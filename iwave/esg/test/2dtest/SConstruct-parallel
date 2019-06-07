@@ -1,0 +1,216 @@
+#   Sconstruct for 2D esg: (1) record trace data;
+#                          (2) generate movie;
+#                          (3) display discrete total energy of the solution as a function of time
+#   (parallel version)
+#   Author: MZ
+#
+#   Note:
+#   (1) Somehow on Macbook the following three jobs in this script cannot be executed by doing scons
+#   once, you need to run scons three times in order to execute 3 jobs. You should see errors after
+#   running scons for the first and second time. But don't be panic, keep running scons will yield
+#   desired results. If some warmhearted person figure out how to fix this problem -- run scons once and
+#   run three jobs, send me an email (mz10@rice.edu). I will be very much appreciated.
+#   (2) If you are running this script on computing platforms (e.g. stampede, Davinci), please change
+#   the email setting in the following penv.
+#   (3) Currently this script runs on Mac. If you want to run it on Stampede, copy one of the following
+#   two lines to to jobs:'exe'.
+#SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+#SetEnv = {'platf':'mpi', 'ppn':str(NP1*NP2)}
+
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'},
+        'davinci' :  {  'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : '***',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'}
+}
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+MYAPPS          = os.getenv('RSFSRC')
+towed_array     = os.path.join(MYAPPS,'trip2.1/iwave/trace/main/towed_array.x')
+stdmdl          = os.path.join(MYAPPS,'trip2.1/iwave/grid/main/standardmodel.x')
+esg             = os.path.join(MYAPPS,'trip2.1/iwave/esg/main/esg.x')
+
+
+fetches = {}
+
+### === SET PARAMETERS
+import math
+
+##   for source
+fpeak=20
+T=0.2 # source duration
+
+##   for stiffness fields
+rho=1
+cs=1
+cp=1.5
+mu0=rho*cs**2;
+lambda0=rho*cp**2-2*mu0;
+
+##   for grid
+nz=401
+nx=nz-30
+dz=cs*1000/fpeak/10
+dx=0.9*dz
+dt=min(dz,dx)/cp/math.sqrt(3)*0.7
+
+
+
+### === CREATE FIELDS
+Flow('byh', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=1 |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx),
+     stdin=0)
+Flow('c11h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, lambda0+2*mu0),
+     stdin=0)
+Flow('c33h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, lambda0+2*mu0),
+     stdin=0)
+Flow('c13h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, lambda0),
+     stdin=0)
+Flow('c55h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, mu0),
+     stdin=0)
+
+
+### === CREATE RECEIVER TRACE FILE
+Flow('data.su', None,
+     sunull + ' nt=1001 ntr=%d dt=0.002 | '%(nx/2) +
+     sushw + ' key=gx a=%g b=%g   | '%(nx/4*dx,dx) +
+     sushw + ' key=gelev a=%g > ${TARGETS[0]}'%(-math.ceil(dz*nz/3)),
+     stdin=0)
+
+
+### === CREATE SOURCE
+t0=1/fpeak
+nt=math.ceil(T*1000/dt)
+
+#   IWAVE presumes that a source is located at its receiver position.
+Flow('src.su', None,
+     suwaveform + ' type=ricker1 fpeak=%g ns=%d | '%(fpeak, nt) +
+     sushw + ' key=delrt  a=%g | '%(t0) +
+     sushw + ' key=gx a=%g  | '%(math.ceil(dx*nx/2)) +
+     sushw + ' key=gelev a=%g > ${TARGETS[0]}'%(-math.ceil(dz*nz/2)), stdin=0)
+
+
+### === START
+jobs=[]
+## (1) create data_vx profile
+for NP1 in [2]:
+    for NP2 in [2]:
+        jobs = jobs + [{'job': 'esg-data' + str(NP1) + str(NP2),
+                       'pre': '''
+                           /bin/cp ${SOURCES[6]} ${TARGETS[0]}
+                           ''',
+                       'cmd': esg + '''
+                           grid_info=${SOURCES[0]}
+                           buoyancy=${SOURCES[0]}
+                           c11=${SOURCES[2]}
+                           c33=${SOURCES[3]}
+                           c13=${SOURCES[4]}
+                           c55=${SOURCES[5]}
+                           source_vx=${SOURCES[1]}
+                           data_vx=${TARGETS[0]}
+                           deriv=0 adjoint=0 order=8 dump_ldc=1 dt=%g eflag=0
+                           mpi_np1=%d mpi_np2=%d
+                           '''%(dt,NP1,NP2),
+                       'src':['byh.rsf', 'src.su', 'c11h.rsf', 'c33h.rsf', 'c13h.rsf', 'c55h.rsf','data.su'],
+                       'tgt':['vxdata.su'],
+                       'exe':SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+                       },]
+
+## (2) create esg movie
+for NP1 in [2]:
+    for NP2 in [2]:
+        jobs = jobs + [{'job': 'esg-sim' + str(NP1) + str(NP2),
+                       'pre': '''
+                           makevel n1=%d n2=%d n3=150
+                           d1=%f d2=%f d3=10 v000=0.0 |
+                           sfput dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[0]}
+                           '''%(nz,nx,dz,dx),
+                       'cmd': esg + '''
+                           grid_info=${SOURCES[0]}
+                           buoyancy=${SOURCES[0]}
+                           c11=${SOURCES[2]}
+                           c33=${SOURCES[3]}
+                           c13=${SOURCES[4]}
+                           c55=${SOURCES[5]}
+                           source_vx=${SOURCES[1]}
+                           movie_vx=${TARGETS[0]}
+                           deriv=0 adjoint=0 order=8 dump_ldc=1 dt=%g eflag=0
+                           mpi_np1=%d mpi_np2=%d
+                           '''%(dt,NP1,NP2),
+                       'src':['byh.rsf', 'src.su', 'c11h.rsf', 'c33h.rsf', 'c13h.rsf', 'c55h.rsf'],
+                       'tgt':['movie.rsf'],
+                       'exe':SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+                       },]
+
+## (3) check energy trace
+for NP1 in [2]:
+    for NP2 in [2]:
+        jobs = jobs + [{'job': 'esg-trace' + str(NP1) + str(NP2),
+                       'pre': '''
+                           makevel n1=%d n2=%d n3=200
+                           d1=%f d2=%f d3=5 v000=0.0 |
+                           sfput dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[0]}
+                           '''%(nz,nx,dz,dx),
+                       'cmd': esg + '''
+                           grid_info=${SOURCES[0]}
+                           buoyancy=${SOURCES[0]}
+                           c11=${SOURCES[2]}
+                           c33=${SOURCES[3]}
+                           c13=${SOURCES[4]}
+                           c55=${SOURCES[5]}
+                           source_vx=${SOURCES[1]}
+                           data_trace=${TARGETS[0]}
+                           deriv=0 adjoint=0 order=8 dump_ldc=1 dt=%g eflag=1
+                           mpi_np1=%d mpi_np2=%d
+                           '''%(dt,NP1,NP2),
+                       'src':['byh.rsf', 'src.su', 'c11h.rsf', 'c33h.rsf', 'c13h.rsf', 'c55h.rsf'],
+                       'tgt':['EnergyTrace.rsf'],
+                       'exe':SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+                       },]
+
+tripExec(jobs,penv)
+
+### === PREPROCESSING
+#   movie.vpl shows the movie
+Plot('movie','sfgrey clip=0.01')
+#   trace.vpl shows the e(t)
+Flow('trace','EnergyTrace','window n1=1 n2=1 f1=1 f2=1')
+Plot('trace','sfgraph')
+
+End()

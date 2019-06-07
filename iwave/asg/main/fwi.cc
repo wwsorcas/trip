@@ -1,0 +1,61 @@
+#include "iwopt.hh"
+#include <par.h>
+
+#include "asg_defn.hh"
+#include "asgfwi_selfdoc.h"
+
+enum{
+  D_BULK=0,
+  D_BUOY=1,
+  D_P0=2,
+  D_P1=3,
+  D_P2=4,
+  D_V0=5,
+  D_V1=6,
+  D_V2=7
+};
+
+IOKEY IWaveInfo::iwave_iokeys[]
+= {
+  {"bulkmod",    D_BULK, 1, 1},
+  {"buoyancy",   D_BUOY, 1, 1},
+  {"source_p",   D_P0, 1, 0},
+  {"data_p",     D_P0, 0, 1},
+  {"data_v0",    D_V0, 0, 1},
+  {"data_v1",    D_V1, 0, 1},
+  {"data_v2",    D_V2, 0, 1},
+  {"",           0, 0, 0}
+};
+
+
+int main(int argc, char ** argv) {
+
+  try {
+
+#ifdef IWAVE_USE_MPI
+    int ts=0;
+    MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);    
+#endif
+
+    if (retrieveGlobalRank()==0 && argc<2) {
+      pagedoc();
+      exit(0);
+    }
+
+    TSOpt::GridMAOpBuilder pb;
+
+    TSOpt::IWaveOpApply(argc,argv,TSOpt::StraightOLS,pb);
+
+#ifdef IWAVE_USE_MPI
+    MPI_Finalize();
+#endif
+  }
+  catch (RVL::RVLException & e) {
+    e.write(cerr);
+#ifdef IWAVE_USE_MPI
+    MPI_Abort(MPI_COMM_WORLD,0);
+#endif
+    exit(1);
+  }
+  
+}

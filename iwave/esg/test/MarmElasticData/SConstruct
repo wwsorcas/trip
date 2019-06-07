@@ -1,0 +1,159 @@
+#!/bin/python
+#   SConstruct for generating receiver traces based on 2D elastic marmousi data
+#   (parallel version)
+#   Author: MZ
+#
+#   Note: If you want to run it on Stampede, (1) change email account in penv
+#                                            (2) change "SetEnv" to Stampede.
+#SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+#SetEnv = {'platf':'mpi', 'ppn':str(NP1*NP2)}
+
+from rsf.proj import *
+from newbatch import tripExec
+import os
+import math
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : 'mz10@rice.edu',
+                        'launcher' : 'ibrun'},
+        'davinci' :  {  'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : '***',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'}
+}
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+MYAPPS          = os.getenv('RSFSRC')
+towed_array     = os.path.join(MYAPPS,'trip2.1/iwave/trace/main/towed_array.x')
+stdmdl          = os.path.join(MYAPPS,'trip2.1/iwave/grid/main/standardmodel.x')
+esg             = os.path.join(MYAPPS,'trip2.1/iwave/esg/main/esg.x')
+
+
+### === FETCH MARMOUSI DATA ONLINE
+#   The default grid spacing is 1.25m on Z-axis and 1m on X-axis
+# cd to ./data and run ./segy2hh.sh
+
+
+
+### === CREATE PAR FIELDS
+par_list = []; #record par field
+
+#   buoyancy field [byh.rsf] = 1/rho
+Flow('mask','MarmRho',
+     '''mask min=-0.5 | scale dscale=1.0''')
+Flow('byh',['mask', 'MarmRho'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]} output='x/y' ''', stdin=0)
+par_list = par_list + ['byh']
+#   stiffness field component [c11.rsf] = rho*vp^2
+Flow('c11',['MarmRho', 'MarmVp'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]} output='x*y*y/1000000' ''', stdin=0)
+par_list = par_list + ['c11']
+#   stiffness field component [c55.rsf] = rho*vs^2
+Flow('c55',['MarmRho', 'MarmVs'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]} output='x*y*y/1000000' ''', stdin=0)
+par_list = par_list + ['c55']
+#   stiffness field component [c13.rsf] = rho*vp^2 - 2*rho*vs^2
+Flow('c13',['c11', 'c55'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]} output='x-2*y' ''', stdin=0)
+par_list = par_list + ['c13']
+
+#   pad par data
+lsize=5 #left: x[start]
+rsize=5 #right: x[end]
+tsize=1 #top: z[start]
+bsize=1 #bottom: z[end]
+for pfile in par_list:
+    Flow('lslice_'+pfile, pfile,
+         '''window n2=1 f2=0 squeeze=n | spray axis=2 n=%d'''%(lsize))
+    Flow('rslice_'+pfile, pfile,
+         '''window n2=1 f2=500 squeeze=n | spray axis=2 n=%d'''%(rsize))
+    Flow(pfile+'_pad1', ['lslice_'+pfile, pfile ,'rslice_'+pfile],
+         '''cat axis=2 ${SOURCES[1:-1]}''')
+    Flow('tslice_'+pfile, pfile+'_pad1',
+         '''window n1=1 f1=0 squeeze=y | spray axis=2 n=%d | sftransp plane=12'''%(tsize))
+    Flow('bslice_'+pfile, pfile+'_pad1',
+         '''window n1=1 f1=148 squeeze=y | spray axis=2 n=%d | sftransp plane=12'''%(bsize))
+    Flow(pfile+'_pad2', ['tslice_'+pfile, pfile+'_pad1', 'bslice_'+pfile],
+         '''cat axis=1 ${SOURCES[1:-1]} ''')
+    Flow(pfile+'_pad', pfile+'_pad2',
+         '''put d1=20 label1="Z" unit1="m" label2="X", unit2="m" ''')
+    Flow(pfile+'_output.txt', ['lslice_'+pfile, 'rslice_'+pfile,
+                               'tslice_'+pfile, 'bslice_'+pfile,
+                               pfile+'_pad1', pfile+'_pad2'],
+         '''rm ${SOURCES[0:-1]}''',stdout=0)
+Flow('output.txt', par_list,
+     '''rm ${SOURCES[0:-1]}''', stdout=0)
+
+
+
+### === CREATE RECEIVER TRACE FILE
+Flow('data.su', None,
+     sunull + ' nt=1601 ntr=200 dt=0.002 | ' +
+     sushw + ' key=gx a=3000 b=20   | ' +
+     sushw + ' key=gelev a=-380 > ${TARGETS[0]}',
+     stdin=0)
+#note: gelev should be negative
+
+
+
+### === CREATE SOURCE
+fpeak=20 #peak frequency
+t0=1/fpeak #delay duration
+#   IWAVE presumes that a source is located at its receiver position.
+Flow('src.su', None,
+     suwaveform + ' type=ricker1 fpeak=%g ns=%d | '%(fpeak, 300) +
+     sushw + ' key=delrt  a=%g | '%(t0) +
+     sushw + ' key=gx a=5000  | ' +
+     sushw + ' key=gelev a=-340 > ${TARGETS[0]}', stdin=0)
+
+
+
+### === SET SIMULATION INTERVAL
+#dt=20/4.7/math.sqrt(2)*0.5
+dt=1.6
+
+
+### === START SIMULATION
+jobs=[]
+for NP1 in [1]:
+    for NP2 in [2]:
+        jobs = jobs + [{'job': 'esg-data' + str(NP1) + str(NP2),
+                       'pre': '''
+                           /bin/cp ${SOURCES[5]} ${TARGETS[0]} &&
+                           /bin/cp ${SOURCES[5]} ${TARGETS[1]}
+                           ''',
+                       'cmd': esg + '''
+                           grid_info=${SOURCES[0]}
+                           buoyancy=${SOURCES[0]}
+                           c11=${SOURCES[1]}
+                           c33=${SOURCES[1]}
+                           c13=${SOURCES[2]}
+                           c55=${SOURCES[3]}
+                           source_sxx=${SOURCES[4]}
+                           source_szz=${SOURCES[4]}
+                           data_vx=${TARGETS[0]}
+                           data_vz=${TARGETS[1]}
+                           deriv=0 adjoint=0 order=8 dump_ldc=1 dt=%g eflag=0
+                           mpi_np1=%d mpi_np2=%d
+                           effective_media=1
+                           '''%(dt,NP1,NP2),
+                       'src':['byh_pad.rsf', 'c11_pad.rsf', 'c13_pad.rsf', 'c55_pad.rsf',
+                              'src.su', 'data.su'],
+                       'tgt':['vxdata.su', 'vzdata.su'],
+                       'exe':{'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+                       },]
+
+#   vx, vz receiver data
+Flow(['vxdata.hh', 'tfile1'],'vxdata.su','''suread tfile=${TARGETS[1]} endian=0 --out=stdout''')
+Flow(['vzdata.hh', 'tfile2'],'vzdata.su','''suread tfile=${TARGETS[1]} endian=0 --out=stdout''')
+
+
+tripExec(jobs,penv)
+
+End()

@@ -1,0 +1,188 @@
+#!/bin/python
+#   GOAL: compare EC-CGS/II-CGS with UGS on a two layer model with a
+#   horizontal material interface, grid interface close to the material
+#   interface
+from rsf.proj import *
+import math
+import os
+from sys import platform
+
+
+
+#=====================================================
+#   INIT TEST ENVIRONMENT
+ECSG = os.getenv('ECSG')
+main = os.path.join(ECSG,'main')
+
+if platform=='darwin':
+    num_threads=2
+elif platform=='linux2':
+    num_threads=80
+    env=Environment()
+    env['ENV']['OMP_NUM_THREADS']=num_threads
+    env['ENV']['OMP_PLACES']="{0}:80"
+else:
+    os._exit(1)
+
+
+
+#=====================================================
+#   INIT PAR FIELDS
+nx=301
+nz=201 #an odd number
+dx=2
+Flow('mask_byh', 'data/rho','''mask min=1 | scale dscale=1.0''')
+Flow('byh',['mask_byh', 'data/rho'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]}
+         output="x/y" ''',stdin=0)
+Flow('s11',['data/rho','data/vp'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]}
+         output="y*y*x" ''',stdin=0)
+Flow('s13',['data/rho','data/vp','data/vs'],
+     '''math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]}
+         output="(y*y-2*z*z)*x" ''',stdin=0)
+
+for file in ['byh', 's11', 's13']:
+    # for composite grid scheme
+    Flow(file+'_1',file,'''window f3=0 n3=%d'''%(nz/4*2+1))
+    Flow(file+'_2',file,'''window f3=%d j1=2 j2=2 j3=2'''%(nz/4*2))
+    # for coarse uniform grid
+    Flow(file+'_0',file,'''window j1=2 j2=2 j3=2''')
+
+
+
+#=====================================================
+#   SETUP SIMULATION TIME STEP dt
+#dt = 2/4/math.sqrt(3)*cfl #unit[ms], cfl in (0,1)
+dt=0.25
+nframe=50
+movie_dt=700*dt
+# src duration has to last longer than 170ms.
+src_duration = round(170/dt)
+# make sure the simulation duration is longer than the src duration
+if movie_dt*nframe<src_duration*dt:
+    print "source is not fully injected!"
+    os._exit(1)
+
+
+
+#=====================================================
+#   SETUP SRC
+fpeak=15
+pi = math.atan(1)*4.
+ricker_tmp = (pi**2)*(fpeak**2)
+ricker_pars = {
+    'src_x':300,
+    'src_y':300,
+    'src_z':100,
+    'src_nt':src_duration,
+    'src_dt':dt/1000., #because src_dt is of unit [s]
+    'tmp':ricker_tmp,
+    'delrt':1/fpeak,
+}
+ricker_pars['equation']="""(1-2*(%(tmp)f)*(x1-%(delrt)f)*(x1-%(delrt)f))
+    *exp(-(%(tmp)f)*(x1-%(delrt)f)*(x1-%(delrt)f))"""%ricker_pars
+Flow('ricker',None,'''math
+    n1=%(src_nt)d o1=0 d1=%(src_dt)f output=\"%(equation)s\"
+    n2=1 o2=%(src_x)f
+    n3=1 o3=%(src_y)f
+    n4=1 o4=%(src_z)f |
+    put label1="Time" unit1="s"
+    label2="Distance(X)" unit2="m"
+    label3="Distance(Y)" unit3="m"
+    label4="Distance(Z)" unit4="m"
+    '''%ricker_pars)
+Result('ricker','''graph title="Ricker Source" ''')
+
+
+
+#=====================================================
+#   SETUP REC
+rec_pars = {
+    'rec1_x':ricker_pars['src_x']-24,
+    'rec2_x':ricker_pars['src_x'],
+    'rec3_x':ricker_pars['src_x']+24,
+    'rec_y':ricker_pars['src_y'],
+    'rec_z':ricker_pars['src_z']-24,
+}
+Flow('rec_in.asci', None, '''echo
+    '%(rec1_x)f %(rec_y)f %(rec_z)f
+    %(rec2_x)f %(rec_y)f %(rec_z)f
+    %(rec3_x)f %(rec_y)f %(rec_z)f'
+    '''%rec_pars)
+Flow('rec_in','rec_in.asci',
+     '''echo in=${SOURCES[0]} n1=3 n2=3 data_format=ascii_float |
+         dd form=native''')
+
+
+
+#=====================================================
+#=====================================================
+#   SIMULATION BASED ON UGS
+#Flow(['out.txt', 'movie_vx_ugs', 'rec_out_ugs', 'energy_ugs'],
+#     ['ricker', 'byh', 's11', 's13', 'rec_in'],
+#     main + ''' num_threads=%d num_grids=1 top_bc=1 radius=1
+#         dt=%f src_type=1 src=${SOURCES[0]}
+#         buoy_1=${SOURCES[1]} s11_1=${SOURCES[2]} s13_1=${SOURCES[3]}
+#         check_energy=y energy_trace=${TARGETS[3]}
+#         movie_dt=%f movie_nt=%d
+#         movie_vx_flag=y movie_vx_1=${TARGETS[1]}
+#         check_rec=y rec_in=${SOURCES[4]} rec_out=${TARGETS[2]}
+#         verb=y
+#         '''%(num_threads,dt,movie_dt,nframe), stdin=0)
+
+Result('energy_ugs','''sfgraph scalebar=y title="Energy: e(t)" ''')
+Flow('rec_out_ugs.hh','rec_out_ugs','''cp --out=stdout''')
+
+# check movie
+movie_number = 2
+Result('movie_vx_ugs%d'%(movie_number), 'movie_vx_ugs', # frame order [z,x,y]
+       ''' window f4=%d n4=1 | transp plane=12 | transp plane=13 |
+           byte gainpanel=all |
+           grey4 frame1=%d frame2=%d frame3=%d
+           title="V_x (UGS)"  flat=y
+           '''%(movie_number,nz/2,nx/2,nx/2))
+
+
+
+#=====================================================
+#=====================================================
+#   SIMULATION BASED ON ECI/II
+test_list = ['ii', 'ec']
+title = ['II-CGS', 'EC-CGS']
+for i in range(len(test_list)):
+    test=test_list[i]
+#    
+#    Flow(['out_'+test+'.txt', 'res_trace_'+test,
+#          'movie_vx_1_'+test, 'movie_vx_2_'+test,
+#          'rec_out_'+test, 'energy_'+test],
+#         ['ricker', 'byh_1', 's11_1', 's13_1',
+#          'byh_2', 's11_2', 's13_2', 'rec_in'],
+#         main + ''' num_threads=%d num_grids=2 top_bc=1 imode=%d radius=1
+#             dt=%f src_type=1 src=${SOURCES[0]}
+#             buoy_1=${SOURCES[1]} s11_1=${SOURCES[2]} s13_1=${SOURCES[3]}
+#             buoy_2=${SOURCES[4]} s11_2=${SOURCES[5]} s13_2=${SOURCES[6]}
+#             check_energy=y energy_trace=${TARGETS[5]}
+#             movie_dt=%f movie_nt=%d
+#             movie_vx_flag=y movie_vx_1=${TARGETS[2]} movie_vx_2=${TARGETS[3]}
+#             check_rec=y rec_in=${SOURCES[7]} rec_out=${TARGETS[4]}
+#             verb=y res_trace=${TARGETS[1]}
+#             '''%(num_threads,i,dt,movie_dt,nframe), stdin=0)
+#    
+#    Result('energy_'+test,'''sfgraph scalebar=y title="Energy: e(t)" ''')
+#    Flow('rec_out_'+test+'.hh','rec_out_'+test,'''cp --out=stdout''')
+
+    # check movie
+    Flow('tmp1_'+test,'movie_vx_1_'+test,'''window f4=%d n4=1 j1=2 j2=2 j3=2'''%(movie_number))
+    Flow('tmp2_'+test,'movie_vx_2_'+test,'''window f4=%d n4=1 f3=1'''%(movie_number))
+    Flow('movie_cg_vx_'+test, ['tmp1_'+test, 'tmp2_'+test],'''cat ${SOURCES[1:-1]} axis=3''')
+    Result('movie_cg_vx_'+test+str(movie_number),'movie_cg_vx_'+test,'''
+        transp plane=12 | transp plane=13 |
+        byte gainpanel=all |
+        grey4 frame1=%d frame2=%d frame3=%d clip=0.01
+        title="V_x (%s)"  flat=y
+        '''%(nz/4,nx/4,nx/4,title[i]))
+
+
+
+End()

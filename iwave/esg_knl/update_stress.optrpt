@@ -1,0 +1,1580 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.102 Build 20160720
+
+Compiler options: -I/Users/muhongzhou/Softwares/madagascar/include -o update_stress.o -c -O3 -qopenmp -restrict -qopt-report=4
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: UpdateStress(Field *, Field **, real **, int, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (UpdateStress(Field *, Field **, real **, int, int, int, int)) [1/5=20.0%] update_stress.cpp(6,1)
+  -> INLINE (MANUAL): (38,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (42,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (42,31) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (45,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (45,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (45,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (48,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (49,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (50,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (50,54) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (50,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (51,44) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (51,70) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (52,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (53,33) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (53,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (53,77) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (54,44) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (54,68) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (56,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (57,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (58,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (58,54) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (58,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (59,44) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (59,70) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (60,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (61,33) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (61,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (61,77) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (62,44) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (62,68) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (70,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (70,41) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (71,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (71,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (71,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (74,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (74,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (74,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (76,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (77,30) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (78,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (78,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (79,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (80,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (80,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (81,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (82,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (82,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (84,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (85,30) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (86,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (86,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (87,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (88,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (88,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (89,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (90,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (90,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (92,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (93,30) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (94,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (94,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (95,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (96,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (96,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (97,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (98,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (98,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (105,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (105,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (106,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (106,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (106,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (109,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (109,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (109,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (110,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (110,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (111,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (111,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (112,46) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (112,72) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (118,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (118,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (119,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (119,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (119,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (122,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (122,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (122,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (123,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (123,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (124,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (124,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (125,46) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (125,70) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (131,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (131,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (132,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (132,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (132,55) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (135,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (135,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (135,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (136,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (136,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (137,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (137,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (138,46) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (138,70) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (142,23) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (146,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (146,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (148,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (148,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (148,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (149,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (149,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (151,19) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (155,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (155,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (157,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (157,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (157,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (158,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (158,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (160,19) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (164,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (164,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (166,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (166,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (166,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (167,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (167,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (170,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (174,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (174,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (176,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (176,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (176,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (177,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (177,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (179,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (183,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (183,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (185,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (185,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (185,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (186,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (186,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (188,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (192,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (192,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (194,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (194,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (194,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (195,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (195,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (198,23) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (202,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (202,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (205,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (205,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (205,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (206,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (206,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (208,19) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (212,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (212,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (215,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (215,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (215,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (216,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (216,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (218,19) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (222,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (222,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (225,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (225,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (225,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (226,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (226,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (229,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (233,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (233,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (236,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (236,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (236,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (237,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (237,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (239,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (243,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (243,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (246,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (246,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (246,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (247,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (247,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (249,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (253,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (253,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (256,35) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (256,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (256,59) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (257,26) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (257,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (262,27) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (266,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (266,43) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (269,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (269,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (269,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (270,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (270,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (272,23) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (276,31) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (276,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (279,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (279,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (279,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (280,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (280,68) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (282,23) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (287,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (287,43) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (290,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (290,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (290,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (291,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (291,69) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (297,27) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (301,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (301,43) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (304,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (304,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (304,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (305,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (305,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (307,23) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (311,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (311,31) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (314,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (314,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (314,63) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (315,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (315,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (317,23) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (321,31) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (321,43) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (324,39) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (324,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (324,64) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (325,30) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (325,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+
+
+    Report from: OpenMP optimizations [openmp]
+
+update_stress.cpp(66:9-66:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(105:9-105:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(118:9-118:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(131:9-131:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(142:9-142:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(151:9-151:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(160:9-160:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(170:9-170:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(179:9-179:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(188:9-188:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(198:9-198:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(208:9-208:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(218:9-218:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(229:9-229:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(239:9-239:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(249:9-249:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(260:9-260:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(272:13-272:13):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(282:13-282:13):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(292:9-292:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(307:13-307:13):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(317:13-317:13):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(326:9-326:9):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP multithreaded code generation for SINGLE was successful
+update_stress.cpp(33:1-33:1):OMP:__Z12UpdateStressP5FieldPS0_PPdiiii:  OpenMP DEFINED REGION WAS PARALLELIZED
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at update_stress.cpp(40,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(40,1)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(43,17)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(45,64)
+         <Peeled loop for vectorization>
+            remark #25015: Estimate of max trip count of loop=1
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(45,64)
+            remark #15389: vectorization support: reference *(*(*(sxx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ update_stress.cpp(48,30) ]
+            remark #15389: vectorization support: reference *(*(*(sxx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ update_stress.cpp(48,30) ]
+            remark #15389: vectorization support: reference *(*(*(c11+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c13+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c13+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c33+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i3+$i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i3+$i4+i0)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c12+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c13+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c23+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c33+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vy+i2*8)+($i1*?+$i2+$i3+?-?+i1-2)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vy+i2*8)+($i1*?+$i2-$i3+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15388: vectorization support: reference *(*(*(syy+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has aligned access   [ update_stress.cpp(56,30) ]
+            remark #15389: vectorization support: reference *(*(*(syy+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ update_stress.cpp(56,30) ]
+            remark #15389: vectorization support: reference *(*(*(c12+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c23+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c13+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c33+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i3+$i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vx+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i3+$i4+i0)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c22+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c23+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c23+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(c33+i2*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vy+i2*8)+($i1*?+$i2+$i3+?-?+i1-2)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15389: vectorization support: reference *(*(*(vy+i2*8)+($i1*?+$i2-$i3+?-?+i1-1)*8)+($i4+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15381: vectorization support: unaligned access used inside loop body
+            remark #15305: vectorization support: vector length 2
+            remark #15309: vectorization support: normalized vectorization overhead 0.509
+            remark #15300: LOOP WAS VECTORIZED
+            remark #15442: entire loop may be executed in remainder
+            remark #15449: unmasked aligned unit stride stores: 1 
+            remark #15450: unmasked unaligned unit stride loads: 26 
+            remark #15451: unmasked unaligned unit stride stores: 1 
+            remark #15475: --- begin vector cost summary ---
+            remark #15476: scalar cost: 375 
+            remark #15477: vector cost: 111.000 
+            remark #15478: estimated potential speedup: 3.310 
+            remark #15486: divides: 4 
+            remark #15488: --- end vector cost summary ---
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(45,64)
+         <Remainder loop for vectorization>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(68,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(68,1)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 4 ) --> ( 1 3 2 4 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(71,55)
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 1 3 ) 
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(72,17)
+            remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(74,63)
+            <Peeled loop for vectorization>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(74,63)
+               remark #15389: vectorization support: reference *(*(*(sxx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(76,30) ]
+               remark #15389: vectorization support: reference *(*(*(sxx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(76,30) ]
+               remark #15389: vectorization support: reference *(*(*(c11+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c12+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+$i4+i1-2)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3-$i4+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c13+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+$i4+i2+?-?+flag-2)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2-$i4+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(syy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(84,30) ]
+               remark #15389: vectorization support: reference *(*(*(syy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(84,30) ]
+               remark #15389: vectorization support: reference *(*(*(c12+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c22+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+$i4+i1-2)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3-$i4+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c23+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+$i4+i2+?-?+flag-2)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2-$i4+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(92,30) ]
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(92,30) ]
+               remark #15389: vectorization support: reference *(*(*(c13+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c23+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+$i4+i1-2)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3-$i4+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(c33+($i1*?+$i2+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+$i4+i2+?-?+flag-2)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2-$i4+i2+?-?+flag-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 1.060
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15450: unmasked unaligned unit stride loads: 30 
+               remark #15451: unmasked unaligned unit stride stores: 2 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 356 
+               remark #15477: vector cost: 66.500 
+               remark #15478: estimated potential speedup: 5.160 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(74,63)
+            <Remainder loop for vectorization>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(103,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(103,1)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 4 ) --> ( 3 1 2 4 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(106,55)
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 1 3 ) 
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(107,17)
+            remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(109,63)
+            <Peeled loop for vectorization>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(109,63)
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(110,30) ]
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(110,30) ]
+               remark #15389: vectorization support: reference *(*(*(c44+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+$i4+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2-$i4+?-?+i2)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+$i4+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15388: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3-$i4+i1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15399: vectorization support: unroll factor set to 4
+               remark #15309: vectorization support: normalized vectorization overhead 0.652
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15450: unmasked unaligned unit stride loads: 5 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 79 
+               remark #15477: vector cost: 14.000 
+               remark #15478: estimated potential speedup: 5.220 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(109,63)
+            <Alternate Alignment Vectorized Loop>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(109,63)
+            <Remainder loop for vectorization>
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(110,30) ]
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(110,30) ]
+               remark #15389: vectorization support: reference *(*(*(c44+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+$i4+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2-$i4+?-?+i2)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+$i4+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3-$i4+i1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 0.867
+               remark #15301: REMAINDER LOOP WAS VECTORIZED
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(109,63)
+            <Remainder loop for vectorization>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(116,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(116,1)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 4 ) --> ( 3 1 2 4 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(119,55)
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 1 3 ) 
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(120,17)
+            remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(122,63)
+            <Peeled loop for vectorization>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(122,63)
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(123,30) ]
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(123,30) ]
+               remark #15389: vectorization support: reference *(*(*(c55+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+$i4+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2-$i4+?-?+i2)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-2)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15388: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15399: vectorization support: unroll factor set to 4
+               remark #15309: vectorization support: normalized vectorization overhead 0.634
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15450: unmasked unaligned unit stride loads: 5 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 76 
+               remark #15477: vector cost: 14.000 
+               remark #15478: estimated potential speedup: 5.040 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(122,63)
+            <Alternate Alignment Vectorized Loop>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(122,63)
+            <Remainder loop for vectorization>
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(123,30) ]
+               remark #15389: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(123,30) ]
+               remark #15389: vectorization support: reference *(*(*(c55+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+$i4+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2-$i4+?-?+i2)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0+?-2)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vz+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 0.778
+               remark #15301: REMAINDER LOOP WAS VECTORIZED
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(122,63)
+            <Remainder loop for vectorization>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(129,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(129,1)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 4 ) --> ( 1 3 2 4 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(132,55)
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 1 3 ) 
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(133,17)
+            remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(135,63)
+            <Peeled loop for vectorization>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(135,63)
+               remark #15388: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(136,30) ]
+               remark #15389: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ update_stress.cpp(136,30) ]
+               remark #15389: vectorization support: reference *(*(*(c66+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+?-?+i2-1)*8)+($i3+$i4+i1-1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+?-?+i2-1)*8)+($i3-$i4+i1)*8)+($i5+i0-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-2)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15388: vectorization support: reference *(*(*(vy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15399: vectorization support: unroll factor set to 4
+               remark #15309: vectorization support: normalized vectorization overhead 0.634
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15450: unmasked unaligned unit stride loads: 5 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 79 
+               remark #15477: vector cost: 14.000 
+               remark #15478: estimated potential speedup: 5.230 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(135,63)
+            <Alternate Alignment Vectorized Loop>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(135,63)
+            <Remainder loop for vectorization>
+               remark #15389: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(136,30) ]
+               remark #15389: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ update_stress.cpp(136,30) ]
+               remark #15389: vectorization support: reference *(*(*(c66+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+?-?+i2-1)*8)+($i3+$i4+i1-1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vx+($i1*?+$i2+?-?+i2-1)*8)+($i3-$i4+i1)*8)+($i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0+?-2)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15389: vectorization support: reference *(*(*(vy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i4+$i5+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+               remark #15381: vectorization support: unaligned access used inside loop body
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 0.778
+               remark #15301: REMAINDER LOOP WAS VECTORIZED
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(135,63)
+            <Remainder loop for vectorization>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(144,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(144,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between sxx[i2][i1][i0-ir] (149:26) and sxx[i2][i1][i0-ir] (149:26)
+
+      LOOP BEGIN at update_stress.cpp(147,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between sxx[i2][i1][i0-ir] (149:26) and sxx[i2][i1][i0-ir] (149:26)
+
+         LOOP BEGIN at update_stress.cpp(148,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between sxx[i2][i1][i0-ir] (149:26) and sxx[i2][i1][i0+ir-1] (149:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(148,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(153,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(153,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between i2->ptr[i2][i1][i0-ir] (158:26) and i2->ptr[i2][i1][i0-ir] (158:26)
+
+      LOOP BEGIN at update_stress.cpp(156,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between i2->ptr[i2][i1][i0-ir] (158:26) and i2->ptr[i2][i1][i0-ir] (158:26)
+
+         LOOP BEGIN at update_stress.cpp(157,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between i2->ptr[i2][i1][i0-ir] (158:26) and i2->ptr[i2][i1][i0+ir] (158:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(157,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(162,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(162,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between i1->ptr[i2][i1][i0-ir] (167:26) and i1->ptr[i2][i1][i0-ir] (167:26)
+
+      LOOP BEGIN at update_stress.cpp(165,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between i1->ptr[i2][i1][i0-ir] (167:26) and i1->ptr[i2][i1][i0-ir] (167:26)
+
+         LOOP BEGIN at update_stress.cpp(166,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between i1->ptr[i2][i1][i0-ir] (167:26) and i1->ptr[i2][i1][i0+ir] (167:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(166,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(172,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(172,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between sxx[i2][i1][i0+ir] (177:26) and sxx[i2][i1][i0+ir] (177:26)
+
+      LOOP BEGIN at update_stress.cpp(175,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between sxx[i2][i1][i0+ir] (177:26) and sxx[i2][i1][i0+ir] (177:26)
+
+         LOOP BEGIN at update_stress.cpp(176,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between sxx[i2][i1][i0+ir] (177:26) and sxx[i2][i1][i0-ir+1] (177:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(176,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(181,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(181,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between i2->ptr[i2][i1][i0+ir] (186:26) and i2->ptr[i2][i1][i0+ir] (186:26)
+
+      LOOP BEGIN at update_stress.cpp(184,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between i2->ptr[i2][i1][i0+ir] (186:26) and i2->ptr[i2][i1][i0+ir] (186:26)
+
+         LOOP BEGIN at update_stress.cpp(185,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between i2->ptr[i2][i1][i0+ir] (186:26) and i2->ptr[i2][i1][i0-ir] (186:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(185,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(190,1)
+   remark #15522: loop was not vectorized: loop control flow is too complex. Try using canonical loop form from OpenMP specification
+
+   LOOP BEGIN at update_stress.cpp(190,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 1 3 2 ) 
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between i1->ptr[i2][i1][i0+ir] (195:26) and i1->ptr[i2][i1][i0+ir] (195:26)
+
+      LOOP BEGIN at update_stress.cpp(193,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 ) --> ( 2 1 ) 
+         remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+         remark #15346: vector dependence: assumed OUTPUT dependence between i1->ptr[i2][i1][i0+ir] (195:26) and i1->ptr[i2][i1][i0+ir] (195:26)
+
+         LOOP BEGIN at update_stress.cpp(194,59)
+            remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+            remark #15346: vector dependence: assumed FLOW dependence between i1->ptr[i2][i1][i0+ir] (195:26) and i1->ptr[i2][i1][i0-ir] (195:26)
+            remark #25439: unrolled with remainder by 2  
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(194,59)
+         <Remainder>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(200,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(200,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(203,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(205,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(205,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(205,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(syy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(206,26) ]
+               remark #15388: vectorization support: reference *(*(*(syy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.333
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 19 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 10.670 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(205,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(205,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(210,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(210,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(213,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(215,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(215,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(215,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(216,26) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 20 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 11.170 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(215,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(215,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(220,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(220,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(223,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(225,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(225,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(225,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(226,26) ]
+               remark #15388: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 20 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 11.170 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(225,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(225,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(231,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(231,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(234,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(236,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(236,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(236,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(syy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(237,26) ]
+               remark #15388: vectorization support: reference *(*(*(syy+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.333
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 19 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 10.670 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(236,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(236,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(241,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(241,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(244,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(246,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(246,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(246,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(247,26) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1+1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 20 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 11.170 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(246,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(246,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(251,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(251,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25452: Original Order found to be proper, but by a close margin
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(254,13)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+         remark #25452: Original Order found to be proper, but by a close margin
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(256,59)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(256,59)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(256,59)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(257,26) ]
+               remark #15388: vectorization support: reference *(*(*(i1->ptr+($i1*?+$i2+?-?+i2-1)*8)+($i3+i1+1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 20 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 11.170 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(256,59)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(256,59)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(264,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(264,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(267,17)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(269,63)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(269,63)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(269,63)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(270,30) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.333
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 17 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 9.620 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(269,63)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(269,63)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(274,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(274,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(277,17)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(279,63)
+         <Peeled loop for vectorization>
+            remark #25015: Estimate of max trip count of loop=1
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(279,63)
+            remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has aligned access   [ update_stress.cpp(280,30) ]
+            remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2-1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+            remark #15305: vectorization support: vector length 2
+            remark #15399: vectorization support: unroll factor set to 4
+            remark #15309: vectorization support: normalized vectorization overhead 2.167
+            remark #15300: LOOP WAS VECTORIZED
+            remark #15442: entire loop may be executed in remainder
+            remark #15448: unmasked aligned unit stride loads: 1 
+            remark #15449: unmasked aligned unit stride stores: 1 
+            remark #15475: --- begin vector cost summary ---
+            remark #15476: scalar cost: 22 
+            remark #15477: vector cost: 3.000 
+            remark #15478: estimated potential speedup: 6.420 
+            remark #15488: --- end vector cost summary ---
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(279,63)
+         <Alternate Alignment Vectorized Loop>
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(279,63)
+         <Remainder loop for vectorization>
+            remark #15389: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0+?-1)*8) has unaligned access   [ update_stress.cpp(280,30) ]
+            remark #15389: vectorization support: reference *(*(*(i2->ptr+($i3+i2-1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+i0+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15381: vectorization support: unaligned access used inside loop body
+            remark #15305: vectorization support: vector length 2
+            remark #15309: vectorization support: normalized vectorization overhead 1.385
+            remark #15301: REMAINDER LOOP WAS VECTORIZED
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(279,63)
+         <Remainder loop for vectorization>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(285,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(285,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(288,17)
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(290,64)
+         <Peeled loop for vectorization>
+            remark #25015: Estimate of max trip count of loop=1
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(290,64)
+            remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+?-1)*8) has aligned access   [ update_stress.cpp(291,30) ]
+            remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2-1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+?-1)*8) has aligned access   [ field.hpp(84,55) ]
+            remark #15305: vectorization support: vector length 2
+            remark #15399: vectorization support: unroll factor set to 4
+            remark #15309: vectorization support: normalized vectorization overhead 2.167
+            remark #15300: LOOP WAS VECTORIZED
+            remark #15442: entire loop may be executed in remainder
+            remark #15448: unmasked aligned unit stride loads: 1 
+            remark #15449: unmasked aligned unit stride stores: 1 
+            remark #15475: --- begin vector cost summary ---
+            remark #15476: scalar cost: 22 
+            remark #15477: vector cost: 3.000 
+            remark #15478: estimated potential speedup: 6.420 
+            remark #15488: --- end vector cost summary ---
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(290,64)
+         <Alternate Alignment Vectorized Loop>
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(290,64)
+         <Remainder loop for vectorization>
+            remark #15389: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+?+?-1)*8) has unaligned access   [ update_stress.cpp(291,30) ]
+            remark #15389: vectorization support: reference *(*(*(i2->ptr+($i3+i2-1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i4+?+?-1)*8) has unaligned access   [ field.hpp(84,55) ]
+            remark #15381: vectorization support: unaligned access used inside loop body
+            remark #15305: vectorization support: vector length 2
+            remark #15309: vectorization support: normalized vectorization overhead 1.385
+            remark #15301: REMAINDER LOOP WAS VECTORIZED
+         LOOP END
+
+         LOOP BEGIN at update_stress.cpp(290,64)
+         <Remainder loop for vectorization>
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(299,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(299,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(302,17)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(304,63)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(304,63)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(304,63)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(305,30) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.333
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 17 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 9.620 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(304,63)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(304,63)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(309,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(309,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(312,17)
+         remark #25084: Preprocess Loopnests: Moving Out Store    [ field.hpp(74,39) ]
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(314,63)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(314,63)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(314,63)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ update_stress.cpp(315,30) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2+1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+i0-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 17 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 9.600 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(314,63)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(314,63)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_stress.cpp(319,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_stress.cpp(319,1)
+      remark #25096: Loop Interchange not done due to: Imperfect Loop Nest (Either at Source or due to other Compiler Transformations)
+      remark #25451: Advice: Loop Interchange, if possible, might help loopnest. Suggested Permutation : ( 1 2 3 ) --> ( 2 3 1 ) 
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_stress.cpp(322,17)
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_stress.cpp(324,64)
+            remark #25401: memcopy(with guard) generated
+            remark #15542: loop was not vectorized: inner loop was already vectorized
+
+            LOOP BEGIN at update_stress.cpp(324,64)
+            <Peeled loop for vectorization, Multiversioned v2>
+               remark #25015: Estimate of max trip count of loop=1
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(324,64)
+            <Multiversioned v2>
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+?-1)*8) has aligned access   [ update_stress.cpp(325,30) ]
+               remark #15388: vectorization support: reference *(*(*(i2->ptr+($i3+i2+1)*8)+($i1*?+$i2+?-?+i1-1)*8)+($i5+?-1)*8) has aligned access   [ field.hpp(84,55) ]
+               remark #15305: vectorization support: vector length 2
+               remark #15309: vectorization support: normalized vectorization overhead 16.667
+               remark #15300: LOOP WAS VECTORIZED
+               remark #15442: entire loop may be executed in remainder
+               remark #15448: unmasked aligned unit stride loads: 1 
+               remark #15449: unmasked aligned unit stride stores: 1 
+               remark #15475: --- begin vector cost summary ---
+               remark #15476: scalar cost: 17 
+               remark #15477: vector cost: 1.500 
+               remark #15478: estimated potential speedup: 9.600 
+               remark #15488: --- end vector cost summary ---
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(324,64)
+            <Alternate Alignment Vectorized Loop, Multiversioned v2>
+            LOOP END
+
+            LOOP BEGIN at update_stress.cpp(324,64)
+            <Remainder loop for vectorization, Multiversioned v2>
+            LOOP END
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+update_stress.cpp(206,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(206,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(206,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(216,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(216,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(216,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(226,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(226,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(226,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(237,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(237,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(237,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(247,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(247,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(247,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(257,26):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(257,26):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(257,26):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(270,30):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(270,30):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(270,30):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(305,30):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(305,30):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(305,30):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(315,30):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(315,30):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(315,30):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(325,30):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(325,30):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_stress.cpp(325,30):remark #34026: call to memcpy implemented as a call to optimized library version
+update_stress.cpp(6,1):remark #34051: REGISTER ALLOCATION : [__Z12UpdateStressP5FieldPS0_PPdiiii] update_stress.cpp:6
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   31[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0-zmm15]
+        
+    Routine temporaries
+        Total         :    4396
+            Global    :    1440
+            Local     :    2956
+        Regenerable   :     629
+        Spilled       :     752
+        
+    Routine stack
+        Variables     :     632 bytes*
+            Reads     :      71 [0.00e+00 ~ 0.0%]
+            Writes    :     118 [1.99e+02 ~ 0.1%]
+        Spills        :    5952 bytes*
+            Reads     :    1236 [2.73e+04 ~ 6.9%]
+            Writes    :     919 [1.26e+04 ~ 3.2%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: Field::GetStart(const Field *, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetStart(const Field *, int) const) field.hpp(74,31)
+
+===========================================================================
+
+Begin optimization report for: Field::GetEnd(const Field *, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetEnd(const Field *, int) const) field.hpp(75,29)
+
+===========================================================================
+
+Begin optimization report for: Field::GetVal(const Field *, int, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetVal(const Field *, int, int, int) const) field.hpp(84,47)
+
+===========================================================================
+
+Begin optimization report for: Field::SetVal(Field *, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::SetVal(Field *, int, int, int)) field.hpp(85,42)
+
+===========================================================================

@@ -1,0 +1,156 @@
+#	Sconstruct for 2D esg: (1) record trace data;
+#                          (2) generate movie;
+#                          (3) display discrete total energy of the solution as a function of time
+#   (serial version)
+#   Author: MZ
+
+from rsf.proj import*
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+RSFSRC = os.getenv('RSFSRC')
+esg = os.path.join(RSFSRC,'trip2.1/iwave/esg/main/esg.x')
+stdmdl = os.path.join(RSFSRC,'trip2.1/iwave/grid/main/standardmodel.x')
+Flow('cout0.txt',None,'touch $TARGET')
+
+
+### === SET PARAMETERS
+import math
+
+##   for source
+fpeak=20
+T=0.2 # source duration
+
+##   for stiffness fields
+rho=1
+cs=1
+cp=1.5
+mu0=rho*cs**2;
+lambda0=rho*cp**2-2*mu0;
+
+##   for grid
+nz=401
+nx=nz-30
+dz=cs*1000/fpeak/10
+dx=0.9*dz
+dt=min(dz,dx)/cp/math.sqrt(3)*0.7
+
+
+### === CREATE FIELDS
+Flow('byh', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=1 |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx),
+     stdin=0)
+Flow('c11h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, lambda0+2*mu0),
+     stdin=0)
+Flow('c13h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, lambda0),
+     stdin=0)
+Flow('c55h', None,
+     '''
+         makevel n1=%d n2=%d
+         d1=%f d2=%f v000=%f |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         '''%(nz,nx,dz,dx, mu0),
+     stdin=0)
+
+
+### === CREATE RECEIVER TRACE FILE
+Flow('data.su', None,
+     sunull + ' nt=1001 ntr=%d dt=0.002 | '%(nx/2) +
+     sushw + ' key=gx a=%g b=%g   | '%(nx/4*dx,dx) +
+     sushw + ' key=gelev a=%g > ${TARGETS[0]}'%(-math.ceil(dz*nz/3)),
+     stdin=0)
+
+
+### === CREATE SOURCE
+t0=1/fpeak
+nt=math.ceil(T*1000/dt)
+
+#   IWAVE presumes that a source is located at its receiver position.
+Flow('src.su', None,
+     suwaveform + ' type=ricker1 fpeak=%g ns=%d | '%(fpeak, nt) +
+     sushw + ' key=delrt  a=%g | '%(t0) +
+     sushw + ' key=gx a=%g  | '%(math.ceil(dx*nx/2)) +
+     sushw + ' key=gelev a=%g > ${TARGETS[0]}'%(-math.ceil(dz*nz/2)), stdin=0)
+
+
+### === START
+## (1) create data_vx profile
+Flow('vxdata.su','byh src.su c11h c13h c55h data.su',
+     '''
+         /bin/cp ${SOURCES[5]} ${TARGETS[0]} &&
+         ''' + esg +
+     '''
+         grid_info=${SOURCES[0]}
+         buoyancy=${SOURCES[0]}
+         c11=${SOURCES[2]}
+         c33=${SOURCES[2]}
+         c13=${SOURCES[3]}
+         c55=${SOURCES[4]}
+         source_vx=${SOURCES[1]}
+         data_vx=${TARGETS[0]}
+         deriv=0 adjoint=0 order=4 cfl=0.5 dump_ldc=1 dt=%g eflag=0
+         '''%(dt), stdin=0, stdout=0)
+
+## (2) create esg movie
+Flow('movie','byh src.su c11h c13h c55h',
+     '''
+         makevel n1=%d n2=%d n3=150
+         d1=%f d2=%f d3=10 v000=0.0 |
+         sfput dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[0]} &&
+         '''%(nz,nx,dz,dx) + esg +
+     '''
+         grid_info=${SOURCES[0]}
+         buoyancy=${SOURCES[0]}
+         c11=${SOURCES[2]}
+         c33=${SOURCES[2]}
+         c13=${SOURCES[3]}
+         c55=${SOURCES[4]}
+         source_vx=${SOURCES[1]}
+         movie_vx=${TARGETS[0]}
+         deriv=0 adjoint=0 order=4 cfl=0.5 dump_ldc=1 dt=%g eflag=0
+         '''%(dt), stdin=0, stdout=0)
+
+## (3) check energy trace
+Flow('EnergyTrace','byh src.su c11h c13h c55h',
+     '''
+         makevel n1=%d n2=%d n3=200
+         d1=%f d2=%f d3=5 v000=0.0 |
+         sfput dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[0]} &&
+         '''%(nz,nx,dz,dx) + esg +
+     '''
+         grid_info=${SOURCES[0]}
+         buoyancy=${SOURCES[0]}
+         c11=${SOURCES[2]}
+         c33=${SOURCES[2]}
+         c13=${SOURCES[3]}
+         c55=${SOURCES[4]}
+         source_vx=${SOURCES[1]}
+         data_trace=${TARGETS[0]}
+         deriv=0 adjoint=0 order=4 cfl=0.5 dump_ldc=1 dt=%g eflag=1
+         '''%(dt), stdin=0, stdout=0)
+
+
+### === PREPROCESSING
+#   movie.vpl shows the movie
+Plot('movie','sfgrey clip=0.01')
+#   trace.vpl shows the e(t)
+Flow('trace','EnergyTrace','window n1=1 n2=1 f1=1 f2=1')
+Plot('trace','sfgraph')
+
+End()

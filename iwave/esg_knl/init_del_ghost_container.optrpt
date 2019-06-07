@@ -1,0 +1,357 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.102 Build 20160720
+
+Compiler options: -I/Users/muhongzhou/Softwares/madagascar/include -o init_del_ghost_container.o -c -O3 -qopenmp -restrict -qopt-report=4
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: DelGhostContainer(Array *&, Array *&, Array *&, Array *&, Array *&, Array *&)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (DelGhostContainer(Array *&, Array *&, Array *&, Array *&, Array *&, Array *&)) [1/2=50.0%] init_del_ghost_container.cpp(50,1)
+  -> EXTERN: (51,5) ___cxa_begin_catch
+  -> EXTERN: (51,5) operator delete[](void *)
+  -> EXTERN: (51,5) Array::~Array(Array *)
+  -> EXTERN: (51,5) ___cxa_end_catch
+  -> EXTERN: (51,5) ___cxa_get_globals_fast
+  -> EXTERN: (51,5) operator delete[](void *)
+  -> EXTERN: (51,5) ___cxa_rethrow
+  -> EXTERN: (52,5) ___cxa_rethrow
+  -> EXTERN: (52,5) operator delete[](void *)
+  -> EXTERN: (52,5) Array::~Array(Array *)
+  -> EXTERN: (52,5) ___cxa_begin_catch
+  -> EXTERN: (52,5) ___cxa_get_globals_fast
+  -> EXTERN: (52,5) operator delete[](void *)
+  -> EXTERN: (52,5) ___cxa_end_catch
+  -> EXTERN: (53,5) Array::~Array(Array *)
+  -> EXTERN: (53,5) ___cxa_end_catch
+  -> EXTERN: (53,5) ___cxa_rethrow
+  -> EXTERN: (53,5) operator delete[](void *)
+  -> EXTERN: (53,5) ___cxa_get_globals_fast
+  -> EXTERN: (53,5) ___cxa_begin_catch
+  -> EXTERN: (53,5) operator delete[](void *)
+  -> EXTERN: (54,5) ___cxa_begin_catch
+  -> EXTERN: (54,5) operator delete[](void *)
+  -> EXTERN: (54,5) Array::~Array(Array *)
+  -> EXTERN: (54,5) ___cxa_end_catch
+  -> EXTERN: (54,5) ___cxa_get_globals_fast
+  -> EXTERN: (54,5) operator delete[](void *)
+  -> EXTERN: (54,5) ___cxa_rethrow
+  -> EXTERN: (55,5) ___cxa_begin_catch
+  -> EXTERN: (55,5) operator delete[](void *)
+  -> EXTERN: (55,5) Array::~Array(Array *)
+  -> EXTERN: (55,5) ___cxa_get_globals_fast
+  -> EXTERN: (55,5) operator delete[](void *)
+  -> EXTERN: (55,5) ___cxa_rethrow
+  -> EXTERN: (55,5) ___cxa_end_catch
+  -> EXTERN: (56,5) operator delete[](void *)
+  -> EXTERN: (56,5) ___cxa_rethrow
+  -> EXTERN: (56,5) ___cxa_end_catch
+  -> EXTERN: (56,5) Array::~Array(Array *)
+  -> EXTERN: (56,5) operator delete[](void *)
+  -> EXTERN: (56,5) ___cxa_get_globals_fast
+  -> EXTERN: (56,5) ___cxa_begin_catch
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at init_del_ghost_container.cpp(51,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(52,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(53,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(54,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(55,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(56,5)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+init_del_ghost_container.cpp(50,1):remark #34051: REGISTER ALLOCATION : [__Z17DelGhostContainerRP5ArrayS1_S1_S1_S1_S1_] init_del_ghost_container.cpp:50
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rbx rbp rsi rdi r8-r9 r12-r15]
+        
+    Routine temporaries
+        Total         :     150
+            Global    :      47
+            Local     :     103
+        Regenerable   :       0
+        Spilled       :       9
+        
+    Routine stack
+        Variables     :       8 bytes*
+            Reads     :      12 [0.00e+00 ~ 0.0%]
+            Writes    :      12 [0.00e+00 ~ 0.0%]
+        Spills        :      24 bytes*
+            Reads     :       4 [2.09e+00 ~ 0.8%]
+            Writes    :       4 [2.09e+00 ~ 0.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: InitGhostContainer(int, Grid *, int, Array *&, Array *&, Array *&, Array *&, Array *&, Array *&)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (InitGhostContainer(int, Grid *, int, Array *&, Array *&, Array *&, Array *&, Array *&, Array *&)) [2/2=100.0%] init_del_ghost_container.cpp(13,1)
+  -> EXTERN: (16,38) ___cxa_get_globals_fast
+  -> EXTERN: (16,38) ___cxa_rethrow
+  -> EXTERN: (16,38) ___cxa_end_catch
+  -> EXTERN: (16,38) operator new[](size_t)
+  -> EXTERN: (16,38) Array::Array(Array *)
+  -> EXTERN: (16,38) ___cxa_begin_catch
+  -> EXTERN: (16,38) ___cxa_get_globals_fast
+  -> EXTERN: (16,38) ___cxa_rethrow
+  -> EXTERN: (16,38) Array::~Array(Array *)
+  -> EXTERN: (16,38) ___cxa_begin_catch
+  -> EXTERN: (16,38) ___cxa_get_globals_fast
+  -> EXTERN: (16,38) std::terminate()
+  -> EXTERN: (16,38) ___cxa_end_catch
+  -> EXTERN: (16,38) ___cxa_end_catch
+  -> EXTERN: (16,38) ___cxa_begin_catch
+  -> EXTERN: (16,38) operator delete[](void *)
+  -> EXTERN: (17,38) ___cxa_get_globals_fast
+  -> EXTERN: (17,38) operator new[](size_t)
+  -> EXTERN: (17,38) Array::Array(Array *)
+  -> EXTERN: (17,38) ___cxa_begin_catch
+  -> EXTERN: (17,38) ___cxa_get_globals_fast
+  -> EXTERN: (17,38) ___cxa_rethrow
+  -> EXTERN: (17,38) Array::~Array(Array *)
+  -> EXTERN: (17,38) ___cxa_begin_catch
+  -> EXTERN: (17,38) ___cxa_get_globals_fast
+  -> EXTERN: (17,38) std::terminate()
+  -> EXTERN: (17,38) ___cxa_end_catch
+  -> EXTERN: (17,38) ___cxa_end_catch
+  -> EXTERN: (17,38) ___cxa_begin_catch
+  -> EXTERN: (17,38) operator delete[](void *)
+  -> EXTERN: (17,38) ___cxa_rethrow
+  -> EXTERN: (17,38) ___cxa_end_catch
+  -> EXTERN: (18,38) ___cxa_get_globals_fast
+  -> EXTERN: (18,38) ___cxa_rethrow
+  -> EXTERN: (18,38) operator new[](size_t)
+  -> EXTERN: (18,38) Array::Array(Array *)
+  -> EXTERN: (18,38) ___cxa_begin_catch
+  -> EXTERN: (18,38) ___cxa_get_globals_fast
+  -> EXTERN: (18,38) ___cxa_rethrow
+  -> EXTERN: (18,38) Array::~Array(Array *)
+  -> EXTERN: (18,38) ___cxa_begin_catch
+  -> EXTERN: (18,38) ___cxa_get_globals_fast
+  -> EXTERN: (18,38) std::terminate()
+  -> EXTERN: (18,38) ___cxa_end_catch
+  -> EXTERN: (18,38) ___cxa_end_catch
+  -> EXTERN: (18,38) ___cxa_begin_catch
+  -> EXTERN: (18,38) ___cxa_end_catch
+  -> EXTERN: (18,38) operator delete[](void *)
+  -> EXTERN: (19,38) ___cxa_end_catch
+  -> EXTERN: (19,38) ___cxa_end_catch
+  -> EXTERN: (19,38) ___cxa_rethrow
+  -> EXTERN: (19,38) operator delete[](void *)
+  -> EXTERN: (19,38) ___cxa_get_globals_fast
+  -> EXTERN: (19,38) ___cxa_begin_catch
+  -> EXTERN: (19,38) ___cxa_end_catch
+  -> EXTERN: (19,38) std::terminate()
+  -> EXTERN: (19,38) ___cxa_get_globals_fast
+  -> EXTERN: (19,38) ___cxa_begin_catch
+  -> EXTERN: (19,38) Array::~Array(Array *)
+  -> EXTERN: (19,38) ___cxa_rethrow
+  -> EXTERN: (19,38) ___cxa_get_globals_fast
+  -> EXTERN: (19,38) ___cxa_begin_catch
+  -> EXTERN: (19,38) Array::Array(Array *)
+  -> EXTERN: (19,38) operator new[](size_t)
+  -> EXTERN: (23,24) Array::operator=(Array *, const Array &)
+  -> EXTERN: (23,24) Array::~Array(Array *)
+  -> EXTERN: (23,69) Array::Array(Array *, int, int)
+  -> EXTERN: (23,69) Array::~Array(Array *)
+  -> EXTERN: (24,24) Array::~Array(Array *)
+  -> EXTERN: (24,24) Array::operator=(Array *, const Array &)
+  -> EXTERN: (24,69) Array::Array(Array *, int, int)
+  -> EXTERN: (24,69) Array::~Array(Array *)
+  -> EXTERN: (25,24) Array::operator=(Array *, const Array &)
+  -> EXTERN: (25,24) Array::~Array(Array *)
+  -> EXTERN: (25,71) Array::Array(Array *, int, int, int)
+  -> EXTERN: (25,71) Array::~Array(Array *)
+  -> EXTERN: (26,24) Array::operator=(Array *, const Array &)
+  -> EXTERN: (26,24) Array::~Array(Array *)
+  -> EXTERN: (26,69) Array::Array(Array *, int, int)
+  -> EXTERN: (26,69) Array::~Array(Array *)
+  -> EXTERN: (32,37) Array::~Array(Array *)
+  -> EXTERN: (32,37) operator new[](size_t)
+  -> EXTERN: (32,37) Array::Array(Array *)
+  -> EXTERN: (32,37) ___cxa_begin_catch
+  -> EXTERN: (32,37) ___cxa_get_globals_fast
+  -> EXTERN: (32,37) ___cxa_rethrow
+  -> EXTERN: (32,37) ___cxa_begin_catch
+  -> EXTERN: (32,37) ___cxa_get_globals_fast
+  -> EXTERN: (32,37) std::terminate()
+  -> EXTERN: (32,37) ___cxa_end_catch
+  -> EXTERN: (32,37) ___cxa_end_catch
+  -> EXTERN: (32,37) ___cxa_begin_catch
+  -> EXTERN: (32,37) ___cxa_get_globals_fast
+  -> EXTERN: (32,37) operator delete[](void *)
+  -> EXTERN: (32,37) ___cxa_rethrow
+  -> EXTERN: (32,37) ___cxa_end_catch
+  -> EXTERN: (33,37) ___cxa_end_catch
+  -> EXTERN: (33,37) ___cxa_get_globals_fast
+  -> EXTERN: (33,37) ___cxa_get_globals_fast
+  -> EXTERN: (33,37) ___cxa_rethrow
+  -> EXTERN: (33,37) Array::~Array(Array *)
+  -> EXTERN: (33,37) ___cxa_begin_catch
+  -> EXTERN: (33,37) ___cxa_get_globals_fast
+  -> EXTERN: (33,37) std::terminate()
+  -> EXTERN: (33,37) ___cxa_end_catch
+  -> EXTERN: (33,37) Array::Array(Array *)
+  -> EXTERN: (33,37) operator new[](size_t)
+  -> EXTERN: (33,37) ___cxa_end_catch
+  -> EXTERN: (33,37) ___cxa_begin_catch
+  -> EXTERN: (33,37) ___cxa_rethrow
+  -> EXTERN: (33,37) operator delete[](void *)
+  -> EXTERN: (33,37) ___cxa_begin_catch
+  -> EXTERN: (36,23) Array::operator=(Array *, const Array &)
+  -> EXTERN: (36,23) Array::~Array(Array *)
+  -> EXTERN: (36,54) Array::~Array(Array *)
+  -> EXTERN: (36,54) Array::Array(Array *, int, int, int)
+  -> EXTERN: (37,23) Array::operator=(Array *, const Array &)
+  -> EXTERN: (37,23) Array::~Array(Array *)
+  -> EXTERN: (37,51) Array::Array(Array *, int, int)
+  -> EXTERN: (37,51) Array::~Array(Array *)
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at init_del_ghost_container.cpp(16,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(17,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(18,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(19,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(21,9)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ init_del_ghost_container.cpp(23,24) ]
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(32,37)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(33,37)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(34,9)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ init_del_ghost_container.cpp(36,23) ]
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(33,37)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(32,37)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(19,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(18,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(17,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+LOOP BEGIN at init_del_ghost_container.cpp(16,38)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+init_del_ghost_container.cpp(13,1):remark #34051: REGISTER ALLOCATION : [__Z18InitGhostContaineriP4GridiRP5ArrayS3_S3_S3_S3_S3_] init_del_ghost_container.cpp:13
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rbx rbp rsi rdi r8-r9 r12-r15]
+        
+    Routine temporaries
+        Total         :     424
+            Global    :     100
+            Local     :     324
+        Regenerable   :      40
+        Spilled       :      23
+        
+    Routine stack
+        Variables     :      88 bytes*
+            Reads     :      30 [0.00e+00 ~ 0.0%]
+            Writes    :      36 [0.00e+00 ~ 0.0%]
+        Spills        :     136 bytes*
+            Reads     :      53 [1.37e+01 ~ 5.3%]
+            Writes    :      35 [7.16e+00 ~ 2.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================

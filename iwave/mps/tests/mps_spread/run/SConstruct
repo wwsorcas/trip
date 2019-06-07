@@ -1,0 +1,323 @@
+from rsf.proj import *
+#from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      },
+         'davinci' :  { 'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : 'symes',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      }
+       }
+
+#######################################################################
+###################### LOCAL DEFINITIONS ##############################
+#######################################################################
+
+RSFSRC   = os.getenv('RSFSRC')
+CWPROOT  = os.getenv('CWPROOT')
+IWAVE    = os.getenv('IWAVE')
+MPSCODE  = os.getenv('MPSCODE')
+thispath = os.getcwd() 
+TESTROOT = thispath + '/../src/main'
+
+stdmdl      = MPSCODE + '/main/genmodel.x' #'sfstandardmodel'
+tg_setup    = MPSCODE + '/main/tg_setup.x'
+tgs_n_cat   = MPSCODE + '/main/tgs_n_cat.x'
+replicate   = MPSCODE + '/main/replicate.x'
+my_waveform = MPSCODE + '/main/my_waveform.x'
+towed_mps   = MPSCODE + '/main/towed_mps.x'
+
+test_acd_scal   = TESTROOT + '/test_acd_scal.x'
+test_acd_canscal   = TESTROOT + '/test_acd_canscal.x'
+test_asg_scal_p    = TESTROOT + '/test_asg_scal_p.x'
+test_asg_canscal_p = TESTROOT + '/test_asg_canscal_p.x'
+
+test_asg_canscal_v = TESTROOT + '/test_asg_canscal_v.x'
+test_asg_canvec_p  = TESTROOT + '/test_asg_canvec_p.x'
+test_asg_canvec_v  = TESTROOT + '/test_asg_canvec_v.x'
+test_asg_exvec_p   = TESTROOT + '/test_asg_exvec_p.x'
+test_asg_exvec_v   = TESTROOT + '/test_asg_exvec_v.x'
+test_asg_scal_v    = TESTROOT + '/test_asg_scal_v.x'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+suhtmath   = CWPROOT + '/bin/suhtmath'
+suconv     = CWPROOT + '/bin/suconv'
+sutxtaper  = CWPROOT + '/bin/sutxtaper'
+suplane    = CWPROOT + '/bin/suplane'
+sugain     = CWPROOT + '/bin/sugain'
+suwind     = CWPROOT + '/bin/suwind'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+OUTFILE = 'OUTFILE.txt'
+Flow(OUTFILE,None,'touch $TARGET')
+
+jobs = []
+
+#######################################################################
+
+
+#---------------------------------------------------------------------#
+#---------------------------------------------------------------------#
+# MPS_IWAVELOVOP TESTING MODULE: (last mod 07-08-16)
+#       
+# There are three main tests for verifying MPS_conv:
+#   [] compilation and runtime success
+#   [] compare output of IWaveLOVOp+MPS_to_RHS and MPS_IWaveLOVOp
+#   [] adjoint test of MPS_IWaveLOVOp
+#
+# This script will call test executables for running tests on different
+# source-reciever configurations, on varying driver data and src types.
+# The core test kernel code in ../include/test_kernel.hh
+#
+# basic_test.x, unlike the other test executables, will run a suite of
+# basic tests on core code kernels related to MPS_IWaveLOVOp in this case.
+#---------------------------------------------------------------------#
+#---------------------------------------------------------------------#
+
+
+#######################################################################
+#######################################################################
+# Building useful wavelets
+#######################################################################
+#######################################################################
+
+Flow('wlt_null.su',None,
+     sunull +' nt=101 dt=0.004 ntr=1',
+     stdin=0)
+
+Flow('wlt_ricker.su',None,
+     my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+     ' nt=101 dt=0.004 fpeak=6 type=2 scal=10 cit=51',
+     stdin=0,stdout=0)
+
+Flow('wlt_gaussd.su',None,
+     my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+     ' nt=101 dt=0.004 fpeak=6 type=1 scal=1 cit=51',
+     stdin=0,stdout=0)
+
+Flow('mps2D_scal_base.su','wlt_ricker.su',
+     sushw +" key=selev a=-100 | "+\
+     sushw +" key=sx a=200 | "+\
+     sushw +" key=delrt a=0 | "+\
+     sushw +" key=tracl a=1 b=1")
+
+Flow('mps2D_canscal_base.su',['wlt_null.su','wlt_ricker.su','wlt_gaussd.su'],
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[2]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a=-100 | '+\
+     sushw +' key=sx a=200 | '+\
+     sushw +' key=delrt a=0 | '+\
+     sushw +' key=tracl a=1 b=1 '+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+Flow('mps2D_canscal_null.su','wlt_null.su',
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a=-100 | '+\
+     sushw +' key=sx a=200 | '+\
+     sushw +' key=delrt a=0 | '+\
+     sushw +' key=tracl a=1 b=1 '+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+c_min = 3
+c_max = 3
+rho   = 1
+
+choose = {
+'dn': '2',
+'vp': '0',
+'bm': '1',
+'by': '3',
+'csq': '4'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy',
+'csq': 'Velocity Squared'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g',
+'csq': 'km\^2\_/s\^2'
+}
+
+
+#depth-axis
+f1 = 0.0
+e1 = 1000.0
+d1 = 20
+n1=int((e1-f1)/d1)+1 #nz
+
+#horizontal-axis
+f2 = 0.0 
+e2 = 2000.0
+d2 = 20
+n2=int((e2-f2)/d2)+1 #nx
+
+
+cmd = stdmdl + ' model=0 choose=' + str(choose['bm'])+\
+    ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 '+\
+    ' label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['bm'] + ' unit=' + unit['bm'] +\
+    ' datapath='+ thispath +' hfile=${TARGETS[0]}'
+Flow( [ 'bmod_2D.rsf','bmod_2D.rsf@' ],None,
+      cmd,stdin=0,stdout=0)
+
+cmd = stdmdl + ' model=0 choose=' + str(choose['by'])+\
+    ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 '+\
+    ' label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['by'] + ' unit=' + unit['by'] +\
+    ' datapath='+ thispath +' hfile=${TARGETS[0]}'
+Flow( [ 'buoy_2D.rsf','buoy_2D.rsf@' ],None,
+      cmd,stdin=0,stdout=0)
+
+cmd = stdmdl + ' model=0 choose=' + str(choose['csq'])+\
+    ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 '+\
+    ' label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['csq'] + ' unit=' + unit['csq'] +\
+    ' datapath='+ thispath +' hfile=${TARGETS[0]}'
+Flow( [ 'csq_2D.rsf','csq_2D.rsf@' ],None,
+      cmd,stdin=0,stdout=0)
+
+
+selev = -100
+sx_o  = 0
+sx_e  = 200
+sx_d  = 100
+sx_n  = int((sx_e-sx_o)/sx_d)+1
+gelev = -150
+gx_o  = 100
+gx_e  = 1000
+gx_d  = 20
+gx_n  = int((gx_e-gx_o)/gx_d)+1
+
+Flow('hdr2D.su',None,
+     sunull +' nt=201 dt=0.004 ntr='+str(gx_n*sx_n)+' | '+\
+     sushw +' key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_d)+' j='+str(gx_n)+'  | '+\
+     sushw +' key=gelev a='+str(gelev)+' | '+\
+     sushw +' key=gx a='+str(gx_o)+' b='+str(gx_d)+' j='+str(gx_n),
+     stdin=0)
+
+Flow('mps2D_scal_towed.su',['hdr2D.su','wlt_null.su'],
+     towed_mps +' data=${SOURCES[0]} source=${SOURCES[1]} towed=${TARGETS[0]}',
+     stdin=0, stdout=0)
+
+Flow('mps2D_canscal_towed.su',['hdr2D.su','mps2D_canscal_null.su'],
+     towed_mps +' data=${SOURCES[0]} source=${SOURCES[1]} towed=${TARGETS[0]}',
+     stdin=0, stdout=0)
+     
+
+#######################################################################
+#######################################################################
+# TEST: ACD_SCAL_2D_0
+#    - acd driver 2D
+#    - pressure data
+#    - pressure source: single scal MPS, order 0
+#                       f(x,t) = F(t) delta(x)
+#######################################################################
+#######################################################################
+
+jobname = 'acd_scal_2D_0'
+
+output = ['acd_scal_2D_0_MPS_spread.su']
+
+input = ['csq_2D.rsf', 
+         'hdr2D.su', 
+         'mps2D_scal_base.su', 
+         'mps2D_scal_towed.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[0]} && '+\
+      test_acd_scal+\
+      ' csq=${SOURCES[0]}'+\
+      ' data_p=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' appx_ord=4'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' MPS_file=${SOURCES[2]}'+\
+      ' MPS_towed=${TARGETS[0]}'+\
+      ' driver=acd'+\
+      ' data_type=pressure'+\
+      ' src_type=pressure'+\
+      ' outfile='+str(OUTFILE)+\
+      ' jobname='+str(jobname)
+
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('acd_scal_2D_0_MPS_spread','acd_scal_2D_0_MPS_spread.su',
+     'suread read=data endian=0')
+Result('acd_scal_2D_0_MPS_spread','acd_scal_2D_0_MPS_spread',
+       'wiggle poly=y')
+
+#######################################################################
+#######################################################################
+# TEST: ACD_CANSCAL_2D_0
+#    - acd driver 2D
+#    - pressure data
+#    - pressure source: single canscal MPS, order 1
+#######################################################################
+#######################################################################
+
+jobname = 'acd_canscal_2D_0'
+
+output = ['acd_canscal_2D_0_MPS_spread.su']
+
+input = ['csq_2D.rsf', 
+         'hdr2D.su', 
+         'mps2D_canscal_base.su', 
+         'mps2D_canscal_towed.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[0]} && '+\
+      test_acd_canscal+\
+      ' csq=${SOURCES[0]}'+\
+      ' data_p=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' appx_ord=4'+\
+      ' MPS_ord=1'+\
+      ' MPS_file=${SOURCES[2]}'+\
+      ' MPS_towed=${TARGETS[0]}'+\
+      ' driver=acd'+\
+      ' data_type=pressure'+\
+      ' src_type=pressure'+\
+      ' outfile='+str(OUTFILE)+\
+      ' jobname='+str(jobname)
+
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('acd_canscal_2D_0_MPS_spread','acd_canscal_2D_0_MPS_spread.su',
+     'suread read=data endian=0')
+Result('acd_canscal_2D_0_MPS_spread','acd_canscal_2D_0_MPS_spread',
+       'wiggle poly=y')
+
+
+End()

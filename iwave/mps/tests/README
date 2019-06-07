@@ -1,0 +1,10 @@
+This directory contains testing libraries for several core MPS classes.
+To compile test code cd to test directory and run scons command. To run
+tests cd to /run directory and run scons command.
+Example commands for compiling and running mps_conv tests: 
+	cd mps_conv; scons; cd run; scons
+
+Output of tests is dumped into OUTFILE.txt for each test directory. In 
+case a test is failed uncomment the VERBOSE_MJB macro in /src/includes/test_kernel.hh
+for that particular test directory to output more information.
+

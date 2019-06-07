@@ -1,0 +1,1035 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.102 Build 20160720
+
+Compiler options: -I/Users/muhongzhou/Softwares/madagascar/include -o update_ghost_sxz.o -c -O3 -qopenmp -restrict -qopt-report=4
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: UpdateGhostSXZ(Field *, Field *, Field &, Field &, real **, real **, Array &, Array &, Array &, Array &, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (UpdateGhostSXZ(Field *, Field *, Field &, Field &, real **, real **, Array &, Array &, Array &, Array &, int)) [1/15=6.7%] update_ghost_sxz.cpp(22,1)
+  -> EXTERN: (29,12) Array::size(const Array *, int *, int *) const
+  -> INLINE (MANUAL): (30,21) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> EXTERN: (32,5) __assert_rtn(const char *, const char *, int, const char *)
+  -> INLINE (MANUAL): (49,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (49,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (50,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (57,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (57,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (58,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (65,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (65,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (66,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (66,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (73,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (73,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (74,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (74,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (81,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (81,61) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (82,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (82,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (83,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (83,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (100,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (100,68) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (102,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (102,69) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (103,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (104,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (106,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (106,72) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (108,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (108,69) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (109,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (110,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (112,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (112,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (113,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (114,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (115,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (116,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (117,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (118,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (119,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (120,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (121,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (123,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (123,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (124,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (125,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (127,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (127,72) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (129,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (129,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (130,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (131,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (133,23) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (133,90) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (142,23) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (143,30) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (144,33) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (144,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (145,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (146,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (147,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (148,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (149,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (150,34) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (150,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (151,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (152,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (153,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (154,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (155,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (156,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (157,34) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (157,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (158,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (159,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (160,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (161,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (162,100) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (163,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (164,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (165,34) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (165,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (166,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (167,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (168,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (169,95) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (170,88) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (171,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (172,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (173,34) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (173,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (174,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (175,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (176,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (177,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (178,100) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (179,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (180,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (181,34) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (181,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (182,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (183,82) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (184,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (185,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (186,96) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (187,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (188,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (189,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (189,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (190,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (191,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (192,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (193,86) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (194,99) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (195,99) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (196,111) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (197,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (198,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (199,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (199,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (200,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (201,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (202,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (203,94) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (204,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (205,107) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (206,99) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (207,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (208,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (209,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (209,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (210,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (211,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (212,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (213,94) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (214,107) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (215,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (216,99) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (217,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (218,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (219,32) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (219,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (220,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (221,80) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (222,81) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (223,102) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (224,95) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (225,95) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (226,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (227,83) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> (236,9) Jacobi2D(Array &, Array &, Array &, int, int, real, Array &) (isz = 487) (sz = 504)
+     [[ Inlining would exceed -inline-max-size value (504>253)]]
+  -> INLINE (MANUAL): (236,46) std::__1::min<double>(const double &, const double &) (isz = 3) (sz = 12)
+    -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm:(2591,12) std::__1::min<double, std::__1::__less<double, double>>(const double &, const double &, std::__1::__less<double, double>) (isz = 8) (sz = 19)
+      -> INLINE (MANUAL): (2583,18) std::__1::__less<double, double>::operator()(const std::__1::__less<double, double> *, const double &, const double &) const (isz = 1) (sz = 11)
+  -> EXTERN: (236,63) Array::AvgAbs(Array *)
+  -> INLINE (MANUAL): (252,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (252,53) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (260,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (260,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (261,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (261,54) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (269,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (269,61) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (270,43) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (271,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (272,49) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (273,51) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (281,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (281,60) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (282,43) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (283,45) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (284,49) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (285,51) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (293,27) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (293,62) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (294,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (295,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (296,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (297,61) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (298,59) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (299,61) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (300,65) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (301,67) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+
+
+    Report from: OpenMP optimizations [openmp]
+
+update_ghost_sxz.cpp(40:1-40:1):OMP:__Z14UpdateGhostSXZP5FieldS0_RS_S1_PPdS3_R5ArrayS5_S5_S5_i:  OpenMP DEFINED REGION WAS PARALLELIZED
+update_ghost_sxz.cpp(89:1-89:1):OMP:__Z14UpdateGhostSXZP5FieldS0_RS_S1_PPdS3_R5ArrayS5_S5_S5_i:  OpenMP DEFINED REGION WAS PARALLELIZED
+update_ghost_sxz.cpp(242:1-242:1):OMP:__Z14UpdateGhostSXZP5FieldS0_RS_S1_PPdS3_R5ArrayS5_S5_S5_i:  OpenMP DEFINED REGION WAS PARALLELIZED
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at update_ghost_sxz.cpp(96,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between *A->ptr3[i1][i0] (100:23) and A->ptr3[8][i1][i0] (133:23)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(97,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed OUTPUT dependence between *A->ptr3[i1][i0] (100:23) and A->ptr3[8][i1][i0] (133:23)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(140,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed ANTI dependence between **coeff1 (142:23) and B->ptr2[i1][i0] (142:23)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(141,17)
+   <Peeled>
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between **coeff1 (142:23) and B->ptr2[i1][i0] (142:23)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(247,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(249,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(251,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(251,17)
+         remark #15388: vectorization support: reference *(*(*(sxz2+?)+i1*8)+i0*8) has aligned access   [ update_ghost_sxz.cpp(252,27) ]
+         remark #15388: vectorization support: reference *(*(g_sxz2->ptr2+($i1*?+$i2+?-?-1)*8)+$i3*8) has aligned access   [ array.hpp(30,47) ]
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 10.333
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15448: unmasked aligned unit stride loads: 1 
+         remark #15449: unmasked aligned unit stride stores: 1 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 14 
+         remark #15477: vector cost: 1.500 
+         remark #15478: estimated potential speedup: 8.300 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(251,17)
+      <Alternate Alignment Vectorized Loop>
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(251,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(258,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between sxz1[:][i1*2][i0*2] (260:27) and sxz1[:][i1*2][i0*2] (260:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(259,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between sxz1[:][i1*2][i0*2] (260:27) and sxz1[?-1][i1*2][i0*2] (260:27)
+      remark #25439: unrolled with remainder by 4  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(259,17)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(264,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(266,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(268,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(268,17)
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+i1*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*(sxz2+?)+i1*8)+(i0+1)*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(sxz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2-1)*8)>, stride is 2   [ update_ghost_sxz.cpp(269,27) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(sxz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2-1)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 0.393
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15448: unmasked aligned unit stride loads: 2 
+         remark #15450: unmasked unaligned unit stride loads: 2 
+         remark #15452: unmasked strided loads: 1 
+         remark #15453: unmasked strided stores: 1 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 64 
+         remark #15477: vector cost: 53.500 
+         remark #15478: estimated potential speedup: 1.190 
+         remark #15487: type converts: 2 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(268,17)
+      <Alternate Alignment Vectorized Loop>
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(268,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(276,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(278,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(280,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(280,17)
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+i1*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*(sxz2+?)+(i1+1)*8)+i0*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?)*8)+$i3*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(sxz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2)*8)>, stride is 2   [ update_ghost_sxz.cpp(281,27) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(sxz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15305: vectorization support: vector length 2
+         remark #15399: vectorization support: unroll factor set to 4
+         remark #15309: vectorization support: normalized vectorization overhead 0.110
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15448: unmasked aligned unit stride loads: 2 
+         remark #15450: unmasked unaligned unit stride loads: 2 
+         remark #15452: unmasked strided loads: 1 
+         remark #15453: unmasked strided stores: 1 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 63 
+         remark #15477: vector cost: 46.500 
+         remark #15478: estimated potential speedup: 1.340 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(280,17)
+      <Alternate Alignment Vectorized Loop>
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(280,17)
+      <Remainder loop for vectorization>
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+i1*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+($i3+?)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+(i1+1)*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?)*8)+($i3+?)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 0.234
+         remark #15301: REMAINDER LOOP WAS VECTORIZED
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(280,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(288,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(290,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(292,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(292,17)
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+i1*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+i1*8)+(i0+1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+(i1+1)*8)+i0*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*(sxz2+?)+(i1+1)*8)+(i0+1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*sxz2+($i1*?+$i2+?-?)*8)+$i3*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(sxz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2-1)*8)>, stride is 2   [ update_ghost_sxz.cpp(293,27) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(sxz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2-1)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 0.366
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15448: unmasked aligned unit stride loads: 1 
+         remark #15450: unmasked unaligned unit stride loads: 7 
+         remark #15452: unmasked strided loads: 1 
+         remark #15453: unmasked strided stores: 1 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 115 
+         remark #15477: vector cost: 71.000 
+         remark #15478: estimated potential speedup: 1.600 
+         remark #15487: type converts: 4 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(292,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(47,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between *(*(*(sxz2+?)+i1*8)+i0*8) (49:27) and *(*(*(sxz2+?)+i1*8)+i0*8) (49:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(48,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between *(*(*(sxz2+?)+i1*8)+i0*8) (49:27) and sxz1[?-2][i1*2][i0*2] (49:27)
+      remark #25439: unrolled with remainder by 2  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(48,17)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(55,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between sxz1[:][i1*2][i0*2] (57:27) and sxz1[:][i1*2][i0*2] (57:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(56,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between sxz1[:][i1*2][i0*2] (57:27) and sxz1[?-1][i1*2][i0*2] (57:27)
+      remark #25439: unrolled with remainder by 4  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(56,17)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(63,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between sxz1[:][i1*2][i0*2+1] (65:27) and sxz1[:][i1*2][i0*2+1] (65:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(64,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between sxz1[:][i1*2][i0*2+1] (65:27) and sxz1[?-1][i1*2][i0*2+1] (65:27)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(71,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between sxz1[:][i1*2+1][i0*2] (73:27) and sxz1[:][i1*2+1][i0*2] (73:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(72,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between sxz1[:][i1*2+1][i0*2] (73:27) and sxz1[?-1][i1*2+1][i0*2] (73:27)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(79,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between sxz1[:][i1*2+1][i0*2+1] (81:27) and sxz1[:][i1*2+1][i0*2+1] (81:27)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(80,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between sxz1[:][i1*2+1][i0*2+1] (81:27) and sxz1[?-1][i1*2+1][i0*2+1] (81:27)
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+update_ghost_sxz.cpp(22,1):remark #34051: REGISTER ALLOCATION : [__Z14UpdateGhostSXZP5FieldS0_RS_S1_PPdS3_R5ArrayS5_S5_S5_i] update_ghost_sxz.cpp:22
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   31[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0-zmm15]
+        
+    Routine temporaries
+        Total         :    1957
+            Global    :     518
+            Local     :    1439
+        Regenerable   :     371
+        Spilled       :     229
+        
+    Routine stack
+        Variables     :     368 bytes*
+            Reads     :      40 [3.95e+00 ~ 0.0%]
+            Writes    :      67 [9.23e+01 ~ 1.0%]
+        Spills        :    1880 bytes*
+            Reads     :     367 [6.52e+02 ~ 7.2%]
+            Writes    :     293 [2.49e+02 ~ 2.7%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: Jacobi2D(Array &, Array &, Array &, int, int, real, Array &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (Jacobi2D(Array &, Array &, Array &, int, int, real, Array &)) [2/15=13.3%] update_ghost_sxz.cpp(321,1)
+  -> INLINE (MANUAL): (334,27) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (334,45) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (342,23) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (342,42) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (343,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (343,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (344,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (344,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (345,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (345,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (346,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (346,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (347,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (347,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (348,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (348,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (349,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (349,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (350,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (350,70) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (350,91) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE: (356,12) Norm2D(Array &, Array &, int, int, int) (isz = 151) (sz = 166)
+    -> EXTERN: (366,5) __assert_rtn(const char *, const char *, int, const char *)
+    -> INLINE (MANUAL): (378,28) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+    -> INLINE (MANUAL): (378,47) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+    -> INLINE (MANUAL): (378,66) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+    -> INLINE (MANUAL): (378,85) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+    -> INLINE (MANUAL): (392,23) std::__1::max<real>(const real &, const real &) (isz = 3) (sz = 12)
+      -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm:(2656,12) std::__1::max<real, std::__1::__less<double, double>>(const real &, const real &, std::__1::__less<double, double>) (isz = 8) (sz = 19)
+        -> INLINE (MANUAL): (2648,18) std::__1::__less<double, double>::operator()(const std::__1::__less<double, double> *, const double &, const double &) const (isz = 1) (sz = 11)
+    -> INLINE (MANUAL): (392,63) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+    -> INLINE (MANUAL): (392,82) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+
+
+    Report from: OpenMP optimizations [openmp]
+
+update_ghost_sxz.cpp(325:1-325:1):OMP:__Z8Jacobi2DR5ArrayS0_S0_iidS0_:  OpenMP DEFINED REGION WAS PARALLELIZED
+update_ghost_sxz.cpp(372:1-372:1):OMP:__Z8Jacobi2DR5ArrayS0_S0_iidS0_:  OpenMP DEFINED LOOP WAS PARALLELIZED
+update_ghost_sxz.cpp(386:1-386:1):OMP:__Z8Jacobi2DR5ArrayS0_S0_iidS0_:  OpenMP DEFINED LOOP WAS PARALLELIZED
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at update_ghost_sxz.cpp(321,1)
+   remark #15521: loop was not vectorized: loop control variable was not identified. Explicitly compute the iteration count before executing the loop or try using canonical loop form from OpenMP specification
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(329,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(331,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(333,17)
+         remark #25399: memcopy generated
+         remark #15542: loop was not vectorized: inner loop was already vectorized
+
+         LOOP BEGIN at update_ghost_sxz.cpp(333,17)
+            remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-1)*8)+$i4*8) has unaligned access   [ update_ghost_sxz.cpp(334,27) ]
+            remark #15389: vectorization support: reference *(*(X->ptr2+($i1*?+$i2+?-?-1)*8)+$i4*8) has unaligned access   [ update_ghost_sxz.cpp(334,45) ]
+            remark #15381: vectorization support: unaligned access used inside loop body
+            remark #15305: vectorization support: vector length 2
+            remark #15309: vectorization support: normalized vectorization overhead 1.000
+            remark #15300: LOOP WAS VECTORIZED
+            remark #15450: unmasked unaligned unit stride loads: 1 
+            remark #15451: unmasked unaligned unit stride stores: 1 
+            remark #15475: --- begin vector cost summary ---
+            remark #15476: scalar cost: 11 
+            remark #15477: vector cost: 3.000 
+            remark #15478: estimated potential speedup: 3.140 
+            remark #15488: --- end vector cost summary ---
+            remark #25015: Estimate of max trip count of loop=6
+         LOOP END
+
+         LOOP BEGIN at update_ghost_sxz.cpp(333,17)
+         <Remainder loop for vectorization>
+            remark #25015: Estimate of max trip count of loop=12
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(337,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(339,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_sxz.cpp(341,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(341,17)
+         remark #15388: vectorization support: reference *(*(X->ptr2+($i1*?+$i2+?-?-1)*8)+$i3*8) has aligned access   [ update_ghost_sxz.cpp(342,23) ]
+         remark #15389: vectorization support: reference *(*(B->ptr2+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*A->ptr3+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+8)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+16)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?)*8)+($i3-1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+24)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-2)*8)+$i3*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+40)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?)*8)+$i3*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+48)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-2)*8)+($i3+1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+56)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?-1)*8)+($i3+1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+64)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15389: vectorization support: reference *(*(X_tmp->ptr2+($i1*?+$i2+?-?)*8)+($i3+1)*8) has unaligned access   [ array.hpp(30,47) ]
+         remark #15389: vectorization support: reference *(*(*(A->ptr3+32)+($i1*?+$i2+?-?-2)*8)+($i3-1)*8) has unaligned access   [ array.hpp(31,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 0.796
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15449: unmasked aligned unit stride stores: 1 
+         remark #15450: unmasked unaligned unit stride loads: 18 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 185 
+         remark #15477: vector cost: 46.500 
+         remark #15478: estimated potential speedup: 3.880 
+         remark #15486: divides: 1 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_sxz.cpp(341,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(388,9) inlined into update_ghost_sxz.cpp(356,12)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed ANTI dependence between X1[_i1][_i0] (392:55) and U26_V (392:55)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(390,13) inlined into update_ghost_sxz.cpp(356,12)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between U26_V (2648:18) and U26_V (392:55)
+      remark #25439: unrolled with remainder by 2  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(390,13) inlined into update_ghost_sxz.cpp(356,12)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(374,9) inlined into update_ghost_sxz.cpp(356,12)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13) inlined into update_ghost_sxz.cpp(356,12)
+   <Peeled loop for vectorization>
+      remark #25015: Estimate of max trip count of loop=1
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13) inlined into update_ghost_sxz.cpp(356,12)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ update_ghost_sxz.cpp(378,17) ]
+      remark #15389: vectorization support: reference *(*(X1+($i1+_i1-1)*8)+$i2*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2+($i1+_i1-1)*8)+$i2*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15388: vectorization support: reference *(*(X1+($i1+_i1-1)*8)+$i2*8) has aligned access   [ array.hpp(30,47) ]
+      remark #15388: vectorization support: reference *(*(X2+($i1+_i1-1)*8)+$i2*8) has aligned access   [ array.hpp(30,47) ]
+      remark #15381: vectorization support: unaligned access used inside loop body
+      remark #15305: vectorization support: vector length 2
+      remark #15399: vectorization support: unroll factor set to 4
+      remark #15309: vectorization support: normalized vectorization overhead 0.946
+      remark #15300: LOOP WAS VECTORIZED
+      remark #15442: entire loop may be executed in remainder
+      remark #15448: unmasked aligned unit stride loads: 2 
+      remark #15450: unmasked unaligned unit stride loads: 2 
+      remark #15475: --- begin vector cost summary ---
+      remark #15476: scalar cost: 27 
+      remark #15477: vector cost: 7.000 
+      remark #15478: estimated potential speedup: 3.620 
+      remark #15488: --- end vector cost summary ---
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13) inlined into update_ghost_sxz.cpp(356,12)
+   <Alternate Alignment Vectorized Loop>
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13) inlined into update_ghost_sxz.cpp(356,12)
+   <Remainder loop for vectorization>
+      remark #15389: vectorization support: reference *(*(X1+($i1+_i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2+($i1+_i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X1+($i1+_i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2+($i1+_i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15381: vectorization support: unaligned access used inside loop body
+      remark #15305: vectorization support: vector length 2
+      remark #15309: vectorization support: normalized vectorization overhead 1.708
+      remark #15301: REMAINDER LOOP WAS VECTORIZED
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13) inlined into update_ghost_sxz.cpp(356,12)
+   <Remainder loop for vectorization>
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+array.hpp(30,47):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+array.hpp(30,47):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+array.hpp(30,47):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+array.hpp(30,47):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+array.hpp(30,47):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+array.hpp(30,47):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+update_ghost_sxz.cpp(334,27):remark #34014: optimization advice for memcpy: increase the destination's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_ghost_sxz.cpp(334,27):remark #34014: optimization advice for memcpy: increase the source's alignment to 16 (and use __assume_aligned) to speed up library implementation
+update_ghost_sxz.cpp(334,27):remark #34026: call to memcpy implemented as a call to optimized library version
+update_ghost_sxz.cpp(321,1):remark #34051: REGISTER ALLOCATION : [__Z8Jacobi2DR5ArrayS0_S0_iidS0_] update_ghost_sxz.cpp:321
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   31[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0-zmm15]
+        
+    Routine temporaries
+        Total         :     795
+            Global    :     184
+            Local     :     611
+        Regenerable   :     148
+        Spilled       :      63
+        
+    Routine stack
+        Variables     :     172 bytes*
+            Reads     :      23 [2.31e+01 ~ 0.1%]
+            Writes    :      37 [5.70e+02 ~ 1.7%]
+        Spills        :     552 bytes*
+            Reads     :     151 [2.66e+03 ~ 7.9%]
+            Writes    :     114 [9.78e+02 ~ 2.9%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: Norm2D(Array &, Array &, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (Norm2D(Array &, Array &, int, int, int)) [3/15=20.0%] update_ghost_sxz.cpp(365,1)
+  -> EXTERN: (366,5) __assert_rtn(const char *, const char *, int, const char *)
+  -> INLINE (MANUAL): (378,28) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (378,47) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (378,66) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (378,85) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (392,23) std::__1::max<real>(const real &, const real &) (isz = 3) (sz = 12)
+    -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm:(2656,12) std::__1::max<real, std::__1::__less<double, double>>(const real &, const real &, std::__1::__less<double, double>) (isz = 8) (sz = 19)
+      -> INLINE (MANUAL): (2648,18) std::__1::__less<double, double>::operator()(const std::__1::__less<double, double> *, const double &, const double &) const (isz = 1) (sz = 11)
+  -> INLINE (MANUAL): (392,63) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (392,82) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+
+
+    Report from: OpenMP optimizations [openmp]
+
+update_ghost_sxz.cpp(372:1-372:1):OMP:__Z6Norm2DR5ArrayS0_iii:  OpenMP DEFINED LOOP WAS PARALLELIZED
+update_ghost_sxz.cpp(386:1-386:1):OMP:__Z6Norm2DR5ArrayS0_iii:  OpenMP DEFINED LOOP WAS PARALLELIZED
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at update_ghost_sxz.cpp(388,9)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed FLOW dependence between U26_V (392:55) and at (392:17)
+
+   LOOP BEGIN at update_ghost_sxz.cpp(390,13)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between U26_V (2648:18) and U26_V (392:55)
+      remark #25439: unrolled with remainder by 2  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(390,13)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_sxz.cpp(374,9)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13)
+   <Peeled loop for vectorization>
+      remark #25015: Estimate of max trip count of loop=1
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13)
+      remark #25084: Preprocess Loopnests: Moving Out Store    [ update_ghost_sxz.cpp(378,17) ]
+      remark #15389: vectorization support: reference *(*(X1->ptr2+($i1+i1-1)*8)+$i2*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2->ptr2+($i1+i1-1)*8)+$i2*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15388: vectorization support: reference *(*(X1->ptr2+($i1+i1-1)*8)+$i2*8) has aligned access   [ array.hpp(30,47) ]
+      remark #15388: vectorization support: reference *(*(X2->ptr2+($i1+i1-1)*8)+$i2*8) has aligned access   [ array.hpp(30,47) ]
+      remark #15381: vectorization support: unaligned access used inside loop body
+      remark #15305: vectorization support: vector length 2
+      remark #15399: vectorization support: unroll factor set to 4
+      remark #15309: vectorization support: normalized vectorization overhead 0.946
+      remark #15300: LOOP WAS VECTORIZED
+      remark #15442: entire loop may be executed in remainder
+      remark #15448: unmasked aligned unit stride loads: 2 
+      remark #15450: unmasked unaligned unit stride loads: 2 
+      remark #15475: --- begin vector cost summary ---
+      remark #15476: scalar cost: 27 
+      remark #15477: vector cost: 7.000 
+      remark #15478: estimated potential speedup: 3.620 
+      remark #15488: --- end vector cost summary ---
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13)
+   <Alternate Alignment Vectorized Loop>
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13)
+   <Remainder loop for vectorization>
+      remark #15389: vectorization support: reference *(*(X1->ptr2+($i1+i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2->ptr2+($i1+i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X1->ptr2+($i1+i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15389: vectorization support: reference *(*(X2->ptr2+($i1+i1-1)*8)+($i2+?)*8) has unaligned access   [ array.hpp(30,47) ]
+      remark #15381: vectorization support: unaligned access used inside loop body
+      remark #15305: vectorization support: vector length 2
+      remark #15309: vectorization support: normalized vectorization overhead 1.708
+      remark #15301: REMAINDER LOOP WAS VECTORIZED
+   LOOP END
+
+   LOOP BEGIN at update_ghost_sxz.cpp(376,13)
+   <Remainder loop for vectorization>
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+update_ghost_sxz.cpp(365,1):remark #34051: REGISTER ALLOCATION : [__Z6Norm2DR5ArrayS0_iii] update_ghost_sxz.cpp:365
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   31[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0-zmm15]
+        
+    Routine temporaries
+        Total         :     440
+            Global    :      80
+            Local     :     360
+        Regenerable   :     129
+        Spilled       :       4
+        
+    Routine stack
+        Variables     :      92 bytes*
+            Reads     :      14 [9.50e-01 ~ 0.1%]
+            Writes    :      23 [5.74e+01 ~ 6.4%]
+        Spills        :      80 bytes*
+            Reads     :      36 [6.55e+00 ~ 0.7%]
+            Writes    :      34 [1.36e+01 ~ 1.5%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: Field::GetEnd(const Field *, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetEnd(const Field *, int) const) field.hpp(75,29)
+
+===========================================================================
+
+Begin optimization report for: Field::GetVal(const Field *, int, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetVal(const Field *, int, int, int) const) field.hpp(84,47)
+
+===========================================================================
+
+Begin optimization report for: Field::SetVal(Field *, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::SetVal(Field *, int, int, int)) field.hpp(85,42)
+
+===========================================================================
+
+Begin optimization report for: Array::GetVal(const Array *, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::GetVal(const Array *, int, int) const) array.hpp(30,39)
+
+===========================================================================
+
+Begin optimization report for: Array::GetVal(const Array *, int, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::GetVal(const Array *, int, int, int) const) array.hpp(31,47)
+
+===========================================================================
+
+Begin optimization report for: Array::SetVal(Array *, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::SetVal(Array *, int, int)) array.hpp(35,34)
+
+===========================================================================
+
+Begin optimization report for: Array::SetVal(Array *, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::SetVal(Array *, int, int, int)) array.hpp(36,42)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__less<double, double>::operator()(const std::__1::__less<double, double> *, const double &, const double &) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__less<double, double>::operator()(const std::__1::__less<double, double> *, const double &, const double &) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm(702,59)
+
+===========================================================================
+
+Begin optimization report for: std::__1::min<double>(const double &, const double &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::min<double>(const double &, const double &)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm(2590,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::max<real>(const real &, const real &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::max<real>(const real &, const real &)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm(2655,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::min<double, std::__1::__less<double, double>>(const double &, const double &, std::__1::__less<double, double>)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::min<double, std::__1::__less<double, double>>(const double &, const double &, std::__1::__less<double, double>)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm(2582,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::max<real, std::__1::__less<double, double>>(const real &, const real &, std::__1::__less<double, double>)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::max<real, std::__1::__less<double, double>>(const real &, const real &, std::__1::__less<double, double>)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/algorithm(2647,1)
+
+===========================================================================

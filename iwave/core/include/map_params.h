@@ -1,0 +1,7 @@
+  " --------------------------- mapping parameters ---------------------------",
+  " Mapping Selection:",
+  " ",
+  "          deriv = 0           order of derivative of forward map to compute",
+  "        adjoint = 0           0: forward, 1: adjoint  ",
+  " ",
+  " --------------------------- mapping parameters ---------------------------",

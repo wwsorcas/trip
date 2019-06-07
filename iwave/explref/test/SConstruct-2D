@@ -1,0 +1,130 @@
+#!/bin/python
+#	2D asg modeling script generating 2D asg movie
+#   by MZ
+#	modified from tripbooks/trip14/asg/project/SConstruct
+
+#   Note: to run this script on Stampede,
+#   (1) modify mail account in penv;
+#   (2) modify SetEnv as follows
+#SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2),'wall':'00:20:00'}
+#SetEnv = {'platf':'mpi', 'ppn':str(NP1*NP2)}
+
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'},
+        'davinci' :  {  'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : '***',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'}
+}
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+#MYAPPS          = os.getenv('RSFSRC')
+MYAPPS          = os.getenv('RSFSRC')
+stdmdl          = os.path.join(MYAPPS,'trip2.1/iwave/grid/main/standardmodel.x')
+asg             = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/asg.x')
+fetches = {}
+
+### === CREATE RECEIVER TRACE FILE
+Flow('data.su', None,
+     sunull + ' nt=801 ntr=301 dt=0.002 | ' +
+     sushw + ' key=gx a=100 b=20   | ' +
+     sushw + ' key=gelev a=-20 > ${TARGETS[0]}',
+     stdin=0)
+Flow('wwsdata.su', None,
+     sunull + ' nt=801 ntr=301 dt=0.002 | ' +
+     sushw + ' key=sx,gx a=3300,100 b=0,20   | ' +
+     sushw + ' key=selev,gelev a=-40,-20 > ${TARGETS[0]}',
+     stdin=0)
+
+
+### === CREATE SOURCE
+#   IWAVE presumes that a source is located at its receiver position.
+Flow('src.su', None,
+     suwaveform + ' type=gaussd fpeak=5 ns=101 | ' +
+     sushw + ' key=delrt  a=-0.1 | ' +
+     sushw + ' key=gx a=0  | ' +
+     sushw + ' key=gelev a=0 ', stdin=0)
+Flow('wwssrc.su', None,
+     suwaveform + ' type=gaussd fpeak=5 ns=101 > ${TARGET}; ' +
+     suwaveform + ' type=gaussd fpeak=5 ns=101 | ' + 
+     sushw + ' key=gx a=400 >> ${TARGET} ', stdin=0, stdout=-1)
+Flow('wwssrc_towed.su',['wwsdata.su', 'wwssrc.su'],     
+     '''towed_array data=${SOURCES[0]} src=${SOURCES[1]} towed=${TARGETS[0]}
+         ''', stdin=0, stdout=-1)
+Flow('src_data.su', None,
+     sunull + ' nt=800 ntr=2 |' +
+     sushw + ' key=sx a=3300 b=400 |' +
+     sushw + ' key=selev a=-40 ', stdin=0)
+Flow('src_towed.su', ['src.su', 'src_data.su'],
+     '''towed_array data=${SOURCES[1]} src=${SOURCES[0]} towed=${TARGETS[0]}
+         ''', stdin=0, stdout=0)
+Flow('src_retowed.su', ['src_towed.su', 'data.su'],
+     '''towed_array data=${SOURCES[1]} src=${SOURCES[0]} towed=${TARGETS[0]}
+         ''', stdin=0, stdout=0)
+Flow('src_towed_new.su','src_towed.su',
+     sushw + ' key=selev a=0 |' +
+     sushw + ' key=sx a=0  ')
+
+### === SET MEDIUM FIELDS
+Flow('bmh', None,
+     '''
+         makevel n1=91 n2=391
+         d1=20.0 d2=20.0 v000=2.25 |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         ''',
+     stdin=0)
+Flow('byh', None,
+     '''
+         makevel n1=91 n2=391
+         d1=20.0 d2=20.0 v000=1.0 |
+         sfput dim=2 gdim=2 id1=0 id2=1
+         ''',
+     stdin=0)
+
+### === START
+jobs=[]
+##  create 2D asg receiver data trace: suximage < pdata.su
+##  and 2D asg movie: sfpen < movie.vpl
+for NP1 in [1]:
+    for NP2 in [2]:
+        jobs = jobs + [{'job': 'asg-data' + str(NP1) + str(NP2),
+                        'pre': '''/bin/cp ${SOURCES[3]} ${TARGETS[0]} && 
+                            /bin/cp ${SOURCES[3]} ${TARGETS[2]} &&
+                            spike n1=91 n2=391 n3=41
+                            d1=20.0 d2=20.0 d3=100.0
+                            label1="Distance" unit1="m"
+                            label2="Distance" unit2="m"
+                            label3="Time" unit3="ms" |
+                            sfscale dscale=0 |
+                            sfput dim=2 gdim=3 id1=0 id2=1 id3=2
+                            > ${TARGETS[1]}''',
+                       'cmd': asg + '''
+                                bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]}
+                                source_p=${SOURCES[2]} 
+                                data_p=${TARGETS[0]} movie_p=${TARGETS[1]}
+                                data_v1=${TARGETS[2]}
+                                deriv=0 adjoint=0 order=1 cfl=0.5 cmin=1.0 cmax=6.0
+                                dmin=0.8 dmax=3.0 dump_term=1
+                                mpi_np1=%d mpi_np2=%d
+                                '''%(NP1, NP2),
+                        'src':['bmh','byh', 'wwssrc_towed.su', 'wwsdata.su'],
+                        'tgt':['pdata.su', 'pmovie.rsf', 'v1data.su'],
+                        'exe':{'platf':'mpi', 'ppn':str(NP1*NP2)}
+               },]
+tripExec(jobs,penv)
+#                        'exe':{'platf':'mpi', 'ppn':str(NP1*NP2)}
+### === POST-PROCESSING
+Plot('pmovie','sfgrey clip=0.01')
+
+End()

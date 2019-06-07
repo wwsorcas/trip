@@ -1,0 +1,141 @@
+#	3D asg modeling script
+#   by MZ
+#	modified from tripbooks/trip14/asg/project/SConstruct
+#
+#   Note:
+#   (1) somehow on Macbook the following two jobs in this script cannot be executed by doing scons
+#   once, you need to run scons two times in order to execute two jobs. You should see errors after
+#   running scons for the first time. But don't be panic, keep running scons will yield
+#   desired results. If some warmhearted person figure out how to fix this problem -- run scons once and
+#   get two jobs done, send me an email (mz10@rice.edu). I will be very much appreciated.
+#   (2) If you are running this script on computing platforms (e.g. stampede, Davinci), please change
+#   the email and the account setting in the following "penv".
+#   (3) The current script runs on a Mac, but you can also run it on Stampede by copying one of the following
+#   two lines to jobs:exe.
+#SetEnv = {'platf':'stampede','nodes':str(1),'ppn':str(NP1*NP2*NP3),'wall':'00:40:00'} # for stampede
+#SetEnv = {'platf':'mpi', 'ppn':str(NP1*NP2*NP3)} # for mac
+
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'
+                      },
+        'davinci' :  {  'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : '***',
+                        'mail'     : '***@rice.edu',
+                        'launcher' : 'ibrun'
+                      }
+       }
+
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+MYAPPS          = os.getenv('RSFSRC')
+stdmdl          = os.path.join(MYAPPS,'trip2.1/iwave/grid/main/standardmodel.x')
+asg             = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/asg.x')
+fetches = {}
+
+
+### === CREATE RECEIVER TRACE FILE
+Flow('data.su', None,
+     sunull + ' nt=1501 ntr=301 dt=0.002 | ' +
+     sushw + ' key=gx a=100 b=20   | ' +
+     sushw + ' key=gy a=100+20*155   | ' +
+     sushw + ' key=gelev a=-30 > ${TARGETS[0]}',
+     stdin=0)
+
+### === CREATE SOURCE
+#   IWAVE presumes that a source is located at its receiver position.
+Flow('src.su', None,
+     suwaveform + ' type=gaussd fpeak=5 ns=101 | ' +
+     sushw + ' key=delrt  a=-0.1 | ' +
+     sushw + ' key=gx a=3300  | ' +
+     sushw + ' key=gy a=3300  | ' +
+     sushw + ' key=gelev a=-40 > ${TARGETS[0]}', stdin=0)
+
+### === SET MEDIUM FIELDS
+Flow('bmh', None,
+     '''
+         makevel n1=91 n2=391 n3=391
+         d1=20.0 d2=20.0 d3=20.0 v000=2.25 |
+         sfput dim=3 gdim=3 id1=0 id2=1 id3=2
+         ''',
+     stdin=0)
+
+Flow('byh', None,
+     '''
+         makevel n1=91 n2=391 n3=391
+         d1=20.0 d2=20.0 d3=20.0 v000=1.0 |
+         sfput dim=3 gdim=3 id1=0 id2=1 id3=2
+
+         ''',
+     stdin=0)
+
+
+jobs=[]
+### === START
+##  create 3D asg receiver data trace: suximage <pdata.su
+for NP1 in [1]:
+    for NP2 in [2]:
+        for NP3 in [2]:
+            jobs = jobs + [{'job': 'asg-data' + str(NP1) + str(NP2) + str(NP3),
+                            'pre': '''
+                               /bin/cp ${SOURCES[3]} ${TARGETS[0]}
+                               ''',
+                            'cmd': asg + '''
+                               bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]}
+                               source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+                               deriv=0 adjoint=0 order=1 cfl=0.5 cmin=1.0 cmax=6.0
+                               dmin=0.8 dmax=3.0 dump_ldc=1
+                               mpi_np1=%d mpi_np2=%d mpi_np3=%d
+                            '''%(NP1,NP2,NP3),
+                            'src':['bmh','byh', 'src.su', 'data.su'],
+                            'tgt':['pdata.su'],
+                            'exe':{'platf':'mpi', 'ppn':str(NP1*NP2*NP3)}
+                           },]
+
+##  create 3D asg movie: sfpen < movie.vpl
+for NP1 in [1]:
+    for NP2 in [2]:
+        for NP3 in [2]:
+            jobs = jobs + [{'job': 'asg-sim' + str(NP1) + str(NP2) + str(NP3),
+                            'pre': '''
+                               spike n1=91 n2=391 n3=391 n4=10
+                               d1=20.0 d2=20.0 d3=20.0 d4=100.0
+                               label1="Distance" unit1="m"
+                               label2="Distance" unit2="m"
+                               label3="Distance" unit3="m"
+                               label4="Time" unit4="ms" |
+                               scale dscale=0 |
+                               put dim=3 gdim=4 id1=0 id2=1 id3=2 id4=3 > ${TARGETS[0]} ''',
+                           'cmd': asg + '''
+                               bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]}
+                               source_p=${SOURCES[2]} movie_p=${TARGETS[0]}
+                               deriv=0 adjoint=0 order=1 cfl=0.5 cmin=1.0 cmax=6.0
+                               dmin=0.8 dmax=3.0 dump_ldc=1
+                               mpi_np1=%d mpi_np2=%d mpi_np3=%d
+                               '''%(NP1,NP2,NP3),
+                           'src':['bmh','byh', 'src.su'],
+                           'tgt':['movie.rsf'],
+                           'exe':{'platf':'mpi', 'ppn':str(NP1*NP2*NP3)}
+                           },]
+
+tripExec(jobs,penv)
+
+# post-processing:  movie.vpl displays the movie.
+Plot('movie',
+     '''
+         byte gainpanel=all |
+         grey4 frame1=2 frame2=165 frame3=165 clip=0.01
+         wanttitle=n label1="n\_3\^" label2="n\_1\^" label3="n\_2\^" flat=n
+         ''')
+
+End()

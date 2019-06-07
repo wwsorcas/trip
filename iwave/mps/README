@@ -1,0 +1,70 @@
+ ~~~~~~~~~~~~~~~~~~~~~~~~~
+| OVERVIEW OF MPS PACKAGE |
+ ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+mps/include:
+
+-- MPS_Space.hh - Contains definition of base class MPS_Space and any functions
+      	       	  related to its implementation.
+-- MPS_Space_Examples.hh - Contains definitions of derived clases from MPS_Space.
+                           Currently implemented are: 
+			      > Scal_MPS_Space 
+			      > CanScal_MPS_Space
+			      > CanVec_MPS_Space
+			      > ExVec_MPS_Space
+-- MPS_conv.hh - Contains definition of convolution operator compatible with MPS.
+-- MPS_frac_cal.hh - Contains definition of fractional calculus operators for MPS.
+-- MPS_includes.hh - Contains useful headers to include in MPS codes.
+-- MPS_iwop.hh - Contains definition of IWaveLOVOp operators for MPS.
+-- MPS_to_RHS.hh - Contains definition of MPS-to-RHS map as implementation of 
+                   the singular source approximation by Tornberg & Engquist 2004.
+-- VPM_mod.hh - Modified variable projection algorithm to allow for preconditioner.
+-- pntsrc_appx.hh - Header for function that computes source stencil weights related
+      		    to singular source approximation.
+
+
+mps/lib:
+  
+-- MPS_Space.cc
+-- MPS_Space_Examples.cc
+-- MPS_conv.cc
+-- MPS_conv_mpi.cc - MPI implementation of MPS convolution.
+-- MPS_frac_cal.cc
+-- MPS_frac_cal_mpi.cc - MPI implementation of MPS fractional calculus ops.
+-- MPS_iwop.cc
+-- MPS_to_RHS.cc
+-- pntsrc_appx.cc
+
+
+mps/main:
+
+-- D_scal.cc/.x - Code for applying a fractional calculus operator on a scalar MPS.
+-- W_res.cc/.x - Code for computing normalized residual, weighted by frac cal op.
+-- acd_scal.cc/.x - Driver for running forward simulator for acoustics constant density (acd)
+    		    with scalar MPS. Output is assumed to be pressure data.
+-- asg_ansol.cc/.x - Code for computing analytical solution to acoustic equations with
+  		     variable density and a scalar MPS (2-D and 3-D, MPS order < 2).
+-- asg_p_canscal.cc/.x - Driver for running forward simulator for acoustics variable 
+  		         density (asg) with canonical scalar MPS. Outout is assumed to be 
+		 	 pressure data.
+-- asg_p_canscal_inv.cc/.x - Driver for estimating canonical scalar MPS, assuming an 
+  			     acoustic media with variable density (asg FD solver).
+-- asg_p_scal.cc/.x - Driver for running forward simulator for acoustics, variable density, 
+  		      (asg) with scalar MPS. Output is assumed to be pressure data.
+-- asg_p_scal_inv.cc/.x - Driver for estimating scalar MPS, assuming an acoustic media with
+  		          variable density (asg FD solver).
+-- genmodel.cc/.x - Code for generating simple acoustic models.
+-- my_waveform.cc/.x - Code for generating simple waveforms (e.g., Ricker, gauss wavelets)
+-- tg_setup.cc/.x - Code for modifying time axis of a collection of SU files to a single 
+  		    time axis uniform to all traces. Handy for concatenating SU files.
+-- tgs_n_cat.cc/.x - Code for concatenating SU files of with matching time axis.
+
+
+mps/howto: 
+
+-- include/MPS_howto.hh - Example of a simple MPS space class.
+-- main/MPS_howto.cc - Example driver for running MPS forward simulation.
+
+
+The mps/tests directory contains a set of modular tests mainly for development and debugging
+purposes. Tests outputs will not be too instructive for a non-familiarized developer.

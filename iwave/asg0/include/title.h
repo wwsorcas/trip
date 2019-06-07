@@ -1,0 +1,8 @@
+"/******************************************************************************",
+" * Acoustic variable density staggered grid finite difference modeling,       * ",
+" * linearized modeling, and adjoint linearized modeling (RTM) in 2D or 3D.    * ", 
+" *                                                                            * ",
+" * Authors: Igor Terentyev, Tanya Vdovina, Xin Wang, Rami Nammour, Dong Sun,  *",
+" *   Mario J. Bencomo, Muhong Zhou, Yin Huang, and William W. Symes           *",
+" ******************************************************************************/",
+" ",

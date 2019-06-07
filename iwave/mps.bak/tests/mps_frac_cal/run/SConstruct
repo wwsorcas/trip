@@ -1,0 +1,1386 @@
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      },
+         'davinci' :  { 'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : 'symes',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      }
+       }
+
+#######################################################################
+###################### LOCAL DEFINITIONS ##############################
+#######################################################################
+
+RSFSRC   = os.getenv('RSFSRC')
+CWPROOT  = os.getenv('CWPROOT')
+IWAVE    = os.getenv('IWAVE')
+MPSCODE  = IWAVE+'/mps'
+thispath = os.getcwd() 
+TESTROOT = thispath + '/../src/main'
+
+stdmdl      = MPSCODE + '/main/genmodel.x' #'sfstandardmodel'
+tg_setup    = MPSCODE + '/main/tg_setup.x'
+tgs_n_cat   = MPSCODE + '/main/tgs_n_cat.x'
+replicate   = MPSCODE + '/main/replicate.x'
+my_waveform = MPSCODE + '/main/my_waveform.x'
+
+test_acd_canscal   = TESTROOT + '/test_acd_canscal.x'
+test_asg_canscal_p = TESTROOT + '/test_asg_canscal_p.x'
+test_asg_canscal_v = TESTROOT + '/test_asg_canscal_v.x'
+test_asg_canvec_p  = TESTROOT + '/test_asg_canvec_p.x'
+test_asg_canvec_v  = TESTROOT + '/test_asg_canvec_v.x'
+test_asg_exvec_p   = TESTROOT + '/test_asg_exvec_p.x'
+test_asg_exvec_v   = TESTROOT + '/test_asg_exvec_v.x'
+test_asg_scal_p    = TESTROOT + '/test_asg_scal_p.x'
+test_asg_scal_v    = TESTROOT + '/test_asg_scal_v.x'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+suhtmath   = CWPROOT + '/bin/suhtmath'
+suconv     = CWPROOT + '/bin/suconv'
+sutxtaper  = CWPROOT + '/bin/sutxtaper'
+suplane    = CWPROOT + '/bin/suplane'
+sugain     = CWPROOT + '/bin/sugain'
+suwind     = CWPROOT + '/bin/suwind'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+OUTFILE = 'OUTFILE.txt'
+Flow(OUTFILE,None,'touch $TARGET')
+
+jobs = []
+
+#######################################################################
+#######################################################################
+# Build useful wavelets
+#######################################################################
+#######################################################################
+
+output = ['wlt_null.su']
+cmd = sunull +' nt=201 dt=0.004 ntr=1'
+Flow(output,None,cmd,stdin=0)
+
+output = ['wlt_ricker.su']
+cmd = my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'
+cmd = cmd + ' nt=201 dt=0.004 fpeak=10 type=2 scal=20 cit=101'
+Flow(output,None,cmd,stdin=0,stdout=0)
+#cmd = suwaveform +' ns=401 dt=0.002 fpeak=5 type=ricker1 | '+sugain+' scale=400 '
+#Flow(output,None,cmd,stdin=0)
+
+output = ['wlt_gaussd.su']
+cmd = my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'
+cmd = cmd + ' nt=201 dt=0.004 fpeak=10 type=1 scal=1 cit=101'
+Flow(output,None,cmd,stdin=0,stdout=0)
+#cmd = suwaveform +' dt=0.002 ns=201 fpeak=10 type=gaussd '
+#Flow(output,None,cmd,stdin=0)
+
+output = ['wlt_delta.su']
+cmd = suspike +' nt=201 dt=0.004 ntr=1 ix1=1 it1=101 | '
+cmd = cmd + sufilter +' f=100,110 amps=1.,0. | '
+cmd = cmd + sugain +' scale=250 | '
+cmd = cmd + sushw + ' key=delrt a=-400'
+Flow(output,None,cmd,stdin=0)
+
+
+#######################################################################
+#######################################################################
+# BASIC TEST for asg
+#######################################################################
+#######################################################################
+
+src_in_0  = 'basic_in_0.su'
+src_out_0 = 'basic_out_0.su'
+src_out_1 = 'basic_out_1.su'
+src_out_2 = 'basic_out_2.su'
+src_out_3 = 'basic_out_3.su'
+src_out_4 = 'basic_out_4.su'
+src_out_5 = 'basic_out_5.su'
+src_out_6 = 'basic_out_6.su'
+src_out_7 = 'basic_out_7.su'
+
+#source parameters
+sx_o  = 100
+sx_e  = 400
+sx_dx = 300
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -250 
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+MPS_dim=1
+#build MPS file
+output = [src_in_0]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=4'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}' #src0
+cmd = cmd +' wlt_2=${SOURCES[1]} wlt_3=${SOURCES[1]}' #src1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [src_out_0,src_out_1,src_out_2,src_out_3,src_out_4,src_out_5,src_out_6,src_out_7]
+input = [src_in_0]
+
+#cmd = basic_test
+cmd = cmd + ' in_0=${SOURCES[0]}'
+cmd = cmd + ' out_0=${TARGETS[0]}'
+
+cmd = cmd + ' in_1=${SOURCES[0]}'
+cmd = cmd + ' out_1=${TARGETS[1]}'
+
+cmd = cmd + ' in_2=${SOURCES[0]}'
+cmd = cmd + ' out_2=${TARGETS[2]}'
+
+cmd = cmd + ' in_3=${SOURCES[0]}'
+cmd = cmd + ' out_3=${TARGETS[3]}'
+
+cmd = cmd + ' in_4=${SOURCES[0]}'
+cmd = cmd + ' out_4=${TARGETS[4]}'
+
+cmd = cmd + ' in_5=${SOURCES[0]}'
+cmd = cmd + ' out_5=${TARGETS[5]}'
+
+cmd = cmd + ' in_6=${SOURCES[0]}'
+cmd = cmd + ' out_6=${TARGETS[6]}'
+
+cmd = cmd + ' in_7=${SOURCES[0]}'
+cmd = cmd + ' out_7=${TARGETS[7]}'
+
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+
+#######################################################################
+#######################################################################
+# Build models
+#######################################################################
+#######################################################################
+
+c_min = 5
+c_max = 5
+rho   = 1
+
+mdl_file ={
+'bm': 'bmod.rsf',
+'by': 'buoy.rsf',
+'csq': 'csq.rsf'
+} 
+
+model = 0 #7#homogeneous model
+
+choose = {
+'dn': '2',#'1',
+'vp': '0',#'2',
+'bm': '1',#'3',
+'by': '3',#'4',
+'csq':'4'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy',
+'csq': 'Velocity Squared'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g',
+'csq': 'km\^2\_/s\^2'
+}
+
+#depth-axis
+f1 = 0.0
+e1 = 2000.0
+d1 = 20
+n1=int((e1-f1)/d1)+1 #nz
+
+#horizontal-axis
+f2 = 0.0 
+e2 = 2000.0
+d2 = 20
+n2=int((e2-f2)/d2)+1 #nx
+
+for m in ('bm','by','csq'):
+   #build commands
+    cmd = stdmdl + ' model=' + str(model) + ' choose=' + str(choose[m])
+    cmd = cmd + ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)
+    cmd = cmd + ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)
+    cmd = cmd + ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)
+    cmd = cmd + ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'
+    cmd = cmd + ' label=' + label[m] + ' unit=' + unit[m] 
+    cmd = cmd + ' datapath='+ thispath +' hfile=' + mdl_file[m]
+    
+    Flow( [ mdl_file[m], mdl_file[m]+'@' ], None,
+          cmd,         
+          stdin=0,stdout=0)
+
+
+#######################################################################
+#######################################################################
+# TEST: ACD_CANSCAL_0
+#    - acd driver
+#    - pressure data: single trace
+#    - pressure source: single MPS, order 0
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'acd_canscal_0_hdr.su'
+data_p   = 'acd_canscal_0_data_p.su'
+#mps I/O files
+MPS_src  = 'acd_canscal_0_MPS_p.su'
+hdr_g    = 'acd_canscal_0_hdr_g.su'
+data_p_g = 'acd_canscal_0_data_p_g.su'
+MPS_src_g= 'acd_canscal_0_MPS_p_g.su'
+#other I/O files
+y_D      = 'acd_canscal_0_y_D.su'
+y_D_Dinv = 'acd_canscal_0_y_D_Dinv.su'
+y_Minv   = 'acd_canscal_0_y_Minv.su'
+y_Minv_M = 'acd_canscal_0_y_Minv_M.su'
+y_Dinv   = 'acd_canscal_0_y_Dinv.su'
+y_Dinv_D = 'acd_canscal_0_y_Dinv_D.su'
+
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 1000  # starting x coord
+gx_e  = 1000 # ending x coord
+gx_dx = 1   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 0.8   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=1'
+cmd = cmd +' wlt_0=${SOURCES[0]} ' #src_0
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=1'
+cmd = cmd +' wlt_0=${SOURCES[0]} '
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canscal_0'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['csq'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} '
+cmd = test_acd_canscal
+#asg args
+cmd = cmd +\
+    ' csq=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_p=empty'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[3]}'+\
+    ' MPS_delta=${SOURCES[4]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#other args
+cmd = cmd +\
+    ' order_0=-0.5'+\
+    ' order_d=1.0'+\
+    ' driver=acd'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT = 1
+NP1 = 1#2
+NP2 = 1#3
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ACD_CANSCAL_1
+#    - acd driver
+#    - pressure data: multiple traces
+#    - pressure source: multiple MPS, order 0
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'acd_canscal_1_hdr.su'
+data_p   = 'acd_canscal_1_data_p.su'
+#mps I/O files
+MPS_src  = 'acd_canscal_1_MPS_p.su'
+hdr_g    = 'acd_canscal_1_hdr_g.su'
+data_p_g = 'acd_canscal_1_data_p_g.su'
+MPS_src_g= 'acd_canscal_1_MPS_p_g.su'
+#other I/O files
+y_D      = 'acd_canscal_1_y_D.su'
+y_D_Dinv = 'acd_canscal_1_y_D_Dinv.su'
+y_Minv   = 'acd_canscal_1_y_Minv.su'
+y_Minv_M = 'acd_canscal_1_y_Minv_M.su'
+y_Dinv   = 'acd_canscal_1_y_Dinv.su'
+y_Dinv_D = 'acd_canscal_1_y_Dinv_D.su'
+
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+#source parameters
+sx_o  = 900
+sx_e  = 1100
+sx_dx = 100
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 20  # starting x coord
+gx_e  = 1980 # ending x coord
+gx_dx = 20   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 0.8   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[0]} ' #src_0
+cmd = cmd +' wlt_1=${SOURCES[0]} ' #src_1
+cmd = cmd +' wlt_2=${SOURCES[0]} ' #src_2
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[0]} '
+cmd = cmd +' wlt_1=${SOURCES[0]} '
+cmd = cmd +' wlt_2=${SOURCES[0]} '
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canscal_1'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['csq'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} '
+cmd = test_acd_canscal
+#asg args
+cmd = cmd +\
+    ' csq=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_p=empty'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[3]}'+\
+    ' MPS_delta=${SOURCES[4]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#other args
+cmd = cmd +\
+    ' order_0=-0.5'+\
+    ' order_d=1.0'+\
+    ' driver=acd'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT = 1
+NP1 = 1
+NP2 = 1
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_P_0
+#    - asg driver
+#    - pressure data: multiple traces
+#    - pressure source: single MPS, order 0
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'asg_canscal_p_0_hdr.su'
+data_p   = 'asg_canscal_p_0_data_p.su'
+#mps I/O files
+MPS_src  = 'asg_canscal_p_0_MPS_p.su'
+hdr_g    = 'asg_canscal_p_0_hdr_g.su'
+data_p_g = 'asg_canscal_p_0_data_p_g.su'
+MPS_src_g= 'asg_canscal_p_0_MPS_p_g.su'
+#other I/O files
+y_D      = 'asg_canscal_p_0_y_D.su'
+y_D_Dinv = 'asg_canscal_p_0_y_D_Dinv.su'
+y_Dinv   = 'asg_canscal_p_0_y_Dinv.su'
+y_Dinv_D = 'asg_canscal_p_0_y_Dinv_D.su'
+y_Minv   = 'asg_canscal_p_0_y_Minv.su'
+y_Minv_M = 'asg_canscal_p_0_y_Minv_M.su'
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 900  # starting x coord
+gx_e  = 1100 # ending x coord
+gx_dx = 20   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=1'
+cmd = cmd +' wlt_0=${SOURCES[0]} ' #src_0
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=1'
+cmd = cmd +' wlt_0=${SOURCES[0]} '
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canscal_p_0'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['bm'],mdl_file['by'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canscal_p
+#asg args
+cmd = cmd +\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' buoyancy=${SOURCES[1]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_p=empty'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'+\
+    ' nl1=500 nr1=500 nl2=500 nr2=500 pmlampl=0.1'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[4]}'+\
+    ' MPS_delta=${SOURCES[5]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#other args
+cmd = cmd +\
+    ' order_0=0.5 order_d=1.0'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT  = 1
+NP1 = 1
+NP2 = 1
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_P_1
+#    - asg driver
+#    - pressure data: multiple traces
+#    - pressure source: single canonical mps, order 1
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'asg_canscal_p_1_hdr.su'
+data_p   = 'asg_canscal_p_1_data_p.su'
+#MPS I/O files
+MPS_src  = 'asg_canscal_p_1_MPS_p.su'
+hdr_g    = 'asg_canscal_p_1_hdr_g.su'
+data_p_g = 'asg_canscal_p_1_data_p_g.su'
+MPS_src_g= 'asg_canscal_p_1_MPS_p_g.su'
+#other I/O files
+y_D      = 'asg_canscal_p_1_y_D.su'
+y_D_Dinv = 'asg_canscal_p_1_y_D_Dinv.su'
+y_Dinv   = 'asg_canscal_p_1_y_Dinv.su'
+y_Dinv_D = 'asg_canscal_p_1_y_Dinv_D.su'
+y_Minv   = 'asg_canscal_p_1_y_Minv.su'
+y_Minv_M = 'asg_canscal_p_1_y_Minv_M.su'
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 900  # starting x coord
+gx_e  = 1100 # ending x coord
+gx_dx = 20  # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_null.su','wlt_ricker.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[1]}' #src_0
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canscal_p_1'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['bm'],mdl_file['by'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canscal_p
+#asg args
+cmd = cmd +\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_p=empty'+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' buoyancy=${SOURCES[1]}'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'+\
+    ' nl1=500 nr1=500 nl2=500 nr2=500 pmlampl=0.1'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[4]}'+\
+    ' MPS_delta=${SOURCES[5]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#mps frac args
+cmd = cmd +\
+    ' order_0=0.5'+\
+    ' order_d=1.0'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT  = 1
+NP1 = 1#2
+NP2 = 1#3
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_P_0
+#    - asg driver
+#    - pressure data: multiple traces
+#    - velocity source: single canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'asg_canvec_p_0_hdr.su'
+data_p   = 'asg_canvec_p_0_data_p.su'
+#mps I/O files
+MPS_src  = 'asg_canvec_p_0_MPS_p.su'
+hdr_g    = 'asg_canvec_p_0_hdr_g.su'
+data_p_g = 'asg_canvec_p_0_data_p_g.su'
+MPS_src_g= 'asg_canvec_p_0_MPS_p_g.su'
+#other I/O files
+y_D      = 'asg_canvec_p_0_y_D.su'
+y_D_Dinv = 'asg_canvec_p_0_y_D_Dinv.su'
+y_Dinv   = 'asg_canvec_p_0_y_Dinv.su'
+y_Dinv_D = 'asg_canvec_p_0_y_Dinv_D.su'
+y_Minv   = 'asg_canvec_p_0_y_Minv.su'
+y_Minv_M = 'asg_canvec_p_0_y_Minv_M.su'
+
+MPS_ord=0
+a_ord=2
+MPS_dim=2
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 900  # starting x coord
+gx_e  = 1100 # ending x coord
+gx_dx = 20   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_null.su','wlt_ricker.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=2'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=2'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canvec_p_0'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['bm'],mdl_file['by'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canvec_p
+#asg args
+cmd = cmd +\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_v0=empty'+\
+    ' source_v1=empty'+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' buoyancy=${SOURCES[1]}'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'+\
+    ' nl1=500 nr1=500 nl2=500 nr2=500 pmlampl=0.1'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[4]}'+\
+    ' MPS_delta=${SOURCES[5]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#mps frac args
+cmd = cmd +\
+    ' order_0=0.5 order_d=1.0'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT  = 1
+NP1 = 1#2
+NP2 = 1#3
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_P_1
+#    - asg driver
+#    - pressure data: multiple traces
+#    - velocity source: single canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'asg_canvec_p_1_hdr.su'
+data_p   = 'asg_canvec_p_1_data_p.su'
+#mps I/O files
+MPS_src  = 'asg_canvec_p_1_MPS_p.su'
+hdr_g    = 'asg_canvec_p_1_hdr_g.su'
+data_p_g = 'asg_canvec_p_1_data_p_g.su'
+MPS_src_g= 'asg_canvec_p_1_MPS_p_g.su'
+#other I/O files
+y_D      = 'asg_canvec_p_1_y_D.su'
+y_D_Dinv = 'asg_canvec_p_1_y_D_Dinv.su'
+y_Dinv   = 'asg_canvec_p_1_y_Dinv.su'
+y_Dinv_D = 'asg_canvec_p_1_y_Dinv_D.su'
+y_Minv   = 'asg_canvec_p_1_y_Minv.su'
+y_Minv_M = 'asg_canvec_p_1_y_Minv_M.su'
+
+MPS_ord=1
+a_ord=2
+MPS_dim=6
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 900  # starting x coord
+gx_e  = 1100 # ending x coord
+gx_dx = 20   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -200 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_null.su','wlt_ricker.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=6'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]}' #src 0
+cmd = cmd +' wlt_2=${SOURCES[1]} wlt_3=${SOURCES[1]}'
+cmd = cmd +' wlt_4=${SOURCES[1]} wlt_5=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=6'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}' #src 0
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[0]}'
+cmd = cmd +' wlt_4=${SOURCES[0]} wlt_5=${SOURCES[0]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_canvec_p_1'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['bm'],mdl_file['by'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} '
+cmd = test_asg_canvec_p
+#asg args
+cmd = cmd +\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_v0=empty'+\
+    ' source_v1=empty'+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' buoyancy=${SOURCES[1]}'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'+\
+    ' nl1=500 nr1=500 nl2=500 nr2=500 pmlampl=0.1'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[4]}'+\
+    ' MPS_delta=${SOURCES[5]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#mps frac args
+cmd = cmd +\
+    ' order_0=0.5 order_d=1.0'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT  = 1
+NP1 = 1#2
+NP2 = 1#3
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_EXVEC_P_0
+#    - asg driver
+#    - pressure data: multiple traces
+#    - velocity source: single exvec MPS
+#######################################################################
+#######################################################################
+
+#asg I/O files
+hdr      = 'asg_exvec_p_0_hdr.su'
+data_p   = 'asg_exvec_p_0_data_p.su'
+#mps I/O files
+MPS_src  = 'asg_exvec_p_0_MPS_p.su'
+hdr_g    = 'asg_exvec_p_0_hdr_g.su'
+data_p_g = 'asg_exvec_p_0_data_p_g.su'
+MPS_src_g= 'asg_exvec_p_0_MPS_p_g.su'
+#other I/O files
+y_D      = 'asg_exvec_p_0_y_D.su'
+y_D_Dinv = 'asg_exvec_p_0_y_D_Dinv.su'
+y_Dinv   = 'asg_exvec_p_0_y_Dinv.su'
+y_Dinv_D = 'asg_exvec_p_0_y_Dinv_D.su'
+y_Minv   = 'asg_exvec_p_0_y_Minv.su'
+y_Minv_M = 'asg_exvec_p_0_y_Minv_M.su'
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+#source parameters
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+
+#######################################################################
+# Build files containing acquisition geometry information. 
+#######################################################################
+
+#receiver parameters
+gx_o  = 900  # starting x coord
+gx_e  = 1100 # ending x coord
+gx_dx = 20   # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -200 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr,None,cmd,stdin=0)
+
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '
+cmd = cmd + sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '
+cmd = cmd + sushw +' key=delrt a=0 | '
+cmd = cmd + sushw +' key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw +' key=gelev a='+ str(gelev)
+Flow(hdr_g,None,cmd,stdin=0)
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+#build MPS file
+output = [MPS_src]
+input = ['wlt_null.su','wlt_ricker.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]}' #src 0
+cmd = cmd +' wlt_2=${SOURCES[1]} '
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = [MPS_src_g]
+input = ['wlt_delta.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=3'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}' #src 0
+cmd = cmd +' wlt_2=${SOURCES[0]} '
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+jobname = 'asg_exvec_p_0'
+output = [data_p, data_p_g, y_D, y_D_Dinv, y_Minv, y_Minv_M, y_Dinv, y_Dinv_D]
+input = [mdl_file['bm'],mdl_file['by'],hdr,hdr_g,MPS_src,MPS_src_g]
+
+#pre command
+pre = ' /bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} '
+cmd = test_asg_exvec_p
+#asg args
+cmd = cmd +\
+    ' data_p=${TARGETS[0]}'+\
+    ' source_v0=empty'+\
+    ' source_v1=empty'+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' buoyancy=${SOURCES[1]}'+\
+    ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+    ' cmin=1.0 cmax=7.0 dmin=0.8 dmax=3.0'+\
+    ' nl1=500 nr1=500 nl2=500 nr2=500 pmlampl=0.1'
+#mps args
+cmd = cmd +\
+    ' data_p_g=${TARGETS[1]}'+\
+    ' MPS_file=${SOURCES[4]}'+\
+    ' MPS_delta=${SOURCES[5]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)
+#mps frac args
+cmd = cmd +\
+    ' order_0=0.5 order_d=1.0'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' y_D=${TARGETS[2]}'+\
+    ' y_D_Dinv=${TARGETS[3]}'+\
+    ' y_Minv=${TARGETS[4]}'+\
+    ' y_Minv_M=${TARGETS[5]}'+\
+    ' y_Dinv=${TARGETS[6]}'+\
+    ' y_Dinv_D=${TARGETS[7]}'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+#mpi args
+PT  = 1
+NP1 = 1#2
+NP2 = 1#3
+cmd = cmd +\
+    ' partask='+ str(PT)+\
+    ' mpi_np1='+str(NP1)+\
+    ' mpi_np2='+str(NP2)
+exe = {'platf':'', 'ppn':str(PT*NP1*NP2) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+tripExec(jobs,penv)
+
+End()

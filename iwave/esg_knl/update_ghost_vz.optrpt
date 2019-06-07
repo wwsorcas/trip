@@ -1,0 +1,440 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.102 Build 20160720
+
+Compiler options: -I/Users/muhongzhou/Softwares/madagascar/include -o update_ghost_vz.o -c -O3 -qopenmp -restrict -qopt-report=4
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: UpdateGhostVZ(Field *, Field *, Field **, Field **, real **, real **, Array &, Array &, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (UpdateGhostVZ(Field *, Field *, Field **, Field **, real **, real **, Array &, Array &, int)) [1/9=11.1%] update_ghost_vz.cpp(13,1)
+  -> INLINE (MANUAL): (28,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (29,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (30,19) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> EXTERN: (32,5) __assert_rtn(const char *, const char *, int, const char *)
+  -> INLINE (MANUAL): (48,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (48,54) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (49,56) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (50,56) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (51,56) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (61,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (61,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (62,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (63,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (65,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (65,55) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (66,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (67,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (69,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (69,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (70,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (71,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (72,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (73,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (75,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (75,57) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (76,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (77,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (78,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (79,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (88,30) Field::GetStart(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (89,21) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (89,49) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (90,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (91,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (93,21) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (93,51) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (94,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (95,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (96,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (98,26) Field::GetEnd(const Field *, int) const (isz = 0) (sz = 8)
+  -> INLINE (MANUAL): (99,21) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (99,51) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (100,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (101,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (103,21) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (103,53) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (104,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (105,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (106,23) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> EXTERN: (119,25) omp_get_thread_num()
+  -> INLINE (MANUAL): (127,19) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (127,65) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (128,66) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (130,19) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (130,65) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (131,66) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (133,19) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (133,62) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (134,42) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (134,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (135,21) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (135,44) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (137,19) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (137,46) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (138,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (138,86) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (139,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (140,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (140,86) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (141,87) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (142,50) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (142,85) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (143,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (144,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (144,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (145,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (146,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (146,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (147,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (148,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (148,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (149,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (150,27) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (151,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (151,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (152,77) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (153,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (153,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (154,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (155,31) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (155,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (156,78) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (157,25) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (158,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (158,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (159,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (160,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (160,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (161,72) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (162,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (162,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (163,77) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (164,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (165,25) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (166,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (166,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (167,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (168,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (168,71) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (169,72) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (170,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (170,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (171,77) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (172,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (173,25) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (174,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (174,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (175,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (176,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (176,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (177,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (178,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (178,78) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (179,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (180,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (181,25) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (182,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (182,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (183,75) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (184,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (184,73) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (185,74) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (186,29) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (186,78) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (187,79) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (188,76) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (198,28) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (198,49) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (199,19) Array::SetVal(Array *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (199,45) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (200,19) Array::SetVal(Array *, int, int) (isz = 3) (sz = 13)
+  -> INLINE (MANUAL): (200,43) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (203,17) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (203,41) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (203,63) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (205,21) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (205,43) Array::GetVal(const Array *, int, int) const (isz = 4) (sz = 14)
+  -> INLINE (MANUAL): (205,66) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (205,91) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (205,113) Array::GetVal(const Array *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (219,36) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (219,58) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (220,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (220,54) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (221,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (221,56) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (229,41) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (229,63) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (230,43) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (230,67) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (231,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (231,56) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+  -> INLINE (MANUAL): (232,25) Field::SetVal(Field *, int, int, int) (isz = 5) (sz = 17)
+  -> INLINE (MANUAL): (232,58) Field::GetVal(const Field *, int, int, int) const (isz = 6) (sz = 18)
+
+
+    Report from: OpenMP optimizations [openmp]
+
+update_ghost_vz.cpp(39:1-39:1):OMP:__Z13UpdateGhostVZP5FieldS0_PS0_S1_PPdS3_R5ArrayS5_i:  OpenMP DEFINED REGION WAS PARALLELIZED
+update_ghost_vz.cpp(114:1-114:1):OMP:__Z13UpdateGhostVZP5FieldS0_PS0_S1_PPdS3_R5ArrayS5_i:  OpenMP DEFINED LOOP WAS PARALLELIZED
+update_ghost_vz.cpp(210:1-210:1):OMP:__Z13UpdateGhostVZP5FieldS0_PS0_S1_PPdS3_R5ArrayS5_i:  OpenMP DEFINED REGION WAS PARALLELIZED
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at update_ghost_vz.cpp(116,9)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between A->ptr3[:][0][i1] (127:19) and *(*(*(vz2+?)+i1*8)+i0*8) (205:21)
+
+   LOOP BEGIN at update_ghost_vz.cpp(124,13)
+   <Peeled>
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between A->ptr3[:][0][i1] (127:19) and *szz2[i1+1][i0] (137:19)
+   LOOP END
+
+   LOOP BEGIN at update_ghost_vz.cpp(196,13)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between A->ptr3[:][0][i1] (198:49) and A->ptr3[:][1][i1] (199:19)
+   LOOP END
+
+   LOOP BEGIN at update_ghost_vz.cpp(204,13)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between *(*(*(vz2+?)+i1*8)+i0*8) (205:21) and B->ptr2[:][i1-1] (205:21)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_vz.cpp(216,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed ANTI dependence between *(*(*(vz2+?)+i1*8)+i0*8) (219:58) and vz1[:][i1*2][i0*2+1] (221:25)
+
+   LOOP BEGIN at update_ghost_vz.cpp(217,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between *(*(*(vz2+?)+i1*8)+i0*8) (219:58) and vz1[:][i1*2][i0*2+1] (221:25)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_vz.cpp(226,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed ANTI dependence between *(*(*(vz2+?)+i1*8)+i0*8) (230:67) and vz1[:][i1*2+1][i0*2+1] (232:25)
+
+   LOOP BEGIN at update_ghost_vz.cpp(227,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between *(*(*(vz2+?)+i1*8)+i0*8) (230:67) and vz1[:][i1*2+1][i0*2+1] (232:25)
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_vz.cpp(46,13)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between *(*(*(vz2+?)+i1*8)+i0*8) (48:25) and *(*(*(vz2+?)+i1*8)+i0*8) (48:25)
+
+   LOOP BEGIN at update_ghost_vz.cpp(47,17)
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed FLOW dependence between *(*(*(vz2+?)+i1*8)+i0*8) (48:25) and vz1[?-2][i1*2][i0*2] (48:25)
+      remark #25439: unrolled with remainder by 4  
+   LOOP END
+
+   LOOP BEGIN at update_ghost_vz.cpp(47,17)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_vz.cpp(55,1)
+   remark #15542: loop was not vectorized: inner loop was already vectorized
+
+   LOOP BEGIN at update_ghost_vz.cpp(57,13)
+      remark #15542: loop was not vectorized: inner loop was already vectorized
+
+      LOOP BEGIN at update_ghost_vz.cpp(59,17)
+      <Peeled loop for vectorization>
+         remark #25015: Estimate of max trip count of loop=1
+      LOOP END
+
+      LOOP BEGIN at update_ghost_vz.cpp(59,17)
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?-1)*8)+$i3*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15389: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?)*8)+($i3-1)*8) has unaligned access   [ field.hpp(84,55) ]
+         remark #15388: vectorization support: reference *(*(*vz2+($i1*?+$i2+?-?)*8)+$i3*8) has aligned access   [ field.hpp(84,55) ]
+         remark #15381: vectorization support: unaligned access used inside loop body
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(vz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2-1)*8)>, stride is 2   [ update_ghost_vz.cpp(61,25) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(vz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2-1)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(vz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2)*8)>, stride is 2   [ update_ghost_vz.cpp(65,25) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(vz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-2)*8)+($i3*2)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(vz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2-1)*8)>, stride is 2   [ update_ghost_vz.cpp(69,25) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(vz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2-1)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15329: vectorization support: non-unit strided store was emulated for the variable <*(*(*(vz1+?*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2)*8)>, stride is 2   [ update_ghost_vz.cpp(75,25) ]
+         remark #15328: vectorization support: non-unit strided load was emulated for the variable <*(*(*(vz1+(?-1)*8)+($i1*(?*2)+$i2*2+?*2+?*-2-1)*8)+($i3*2)*8)>, stride is 2   [ field.hpp(84,55) ]
+         remark #15305: vectorization support: vector length 2
+         remark #15309: vectorization support: normalized vectorization overhead 0.075
+         remark #15300: LOOP WAS VECTORIZED
+         remark #15442: entire loop may be executed in remainder
+         remark #15448: unmasked aligned unit stride loads: 1 
+         remark #15450: unmasked unaligned unit stride loads: 11 
+         remark #15452: unmasked strided loads: 4 
+         remark #15453: unmasked strided stores: 4 
+         remark #15475: --- begin vector cost summary ---
+         remark #15476: scalar cost: 444 
+         remark #15477: vector cost: 338.500 
+         remark #15478: estimated potential speedup: 1.300 
+         remark #15486: divides: 10 
+         remark #15488: --- end vector cost summary ---
+      LOOP END
+
+      LOOP BEGIN at update_ghost_vz.cpp(59,17)
+      <Remainder loop for vectorization>
+      LOOP END
+   LOOP END
+LOOP END
+
+LOOP BEGIN at update_ghost_vz.cpp(84,1)
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed OUTPUT dependence between vz1[:][i1*2][vz2*2] (89:21) and vz1[:][i1*2+1][vz2*2+1] (103:21)
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+field.hpp(84,55):remark #34060: alignment of adjacent dense (unit-strided stencil) loads is (alignment, offset): (1, 0)
+field.hpp(84,55):remark #34050: optimization of adjacent dense (unit-strided stencil) loads seems unprofitable.
+field.hpp(84,55):remark #34055: adjacent dense (unit-strided stencil) loads are not optimized. Details: stride { 8 }, step { 8 }, types { F64-V128, F64-V128 }, number of elements { 2 }, select mask { 0x000000003 }.
+update_ghost_vz.cpp(13,1):remark #34051: REGISTER ALLOCATION : [__Z13UpdateGhostVZP5FieldS0_PS0_S1_PPdS3_R5ArrayS5_i] update_ghost_vz.cpp:13
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   31[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0-zmm15]
+        
+    Routine temporaries
+        Total         :    1110
+            Global    :     255
+            Local     :     855
+        Regenerable   :     255
+        Spilled       :     101
+        
+    Routine stack
+        Variables     :     280 bytes*
+            Reads     :      19 [0.00e+00 ~ 0.0%]
+            Writes    :      45 [5.76e+01 ~ 1.3%]
+        Spills        :     856 bytes*
+            Reads     :     149 [2.92e+02 ~ 6.6%]
+            Writes    :     133 [7.85e+01 ~ 1.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: Field::GetStart(const Field *, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetStart(const Field *, int) const) field.hpp(74,31)
+
+===========================================================================
+
+Begin optimization report for: Field::GetEnd(const Field *, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetEnd(const Field *, int) const) field.hpp(75,29)
+
+===========================================================================
+
+Begin optimization report for: Field::GetVal(const Field *, int, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::GetVal(const Field *, int, int, int) const) field.hpp(84,47)
+
+===========================================================================
+
+Begin optimization report for: Field::SetVal(Field *, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Field::SetVal(Field *, int, int, int)) field.hpp(85,42)
+
+===========================================================================
+
+Begin optimization report for: Array::GetVal(const Array *, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::GetVal(const Array *, int, int) const) array.hpp(30,39)
+
+===========================================================================
+
+Begin optimization report for: Array::GetVal(const Array *, int, int, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::GetVal(const Array *, int, int, int) const) array.hpp(31,47)
+
+===========================================================================
+
+Begin optimization report for: Array::SetVal(Array *, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::SetVal(Array *, int, int)) array.hpp(35,34)
+
+===========================================================================
+
+Begin optimization report for: Array::SetVal(Array *, int, int, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (Array::SetVal(Array *, int, int, int)) array.hpp(36,42)
+
+===========================================================================

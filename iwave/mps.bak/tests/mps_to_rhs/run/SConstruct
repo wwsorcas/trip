@@ -1,0 +1,1182 @@
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      },
+         'davinci' :  { 'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : 'symes',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      }
+       }
+
+#######################################################################
+###################### LOCAL DEFINITIONS ##############################
+#######################################################################
+RSFSRC   = os.getenv('RSFSRC')
+CWPROOT  = os.getenv('CWPROOT')
+IWAVE    = os.getenv('IWAVE')
+MPSCODE  = os.getenv('MPSCODE')
+thispath = os.getcwd()
+TESTROOT = thispath + '/../src/main'
+
+stdmdl      = MPSCODE + '/main/genmodel.x' #'sfstandardmodel'
+tg_setup    = MPSCODE + '/main/tg_setup.x'
+tgs_n_cat   = MPSCODE + '/main/tgs_n_cat.x'
+replicate   = MPSCODE + '/main/replicate.x'
+my_waveform = MPSCODE + '/main/my_waveform.x'
+
+test_acd_canscal   = TESTROOT + '/test_acd_canscal.x'
+test_asg_canscal_p = TESTROOT + '/test_asg_canscal_p.x'
+test_asg_canscal_v = TESTROOT + '/test_asg_canscal_v.x'
+test_asg_canvec_p  = TESTROOT + '/test_asg_canvec_p.x'
+test_asg_canvec_v  = TESTROOT + '/test_asg_canvec_v.x'
+test_asg_exvec_p   = TESTROOT + '/test_asg_exvec_p.x'
+test_asg_exvec_v   = TESTROOT + '/test_asg_exvec_v.x'
+test_asg_scal_p    = TESTROOT + '/test_asg_scal_p.x'
+test_asg_scal_v    = TESTROOT + '/test_asg_scal_v.x'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+suhtmath   = CWPROOT + '/bin/suhtmath'
+suconv     = CWPROOT + '/bin/suconv'
+sutxtaper  = CWPROOT + '/bin/sutxtaper'
+suplane    = CWPROOT + '/bin/suplane'
+sugain     = CWPROOT + '/bin/sugain'
+suwind     = CWPROOT + '/bin/suwind'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+OUTFILE = 'OUTFILE.txt'
+Flow(OUTFILE,None,'touch $TARGET')
+
+jobs = []
+
+#######################################################################
+#######################################################################
+# Build useful wavelets
+#######################################################################
+#######################################################################
+
+output = ['wlt_null.su']
+cmd = sunull +' nt=201 dt=0.004 ntr=1'
+Flow(output,None,cmd,stdin=0)
+
+output = ['wlt_ricker.su']
+cmd = my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'
+cmd = cmd + ' nt=201 dt=0.004 fpeak=10 type=2 scal=20 cit=101'
+Flow(output,None,cmd,stdin=0,stdout=0)
+
+output = ['wlt_gaussd.su']
+cmd = my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'
+cmd = cmd + ' nt=201 dt=0.004 fpeak=10 type=1 scal=1 cit=101'
+Flow(output,None,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+#######################################################################
+# Build models
+#######################################################################
+#######################################################################
+
+c_min = 5
+c_max = 5
+rho   = 1
+
+mdl_file ={
+'bm': 'bmod.rsf',
+'by': 'buoy.rsf',
+'csq': 'csq.rsf'
+} 
+
+model = 0 #7#homogeneous model
+
+choose = {
+'dn': '2',#'1',
+'vp': '0',#'2',
+'bm': '1',#'3',
+'by': '3',#'4',
+'csq': '4'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy',
+'csq': 'Velocity Squared'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g',
+'csq': 'km\^2\_/s\^2'
+}
+
+#depth-axis
+f1 = 0.0
+e1 = 500.0
+d1 = 6
+n1=int((e1-f1)/d1)+1 #nz
+
+
+#horizontal-axis
+f2 = 0.0 
+e2 = 500.0
+d2 = 6
+n2=int((e2-f2)/d2)+1 #nx
+
+for m in ('bm','by','csq'):
+   #build commands
+    cmd = stdmdl + ' model=' + str(model) + ' choose=' + str(choose[m])+\
+        ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+        ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+        ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+        ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'+\
+        ' label=' + label[m] + ' unit=' + unit[m]+\
+        ' datapath='+ thispath +' hfile=' + mdl_file[m]
+    
+    Flow( [ mdl_file[m], mdl_file[m]+'@' ], None,
+          cmd,         
+          stdin=0,stdout=0)
+
+
+#######################################################################
+#######################################################################
+# Build header file
+#######################################################################
+#######################################################################
+
+#source parameters
+sx_o  = 100
+sx_e  = 400
+sx_dx = 300
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -250 
+
+#receiver parameters
+gx_o  = 20  # starting x coord
+gx_e  = 480 # ending x coord
+gx_dx = 10  # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -200 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 1.0   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+output = ['hdr.su']
+cmd = sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '+\
+    sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '+\
+    sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '+\
+    sushw +' key=delrt a=-250 | '+\
+    sushw +' key=selev a='+ str(selev) + ' | '+\
+    sushw +' key=gelev a='+ str(gelev)
+Flow(output,None,cmd,stdin=0)
+
+
+#######################################################################
+#######################################################################
+# TEST: ACD_CANSCAL_0
+#    - ACD driver
+#    - pressure data: multiple traces
+#    - pressure source: two canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+data_p    = 'acd_canscal_0_data_p.su'
+MPS_file  = 'acd_canscal_0_MPS.su'
+RHS_p_1   = 'acd_canscal_0_RHS_p.su'
+RHS_p_2   = 'RHS_0_'+MPS_file
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=2'
+cmd = cmd +' wlt_0=${SOURCES[0]}' #src 0
+cmd = cmd +' wlt_1=${SOURCES[1]}' #src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_p_1, RHS_p_2]
+input = [mdl_file['csq'], 'hdr.su', MPS_file]
+jobname = 'acd_canscal_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} '
+
+#test command
+cmd = test_acd_canscal+\
+    ' csq=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=acd'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ACD_CANSCAL_1
+#    - ACD driver
+#    - pressure data: multiple traces
+#    - pressure source: two canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+data_p     = 'acd_canscal_1_data_p.su'
+MPS_file   = 'acd_canscal_1_MPS.su'
+RHS_p_1    = 'acd_canscal_1_RHS_p.su'
+RHS_p_2    = 'RHS_0_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_null.su','wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=6'
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[1]}' #src 0
+cmd = cmd +' wlt_3=${SOURCES[0]} wlt_4=${SOURCES[2]} wlt_5=${SOURCES[0]}' #src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_p_1, RHS_p_2]
+input = [mdl_file['csq'], 'hdr.su', MPS_file]
+jobname = 'acd_canscal_1'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]}'
+
+#test command
+cmd = test_acd_canscal+\
+    ' csq=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=acd'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_P_0
+#    - ASG driver
+#    - pressure data: multiple traces
+#    - pressure source: two canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+data_p     = 'asg_canscal_p_0_data_p.su'
+MPS_file   = 'asg_canscal_p_0_MPS.su'
+RHS_p_1    = 'asg_canscal_p_0_RHS_p.su'
+RHS_p_2    = 'RHS_0_'+MPS_file
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=2'
+cmd = cmd +' wlt_0=${SOURCES[0]}' #src 0
+cmd = cmd +' wlt_1=${SOURCES[1]}' #src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_p_1, RHS_p_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canscal_p_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} '
+
+#test command
+cmd = test_asg_canscal_p+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_P_1 
+#    - ASG driver
+#    - pressure data: multiple traces
+#    - pressure source: two canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+data_p     = 'asg_canscal_p_1_data_p.su'
+MPS_file   = 'asg_canscal_p_1_MPS.su'
+RHS_p_1    = 'asg_canscal_p_1_RHS_p.su'
+RHS_p_2    = 'RHS_0_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=6'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[1]}' #src 0
+cmd = cmd +' wlt_3=${SOURCES[1]} wlt_4=${SOURCES[1]} wlt_5=${SOURCES[1]}' #src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_p_1, RHS_p_2]
+input = [mdl_file['bm'], 'hdr.su',MPS_file]
+jobname = 'asg_canscal_p_1'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]}'
+
+#test command
+cmd = test_asg_canscal_p+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_V_0
+#    - ASG driver
+#    - velocity data: multiple traces
+#    - pressure source: two canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+data_v0    = 'asg_canscal_v_0_data_v0.su'
+data_v1    = 'asg_canscal_v_0_data_v1.su'
+MPS_file   = 'asg_canscal_v_0_MPS.su'
+RHS_p_1    = 'asg_canscal_v_0_RHS_p.su'
+RHS_p_2    = 'RHS_0_'+MPS_file
+
+MPS_ord=0
+a_ord=2
+MPS_dim=1
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=2'
+cmd = cmd +' wlt_0=${SOURCES[0]}'#src 0
+cmd = cmd +' wlt_1=${SOURCES[1]}'#src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_v0, data_v1, RHS_p_1, RHS_p_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canscal_v_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} &&'+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canscal_v+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_v0=${TARGETS[0]}'+\
+    ' data_v1=${TARGETS[1]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=velocity'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANSCAL_V_1 
+#    - ASG driver
+#    - velocity data: multiple traces
+#    - pressure source: two canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+data_v0    = 'asg_canscal_v_1_data_v0.su'
+data_v1    = 'asg_canscal_v_1_data_v1.su'
+MPS_file   = 'asg_canscal_v_1_MPS.su'
+RHS_p_1    = 'asg_canscal_v_1_RHS_p.su'
+RHS_p_2    = 'RHS_0_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N=6'
+cmd = cmd +' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[1]}' #src 0
+cmd = cmd +' wlt_3=${SOURCES[1]} wlt_4=${SOURCES[1]} wlt_5=${SOURCES[1]}' #src 1
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_v0, data_v1, RHS_p_1, RHS_p_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canscal_v_1'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} &&'+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[1]}'
+
+#test command
+cmd = test_asg_canscal_v+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_v0=${TARGETS[0]}'+\
+    ' data_v1=${TARGETS[1]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_p=${TARGETS[1]}'+\
+    ' driver=asg'+\
+    ' src_type=pressure'+\
+    ' data_type=velocity'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_P_0 
+#    - ASG driver
+#    - pressure data: multiple traces
+#    - velocity source: two canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+data_p       = 'asg_canvec_p_0_data_p.su'
+MPS_file     = 'asg_canvec_p_0_MPS.su'
+RHS_v0_1     = 'asg_canvec_p_0_RHS_v0.su'
+RHS_v1_1     = 'asg_canvec_p_0_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=0
+a_ord=2
+MPS_dim=2
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[1]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canvec_p_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} '
+
+#test command
+cmd = test_asg_canvec_p+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_P_1 
+#    - ASG driver
+#    - pressure data: multiple traces
+#    - velocity source: two canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+data_p       = 'asg_canvec_p_1_data_p.su'
+MPS_file     = 'asg_canvec_p_1_MPS.su'
+RHS_v0_1     = 'asg_canvec_p_1_RHS_v0.su'
+RHS_v1_1     = 'asg_canvec_p_1_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=6
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[0]}'
+cmd = cmd +' wlt_4=${SOURCES[0]} wlt_5=${SOURCES[0]}'
+cmd = cmd +' wlt_6=${SOURCES[1]} wlt_7=${SOURCES[1]}'
+cmd = cmd +' wlt_8=${SOURCES[1]} wlt_9=${SOURCES[1]}'
+cmd = cmd +' wlt_10=${SOURCES[1]} wlt_11=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canvec_p_1'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} '
+
+#test command
+cmd = test_asg_canvec_p+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_V_0 
+#    - ASG driver
+#    - velocity data: multiple traces
+#    - velocity source: two canonical MPS, order 0
+#######################################################################
+#######################################################################
+
+data_v0      = 'asg_canvec_v_0_data_v0.su'
+data_v1      = 'asg_canvec_v_0_data_v1.su'
+MPS_file     = 'asg_canvec_v_0_MPS.su'
+RHS_v0_1     = 'asg_canvec_v_0_RHS_v0.su'
+RHS_v1_1     = 'asg_canvec_v_0_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=0
+a_ord=2
+MPS_dim=2
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[1]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_v0, data_v1, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canvec_v_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canvec_v+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_v0=${TARGETS[0]}'+\
+    ' data_v1=${TARGETS[1]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=velocity'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_CANVEC_V_1 
+#    - ASG driver
+#    - velocity data: multiple traces
+#    - velocity source: two canonical MPS, order 1
+#######################################################################
+#######################################################################
+
+data_v0      = 'asg_canvec_v_1_data_v0.su'
+data_v1      = 'asg_canvec_v_1_data_v1.su'
+MPS_file     = 'asg_canvec_v_1_MPS.su'
+RHS_v0_1     = 'asg_canvec_v_1_RHS_v0.su'
+RHS_v1_1     = 'asg_canvec_v_1_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=6
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[0]}'
+cmd = cmd +' wlt_4=${SOURCES[0]} wlt_5=${SOURCES[0]}'
+cmd = cmd +' wlt_6=${SOURCES[1]} wlt_7=${SOURCES[1]}'
+cmd = cmd +' wlt_8=${SOURCES[1]} wlt_9=${SOURCES[1]}'
+cmd = cmd +' wlt_10=${SOURCES[1]} wlt_11=${SOURCES[1]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_v0, data_v1, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_canvec_v_1'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[1]} '
+
+#test command
+cmd = test_asg_canvec_v+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_v0=${TARGETS[1]}'+\
+    ' data_v1=${TARGETS[2]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=velocity'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_EXVEC_P_0
+#    - ASG driver
+#    - pressure data: multiple
+#    - velocity source: two exvec MPS
+#######################################################################
+#######################################################################
+
+data_p       = 'asg_exvec_p_0_data_p.su'
+MPS_file     = 'asg_exvec_p_0_MPS.su'
+RHS_v0_1     = 'asg_exvec_p_0_RHS_v0.su'
+RHS_v1_1     = 'asg_exvec_p_0_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[0]}'
+cmd = cmd +' wlt_4=${SOURCES[0]} wlt_5=${SOURCES[0]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_p, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_exvec_p_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[2]} ${TARGETS[0]} '
+
+#test commad
+cmd = test_asg_exvec_p+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_p=${TARGETS[0]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=pressure'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+
+#######################################################################
+#######################################################################
+# TEST: ASG_EXVEC_V_1
+#    - ASG driver
+#    - velocity data: multiple traces
+#    - velocity source: two exvec MPS
+#######################################################################
+#######################################################################
+
+data_v0      = 'asg_exvec_v_0_data_v0.su'
+data_v1      = 'asg_exvec_v_0_data_v1.su'
+MPS_file     = 'asg_exvec_v_0_MPS.su'
+RHS_v0_1     = 'asg_exvec_v_0_RHS_v0.su'
+RHS_v1_1     = 'asg_exvec_v_0_RHS_v1.su'
+RHS_v0_2     = 'RHS_0_'+MPS_file
+RHS_v1_2     = 'RHS_1_'+MPS_file
+
+MPS_ord=1
+a_ord=2
+MPS_dim=3
+
+
+#######################################################################
+# Build sources
+#######################################################################
+
+N = sx_n * MPS_dim
+
+#build MPS file
+output = [MPS_file]
+input = ['wlt_ricker.su','wlt_gaussd.su']
+cmd = tgs_n_cat +' CWPROOT='+ CWPROOT +' N='+ str(N)
+cmd = cmd +' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]}'
+cmd = cmd +' wlt_2=${SOURCES[0]} wlt_3=${SOURCES[0]}'
+cmd = cmd +' wlt_4=${SOURCES[0]} wlt_5=${SOURCES[0]}'
+cmd = cmd +' out=tmp_MPS.su && '
+cmd = cmd + sushw + ' <tmp_MPS.su key=selev a='+ str(selev) + ' | '
+cmd = cmd + sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+str(MPS_dim)
+cmd = cmd +' >${TARGETS[0]} && /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#######################################################################
+# Compute data
+#######################################################################
+
+output = [data_v0, data_v1, RHS_v0_1, RHS_v1_1, RHS_v0_2, RHS_v1_2]
+input = [mdl_file['bm'], 'hdr.su', MPS_file]
+jobname = 'asg_exvec_v_0'
+
+#pre command
+pre = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[0]}'
+
+#test command
+cmd = test_asg_exvec_v+\
+    ' bulkmod=${SOURCES[0]}'+\
+    ' data_v0=${TARGETS[0]}'+\
+    ' data_v1=${TARGETS[1]}'+\
+    ' appx_ord='+ str(a_ord)+\
+    ' MPS_ord='+str(MPS_ord)+\
+    ' MPS_file=${SOURCES[2]}'+\
+    ' RHS_v0=${TARGETS[1]}'+\
+    ' RHS_v1=${TARGETS[2]}'+\
+    ' driver=asg'+\
+    ' src_type=velocity'+\
+    ' data_type=velocity'+\
+    ' outfile=../'+str(OUTFILE)+\
+    ' jobname='+str(jobname)
+
+#mpi args
+PT = 1
+cmd = cmd + ' partask='+ str(PT)
+exe = { 'platf':'', 'ppn':str(PT) }
+
+#job
+jobs = jobs + [{ 'job': jobname,
+                 'pre': pre,
+                 'cmd': cmd,
+                 'src': input,
+                 'tgt': output,
+                 'exe': exe
+                 },
+               ]
+
+tripExec(jobs,penv)
+
+End()

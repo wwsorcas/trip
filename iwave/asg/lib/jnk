@@ -1,0 +1,7 @@
+scons: Entering directory `/Users/symes/Applications/trip/iwave/asg'
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+g++ -o lib/dton.o -c -g -pedantic -Wunused -Wimplicit -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -Iinclude -I/Users/symes/Applications/trip/iwave/core/include -I/Users/symes/Applications/trip/iwave/grid/include -I/Users/symes/Applications/trip/iwave/trace/include -I/Users/symes/Applications/trip/iwave/ang/include -I/Users/symes/Applications/trip/iwave/oc/include -I/Users/symes/Applications/trip/iwave/sucore/include -I/Users/symes/Applications/trip/iwave/base/include -I/Users/symes/Applications/trip/rvl/umin/include -I/Users/symes/Applications/trip/rvl/alg/include -I/Users/symes/Applications/trip/rvl/mpirvl/include -I/Users/symes/Applications/trip/rvl/local/include -I/Users/symes/Applications/trip/rvl/rvl/include -I/Users/symes/Applications/trip/rvl/rand/include lib/dton.cc
+cc1plus: warning: command line option '-Wimplicit' is valid for C/ObjC but not for C++
+scons: done building targets.

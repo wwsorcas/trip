@@ -1,0 +1,140 @@
+from rsf.proj import *
+from newbatch import tripExec
+import os
+
+penv = {'stampede' :  { 'batch'    : 'slurm',
+                        'queue'    : 'normal',
+                        'acct'     : 'FDTD3D-Cont',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      },
+         'davinci' :  { 'batch'    : 'slurm',
+                        'queue'    : 'trip',
+                        'acct'     : 'symes',
+                        'mail'     : 'symes@caam.rice.edu',
+			'launcher' : 'ibrun'
+                      }
+       }
+
+#######################################################################
+###################### LOCAL DEFINITIONS ##############################
+#######################################################################
+RSFSRC   = os.getenv('RSFSRC')
+CWPROOT  = os.getenv('CWPROOT')
+IWAVE    = os.getenv('IWAVE')
+MPSCODE  = os.getenv('MPSCODE')
+thispath = os.getcwd()
+TESTROOT = thispath+'/../src/main'
+
+ssappx_fun  = MPSCODE + '/main/ssappx_fun.x'
+test_kern   = TESTROOT + '/test_kern.x'
+
+
+# Running test_kern.x
+#Flow(None,None,test_kern,stdin=0,stdout=0)
+
+
+# Plotting ssappx functions
+h = 1
+dx = 0.005
+
+# s=0, q=2 case
+s = 0
+q = 2
+ox = -2
+fx = 2
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s0q2.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+# s=0, q=4 case
+s = 0
+q = 4
+ox = -3
+fx = 3
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s0q4.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+# s=1, q=2 case
+s = 1
+q = 2
+ox = -2.5
+fx = 2.5
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s1q2.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+# s=1, q=4 case
+s = 1
+q = 4
+ox = -3.5
+fx = 3.5
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s1q4.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+# s=2, q=2 case
+s = 2
+q = 2
+ox = -3
+fx = 3
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s2q2.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+# s=2, q=4 case
+s = 2
+q = 4
+ox = -4
+fx = 4
+nx = (int)((fx-ox)/dx)+1
+
+Flow('ssappx_s2q4.rsf',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=tmp.asc && '+
+     ' echo in=tmp.asc n1='+str(nx)+' n2=1 data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc',
+     stdin=0, stdout=0)
+
+ox=0
+dx=1
+fx=0
+Flow('zz.asc',None,
+     ssappx_fun+' h='+str(h)+' a_ord='+str(q)+' d_ord='+str(s)+
+     ' ox='+str(ox)+' dx='+str(dx)+' fx='+str(fx)+' filename=${TARGETS[0]}',
+     stdin=0,stdout=0)
+
+End()
+

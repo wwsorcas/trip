@@ -1,0 +1,66 @@
+#ifndef __FWI_SELFDOC__
+#define __FWI_SELFDOC__
+
+" ----------------------- begin FWI Parameters ---------------------",
+  " ",
+  " Overview: model, source, and data components should be provided ",
+  " valid pathnames, to create a configuration valid for forward",
+  " modeling. These choices are used to initialize data geometry",
+  " and/or background values not changed during inversion.",
+  " ",
+  " Parameters to be inverted are amongst those described in the",
+  " list of model parameters. ",
+  " ",
+  " Optional pathnames (rsf format) for model key xxx take the form:",
+  "        xxx_est = <string>    model update on subgrid of model grid",
+  "        xxx_inv = <string>    updated model (reference plus update)",
+  "        xxx_ub  = <string>    pointwise upper bound",
+  "        xxx_lb  = <string>    pointwise lower bound",
+  " ",
+  " Optional parameters pertaining to xxx:",
+  "        xxx_max = <float>     uniform upper bound",
+  "        xxx_min = <float>     uniform lower bound",
+  " ",
+  " Optional taper parameters for update to reference grid injection:",
+  "         taper1 = <float>     taper width (m), axis 0",
+  "         taper2 = <float>     taper width (m), axis 1",
+  "         taper3 = <float>     taper width (m), axis 2",
+  " ",
+  " Optional storage (SU format) for data residual component yyy",
+  "        yyy_res = <string>    data residual component",
+  " ",
+  " At least one model update pathname of the form [model component]_est.rsf",
+  " must be supplied for application to run.",
+  " ",
+  " Model components may be updated on entire grid or on a subgrid.",
+  " ",
+  " The path xxx_est.rsf, for the update of model component in file",
+  " xxx.rsf, must name an existing rsf file, since the update grid ",
+  " is read from it. Use M8R utilities to construct xxx_est.rsf prior",
+  " to invoking this command."
+  " "
+  " The other output files (xxx_inv.rsf, yyy_res.su) may be created during",
+  " execution; if they exist they are overwritten. Existing output files",
+  " must have geometry compatible with that of the corresponding inputs."
+  " ",
+  " Functions on update grid specd in file xxx_est.rsf are transferred to",
+  " model grid by injection pullback, so former must be subgrid of latter.",
+  " ",
+  " Every model parameter to be updated must be supplied with upper ",
+  " and lower bounds. These can take one of two forms: ",
+  " upper and lower bounds are either",
+  " [name_from_keys]_ub, [name_from_keys]_lb (grids for envelope ",
+  " must be same those for parameter updates), or",
+  " [name_from_keys]_max, [name_from_keys]_min (floats)",
+  " ",
+  " In addition, choice and parameters for modeling and optimization",
+  " must be supplied, as described in following selfdoc sections.",
+  " "
+" ------------------------- end FWI Parameters ---------------------", 
+#include <umin_pars.h>
+#include <lbfgs_pars.h>
+#include <trgn_pars.h>
+" -------------------- COMMON SIMULATION PARAMETERS ----------------",
+  " ",
+
+#endif

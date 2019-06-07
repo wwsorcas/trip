@@ -1,0 +1,503 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.102 Build 20160720
+
+Compiler options: -I/Users/muhongzhou/Softwares/madagascar/include -o init_del_res_trace.o -c -O3 -qopenmp -restrict -qopt-report=4
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: DelRes(int, std::__1::vector<float, std::__1::allocator<float>> **&)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (DelRes(int, std::__1::vector<float, std::__1::allocator<float>> **&)) [1/34=2.9%] init_del_res_trace.cpp(15,1)
+  -> EXTERN: (17,9) ___cxa_end_catch
+  -> EXTERN: (17,9) ___cxa_rethrow
+  -> EXTERN: (17,9) operator delete[](void *)
+  -> EXTERN: (17,9) ___cxa_get_globals_fast
+  -> EXTERN: (17,9) ___cxa_begin_catch
+  -> INLINE (MANUAL): (17,9) std::__1::vector<float, std::__1::allocator<float>>::~vector(std::__1::vector<float, std::__1::allocator<float>> *) (isz = 72) (sz = 77)
+    -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector:(457,29) std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const) (isz = 72) (sz = 77)
+      -> INLINE (MANUAL): (365,5) std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 72) (sz = 77)
+        -> INLINE (MANUAL): (449,21) std::__1::__get_nullptr_t() (isz = 3) (sz = 8)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef:(85,94) std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long) (isz = 0) (sz = 6)
+        -> DELETED: (449,21) std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const (isz = 0) (sz = 5)
+        -> INLINE (MANUAL): (451,9) std::__1::__vector_base<float, std::__1::allocator<float>>::clear(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 14) (sz = 19)
+          -> INLINE (MANUAL): (368,29) std::__1::__vector_base<float, std::__1::allocator<float>>::__destruct_at_end(std::__1::__vector_base<float, std::__1::allocator<float>> *, std::__1::__vector_base<float, std::__1::allocator<float>>::pointer) (isz = 38) (sz = 45)
+            -> EXTERN: (422,1) ___cxa_call_unexpected
+            -> DELETED: (424,9) std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::destroy<float>(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *) (isz = 3) (sz = 10)
+            -> INLINE (MANUAL): (424,33) std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 10) (sz = 17)
+              -> INLINE (MANUAL): (350,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) (isz = 4) (sz = 11)
+                -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2467,84) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) (isz = 0) (sz = 6)
+            -> INLINE (MANUAL): (424,44) std::__1::__to_raw_pointer<float>(float *) (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (452,9) std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::deallocate(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::pointer, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::size_type) (isz = 7) (sz = 16)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(1496,14) std::__1::allocator<float>::deallocate(std::__1::allocator<float> *, std::__1::allocator<float>::pointer, std::__1::allocator<float>::size_type) (isz = 5) (sz = 12)
+            -> EXTERN: (1731,9) ___cxa_call_unexpected
+            -> INLINE (MANUAL): (1731,10) std::__1::__deallocate(void *) (isz = 0) (sz = 5)
+              -> EXTERN: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/new:(177,3) operator delete(void *)
+        -> INLINE (MANUAL): (452,36) std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 10) (sz = 17)
+          -> INLINE (MANUAL): (350,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) (isz = 4) (sz = 11)
+            -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2467,84) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (452,57) std::__1::__vector_base<float, std::__1::allocator<float>>::capacity(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const (isz = 21) (sz = 28)
+          -> INLINE (MANUAL): (371,40) std::__1::__vector_base<float, std::__1::allocator<float>>::__end_cap(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const (isz = 11) (sz = 18)
+            -> INLINE (MANUAL): (359,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::first(const std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) const (isz = 5) (sz = 12)
+              -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2465,83) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::first(const std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) const (isz = 1) (sz = 7)
+  -> EXTERN: (17,9) operator delete[](void *)
+  -> EXTERN: (18,5) operator delete[](void *)
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at init_del_res_trace.cpp(16,5)
+   remark #15382: vectorization support: call to function operator delete(void *) cannot be vectorized   [ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/new(177,3) ]
+   remark #15382: vectorization support: call to function operator delete[](void *) cannot be vectorized   [ init_del_res_trace.cpp(17,9) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+   remark #15346: vector dependence: assumed ANTI dependence between *(*res_vec+i*8) (17:19) and call:operator delete[](void *) (17:9)
+
+   LOOP BEGIN at init_del_res_trace.cpp(17,9)
+      remark #15382: vectorization support: call to function operator delete(void *) cannot be vectorized   [ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/new(177,3) ]
+      remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+      remark #15346: vector dependence: assumed ANTI dependence between U15_V->__begin_ (449:5) and call:operator delete(void *) (177:3)
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+init_del_res_trace.cpp(15,1):remark #34051: REGISTER ALLOCATION : [__Z6DelResiRPPNSt3__16vectorIfNS_9allocatorIfEEEE] init_del_res_trace.cpp:15
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rbx rbp rsi rdi r8-r9 r12-r15]
+        
+    Routine temporaries
+        Total         :      37
+            Global    :      20
+            Local     :      17
+        Regenerable   :       1
+        Spilled       :       9
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :      72 bytes*
+            Reads     :       9 [9.13e+00 ~ 4.2%]
+            Writes    :       9 [9.13e+00 ~ 4.2%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::destroy<float>(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::destroy<float>(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1536,13)
+
+===========================================================================
+
+Begin optimization report for: std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef(65,79)
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator<float>::allocator(std::__1::allocator<float> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator<float>::allocator(std::__1::allocator<float> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1722,53)
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator<float>::deallocate(std::__1::allocator<float> *, std::__1::allocator<float>::pointer, std::__1::allocator<float>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator<float>::deallocate(std::__1::allocator<float> *, std::__1::allocator<float>::pointer, std::__1::allocator<float>::size_type)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1731,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::deallocate(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::pointer, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::deallocate(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::pointer, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::size_type)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1496,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::__destroy<float>(std::__1::false_type, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::__destroy<float>(std::__1::false_type, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1672,13)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2232,53)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *const, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *const, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2231,40)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::first(const std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::first(const std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2293,75)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2295,76)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::__compressed_pair(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *, std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::__compressed_pair(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *, std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2411,49)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::first(const std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::first(const std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2465,75)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(2467,76)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(350,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::__end_cap(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::__end_cap(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(359,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(434,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(429,33)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(448,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(365,5)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::clear(std::__1::__vector_base<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::clear(std::__1::__vector_base<float, std::__1::allocator<float>> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(368,28)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::capacity(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::capacity(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(371,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__vector_base<float, std::__1::allocator<float>>::__destruct_at_end(std::__1::__vector_base<float, std::__1::allocator<float>> *, std::__1::__vector_base<float, std::__1::allocator<float>>::pointer)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__vector_base<float, std::__1::allocator<float>>::__destruct_at_end(std::__1::__vector_base<float, std::__1::allocator<float>> *, std::__1::__vector_base<float, std::__1::allocator<float>>::pointer)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(422,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::vector<float, std::__1::allocator<float>>::vector(std::__1::vector<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::vector<float, std::__1::allocator<float>>::vector(std::__1::vector<float, std::__1::allocator<float>> *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(484,9)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__get_nullptr_t()
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__get_nullptr_t()) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef(85,76)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__deallocate(void *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__deallocate(void *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/new(173,65)
+
+===========================================================================
+
+Begin optimization report for: std::__1::__to_raw_pointer<float>(float *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::__to_raw_pointer<float>(float *)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1066,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::forward<std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param>(std::__1::remove_reference<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer>::type &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::forward<std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param>(std::__1::remove_reference<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer>::type &)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/type_traits(1712,1)
+
+===========================================================================
+
+Begin optimization report for: std::__1::allocator<float>::allocator(std::__1::allocator<float> *const)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::allocator<float>::allocator(std::__1::allocator<float> *const)) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory(1722,31)
+
+===========================================================================
+
+Begin optimization report for: std::__1::vector<float, std::__1::allocator<float>>::~vector(std::__1::vector<float, std::__1::allocator<float>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (std::__1::vector<float, std::__1::allocator<float>>::~vector(std::__1::vector<float, std::__1::allocator<float>> *)) [32/34=94.1%] /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(457,29)
+  -> INLINE (MANUAL): (457,29) std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const) (isz = 72) (sz = 77)
+    -> INLINE (MANUAL): (365,5) std::__1::__vector_base<float, std::__1::allocator<float>>::~__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 72) (sz = 77)
+      -> INLINE (MANUAL): (449,21) std::__1::__get_nullptr_t() (isz = 3) (sz = 8)
+        -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef:(85,94) std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long) (isz = 0) (sz = 6)
+      -> DELETED: (449,21) std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const (isz = 0) (sz = 5)
+      -> INLINE (MANUAL): (451,9) std::__1::__vector_base<float, std::__1::allocator<float>>::clear(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 14) (sz = 19)
+        -> INLINE (MANUAL): (368,29) std::__1::__vector_base<float, std::__1::allocator<float>>::__destruct_at_end(std::__1::__vector_base<float, std::__1::allocator<float>> *, std::__1::__vector_base<float, std::__1::allocator<float>>::pointer) (isz = 38) (sz = 45)
+          -> EXTERN: (422,1) ___cxa_call_unexpected
+          -> DELETED: (424,9) std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::destroy<float>(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, float *) (isz = 3) (sz = 10)
+          -> INLINE (MANUAL): (424,33) std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 10) (sz = 17)
+            -> INLINE (MANUAL): (350,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2467,84) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): (424,44) std::__1::__to_raw_pointer<float>(float *) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (452,9) std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::deallocate(std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::allocator_type &, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::pointer, std::__1::allocator_traits<std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::size_type) (isz = 7) (sz = 16)
+        -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(1496,14) std::__1::allocator<float>::deallocate(std::__1::allocator<float> *, std::__1::allocator<float>::pointer, std::__1::allocator<float>::size_type) (isz = 5) (sz = 12)
+          -> EXTERN: (1731,9) ___cxa_call_unexpected
+          -> INLINE (MANUAL): (1731,10) std::__1::__deallocate(void *) (isz = 0) (sz = 5)
+            -> EXTERN: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/new:(177,3) operator delete(void *)
+      -> INLINE (MANUAL): (452,36) std::__1::__vector_base<float, std::__1::allocator<float>>::__alloc(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 10) (sz = 17)
+        -> INLINE (MANUAL): (350,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::second(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) (isz = 4) (sz = 11)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2467,84) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::second(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (452,57) std::__1::__vector_base<float, std::__1::allocator<float>>::capacity(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const (isz = 21) (sz = 28)
+        -> INLINE (MANUAL): (371,40) std::__1::__vector_base<float, std::__1::allocator<float>>::__end_cap(const std::__1::__vector_base<float, std::__1::allocator<float>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (359,28) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::first(const std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *) const (isz = 5) (sz = 12)
+            -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2465,83) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::first(const std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *) const (isz = 1) (sz = 7)
+
+
+    Report from: Code generation optimizations [cg]
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector(457,29):remark #34051: REGISTER ALLOCATION : [__ZNSt3__16vectorIfNS_9allocatorIfEEED1Ev] /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector:457
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    5[ rax rdx rcx rsi rdi]
+        
+    Routine temporaries
+        Total         :      20
+            Global    :       9
+            Local     :      11
+        Regenerable   :       0
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef(71,32)
+
+===========================================================================
+
+Begin optimization report for: InitRes(int, std::__1::vector<float, std::__1::allocator<float>> **&)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (InitRes(int, std::__1::vector<float, std::__1::allocator<float>> **&)) [34/34=100.0%] init_del_res_trace.cpp(5,1)
+  -> EXTERN: (7,54) operator new[](size_t)
+  -> EXTERN: (9,9) ___cxa_rethrow
+  -> EXTERN: (9,9) operator delete[](void *)
+  -> EXTERN: (9,9) ___cxa_get_globals_fast
+  -> EXTERN: (9,9) ___cxa_begin_catch
+  -> EXTERN: (9,9) ___cxa_end_catch
+  -> EXTERN: (9,9) ___cxa_end_catch
+  -> EXTERN: (9,9) std::terminate()
+  -> EXTERN: (9,9) ___cxa_end_catch
+  -> EXTERN: (9,9) ___cxa_begin_catch
+  -> (9,9) std::__1::vector<float, std::__1::allocator<float>>::~vector(std::__1::vector<float, std::__1::allocator<float>> *) (isz = 72) (sz = 77)
+     [[ Unable to inline callsite ]]
+  -> EXTERN: (9,9) ___cxa_rethrow
+  -> EXTERN: (9,9) ___cxa_get_globals_fast
+  -> EXTERN: (9,9) ___cxa_begin_catch
+  -> INLINE (MANUAL): (9,9) std::__1::vector<float, std::__1::allocator<float>>::vector(std::__1::vector<float, std::__1::allocator<float>> *) (isz = 11) (sz = 16)
+    -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/vector:(483,5) std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *const) (isz = 11) (sz = 16)
+      -> INLINE (MANUAL): (429,33) std::__1::__vector_base<float, std::__1::allocator<float>>::__vector_base(std::__1::__vector_base<float, std::__1::allocator<float>> *) (isz = 38) (sz = 43)
+        -> DELETED: (429,33) std::__1::__vector_base_common<true>::__vector_base_common(std::__1::__vector_base_common<true> *const) (isz = 0) (sz = 5)
+        -> DELETED: (431,16) std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const (isz = 0) (sz = 5)
+        -> INLINE (MANUAL): (431,16) std::__1::__get_nullptr_t() (isz = 3) (sz = 8)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef:(85,94) std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long) (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (432,14) std::__1::__get_nullptr_t() (isz = 3) (sz = 8)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef:(85,94) std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long) (isz = 0) (sz = 6)
+        -> DELETED: (432,14) std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const (isz = 0) (sz = 5)
+        -> INLINE (MANUAL): (433,18) std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::__compressed_pair(std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type> *, std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param) (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2411,16) std::__1::forward<std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param>(std::__1::remove_reference<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer>::type &) (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/memory:(2411,16) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *const, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param) (isz = 6) (sz = 13)
+            -> INLINE (MANUAL): (2231,40) std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::__libcpp_compressed_pair_imp(std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U> *, std::__1::__libcpp_compressed_pair_imp<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type, 2U>::_T1_param) (isz = 6) (sz = 13)
+              -> DELETED: (2231,40) std::__1::allocator<float>::allocator(std::__1::allocator<float> *const) (isz = 0) (sz = 5)
+              -> INLINE (MANUAL): (2232,20) std::__1::forward<std::__1::__compressed_pair<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer, std::__1::__vector_base<float, std::__1::allocator<float>>::allocator_type>::_T1_param>(std::__1::remove_reference<std::__1::__vector_base<float, std::__1::allocator<float>>::pointer>::type &) (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (433,18) std::__1::__get_nullptr_t() (isz = 3) (sz = 8)
+          -> INLINE (MANUAL): /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1/cstddef:(85,94) std::__1::nullptr_t::nullptr_t(std::__1::nullptr_t *, long) (isz = 0) (sz = 6)
+        -> DELETED: (433,18) std::__1::nullptr_t::operator float *<float>(const std::__1::nullptr_t *) const (isz = 0) (sz = 5)
+  -> EXTERN: (9,9) operator new[](size_t)
+  -> EXTERN: (9,9) ___cxa_get_globals_fast
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at init_del_res_trace.cpp(8,5)
+   remark #15382: vectorization support: call to function operator new[](size_t) cannot be vectorized   [ init_del_res_trace.cpp(9,9) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization. First dependence is shown below. Use level 5 report for details
+
+   LOOP BEGIN at init_del_res_trace.cpp(9,9)
+      remark #25436: completely unrolled by 9   (pre-vector) 
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+init_del_res_trace.cpp(5,1):remark #34051: REGISTER ALLOCATION : [__Z7InitResiRPPNSt3__16vectorIfNS_9allocatorIfEEEE] init_del_res_trace.cpp:5
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    9[ rax rdx rcx rsi rdi r12-r15]
+        
+    Routine temporaries
+        Total         :      23
+            Global    :      16
+            Local     :       7
+        Regenerable   :       2
+        Spilled       :       4
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :      16 bytes*
+            Reads     :       2 [1.92e+00 ~ 0.8%]
+            Writes    :       2 [1.92e+00 ~ 0.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
