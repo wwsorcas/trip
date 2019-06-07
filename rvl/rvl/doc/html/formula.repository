@@ -1,0 +1,85 @@
+\form#0:$dy = \partial_jF_i(x)dx_j$
+\form#1:$dx_j \in X_j$
+\form#2:$dy_i \in Y_i$
+\form#3:$dx_j = \partial_jF_i(x)^*dy_i$
+\form#4:$dy_i = D^2F_i(x)[dx0, dx1]$
+\form#5:$dx0, dx1 \in X$
+\form#6:$dx = \sum_i D^2F_i(x)^*[dx,dy_i]$
+\form#7:$x_j = F_i^*y_i$
+\form#8:$x_j \in X_j$
+\form#9:$y$
+\form#10:$F$
+\form#11:$DF(y)dy$
+\form#12:$G(h) = (F(y+h*dy)-F(y-h*dy))/(2*h)$
+\form#13:$h = hmin + i*dh, dh = (hmax-hmin)/(n-1)$
+\form#14:$i=0,...,n-1$
+\form#15:$\log(\|G(h+dh)-(h+dh)*DF(y)dy\|/\|G(h)-h*DF(y)dy\|)/ \log((h+dh)/h)$
+\form#16:$h \rightarrow 0$
+\form#17:$dy = H(x)*dx$
+\form#18:$f(x) = 0 $
+\form#19:$f(G(x))$
+\form#20:$val = F(x)$
+\form#21:$g = grad F(x)$
+\form#22:$dy = Hess F(x) dx$
+\form#23:$ Op_1, Op_2 \mapsto Op_2 \circ Op_1 $
+\form#24:$ A^*A $
+\form#25:$ A $
+\form#26:$ x\mapsto ax $
+\form#27:$ a $
+\form#28:$ x\mapsto \frac{1}{a}x $
+\form#29:$ w_1, w_2 $
+\form#30:$ Op_1 $
+\form#31:$ Op_2 $
+\form#32:$w_1 Op_1 + w_2 Op_2$
+\form#33:$ y $
+\form#34:$ A x$
+\form#35:$ A^* x$
+\form#36:$ y = \alpha A x + y $
+\form#37:$ y = \alpha A^T x + y $
+\form#38:$ y = \alpha A x + \beta y $
+\form#39:$ y = \alpha A^* x + \beta y$
+\form#40:$ A^{-1} * x$
+\form#41:$ A * y = x $
+\form#42:$ A^{-T} * x$
+\form#43:$ A^{T} * y = x $
+\form#44:$ A(x_0,x_1)$
+\form#45:$ A(x_1,x_0)$
+\form#46:$ x_0, x_1 $
+\form#47:$ x_1 $
+\form#48:$ A^*(x_0,y)$
+\form#49:$F(x) = x-d$
+\form#50:$F(x) = G(x)-d$
+\form#51:$f(x) = 0.5 |x|^{2}$
+\form#52:$ x \mapsto \frac{1}{2} |A x|^2 $
+\form#53:$ x \mapsto \frac{1}{2} |A x - b|^2 $
+\form#54:$ x \mapsto \frac{1}{2} \|A[x]\|^2 \equiv J[x] $
+\form#55:$ x \mapsto DA[x]^T(A[x]) = \nabla J[x] $
+\form#56:$ x \mapsto DA[x]^TDA[x] $
+\form#57:$ d $
+\form#58:$ x \mapsto \frac{1}{2} \|A[x]-d\|^2 \equiv J[x] $
+\form#59:$ x \mapsto DA[x]^T(A[x]-d) = \nabla J[x] $
+\form#60:$ F(x_0)x_1$
+\form#61:$ F(x_0,x_1) $
+\form#62:$ (x,dx) \mapsto DF(x)dx$
+\form#63:$M = 2.0*L_1-3.7*L_2+9.0*L_3$
+\form#64:$x \mapsto M(x)=L2(L1(x))$
+\form#65:$x \mapsto M(x)=L5(L4(L3(L2(L1(x)))))$
+\form#66:$y = F(x)$
+\form#67:$dy = DF(x)dx$
+\form#68:$dx = DF(x)^*dy$
+\form#69:$dx_1 = D^2F(x)^*(dx_0,dy)$
+\form#70:$\langle D^2F(x)^*(dx_0,dy),dx_1\rangle_X = \langle dy, D^2F(x)(dx_0,dx_1) $
+\form#71:$dy = \partial_iF(x)dx_i$
+\form#72:$dx_i \in X_i$
+\form#73:$dx_i = \partial_iF(x)^*dy$
+\form#74:$dy = \partial^2_{i,j}F(x)(dx_i,dx_j)$
+\form#75:$dx_i \in X_i, dx_j \in X_j$
+\form#76:$dx_i = \partial^2_{i,j}F(x)^*(dy,dx_j)$
+\form#77:$X_i \rightarrow Y$ defined by $dx_i \mapsto \partial^2_{i,j}F(x)(dx_i,dx_j)$
+\form#78:$y = F(x_0)x_1$
+\form#79:$x_1 = F^*(x_0)y$
+\form#80:$x_1 \rightarrow F(x_0)x_1$
+\form#81:$dx_0 = (DF(x_0)dx_0)x_1$
+\form#82:$dx_0 \rightarrow (DF(x_0)dx_0)x_1$
+\form#83:$x_1 \rightarrow (DF(x_0)dx_0)x_1$
+\form#84:$quot = a/b$
