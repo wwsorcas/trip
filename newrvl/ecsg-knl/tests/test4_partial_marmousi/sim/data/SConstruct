@@ -1,0 +1,23 @@
+#!/bin/python
+# Truncate a small portion of marmousi data
+# vs,vp [m/s], byh [cm^3/g]
+
+from rsf.proj import *
+
+par_list = ['vs', 'vp', 'density']
+file_list = ['MODEL_S-WAVE_VELOCITY_1.25m.rsf',
+             'MODEL_P-WAVE_VELOCITY_1.25m.rsf',
+             'MODEL_DENSITY_1.25m.rsf']
+
+for i in range(3):
+    Flow(par_list[i], file_list[i],
+         '''window f1=561 n1=201 j1=8 f2=6700 n2=301 j2=10 |
+             spray axis=2 n=301 |
+             put o1=0 d1=10 label1='Z' unit1='m' |
+             put o2=0 d2=10 label2='Y' unit2='m' |
+             put o3=0 d3=10 label3='X' unit3='m' |
+             transp plane=13''')
+
+    Plot(par_list[i],'''transp plane=13 | window f2=155 n2=1 | grey color=e''')
+
+
