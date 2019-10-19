@@ -1,0 +1,6 @@
+CC = 'mpicc' 
+CCFLAGS = '-O3 -qopt-report=4 -qopenmp -xhost -falign-functions=16 -restrict -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -DIWAVE_USE_MPI'
+CFLAGS = '-std=c99'
+CXXFLAGS='-std=c++0x'
+CXX = 'mpicxx'
+LINKFLAGS = '-qopenmp -xhost'

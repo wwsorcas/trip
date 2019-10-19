@@ -1,0 +1,6 @@
+CC = 'icc' 
+CCFLAGS = '-O3 -qopt-report=4 -xhost -falign-functions=16 -restrict -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE'
+CFLAGS = '-std=c99'
+CXXFLAGS='-std=c++0x'
+CXX = 'icpc'
+LINKFLAGS = '-xhost'
