@@ -1,0 +1,95 @@
+      *** Installation of TRIP Software ***
+
+0. Contents
+
+rvl - framework for linking complex simulations with optimization and
+numerical linear algebra
+
+iwave - framework for timestepping simulators, with RVL hooks
+
+repro - reproducible documents, in form of Madagascar books. Depends
+on TRIP, Seismic Unix, and Madagascar reproducible documents package,
+which in turn requires a standard installation of TeX. See Madagascar
+documentation for more on this. To build each book, run scons in
+corresponding subdirectory of repro.
+
+test - regression test package, depends on GoogleTest. Useful mainly
+for code maintainers/developers. Not built by any top level
+install, either local or global - to build, run scons in test
+directory.
+
+admin - useful auxiliary scripts, including SConstruct templates and
+configuration files for various common combinations of software and
+platform.
+
+2. Installation - code
+
+SConstruct must be installed first. SConstruct is a Python
+application, so Python must be installed, version 2.7 or later.
+
+For basic install using gcc -g, execute scons in this directory.
+
+To control choice of compiler suite and compiler options, modify
+config.py in this directory to invoke the desired options. Default
+config.py is the same as admin/linux.gcc.dbg.py and uses gcc with
+debug options set. Model config.py files for gcc and icc and higher
+optimization levels, with and without MPI enabled, may be found in
+admin.
+
+On some systems, MPI-enabled installation requires definition of a
+path to MPI source directory as environment variable MPIROOT, for
+example
+
+export MPIROOT=<path to MPI root directory>
+
+3. Installation - docs
+
+Command self-docs and doxygen-generated html reference material are
+included in the release, and require no additional work on the user's
+part.
+
+The subdirectories of repro define Madagascar books. These build with
+the Madagascar reproducible research framework. Also, many of the
+project directories require Seismic Unix (unlike Madadagascar books
+proper, which build with Madagascar only).
+
+The Madagascar framework requires a standard TeX installation. The
+precise requirements are described in the Madagascar documentation.
+
+To build the reproducible documents, you will need to define several
+variables in your environment, including some related to the TeX
+installation, and in addition at least the following:
+
+- PYTHONPATH, via
+
+export PYTHONPATH=$PYTHONPATH:<path to trip>/admin
+
+- CWPROOT = path to Seismic Unix root directory
+
+- RSFROOT = path to Madagascar install directory
+
+- RSFSRC  = path to Madagascar build directory
+
+- RSFFIGS = path to a scratch directory for archiving Madagascar
+graphics (.vpl) files generated in the course of building the various
+papers in repro
+
+The procedure for building a paper in repro/book/paper is
+
+cd project; scons lock
+
+(this command builds all of the results, both intermediate and final
+(figures!) in the paper/project directory, and archives the figure
+files in an appropriate subdirectory of RSFFIGS)
+
+cd ..; scons
+
+(this command converts the archived figure files in RSFFIGS into pdfs,
+stores them in project/Fig, then runs LaTeX to create the paper pdf)
+
+It is also possible to build all of the papers in each subdirectory of
+repro to create an anthology ("book"), provided that the subdirectory
+is equipped with an appropriate SConstruct file.
+
+Building reproducible papers using remote HPC resources is a bit
+trickier. See the paper repro/papers/madfigs for some recommendations.
