@@ -1,0 +1,15 @@
+from rsf.tex import *
+
+End(
+use='amsmath,setspace,wasysym,graphicx,float,subfig,natbib',
+
+include=r'''
+\everymath{\displaystyle}
+''',
+color='ALL'
+)
+
+
+
+
+

@@ -1,0 +1,26 @@
+from rsf.tex import *
+
+End(
+
+#options='manuscript,12pt',
+options='georeport,12pt',
+
+use='amssymb,amsthm,amsmath,amscd,setspace,wasysym',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bR}{\mathbf{R}}
+\newtheorem{theorem}{Theorem}
+''',
+color='ALL'
+)
+
+
+
+
+

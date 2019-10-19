@@ -1,0 +1,1003 @@
+\title{Inversion Velocity Analysis}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\maketitle
+\parskip 12pt
+\begin{abstract}
+Minimization of semblance subject to regularized linearized inversion with fixed penalty parameter(s) results in computable gradient approximation with controllable error. This is an intermediate result for the constrained formulation.
+\end{abstract}
+
+\section{Introduction}
+
+\section{Mapping properties of separable extended modeling operators}
+This is a Hilbert space story. For any Hilbert space $H$, the inner
+product will be denoted $\langle \cdot, \cdot \rangle_H$, the norm
+denoted $\| \cdot \|_H$, with the subscript omitted whenever the
+choice of space is clear from context. 
+
+The natural objects in this study are {\em Hilbert space scales}, that
+is sequences of Hilbert spaces $H = \{ H^s, s \in \bZ\}$, decreasing in
+the sense that
+$H^{s+1} \subset H^s, s \in \bZ$. Define the sets
+\[
+H^{\infty} = \cap_{s \in \bZ} H^s, \,H^{-\infty} = \cup_{s \in
+  \bZ}H^s.
+\]
+An {\em operator} $L$  {\em of order $k \in \bZ$} from
+a scale $H_1$ to a scale $H_2$ is linear function from $H_1^{-\infty}$ to
+$H_2^{-\infty}$ for which $L|_{H_1^s} \in \sB(H_1^s,H_2^{s-k})$ for
+all $ s \in
+\bZ$. Denote by $OP^k(H_1,H_2)$ the set of all operators of order $k$.
+
+The motivating example of this structure are scales of $L^2$ Sobolev
+spaces, and (pseudo)differential operators on them.
+
+The domain of a separable extended model consists of two
+components. The first is a (background) model Hilbert space $M_b$ and
+an open set of admissible models
+$U \subset M_b$. In all examples, $M_b$ is a space of (possibly)
+vector-valued) smooth ($C^{\infty}$, ``low frequency'') functions on a suitable physical
+domain representing the physical parameters of a wave dynamics model, and members of $U$ obey additional constraints (such as
+bounds) required to make the dynamical laws they parametrize
+well-posed. 
+
+The other component of the model domain is a Hilbert space scale of extended
+models $\oM =\{\oM_k, k\in \bZ\}$. 
+A distinguished subscale $M = \{M_k, k\in \bZ\}, M_k \subset \oM_k$,
+represents the non-extended or physical models. 
+The  {\em annihilator} $A \in OP^0(\oM,N)$ has $M$ as its kernel:
+\begin{equation}
+\label{eqn:ann}
+\om \in \oM,\,\,A\om=0 \Leftrightarrow \om \in M.
+\end{equation}.
+The {\em extension map} $E \in OP^0(M,\oM)$ is injective.
+
+The model range or data space is another Hilbert scale $D$.
+
+The extended modeling operator, or forward map, is a function
+\[
+\oF: U \rightarrow OP^0(\oM,D)
+\]
+It is {\em smooth with loss of regularity}: $m_b \mapsto \oF[m_b]|_{\oM^k}$ is a 
+of class $C^p$ as a map from $U \rightarrow \sB(\oM^k,D^{k-p})$.
+
+The physical modeling operator is a similar map
+\[
+F:U \rightarrow OP^0(M,D)
+\]
+with the same smoothness with loss of regularity. 
+
+The extended and physical modeling operators are related through the
+extension map: for each $m_b \in U$,
+\[
+F[m_b] = \oF[m_b] \circ E.
+\]
+
+\section{Idealized extended inversion}
+The main alleged advantage of extended modeling over standard modeling
+is that {\em data can always be fit}, thus avoiding any possibility of
+cycle-skipping. For the moment, then, idealize the extended modeling
+operator $\oF[m_b]$ as bijective, for each admissible
+background model $m_b \in U$: that is, assume that for any admissible
+background model, it is always possible to perfectly fit data (certainly untrue
+of standard modeling) with proper choice of extended model, and in
+precisely one way. In some simple cases, this property actually holds,
+while in others it holds in an approximate sense; in the latter case,
+regularization is required, as will be explained in the next section.
+
+In terms of the framework introduced in the last section, the inverse
+problem is: given data $d \in D^0$, find a model $m_b \in U, m \in M^0$ so that
+$F[m_b]m \approx d$. 
+Call $d \in D$ {\em model-consistent} if there
+exists $m_b^* \in U, m^* \in M$ so that $F[m_b^*]m^*=d$. 
+In view of the extension property, and the assumed
+bijectivity of $\oF[m_b]$, for any $m_b \in U$ there exists a unique
+$\om[m_b,d] \in \oM$ so that
+\be
+\label{eqn:perfect}
+\oF[m_b]\om[m_b,d] = d
+\ee
+
+{\em Inversion velocity analysis} (IVA) is the minimization of the objective
+\be
+\label{eqn:iva}
+J[m_b] = \frac{1}{2}\|A\om[m_b,d]\|_0^2
+\ee
+over $m_b \in U$. If the data $d$ is model-consistent, then the global
+minimum value is zero, since $M$ is the kernel of $A$. Therefore in
+this case any global minimizer of $J$ is the first component of a
+solution of the inverse problem, or equivalently a global minimizer of
+the mean-square error $\|F[m_b]m-d\|_0$.
+
+\ref{eqn:perfect}), is necessarily the background component of a
+solution to the inverse problem. Note that this solution is not necessarily the
+same as $m_b^*,m^*$, since $\oF$ (as opposed to $\oF[m_b], m_b \in U$)
+has not been assumed injective.
+If the data is not model-consistent, 
+then $J[m_b]$ measures the distance to the feasible set ($M$) amongst
+all extended models that fit the data, so a projection (left inverse
+to the injection $M \subset \oM$) from $m_b,\om[m_b,d]$ onto $M$ will produce an
+approximate solution. 
+
+Evidently (\ref{eqn:iva}) could be viewed as a constrained problem,
+with constraint (\ref{eqn:perfect}). On the other hand, FWI could be
+posed as minimzation of the extended residual (error in
+(\ref{eqn:perfect})) subject to the constraint $A\om=0$. Thus IVA
+may be viewed as FWI with the roles of objective and
+constraint switched. While the two problems have the same solutions
+for model-consistent data, the solutions are different for
+model-inconsistent data. Also, all nontrivial examples of output least
+squares inversion tend to generate a 
+multiplicity of uninformative stationary points arbitrarily close to a
+consistent-data global minimizer (the ``local min''
+problem). In contrast, it can sometimes be shown that IVA
+has only global minimizers, or at least that the IVA objective
+is convex in a ball about the global solution.
+
+Local minimization via Newton-like optimization requires computation
+of the gradient. According to the smoothness assumptions made in the
+last section,  $m_b \mapsto \om[m_b,d]$ is differentiable; by implicit
+differentiation of (\ref{eqn:perfect}),
+\begin{equation}
+\label{eqn:dperfect}
+(D\oF[m_b]\delta m_b)\om[m_b,d] + \oF[m_b]D\om[m_b,d]\delta m_b = 0,
+\end{equation}
+so
+\[
+DJ[m_b]\delta m_b = \langle D\om[m_b]\delta m_b, A^*A\om[m_b]\rangle
+\]
+\begin{equation}
+\label{eqn:naive_jderiv}
+= -\langle \oF[m_b]^{-1}(D\oF[m_b]\delta m_b)\om[m_b],A^*A\om[m_b]\rangle.
+\end{equation}
+For $m_b \in M_b$ and $\om \in \oM$, denote by $D\oF[m_b]\om$ the
+linear map: $M_b \rightarrow D$ defined by
+\[
+\delta m_b \mapsto D(\oF[m_b]\om)\delta m_b
+\]
+and by $(D\oF[m_b]\om)^T$ its adjoint (note the distinction with the
+adjoint $(D\oF[m_b]\delta m_b)^*$). Then 
+whence the formal gradient of $J$ is
+\be
+\label{eqn:naive0_g}
+\nabla J[m_b] = - (D\oF[m_b]\om[m_b])^T\bq[m_b]
+\ee
+in which $\bq \in D$ is the solution of
+\be
+\label{eqn:naive0_q}
+\oF[m_b]^*\bq = A^*A\om[m_b].
+\ee
+
+Thus computation of the gradient appears to involve solution of two
+linear systems ((\ref{eqn:perfect}) and (\ref{eqn:naive0_q})) and
+application of the  {\em tomographic operator}
+$(D\oF[m_b]\om[m_b,d])^T$. As explained elsewhere
+\cite[]{KerSy:94,BiondiSava:04}. the tomographic operator is quite
+computable via a variant of the {\em adjoint state method}, so modulo
+the solution of the linear systems, (\ref{eqn:naive0_g}) appears to be
+a computational {\em entr\'{e}} into IVA via quasi-Newton or conjugate
+gradient methods. However several obstacles arise to practical use of
+these ideas:
+\begin{itemize}
+\item for all but the simplest examples of extended seismic modeling, the linearized extended forward map $\oF$ is not actually surjective, therefore the equality constraint (\ref{eqn:perfect}) must be replaced by a best-fit criterion, such as least squares.
+\item for all but the simplest examples of extended seismic modeling, the linearized extended forward map is not coercive, that is, the ratio $\|\oF[m_b]\om\|/\|\om\|$ attains arbitrarily small values (this is the case even if $\oF[m_b]$ is injective, which hardly matters). Therefore the least squares problem replacing (\ref{eqn:perfect}) must be regularized. On the other hand, for a natural choice of norm, the cone defined by $\|\oF[m_b]\om\| \ge \alpha \|\om\|$ for suitable $\alpha > 0$ contains a subspace whose dimension grows without bound as the frequency content of the modeled data grows without bound - that is an expression of the high information content of carried by propagating waves.
+\item for all but the simplest examples of extended seismic modeling,
+  the optimization problem replacing (\ref{eqn:perfect}) must be
+  solved by an iterative process, simply because of computational size - therefore only an estimate of $\om[m_b,d]$ is available, and its error propagates into error in (regularized versions of) $J$ and $\nabla J$.
+\item if the model parameters include wave velocities (that is to say,
+almost always), the tomographic operator $(D\oF[m_b]\om[m_b,d])^T$ is not
+continuous in the choice of norms for which the $\oF[m_b]$ is bounded
+and has the ``partly coercive'' property mentioned in the second
+bullet above. Otherwise put, in a choice of norms for which
+$(D\oF[m_b]\om[m_b,d])^T$ is continuous, $\oF[m_b]$ is compact. If on the other hand
+the iterative estimate oof $\om[m_b,d]$ relies on a choice of norms
+for which $\oF[m_b]$ has a ``large'' well-conditioned subspace, then
+no bound is possible for the effect of $(D\oF[m_b]\om[m_b,d])^T$ on
+these error, hence no error control of the gradient is possible. In
+practice, after discretization, this means that even a minimally accurate gradient requires
+an excessively precise, hence computationally costly, estimation of $\om[m_b,d]$.
+\end{itemize}
+
+\section{Regularized extended inversion}
+Overcoming the obstacles outlined at the end of the last section
+requires introduction of additional abstract structure mirroring the
+properties of important exaamples.
+
+First, the extended domain space $\oM=\oM_0$ is member of a scale of Hilbert
+spaces $\{\oM_s: s \in \bf{Z}\}$, each compactly embedded in the next: $\oM_s \subset \subset \oM_{s+1}$. Denote by $\langle \cdot ,\cdot \rangle_{s}$ the inner product
+on $\oM_s$. Typically, $\{\oM_s\}$ is some version of the Sobolev
+scale. Motivated by that example, assume that the inner product on
+$\oM_0$ extends to a pairing: $\oM_s \times \oM_{-s} \rightarrow
+\bf{R}$, realizing an isomorphism of $\oM_{-s}$ with the dual of
+$\oM_s$, all $s \in \bf{Z}$.
+
+We will assume that the data space $D = D_0$ is also a member of a
+Hibert scale $\{D_s: s \in \bf{Z}\}$.
+
+A linear map $L: \cup_{s \in \bf{Z}} X_s \rightarrow \cup_{s \in
+  \bf{Z}}Y_s$ between scales $X, Y$ is {\em of order} $k$ iff $L: \in
+{\cal L}(X_s,Y_{s-k})$ for every $s \in \bf{Z}$.
+
+\noindent {\bf Assumption 1:} Assume that the operators $\oF[m_b]$ and $A$ extend to
+the  {\em order 0} operators on the domain and range scales: $\oF[m_b]
+\in {\cal L}(\oM_s,D_s)$ for every $s \in \bf{Z}$, similarly for $A$. The
+notation $*$ is reserved for the adjoint of
+$\oF[m_b]: \oM_0 \rightarrow D_0$. 
+
+\noindent {\bf Assumption 2:}  The {\em normal operator} $ m_b
+\mapsto \oF[m_b]^*\oF[m_b]$ defines a smooth
+${\cal L}(\oM_s,\oM_s)$-valued function on $U$ for every $s\in
+\bf{Z}$, mapping $U$ to a bounded set. Similarly, the (``abnormal''?) operator $ m_b
+\mapsto \oF[m_b]\oF[m_b]^*$ defines a smooth
+${\cal L}(D_s,D_s)$-valued function on $U$ with bounded image, for every  $s \in \bf{Z}$.
+
+\noindent {\bf Remark 1:} $\oF$ itself is {\em not} assumed to define a differentiable
+map $\oM_s \rightarrow D_s$: that is because it does not, when wave
+velocities are amongst the parameters in $m_b$. The (Gateaux) derivative does
+exist, but only as an operator of order 1 - more on this below.
+
+\noindent {\bf Remark 2:} Except in trivial instances, extended
+modeling is {\em necessary} in order that $\oF\oF^*$ has the
+smoothness property indicated.
+
+Denote by $\bre[m_b,d]$ the solution of the $L^2$ least-squares problem,
+\be
+\label{eqn:reg}
+\mbox{min}_{\br \in \oM_0}\, \frac{1}{2}(\|\oF[m_b]\br -\de\|_0^2 + \lambda \|\br\|_0^2).
+\ee
+This condition is of course a regularized version of (\ref{eqn:perfect}).
+The first order condition for this problem is
+\be
+\label{l2normal}
+\Ne[m_b]\br = \oF[m_b]^*\de
+\ee
+in which 
+\[
+\Ne[m_b] = \oF[m_b]^*\oF[m_b] + \lambda I
+\]
+Note that $\Ne$ is positive definite and self-adjoint on $M_0$, so the
+Lax-Milgram Theorem asserts the existence of a unique $\bre[m_b,d] \in
+L^2(X)$ satisfying (\ref{l2normal}). 
+
+In general the best possible estimate for the solution of (\label{l2normal})
+is
+\be
+\label{eqn:genlest}
+\|\om[m_b,d]\|_0  = O(\lambda^{-1}\|d\|_0)
+\ee
+However (\ref{eqn:genlest}) does not reflect the information content
+of wave data, as remarked at the end of the last section.  To capture
+this additional control possible in certain instances, posit the
+existance of self-adjoint approximate projectors
+\be
+\label{eqn:dataproj}
+\Pi_D,\bar{\Pi}_D \in \cap_{s \in \bf{Z}}{\cal L}(D_s, D_s), \,\Pi_D^*
+= \Pi_D, \,\bar{\Pi}_D^* = \bar{\Pi}_D,
+\ee
+so that $\bar{\Pi}_D$ acts as an approximate identity on the range of
+  $\Pi_D$, in the sense that 
+\be
+\label{eqn:projsmoothing}
+(I-\bar{\Pi}_D)\Pi_D \in {\cal L}(D_s, D_{s+k}) \mbox{ for every } s
+\in \bf{Z}, k \in \bf{Z}^+.
+\ee 
+
+\noindent {\bf Assumption 3:} There exist $\gamma >0$, and for every $s \in \bf{Z}$, $k \in
+\bf{Z}^+$ $C_{s,k} \ge 0$, so that
+\be
+\label{eqn:microell}
+\|\oF[m_b]\oF[m_b]^*\bar{\Pi}_Dd\|_s \ge \gamma \|\bar{\Pi}_Dd\|_s -
+\|d\|_{s-k}
+\ee
+
+\noindent {\bf Remark 3:} It follows from (\ref{eqn:projsmoothing})
+that a similar inequality holds for $\Pi_D$.
+
+\noindent {\bf Remark 4:} The inequality (\ref{eqn:microell})
+abstracts a key feature of several important examples, a microlocal version of G\aa rding's inequality
+\cite[]{Tay:81}; it is established by appeal to microlocal ellipticity
+of the extended modeling operator.
+
+The final two assumptions concern properties of the data, expressed in
+terms of homogeneous inequalities defining cones in $D_s$. The results
+to follow are {\em aymptotic}, so concern, not a single datum but a family
+$\{\de\}_{\lambda \in (0,\lambda_{\rm max}}$ of data. The index
+parameter $\lambda$ will turn out to signify (roughly) wavelength. 
+
+The first property expresses concentration of energy in ``imageable''
+parts of data space.
+
+\noindent {\bf Assumption 4:} For every $s \in \bf{Z}$, there exists
+$L_s \ge 0$ so that for all $k \in \bf{Z}^+$, $\lambda \in
+(0, \lambda_{\rm max}]$,
+\be
+\label{micro}
+\|(I- \Pi_D)\de\|_s \le L_s \|\de\|_{s-k}.
+\ee
+
+The second property makes the connection with wavelength, and expresses
+the assumption that the data is concentrated at high frequency:
+
+\noindent {\bf Assumption 5 -  High Frequency Cone Condition:} 
+For each $s \in \bf{Z}$ there exists $K_s
+\ge 0$ so that for  $\lambda \in
+(0, \lambda_{\rm max}]$,
+\be
+\label{hfcd}
+\|\de\|_{s} \le K_s \lambda\|\de\|_{s+1}
+\ee
+
+\noindent{\bf Theorem 1:} 
+Under assumptions 1 - 5 above, there exist $C,\lambda_0>0$ so that $\lambda_0 \le \lambda_{\rm max}$ and
+\[
+\|\bre[m_b,d]\|_0 \le C\|\de\|_0
+\]
+uniformly in $\lambda \in (0,\lambda_0]$, $m \in U$.
+
+
+\noindent{\bf Proof:} See following section. % Take $M=\oF[m_b]^*\oF[m_b]$, $P=I$,
+%$q_{\lambda}=\oF[m_b]^*\de$, $s=0$ and $k=1$ in the statement of Corollary A6. Lemma 2 verifies the required cond%itions on $M$, $P$, and $q_{\lambda}$. Q. E. D.
+
+
+The semblance optimization functional [REF TO DEF IN INTRO] may be written as
+\be
+\label{tgt}
+\Je[m_b] = \frac{1}{2}\|A\bre[m_b,d]\|^2
+\ee
+\[
+=\frac{1}{2}\langle \de, \oF[m_b]\Ne[m_b]^{-1} A^*A \Ne[m_b]^{-1}\oF[m_b]^*\de \rangle
+\]
+%From Egorov's Theorem and Assumption 1 follows that operator in this expression is $\Psi$DO with symbol depending smoothly on $m$. Therefore $\Je$ is smooth in $m$.
+
+\noindent {\bf Proposition 1:} $\Ne \in C^1(U,P_0)$, and for $\br \in \oM_1$, $\delta m_b \in M$,
+\[
+(D\Ne[m,\delta m]\br = (D\oF[m,\delta m]\oF[m_b]+\oF[m_b]D\oF[m,\delta m])\br
+\]
+\noindent {\bf Proof:} ...
+
+For $\delta m \in M$,
+\[
+D\Je[m_b]\delta m = \langle D\bre[m_b,d]\delta m, A^*A\bre[m_b,d]\rangle.
+\]
+Thanks to Proposition 1,
+\[
+D\bre[m_b,d]\delta m = 
+D\Ne[m_b]^{-1}(\delta m,\oF^*[m_b]\de) + \Ne[m_b]^{-1}D\oF[m_b]^*(\delta m, \de))
+\]
+\[
+= -\Ne[m_b]^{-1}D\Ne[m_b](\delta m,\Ne[m_b]^{-1}\oF^*[m_b]\de) + \Ne[m_b]^{-1}D\oF[m_b]^*(\delta m, \de)
+\]
+\[
+=-\Ne[m_b]^{-1}D\oF[m_b]^*(\delta m,\oF[m_b]\bre[m_b,d]) - \Ne[m_b]^{-1}\oF[m_b]^*D\oF[m_b](\delta m,\bre[m_b,d])
+\]
+\be
+\label{prerderiv}
++ \Ne[m_b]^{-1}D\oF[m_b]^*(\delta m, \de)
+\ee
+\be
+\label{rderiv}
+=\Ne^{-1}(D\oF[m_b]^*(\delta m, \de - \oF[m_b]\bre[m_b,d]) - \oF[m_b]^*D\oF[m_b](\delta m, \bre[m_b,d])).
+\ee
+Define
+\be
+\label{qdef}
+\bqe[m_b]=\Ne[m_b]^{-1}A^*A\bre[m_b,d].
+\ee
+Then
+\be
+\label{Jderiv}
+D\Je[m_b]\delta m =\langle D\oF[m_b]^*(\delta m, \de - \oF[m_b]\bre[m_b,d]) - \oF[m_b]^*D\oF[m_b](\delta m, \bre[m_b,d]), \bqe[m_b]\rangle 
+\ee
+from which it follows that the formal ($L^2$) gradient of $\Je$ is 
+\be
+\label{grad}
+\nabla \Je[m_b] = D\oF[m_b]^*(\bqe[m_b],\de - \oF[m_b]\bre[m_b,d])- D\oF[m_b]^*(\bre[m_b,d],\oF[m_b]\bqe[m_b]),
+\ee
+
+\noindent {\bf Remark:} That is, two linear least squares solves are required to compute the gradient of $\Je[m_b]$: (\ref{l2normal}) for $\bre[m_b,d]$ and (\ref{qdef}) for $\bqe[m_b]$.
+
+\noindent {\bf Factorization Lemma:} $D\oF[m_b](\delta m,\br) = \oF[m_b]Q[m,\delta m]\br$, in which $Q[m,\delta m]$ is a smooth $OPS^1$-valued function of $(m,\delta m) \in U \times M$, linear in $\delta m$, whose values are essentially skew-adjoint:
+\[
+Q[m,\delta m] + Q[m,\delta m]^* = R[m,\delta m] \in OPS^0.
+\]
+For $u \in H^1$, 
+\be
+\label{Qnorm}
+\|Q[m,\delta m]u\|_0 \le C\|\delta m\|_M \|u\|_1,
+\ee
+\be
+\label{Rnorm}
+\|R[m,\delta m]u\|_0 \le C\|\delta m\|_M \|u\|_0,
+\ee
+with $C$ uniform for $m\in U$.
+
+It will be convenient to view $Q[m,\cdot]\br, m\in U, \br \in \oM$, as a continuous linear map $:M \rightarrow \oM$, and denote its adjoint by $Q^*[m,\cdot]\br$. That is,
+\[
+\langle Q^*[m,\br_2]\br_1,\delta m\rangle_M = \langle Q[m,\delta m]\br_1,\br_2\rangle.
+\]
+In the statement (\ref{Qnorm}), I have used $Q[m,\delta m]^*$ to denote the ``other'' adjoint, defined by 
+\[
+\langle Q[m,\delta m]^*\br_1,\br_2\rangle = \langle \br_1,Q[m,\delta m]\br_2\rangle
+\]
+
+\noindent {\bf Theorem 5:} 
+\be
+\label{qrderiv}
+D\bre[m_b,d]\delta m = -Q[m,\delta m]\bre[m_b,d] + \lambda \Ne^{-1}R[m,\delta m]\bre[m_b,d].
+\ee
+\be
+\label{eqn:gradq}
+\nabla \Je[m_b] = (-Q^*[m,A^*A\bre[m_b,d]] + \lambda R^*[m,\bqe[m_b]])\bre[m_b,d].
+\ee
+For $C \ge 0$ uniform in small $\lambda$, $m \in U$,
+\be
+\label{eqn:firstgradest}
+\|\nabla \Je[m_b] - -Q^*[m,A^*A\bre[m_b,d]]\bre[m_b,d] \|_M \le C\lambda \|\de\|_0.
+\ee
+Also, the $M$-valued quadratic form on $H^1$, defined by
+\be
+\label{qquad}
+\br \mapsto -Q^*[m,A^*A\br]\br
+\ee
+extends continuously to $H^0$.
+
+\noindent {\bf Remark:} The importance of the last statement stems from the effect of approximating $\bre[m_b,d]$, of course, as will be described below.
+ 
+\noindent {\bf Proof:} From (\ref{prerderiv}) above and the definition of $Q$,
+\[
+D\bre[m_b,d]\delta m = 
+-\Ne[m_b]^{-1}(Q[m,\delta m]^*\oF[m_b]^*\oF[m_b]\bre[m_b,d] + \oF[m_b]^*\oF[m_b]Q[m,\delta m])\bre[m_b,d]
+\]
+\[
+ + \Ne[m_b]^{-1}Q[m,\delta m]^*\oF[m_b]^*\de)
+\]
+\[
+= 
+-\Ne[m_b]^{-1}([Q[m,\delta m]^*,\oF[m_b]^*\oF[m_b]] + \oF[m_b]^*\oF[m_b] (Q^*[m,\delta m]+Q[m,\delta m]))\bre[m_b,d]
+\]
+\[
+ + \Ne[m_b]^{-1}Q[m,\delta m]^*\oF[m_b]^*\de)
+\]
+Using (\ref{l2normal}) and the definitions of $Q,R$, this is
+\[
+(-\Ne[m_b]^{-1}[Q[m,\delta m]^*,\oF[m_b]^*\oF[m_b]]-(I-\lambda \Ne[m_b]^{-1})R[m,\delta m])\bre[m_b,d]
+\]
+\[
++ \Ne[m_b]^{-1}([Q[m,\delta m]^*,\oF[m_b]^*\oF[m_b]] + \Ne[m_b]Q[m,\delta m]^*)\bre[m_b,d]
+\]
+\[
+=(Q[m,\delta m]^*-(I-\lambda \Ne[m_b]^{-1})R[m,\delta m])\bre[m_b,d]
+\]
+\[
+= -Q[m,\delta m]\bre[m_b,d] + \lambda \Ne^{-1}R[m,\delta m]\bre.
+\]
+as claimed. 
+
+The stated expression for $\nabla \Je[m_b]$ follows. The estimate amounts to a bound on the second term on the RHS. To see this, note that according to Theorem 4, $\bre[m_b,d]$ satisfies the hypotheses of Lemma A-4 with $s=0, k=1, M \leftarrow \oF[m_b]^*\oF[m_b], q \leftarrow \bre[m_b,d]$, and $\Pi \leftarrow \Pi[m_b]$. Accordingly from (\ref{a4:res1}) follows
+\[
+\|\bqe[m_b]\|_0 \le C\|\bre[m_b,d]\|_0.
+\]
+Since $R[m,\delta m]$ is continuous $OPS^0$-valued, the estimate follows from Theorem 1.
+
+Finally, note that
+\[
+|\langle Q[m,\delta m]\br,A^*A \br\rangle| = |\langle ([A,Q[m,\delta m]]+Q[m,\delta m]A)\br,A\br\rangle|
+\]
+\[
+=|\langle[A,Q[m,\delta m]]\br+\frac{1}{2}R[m,\delta m]A\br,A\br\rangle| \le C\|\br\|_0^2,
+\]
+since the operators appearing in the last expression are $\in OPS^0$.
+Q. E. D.
+
+The estimate (\ref{eqn:firstgradest}) suggests the use of the first
+term in (\ref{eqn:gradq}) as an approximation to the gradient: in
+essence, the use of the Factorization Lemma has isolated the result
+$\bqe$ of the otherwise apparently necessary second system solve in a
+term which is uniformly $O(\lambda)$. As $\lambda$ will in
+applications be proportional to a wavelength, the achievable
+resolution of the inversion, it seems reasonable to neglect this
+term. Thus $\bqe$ need not be computed.
+
+However the key player in the first term in (\ref{eqn:gradq}), namely
+the operator $Q$, is not directly computable. Fortunatly, key examples
+add yet another property to the extended modeling operator, formalized
+in 
+
+\noindent {\bf Assumption 6:} For $m_b \in U$, $\oF[m_b]^{\dagger}$
+denotes a {\em partial parametrix} for $\oF[m_ b]$, in the sense that
+for every $s \in \bf{Z}$, $k \in \bf{Z}^*$,
+\be
+\label{eqn:paradef}
+\bar{\Pi}_D (I-\oF[m_b]\oF[m_b]^{\dagger}) \in {\cal L}(D_s,D_{s-k}).
+\ee
+
+\noindent {\bf Remark 7}: In fact, the inequality (\ref{eqn:paradef}) will be required only for 
+a finite range of $k$, actually for $k=2$, and can even be concocted
+from an operator satisfying (\ref{eqn:paradef}) for $k=1$. This fact
+is important, as common algorithms for constructing such partial
+parametrices conveniently produce operators satisfying
+(\ref{eqn:paradef}) only for $k=1$. %In fact write $\bar{\Pi}_D(I-
+
+
+\section{Linearized Extended Inversion}
+The first order of business is to describe the key model
+properties. An example possessing these properties will be described
+later.
+
+\begin{itemize}
+\item The space of space of p-parameter reference models $M \subset
+  (H_{\rm loc}^m(\bR^3))^p,\,m>>3/2$. Such models must have a number of continuous
+  derivatives, so $m$ must be quite large.
+\item The feasible reference model set $U \subset M$ is defined by
+  pointwise bounds.
+\item Perturbational extended model spaces $\oM_s \subset (H^s_{\rm
+    loc}(\bR^3 \times \bR^2))^p$, $s=0, \pm 1, \pm 2,...$, Hilbert norms $\|\cdot\|_{s} = \|\Lambda^s \cdot\|_0$, where $\Lambda = \sqrt{I-l^2\nabla^2}$ is the usual Sobolev weight operator, extended to act diagonally on vector-valued functions, with nondimensionalizing weight $l$ (units of length). 
+\item Corresponding data spaces $D_s \subset \subset (H^s_{\rm
+    loc}(\bR^3 \times \bR^2))^d$, $s=0, \pm 1, \pm 2,...$, 
+\item Linearized extended forward map = $\oF_{\rm raw} \cap_{s \in
+    {\rm Z}} C^1(U , {\cal L}(\oM_s,D_s)$ 
+\item Semblance operator (``annihilator'') = $A \in \cap_{s \in
+    {\rm Z}} {\cal L}(\oM_s,\oM_s)$;
+\item Precompact model and data supports $\Omega_M, \Omega_D$. Pre-
+  and post-cutoff versions of $\oF, A$ so that $\oM_s$ can be
+  replaced by $(H^s_0(\Omega_M))^p$, $D_s$ by
+  $(H^s_0(\Omega_D))^d$. $\Omega_M$ is precompact in $\bR^5$,
+  $\Omega_D$ is a precompact smooth manifold of dimension 5 in $R^6$.
+\end{itemize}
+
+These abstract the structure of a typical wave inverse problem setting for seismology, with a number of critical assumptions, detailed in the appendix, along with an important example. The examples have a number of crucial additional features:
+
+\noindent {\bf Assumption 1:} For $m \in U$, both $\oF[m_b]^*\oF[m_b]$ and $\oF[m_b]\oF[m_b]^*$ are uniformly bounded on each $\oM_s$ respectively $D_s$ for every $s \in {\bf Z}$, uniformly in $m \in U$.
+
+\noindent {\bf Assumption 2:} $\oF[m_b]^*\oF[m_b] \in OPS^0(\Omega_M)$,
+$\oF[m_b]\oF[m_b]^* \in OPS^0(\Omega_D)$. Here $OPS^k$ denotes $p \times
+p$, resp. $d \times d$, matrix pseudodifferential operators of order
+k. Officially, reference models must be $\in C^{\infty}$ for this to
+literally true, however the exponent $m$ in the first bullet above
+should be chosen large enough that it makes no
+difference. Alternative, restrict $M$ to a finite-dim'l subspace of
+smooth models.
+
+\noindent {\bf Remark:} Extended modeling is {\em necessary} in order that $\oF\oF^*$ is $\Psi$DO;
+
+\noindent {\bf Assumption 3 - Uniform Microlocal Ellipticity:}  $\Gamma_D \subset T^*(Y)$ is conic so that $\oF[m_b]\oF[m_b]^*$ is elliptic in $\Gamma_D$ uniformly for $m \in U$.
+
+\noindent {\bf Remark:} Denote by ${\cal C}[m_b]$ the canonical relation of $\oF[m_b]$. According to Egorov's Theorem, $\oF[m_b] P \oF[m_b]^*$ is elliptic in $\Gamma_D$ if $P \in OPS^0$ is elliptic in ${\cal C}[m_b]^{-1}\Gamma_D \equiv \Gamma[m_b]$. Also $\oF[m_b]^*\oF[m_b]$ is elliptic in $\Gamma[m_b]$.
+
+The final two assumptions concern properties of the data, expressed in
+terms of homogeneous inequalities defining cones in $D_s$. The results
+to follow are {\em aymptotic}, so concern, not a single datum but a family
+$\{\de\}_{\lambda \in (0,\lambda_{\rm max}}$ of data. The index
+parameter $\lambda$ will turn out to signify (roughly) wavelength. 
+
+The first property expresses microlocal concentration of energy.
+Pseudodifferential ``projection'' operators $\Pi_D, \bar{\Pi}_D \in
+OPS^0$ will appear throughout the following results: these are chosen
+to satisfy 
+\[
+\mbox{ess supp } \bar{\Pi}_D \subset \Gamma_D,
+\]
+\[
+\sigma_0(\bar{\Pi}_D) = 1 \mbox{ on ess supp } \Pi_D
+\]
+
+In the following two Assumptions, $k_0>0$ is 
+independent of $m \in U$ and $\lambda \in (0,\lambda_{\rm max}]$. 
+
+\noindent {\bf Assumption 4 - Data Microlocalization:} There exists $L
+\ge 0$ so that for $0 \le s,  k \le k_0, \lambda \in
+(0, \lambda_{\rm max}]$,
+\be
+\label{micro}
+\|(I- \Pi_D)\de\|_s \le L_s \|\de\|_{s-k}.
+\ee
+
+The last property makes the connection with wavelength, and expresses
+the assumption that the data is concentrated at high frequency:
+
+\noindent {\bf Assumption 5 -  High Frequency Cone Condition:} 
+For each $s \ge -k_0$ there exists $K_s
+\ge 0$ so that for  $\lambda \in
+(0, \lambda_{\rm max}]$,
+\be
+\label{hfcd}
+\|\de\|_{s} \le K_s \lambda\|\de\|_{s+1}
+\ee
+
+The estimates (\ref{micro}) and (\ref{hfcd}) involve constants independent of the parameter $\lambda \in (0,\lambda_0]$, so it is not immediately obvious that these assumptions define non-empty cones. To build a family $\{\de: \lambda \in (0,\lambda_0]\}$ satisfying estimates of the forms (\ref{micro}) and (\ref{hfcd}). choose $u \in C_0^{\infty}(\bR^3)$ and define $\Phi_{\lambda}(\bx)=(x_1/\lambda,x_2,x_3)$, $u_{\lambda} = \Phi_{\lambda}^*u, \de= \Lambda^{k_0}u_{\lambda}$. Recall the simple anisotropic Poincar\'{e} inequality:
+\[
+\int u^2 = \int_0^1dx_2 \int_0^1dx_3 \int_0^1dx_1\left(\int_0^{x_1} D_1u\right) ^2
+\]
+\[
+\le \int_0^1dx_2 \int_0^1dx_3 \int_0^1dx_1\left(x_1\int_0^{x_1} (D_1u)^2\right)
+\le \int (D_1u)^2
+\]
+whence
+\[ 
+\int u_\lambda^2 = \int (\Phi_{\lambda}^{-1})^*u_{\lambda} |det D(\Phi_{\lambda}^{-1})|
+ = \lambda \int u^2 \le \lambda \int (D_1u)^2 = \lambda^3 \int (\Phi_{\lambda}^{-1})^*(D_1 u_{\lambda})^2 
+\]
+\[
+= \lambda^2 \int (D_1 u_{\lambda})^2 \le \lambda^2 (u^2 + l^2|\nabla u|^2), 
+\]
+so
+\[
+\|u_{\lambda}\|_0 \le \lambda \|D_1 u_{\lambda}\| \le \lambda \|u_{\lambda}\|_1.
+\]
+Since $D^{\alpha}u_{\lambda}$ is of the same type as $u_{\lambda}$, the same inequality holds, hence for $s \ge 0$  
+\[
+\|u_{\lambda}\|_s \le C_s \lambda \|u_{\lambda}\|_{s+1}.
+\]
+Then
+\[
+\|\de\|_s = \|u_{\lambda}\|_{s+k_0} \le C_{s+k_0}\lambda\|u_{\lambda}\|_{s+k_0+1} = C_{s+k_0}\lambda\|\de|_{s+1}
+\]
+for $s \ge -k_0$, that is, $\{\de:\lambda > 0\}$ satistfies (\ref{hfcd}) with $K_s = C_{s+k_0}$.
+
+Choose a pseudodifferential partition of unity $\{\Pi_D,I-\Pi_D\}$ with
+the scalar matrix symbol of $\Pi$ being
+\begin{itemize}
+\item independent of $\bx$,
+\item homogeneous of order 0 outside a neighborhood of the zero, 
+  section, with  values between 0 and 1;
+\item $\equiv 1$ in a conic neighborhood of $\{(\bx,{\bf
+    \xi}):\xi_2=\xi_3=0\}$, say  $\{(\bx,{\bf \xi}):|\xi_1|\le \beta
+  |\xi'|\}$ ($\xi'=(\xi_2,\xi_3)$); 
+\item $\equiv 0$ in a conic neighborhood of  $\{(\bx,{\bf
+    \xi}):\xi_1=0\}$. 
+\end{itemize}
+Then for $0\le k \le k_0, s\ge-k_0+k$, 
+\[
+\|(I-\Pi)\de\|_s^2  = \int d\xi |\hat{u_\lambda}(\xi)|^2\Pi(\xi)^2\Lambda(\xi)^{2(s+k_0)} 
+\]
+\[
+\le \int_{|\xi_1| \le \beta|\xi'|} d\xi |\hat{u_\lambda}(\xi)|^2\Lambda(\xi)^{2(s+k_0)} 
+\]
+\[
+= \lambda^2 \int_{|\xi_1| \le \beta|\xi'|} d\xi
+\left|\hat{u}\left(\lambda \xi_1,\xi'\right)\right|^2\Lambda(\xi)^{2(s+k_0)} .
+\]
+Since $\Lambda(\xi) \le (1+\beta)\Lambda(\xi')$ provided that $|\xi_1|
+\le \beta |\xi'|$, this is
+\[
+\le (1+\beta)^{2k} \lambda^2 \int_{|\xi_1| \le \beta|\xi'|} d\xi
+\left|\hat{u}\left(\lambda
+    \xi_1,\xi'\right)\right|^2\Lambda(\xi')^{2k}\Lambda(\xi)^{2(s+k_0-k)} 
+\]
+\[
+=(1+\beta)^{2k} \lambda^2 \int_{|\xi_1| \le \beta|\xi'|} d\xi
+\left|\widehat{\Lambda(D')^ku}\left(\lambda
+    \xi_1,\xi'\right)\right|^2\Lambda(\xi)^{2(s+k_0-k)}  \le (1+\beta^{2k})\|\Lambda(D')^ku_{\lambda}\|_{s+k_0-k}
+\]
+Since $s+k_0-k \ge 0$, the alternate expression for the norm is
+available:
+\[
+\le C(1+\beta)^2 \sum_{ |\alpha| \le s+k_0-k}
+\|D^{\alpha}\Lambda(D')^ku_{\lambda}\|_0^2 
+\]
+\[
+\le \le C(1+\beta)^2 \sum_{
+  0 \le \alpha_1 \le s+k_0-k, |\alpha'| \le s+k_0-k-\alpha_1}
+\lambda^{1-2\alpha_1}\|D_1^{\alpha_1}(D')^{\alpha'}\Lambda(D')^ku\|_0^2
+\]
+\[
+ \le C_1C(1+\beta)^2 \sum_{
+  0 \le \alpha_1 \le s+k_0-k, |\alpha'| \le s+k_0-k-\alpha_1}
+\lambda^{1-2\alpha_1}\|D_1^{\alpha_1}(D')^{\alpha'}u\|_0^2
+\]
+\[
+ \le C_1C(1+\beta)^2 \sum_{
+  0 \le \alpha_1 \le s+k_0-k, |\alpha'| \le s+k_0-k-\alpha_1}
+\|D_1^{\alpha_1}(D')^{\alpha'}u_{\lambda}\|_0^2
+\]
+\[
+\le C_1C(1+\beta)^2 \sum_{ |\alpha| \le s+k_0-k}
+\|D^{\alpha}u_{\lambda}\|_0^2 \le C_2 C_1 C (1+\beta)^2
+\|u_\lambda\|_{s+k_0-k} \le L \|\de\|_{s-k}
+\]
+in which 
+\[
+C_1 = \max_{|\alpha| \le
+  s+k_0-k}\frac{\|D^{\alpha}\Lambda(D')^ku\|_0^2}
+{\|D^{\alpha}u\|_0^2}
+\]
+
+\noindent{\bf Lemma 1:} There exist $C_*,\lambda_0>0$, $\lambda_0 \le \lambda_{\rm max}$ depending on the same quantities as $K,L$ so that for $\lambda \in (0,\lambda_0]$, $m \in U$, $s=-k_0,...,t$, 
+\be
+\label{lemma1:res}
+\|\de\|_s \le C_*\|\oF[m_b]^*\de\|_s.
+\ee
+
+\noindent{\bf Proof:} 
+The principal symbol of $\oF[m_b]\oF[m_b]^*$ is nonnegative, and positive in $\Gamma_D$:
+\[
+\sigma_0(\oF[m_b]\oF[m_b]^*) \ge \gamma^2 \mbox{ in } \Gamma_D,
+\]
+so by a standard construction there exists a microlocal square root $B[m_b] \in OPS^0$ with real nonnegative principal symbol, for which 
+\[
+\sigma_0(B[m_b]) \ge \gamma \mbox{ in } \Gamma_D,
+\]
+\[
+(\oF[m_b]\oF[m_b]^*-B[m_b]^*B[m_b]) \Pi_D \in OPS^{-2},
+\]
+whence if $\lambda \in (0,\lambda_{\rm max}]$,
+\[
+\|\oF[m_b]^*\de\|^2_s = \langle \de, \oF[m_b]\oF[m_b]^* \de \rangle_s =
+\|B[m_b]\de\|_s+ \langle \de,(\oF[m_b]\oF[m_b]^*-B[m_b]^*B[m_b]) \Pi_D\de
+\rangle_s
+\]
+\[
++ \langle \de,(\oF[m_b]\oF[m_b]^*-B[m_b]^*B[m_b]) (I-\Pi_D)\de \rangle_s \ge
+\|B[m_b]\Pi_D\de\|^2_s  -\|B[m_b](I-\Pi_D)\de\|^2_s  - C\|\de\|^2_{s-1}
+\]
+\[
+\ge \gamma \|\de\|^2_s - C\|\de\|^2_{s-1} \ge (\gamma - C_1\lambda^2)\|\de\|^2_s,
+\]
+using Lemma A1 (microlocal G\aa rding inequality), $L^2$ estimates, and Assumptions 4 and 5 (with $k=1$). Take $\lambda_0 = \mbox{min }(\lambda_{\rm max}, (\gamma/2C_1))^{1/2})$ (for instance): then for $0 < \lambda \le \lambda_0$,
+\be
+\label{lemma1:eq5}
+\|\oF[m_b]^*\de\|_s \ge \frac{\gamma}{2} \|\de\|_s
+\ee
+
+Q. E. D.
+
+From her on replace $\lambda_{\rm max}$ by $\lambda_0$.
+
+\noindent{\bf Lemma 2:} There exist $K_0, L_0 \ge 0$ so that for $0
+\le s \le t, 1 \le k \le k_0, \lambda \in (0, \lambda_{\rm max}]$,
+\be
+\label{lemma2:res1}
+\|(I-\Pi[m_b])\oF[m_b]^*\de\|_s \le L_0 \|\oF[m_b]^*\de\|_{s-k}
+\ee
+\be
+\label{lemma2:res2}
+\|\oF[m_b]^*\de\|_{s-1} \le K_0\lambda\|\oF[m_b]^*\de\|_{s}
+\ee
+
+\noindent{\bf Proof:} 
+Egorov's Theorem (REF) implies that $\oF[m_b]^*\Pi_D = \Pi[m_b]\oF[m_b]^*+R[m_b]$, in which $\Pi[m_b] \in OPS^0$ has principal symbol $=1$ in $\Gamma[m_b]$, and $R[m_b] \in OPS^{-\infty}$.  
+\[
+\|(\Pi[m_b]-I)\oF[m_b]^*\de\|_s = \|\oF[m_b]^*(\Pi_D-I)\de\|_s + \|R[m_b]\|_{s-k,s}\|\de\|_{s-k}  
+\]
+\[
+\le (\|\oF[m_b]^*\|_{s}L_k+\|R[m_b]\|_{s-k,s})\|\de\|_{s-k} \le L_{0,k}\|\oF[m_b]^*\de\|_{s-k},
+\]
+from (\ref{lemma1:res}), with $L_{0,k} = (\|\oF[m_b]^*\|_{s}L_k+\|R[m_b]\|_{s-k,s})C_*$.
+
+Similarly,
+\[
+\|\oF[m_b]^*\de\|_{s-1} \le \lambda\|\oF[m_b]^*\|_{s-1}\|\de\|_{s} \le \lambda K_0\|\oF[m_b]^*\de\|_s,
+\]
+with $K_0 = \|\oF[m_b]^*\|_{s-1}C_*$.
+
+Q. E. D.
+
+\noindent {\bf Lemma A1: Standard Microlocal G\aa rding Estimate:} Suppose that $\Gamma \subset T^*\bR^n$ is conic open, and let $\Pi$, $\bar{\Pi} \in OPS^0$ be such that 
+\begin{itemize}
+\item[1. ]$\mbox{ess supp} \,\bar{\Pi} \subset \Gamma$;
+\item[2. ]$(\bar{\Pi}-I)\Pi \in OPS^{-\infty}$
+\end{itemize}
+Suppose that $M \in OPS^0$ is microlocally elliptic in $\Gamma$: for certain $\gamma, R>0$,  $\sigma_0(M)(\bx,\xi)  \ge \gamma > 0$ for $(\bx,\xi) \in \Gamma$, $|\xi|>R$.   Then for $u \in H^s(\bR^n)$, any $k \ge 0$, there exists $C_{s,k} \ge 0$ depending on $\Gamma$ and on the symbol semi-norms of  $\bar{\Pi}, \Pi$ and $M$ so that
+\be
+\label{garding}
+\|M\Pi u\|_s \ge \gamma \|\Pi u\|_s - C_{s,k} \|u\|_{s-k}.
+\ee
+
+\noindent Proof: Define
+\[
+\tilde{M} = M \bar{\Pi} + \gamma (I-\bar{\Pi}).
+\]
+Then $\sigma_0(\tilde{M})(\bx,\xi) \ge \gamma$ so by standard G\aa rding, 
+\[
+\|\tilde{M}(\Pi u)\|_s \ge \gamma \|\Pi u\|_s - C \|u\|_{s-k},
+\]
+with $C \ge 0$ as described. Since $(I-\bar{\Pi})\Pi \in OPS^{-\infty}$, the conclusion follows with a different $C$ of same type. Q. E. D.
+
+\noindent {\bf Lemma A2: Standard Microlocal Parametrix Construction:} With the same hypotheses, there exist $M^{\dagger} \in OPS^0$ so that for $s \in {\bf Z}, k \in {\bf Z}_+$, there are $K_s, C_{s,k} \ge 0$ so that for $u \in H^s(\bR^n)$,
+\[
+\|\Pi (MM^{\dagger}u - u)\|_s \le C_{s,k} \|u\|_{s-k},
+\]
+\[
+\|\Pi (M^{\dagger}Mu - u)\|_s \le C_{s,k} \|u\|_{s-k},
+\]
+\[
+\|M^{\dagger}u\|_s \le \frac{1}{\gamma}\|u\|_s + K_s \|u\|_{s-1}.
+\]
+The constants may be taken uniform over any bounded subset of $M \in OPS^0$ that are uniformly elliptic in $\Gamma$.
+
+\noindent {\bf Lemma A3:} Same hypotheses as Lemma A1, and $P \in OPS^0$. Suppose $t \ge 0$ and $q \in H^t(\bR^n)$ satisfies
+\be
+\label{microlocal}
+\|\Pi q - q \|_s \le L\|q\|_{s-k}
+\ee
+for $0 \le s \le t, 1 \le k \le k_0 > 0$. Then there exists $p\in H^t(\bR^n)$ so that
+\[
+\|Mp - Pq\|_s \le C_{s,k}\|q\|_{s-k} 
+\]
+for $0 \le s \le t, 1 \le k \le k_0 > 0$, with $C$ depending on the constant in the $\Gamma$-ellipticity estimate of $M$,  semi-norms of $\Pi, \bar{\Pi}, M$, and $P$, and on $L$.
+
+\noindent Proof: Let $M^{\dagger}$ be a $\Gamma$-microlocal parametrix as in Lemma A2, set
+\[
+p = M^{\dagger}Pq.
+\]
+Then for $0 \le s \le t$, 
+\[
+\|Mp-Pq\|_s \le \|\bar{\Pi}(MM^{\dagger}-I)Pq\|_s + \|(I-\bar{\Pi})(MM^{\dagger}-I)P\Pi q\|_s 
+\]
+\[
++ \|(I-\bar{\Pi})(MM^{\dagger}-I)P(I-\Pi) q\|_s
+\]
+For $k=1,...,k_0$, the first term is bounded by a multiple of $\|q\|_{s-k}$ as a consequence of the parametrix bound. The operator in the second term is $\in OPS^{-\infty}$, and the third term is also bounded by a multiple of $\|q\|_{s-k}$ due to the microlocal bound on $q$. All of the constants are uniform as indicated. Q. E. D.
+
+
+\noindent {\bf Lemma A4:} Suppose that $M \in OPS^0$ is positive semidefinite on $H^0$. Then $M_{\lambda} \equiv M + \lambda I$ is invertible on $H^s$ for $s \in Z^+$, and for $C_{s} \ge 0$ independent of $\lambda \in (0,\infty)$,
+\be
+\label{a4:res0}
+\|M_{\lambda}^{-1}q \|_s \le C_s\sum_{j=0}^s \lambda^{-(j+1)} \|q\|_{s-j},\,\,q \in H^s.
+\ee
+\noindent {\bf Proof:} $M_{\lambda}$ is invertible on $H^0$, as a consequence of the bounds
+\[
+C \|u\|^2  \ge \langle u, M_{\lambda}u\rangle_0 \ge \lambda \|u\|_0^2
+\]
+and the Lax-Milgram Theorem. In particular $\|M_{\lambda}^{-1}q\|_0\le \lambda^{-1}\|q\|_0$, that is, the case $s=0$ is established. 
+
+For $q \in H^s$, $M_{\lambda}^{-1}q \in H^s$ as a consequence of the existence of a parametrix $\in  OPS^0$. Note that for $u \in H^s$, 
+\[
+\frac{\lambda}{4}\|u\|_s^2 + \frac{1}{\lambda}\|M_{\lambda}u\|_s^2 \ge \|u\|_s\|M_{\lambda}u\|_s \ge \langle \Lambda^s u, \Lambda^s M_{\lambda} u\rangle_0  
+\]
+\[
+= \langle \Lambda^s u, M_{\lambda} \Lambda^s u\rangle_0 + \langle \Lambda^s u, [\Lambda^s, M_{\lambda}]u\rangle_0 
+\ge \lambda \|u\|_s^2 - C\|u\|_s \|u\|_{s-1} \ge \frac{\lambda}{2}\|u\|_s^2-\frac{C^2}{2\lambda}\|u\|_{s-1}^2,
+\]
+whence
+\[
+\|M_{\lambda}u\|_s + \frac{C^2}{2}\|u\|_{s-1} \ge \sqrt{2} (\|M_{\lambda}u\|_s^2 + \frac{C^2}{2}\|u\|_{s-1}^2)^{\frac{1}{2}} \ge \frac{\lambda}{\sqrt{2}}\|u\|_s
+\]
+Take $u=M_{\lambda}^{-1}q$, and suppose that the conclusion holds for $s-1$. Then
+\[
+\frac{\lambda}{\sqrt{2}}\|M_{\lambda}^{-1}q\|_s \le \|q\|_s + \frac{C^2}{2}\|M_{\lambda}^{-1}q\|_{s-1} 
+\]
+\[
+\le \|q\|_s + \frac{C^2}{2}C_{s-1}\sum_{j=0}^{s-1}\lambda^{-(j+1)}\|q\|_{s-1-j}.
+\]
+Rearranging and renaming constants completes the induction step. Q. E. D.
+
+
+\noindent {\bf Lemma A5:} Suppose that $M \in OPS^0$ is microlocally elliptic in $\Gamma$, self-adjoint and positive semidefinite on $H^0$. Suppose $t \ge 0$ and $q \in H^t(\bR^n)$ satisfies (\ref{microlocal}) for $0 \le s \le t, k=1,...,k_0 > 0$. 
+Then there exist $C_{s,k} \ge 0$ and $\lambda_0>0$ so that for $\lambda \in (0,\lambda_0]$,
+ \be
+ \label{a4:res1}
+\| M_{\lambda}^{-1} P q \|_s \le C_{s,k} (\|Pq\|_s + \sum_{j=0}^s \lambda^{-(j+1)} \|q\|_{s-j-k}).
+\ee
+Denote by $M_{\lambda}^{\dagger}$ the $\Gamma$-microlocal parametrix for $M_{\lambda}$ constructed in Lemma A-2, and note that $M_{\lambda}^{\dagger}$ is bounded on each $H^s$ with bound independent of $\lambda$. Then
+\be
+\label{a4:res2}
+\|M_{\lambda}^{-1} P q - M_{\lambda}^{\dagger} Pq\|_s \le C_{s,k} \sum_{j=0}^s \lambda^{-(j+1)} \|q\|_{s-j-k}.
+\ee
+Finally,
+\be
+\label{a4:res3}
+\|(I-\bar{\Pi})M_{\lambda}^{-1}Pq\|_s \le C_{s,k} \sum_{j=0}^s \lambda^{-(j+1)} \|q\|_{s-j-k}.
+\ee
+for $0 \le s \le t, k=1,...,k_0 > 0$. 
+The constants $C_{s,k}$ depend on $s,k$ and the symbol semi-norms of $M, P, \Pi, \bar{\Pi}$ and on $L$, but are independent of $\lambda \in (0,\lambda_0]$. 
+
+\noindent {\bf Proof:} Apply Lemma A3 to $M_{\lambda}$ to construct $p \in H^t(\bR^n)$ so that for $0 \le s \le t$, $0 \le k \le k_0$,
+\[
+\|M_{\lambda}p-Pq\|_s \le C\|q\|_{s-k}.
+\]
+Note that $\{M_{\lambda}: \lambda \in (0,\lambda_0]\}$ is bounded in $OPS^0$ and uniformly $\Gamma$-elliptic, hence the constants $C$ from Lemma A3 are also independent of $\lambda$. 
+Then
+\[
+\|M_{\lambda}^{-1}Pq\|_s \le \|p\|_s + \|M_{\lambda}^{-1}(Pq-M_{\lambda}p)\|_s 
+\]
+\[
+\le \|p\|_s + C_s\sum_{j=0}^s \lambda^{-(j+1)}\|Pq-M_{\lambda}p\|_{s-j} 
+\]
+\[
+\le \|M_{\lambda}^{\dagger}Pq\|_s + C_s\sum_{j=0}^s \lambda^{-(j+1)} C_{s-j,k}\|q\|_{s-j-k}
+\]
+\[
+\le \|M^{\dagger}\|\|Pq\|_s + C_{s,k} \sum_{j=0}^s \lambda^{-(j+1)} \|q\|_{s-j-k}
+\]
+after suitable redefinition of constants.
+Also
+\[
+\|M_{\lambda}(M_{\lambda}^{-1} P q - M_{\lambda}^{\dagger} Pq)\|_s = \|Pq-M_{\lambda}p\|_s
+\]
+\[
+\le C\|q\|_{s-k},
+\]
+from Lemma A3, whence (\ref{a4:res2}) follows from (\ref{a4:res0}). Finallly, (\ref{a4:res2}) implies
+\[
+\|(I-\bar{\Pi})M_{\lambda}^{-1}Pq\|_s \le \|M_{\lambda}^{-1} P q - M_{\lambda}^{\dagger} Pq\|_s + \|(I-\bar{\Pi})M_{\lambda}^{\dagger}Pq\|_s
+\]
+\[
+\le C_{s,k}\sum_{j=0}^{s}\lambda^{-(j+1)}\|q\|_{s-j-k} + \|(I-\bar{\Pi})M_{\lambda}^{\dagger}P \Pi q\|_s
+\]
+\[
++\|(I-\bar{\Pi})M_{\lambda}^{\dagger}P(I-\Pi)q\|_s
+\]
+The operator inside the second term on the RHS is smoothing, and the third term is $O(\|q\|_{s-k})$ for any $k=1,...,k_0$ by hypothesis, hence bounded by a sum of the given form, in fact by its $j=0$ term. Once again redefining the $C_{s,k}$ yields (\ref{a4:res3}).
+
+Q. E. D.
+
+\noindent {\bf Corollary A6:} Suppose that in addition to the assumptions of Lemma A6, $\{q_{\lambda}: 0<\lambda<\lambda_{\rm max}\} \subset H^t$ satisfies 
+\be
+\label{hfc}
+\|q_{\lambda}\|_{k} \le K \lambda \|q_{\lambda}\|_{k+1}
+\ee
+for $-k_0 \le k < t$, $K$ independent of $\lambda$, $k_0 \ge 2$. Then there exists
+$C >0$ so that for $0 \le s
+\le t$, 
+\be
+\label{main_est}
+\|M_{\lambda}^{-1}Pq_{\lambda}\|_s \le C \|q_{\lambda}\|_s.
+\ee
+and for $1 \le k \le k_0$,
+\be
+\label{microlocal_est}
+\|(I-\bar{\Pi})M_{\lambda}^{-1}Pq_{\lambda}\|_s \le C \lambda\|q\|_{s-k+2}.
+\ee
+If additionally $P=I$ and $k_0 \ge 2$, then $L_1, K_1>0$ exist so that for $0 \le s \le t, 1 \le k \le \min(k_0,s+1)$,
+\be
+\label{hfc_sol}
+\|M_{\lambda}^{-1}q_{\lambda}\|_{s-1} \le K_1\lambda\|M_{\lambda}^{-1}q\|_{s}
+\ee
+and
+\be
+\label{microlocal_sol}
+\|(I-\bar{\Pi})M_{\lambda}^{-1}q_{\lambda}\|_s \le L_1\lambda\|M_{\lambda}^{-1}q_\lambda\|_{s}.
+\ee
+for $s=0,...t$. 
+
+\noindent{\bf Proof:} 
+The inequalities (\ref{hfc}) imply that 
+\[
+\|q_{\lambda}\|_{s-j-k} \le K \lambda \|q_{\lambda}\|_{s-(j-1)-k} \le ...\le (K\lambda)^{j} \|q_{\lambda}\|_{s-k}.
+\]
+So all terms in the sum on the RHS of (\ref{a4:res0}) are bounded by multiples of $\lambda^{-1}\|q_{\lambda}\|_{s-k}$, and add up to
+\[
+\|M_{\lambda}^{-1}Pq_{\lambda}\|_s \le C (\|Pq_{\lambda}\|_s + \lambda^{-1} \|q_{\lambda}\|_{s-k} )
+\]
+Since $k \ge 1$, (\ref{hfc}) implies (\ref{main_est}), with the constant $C$ inheriting its properties from standard bounds on $P$, $K$, and the $C_{s,k}$.
+
+Apply the same trick to (\ref{a4:res3}) to obtain 
+\[
+\|(I-\bar{\Pi})M_{\lambda}^{-1}Pq_{\lambda}\|_s \le C
+\lambda^{-1}\|q\|_{s-k}.
+\]
+Since $s \ge 0$, $s-k \ge -k_0$, so you can apply (\ref{hfc}) twice to obtain (\ref{microlocal_est}).
+
+To show (\ref{hfc_sol}), write
+\[
+\|M_{\lambda}^{-1} q \|_{s-1} \le \|M_{\lambda}^{-1} q_{\lambda} - M_{\lambda}^{\dagger} q_{\lambda}\|_s + \|M_{\lambda}^{\dagger} q_{\lambda}\|_{s-1}
+\]
+For $s =0, ..., t$, (\ref{a4:res2}) together with the trick applied twice already using (\ref{hfc}) estimates the first term as
+\[
+\le  C \lambda^{-1}\|q_{\lambda}\|_{s-k} \le C \lambda \|q_{\lambda}\|_{s}
+\]
+taking $k=2$, as we may thanks to $k_0 \ge 2$. Lemma A-2 provides a uniform (in $\lambda$) estimate for $\|M_{\lambda}^{\dagger}\|_{s-1,s-1}$ for any $s \in {\bf Z}$: 
+\[
+\|M_{\lambda}^{\dagger} q\|_{s-1} \le C \|q\|_{s-1} \le C\lambda \|q\|_{s}
+\]
+Combining these estimates, obtain
+\[
+\|M_{\lambda}^{-1} q \|_{s-1} \le C \lambda \|q\|_{s} \le C\lambda \|M_{\lambda}^{-1} q \|_{s}.
+\]
+
+Finally, for $P=I$ and $k=2$, (\ref{microlocal_est}) takes the form
+\[
+\|(I-\bar{\Pi})M_{\lambda}^{-1}q_{\lambda}\|_s \le C \lambda\|q\|_{s}
+\]
+\[
+\le C\lambda\|M_{\lambda}\|_{s,s}\|M_{\lambda}^{-1}q_{\lambda}\|_{s}
+\]
+which gives (\ref{microlocal_sol}) with proper choice of $L_1$.
+
+Q. E. D.
+
+\bibliographystyle{seg}
+\bibliography{../bib/masterref}
+

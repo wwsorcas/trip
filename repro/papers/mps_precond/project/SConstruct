@@ -1,0 +1,2370 @@
+
+################## COMMON DEFINITIONS #################################
+from rsf.proj import *
+import os
+################### END COMMON DEFINITIONS ############################
+
+
+##################### LOCAL DEFINITIONS ###############################
+thispath = os.getcwd()
+
+RSFSRC  = os.getenv('RSFSRC')
+RSFROOT = os.getenv('RSFROOT')
+CWPROOT = os.getenv('CWPROOT')
+IWAVE   = os.getenv('IWAVE')
+MPSCODE = os.path.join(IWAVE,'mps')
+
+stdmdl            = IWAVE + '/grid/main/standardmodel.x'
+genmdl            = MPSCODE + '/main/genmodel.x' 
+tg_setup          = MPSCODE + '/main/tg_setup.x'
+tgs_n_cat         = MPSCODE + '/main/tgs_n_cat.x'
+replicate         = MPSCODE + '/main/replicate.x'
+my_waveform       = MPSCODE + '/main/my_waveform.x'
+my_wavemath       = MPSCODE + '/main/my_wavemath.x'
+W_res             = MPSCODE + '/main/W_res.x'
+D_scal            = MPSCODE + '/main/D_scal.x'
+asg_scal_p        = MPSCODE + '/main/asg_scal_p.x'
+asg_canscal_p     = MPSCODE + '/main/asg_canscal_p.x'
+asg_scal_p_inv    = MPSCODE + '/main/asg_scal_p_inv.x'
+asg_canscal_p_inv = MPSCODE + '/main/asg_canscal_p_inv.x'
+
+parseCG = 'python parseCG.py'
+LCurveV = 'python LCurveV.py'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+sugain     = CWPROOT + '/bin/sugain'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+suread     = CWPROOT + '/bin/suread'
+sufft      = CWPROOT + '/bin/sufft'
+suamp      = CWPROOT + '/bin/suamp'
+sutaper    = CWPROOT + '/bin/sutaper'
+suaddnoise = CWPROOT + '/bin/suaddnoise'
+
+###################### END LOCAL DEFINITIONS ##########################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+
+#######################################################################
+# Build useful wavelets ###############################################
+#######################################################################
+
+Flow( 'wlt_null.su',None,
+      sunull +' nt=201 dt=0.004 ntr=1', 
+      stdin=0 )
+
+Flow( 'wlt_ricker.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+      ' nt=201 dt=0.004 type=2 fpeak=10 cit=101 scal=100 ',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_gaussd.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=201 dt=0.004 type=1 fpeak=10 cit=101 scal=4',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_ramp1.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=401 dt=0.004 type=5 cit=201 ramp_bot=0 ramp_top=100 width=1.0',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_ramp2.su',['wlt_ramp1.su','wlt_pack1.su'],
+      my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=${TARGETS[0]} op=add',
+      stdin=0,stdout=0)
+
+Flow( 'wlt_pack1.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=401 dt=0.004 type=6 cit=151 width=0.5 fpeak=15 scal=50',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_pack2.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=201 dt=0.004 type=6 cit=101 width=0.5 fpeak=20 scal=1000',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_pack3.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=401 dt=0.004 type=6 cit=151 width=0.5 fpeak=15 scal=1000',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_pack4.su',None,
+      my_waveform +' CWPROOT='+CWPROOT+' output=${TARGETS[0]}'+\
+      ' nt=201 dt=0.004 type=6 cit=101 width=0.5 fpeak=15 scal=1000',
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_delta.su',None,
+      suspike +' nt=201 dt=0.004 ntr=1 ix1=1 it1=201 | '+\
+      sugain +' scale=250 | '+\
+      sushw +' key=delrt a=-800 ',
+      stdin=0)
+
+
+
+#######################################################################
+# Build models ########################################################
+#######################################################################
+
+c_min = 3
+c_max = 3
+rho   = 1
+
+choose = {
+'dn': '2',#'1',
+'vp': '0',#'2',
+'bm': '1',#'3',
+'by': '3',#'4',
+'csq': '4'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy',
+'csq': 'Velocity Squared'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g',
+'csq': 'km\^2\_/s\^2'
+}
+
+
+#~~~~~~~~~~~~~~~~~~~~~~#
+# 2D Homogeneous model #
+#~~~~~~~~~~~~~~~~~~~~~~#
+
+#depth-axis
+f1 = 0.0
+e1 = 2000.0
+d1 = 20
+n1=int((e1-f1)/d1)+1 #nz
+
+#horizontal-axis
+f2 = 0.0 
+e2 = 2000.0
+d2 = 20
+n2=int((e2-f2)/d2)+1 #nx
+
+output = 'bmod_hom.rsf'
+cmd = genmdl + ' model=0 choose=' + str(choose['bm'])+\
+    ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['bm'] + ' unit=' + unit['bm']+\
+    ' datapath='+ thispath +' hfile=' + output
+Flow( [output,output+'@'],None,cmd,stdin=0,stdout=0)
+
+output = 'buoy_hom.rsf'
+cmd = genmdl + ' model=0 choose=' + str(choose['by'])+\
+    ' c_min='+ str(c_min) +' c_max='+ str(c_max) +' rho='+ str(rho)+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['by'] + ' unit=' + unit['by']+\
+    ' datapath='+ thispath +' hfile=' + output
+Flow( [output,output+'@'],None,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~#
+# Dome model #
+#~~~~~~~~~~~~#
+
+#depth-axis
+f1 = 0.0
+e1 = 2000.0
+d1 = 20
+n1=int((e1-f1)/d1)+1 #nz
+
+#horizontal-axis
+f2 = 0.0 
+e2 = 4000.0
+d2 = 20
+n2=int((e2-f2)/d2)+1 #nx
+
+output = 'bmod_dome.rsf'
+cmd = stdmdl + ' model=8 choose=3'+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['bm'] + ' unit=' + unit['bm']+\
+    ' datapath='+ thispath +' hfile=' + output
+Flow( [output,output+'@'],None,cmd,stdin=0,stdout=0)
+
+output = 'buoy_dome.rsf'
+cmd = stdmdl + ' model=8 choose=4'+\
+    ' o1=' + str(f1) + ' n1=' + str(n1) + ' d1=' + str(d1)+\
+    ' o2=' + str(f2) + ' n2=' + str(n2) + ' d2=' + str(d2)+\
+    ' o3=0.0 n3=1 d3=1.0 label1=Depth unit1=m label2=Distance unit2=m'+\
+    ' label=' + label['bm'] + ' unit=' + unit['bm']+\
+    ' datapath='+ thispath +' hfile=' + output
+Flow( [output,output+'@'],None,cmd,stdin=0,stdout=0)
+
+
+#making figs for models
+Result('bmod-hom','bmod_hom',
+       'put label1=Depth unit1=m label2=Distance unit2= m label="'+label['bm']+'" unit="'+unit['bm']+'" | '+\
+       'grey color=c mean=y scalebar=y barreverse=y wanttitle=n')
+
+Result('buoy-hom','buoy_hom',
+       'put label1=Depth unit1=m label2=Distance unit2= m label="Buoyancy" unit="'+unit['by']+'" | '+\
+       'grey color=c mean=y scalebar=y barreverse=y wanttitle=n')
+
+Result('bmod-dome','bmod_dome',
+       'put label1=Depth unit1=m label2=Distance unit2= m label="'+label['bm']+'" unit="'+unit['bm']+'" | '+\
+       'grey color=c mean=y scalebar=y barreverse=y wanttitle=n')
+
+Result('buoy-dome','buoy_dome',
+       'put label1=Depth unit1=m label2=Distance unit2= m label="Buoyancy" unit="'+unit['by']+'" | '+\
+       'grey color=c mean=y scalebar=y barreverse=y wanttitle=n')
+
+
+#######################################################################
+# Build some useful headers and MPS files #############################
+#######################################################################
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# For 2D homogeneous model #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#source parameters
+sx_o  = 1003
+sx_e  = 1003
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1003 
+
+#receiver parameters
+gx_o  = 0  # starting x coord
+gx_e  = 2000  # ending x coord
+gx_dx = 20    # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -900 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 1.6   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+Flow('hdr_hom.su',None,
+     sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '+\
+     sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=delrt a=0 | '+\
+     sushw +' key=selev a='+ str(selev) + ' | '+\
+     sushw +' key=gelev a='+ str(gelev),
+     stdin=0)
+
+Flow('MPS_scal0_hom.su','wlt_ricker.su',
+     sushw + ' key=selev a='+ str(selev) + ' | '+\
+     sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j=1')
+
+Flow('MPS_scal1_hom.su','wlt_pack4.su',
+     sushw + ' key=selev a='+ str(selev) + ' | '+\
+     sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j=1')
+
+Flow('MPS_scalN_hom.su','wlt_null.su',
+     sushw + ' key=selev a='+ str(selev) + ' | '+\
+     sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j=1')
+
+Flow('MPS_scalD_hom.su','wlt_delta.su',
+    sushw + ' key=selev a='+ str(selev) + ' | '+\
+    sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j=1')
+
+Flow('MPS_canscal_hom.su',['wlt_ricker.su','wlt_pack2.su','wlt_pack4.su'],
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[2]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+Flow('MPS_canscalD_hom.su','wlt_delta.su',
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+Flow('MPS_canscalN_hom.su','wlt_null.su',
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+
+#~~~~~~~~~~~~~~~~#
+# For dome model #
+#~~~~~~~~~~~~~~~~#
+
+#source parameters
+sx_o  = 1003
+sx_e  = 1003
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -103 #-12 
+
+#receiver parameters
+gx_o  = 1400  # starting x coord
+gx_e  = 3400  # ending x coord
+gx_dx = 20    # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -8 #-40 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 2.5   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+Flow('hdr_dome.su',None,
+     sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '+\
+     sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=delrt a=0 | '+\
+     sushw +' key=selev a='+ str(selev) + ' | '+\
+     sushw +' key=gelev a='+ str(gelev),
+     stdin=0)
+
+Flow('MPS_canscal_dome.su',['wlt_ricker.su','wlt_pack2.su','wlt_pack4.su'],
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[1]} wlt_2=${SOURCES[2]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+Flow('MPS_canscalD_dome.su','wlt_delta.su',
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+Flow('MPS_canscalN_dome.su','wlt_null.su',
+     tgs_n_cat +' CWPROOT='+CWPROOT+' N=3'+\
+     ' wlt_0=${SOURCES[0]} wlt_1=${SOURCES[0]} wlt_2=${SOURCES[0]}'+\
+     ' out=tmp_MPS.su && '+\
+     sushw +' <tmp_MPS.su key=selev a='+str(selev)+' | '+\
+     sushw +' key=sx a='+str(sx_o)+' c='+str(sx_dx)+' j=3'+\
+     ' >${TARGETS[0]} && /bin/rm tmp_MPS.su',
+     stdin=0, stdout=0)
+
+
+#######################################################################
+#######################################################################
+# Test 0
+# Making figures for comparing pressure field with time derivatives of
+# source field. Running on acd driver, with MPS of order 0,1,2 and a 
+# ricker wavelet time dependency.
+#
+#######################################################################
+#######################################################################
+
+#Constructing header and MPS files
+
+sx_o  = 1000
+sx_e  = 1000
+sx_dx = 1
+sx_n  = int((sx_e-sx_o)/sx_dx)+1
+selev = -1000 
+
+gx_o  = 800  # starting x coord
+gx_e  = 800  # ending x coord
+gx_dx = 1    # distance between  
+gx_n  = int((gx_e-gx_o)/gx_dx)+1
+gelev = -800 # receiver depth
+
+ntr = gx_n*sx_n
+
+T  = 0.8   # final time in seconds
+dt = 0.004 # time step size
+nt = int(T/dt)+1
+
+Flow('test0_hdr.su',None,
+     sunull +' nt='+ str(nt) +' ntr='+ str(ntr) +' dt='+ str(dt) +' | '+\
+     sushw +' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=gx a='+ str(gx_o) +' b='+ str(gx_dx) +' j='+ str(gx_n) +' | '+\
+     sushw +' key=delrt a=0 | '+\
+     sushw +' key=selev a='+ str(selev) + ' | '+\
+     sushw +' key=gelev a='+ str(gelev),
+     stdin=0)
+
+Flow('test0_MPS.su','wlt_ricker.su',
+     sushw + ' key=selev a='+ str(selev) + ' | '+\
+     sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_dx) +' j=1')
+
+#computing pressure fields from Scal_MPS_Space of order 0
+output = ['test0_data_p_0.su',
+          'test0_MPS_0.su',
+          'RHS_0_test0_MPS_0.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf',
+         'test0_hdr.su', 
+         'test0_MPS.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_scal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.5 order=2'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' appx_ord=4'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#computing pressure fields from Scal_MPS_Space of order 1
+output = ['test0_data_p_1.su',
+          'test0_MPS_1.su',
+          'RHS_0_test0_MPS_1.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'test0_hdr.su', 
+         'test0_MPS.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_scal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' appx_ord=4'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#computing pressure fields from Scal_MPS_Space of order 2
+output = ['test0_data_p_2.su',
+          'test0_MPS_2.su',
+          'RHS_0_test0_MPS_2.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'test0_hdr.su', 
+         'test0_MPS.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_scal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2'+\
+      ' cmin=2.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' appx_ord=4'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=2'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#computing frac differint of MPS wavelet
+Flow('test0_D_0.su',
+     ['bmod_hom.rsf','test0_MPS.su'],
+     D_scal +\
+         ' order_0=0.5 order_d=1.0 '+\
+         ' MPS_ord_0=0 MPS_ord_1=0 '+\
+         ' c_max=3.0 '+\
+         ' D_file=${TARGETS[0]}'+\
+         ' MPS_file=${SOURCES[1]} '+\
+         ' grid=${SOURCES[0]}',
+     stdin=0,stdout=0)
+
+Flow('test0_D_1.su',
+     ['bmod_hom.rsf','test0_MPS.su'],
+     D_scal +\
+         ' order_0=0.5 order_d=1.0 '+\
+         ' MPS_ord_0=0 MPS_ord_1=1 '+\
+         ' c_max=3.0 '+\
+         ' D_file=${TARGETS[0]}'+\
+         ' MPS_file=${SOURCES[1]} '+\
+         ' grid=${SOURCES[0]}',
+     stdin=0,stdout=0)
+
+Flow('test0_D_2.su',
+     ['bmod_hom.rsf','test0_MPS.su'],
+     D_scal +\
+         ' order_0=0.5 order_d=1.0 '+\
+         ' MPS_ord_0=0 MPS_ord_1=2 '+\
+         ' c_max=3.0 '+\
+         ' D_file=${TARGETS[0]}'+\
+         ' MPS_file=${SOURCES[1]} '+\
+         ' grid=${SOURCES[0]}',
+     stdin=0,stdout=0)
+
+#making figs
+output = 'test0-MPS'
+Flow(output,'test0_MPS.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+Flow('test0_MPS_spec.su','test0_MPS.su',
+     sufft +' | '+ suamp +' mode=amp')
+output = 'test0-MPS-spec'
+Flow(output,'test0_MPS_spec.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-data-0'
+Flow(output,'test0_data_p_0.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-data-1'
+Flow(output,'test0_data_p_1.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-data-2'
+Flow(output,'test0_data_p_2.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-D-0'
+Flow(output,'test0_D_0.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-D-1'
+Flow(output,'test0_D_1.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+output = 'test0-D-2'
+Flow(output,'test0_D_2.su','suread read=data endian=0')
+Result(output,output,'graph wanttitle=n label2=Amplitude plotfat=3')
+
+
+#######################################################################
+#######################################################################
+# TEST 1
+# Source inversion test:
+#    - homogeneous model 2D
+#    - pressure data
+#    - MPS order 0, Scal_MPS_Space
+#
+#######################################################################
+#######################################################################
+
+#~~~~~~~~~~~~~#
+# Making data #
+#~~~~~~~~~~~~~#
+output = ['test1_data_p_nf.su',
+          'test1_MPS.su',
+          'RHS_0_test1_MPS.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf',
+         'hdr_hom.su',
+         'MPS_scal0_hom.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_scal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' appx_ord=4'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('test1_data_p.su','test1_data_p_nf.su',
+     suaddnoise+' noise=gauss sn=43.88')
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test1_CG.txt',
+          'test1_MPS_inv.su',
+          'test1_MPS_del.su',
+          'RHS_0_test1_MPS_inv.su',
+          'RHS_0_test1_MPS_del.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test1_MPS.su',
+         'test1_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' appx_ord=4'+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test1_CG_rnrm.asc',
+          'test1_CG_gnrm.asc',
+          'test1_CG_xnrm.asc',
+          'test1_CG_xerr.asc']
+input = 'test1_CG.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test1_CG_rnrm.rsf','test1_CG_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_gnrm.rsf','test1_CG_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_xnrm.rsf','test1_CG_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_xerr.rsf','test1_CG_xerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test1_CG_best.txt',
+          'test1_MPS_inv_best.su',
+          'test1_MPS_del_best.su',
+          'RHS_0_test1_MPS_inv_best.su',
+          'RHS_0_test1_MPS_del_best.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf',
+         'hdr_hom.su',
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test1_MPS.su',
+         'test1_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' appx_ord=4'+\
+      ' MaxIter=28 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test1_CG_PC.txt',
+          'test1_MPS_inv_PC.su',
+          'test1_MPS_del_PC.su',
+          'RHS_0_test1_MPS_inv_PC.su',
+          'RHS_0_test1_MPS_del_PC.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test1_MPS.su',
+         'test1_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test1_CG_PC_rnrm.asc',
+          'test1_CG_PC_gnrm.asc',
+          'test1_CG_PC_xnrm.asc',
+          'test1_CG_PC_Lxnrm.asc',
+          'test1_CG_PC_xerr.asc',
+          'test1_CG_PC_Lxerr.asc']
+input = 'test1_CG_PC.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test1_CG_PC_rnrm.rsf','test1_CG_PC_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_PC_gnrm.rsf','test1_CG_PC_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_PC_xnrm.rsf','test1_CG_PC_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_PC_Lxnrm.rsf','test1_CG_PC_Lxnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_PC_xerr.rsf','test1_CG_PC_xerr.asc',cmd,stdin=0,stdout=0)
+Flow('test1_CG_PC_Lxerr.rsf','test1_CG_PC_Lxerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test1_CG_PC_best.txt',
+          'test1_MPS_inv_PC_best.su',
+          'test1_MPS_del_PC_best.su',
+          'RHS_0_test1_MPS_inv_PC_best.su',
+          'RHS_0_test1_MPS_del_PC_best.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test1_MPS.su',
+         'test1_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=0'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=5 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#~~~~~~~~~~~~~#
+# Making Figs #
+#~~~~~~~~~~~~~#
+
+#plotting data
+output = 'test1-data-p'
+Flow(output,'test1_data_p.su','suread read=data endian=0')
+Result(output,output,'grey wanttitle=n scalebar=y')
+
+#plotting solution
+Flow('test1-MPS','test1_MPS.su',
+     'suread read=data endian=0')
+
+Flow('test1-MPS-inv',
+     ['test1_MPS.su','test1_MPS_inv_best.su'],     
+     my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+     ' suread <tmp read=data endian=0 >${TARGETS[0]} && '+\
+     ' /bin/rm tmp',
+     stdin=0,stdout=0)          
+
+Flow('test1-MPS-inv-PC',
+     ['test1_MPS.su','test1_MPS_inv_PC_best.su'],     
+     my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+     ' suread <tmp read=data endian=0 >${TARGETS[0]} && '+\
+     ' /bin/rm tmp',
+     stdin=0,stdout=0)          
+
+output = 'test1-MPS'
+input = ['test1-MPS',
+         'test1-MPS-inv',
+         'test1-MPS-inv-PC']
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+Result(output,input,cmd)
+
+#plotting residual and normal residual norms vs CG iterations
+output = 'test1-CG-rnrm'
+input = ['test1_CG_rnrm.rsf',
+         'test1_CG_PC_rnrm.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iteration" label2="Log L2-Norm of Residual" dash=1,0 plotcol=5,5 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+output = 'test1-CG-gnrm'
+input = ['test1_CG_gnrm.rsf',
+         'test1_CG_PC_gnrm.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm of Normal Residual" dash=1,0 plotcol=6,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+output = 'test1-plots'
+input = ['test1_CG_rnrm.rsf',
+         'test1_CG_gnrm.rsf',
+         'test1_CG_PC_rnrm.rsf',
+         'test1_CG_PC_gnrm.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1:4]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm" dash=1,1,0,0 plotcol=5,6,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+#Result(output,input,cmd)
+
+#plotting L-curve
+cmd = ' window f1=1 <${SOURCES[0]} | '+\
+      ' math output="log(input)/log(10)" >tmp1 && '+\
+      ' window f1=1 <${SOURCES[1]} | '+\
+      ' math output="log(input)/log(10)" >tmp2 && '+\
+      ' cmplx tmp1 tmp2 | '+\
+      ' graph symbol=o symbolsz=7 label1="Log L2-Norm Residual" label2="Log L2-Norm Solution" dash=0 plotcol=6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp1 tmp2'
+
+output = 'test1-Lcurve'
+input = ['test1_CG_rnrm.rsf',
+         'test1_CG_xnrm.rsf']
+#Result(output,input,cmd,stdin=0,stdout=0)
+
+output = 'test1-Lcurve-PC'
+input = ['test1_CG_PC_rnrm.rsf',
+         'test1_CG_PC_Lxnrm.rsf']
+#Result(output,input,cmd,stdin=0,stdout=0)
+
+#plotting solution errors
+output = 'test1-err'
+input = ['test1_CG_xerr.rsf',
+         'test1_CG_PC_xerr.rsf',
+         'test1_CG_PC_Lxerr.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm" dash=1,0,0 plotcol=5,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+
+
+#######################################################################
+#######################################################################
+# TEST 2
+# Source inversion test:
+#    - homogeneous model 2D
+#    - pressure data
+#    - MPS order 1, Scal_MPS_Space
+#
+#######################################################################
+#######################################################################
+
+#~~~~~~~~~~~~~#
+# Making data #
+#~~~~~~~~~~~~~#
+output = ['test2_data_p_nf.su',
+          'test2_MPS.su',
+          'RHS_0_test2_MPS.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf',
+         'hdr_hom.su',
+         'MPS_scal1_hom.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_scal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'+\
+      ' appx_ord=4'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('test2_data_p.su','test2_data_p_nf.su',
+     suaddnoise+' noise=gauss sn=30.39')
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test2_CG.txt',
+          'test2_MPS_inv.su',
+          'test2_MPS_del.su',
+          'RHS_0_test2_MPS_inv.su',
+          'RHS_0_test2_MPS_del.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test2_MPS.su',
+         'test2_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test2_CG_rnrm.asc',
+          'test2_CG_gnrm.asc',
+          'test2_CG_xnrm.asc',
+          'test2_CG_xerr.asc']
+input = 'test2_CG.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test2_CG_rnrm.rsf','test2_CG_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_gnrm.rsf','test2_CG_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_xnrm.rsf','test2_CG_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_xerr.rsf','test2_CG_xerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test2_CG_best.txt',
+          'test2_MPS_inv_best.su',
+          'test2_MPS_del_best.su',
+          'RHS_0_test2_MPS_inv_best.su',
+          'RHS_0_test2_MPS_del_best.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test2_MPS.su',
+         'test2_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=68 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test2_CG_PC.txt',
+          'test2_MPS_inv_PC.su',
+          'test2_MPS_del_PC.su',
+          'RHS_0_test2_MPS_inv_PC.su',
+          'RHS_0_test2_MPS_del_PC.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test2_MPS.su',
+         'test2_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test2_CG_PC_rnrm.asc',
+          'test2_CG_PC_gnrm.asc',
+          'test2_CG_PC_xnrm.asc',
+          'test2_CG_PC_Lxnrm.asc',
+          'test2_CG_PC_xerr.asc',
+          'test2_CG_PC_Lxerr.asc']
+input = 'test2_CG_PC.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=200 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test2_CG_PC_rnrm.rsf', 'test2_CG_PC_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_PC_gnrm.rsf', 'test2_CG_PC_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_PC_xnrm.rsf', 'test2_CG_PC_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_PC_Lxnrm.rsf','test2_CG_PC_Lxnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_PC_xerr.rsf', 'test2_CG_PC_xerr.asc',cmd,stdin=0,stdout=0)
+Flow('test2_CG_PC_Lxerr.rsf','test2_CG_PC_Lxerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test2_CG_PC_best.txt',
+          'test2_MPS_inv_PC_best.su',
+          'test2_MPS_del_PC_best.su',
+          'RHS_0_test2_MPS_inv_PC_best.su',
+          'RHS_0_test2_MPS_del_PC_best.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_scalN_hom.su',
+         'MPS_scalD_hom.su',
+         'test2_MPS.su',
+         'test2_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_scal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord_0=0 MPS_ord_1=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=5 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~#
+# Making Figs #
+#~~~~~~~~~~~~~#
+
+#plotting data
+output = 'test2-data-p'
+Flow(output,'test2_data_p.su','suread read=data endian=0')
+Result(output,output,'grey wanttitle=n scalebar=y')
+
+#plotting solution 
+Flow('test2-MPS','test2_MPS.su',
+     'suread read=data endian=0')
+
+Flow('test2-MPS-inv',
+     ['test2_MPS.su','test2_MPS_inv_best.su'],     
+     my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+
+     ' suread <tmp read=data endian=0 >${TARGETS[0]} && '+\
+     ' /bin/rm tmp',
+     stdin=0,stdout=0)          
+
+Flow('test2-MPS-inv-PC',
+     ['test2_MPS.su','test2_MPS_inv_PC_best.su'],     
+     my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+
+     ' suread <tmp read=data endian=0 >${TARGETS[0]} && '+\
+     ' /bin/rm tmp',
+     stdin=0,stdout=0)          
+
+output = 'test2-MPS'
+input = ['test2-MPS',
+         'test2-MPS-inv',
+         'test2-MPS-inv-PC']
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+Result(output,input,cmd,)
+
+#plotting residual and normal residual norms vs CG iterations
+output = 'test2-CG-rnrm'
+input = ['test2_CG_rnrm.rsf',
+         'test2_CG_PC_rnrm.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iteration" label2="Log L2-Norm or Residual" dash=1,0 plotcol=5,5 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+output = 'test2-CG-gnrm'
+input = ['test2_CG_gnrm.rsf',
+         'test2_CG_PC_gnrm.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm" dash=1,0 plotcol=6,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+#plotting solution errors
+output = 'test2-err'
+input = ['test2_CG_xerr.rsf',
+         'test2_CG_PC_xerr.rsf',
+         'test2_CG_PC_Lxerr.rsf']
+cmd =  ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm of error in sol" dash=1,0,0 plotcol=5,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+Result(output,input,cmd)
+
+
+#######################################################################
+#######################################################################
+# TEST 3
+# Source inversion test:
+#    - homogeneous model 2D
+#    - pressure data
+#    - MPS order 1, CanScal_MPS_Space
+#
+#######################################################################
+#######################################################################
+
+#~~~~~~~~~~~~~#
+# Making data #
+#~~~~~~~~~~~~~#
+output = ['test3_data_p_nf.su',
+          'test3_MPS.su',
+          'RHS_0_test3_MPS.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf',
+         'hdr_hom.su',
+         'MPS_canscal_hom.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_canscal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('test3_data_p.su','test3_data_p_nf.su',
+     suaddnoise+' noise=gauss sn=48.623')
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test3_CG.txt',
+          'test3_MPS_inv.su',
+          'test3_MPS_del.su',
+          'RHS_0_test3_MPS_inv.su',
+          'RHS_0_test3_MPS_del.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test3_CG_rnrm.asc',
+          'test3_CG_gnrm.asc',
+          'test3_CG_xnrm.asc',
+          'test3_CG_xerr.asc']
+input = 'test3_CG.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test3_CG_rnrm.rsf','test3_CG_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_gnrm.rsf','test3_CG_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_xnrm.rsf','test3_CG_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_xerr.rsf','test3_CG_xerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test3_CG_best.txt',
+          'test3_MPS_inv_best.su',
+          'test3_MPS_del_best.su',
+          'RHS_0_test3_MPS_inv_best.su',
+          'RHS_0_test3_MPS_del_best.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner + reg #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test3_CG_reg.txt',
+          'test3_MPS_inv_reg.su',
+          'test3_MPS_del_reg.su',
+          'RHS_0_test3_MPS_inv_reg.su',
+          'RHS_0_test3_MPS_del_reg.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test3_CG_rnrm_reg.asc',
+          'test3_CG_gnrm_reg.asc',
+          'test3_CG_xnrm_reg.asc',
+          'test3_CG_xerr_reg.asc']
+input = 'test3_CG_reg.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150'+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test3_CG_rnrm_reg.rsf','test3_CG_rnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_gnrm_reg.rsf','test3_CG_gnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_xnrm_reg.rsf','test3_CG_xnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_xerr_reg.rsf','test3_CG_xerr_reg.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test3_CG_best_reg.txt',
+          'test3_MPS_inv_best_reg.su',
+          'test3_MPS_del_best_reg.su',
+          'RHS_0_test3_MPS_inv_best_reg.su',
+          'RHS_0_test3_MPS_del_best_reg.su']
+
+input = ['bmod_hom.rsf', 
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test3_CG_PC.txt',
+          'test3_MPS_inv_PC.su',
+          'test3_MPS_del_PC.su',
+          'RHS_0_test3_MPS_inv_PC.su',
+          'RHS_0_test3_MPS_del_PC.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test3_CG_PC_rnrm.asc',
+          'test3_CG_PC_gnrm.asc',
+          'test3_CG_PC_xnrm.asc',
+          'test3_CG_PC_Lxnrm.asc',
+          'test3_CG_PC_xerr.asc',
+          'test3_CG_PC_Lxerr.asc']
+input = 'test3_CG_PC.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test3_CG_PC_rnrm.rsf', 'test3_CG_PC_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_gnrm.rsf', 'test3_CG_PC_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_xnrm.rsf', 'test3_CG_PC_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_Lxnrm.rsf','test3_CG_PC_Lxnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_xerr.rsf', 'test3_CG_PC_xerr.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_Lxerr.rsf','test3_CG_PC_Lxerr.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test3_CG_PC_best.txt',
+          'test3_MPS_inv_PC_best.su',
+          'test3_MPS_del_PC_best.su',
+          'RHS_0_test3_MPS_inv_PC_best.su',
+          'RHS_0_test3_MPS_del_PC_best.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=36 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner + reg #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test3_CG_PC_reg.txt',
+          'test3_MPS_inv_PC_reg.su',
+          'test3_MPS_del_PC_reg.su',
+          'RHS_0_test3_MPS_inv_PC_reg.su',
+          'RHS_0_test3_MPS_del_PC_reg.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test3_CG_PC_rnrm_reg.asc',
+          'test3_CG_PC_gnrm_reg.asc',
+          'test3_CG_PC_xnrm_reg.asc',
+          'test3_CG_PC_Lxnrm_reg.asc',
+          'test3_CG_PC_xerr_reg.asc',
+          'test3_CG_PC_Lxerr_reg.asc']
+input = 'test3_CG_PC_reg.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test3_CG_PC_rnrm_reg.rsf', 'test3_CG_PC_rnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_gnrm_reg.rsf', 'test3_CG_PC_gnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_xnrm_reg.rsf', 'test3_CG_PC_xnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_Lxnrm_reg.rsf','test3_CG_PC_Lxnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_xerr_reg.rsf', 'test3_CG_PC_xerr_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test3_CG_PC_Lxerr_reg.rsf','test3_CG_PC_Lxerr_reg.asc',cmd,stdin=0,stdout=0)
+
+#Best solution
+output = ['test3_CG_PC_best_reg.txt',
+          'test3_MPS_inv_PC_best_reg.su',
+          'test3_MPS_del_PC_best_reg.su',
+          'RHS_0_test3_MPS_inv_PC_best_reg.su',
+          'RHS_0_test3_MPS_del_PC_best_reg.su']
+
+input = ['bmod_hom.rsf',
+         'buoy_hom.rsf', 
+         'hdr_hom.su', 
+         'MPS_canscalN_hom.su',
+         'MPS_canscalD_hom.su',
+         'test3_MPS.su',
+         'test3_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2'+\
+      ' nl1=250 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=3.0 cmax=3.0 dmin=1.0 dmax=1.0'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=3.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=79 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~#
+# Making Figs #
+#~~~~~~~~~~~~~#
+
+#plotting data
+output = 'test3-data-p'
+Flow(output,'test3_data_p.su','suread read=data endian=0')
+Result(output,output,'grey wanttitle=n scalebar=y')
+
+#plotting solution
+
+#0-component
+Flow('test3-MPS-0','test3_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=0 max2=0')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=0 max2=0 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test3-MPS-inv-0',
+     ['test3_MPS.su','test3_MPS_inv_best.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-reg-0',
+     ['test3_MPS.su','test3_MPS_inv_best_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-0',
+     ['test3_MPS.su','test3_MPS_inv_PC_best.su'],
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-reg-0',
+     ['test3_MPS.su','test3_MPS_inv_PC_best_reg.su'],
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test3-MPS-0'
+input = ['test3-MPS-0',
+         'test3-MPS-inv-0',
+         'test3-MPS-inv-PC-0']
+Result(output,input,cmd,)
+
+output = 'test3-MPS-reg-0'
+input = ['test3-MPS-0',
+         'test3-MPS-inv-reg-0',
+         'test3-MPS-inv-PC-reg-0']
+Result(output,input,cmd,)
+
+#1-component
+Flow('test3-MPS-1','test3_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=1 max2=1')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=1 max2=1 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test3-MPS-inv-1',
+     ['test3_MPS.su','test3_MPS_inv_best.su'],   
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-reg-1',
+     ['test3_MPS.su','test3_MPS_inv_best_reg.su'],   
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-1',
+     ['test3_MPS.su','test3_MPS_inv_PC_best.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-reg-1',
+     ['test3_MPS.su','test3_MPS_inv_PC_best_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test3-MPS-1'
+input = ['test3-MPS-1',
+         'test3-MPS-inv-1',
+         'test3-MPS-inv-PC-1']
+Result(output,input,cmd,)
+
+output = 'test3-MPS-reg-1'
+input = ['test3-MPS-1',
+         'test3-MPS-inv-reg-1',
+         'test3-MPS-inv-PC-reg-1']
+Result(output,input,cmd,)
+
+#2-component
+Flow('test3-MPS-2','test3_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=2 max2=2')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=2 max2=2 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test3-MPS-inv-2',
+     ['test3_MPS.su','test3_MPS_inv_best.su'],   
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-reg-2',
+     ['test3_MPS.su','test3_MPS_inv_best_reg.su'],   
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-2',
+     ['test3_MPS.su','test3_MPS_inv_PC_best.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test3-MPS-inv-PC-reg-2',
+     ['test3_MPS.su','test3_MPS_inv_PC_best_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test3-MPS-2'
+input = ['test3-MPS-2',
+         'test3-MPS-inv-2',
+         'test3-MPS-inv-PC-2']
+Result(output,input,cmd)
+
+output = 'test3-MPS-reg-2'
+input = ['test3-MPS-2',
+         'test3-MPS-inv-reg-2',
+         'test3-MPS-inv-PC-reg-2']
+Result(output,input,cmd)
+
+#plotting residual and normal residual norms vs CG iterations
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iteration" label2="Log L2-Norm or Residual" dash=1,0 plotcol=5,5 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test3-CG-rnrm'
+input = ['test3_CG_rnrm.rsf',
+         'test3_CG_PC_rnrm.rsf']
+Result(output,input,cmd)
+
+output = 'test3-CG-rnrm-reg'
+input = ['test3_CG_rnrm_reg.rsf',
+         'test3_CG_PC_rnrm_reg.rsf']
+Result(output,input,cmd)
+
+
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm" dash=1,0 plotcol=6,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test3-CG-gnrm'
+input = ['test3_CG_gnrm.rsf',
+         'test3_CG_PC_gnrm.rsf']
+Result(output,input,cmd)
+
+output = 'test3-CG-gnrm-reg'
+input = ['test3_CG_gnrm_reg.rsf',
+         'test3_CG_PC_gnrm_reg.rsf']
+Result(output,input,cmd)
+
+
+#plotting solution errors
+cmd =  ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm of error in sol" dash=1,0,0 plotcol=5,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test3-err'
+input = ['test3_CG_xerr.rsf',
+         'test3_CG_PC_xerr.rsf',
+         'test3_CG_PC_Lxerr.rsf']
+Result(output,input,cmd)
+
+output = 'test3-err-reg'
+input = ['test3_CG_xerr_reg.rsf',
+         'test3_CG_PC_xerr_reg.rsf',
+         'test3_CG_PC_Lxerr_reg.rsf']
+Result(output,input,cmd)
+
+
+#######################################################################
+#######################################################################
+# TEST 4
+# Source inversion test:
+#    - dome model
+#    - pressure data
+#    - MPS order 1, CanScal_MPS_Space
+#
+#######################################################################
+#######################################################################
+
+#~~~~~~~~~~~~~#
+# Making data #
+#~~~~~~~~~~~~~#
+output = ['test4_data_p_nf.su',
+          'test4_MPS.su',
+          'RHS_0_test4_MPS.su']
+
+input = ['bmod_dome.rsf',
+         'buoy_dome.rsf',
+         'hdr_dome.su',
+         'MPS_canscal_dome.su']
+
+cmd = ' /bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      ' /bin/cp ${SOURCES[3]} ./${TARGETS[1]} && '+\
+      asg_canscal_p +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${TARGETS[0]}'+\
+      ' deriv=0 adjoint=0 cfl=0.4 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+Flow('test4_data_p.su','test4_data_p_nf.su',
+     suaddnoise+' noise=gauss sn=30.66')
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test4_CG.txt',
+          'test4_MPS_inv.su',
+          'test4_MPS_del.su',
+          'RHS_0_test4_MPS_inv.su',
+          'RHS_0_test4_MPS_del.su']
+
+input = ['bmod_dome.rsf', 
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test4_CG_rnrm.asc',
+          'test4_CG_gnrm.asc',
+          'test4_CG_xnrm.asc',
+          'test4_CG_xerr.asc']          
+input = 'test4_CG.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test4_CG_rnrm.rsf','test4_CG_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_gnrm.rsf','test4_CG_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_xnrm.rsf','test4_CG_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_xerr.rsf','test4_CG_xerr.asc',cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation without preconditioner + reg #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test4_CG_reg.txt',
+          'test4_MPS_inv_reg.su',
+          'test4_MPS_del_reg.su',
+          'RHS_0_test4_MPS_inv_reg.su',
+          'RHS_0_test4_MPS_del_reg.su']
+
+input = ['bmod_dome.rsf', 
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test4_CG_rnrm_reg.asc',
+          'test4_CG_gnrm_reg.asc',
+          'test4_CG_xnrm_reg.asc',
+          'test4_CG_xerr_reg.asc']          
+input = 'test4_CG_reg.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_xerr=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test4_CG_rnrm_reg.rsf','test4_CG_rnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_gnrm_reg.rsf','test4_CG_gnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_xnrm_reg.rsf','test4_CG_xnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_xerr_reg.rsf','test4_CG_xerr_reg.asc',cmd,stdin=0,stdout=0)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test4_CG_PC.txt',
+          'test4_MPS_inv_PC.su',
+          'test4_MPS_del_PC.su',
+          'RHS_0_test4_MPS_inv_PC.su',
+          'RHS_0_test4_MPS_del_PC.su']
+
+input = ['bmod_dome.rsf',
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=1.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test4_CG_PC_rnrm.asc',
+          'test4_CG_PC_gnrm.asc',
+          'test4_CG_PC_xnrm.asc',
+          'test4_CG_PC_Lxnrm.asc',
+          'test4_CG_PC_xerr.asc',
+          'test4_CG_PC_Lxerr.asc']
+input = 'test4_CG_PC.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test4_CG_PC_rnrm.rsf','test4_CG_PC_rnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_gnrm.rsf','test4_CG_PC_gnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_xnrm.rsf','test4_CG_PC_xnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_Lxnrm.rsf','test4_CG_PC_Lxnrm.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_xerr.rsf','test4_CG_PC_xerr.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_Lxerr.rsf','test4_CG_PC_Lxerr.asc',cmd,stdin=0,stdout=0)
+
+#Best Solution
+output = ['test4_CG_PC_best.txt',
+          'test4_MPS_inv_PC_best.su',
+          'test4_MPS_del_PC_best.su',
+          'RHS_0_test4_MPS_inv_PC_best.su',
+          'RHS_0_test4_MPS_del_PC_best.su']
+
+input = ['bmod_dome.rsf',
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=1.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Estimation with preconditioner + reg #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+output = ['test4_CG_PC_reg.txt',
+          'test4_MPS_inv_PC_reg.su',
+          'test4_MPS_del_PC_reg.su',
+          'RHS_0_test4_MPS_inv_PC_reg.su',
+          'RHS_0_test4_MPS_del_PC_reg.su']
+
+input = ['bmod_dome.rsf',
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=1.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#Extracting iteration info
+output = ['test4_CG_PC_rnrm_reg.asc',
+          'test4_CG_PC_gnrm_reg.asc',
+          'test4_CG_PC_xnrm_reg.asc',
+          'test4_CG_PC_Lxnrm_reg.asc',
+          'test4_CG_PC_xerr_reg.asc',
+          'test4_CG_PC_Lxerr_reg.asc']
+input = 'test4_CG_PC_reg.txt'
+cmd = parseCG+' infile=${SOURCES[0]}  Niter=150 '+\
+      ' out_nres=${TARGETS[0]}'+\
+      ' out_grad=${TARGETS[1]}'+\
+      ' out_xnrm=${TARGETS[2]}'+\
+      ' out_Lxnrm=${TARGETS[3]}'+\
+      ' out_xerr=${TARGETS[4]}'+\
+      ' out_Lxerr=${TARGETS[5]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+cmd = ' /bin/cp ${SOURCES[0]} tmp && '+\
+      ' echo in=${SOURCES[0]} n1=150 n2=1 data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+Flow('test4_CG_PC_rnrm_reg.rsf','test4_CG_PC_rnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_gnrm_reg.rsf','test4_CG_PC_gnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_xnrm_reg.rsf','test4_CG_PC_xnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_Lxnrm_reg.rsf','test4_CG_PC_Lxnrm_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_xerr_reg.rsf','test4_CG_PC_xerr_reg.asc',cmd,stdin=0,stdout=0)
+Flow('test4_CG_PC_Lxerr_reg.rsf','test4_CG_PC_Lxerr_reg.asc',cmd,stdin=0,stdout=0)
+
+#Best Solution
+output = ['test4_CG_PC_best_reg.txt',
+          'test4_MPS_inv_PC_best_reg.su',
+          'test4_MPS_del_PC_best_reg.su',
+          'RHS_0_test4_MPS_inv_PC_best_reg.su',
+          'RHS_0_test4_MPS_del_PC_best_reg.su']
+
+input = ['bmod_dome.rsf',
+         'buoy_dome.rsf', 
+         'hdr_dome.su', 
+         'MPS_canscalN_dome.su',
+         'MPS_canscalD_dome.su',
+         'test4_MPS.su',
+         'test4_data_p.su']
+
+cmd = ' /bin/cp ${SOURCES[3]} ${TARGETS[1]} && '+\
+      ' /bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      asg_canscal_p_inv +\
+      ' bulkmod=${SOURCES[0]}'+\
+      ' buoyancy=${SOURCES[1]}'+\
+      ' source_p=empty'+\
+      ' data_p=${SOURCES[6]}'+\
+      ' deriv=0 adjoint=0 cfl=0.2 order=2 sampord=1'+\
+      ' nl1=0 nr1=250 nl2=250 nr2=250 pml_ampl=1.0'+\
+      ' cmin=1.0 cmax=4.5 dmin=1.0 dmax=2.5'+\
+      ' data_p_g=${SOURCES[2]}'+\
+      ' MPS_file=${TARGETS[1]}'+\
+      ' MPS_delta=${TARGETS[2]}'+\
+      ' MPS_file_true=${SOURCES[5]}'+\
+      ' MPS_ord=1'+\
+      ' PC_c=1.0 PC_ord0=0.5 PC_ordd=1.0'+\
+      ' appx_ord=4 '+\
+      ' MaxIter=150 ResidualTol=0.0001 GradientTol=0.0001'+\
+      ' Tikhonov_reg=1e-10'+\
+      ' outfile=${TARGETS[0]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+#~~~~~~~~~~~~~#
+# Making Figs #
+#~~~~~~~~~~~~~#
+
+#plotting data
+output = 'test4-data-p'
+Flow(output,'test4_data_p.su','suread read=data endian=0')
+Result(output,output,'grey wanttitle=n scalebar=y')
+
+#plotting solution
+
+#0-component
+Flow('test4-MPS-0','test4_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=0 max2=0')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=0 max2=0 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test4-MPS-inv-0',
+     ['test4_MPS.su','test4_MPS_inv.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-reg-0',
+     ['test4_MPS.su','test4_MPS_inv_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-0',
+     ['test4_MPS.su','test4_MPS_inv_PC_best.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-reg-0',
+     ['test4_MPS.su','test4_MPS_inv_PC_best_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test4-MPS-0'
+input = ['test4-MPS-0',
+         'test4-MPS-inv-0',
+         'test4-MPS-inv-PC-0']
+Result(output,input,cmd,)
+
+output = 'test4-MPS-reg-0'
+input = ['test4-MPS-0',
+         'test4-MPS-inv-reg-0',
+         'test4-MPS-inv-PC-reg-0']
+Result(output,input,cmd,)
+
+#1-component
+Flow('test4-MPS-1','test4_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=1 max2=1')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=1 max2=1 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test4-MPS-inv-1',
+     ['test4_MPS.su','test4_MPS_inv.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-reg-1',
+     ['test4_MPS.su','test4_MPS_inv_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-1',
+     ['test4_MPS.su','test4_MPS_inv_PC_best.su'],     
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-reg-1',
+     ['test4_MPS.su','test4_MPS_inv_PC_best_reg.su'],     
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test4-MPS-1'
+input = ['test4-MPS-1',
+         'test4-MPS-inv-1',
+         'test4-MPS-inv-PC-1']
+Result(output,input,cmd,)
+
+output = 'test4-MPS-reg-1'
+input = ['test4-MPS-1',
+         'test4-MPS-inv-reg-1',
+         'test4-MPS-inv-PC-reg-1']
+Result(output,input,cmd,)
+
+#2-component
+Flow('test4-MPS-2','test4_MPS.su',
+     'suread read=data endian=0 | '+\
+     'window min2=2 max2=2')
+
+cmd = my_wavemath +' in1=${SOURCES[0]} in2=${SOURCES[1]} out=tmp op=sub && '+\
+      ' suread <tmp read=data endian=0 | '+\
+      ' window min2=2 max2=2 >${TARGETS[0]} && '+\
+      ' /bin/rm tmp'
+
+Flow('test4-MPS-inv-2',
+     ['test4_MPS.su','test4_MPS_inv.su'],  
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-reg-2',
+     ['test4_MPS.su','test4_MPS_inv_reg.su'],  
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-2',
+     ['test4_MPS.su','test4_MPS_inv_PC_best.su'],
+     cmd,stdin=0,stdout=0)          
+
+Flow('test4-MPS-inv-PC-reg-2',
+     ['test4_MPS.su','test4_MPS_inv_PC_best_reg.su'],
+     cmd,stdin=0,stdout=0)          
+
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=7,5,6 dash=0,4,1 plotfat=3 wanttitle=n label2=Amplitude'
+
+output = 'test4-MPS-2'
+input = ['test4-MPS-2',
+         'test4-MPS-inv-2',
+         'test4-MPS-inv-PC-2']
+Result(output,input,cmd)
+
+output = 'test4-MPS-reg-2'
+input = ['test4-MPS-2',
+         'test4-MPS-inv-reg-2',
+         'test4-MPS-inv-PC-reg-2']
+Result(output,input,cmd)
+
+#plotting residual and normal residual norms vs CG iterations
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iteration" label2="Log L2-Norm or Residual" dash=1,0 plotcol=5,5 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test4-CG-rnrm'
+input = ['test4_CG_rnrm.rsf',
+         'test4_CG_PC_rnrm.rsf']
+Result(output,input,cmd)
+
+output = 'test4-CG-rnrm-reg'
+input = ['test4_CG_rnrm_reg.rsf',
+         'test4_CG_PC_rnrm_reg.rsf']
+Result(output,input,cmd)
+
+
+cmd =  ' cat axis=2 ${SOURCES[1]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm" dash=1,0 plotcol=6,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test4-CG-gnrm'
+input = ['test4_CG_gnrm.rsf',
+         'test4_CG_PC_gnrm.rsf']
+Result(output,input,cmd)
+
+output = 'test4-CG-gnrm-reg'
+input = ['test4_CG_gnrm_reg.rsf',
+         'test4_CG_PC_gnrm_reg.rsf']
+Result(output,input,cmd)
+
+#plotting solution errors
+cmd =  ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' math output="log(input)/log(10)" | '+\
+       ' graph label1="CG Iterate" label2="Log L2-Norm of error in sol" dash=1,0,0 plotcol=5,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2'
+
+output = 'test4-err'
+input = ['test4_CG_xerr.rsf',
+         'test4_CG_PC_xerr.rsf',
+         'test4_CG_PC_Lxerr.rsf']
+Result(output,input,cmd)
+
+output = 'test4-err-reg'
+input = ['test4_CG_xerr_reg.rsf',
+         'test4_CG_PC_xerr_reg.rsf',
+         'test4_CG_PC_Lxerr_reg.rsf']
+Result(output,input,cmd)
+
+
+
+End()

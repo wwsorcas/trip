@@ -1,0 +1,111 @@
+\title{Reproducible Research with Local and Remote Computation - building Madagascar Papers the TRIP way}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\maketitle 
+\parskip 12pt 
+\begin{abstract}
+Madagascar makes publishing reproducible research results relatively straightforward. To my knowledge, no other available framework is as well-adapted to merging large-scale computation with text describing its significance. However, the system is poorly documented: most current documentation consists of oversimplified or incomplete examples, with little guidance about incorporating high-performance computing environments. This paper gives a complete description of the steps necessary to produce a paper via Madagascar that combines the results of local computations on the writer's laptop or desktop computer with those of other computations performed at remote supercomputer centers.
+\end{abstract}
+
+\section{Introduction}
+\section{Local Computation}
+The Viking Graben, or Mobil AVO, data is available on the TRIP data web page. 
+I've written a draft paper in {\tt tripbooks/scratch/viking} describing very simple standard processing for this data, using the Radon-demultiple version as a stand-in for primaries-only reflection data. See this paper for a description of the workflow, implemented mostly with SU. Here, I want to emphasize the method for generating and including figures as part of the reproducible research process. The Viking Graben paper and its project directory are a good example: you can build the project from scratch in a few minutes, and carry out the entire procedure described here to obtain a readable paper.
+
+There are four major steps.
+
+\subsection{Generating Figure Files}
+
+Each figure is recorded as a {\tt .vpl} file in the {\tt project/Fig} subdirectory, by evaluation of the {\tt Result} function. A typical example from {\tt viking/project/SConstruct}: 
+\begin{verbatim}
+Result('parastack','parastack.su','suread endian=0  read=data | put label1=Time label2=Trace unit1=s | grey clip=1.e+7 xinch=10 yinch=5')
+\end{verbatim}
+Note that the graphics file is in Madagascar graphics format ({\tt .vpl}), created in {\tt project/Fig}. Even though the rest of the workflow is implemented using SU commands, the graphics are Madagascar. {\tt sfsuread} converts the SEGY traces in {\tt parastack.su} into RSF format, {\tt sfput} adds header words for labels and units, and {\tt sfgrey} converts the RSF data to graphics format. As usual, the prefix {\tt sf} may be left off within the command argument for {\tt Result} or {\tt Flow}.
+
+SU commands (and other non-Madagascar commands, such as compiled-in-place IWAVE) must be defined, most reliably by full pathnames. See the {\tt SConstruct} file in {\tt viking/project} for a good way to do this.
+
+Otherwise, only the standard RSF project framework is required ({\tt from rsf.proj import *} at the top of the {\tt SConstruct}) for this part of the process.
+
+You can do this at home: update your copy of {\tt tripbooks/scratch} (and of course Madagascar and SU if you haven't updated them recently) and run {\tt scons} in {\tt viking/project}
+
+\subsection{Archiving the Figures}
+Madagascar defines a sort of figure repository - actually, just a directory with a specific subdirectory tree structure in which copies of figure files are stored for future use. You control the location of this directory with the environment variable {\tt RSFFIGS}.
+
+For TRIP projects (papers in subdirs of {\tt tripbooks}, the correct choice is the fully qualified path to {\tt tripbooks/figs}. This is a local (platform-specific) definition - for example, on one of my laptops, {\tt .bashrc} contains the line
+\begin{verbatim}
+export RSFFIGS=/Users/symes/Documents/tripbooks/figs
+\end{verbatim}
+and you would do something similar if you use {\tt tcsh}. The directory at this path is a by-product of installing {\tt tripbooks} by {\tt svn import}.
+
+The figures get into the figure ``repository'' by the {\tt scons lock} command, run in the {\tt project} subdirectory. 
+
+For example, if you have successfully run {\tt scons} in {\tt viking/project}, then execute {\tt scons lock} to ``lock'' the figure files, i.e. copy them to the RSFFIGS directory. 
+
+After you do this, inspect {\tt RSFFIGS}: you will see a {\tt scratch} subdirectory - this would be created, if it did not exist before. In {\tt figs/scratch}, you will see a {\tt viking} subdir, and within that a {\tt project} subdir, containing copies of all the figure files from {\tt tripbooks/scratch/viking/project/Figs}. This is Fomel's device for keeping the figures for each project in a unique place: create a subdirectory path in {\tt RSFFIGS} mimicing the directory path under the ``book'' ({\tt scratch}, in this case) and put the figures there. The construction follows the standard {\tt book/paper/project} structure of Madagascar reproducible research.
+
+You can now build the paper in the {\tt scratch/viking}. You will see the {\tt .vpl} files from the {\tt RSFFIGS} subdir converted to {\tt .pdf} and incorporated in the paper {\tt .pdf} file. The rigid choice of directory structure and environment variables makes all this work: you have to follow {\tt book/paper/project}!
+
+Once again, only the standard RSF reproducible research framework is needed to make all of this work.
+ 
+\subsection{Archiving the Archive}
+The process described so far is documented on the Madagascar web page (though not all in one place, or in as much detail). It works fine if you do all your work in one environment (like your laptop). However, if you use a number of platforms, not so much. Even more of an issue, other people won't be able to build your paper without running all of your code and rebuilding the figures from scratch - not a problem if your project builds in a few seconds, but definitely an obstacle if it runs several hours.
+
+You can get around this problem by using {\tt svn} to archive figure directories, thus breaking the chain of reproduction. The figures are still reproducible - you can rebuild the project - but it's not necessary to rebuild them to make the paper readable. 
+
+The basic idea is to commit the subdirectory of {\tt RSFFIGS} containing the figures. There are some subtleties. For example, you must commit just the path that you have added - for example, if {\tt RSFFIGS/scratch} exists (the ``book''), and you are adding {\tt mypaper}, then you should go to {\tt RSFFIGS/scratch}, which contains the not-yet-committed subdirectory {\tt mypaper} created by your use of {\tt scons lock}, {\tt svn add} it, then {\tt svn commit}. It gets more complicated if you are adding or removing figures from an earlier version of a project. Then you need to go to the {\tt RSFFIGS/book/paper/project} directory that you have previously created, and use {\tt svn add} and {\tt svn rm} to make the needed changes (followed by {\tt svn commit} of course!). The easiest way to do this is by a command-line script: after you've locked your new figures, go to the {\tt RSFFIGS/book/paper/project} and 
+\begin{verbatim}
+foreach i (`ls -1 *.vpl`)
+svn add $i
+end
+\end{verbatim}
+(in {\tt tcsh}, something similar in {\tt bash}). You will get complaints about existing figure files, but who cares. Old and unneeded files won't be removed, but again, who cares, they're not very big.
+
+Another approach, perhaps simpler, is to trash your old directory in its entirety by {\tt svn rm} and {\tt svn commit}, generate the new directory using {\tt scons lock}, and archive the whole thing using {\tt svn add} and {\tt svn commit}.
+
+When a project is truly finished, it is civilized behaviour to groom your figure archive.
+
+If you do archive your figures in this way, you'll be able to portably build your paper, and others will be able to build your paper without rebuilding your figures from scratch.
+
+If you want to check the reproducibility of someone else's paper that has been organized as I suggest, then simply {\tt rm -r} or move aside the paper subdirectory in {\tt tripbooks/figs}, and re-run {\tt scons lock} in the project directory. If you want to completely rebuild {\em your} figures, then use {\tt svn rm} and {\tt svn commit} instead, and don't forget to add and commit your new path afterwards.
+
+\subsection{Including Figures in the Paper}
+The procedure for including figures in a paper is well-described on the Madagascar web site. As long as the preconditions are defined:
+\begin{itemize}
+\item {\tt RSFFIGS} defined in environment, points to local {\tt .../tripbooks/figs},
+\item project organization according to {\tt book/paper/project},
+\item figures locked, and
+\item paper LaTeX file built according to Madagascar principles - that is, all macros and extra packages defined in the SConstruct rather than paper, graphics included via {\tt plot} and {\tt multiplot},
+\end{itemize}
+the paper will build.
+
+One final point: make sure the book builds also before you include your paper in the master copy of the book-level {\tt SConstruct}.
+
+\section{Remote Computation}
+Remote computation poses a particular problem: how can you retain the ``build portability'' of the paper compiling process in Madagascar, without making local copies of large binary files, computed remotely, from which the figures are built? Or, alternatively, keeping the figures in the paper directory in pdf form, as many members of our group have done recently - that breaks the reproducibility link between figure and data/code, since a pdf could a priori come from anywhere.
+ 
+The solution is simple, and uses the same procedure that works locally. Only one step need be changed in the process just outlined to make use of remotely built figures in a reproducible research project. Obviously the paper that results will not be reproducible in the same sense as those relying entirely on local computation, which was really the conceptual model for the Madagascar framework. However it is possible to attain essentially the same result with a bit of care.
+
+There are several equally effective workflows, but the simplest and most in-synch with the Madagascar process is this:
+
+\begin{itemize}
+\item log in to your remote platform, {\tt cd} to the disk where you will do the work. Define {\tt DATAPATH} suitably so that large binary files will go to the right place.
+\item check out the appropriate book from {\tt \$SVNURL/trip/trunk/tripbooks}. Example:
+\begin{verbatim}
+svn co $SVNURL/trip/trunk/tripbooks/trip15 trip15
+\end{verbatim}
+If all of the papers in the book are built according to Madagascar standard, the book consists of a few subdirectories, LaTeX files and scripts, so there's no harm in copying the whole thing. If it's got more stuff in it than that (the current state of affairs with our books), then it will take longer - you can get rid of the papers you're not going to work with, and the pdfs or whatever that the authors cluttered them up with.
+\item Now do the same with the TRIP figures directory: go somewhere convenient and
+\begin{verbatim}
+svn co $SVNURL/trip/trunk/tripbooks/figs $RSFFIGS
+\end{verbatim}
+Make sure that {\tt RSFFIGS} is defined but does not point to an existing directory before you do this.
+\item Now go ahead as you did before, building all of the intermediate results and figures and locking the figures.
+\item MOST IMPORTANT: then archive the archive, as above - use {\tt svn} to add and commit the subdirectory of {\tt RSFFIGS}.
+\item Now go home and write your paper in the paper directory. When you are ready to compile it, go to your local version of {\tt RSFFIGS} and {\tt svn update} the subdirectory you've committed in the previous step. 
+\item When (inevitably) you don't like your first set of figures, or want to add more, just go back to the remote platform, update and add figures in your {\tt project} directory, and when you've got what you want (tested by viewing the {\tt .vpl} files in {\tt project/Fig} remotely, if possible), then lock'em again, and update the archive. If you add figures, then you'll have to add their copies in {\tt RSFFIGS} to the archive - as mentioned before, probably the easiest way to do that is to {\tt svn rm} the paper subdirectory of {\tt RSFFIGS/book}, {\tt svn commit} that change, go back to your project directory, {\tt scons lock} again (which will regenerate the {\tt paper/project} subdirectory of {\tt RSFFIGS/book}, then go back to {\tt RSFFIGS/book}, {\tt svn add} the {\tt paper} directory, then {\tt svn commit}. It sounds complicated, but the idea is straightforward: to ensure that everything's added, trash the repo directory containing your figures, rebuild it locally with {\tt scons lock}, and add it back to the repo.
+\end{itemize}
+
+This is essentially what I've done to build the figures for {\tt trip15/iwavext}. Go ahead and try it - go to your copy of {\tt tripbooks/figs}, {\tt svn update}, then go to the nice clean directory {\tt trip15/iwavext}, nothing there but a {\tt tex} file and a few scripts, and build the paper. 
+
+Note what has been accomplished here: the figures are saved, but as {\tt .vpl} files in the standard place where Madagascar expects to find figures stored in this format, each a copy via {\tt scons lock} of a local {\tt .vpl} file built as part of the project, via a {\tt Result} command in the project {\tt SConstruct}. So even though the figures do not have to be rebuilt from scratch to compile the paper, they CAN be rebuilt from scratch if you like - all of the code is there to do so. Contrast this with the practice of saving pdfs, which are intrinsically decoupled from the command that builds the input data to the pdf conversion.

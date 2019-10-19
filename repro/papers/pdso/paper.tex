@@ -1,0 +1,165 @@
+\title{Preconditioned Differential Semblance Optimization in the Subsurface Offset Domain}
+
+\author{
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Symes}
+
+\righthead{Subsurface Offset DSO}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+A really short abstract.
+\end{abstract}
+
+\section{Introduction} 
+A really short introduction.
+
+
+
+
+
+\section{Preconditioned DSO}
+
+\[
+ \frac{1}{2}(\|d-\oF[v]\obr\|^2 + \alpha \|A\obr\|^2) \approx 
+\frac{1}{2}(\|d-\oF[v]\odF[v]g\|^2 + \alpha \|A \odF[v]g\|^2)
+\]
+\begin{equation}
+\label{eqn:Jdef}
+= J_{\alpha}[v,g,d] 
+\end{equation}
+\[
+\approx \frac{1}{2}(\|d-g\|^2 +  \alpha \|A \odF[v]g\|^2)
+\]
+\begin{equation}
+\label{eqn:Jdef}
+= J^0_{\alpha}[v,g,d] 
+\end{equation}
+\[
+\ga[v,d] = \mbox{ argmin}_{g} J_{\alpha}[v,g,d]
+\]
+\begin{equation}
+\label{eqn:normal}
+(\oF[v]\odF[v] + \alpha (\odF[v])^TA^TA\odF[v]) \ga[v,d]=d 
+\end{equation}
+\[
+\ga^0[v,d] = \mbox{ argmin}_{g} J^0_{\alpha}[v,g,d]
+\]
+\begin{equation}
+\label{eqn:normal0}
+(I + \alpha (\odF[v])^TA^TA\odF[v]) \ga^0[v,d]=d 
+\end{equation}
+
+\begin{equation}
+\label{eqn:normop}
+N[v] = (\odF[v])^TA^TA\odF[v]
+\end{equation}
+\begin{equation}
+\label{eqn:red}
+\tJ^0[v,d]=J_{\alpha}^0[v,\ga^0[v,d],d]
+\end{equation}
+\[
+= \frac{1}{2}(\|d - (I+\alpha N[v])^{-1}d\|^2 + \langle (I+\alpha N[v])^{-1}d, \alpha N[v](I+\alpha N[v])^{-1}d\rangle)
+\]
+\[
+= \frac{1}{2}(\|(I+\alpha N[v])^{-1}\alpha N[v]d\|^2 +  \langle (I+\alpha N[v])^{-1}d, ((I + \alpha N[v]) - I) (I+\alpha N[v])^{-1}d \rangle)
+\]
+\[
+=\frac{1}{2}(\|(I+\alpha N[v])^{-1}\alpha N[v]d\|^2 + \langle (I+\alpha N[v])^{-1}d,d\rangle - \|(I+\alpha N[v])^{-1}d\|^2)
+\]
+\[
+=\frac{1}{2}\left( \langle (I+\alpha N[v])^{-1}\alpha N[v]d - (I+\alpha
+N[v])^{-1}d,  (I+\alpha N[v])^{-1}\alpha N[v]d + (I+\alpha
+N[v])^{-1}d \rangle \right.
+\]
+\[
+\left.+ \langle (I+\alpha N[v])^{-1}d,d\rangle \right)
+\]
+\[
+=\frac{1}{2}\left( \langle (I+\alpha N[v])^{-1}(\alpha
+  N[v]-I)d,d\rangle + \langle (I+\alpha N[v])^{-1}d,d\rangle \right)
+\]
+\[
+=\frac{1}{2}\langle (I+\alpha N[v])^{-1}\alpha
+  N[v]d,d\rangle
+\]
+\begin{equation}
+\label{eqn:iva}
+\lim_{\alpha \rightarrow 0} \frac{1}{\alpha}\tJ^0_{\alpha}[v,d] =
+\frac{1}{2}\|A\odF[v]d\|^2 = J_{\rm IVA}[v,d]
+\end{equation}
+
+\[
+DJ_{\rm IVA}[v,d]\delta v = \langle A \odF[v]d,AD(\odF[v]d)\delta
+v\rangle
+\]
+\[
+\odF[v] = B_m[v] \oF[v]^T B_d \,\Rightarrow \, D(\odF[v]d)\delta v =
+DB_m[v](F[v]^T B_dd)\delta v + B_m[v]D(\oF[v]^T B_dd) \delta v
+\]
+\[
+\oF[v] \bar{r}= 
+D\bar{\mathcal{F}}[v] (\bar{r}), 
+\]
+\[
+D(\oF[v]\bar{r})\delta v =
+D(D\bar{\mathcal{F}}[v](\bar{r}))\delta v =
+D^2\bar{\mathcal{F}}[v][\bar{r},\delta v]
+\]
+\[
+D\langle \oF[v]\bar{r},d \rangle\delta v = \langle
+D(\oF[v]\bar{r})\delta v, d\rangle
+\]
+\[
+\langle \bar{r},D(\oF[v]^Td)\delta v \rangle
+\]
+\[
+=\langle D^2\bar{\mathcal{F}}[v][v\bar{r},\delta v],d \rangle
+\]
+\[
+=\langle D^2\bar{\mathcal{F}}[v][\delta v ,\bar{r}],d \rangle
+\]
+
+\[
+\langle D(\oF[v](\delta v))(\bar{r}),d\rangle
+\]
+\[
+= D\langle \oF[v](\delta v),d \rangle (\bar{r})
+\]
+\[
+= \langle \delta v, D(\oF[v]^Td) \bar{r} \rangle
+\]
+\[
+DJ_{\rm IVA}[v,d]\delta v = \langle A \odF[v]d,AD(\odF[v]d)\delta
+v\rangle
+\]
+\[
+= \langle A^TA \odF[v]d, D(\odF[v]d) \delta v \rangle 
+\]
+\[
+= \langle A^TA \odF[v]d, DB_m[v](\oF[v]^T B_dd)\delta v +
+B_m[v]D(\oF[v]^T B_dd) \delta v \rangle
+\]
+\[
+= \langle DB_m[v](\oF[v]^T B_dd)^TA^TA \odF[v] d,\delta v \rangle 
++\langle B_m[v]^TA^TA \odF[v] d, D(\oF[v]^T B_dd) \delta v \rangle 
+\]
+\[
+\langle DB_m[v](\oF[v]^T B_dd)^TA^TA \odF[v] d  + D(\oF[v]^TB_dd)(B_m[v]^TA^TA \odF[v] d), \delta v \rangle 
+\]
+
+\begin{equation}
+\label{eqn:ivagrad}
+\nabla J_{\rm IVA}[v,d] = DB_m[v](\oF[v]^T B_dd)^TA^TA \odF[v] d  +
+D(\oF[v]^TB_dd)(B_m[v]^TA^TA \odF[v] d)
+\end{equation}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+

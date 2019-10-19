@@ -1,0 +1,166 @@
+\title{Parallel IWAVE}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\lefthead{Symes}
+\righthead{Parallel IWAVE}
+
+\maketitle
+\parskip 12pt
+\begin{abstract}
+IWAVE supports loop-level, block-level, and task-level parallelism. OpenMP parallelization of loops is available, as is domain decomposition via MPI. MPI also enables parallelism over shot records. This brief report desribes the mechanics of IWAVE parallel execution modes, and includes examples of typical use cases. 
+\end{abstract}
+
+\section{Introduction}
+IWAVE was designed from the outset for parallel execution. The first release (version 1.0, fall 2009) used domain decomposition via MPI, and optionally loop distribution via OpenMP, for simulation (forward map) only. Later releases introduced task-level parallelism, that is, concurrent execution of shots optionally in combination with domain decomposition, and extended all of these modes of parallelism to derivative and adjoint derivative computations.
+
+This paper explains how to invoke IWAVE in various modes of parallel execution. I apply a selection of these modes to a small 2D example, and so illustrate that the same results are obtained for serial execution as for any mix of parallel options. I will discuss parallelization over shots and domain decomposition here: loop distribution via OpenMP will be discussed elsewhere. The {\tt SConstruct} file in the {\tt project} subdirectory contains examples of all of the constructions mentioned here, and should be regarded as part of the paper.
+
+\section{The IWAVE approach to parallelism}
+
+Domain decomposition is {\em computed} from minimal user input, namely the number of subdomains along each grid axis. The global grid is partitioned into subgrids of equal, or near-equal, size, and each subgrid is assigned to an MPI process. The subgrids contain ghost points required to execute the scheme stencil. Exchange of data to re-initialize ghost points uses the {\tt MPI\_Vectortype} structure to realize virtual subgrids, thus avoiding redundant memory allocation and data motion. OpenMP-based threaded execution co-exists with domain decomposition. See \cite{Terentyev:09a} for details on the initial design of IWAVE, \cite{FehlerKeliher:11} for information on its use in the QC of the SEAM Phase I project. and \cite{GeoPros:11} for a description of a later release.
+
+IWAVE uses minimal user data, namely the number of shots to execute in parallel, to generate a vector of communicators, one per parallel shot. Each communicator is assigned a subset of shots, the subsets being chosen as close to equal size as possible, and a subset of processes that participate in computing each shot assigned to that communicator - one for pure task-level parallelism, more than one if domain decomposition is also being used.
+
+The same principles apply to the forward map and to its derivatives and adjoint derivatives: all are parallelized in the same ways.
+
+IWAVE currently implements disk-to-disk operations. Common input data (eg. model fields) is read and broadcast, shot-dependent data (such as shot gathers) are read or written as needed or generated. The current i/o design is very MPI 1, that is, all i/o takes place on rank 0 of each communicator (note that there may possibly be multiple communicators active in an IWAVE run). Reduction data (non-extended adjoint output) is presumed to be summed (stacked). In task-parallel domain decomposition, each communicator assembles a partial stack over the shots assigned to it, then these results are summed in a final reduction phase.
+
+\section{Building Parallel IWAVE}
+IWAVE can be built MPI-enabled, but not as part of the overall Madagascar build. To enable MPI execution, run SConstruct in {\tt RSFSRC/trip}, with a {\tt config.py} file specifying MPI compilation and linking. You will need to put the path to the MPI root directory in your environment as {\tt MPIROOT}, or use one of the module loading systems common at supercomputer sites to provide equivalent information to your shell, then follow the model (or use) one of the config files in {\tt RSFSRC/trip/admin}, for example {\tt RSFSRC/trip/admin/linux.mpi.py} - to use, simply copy to {\tt RSFSRC/trip/config.py}, then {\tt scons}.
+
+This process creates the MPI-enabled executables in the {\tt main} subdirectories, not in the {\tt RSFROOT/bin} directory where other Madagascar commands are found - for example, in this exercise, {\tt RSFSRC/trip/iwave/acd/main/acd.x}. You will need to instrument your {\tt SConstruct} files to find these commands, since the default paths from Madagascar will not work. See {\tt project/SConstruct} for an example.
+
+\noindent {\bf NOTE:} at this writing (2015.09.10) the TRIP directory tree head revision does NOT reside in {\tt RSFSRC} - it is independent of Madagascar, for purely accidental reasons flowing from a catastrophic failure at SourceForge earlier in summer 2015, and lives in the CAAM TRIP repository as {\tt trip2.1}. I anticipate that sometime soon the TRIP tree will migrate back to the new {\tt RSFSRC} GitHub repository. For the time being, where you see {\tt RSFSRC/trip} in this discussion, substitute {\tt trip2.1}. Do NOT use the version of the TRIP tree found in {\tt RSFSRC}, until further notice, as it is increasingly out-of-date.
+
+\section{Job Control}
+The TRIP software stack includes a Python module ({\tt RSFSRC/trip/admin/newbatch.py}) defining functions that read standardized job information for serial, command line parallel, or batch execution of IWAVE commands and builds appropriate Madagascar {\tt Flow}s for each case. These data structures specify each essential item of information necessary for job definition with minimal dependencies on other items.
+
+An {\tt SConstruct} file using the IWAVE batch module should include standard boilerplate at the top:
+\begin{verbatim}
+from rsf.proj import *
+from newbatch import tripExec
+\end{verbatim}
+The {\tt SConstruct} should also define
+\begin{itemize}
+\item an array of {\em job dictionaries};
+\item one or more {\em parallel environment} dictionaries;
+\item one or more {\em batch environment} dictionaries.
+\end{itemize}
+and include a call to {\tt tripExec} following these definitions.
+This section describes these data structures and their relations and uses. 
+ 
+The central data structure is the {\em job}, a Python dictionary with these fields:
+\begin{itemize}
+\item {\tt job}: job name (string),
+\item {\tt pre}: preliminary command, to be executed in serial mode. This is mainly provided to include creation of output data files by copy or by another command (from Madagascar or SU, for example) - these need to exist, with correct metadata, before acting as target in an IWAVE command, however they cannot be built in a separate {\tt Flow} since no object can serve as target in two different {\tt Flow}s. Generally these are (low-intensity floating point) commands which one wishes to execute in serial, hence defined separately from the main command below, which may be executed in parallel.
+\item {\tt src}: list of source files, including all those used in as sources in the IWAVE command and in the preliminary command. 
+\item {\tt tgt}: list of target files.
+\item {\tt cmd}: main command, to be executed as serial command, under mpirun, or as part of a batch script.
+\item {\tt exe}: execution environment dictionary - defines type of parallel execution (serial, command-line mpi, or batch) with necessary parameters for each.
+\end{itemize}
+Since each project typically specifies several jobs, the project {\tt SConstruct} file should organize its job dictionaries into an array, eg.
+\begin{verbatim}
+jobs = [ {job1: {...}}, {job2: {...}},...]
+\end{verbatim}
+
+Three types of parallel execution environment are recognized, corresponding to three dictionary structures:
+\begin{itemize}
+\item serial: an empty dictionary
+\item command line mpi: a dictionary with two items,
+\begin{itemize}
+\item {\tt platf: mpi} - specifies command line mpi
+\item {\tt ppn: ...} - number of MPI processes
+\end{itemize}
+\item batch:
+\begin{itemize}
+\item {\tt platf}: batch platform name - serves as index into batch environment dictionary, see below
+\item {\tt nodes}: number of nodes
+\item {\tt ppn}: processes/cores per node
+\item {\tt wall}: wallclock time limit, in form xx:xx:xx
+\end{itemize}
+\end{itemize}
+
+Batch execution requires some additional job-independent characteristics of each environment, such as scripting language, launcher name or path, project name and other accounting information, etc. These need to be listed in a {\em batch environment} dictionary. The information provided in the batch environment dictionary is peculiar to each site and/or machine operated by the site, and may be expected to change as supercomputing sites evolve their software stacks and environments. The dictionary has a standard structure: it uses platform names (from the batch instances in the parallel environment dictionary) as keys; the corresponding values are themselves dictionaries, defining values for the standard keys:
+\begin{itemize}
+\item {\tt batch}: batch system name, eg. pbs, sge, slurm,...
+\item {\tt queue}: name of execution queue.
+\item {\tt acct}: account name, to which jobs are to be charged.
+\item {\tt mail}: email address to which notification of job begin and end should be sent
+\item {\tt launcher}: name of MPI launcher used, eg. mpiexec, ibrun,...
+\end{itemize}
+
+Having defined the array of job dictionaries, the parallel environment dictionary (or dictionaries, as different jobs can use different parallel environments), and the batch environment dictionary (which may be empty, if your project has no need of batch job submission), include the line
+\begin{verbatim}
+tripExec(<name of jobs array>, <name of batch env dict>)
+\end{verbatim}
+in the project {\tt SConstruct} somewhere below the definitions. The {\tt tripExec} function parses the information contained in its arguments into Madagascar {\tt Flow}s that execute the various jobs with the chosen modes of parallelism. Each {\tt Flow} executes in a subdirectory of the {\tt project} directory, named {\tt jobname.work}, in which {\tt jobname} is the job name assigned in the job dictionary (containing the item {\tt 'job': jobname}). This subdirectory captures the diagnostic output of IWAVE and MPI (for instance, the {\tt cout....txt} files generated by IWAVE, one for each MPI process). The subdirectory is a {\tt Flow} target, so {\tt scons -c} in the project directory gets rid of all of these execution directories and their contents.
+
+\noindent Notes:
+
+\noindent 1. The {\tt Flow}s generated by {\tt tripExec} do not do standard i/o, so this tool is really suitable only for applications like IWAVE. For SU or Madagascar commands structured as filters (i.e. {\tt < inp cmd >outp}, write ordinary Madagascar {\tt Flow}s.
+
+\noindent 2. The implementation of {\tt tripExec} uses {\tt sfbatch}, the Madagascar batch utility, enabling use of the Madagascar {\tt SOURCES} and {\tt TARGETS} macros in the command definition, and keeping each data file name to a unique location (in the {\tt src} or {\tt tgt} list). {\tt sfbatch} incorporates current standard choices for SLURM and PBS at many sites, but given the variety and continued evolution of supercomputer batch environments it's natural to suspect that it may need updating - so beware.
+
+\noindent 3. The various modes of execution may be mixed in a Madagascar project {\tt SConstruct}. In particular, dependence of results on other results produced by batch commands is respected: a {\tt Flow} dependent on the result of a batch computation executes when the batch computation is complete, rather than when the batch submission command is executed.
+
+\noindent 4. For all but serial execution models, the number of processes, and for domain decomposition their geometric layout, must be described. This information can be captured in various ways, but probably the easiest is via a set of Python integer variables, as in the example described in the next section. For example, a script fragment describing a 2D 2 $\times$ 3 domain decomposition of 6 shots, computed 3 at a time, would include in the definition of the IWAVE driver command something like
+\begin{verbatim}
+NP1=2
+NP2=3
+NPT=3
+...
+cmd='... mpi_np1=' + str(NP1) + ' mpi_np2=' + str(NP2) +
+    ' partask=' + str(NPT)
+\end{verbatim}
+For command-line MPI execution, one would naturally use exactly the required number of threads, so
+\begin{verbatim}
+jobs=[..., {...,'exe': {'platf': 'mpi', 'ppn': str(NP1*NP2*NPT)} },...]
+\end{verbatim}
+whereas queue management algorithms for batch sites argue for an independent definition of the number of threads, like
+\begin{verbatim}
+jobs=[..., {...,'exe': {'platf': 'euclid',
+                        'nodes': str(NODES),
+                        'ppn': str(PPN),
+                        'wall': '04:00:00'} },...]
+\end{verbatim}
+The IWAVE MPI environment function checks that sufficient resources are available: thus IWAVE will abort if {\tt NP1*NP2*NPT > NODES*PPN}.
+
+\noindent 5. {\bf WARNING:} In many cluster environments, partial use of a node (using fewer cores than available on the number of nodes allocated) can result in jobs hanging. Therefore, until we see some portable and transparent way around this limitation, the number of tasks defined by IWAVE ({\tt NP1*NP2*NPT} in the preceding example) should be the same as the number of cores allocated ({\tt NODES*PPN} in the example).
+
+\section{Examples}
+\inputdir{project}
+
+I have used the simple 4-layer OBC example from \cite[]{trip14:struct} to illustrate the various parallel IWAVE modes for serial and command line mpi execution. The command used in these examples is {\tt iwave/acd/main/acd.x}, which implements the forward map, its first and second derivatives, and their adjoints. This application is described in some detail in \cite{trip14:struct}. 
+
+The paper \cite[]{SymesIWEXT:15} describes a similar example. The reader should examing the {\tt project/SConstruct} files for both papers to see ``live'' examples of the framework. In particular, the examples attached to this paper are configured for command-line MPI, rather than batch. To see an explicit example of the mechanics of batch submission, see the examples attached to the companion paper \cite[]{SymesIWEXT:15}.
+
+The velocity model for the 4-layer OBS example appears as Figure \ref{fig:csq4layer}. Other details of the simulation are as described in \cite{trip14:struct}, and in the figure captions.
+Figures \ref{fig:shot11}, \ref{fig:shot12}, \ref{fig:shot21}, and \ref{fig:shot22} show the results of modeling an OBC gather (effectively, a shot on the seafloor and near-surface receivers) with no domain decomposition (or 1 $\times$ 1), versus 1 $\times$ 2, 2 $\times$ 1, and $2 \times 2$ decompositions, all plotted on the same scale. The differences are at round-off level. The parameters {\tt mpi\_np1} and {\tt mpi\_np2} describe the number of domains along the first and second axes, and were set at 1 and 2 respectively. Thus, 1, 2, 2, and 4 MPI processes were involved in these simulations respectively. It is an error to provide too few processes to assign each domain a process. However providing more processes is not an error; the unused processes are simply idled.
+
+Figures \ref{fig:born11}, \ref{fig:born12}, \ref{fig:born21}, and \ref{fig:born22} describe the analogous results for the Born approximation. Once again, the differences are at round-off level. Finally, Figures \ref{fig:rtm11}, \ref{fig:rtm12}, \ref{fig:rtm21}, and \ref{fig:rtm22} describe the reverse time migration (adjoint linearized modeling) of the corresponding Born data. 
+
+All of these results should be compared the analogous plots in \cite{trip14:struct}. 
+
+Finally, to illustrate shot parallelization and its combination with domain decomposition, I simulated 9 shots, with 3 computed concurrently ({\tt partask=3}). I obtained the result displayed in Figure \ref{fig:shot8-12km}. This runs under mpi command line control with {\tt -np 3} (resulting from the parallel environment dictionary entry {\tt 'ppn': '3'}. Initially, shots 0, 3, and 6 are distributed to processes 1, 2, and 3. Then shots 1, 4, and 7 are distributed in the same way, and finally 2,5, and 8. 
+
+Note that the communicator design described above causes the algorithm to behave like an asynchronous queue - for example process 2 could be working on shot 4 when process 1 is still on shot 0. In general, IWAVE takes an optimistic point of view regarding load balancing: it simply relies on similar-sized jobs taking similar lengths of time to complete. This approach has definite limits, but it is perhaps reasonable as a first cut for a solver based on uniform rectangular meshes.
+
+Figure \ref{fig:shot8-12kmdd} shows the same job processed with 3 concurrent shots and a 1 $\times$ 2 domain decomposition. In this case, processes 1 and 2 start on shot 0, processes 3 and 4 on shot3, and processes 5 and 6 on shot 6, and so on. As was the case in other examples, the differences between results obtained with different levels of parallelism are within round-off of each other.
+
+\plot{csq4layer}{width=0.8\textwidth}{4-layer velocity-squared model. First layer has $H_2O$ properties: model sea bottom is at depth = 1875 m.}
+\multiplot{4}{shot11,shot12,shot21,shot22}{width=0.45\textwidth}{Shot over model of Figure \ref{fig:csq4layer} at OBC position $x=$ 8 km, $z=$ 1.875 km, 400 receivers in 5 km $\le x \le $ 15 km, $\Delta x$ = 25 m. Isotropic point source as constitutive law anomaly, Gaussian derivative wavelet, 5 Hz peak frequency. Domain decomposition parameters ({\tt mpi\_np1,mpi\_np2}) = (1,1) (no domain decomp), (1,2), (2,1) and (2,2).}
+ 
+\plot{csq4layersm}{width=0.8\textwidth}{Background model: smoothing of 4-layer velocity-squared.}
+\plot{dcsq4layer}{width=0.8\textwidth}{Reflectivity model: difference between velocity-squared (Figure \ref{fig:csq4layer}) and a less aggressive smoothing than that shown in Figure \ref{fig:csq4layersm}.}
+
+\multiplot{4}{born11,born12,born21,born22}{width=0.45\textwidth}{Linearized (``Born'') shot over model of Figure \ref{fig:csq4layer} at OBC position $x=$ 8 km, $z=$ 1.875 km, 400 receivers in 5 km $\le x \le $ 15 km, $\Delta x$ = 25 m. Isotropic point source as constitutive law anomaly, Gaussian derivative wavelet, 5 Hz peak frequency. Velocity-squared as in Figure \ref{fig:csq4layersm}, reflectivity (velocity-squared perturbation) as in Figure \ref{fig:dcsq4layer}. Domain decomposition parameters ({\tt mpi\_np1,mpi\_np2}) = (1,1) (no domain decomp), (1,2), (2,1) and (2,2).}
+
+\multiplot{4}{rtm11,rtm12,rtm21,rtm22}{width=0.45\textwidth}{Adjoint linearized map (RTM) applied to data of Figures \ref{fig:born11}, \ref{fig:born12}, \ref{fig:born21}, and \ref{fig:born22}, with same domain decomposition parameters.}
+
+\multiplot{2}{shot8-12km,shot8-12kmdd}{width=0.45\textwidth}{9 shots from $x_s$ = 8 km to $x_s$ = 12 km, 3 shots computed at once ({\tt partask=3}); no domain decomposition on left, 1 $\times$ 2 domain decomposition on right.} 
+
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

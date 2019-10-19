@@ -1,0 +1,153 @@
+\title{Born Approximation}
+\maketitle
+\label{ch:born}
+
+\inputdir{project}
+
+\section{Introduction}
+Several features of the seismic wave field are obvious from field recordings:
+\begin{itemize}
+\item it consists largely of waves, that is, coherent space-time structures with definite apparent velocities;
+\item the velocity of seismic waves varies with position in the earth;
+\item some of the waves appear to be reflections, that is, the result of interaction with the earth's structure that changes (or even reverses) the direction of wave motion.
+\end{itemize}
+The simplest model of wave motion that predicts these features is {\em constant density acoustics},  connecting the acoustic pressure field $p(\bx,t)$, the compressional wave velocity $v(\bx)$, and a source wavefield $f(\bx,t)$ through the partial differential equation
+\begin{eqnarray}
+\label{eqn:cdawe}
+\frac{\partial^2 p}{\partial t^2} -v^2 \nabla^2 p& = & f\\
+p &= & 0, \,t<<0 \nonumber 
+\end{eqnarray} 
+The second condition guarantees that the field is causal, that is, vanishes before the onset of nonzero source wavefield values.
+
+This section takes a first look at the relation between $p$ and $v$ implicit in the system \ref{eqn:cdawe}, and introduces the linearization of this relation, often called (somewhat imprecisely) the Born approximation in the seismic literature. The Born approximation is both a powerful analytical tool and the foundation for much of seismic data processing. It is particularly accurate when the reference model is smooth, or slowly varying, on the wavelength scale, and the perturbation is oscillatory, that is, contains all wavelength-scale features. Under these circumstances, Born data represents the part of the wavefield that has interacted once with the wavelength-scale features in the model, that is, the singly-scattered field, and provides a rough definition of the primary reflection field. These features are illustrated via a model constructed from the NMO-based velocity analysis and PSPI depth image derived from the Mobil Viking Graben data in Chapter \ref{ch:basic}.%\cite{basic-caam641:17}.
+
+\section{Refraction}
+Note that the wave equation \ref{eqn:cdawe} does not necessarily predict wave motion: if the velocity field $v$ is sufficiently complex, not only may waves not be observable, but energy may not even flow as one would expect in a wave setting. So called Anderson localization, in which a complex material with highly spatially variable index of refraction ($1/v$) causes energy to remain for arbitrarily long periods in the same location, or to diffuse slowly rather than propagate, has been predicted theoretically and even observed in the lab \cite[]{huetal:08,WrightWeaver:10}. Clear evidence of waves at seismic frequencies already tells us something about the structure of the earth's interior.
+
+The classical radiation solution for the wave equation \cite[]{CourHil:62} is the pressure field $p(\bx,t)$ satisfying \ref{eqn:cdawe} with constant (space-independent) $v$ and $f(\bx,t) = w(t)\delta(\bx)$. As is well-known, the solution in 3D is
+\begin{equation}
+\label{eqn:cdawe-green}
+p(\bx,t) = \frac{w(t-r/v)}{4\pi r}, \,r=|\bx| = \sqrt{\bx^T\bx}.
+\end{equation}
+The 2D case has a more complex expression:
+\begin{equation}\label{eqn:acdsol2dalt}
+p(\bx,t)=\frac{1}{\pi v^2} \int_0^{\sqrt{t-r/v}}d\sigma \frac{w(t-\sigma^2-r/v)}{\sqrt{\sigma^2 + 2r/c}}. 
+\end{equation}
+The constant $v$ radiation solution predicts waves moving at speed $v$, but (of course) their velocity does not vary with position. Also, this model does not generate anything that looks like reflected waves. So, reflection (and even more so, variable wave velocity) implies spatially variable wave velocity.
+
+Next examine wave propagation via numerical approximation. Throughout these notes, I use finite difference schemes to model wave propagation. A good overview of finite difference methods appears in \cite[]{Moczoetal:06}. These methods approximate the actual solution with an asymptotic rate called the scheme order. Actually only some solutions are approximated with this order, in general - see \cite[]{SymesTerentyevVdovina:08} or \cite[]{SymesVdovina:09} for examples in which the formal order does not predict the actual convergence behaviour. In general, for smooth solutions and coefficients (like $v$), the formal order actually predicts the rate of convergence: if the scheme is of second order, the error will be roughly proportional to $\Delta t^2$ for small enough $\Delta t$, for instance. For the examples shown in this section of the notes, we use the classic centered difference scheme, with second order centered difference in time replacing the time derivatives in \ref{eqn:cdawe-green}, and $2k$th order centered differences replacing the spatial derivatives (usually $k=2$, so the scheme is fourth order in space). Singular right hand sides are represented by numerical delta functions.
+
+A slightly more realistic propagating medium from the constant case (equation \ref{eqn:cdawe-green})  is  the  interval velocity predicted by NMO velocity analysis from the Mobil AVO data \cite[]{basic-caam641:17}, which is slowly varying on the wavelength scale. [Average velocity = 2500 m/s, wavelength at 20 Hz = 125 m.] Figure \ref{fig:paracsq} shows the square of this interval velocity. Since we have no density information in this model, this field may be regarded as proportional to bulk modulus, with constant density.
+
+Up to this point boundary conditions have not been mentioned: the radiation solution does not interact with any boundaries. The problem solved numerically in the following examples takes place in a bounded rectangle in ${\bf R}^3$, namely the one shown in Figure \ref{fig:paracsq}. Every boundary is subject to the pressure-free condition $p=0$. The domain is so chosen that for the point sources used in the numerical experiments, the interaction of the wavefield with the side and bottom boundaries does not affect the simulated trace data - as will be evident shortly. The free surface at the top of the model does interact with these solutions, however.
+
+\plot{paracsq}{width=0.9\textwidth}{Interval velocity as function of depth, derived from NMO velocity analysis. Probably not to be taken seriously below 3 km.}
+
+Figures \ref{fig:movereflooverlay-frame05}, \ref{fig:movereflooverlay-frame10} and \ref{fig:movereflooverlay-frame15} show the computed pressure wavefield at $t=0.5s, 1.0s$ and $1.5s$, for a shot at $x_s=10012.5 m$ (in the coordinate system of the trace headers).
+The wavelet is a 5-10-20-25 Hz zero-phase bandpass filter.
+
+\plot{movereflooverlay-frame05}{width=0.9\textwidth}{Pressure field at $t=0.5s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field derived from NMO velocity analysis, square depicted in Figure \ref{fig:paracsq}.}
+
+\plot{movereflooverlay-frame10}{width=0.9\textwidth}{Pressure field at $t=1.0s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field derived from NMO velocity analysis, square depicted in Figure \ref{fig:paracsq}.}
+
+\plot{movereflooverlay-frame15}{width=0.9\textwidth}{Pressure field at $t=1.5s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field derived from NMO velocity analysis, square depicted in Figure \ref{fig:paracsq}.}
+
+There is little evidence of reflection occuring in this example. The shot gather (all acquisition parameters as in the field data, reported in \cite[]{basic-caam641:17}) shows the direct wave and a diving wave arrival - at longer offsets, the latter will overtake the former.
+
+\plot{data10012}{width=0.9\textwidth}{Pressure shot gather for shot at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field derived from NMO velocity analysis, square depicted in Figure \ref{fig:paracsq}.}
+
+\section{Reflectors and Reflection}
+From the homogeneous and slowly varying examples, one could infer that only transmitted (direct and diving wave) arrivals occur in models for which the wave velocity (and eventually other parameters) change slowly (are smooth) on the scale of a wavelength. This supposition is correct, and will be fully justified in the next section \cite[]{raytheory-caam641:17}. Therefore, to make reflections appear in model-derived synthetics requires a model having substantial variation on the wavelength scale.
+
+We create such a model by adding a scaled version of the PSPI depth-migrated image from \cite[]{basic-caam641:17}, shown in Figure \ref{fig:parapspimdlpert}. Keeping the velocity between 1.0 and 5.0 km/s by using a scale factor of 0.15, we obtain the model shown in Figure \ref{fig:parapspimdl}. This model has wavelength scale features, and we would expect it to generate reflections. In fact it does, as can be seen in the snapshots at 0.5, 1.0, and 1.5 s (Figures \ref{fig:moviereflopoverlay-frame05}, \ref{fig:moviereflopoverlay-frame10} and \ref{fig:moviereflopoverlay-frame15}). The shot gather, Figure \ref{fig:data10012p} appears to be rich in reflected events.
+
+\plot{parapspimdlpert}{width=0.9\textwidth}{PSPI depth migration of Mobil AVO data using square velocity of Figure \ref{fig:paracsq}.}
+
+\plot{parapspimdl}{width=0.9\textwidth}{Interval squared velocity as function of depth, combines background model of Figure \ref{fig:paracsq} with PSPI poststack image, scaled by 0.15.}
+
+\plot{moviereflopoverlay-frame05}{width=0.9\textwidth}{Pressure field at $t=0.5s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field depicted in Figure \ref{fig:parapspimdl}.}
+
+\plot{moviereflopoverlay-frame10}{width=0.9\textwidth}{Pressure field at $t=1.0s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field depicted in Figure \ref{fig:parapspimdl}.}
+
+\plot{moviereflopoverlay-frame15}{width=0.9\textwidth}{Pressure field at $t=1.5s$ for a point source at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field depicted in Figure \ref{fig:parapspimdl}.}
+
+\plot{data10012p}{width=0.9\textwidth}{Pressure shot gather for shot at $x=10012$ m. Wavelet is  5-10-20-25 Hz zero-phase bandpass filter. Velocity field depicted in Figure \ref{fig:parapspimdl}.}
+
+Recall that the reference data (Figure \ref{fig:data10012}) created from the slowly varying model (Figure \ref{fig:paracsq}) contains only direct and refracted waves. These are also visible in the data (Figure \ref{fig:data10012p}) created from the model with reflectors (Figure \ref{fig:parapspimdl}), and the wavefield snapshots also suggest that the transmitted waves persist. It is natural to speculate that the difference between these two shot gathers might contain only reflections: we plot this difference in Figure \ref{fig:data10012res}. 
+
+\plot{data10012res}{width=0.9\textwidth}{Difference between shot gathers for $v^2$ and $v^2 + \epsilon \delta v^2$, with $\epsilon=0.15$ (shown in Figures \ref{fig:data10012} and \ref{fig:data10012p}).}
+
+\section{Linearization}
+Of course the relation between $v$ and $p$ implied by \ref{eqn:cdawe} is nonlinear, so the change between the shot gathers of Figures \ref{fig:data10012} and \ref{fig:data10012p} cannot be linear in the perturbation (Figure \ref{fig:parapspimdlpert}). On the other hand, the RMS (or $L^2$ norm) of the perturbation is approximately 2\% of the $L^2$ norm of the square velocity, so in some sense a small perturbation, and it is natural to think that a linear approximation to the model-data relation would be predictive of the data change. Linearization, or (as it is somewhat imprecisely known in this business) the Born approximation. amounts to replacing both $p$ and $v$ by perturbed quantities $p + \delta p$, $v+\delta v$, substituting these in equation \ref{eqn:cdawe}, throwing away all terms with two or more $\delta$s in them, and using \ref{eqn:cdawe} itself to eliminate a few more terms. The upshot is a relation between the reference fields $p, v$ (presumed to solve \ref{eqn:cdawe}) and perturbation fields $\delta p, \delta v$:
+\begin{eqnarray}
+\label{eqn:pcdawe}
+\frac{\partial^2 \delta p}{\partial t^2} -v^2 \nabla^2 \delta p& = & \delta v^2 \nabla^2 p\\
+\delta p &= & 0, \,t<<0 \nonumber 
+\end{eqnarray} 
+This equation may be approximated numerically by the same kind of finite difference method explained above for the reference system. The perturbation field  is sampled in exactly the same way as the other shot gathers shown here to produce Figure \ref{fig:data10012born}. If linearization is an accurate approximation, then this field should approximate the difference between the shot gathers produced from the model with reflectors (Figure \ref{fig:data10012p} and the one without (Figure \ref{fig:data10012}), plotted as Figure \ref{fig:data10012res}. Indeed the two look quite similar: the difference between the data in Figure \ref{fig:data10012res} and FIgure \ref{fig:data10012born} is displayed in Figure \ref{fig:data10012bornres}, all three figures plotted on the same grey scale.
+
+\plot{data10012born}{width=0.9\textwidth}{Born data: shot gather at shot position $x=10012 m$ with the reference model ($v^2$) of Figure \ref{fig:paracsq} and the perturbation ($\delta (v^2)$) of Figure \ref{fig:parapspimdlpert}, scaled by $\epsilon=0.15$ .}
+
+\plot{data10012bornres}{width=0.9\textwidth}{Difference between Born shot gather (Figure \ref{fig:data10012born}) and residual shot gather (Figure \ref{fig:data10012res}) for perturbation scaled by $\epsilon = 0.15$, all three plotted on same grey scale.}
+
+The events appearing in Figure \ref{fig:data10012born} are found in Figure \ref{fig:data10012res}, which however contains other events as well: careful examination shows that these other events tend to be slower than those retained in Figure \ref{fig:data10012born}. These slower events are multiple reflections, bouncing between the free surface at the top of the model (a perfect reflector) and the various reflectors evident in Figure \ref{fig:parapspimdl}, especially those near the surface.
+
+To understand better the relation between the full model (equation \ref{eqn:cdawe}) and the Born model (equation \ref{eqn:pcdawe}), and set the stage for what follows, introduce the {\em forward map} or {\em modeling operator} $\cF$, mapping the square velocity $v^2$ to the trace data:
+\begin{equation}
+\label{eqn:mdlop}
+\cF[v^2] = \{p(\bx_r,t;\bx_s)\}
+\end{equation}
+in which $\bx_r,\bx_s$ are presumed to run over the combinations of receiver and source locations present in the data. Similarly the linearized forward map, or Born modeling operator, $D\cF$ is defined by
+\begin{equation}
+\label{eqn:pmdlop}
+D\cF[v^2]\delta v^2 = \{\delta p(\bx_r,t;\bx_s)\}.
+\end{equation}
+The Born modeling operator is actually the derivative of the modeling operator, as the notation suggests, in a suitable sense: this is proven in the theoretical part of this course. In fact, the modeling operator is twice differentiable, so long as the pulse is bandlimited as are the sources used here. One would therefore expect that the remainder of the first order Taylor series should decrease like the second power of the perturbation length:
+\begin{equation}
+\label{eqn:taylor1}
+\cF[v^2 + \epsilon \delta v^2] - \cF[v^2] - \epsilon D\cF[v^2]\delta v^2 = O(\epsilon^2).
+\end{equation}
+Using the common notation $\|\cdot\|$ for the $L^2$ norm (RMS scaled by cell volume), this would imply
+\begin{equation}
+\label{eqn:taylor1l2}
+\|\cF[v^2 + \epsilon \delta v^2] - \cF[v^2] - D\cF[v^2]\delta v^2 \| \approx K \epsilon^2
+\end{equation}
+for a constant $K$ depending on everything in sight. We can see this relation by measuring the $L^2$ norms of the Taylor series remainder, which you have already seen, namely as Figure \ref{fig:data10012bornres}, for the choices of $v^2$ (Figure \ref{fig:paracsq}) and $\delta v^2$ (Figure \ref{fig:parapspimdlpert}) introduced above, and $\epsilon = 0.15$. If you replace $\epsilon$ by $0.05$, then the norm of the first order Taylor series residual should drop by roughly a factor of $9$, according to the formula \ref{eqn:taylor1l2}. In fact the norms are respectively 0.0027 ($\epsilon=0.15$) and 0.00029 ($\epsilon = 0.05$), and differ almost exactly a factor of 9, as predicted. The residual and Born approximation (linear term in the Taylor series) appear as Figures \ref{fig:data10012res05} and \ref{fig:data10012born05} respectively, plotted on the same scale as the remainder in the first order Taylor series in \ref{fig:data10012bornres05}.
+
+\plot{data10012res05}{width=0.9\textwidth}{Difference between shot gathers for $v^2$ and $v^2 + \epsilon \delta v^2$, with $\epsilon=0.05$.}
+
+\plot{data10012born05}{width=0.9\textwidth}{Born data: shot gather at shot position $x=10012 m$ with the reference model ($v^2$) of Figure \ref{fig:paracsq} and the perturbation ($\delta (v^2)$) of Figure \ref{fig:parapspimdlpert}, scaled by $\epsilon=0.05$ .}
+
+\plot{data10012bornres05}{width=0.9\textwidth}{Difference between Born shot gather (Figure \ref{fig:data10012born05}) and residual shot gather (Figure \ref{fig:data10012res05}) for perturbation scaled by $\epsilon=0.05$, all three plotted on same grey scale.}
+
+Another important fact to learn about the Born approximation is that its accuracy reflects {\em scale separation}, and the first order Taylor series remainder is much smaller when the perturbation contains little energy on the scale of a wavelength. This freedom from long-scale components is a feature of the PSPI image \ref{fig:parapspimdlpert} used as $\delta v^2$ in the preceding examples, which accounts for the relative accuracy of the Born approximation. If instead one uses the perturbed model (Figure \ref{fig:parapspimdl}) as reference ($v^2$) and perturbs by a multiple of the smooth background model (Figure \ref{fig:paracsq}) ($\delta v^2$), a much larger first order Taylor remainder results. For example, with $\epsilon = 0.02$ to give a perturbation of the same $L^2$ size as the PSPI image, but with $v^2$ and $\delta v^2$ as just suggested, the residual shown in Figure \ref{fig:data10012reslf} results, which may be compared to the Born approximation (linearization) shown in Figure \ref{fig:data10012bornlf}. The larger difference is evident to the eye: the norm of the difference (first order Taylor series remainder) is 0.0089, actually larger than the residual norm of 0.0077.  In contrast, the corresponding numbers in the preceding example were 0.0027  and 0.0048. This phenomonon - the more rapid variation of $\cF$ in smooth directions - is key to understanding many aspects of the seismic inverse problem. The next section of this course will give some inkling about why it occurs, but the full mathematical story has yet to be told.
+
+\plot{data10012reslf}{width=0.9\textwidth}{Difference between shot gathers for $v^2$ and $v^2 + \epsilon \delta v^2$, with $v^2=$ the perturbed model (Figure \ref{fig:parapspimdl}), $\delta v^2 = $ the smooth background model (Figure \ref{fig:paracsq}), and  $\epsilon=0.02$, chosen to create a perturbation of the same $L^2$ size as the PSPI image (Figure \ref{fig:parapspimdlpert}).}
+
+\plot{data10012bornlf}{width=0.9\textwidth}{Born data: shot gather at shot position $x=10012 m$ with the reference, perturbation, and scale factor $\epsilon$ as in Figure \ref{fig:data10012reslf}, plotted on same scale.}
+
+\plot{data10012bornreslf}{width=0.9\textwidth}{Difference between Born shot gather (Figure \ref{fig:data10012bornlf}) and residual shot gather (Figure \ref{fig:data10012reslf}), plotted on same scale.}
+
+\section{Project Notes}
+The computational results for this section depend on those of the previous section \cite[]{basic-caam641:17}, and the corresponding project must be built first.
+
+Along with the displays in the paper, the project build ({\tt scons}) creates two propagating wave movies, from which the snapshots in the paper were taken. To view these, use the {\tt xtpen} command in the project directory:
+\begin{verbatim}
+xtpen < Fig/moviereflooverlay.vpl 
+\end{verbatim}
+for the radiation solution from a point source in the smooth square velocity model (Figure \ref{fig:paracsq}), and
+\begin{verbatim}
+xtpen < Fig/moviereflopoverlay.vpl 
+\end{verbatim}
+for the radiation solution from a point source in the square velocity model with reflectors (Figure \ref{fig:parapspimdl}).
+
+The $L^2$ norms quoted in the text were obtained using {\tt sfattr} - flows are provided in {\tt project/SConstruct} that write the relevant line out to a text file.
+
+\section{Suggested Projects}
+\begin{enumerate}
+\item Just how separated are the scales between the ``background'' model (Figure \ref{fig:paracsq}) and reflectivity or perturbation (Figure \ref{fig:parapspimdlpert})? This question can be explored using the 2D fft implemented in Madagascar.
+\item create examples with well-separated scales and investigate the linearization error for perturbations in smooth background vs. rough reflectivity.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

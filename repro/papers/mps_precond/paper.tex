@@ -1,0 +1,1231 @@
+\newcommand{\Langle}{\bigg\langle} 
+\newcommand{\Rangle}{\bigg\rangle} 
+\newcommand{\Lparan}{\bigg(} 
+\newcommand{\Rparan}{\bigg)} 
+\newcommand{\WE}{\Lparan\frac{\partial^2}{\partial t^2} - c^2\nabla^2 \Rparan} 
+\def\mathbi#1{\textbf{\em{#1}}}
+\def\bhat#1{\hat{\mathbf{#1}}}
+
+
+
+\title{Preconditioner for Estimation of Multipole Sources via Full Waveform Inversion}
+\date{}
+
+
+%\lefthead{Huang \& Nammour \& Symes}
+
+%\address{
+%\footnotemark[1]The Rice Inversion Project,\\ Rice University,\\ Houston, TX
+%77005-1892 USA\\
+%%\footnotemark[2]Total E\&P R\&T USA
+%}
+%\author{Mario J. Bencomo\footnotemark[1] and William Symes\footnotemark[1]}
+\author{Mario J. Bencomo and William W. Symes}
+
+\righthead{multipole source estimation, preconditioner }
+
+\maketitle
+\parskip 12pt
+
+%%%%%%%%%
+\begin{abstract}
+
+%Abstract needs to be updated ...
+
+Accurate representation and estimation of seismic sources is crucial to the joint medium-source full waveform inversion problem. 
+In the work presented here we focus on the source estimation subproblem for 2-D acoustics, where source terms are represented as truncated series of multipoles. 
+Our main contribution lies in developing a preconditioner for the normal equations related to the source-parameter linear least squares problem.
+The proposed preconditioner consists of fractional time derivative/integral operators based on the analytical solutions for unbounded, homogeneous medium with multipole sources.  
+Numerical results demonstrate an acceleration of conjugate gradient iterates when our preconditioning scheme is used.
+
+%%%%%%%%%
+\end{abstract}
+
+%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%
+
+%Reworked intro, as of 05/22/19
+
+Accurate representation and estimation of seismic sources is essential for the recovery of medium parameters in the seismic inverse problem.
+Joint determination of medium and source parameters via \emph{full waveform inversion} (FWI) has been shown to be successful in many applications as a means of addressing the impact of source parameters on the estimated medium. 
+For example, \cite{Wang:09} demonstrated the feasibility of joint medium-source parameter estimation for 2-D, constant density, acoustics with multiples in the data. 
+Furthermore, their synthetic tests show how robust the source inversion is due to inaccuracies in the estimated medium by imposing constraints on the spectrum and time duration on the source time-dependence.
+\cite{SymMink:97} further motivate the need for joint medium-source inversion and highlight the importance of taking into account the source anisotropy in their study of marine reflection data with plane-wave viscoelastic modeling.
+
+In this paper, we model general anisotropic sources as a \emph{multipole} series involving derivatives of the spatial delta function,
+\begin{equation}\label{eq:MPS}
+	f(\mathbf x,t) = \sum_{|\mathbf s|=0}^N w_{\mathbf s}(t) D^{\mathbf s} \delta(\mathbf x-\mathbf x^*),
+\end{equation}
+for a source centered at $\mathbf x^*$, where $f(\mathbf x,t)$ plays the role of the source term (or inhomogeneous term) for a given wave equation; we present our modeling equations in full detail in the theory section.
+Equation \ref{eq:MPS} makes use of multi-index notation:
+given multi-index (integer $d$-tuple) $\mathbf s=(s_1,...,s_d)$, define the $\mathbf s$-mixed partial derivative operator $D^{\mathbf s}$ and its order $|\mathbf s|$ as follows,
+\[
+	D^{\mathbf s} = \prod_{k=1}^d \left(\frac{\partial}{\partial x_k}\right)^{s_k},
+         \quad |\mathbf s| = \sum_{k=0}^d s_k,
+\]
+with $d\in\{1,2,3\}$ denoting the spatial dimension. 
+We note that equation \ref{eq:MPS} is in fact the time-space analogue of the source-model considered by \cite{SymMink:97}.
+Moreover, equation \ref{eq:MPS} is a generalization of the commonly used \emph{moment tensor} representation of anisotropic point-sources in earthquake seismology; see \cite{AkiRich:80}, \cite{Backus:1976a}, \cite{Shearer:2009} for a detailed discussion on seismic moment tensors.
+Moment tensors of higher degree (related to multipole terms of higher order) have been shown to be important in cases where finiteness of the source is of issue, that is, the fault size is comparable to propagating wavelengths \citep{Stump:1982}.
+
+Though the ultimate goal is joint medium-source inversion, we focus on the source estimation subproblem and its challenges in this paper:
+We formulate the source inversion as FWI in the time domain, assuming medium parameters are known.
+The novelty of our work is in the representation, and thus estimation, of seismic sources as multipoles.
+We discuss and provide means to address the main challenge of ill-conditioning in the resulting inverse problem.
+In particular, FWI yields a linear \emph{least squares} (LS) problem which we solve iteratively by \emph{conjugate gradient} (CG).
+Our main contribution is to propose a preconditioner, based on (potentially fractional) derivative/integral operators, as a means to better condition the source inversion problem.
+
+We first present a review of prior work on seismic source inversion, as well as joint medium-source estimation, in the context of FWI to motivate our methodology. 
+In the following section we formulate the multipole source FWI problem and discuss the root causes of its ill-conditioning.
+Lastly, we motivate and derive our proposed preconditioner and demonstrate its effectiveness in accelerating convergence of CG on some synthetic examples.
+
+
+%%%%%%%
+\subsection{Literature Review}
+
+%Reworked lit review, as of 05/22/19
+
+%Motivating source estimation in seismic inversion
+Seismic data contains information about source and receiver responses as well as properties of the earth's medium, the latter being of priority in exploration seismology. 
+Conventional methodology initially focused on removing the source response from data as a preprocessing step in seismic imaging by estimating the source signature through statistical methods like predictive deconvolution \citep{Rob:57} and homomorphic deconvolution \citep{Ulr:71}. 
+\cite{Zio:91} has criticized these statistical methods for imposing unrealistic and at times theoretically unjustifiable constraints on both the source and medium, yielding results vulnerable to subjectivity. 
+Alternatively, source signatures for the \emph{Vibroseis$^{TM}$} and airgun arrays have been estimated using near-field measurements with some success; see \cite{Zio:91} and \cite{Landro:92}.
+It should be noted that source estimation with near-field measurements still depends on how the source is modeled and the data's dependency on the medium which can be unknown in applications where the source-receiver path is partially submerged in unknown medium or the direct arrival cannot be clearly discerned from the data.
+
+%Joint medium-source inversion
+Starting in the late 1980's, efforts in decoupling medium-source interactions shifted from preprocessing the source signature out of seismic traces to the joint inversion of source and medium parameters. 
+Early attempts focused on proving theoretically the co-determinability of source time-dependent parameters and medium parameters from reflectivity data under simplifying assumptions: acoustic layered medium, quasi-impulsive and non-impulsive sources, primaries only data, inverting for only one medium parameter (reflectivity),  \citep{Ramm:85, Lew:89, BubeLaiSacksSanSy:88, MinkSym:95}. 
+Later works have implemented and tested the feasibility of joint medium-source inversion beyond the theory with some success in a variety of synthetic and field examples; \citep{SymMink:97, Wang:09, Zhou:97}.
+
+%VPM
+In most cases, an FWI formulation of joint medium-source estimation results in a \emph{separable LS} problem in which the source parameters are quadratic with respect to the FWI objective function; we discuss this in the theory section with more detail.
+Some recent works have employed the \emph{variable projection} (VP) method, first developed by \cite{GolubPereyra:73} (see \cite{GolubPereyra:03} for a more current discussion on the topic), to exploit the separable structure;
+source parameters are effectively eliminated by an orthogonal projection when solving a linear LS subproblem.
+In practice, VP, coupled with Gauss-Newton type algorithms for solving the primary nonlinear LS problem, has been proven to outperform other multiparameter estimation algorithms, \citep{Ruhe:1980}.
+For example, \cite{Rickett:SEG12} and \cite{LiRickettAbubakar:13} demonstrate the effectiveness of VP over simultaneous descent and alternating direction in the context of joint medium-source inversion via FWI in the time and frequency domains respectively.
+%Formulating the multipole source subproblem via FWI will allow us to couple our methodology to VP algorithms for joint medium-source estimation in future work as a means to mitigate the difficulty of multiparameter inversion.
+%Future work regarding inversion of medium-source parameters will incorporate VP as a means to mitigate the difficulty of multiparameter inversion.
+
+%Motivating anisotropic source modeling
+All of the works mentioned above, with the exception of \cite{SymMink:97}, idealize the source contribution to that of an isotropic source localized at a single point in space, i.e., a point-source. 
+The point-source assumption for seismic sources is justified by the fact that the spatial dimensions of sources considered in exploration seismology are considerably smaller (typically by an order of magnitude) than the propagating wavelengths of seismic waves. 
+The isotropy assumption, however, is questionable, especially when the source is known or potentially expected to exhibit directivity or anisotropy in its radiation pattern. 
+A perfect example is the airgun-array used in marine seismic surveying where the output pressure field of the source is known to exhibit vertical directivity. 
+Work by \cite{SymMink:97} has been the prime motivator for this paper.
+Their results highlight the necessity of modeling source anisotropy, as well as estimating source parameters in conjunction with the medium for an accurate inversion.
+Anisotropy of their seismic source, which consisted of an airguns-arary, was modeled in the plane-wave domain by representing the source term as a series of Legendre polynomials in the slowness variable $p$, that is
+\begin{equation}\label{eq:MPSradon}
+	f(p,t) = \sum_{n=0}^N w_n(t)L_n(p),
+\end{equation}
+where $L_n$ is the $n$-th Legendre polynomial.
+Their results show that inverting for anisotropic source parameters $\{w_n(t)\}$, as oppose to using a given isotropic source or even inverting for an isotropic source, allowed them to account for 25\% more of the data and were even able to achieve a dramatic 90\% data fit up to a gas-sand target.
+Moreover, recovered reflectivity parameters matched closely expected lithology, but only when jointly estimating for medium and anisotropic source parameters.
+
+%Prior work on anisotropic source inversion
+Active work in anisotropic seismic source inversion primarily has focused on the determination of earthquake mechanisms \citep{Sipkin:82,Koch:91}, and most recently in the characterization of microseismic events (small earthquakes) resulting from hydraulic fracturing \citep{Song:11,Eaton:10}.
+%These applications use the seismic moment tensor representation, which are related to the multipole source representation given in equation \ref{eq:MPS}.
+
+
+Time-domain methods, based on an FWI approach, result in having to solve a block Toeplitz system of equations, which can be done efficiently with Levinson recursion algorithms \citep{Robinson:83,Trench:64}.
+The equivalent problem in the frequency domain is no longer a simple Fourier division.
+%, however, since we are dealing with \emph{multichannel deconvolution} (i.e., source being estimated has multiple components).
+Instead, one has to solve a system of $M$ equations for $M$ unknowns point-wise in frequency, where $M$ is the number of source components we are inverting for.%; we discuss this in more detail later.
+Some of the references cited above consider an alternate frequency-domain method, the so-called \emph{appraisal deconvolution} method by \cite{Oldenburg:82}.
+Appraisal deconvolution consists of estimating, in the frequency domain, a set of optimal inverse filters, rather than source parameters.
+What sets this method apart from a standard LS approach in the frequency-domain is the choice of objective function that defines the optimal inverse filters. 
+In the scalar deconvolution case, one can show equivalency between appraisal deconvolution and a standard LS approach in time and frequency domain (also equivalent to Wiener deconvolution); this is no longer true for the general multichannel case.
+Given that an inverse filter is computed, the appraisal deconvolution method readily offers access to qualitative measures of the inversion, primarily the sensitivity matrix.
+On the other hand, this method requires the careful calibration of several hyper-parameters, and can be computationally intractable for moderate to large scale problems.
+
+%\cite{Sipkin:82} estimates earthquake source parameters, mainly seismic moment (rate) tensor components, via FWI using two methods: a time-domain method equivalent to a standard LS formulation, and a frequency-domain method referred to as \emph{appraisal deconvolution}.
+%The time-domain approach results in having to solve a block Toeplitz system which can be done efficiently with recursive solvers \citep{Robinson:83}.
+%The appraisal deconvolution \citep{Oldenburg:82} consists of estimating for optimal filters in a LS sense in the frequency domain. 
+%This method, however, requires one to tune several hyper-parameters, though it does offer easy access to qualitative measures of the inversion (e.g., the sensitivity matrix).
+
+%Prior work on dealing with ill-conditioning of src problem
+A particular challenge of the multipole source inverse problem, as we discuss in the next section, is ill-conditioning.
+Some attempts at regularization have aimed to improve data coverage, as well as constraining or oversimplifying the source representation.
+For example, \cite{Eaton:10} and \cite{Song:11} invert for time-independent moment tensor components and \cite{Eaton:10} further discusses ill-conditioning of the inverse problem with respect to angle subtended by the receiver array.
+\cite{Koch:91} applies a more standard approach via Tikhonov regularization.
+Their numerical results indeed demonstrate the benefits of this method, especially in cases where data acquisition geometry results in known ill-conditioning. 
+Furthermore, \cite{Koch:91} illustrated robustness of their results against errors in time lag, model parameters (i.e., velocity model), and extended sources (non-point sources). 
+It is worth highlighting that their regularization parameter is chosen in a trial by error manner given information about the singular value decomposition of the forward map, which could be impractical for larger problems.
+It should also be noted that time-domain algorithms, based on Levinson recursion, are weakly stable \citep{Bunch:85}, making them ill-suited for ill-conditioned problems unless adequate regularization is introduced.
+The appraisal deconvolution method offers a form of regularization (equivalent to Tikhonov regularization) through a ``trade-off'' parameter, though there is no efficient manner in setting said parameter.
+
+%Motivating our approach
+Formulating the multipole source subproblem via FWI allows us to couple our methodology to VP algorithms for joint medium-source inversion in future work, giving us a means of mitigating the difficulty of multiparameter inversion.
+We decide to solve the multipole source inversion problem iteratively via CG in the time-domain, as done by \cite{SymMink:97} and \cite{Wang:09}.
+
+%An iterative approach offers an efficient method of solving the source 
+%regularizing via CG early stop -> more control in accuracy of src estimation subproblem (relevant for joint inversion and VPM)
+%%  - can determine Tikhonov reg param iteratively
+%A lot of the methodology from the previously cited works fail to address this challenge in a manner that is efficient to larger-scale problems.
+
+
+%%Prior work on anisotropic source inversion and multichannel deconvolution
+%As alluded to earlier, the source estimation can be framed as a deconvolution problem; we formalize this in the following section.
+%In fact, an FWI formulation of the source estimation subproblem can be shown to be equivalent to deconvolution under simplifying assumption in the data noise.
+%%FWI with Tikhonov regularization is equivalent to Wiener deconvolution.
+%In the case where the source term consists of a single component, we have a scalar deconvolution problem which consists of a solving Toeplitz systems in the time domain or applying a regularized form Fourier division in the frequency domain.
+%The multipole source case, however, results in a \emph{multichannel deconvolution} problem which is no longer trivial to solve in the frequency domain.
+%In the time-domain, one is required to solve a block Toeplitz system.
+
+
+%time vs frequency domain
+%iterative vs direct solvers
+%issues with ill-conditioning/posedness and how to alleviate it
+
+%Benefits of our method (time-domain iterative solver via CG for source estimation subproblem):
+%  - easy to time window the source function
+%  - regularizing via CG early stop -> more control in accuracy of src estimation subproblem (relevant for joint inversion and VPM)
+%  - can determine Tikhonov reg param iteratively
+%  - consistent with our time-domain approach 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Theory}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We model seismic wave phenomena via the acoustic equations, particularly in the first-order form,
+\begin{equation}\label{eq:acous1}
+\begin{split}
+		\frac{\partial}{\partial t} \mathbf v(\mathbf x,t) +  
+		\beta(\mathbf x) \nabla p(\mathbf x,t) &= 0, \\
+		\frac{\partial}{\partial t} p(\mathbf x,t) + 
+		\kappa(\mathbf x)\nabla \cdot \mathbf v (\mathbf x,t) &= f(\mathbf x,t),
+\end{split}
+\end{equation}
+with
+\begin{itemize}
+	\item $\beta = $ buoyancy (reciprocal of density), 
+	\item $\kappa = $ bulk modulus,
+	\item $p = $ pressure scalar field, 
+	\item $\mathbf v = $ particle velocity vector field,
+	\item $f = $ (pressure) source term,
+\end{itemize}
+for $\mathbf x\in \Omega\subset\mathbb R^d$ and $t\in[0,T]$, with homogeneous boundary and initial conditions, when appropriate.
+Our choice of PDE for modeling seismic waves is predicated on its simplicity and applicability. 
+Furthermore, our proposed preconditioning strategy, related to this first-order system, will have a natural extension to elasticity with related velocity-stress equations and will be explored in future work.
+
+Note that the source term $f$ is introduced as a scalar in the pressure equation only, though we could have just as easily introduced a vector force in the velocity equations.
+Indeed, the relationship among corresponding velocity-pressure (or stress in linear elasticity) source terms will be of interest when modeling seismic sources, however this paper will abstain from such discussions given its intended scope. 
+Moreover, though we focus on pressure sources for brevity, our approach can easily be applied to velocity sources.
+
+We represent source term $f$ as a slightly different but equivalent multipole series, after some reordering for ease of enumeration, 
+\begin{equation}\label{eq:MPSrep}
+	f(\mathbf x,t) = \sum_{j=1}^M w_j(t) D^{\mathbf s_j} \delta(\mathbf x-\mathbf x^*).
+\end{equation}
+Note that multipole source $f$ as stated above, given multi-indexes $\mathbf s_j$ and source location $\mathbf x^*$, is uniquely determined by its time-dependent functions $w_j(t)$ which we refer to as {\em multipole coefficients}.
+%In particular, multipole sources are linear combinations of multipoles $D^{\mathbf s_j}\delta(\mathbf x-\mathbf x^*)$ with time varying coefficients $w_j(t)$, which we refer to as {\em multipole coefficients}.
+
+In our discussion of analytical solutions, and the derivation of our preconditioning scheme, we will assume we are dealing with a homogenous and unbounded medium, i.e., $\beta$ and $\kappa$ are constants and $\Omega=\mathbb R^d$.
+Moreover, in our analysis we consider the second order form of the wave equation \begin{equation}\label{eq:WE}
+	\WE p(\mathbf x,t) = \tilde f(\mathbf x,t),
+\end{equation}
+where $c=\sqrt{\kappa \beta}$ is the speed of wave propagation and $\tfrac{\partial}{\partial t} f(\mathbf x,t) = \tilde f(\mathbf x,t)$;
+the pressure field from the first order system \ref{eq:acous1} is also a solution to the second order wave equation as described here.
+
+
+
+%%%%%
+\subsection{Analytical Solutions to the Wave Equation with Multipole Sources}
+
+The following theorem states that the solution of wave equation \ref{eq:WE}, with multipole source \ref{eq:MPSrep}, can be written as a multichannel convolution of multipole coefficients $\tilde w_j(t) = \tfrac{d}{dt}w_j(t)$ with some kernels $g_j(\mathbf x,t)$.
+Without loss of generality, we assume $\mathbf x^*=0$.
+
+\begin{theorem}\label{thm:MPSsol}
+	The solution $p$ of wave equation \ref{eq:WE}, with multipole source \ref{eq:MPSrep}, is given by
+	\begin{equation}\label{eq:multiconv}
+		p(\mathbf x,t) = \sum_{j=1}^M g_j(\mathbf x,t) * \tilde w_j(t),
+	\end{equation}
+	where `$*$' denotes convolution in time, and $g_j(\mathbf x,t)$ satisfy the following wave equation,
+	\[
+		\WE g_j(\mathbf x,t) = \delta(t) D^{\mathbf s_j}\delta(\mathbf x).
+	\]
+	Furthermore, 
+	\[
+		g_j(\mathbf x,t) = D^{\mathbf s_j} g(\mathbf x,t)
+	\]
+	where $g$ is the solution to the wave equation with an impulsive point source, i.e.,
+	\[
+		\WE g(\mathbf x,t) = \delta(t) \delta(\mathbf x).
+	\]
+\end{theorem}
+\begin{proof}
+	With some forethought, we clarify that partial derivatives of convolution kernels $g_j$ and Green's function $g$ are taken in a weak (distribution) sense given that these functions may be singular, in fact distributions.
+	Moreover, satisfaction of the wave equation is also taken in a weak sense since we are dealing with singular sources, even when the resulting pressure field $p$ may be smooth.
+	
+	Assume that $p$ is given by equation \ref{eq:multiconv}.
+	We apply the wave equation operator, multiply with a test function $\phi$ that is smooth and has compact support in space and time (denoted by $\phi\in C_0^\infty$), and integrate:
+	\[
+		\Langle \WE p(\mathbf x,t),\phi(\mathbf x,t) \Rangle 
+		= \sum_{j=1}^M \Langle  \left(\frac{\partial^2}{\partial t^2}g_j - c^2\nabla^2g_j\right)(\mathbf x,t)*\tilde w_j(t), \phi(\mathbf x,t) \Rangle,
+	\]
+	where $\langle \cdot\rangle$ denotes the space-time inner product.
+	Given that $g_j$ satisfy the wave equation with an particular multipole source, we have
+\begin{equation*}
+\begin{split}		
+	\Langle\WE p(\mathbf x,t),\phi(\mathbf x,t) \Rangle
+		&= \sum_{j=1}^M \Langle D^{\mathbf s_j}\delta(\mathbf x)\delta(t)*\tilde w_j(t), \phi(\mathbf x,t) \Rangle \\
+		&= \Langle \sum_{j=1}^M \tilde w_j(t) D^{\mathbf s_j}\delta(\mathbf x), \phi(\mathbf x,t) \Rangle
+\end{split}
+\end{equation*}
+for all $\phi \in C_0^\infty$, i.e., the desired result.
+
+To obtain the second part of the theorem we use the definition of derivatives for distributions, the fact that the wave equation operator is a differential operator of even order, and that differential operators commute on smooth test functions:
+\begin{equation*}
+\begin{split}		
+	\Langle\WE D^{\mathbf s_j} g(\mathbf x,t),\phi(\mathbf x,t) \Rangle
+		&= \Langle g(\mathbf x,t), (-1)^{|\mathbf s_j|} D^{\mathbf s_j} \WE \phi(\mathbf x,t) \Rangle \\
+		&= \Langle g(\mathbf x,t), \WE(-1)^{|\mathbf s_j|} D^{\mathbf s_j} \phi(\mathbf x,t)\Rangle \\
+		&= \Langle D^{\mathbf s_j}\WE g(\mathbf x,t), \phi(\mathbf x,t) \Rangle \\
+		&= \Langle \delta(t) D^{\mathbf s_j} \delta(\mathbf x), \phi(\mathbf x,t)\Rangle,
+\end{split}
+\end{equation*}
+for all $\phi\in C_0^\infty$.
+\end{proof}
+
+The Green's function $g(\mathbf x,t)$, in 1D, 2D and 3D space, is given in table \ref{tab:Gfun}.
+Note that none of these Green's functions are differentiable in the classical sense, and thus weak derivatives must be carefully applied when deriving expressions for $g_j(\mathbf x,t)$.
+Alternatively, we can leverage the smoothness of the resulting pressure field from the monopole case, i.e., $f(\mathbf x,t) = w(t)\delta(\mathbf x)$, to compute the solution of the wave equation with multipole sources. 
+In particular, it follows from theorem \ref{thm:MPSsol} that we can express $p(\mathbf x,t)$ as the linear combination of spatial derivatives of other pressure fields $p_j(\mathbf x,t)$:
+\[
+	p(\mathbf x,t) = \sum_{j=1}^M D^{\mathbf s_j} p_j(\mathbf x,t)
+\]
+where
+\[
+	p_j(\mathbf x,t) = g(\mathbf x,t) * \tilde w_j(t).
+\]
+
+\begin{table}[!h]
+	\centering
+	\begin{tabular}{c | c }
+		  	& $g(\mathbf x,t)$ \\  \hline 
+		1-D & $\displaystyle \frac{1}{2c} H(t-\tfrac{|x|}{c})$ \vspace{5pt}\\ \hline \vspace{5pt}
+		2-D & $\displaystyle \frac{1}{2\pi c} \frac{H(t-\frac{|\mathbf x|}{c})}{\sqrt{c^2t^2 - |\mathbf x|^2}}$ \\ \hline
+		3-D & $\displaystyle \frac{1}{4\pi c^2} \frac{\delta(t-\tfrac{|\mathbf x|}{c})}{|\mathbf x|} $
+	\end{tabular}
+	\caption{Green's functions for wave equation.}
+	\label{tab:Gfun}
+\end{table}
+
+We summarize in table \ref{tab:AnSol} the analytical solution to the wave equation, though related to the first-order system (thus the occurrence of $w_j(t)$ instead of $\tilde w_j(t)$), with a single multipole source term, where
+\[
+	\tau = t - \frac{|\mathbf x|}{c},
+	\quad
+	\gamma_k = \frac{x_k}{|\mathbf x|},
+	\quad
+	\Omega(\mathbf x,\sigma) = \left( \sigma^2 + 2\frac{|\mathbf x|}{c} \right)^{-1/2},
+\]
+\[
+	{\rm sgn}(x) = \left\{ \begin{array}{rl}
+		-1,& x<0\\
+		1,& x>0
+	\end{array}\right.,
+	\quad 
+	\delta_{kl} = \left\{ \begin{array}{rl}
+		1,& k=l\\
+		0,& k\neq l 
+	\end{array}\right..
+\]
+The 1D solutions, interestingly enough, show that the pressure field is only smooth in the monopole case, with discontinuous and singular pressure responses for dipole and quadrapole sources respectively. 
+The 2D\footnote{Given the complexity of the Green's function in 2D, we provide a more detailed derivation of analytical solutions in the appendix.} and 3D solutions, however,  are indeed smooth\footnote{Assuming $w(t)$ is sufficiently smooth.}.
+In all cases, the pressure field due to a monopole is indeed isotropic, that is $p(\mathbf x,t)$ is a function of $|\mathbf x|$ and time only.
+Furthermore, pressure field response of a dipole point source is evidently anisotropic given the $\rm{sgn}(x)$ factor in 1D and the $\gamma_k$ factor 2D and 3D.
+
+
+\begin{table}[!h]
+\renewcommand{\arraystretch}{2}
+	\centering
+	\small
+	\begin{tabular}{c | c | l }
+	& \multicolumn{1}{c|}{Source Term $f$} & \multicolumn{1}{l}{Analytical Solution $p$}\\ \hline\hline
+	\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{1-D}}} 
+		&$w(t)\delta(x)$ 				& $ \displaystyle \frac{1}{2c} w(\tau)$ \\
+		&$w(t)\frac{d}{dx}\delta(x)$ 		& $ \displaystyle -\frac{1}{2c^2} w'(\tau) \; \text{sgn}(x)$ \\
+		&$w(t)\frac{d^2}{dx^2}\delta(x)$	& $ \displaystyle \frac{1}{2c^3} w''(\tau) - \frac{1}{c^2} w'(\tau) \delta(x)$\\ 
+	\hline\hline
+	\parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{2-D}}} 
+		&$w(t)\delta(\mathbf x)$ & $ \displaystyle \frac{1}{\pi c^2} \int_0^{\sqrt{\tau}} w'(\tau-\sigma^2)\Omega(\mathbf x, \sigma) \; d\sigma$\\
+		&$w(t) \frac{\partial}{\partial x_k} \delta(\mathbf x)$ 
+		& $\displaystyle-\frac{\gamma_k}{\pi c^3}  \int_{0}^{\sqrt{\tau}} 
+		\Big\{ w''(\tau-\sigma^2) \Omega(\mathbf x,\sigma)
+			+ w'(\tau-\sigma^2)\Omega^3(\mathbf x,\sigma) \Big\}\; d\sigma $ \\
+		\hline\hline
+	\parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{3-D\;\;}}} 
+		&$w(t) \delta(\mathbf x)$ & $\displaystyle \frac{1}{4\pi c^2 |\mathbf x|} w'(\tau)$ \\
+		&$w(t) \frac{\partial}{\partial x_k}\delta(\mathbf x)$ 
+			& $ 	\displaystyle -\frac{\gamma_k}{4\pi c^2} \left\{ 
+					\frac{1}{c|\mathbf x|} w''(\tau) +
+					\frac{1}{|\mathbf x|^2} w'(\tau) 
+				\right\} $ \\
+		&$w(t)\frac{\partial^2}{\partial x_l\partial x_k}\delta(\mathbf x)$ 
+			& $ 	\displaystyle \frac{1}{4\pi c^2} \left\{ 
+					 \frac{\gamma_k\gamma_l}{c^2|\mathbf x|} w'''(\tau) -
+					\frac{\delta_{kl}-3\gamma_k\gamma_l}{c|\mathbf x|^2} w''(\tau) -
+					\frac{\delta_{kl}-3\gamma_k\gamma_l}{|\mathbf x|^3} w'(\tau)					 
+				\right\} $
+	\end{tabular}
+    \caption{Analytical solutions to 1D, 2D and 3D acoustic equations in first-order form with multipole sources in homogeneous unbounded medium.}
+    \label{tab:AnSol}
+\end{table}
+
+
+For 1D and 3D it is quite straight forward to make a connection between multipole coefficient $w(t)$ and the analytical pressure field $p(\mathbf x,t)$, if we focus on the far-field terms, that is, terms that dominate as $|\mathbf x|\to\infty$.
+Essentially, the pressure field will consist of the some derivatives of $w$ evaluated at $\tau$, and scaled by $1/c$.
+The higher the multipole order, the more derivatives and factors of $1/c$ are tacked onto multipole coefficients $w(t)$.
+In 2D, we still have derivatives of $w$ and scaling by $1/c$ but with the added complexity of an integral.
+It turns out that the differ-integral form for the 2D analytical solution is quiet similar to the (Caputo) fractional derivative; the fractional derivative of order $m-1/2$ for $m\in\mathbb N$ is defined as
+\[
+        \mathcal{D}^{m-1/2}_C w(t) := \frac{1}{\Gamma(\tfrac{1}{2})} \int_{0}^t \frac{w^{(m)}(t')}{ \sqrt{t-t'}} \; dt'.
+\]
+As qualitative proof, we plot the output pressure field $p$ and fractional time derivatives of input multipole coefficient $w$ in figure \ref{fig:test0-data-0,test0-D-0,test0-data-1,test0-D-1,test0-data-2,test0-D-2}, related to multipole source $f(\mathbf x, t) =  w(t) D^{\mathbf s}\delta(\mathbf x - \mathbf x^*)$ in a 2D homogeneous unbounded acoustic medium for $\mathbf s = (0,0), (0,1), (0,2)$.
+Multipole coefficient $w(t)$ was a 10Hz Ricker wavelet, see figure \ref{fig:test0-MPS,test0-MPS-spec}. 
+Source location is given by $\mathbf x^* = (-1km,1km)$, and pressure fields are measured at $\mathbf x = (-0.8km,0.8km)$. 
+Plots show almost identical waveforms when comparing pressure fields to fractional derivatives of multipole coefficient $w$, modulo a scaling factor.
+
+%%%%%
+\subsection{FWI Formulation}
+
+We now state multipole source inversion as a linear LS problem, and introduce some basic notation.
+We first group multipole coefficients to form the {\em multipole coefficient vector} $\mathbf w$,
+\[
+	\mathbf w(t) = \{w_j(t) : j=1,...,M\},
+\]
+which has a natural vector space structure if we endow such vectors with the following obvious definition of linear combinations: for two multipole coefficient vectors $\mathbf w^1$ and $\mathbf w^2$, and scalars $a_1,a_2$,
+\[
+	a_1\mathbf w^1(t) + a_2 \mathbf w^2(t) = \{a_1w^{1}_j(t) + a_2 w^{2}_j(t) : j=1,...,M\}.
+\]
+The space of multipole coefficient vectors, $\mathfrak W$, is referred to as the {\em multipole source (MPS) space}.
+Note that we regard source position $\mathbf x^*$ and multipole basis (i.e., multi-indexes $\mathbf s_j$) as attributes of an MPS space.
+
+Similarly, we group pressure field traces sampled at receiver points $\{\mathbf x_i : i=1,2,...,N\}$ to form the {\em data vector} $\mathbf d$,
+\[
+	\mathbf d = \{ p(\mathbf x_i,t) : t\in[0,T], i=1,...,N\}.
+\]
+We let $\mathfrak D$ denote the space of data vectors, or simply the {\em data space}.
+Furthermore, we define a natural $L^2$ inner-product for MPS and data spaces as follows,
+\begin{equation}\label{eq:Wprod}
+	\langle \mathbf w^1,\mathbf w^2 \rangle_{\mathfrak W} := \sum_{j=1}^M \int_{0}^T w^1_j(t) w^2_j(t) \;dt,
+\end{equation}
+\begin{equation}\label{eq:Dprod}
+	\langle \mathbf d^1,\mathbf d^2 \rangle_{\mathfrak D} := \sum_{i=1}^N \int_{0}^T p^1(\mathbf x_i,t) p^2(\mathbf x_i,t) \; dt.
+\end{equation}
+
+
+Define the \emph{forward map} as an operator $F:\mathfrak M\times \mathfrak W \to \mathfrak D$ from medium-source parameter space $\mathfrak M\times \mathfrak W$ to data space $\mathfrak D$.
+In other words,
+\[
+	F(\mathbf m,\mathbf w) = \mathbf d
+\]
+where $\mathbf m\in\mathfrak M$ denotes medium parameters (possibly $(\beta, \kappa)$ or other parameterizations).
+It was shown in the previous subsection that the forward map is linear with respect to source parameters.
+Linearity of $F$ with respect to source parameters will be emphasized for convenience by the following notation,
+\[
+	F(\mathbf m,\mathbf w) \equiv \mathbf F \mathbf w,
+\]
+where $\mathbf F:\mathfrak W\to\mathfrak D$ has a tacit dependence on $\mathbf m$.
+We can go a step further and give a more explicit form of $\mathbf F$ using the multichannel representation in theorem \ref{thm:MPSsol}.
+In particular, we can view $\mathbf F$ as an $N\times M$ matrix of linear operators,
+\[
+	\mathbf F = \mat{  F_{11} & \cdots &  F_{1M}\\
+				   \vdots & \ddots & \vdots \\
+				    F_{N1} & \cdots &  F_{NM} }
+\]
+ where 
+\[
+	\mathbf (F_{ij} w_j)(t) = g_j(x_i,t)*w_j(t).
+\]
+
+The multipole source FWI problem consists of finding $\mathbf w^*$ that minimizes the error between observed and predicted data in a LS sense:
+\begin{equation}\label{eq:FWI}
+	\mathbf w^* = \underset{\mathbf w\in\mathfrak W}{\text{argmin}} \; \| \mathbf F \mathbf w - \mathbf d_{obs}\|^2_{\mathfrak D},
+\end{equation}
+where $\|\cdot\|_{\mathfrak D}$ is the norm induced by the data space inner product defined in equation \ref{eq:Dprod}.
+Solution to minimization problem \ref{eq:FWI} is given by the solution to the normal equations
+\begin{equation}\label{eq:NEQ}
+	\mathbf F^T \mathbf F \mathbf w^* = \mathbf F^T \mathbf d_{obs},
+\end{equation}
+$\mathbf F^T$ denoting the adjoint of $\mathbf F$ with respect to source parameter and data spaces and their respective inner products.
+
+We also consider the regularized linear inverse problem, as done in \cite{Koch:91}:
+\begin{equation}\label{eq:FWIreg}
+	\mathbf w^*_{\lambda} = \underset{\mathbf w\in\mathfrak W}{\text{argmin}} \; \| \mathbf F \mathbf w - \mathbf d_{\rm obs}\|^2_{\mathfrak D} + \lambda \| \mathbf w\|^2_{\mathfrak W},
+\end{equation}
+equivalent to solving the modifyed the normal equations to
+\begin{equation}\label{eq:RegNEQ}
+	\Big( \mathbf F^T \mathbf F + \lambda\mathbf I\Big) \mathbf w^*_{\lambda} = \mathbf F^T \mathbf d_{\rm obs},
+\end{equation}
+where $\lambda$ is the damping constant, also referred to as the regularization parameter.
+
+
+%%%%
+\subsection{1D Analytical Case}
+
+Consider the 1D case, with multipole source
+\begin{equation}\label{eq:1Ddipole}
+	f(x,t) = w_1(t)\delta(x) + w_2(t) \frac{d}{dx}\delta(x).
+\end{equation}
+To simplify the analysis, we assume the medium is homogenous and unbounded and pose the inversion in the frequency domain.
+Applying the Plancherel theorem results in the following equivalent LS problem: find $\bhat{w}^*$ such that
+\[
+	\bhat{w}^* = \underset{\bhat{w}}{\rm argmin} \| \bhat{F}\bhat{w} - \bhat{d}_{\rm obs}\|^2_{\mathfrak D}
+\]
+where $\hat w_j(\omega)$ denotes the Fourier transform of $w_j(t)$,
+\[
+	\hat w_j(\omega) = \int_{\mathbb R} w_j(t) e^{-2\pi i t \omega} \; dt
+\]
+and similarly for other functions.
+It follows from the convolution theorem that the forward map in the frequency domain, $\bhat{F}$, consists of simply matrix multiplication, point-wise in frequency.
+In particular,
+\[
+	\bhat F = \mat{ \hat g_1(x_1,\omega) & \cdots & \hat g_M(x_1,\omega) \\
+			        \vdots & \ddots & \vdots \\
+			        \hat g_1(x_N,\omega) & \cdots & \hat g_M(x_N,\omega) }.
+\]
+One still has to solve a system of normal equations, analogous to that of \ref{eq:NEQ}, though point-wise in frequency:
+\[
+	\bhat{F}^H\bhat{F} \bhat w^* = \bhat{F}^H \bhat{d}_{\rm obs}
+\]
+where $\bhat{F}^H$ denotes the conjugate transpose of $\bhat{F}$.
+
+
+For dipole source \ref{eq:1Ddipole}, we have $M=2$ and
+\[
+	g_1(x,t) = \frac{1}{2c} \delta(t-\tfrac{|x|}{c}),
+\]
+\[
+	g_2(x,t) = \frac{1}{2c^2}\delta'(t-\tfrac{|x|}{c})\rm{sgn}(x),
+\]
+in accordance to theorem \ref{thm:MPSsol}.
+Thus,
+\[
+	\bhat{F} = \frac{1}{2c} \mat{ {\phi}(\omega), &
+						     -\frac{2\pi i}{c} \omega \psi(\omega)}
+\]
+with
+\[
+	\phi(\omega) = \mat{{\rm exp}(-2\pi i \tfrac{|x_1|}{c}\omega)\\
+					\vdots \\
+					{\rm exp}(-2\pi i \tfrac{|x_N|}{c}\omega)}
+\]
+and 
+\[
+	\psi(\omega) = \mat{ {\rm exp}(-2\pi i \tfrac{|x_1|}{c}\omega) \; {\rm sgn}(x_1) \\
+					\vdots\\
+					{\rm exp}(-2\pi i \tfrac{|x_N|}{c}\omega) \; {\rm sgn}(x_N)}
+\]
+Moreover, the normal operator $\bhat{F}^H\bhat{F}$ is given by
+\begin{equation*}
+\begin{split}
+	\bhat{F}^H\bhat{F} 
+	&= 
+		\frac{1}{4c^2}\mat{ \phi(\omega)^H \phi(\omega) & 
+		\frac{2\pi i}{c}w \phi(\omega)^T \psi(\omega) \\
+		-\frac{2\pi i}{c} \omega \psi(\omega)^H \phi(\omega) &
+		\frac{4\pi^2}{c^2} \omega^2 \psi(\omega)^H\psi(\omega) }\\
+	&=
+		\frac{1}{4c^2}\mat{N & \frac{2\pi i}{c}\omega \sum_{i=1}^N {\rm sgn}(x_i) \\
+		-\frac{2\pi i}{c}\omega \sum_{i=1}^N {\rm sgn}(x_i) & \frac{4\pi^2}{c^2} w^2 N}.
+\end{split}
+\end{equation*}
+
+Consider the case where all of the receiver points $\{x_i\}_{i=1}^N$ lie either to the right or left of the source, resulting in $\sum_{i=1}^N {\rm sgn}(x_i) = N$ or  $-N$ respectively.
+For this case, we have that $\bhat{F}^H\bhat{F}(\omega) \in \mathbb C^{2\times 2}$ is rank one and thus singular.
+In other words, such data coverage fails to capture any of the anisotropy, making the monopole term (isotropic source term) indistinguishable from the dipole term.
+This placement of receiver points $\{x_i\}_{i=1}^N$ constitutes the worst case scenario resulting in ill-posed inverse problem.
+The optimal data coverage scenario consists of having half of receiver points on the left and right of the source.
+Assuming we have an even number of receiver points, this leads to $\sum_{i=1}^N {\rm sgn}(x_i) = 0$, and
+\[
+	\bhat{F}^H\bhat{F} = \frac{1}{4c^2}\mat{ N & 0 \\
+		0 & \frac{4\pi^2}{c^2} \omega^2 N}.
+\]
+Normal operator $\bhat{F}^H\bhat{F}$ is clearly invertible in the case of optimal data coverage, though with a condition number that is quadratic in wavelength, i.e., 
+\begin{equation}\label{eq:cond1}
+	\kappa(\bhat{F}^H\bhat{F}) = \mathcal O(\tfrac{\omega^2}{c^2}) = \mathcal O(\lambda^{-2}).
+\end{equation}
+
+Given our discussion of analytical solutions of the wave equation with multipole sources, we can extrapolate result \ref{eq:cond1} for source with higher order multipoles. 
+Suppose source term $f$ contains a monopole term and that the highest order multipole is of order $M^*$, then we have that $\kappa(\bhat{F}^H\bhat{F}) = \mathcal O(\lambda^{-2M^*})$.
+This result follows from observing that every extra derivative on the spatial delta function in the multipole source incurs a factor of $\omega/c$ in the Fourier transform of the kernel $\hat g_j$.
+Moreover, given that the Fourier transform is a unitary operator, we can conclude that the original forward map in the time domain, $\mathbf F$, has condition number $\mathcal O(\lambda_{\rm min}^{M^*})$, where $\lambda_{\rm min}$ is the smallest wavelength, assuming that observed data is bounded in the frequency domain. 
+
+Clearly, data coverage has a direct impact on the well-posedness and conditioning of the inverse problem.
+However, the analysis above reveals that multipole source inversion is inherently, and potentially, highly ill-conditioned.
+This ill-conditioning stems from the singular nature of the multipole source terms, which translate into a pressure field response as derivatives of the input waveform $\mathbf w(t)$.
+
+
+\newpage
+
+%%%%%
+\subsection{Preconditioner}
+
+%Solution to normal equations \ref{eq:NEQ}, in the context of moment tensor inversion, has been shown to suffer from numerical instability stemming from $\mathbf F$ having a large condition number. 
+%Most attempts at regularization have aimed to improve the condition number by optimizing data coverage, as well as constraining or oversimplifying the source representation; see \cite{Eaton:10} and \cite{Song:11} for examples of moment tensor inversions from microseismic data.
+%\cite{Koch:91} applies a more general approach to improving the condition number, namely by introducing a damping term in the underlying linear LS problem (i.e., Tikhonov regularization), thus modifying the normal equations to
+%\begin{equation}\label{eq:RegNEQ}
+%	\Big( \mathbf F^T \mathbf F + \lambda\mathbf I\Big) \mathbf w = \mathbf F^T \mathbf d_{\rm obs},
+%\end{equation}
+%where $\lambda$ is the damping constant also referred to as the regularization parameter.
+%Their numerical results indeed demonstrate the benefits of this method, especially in cases where data acquisition geometry results in known ill-conditioning.
+%Furthermore, \cite{Koch:91} illustrated robustness of their results against errors in time lag, model parameters (i.e., velocity model), and extended sources (non-point sources).
+%It is worth highlighting that $\lambda$ is chosen in a trial by error manner given information about the singular value decomposition of $\mathbf F$ which could be impractical for larger problems.
+
+The approach developed here seeks to better condition the multipole source inversion by redefining the domain space $\mathfrak W$ to yield a better bounded operator $\mathbf F$, hence improving the condition number associated with solving the normal equations.
+We redefine $\mathfrak W$ by replacing its native inner-product $\langle\cdot,\cdot\rangle_{\mathfrak W}$ by a weighted one denoted by $\langle\cdot,\cdot\rangle_{\mathfrak W'}$,
+\[
+	\langle \mathbf w^1, \mathbf w^2 \rangle_{\mathfrak W'} := \langle \mathbf Q\mathbf w^1, \mathbf Q \mathbf w^2 \rangle_{\mathfrak W} \equiv \langle \mathbf w^1, \mathbf Q^T\mathbf Q \mathbf w^2 \rangle_{\mathfrak W}.
+\] 
+Weight operator $\mathbf Q$ will consists of a diagonal operator with respect to multipole coefficients, i.e.,
+\[
+	\mathbf Q \mathbf w = \text{diag}(Q_1 w_1, \cdots, Q_M w_M)
+\]
+for some linear operators $Q_j$.
+Note that we can express the adjoint of $\mathbf F$ with respect to our weighted inner-product $\langle\cdot,\cdot\rangle_{\mathfrak W'}$ in terms of $\mathbf F^T$, namely
+\[
+	\mathbf F^T \to (\mathbf Q^T\mathbf Q)^{-1} \mathbf F^T.
+\]
+The LS problem with respect to our new inner-product results in the following modified normal equations,
+\begin{equation}\label{eq:PNEQ}
+	\mathbf M\mathbf F^T\mathbf F \mathbf w = \mathbf M\mathbf F^T \mathbf d_{\rm obs},
+\end{equation}
+where we have effectively (left) preconditioned by $\mathbf M = (\mathbf Q^T\mathbf Q)^{-1}$.
+Implementation wise, we take the preconditioning approach instead of actually weighting the MPS space inner product.
+
+The effectiveness of our preconditioner hinges on a proper choice of $Q_j$: a linear operator that is numerically stable, has an inverse we can readily implement, and most importantly better-conditions our normal equations.
+Based on our discussion of analytical solutions to the wave equation we choose $Q_j$ in general to be a temporal integro-differential operator, more precisely a fractional derivative/integral, scaled by wave speed $c=\sqrt{\beta\kappa}$,
+\[
+	Q_j = \frac{1}{c^{|\mathbf s_j|}} \left( \frac{d}{d t} \right)^{\alpha_j}, \quad \text{with} \quad \alpha_j = \gamma + |\mathbf s_j| \in\mathbb R.
+\]
+The value of $\gamma$ is potentially non-integer and dependent on the spatial dimension and the choice of PDE modeling our wave phenomenology.
+
+As an example, for multipole source term of the form
+\[
+	f(\mathbf x,t) = w_1(t) \delta(\mathbf x-\mathbf x^*) + 
+			w_2(t) \frac{\partial}{\partial x_1}\delta(\mathbf x-\mathbf x^*) +
+			w_3(t) \frac{\partial}{\partial x_2}\delta(\mathbf x-\mathbf x^*).
+\]
+in the first-order acoustic equations \ref{eq:acous1}, then we take $\gamma=1/2$ and
+\[
+        Q_1 = \left(\frac{d}{dt}\right)^{1/2}, \quad 
+        Q_2 = Q_3 = \frac{1}{c} \left(\frac{d}{d t}\right)^{3/2}.       
+\]
+The inverse of fractional derivatives, which will be needed for our proposed preconditioner, will coincide with fractional integrals.
+Our numerical approach and implementation of fractional derivative/integral operators is discussed in the appendix.
+
+
+%%%%
+\section{Numerical Experiments}
+
+In this section we present some source inversion results illustrating the better-conditioning of normal equations \ref{eq:NEQ} when using our preconditioning scheme.
+We solve system \ref{eq:NEQ} iteratively via conjugate gradient for normal equations (CGNE/CGLS), both without and with preconditioner 
+\[
+	\mathbf M = (\mathbf Q^T\mathbf Q)^{-1}.
+\]
+See \cite{Paige:82} for a description of the CGLS algorithm and \cite{NocedalWright} for the preconditioned variant which we refer to as PCGLS.
+Previous work on moment tensor inversion exclusively use direct solvers given the manageable size of the underlying linear systems.
+Direct solvers are indeed the tools to use when the problem is posed in the frequency domain or when simplifying assumptions on the source lead to tractable linear systems.
+The size of system \ref{eq:NEQ} we expect to solve for problems related to exploration seismology, as oppose to earthquake seismology, is quite large due to the number of receivers typical in these applications, thus we are motivated in our use of iterative solvers.
+
+The multipole source representation and inversion framework has been implemented as part of the \emph{IWave} and the \emph{Rice Vector Library} (RVL) packages; see \cite{GeoPros:11} and \cite{RVL_TOMS} for more information on the related software.%, and in particular \cite{MPSframework} detailing our implementation.
+The underlying PDE solver for acoustic system \ref{eq:acous1} used here, via IWave, is a staggered-grid \emph{finite difference} (FD) method of second-order in time and fourth-order in space, also referred to as the 2-4 scheme, based on \cite{mad:dyn} for elasticity.
+
+The action of linear operator $\mathbf F$, as alluded to before, is implemented as a multichannel convolution of multipole coefficients $\{w_j(t):j=1,2,...\}$ with appropriate Green's functions, thus avoiding further PDE solves during CG iterations.
+It is worth mentioning that special care is taken when computing Green's functions since one would have to solve acoustic system \ref{eq:acous1} with impulsive multipole source terms, i.e., 
+\[
+ 	f(\mathbf x,t) = \delta(t) D^{\mathbf s}\delta(\mathbf x-\mathbf x^*).
+\]
+We take the approach developed by \cite{Walden:1999} for discretizing singular terms $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$, namely replacing such singularities with regular functions of compact support that satisfy vanishing discrete moment conditions.
+Such discretizations of singular source terms have been shown to be accurate by preserving convergence rates of FD solvers; for example see \cite{Walden:1999} and \cite{Petersson:2010} for numerical results related to 1D Helmholtz and 2D elastic wave equation respectively.
+We reference some of our previous work on singular source approximations \cite{MPStheory} for more details on the methodology applied here.
+
+%%%%%%%%%%
+\subsection{Test 1}
+
+The first three tests we present involve estimating some simple multipole sources in a homogeneous medium with ``unbounded'' domain simulated using \emph{perfectly matched layers} (PMLs), as described by \cite{Habashy:07}.
+Figures \ref{fig:bmod-hom} and \ref{fig:buoy-hom} plot medium parameters, bulk modulus and buoyancy respectively, as functions of space discretized over a uniform grid with $20m\times 20m$ spacing.
+A single multipole source is positioned at $\mathbf x^*=(1.003km,1.003km)$, where components $x_1$ and $x_2$ refer to depth and horizontal axes respectively.
+Receivers points $\mathbf x_{i_r}$ are placed at depth $0.9km$, spanning the horizontal axis from $0km$ to $2km$ with a spacing of $20m$. 
+
+In test 1 we estimate multipole coefficient $\mathbf w = w_1(t)$ for monopole source
+\[
+	f(\mathbf x,t) = w_1(t) \delta(\mathbf x-\mathbf x^*).
+\]
+Observed data $\mathbf d_{\rm obs}^{\epsilon}$ is shown in figure \ref{fig:test1-data-p} with added Gaussian noise $\epsilon$, that is
+\[
+	\mathbf d_{\rm obs}^{\epsilon} = \mathbf d_{\rm obs} + \epsilon
+\]
+such that 
+\[
+	\frac{{\rm RMS}(\epsilon)}{{\rm RMS}(\mathbf d_{\rm obs})} = 20\%,
+\]
+as is be done in all other test cases.
+
+Figures \ref{fig:test1-CG-rnrm} and \ref{fig:test1-CG-gnrm} plot the log of the $L^2$-norm of the residual $\mathbf r^{(k)} = \mathbf F \mathbf w^{(k)} -\mathbf d_{\rm obs}^{\epsilon}$ and the normal residual $\mathbf g^{(k)} = \mathbf F^T \mathbf r^{(k)}$ versus CG iteration index $k$ respectively.
+For PCGLS the normal residual is actually given by $\mathbf g^{(k)} = \mathbf M \mathbf F^T\mathbf r^{(k)}$.
+The following CG stoping criterion is applied to all test cases: stop if either of the following three conditions are satisfied,
+\begin{itemize} 
+	\item reached maximum number of iterations, $k=150$;
+	\item sufficient reduction in residual, $\tfrac{\|\mathbf r^{(k)}\|_{\mathfrak D}}{\|\mathbf r^{(0)}\|_{\mathfrak D}} \le 1\times 10^{-4}$;
+	\item sufficient reduction in normal residual, $\tfrac{\|\mathbf g^{(k)}\|_{\mathfrak W}}{\|\mathbf g^{(0)}\|_{\mathfrak W}} \le 1\times 10^{-4}$.
+\end{itemize}
+Note that both CGLS and PCGLS terminate before the 150 iterations for test 1 since they both achieved a sufficient reduction in the normal residual. 
+Moreover, applying preconditioning accelerated convergence by almost 100 iterations.
+
+In figure \ref{fig:test1-err} we plot the log of the normalized inversion error, i.e.,
+\[
+	\log \frac{\|\mathbf w^{(k)}-\mathbf w_{\rm true}\|}{\|\mathbf w_{\rm true}\|}
+\]
+given that we have access to the true solution $\mathbf w_{\rm true}$.
+We report errors using the unweighted norm $\|\cdot\|_{\mathfrak W}$, and for PCGLS estimates we also display the weighted norm $\|\cdot\|_{\mathfrak W'}$ since it is accessible within the PCGLS algorithm.
+Inversion error plots demonstrate the semi-convergence behavior of CG when applied to ill-conditioned inverse problems with noisy data, namely that errors begin to increase as one keeps iterating.
+For the preconditioned case, we observe that the minimal error and the onslaught of increasing error occurs at earlier iterations.
+Stopping criteria that capitalize on the semi-convergence of Krylov space methods are thus crucial in the context of large-scale ill-conditioned inverse problems and are subject of current research.
+Given the intended focus of the paper, we postpone dealing with the issue of optimal stopping criteria and simply analyze inversion error plots such as figure \ref{fig:test1-err}.
+In the discussion section we will offer some suggestions based on standard techniques in the current literature.
+
+Looking at error plot \ref{fig:test1-err} we see that minimal error estimates are obtained at iterates 28 and 5 for the CGLS and PCGLS respectively.\footnote{PCGLS obtains its minimal error estimate at the same iterate in both the unweighted and weighted norms.}
+Figure \ref{fig:test1-MPS} plots the true multipole coefficient $\mathbf w_{\rm true}$ and the minimal error estimates for CGLS and PCGLS, both are qualitatively similar.  
+
+%%%%%%%%%
+\subsection{Test 2}
+
+In the second test case we invert for a dipole source,
+\[
+	f(\mathbf x,t) = w_1(t) \frac{\partial}{\partial x_2}\delta(\mathbf x-\mathbf x^*).
+\]
+Observed data $\mathbf d_{\rm obs}^{\epsilon}$ is shown in figure \ref{fig:test1-data-p} and the log of the $L^2$-norm of the residual and the normal residual plotted in figure \ref{fig:test2-CG-rnrm,test2-CG-gnrm}.
+For this case, only PCGLS converges before 150 iterations, again by sufficient normal residual reduction.
+Looking at the inversion error plots, figure \ref{fig:test2-err}, we see that PCGLS obtains a larger minimal error than CGLS, though after 5 iterations as oppose to 68 for CGLS.
+True multipole coefficient is plotted along with the minimal errors in figure \ref{fig:test2-MPS}.
+
+%%%%%%%%%%
+\subsection{Test 3}
+
+In test three we invert for a first-order multipole series of the form
+\begin{equation}\label{eq:test3MPS}
+	f(\mathbf x,t) = w_1(t) \delta(\mathbf x-\mathbf x^*) 
+		+ w_2(t) \frac{\partial}{\partial x_1}\delta(\mathbf x-\mathbf x^*)
+		+ w_3(t) \frac{\partial}{\partial x_2}\delta(\mathbf x-\mathbf x^*).
+\end{equation}
+Though neither CGLS or PCGLS converge in under 150 iteration we do observe that PCGLS achieves a greater reduction in both the residual and the normal residual, see figure \ref{fig:test3-CG-rnrm,test3-CG-gnrm}.
+PCGLS also produces marginally more accurate inversion compared to CGLS though under less iterations, i.e., 36 versus 150 iterations in reference to inversion error plots \ref{fig:test3-err}.
+Nonetheless, neither CGLS or PCGLS yield satisfactory multipole coefficients as shown by the minimal error plots in figure \ref{fig:test3-MPS-0,test3-MPS-1,test3-MPS-2}.
+
+In hopes of improving our inversion results we apply Tikhonov regularization, or equivalently introduce a damping term in the linear LS problem, that is system \ref{eq:RegNEQ}.
+We used a variant of CGLS for solving the regularized normal equations, discussed in algorithm 3 of \cite{Frommer:99}, which we refer to as CGLS+Reg.
+Similarly, we modify PCGLS to incorporate regularization yielding PCGLS+Reg.
+We avoid the difficulty associated with choosing regularization parameter $\lambda$ by simply choosing it in a trial and error manner as to yield the best of result, specifically smaller solution errors. 
+Again, in the discussion section we offer some recommendations and insight as to which current methodologies to apply for choosing $\lambda$.
+In this test case, $\lambda= 1e-10$ for both CGLS+Reg and PCGLS+Reg.
+
+Results for both CGLS+Reg and PCGLS+Reg are shown in figures \ref{fig:test3-CG-rnrm-reg,test3-CG-gnrm-reg}, \ref{fig:test3-err-reg}, and \ref{fig:test3-MPS-reg-0,test3-MPS-reg-1,test3-MPS-reg-2}.
+Inversion error plots demonstrate a significant improvement for PCGLS+Reg, where it is able to achieve a relative error below $10\%$.
+CGLS+Reg however demonstrated little reduction in its solution error.
+In fact, it was observed that CGLS+Reg was quite insensitive to regularization, producing similar results for $\lambda$ of varying magnitudes.
+This might be perhaps due to the fact that convergence of CGLS with or without regularization is quite sluggish.
+
+%FIX 
+
+%%%%%%%%%%
+\subsection{Test 4}
+
+A fourth test was conducted for a more complex data set, namely reflectivity data resulting from a dome model; see \ref{fig:bmod-dome} and \ref{fig:buoy-dome} for plots of medium parameters.
+The 2-4 staggered grid FD method was used with PML boundaries added at the $x_2=0km$, $x_2=4km$, and $x_1=2km$ edges of the medium while using the free surface condition at depth $x_1=0km$ to simulate marine seismic data.
+The source was located at $\mathbf x^*=(0.103km,1.003km)$, and a line of receivers was placed at a depth of $8m$ spanning the horizontal axis from $1.4km$ to $3.4km$ with a $20m$ separation between receivers.
+The same multipole source term as in test 3, equation \ref{eq:test3MPS}, is estimated in this final test.
+
+Inversion error plots \ref{fig:test4-err} show a slow but steady decrease in error for CGLS.
+Conversely the behavior of PCGLS is rather erratic with inversion error significantly increasing after 20 iterations, despite PCGLS producing smaller residuals (figure \ref{fig:test4-CG-rnrm}).
+Interestingly enough, this is the first case where the behavior of the error in the unweighted and weighted norms vary drastically for PCGLS.
+Similar to test 3, Tikhonov regularization comes to the rescue demonstrating a significant improvement particularly for PCGLS+Reg.
+Optimal regularization parameter was found to be $\lambda=1e-10$ for both CGLS and PCGLS.
+
+%Table \ref{tab:summary} provides a quantitative summary of the estimated solutions, with minimal error, for all test cases.
+
+%%%
+\section{Discussions}
+
+Numerical results overall show an acceleration in the semi-convergence of CG iterates when our preconditioning scheme is used.
+As the complexity of the source representation increases, such as in the latter test cases, we observe increasingly slow convergence of CGLS and worse yet erratic behavior for PCGLS when analyzing inversion errors.
+The goal of preconditioning is to accelerate convergence of CG.
+According to standard CG convergence theory, acceleration is achieved if singular values of the preconditioned normal operator $\mathbf M\mathbf F^T\mathbf F$ are more clustered.
+An unintended consequence with regards to the semi-convergence properties of CG is that this spectral clustering in the preconditioned system may introduce components related to the ill-conditioned part of the spectrum at earlier iterates.
+This is our theory for explaining why PCGLS produces poor results for tests 3 and 4.
+Adding, however, Tikhonov regularization seems to alleviated these spectral issues as demonstrated by PCGLS+Reg solutions.
+%insensitivity of CGLS to regularization?
+
+Of course, in order to take advantage of CG semi-convergence and Tikhonov regularization requires one to have optimal stopping criteria and a method for choosing the regularization parameter.
+Consider first the CGLS algorithm.
+It is well known that the residual monotonically decreases with iteration index while the norm of the solution monotonically increases\footnote{If a zero initial guess is used.} under exact arithmetic.
+In other words, an early termination of CGLS effectively provides Tikhonov regularization where the terminating iteration count plays the role of regularization parameter.
+The L-curve method consists of plotting the residual and solution norm at varying regularization parameter values yielding a characteristic L shaped curve, and selecting the regularization parameter closes to the corner of the L. 
+The idea behind the L-curve criterion is that the corner point produces a regularized solution that is a balance between overfitting (smaller residual and larger solution norm) and over-regularizing (smaller solution norm and larger residual).
+Given that the residual and solution norm are rather accessible during CGLS solution update makes the L-curve stopping criterion an attractive choice;
+we refer to \cite{Hansen:05}, chapter 6 and 7 for a full discussion of the L-curve and its application as a stopping criteria for CGLS. 
+
+In the case of PCGLS, with preconditioner of the form $\mathbf M = (\mathbf Q^T\mathbf Q)^{-1}$, it turns out we can relate this algorithm to CGLS via the following standard form transformation, $\tilde{\mathbf w}\leftarrow \mathbf Q \mathbf w$.
+Thus we have
+\[
+	\min_{\mathbf w} \|\mathbf F \mathbf w -\mathbf d \| 
+	= \min_{\tilde{\mathbf w}}\| \tilde{\mathbf F} \tilde{\mathbf w} -\mathbf d\|
+\]
+where $\tilde {\mathbf F} = \mathbf F \mathbf Q^{-1}$.
+CGLS iterates of the transformed system can be written as polynomials involving the modified linear operator $\tilde{\mathbf F}$; in particular
+\begin{align*}
+	\tilde {\mathbf w}^{(k)} 
+		&= \mathcal P_k(\tilde{\mathbf F}^T \tilde{\mathbf F})\tilde{\mathbf F}^T \mathbf d \\
+		&= \mathcal P_k( (\mathbf Q^{-1})^T \mathbf F^T \mathbf F \mathbf Q^{-1} ) (\mathbf Q^{-1})^T \mathbf F^T \mathbf d
+\end{align*}
+where $\mathcal P_k(\cdot)$ is a polynomial of degree $k-1$ of its input argument.
+Furthermore,
+\[
+	\mathbf w^{(k)} = \mathcal P_k( (\mathbf Q^T\mathbf Q)^{-1} \mathbf F^T \mathbf F) (\mathbf Q^T\mathbf Q)^{-1} \mathbf F^T \mathbf d
+\]
+since $\mathbf Q^{-1} \tilde {\mathbf w}^{(k)} = \mathbf w^{(k)}$.
+Hence, PCGLS with preconditioner $\mathbf M = (\mathbf Q^T\mathbf Q)^{-1}$ is equivalent to CGLS under the transformation $\tilde{\mathbf w}\leftarrow \mathbf Q\mathbf w$ and $\tilde{\mathbf F}\leftarrow \mathbf F\mathbf Q^{-1}$.
+It follows that PCGLS produces iterates with monotonically increasing $\|\mathbf Q\mathbf w^{(k)}\|$ which implies that one should monitor the weighted norm of the solution when applying the L-curve stopping criterion.
+Note that this would be a form of generalized Tikhonov regularization with Tikhonov operator $\mathbf Q$.
+
+It is clear from our results that regularization is pivotal, especially for PCGLS in the context of complex sources.
+Choosing an optimal regularization parameter $\lambda$ for the regularized normal equations \ref{eq:RegNEQ}, particularly in a manner that is computationally tractable for iterative methods, is also of fundamental importance.% for both the theory of linear ill-posed inverse problems and our particular application. 
+A naive implementation of the L-curve criterion for determining an optimal $\lambda$ would entail fully solving system \ref{eq:RegNEQ} for several values of $\lambda$, usually to the order of $O(10)$ times.
+Alternatively, there have been variants of the L-curve method for determining optimal $\lambda$ that have been tailored to CG to reduce computational cost.
+One such method is the {\em envelope guided} CG algorithm developed by \cite{Kaufman:96} initially for PET image reconstruction.
+The method is based on theoretical properties of the L-curve, mainly that its envelope contains all points $(\|\mathbf r\|^2,\|\mathbf w\|^2)$ for all $\mathbf w$.
+This is used to guide CG iterates towards the L-curve corner as $\lambda$ is refined according to some updating scheme.
+A drawback of this method is that it requires one to store several iterates as potential solutions, similar to the naive implementation of the L-curve.
+
+\cite{Frommer:99} offer two other algorithms for determining regularization parameter $\lambda$ in the context of CG.
+Their first method is referred to as a {\em truncated CG} algorithm that, for a current value of $\lambda$, terminates early from CGLS if their theoretical lower bound based on the discrepancy principle is violated.
+Regularization parameter is refined in this process until the discrepancy principle is satisfied.
+The second method is dubbed the {\em shifted CG} method and utilizes a Lanczos process to compute CG iterates for several $\lambda$ values simultaneously.
+This results in less $\mathbf F\mathbf w$ and $\mathbf F^T\mathbf y$ computations overall but requires one to store $O(k_{\rm max})$ more vectors, where $k_{\rm max}$ is the number of different $\lambda$ values being tested.
+It should be mentioned that the shifted CG method also relies on the discrepancy principle, like the truncated CG algorithm, and thus require knowledge of the noise in the data.
+
+ 
+
+
+
+%using L-curve criterion for stopping criteria of CGLS, 
+%monitor ||x|| and ||r|| when there is no preconditioning
+%monitor ||Qx|| and ||r|| when there is preconditioning
+%Properties of CG, monotonically increasing ||x|| and ||Qx|| resp
+%Equivalency of preconditioning and Tikhonov reg standard form transformation
+%Preconditioning CGLS is more sensitive to null space issues, early CG termination is not sufficient to reg problem
+
+%choosing regularization parameter  for damped LS: 
+
+%extension of preconditioner to elasticity
+
+
+%We have demonstrated better-conditioning of multipole inversions when preconditioning, in the context of CGLS as our iterative solver for the source estimation problem.
+%Our preconditioning approach is based on fundamentally improving condition number of normal equations by redefining the domain inner-product of linear operator $\mathbf F$, thus resulting in a preconditioned normal equations; see equation \ref{eq:PNEQ}.
+%We thus argue that our methodology for better-conditioning the multipole estimation, or equivalently the moment tensor, problem via FWI can be applied in general regardless of the choice of solver for the normal equation.
+%Moreover, regularization techniques such as optimized data coverage and dampening of the normal equations as suggested by \cite{Koch:91} can and should be applied conjunctly to further improve condition number of system \ref{eq:PNEQ}.
+%
+
+%%%
+\section{Conclusion}
+In this paper we have presented a framework for inverting seismic sources as series of multipoles.
+The source estimation problem reduces to solving normal equations for multipole coefficients, reminiscent of moment tensor components in earthquake seismology.
+Our main contribution has been to introduce a preconditioner when solving the aforementioned normal equations via conjugate gradient.
+This preconditioner is based on fractional derivative/integral operators whose order is based semi-heuristically on the analytical solutions of the acoustic wave equation in unbounded media with multipole source terms.
+Numerical experiments conducted show the acceleration of CG iterates and accuracy of estimated sources when using preconditioning and in conjunction with Tikhonov regularization for more complicated inversions.
+%Our approach for better-conditioning the source inversion problem for seismic sources represented as multipoles is fundamental  and necessary, especially for complex sources, and should be applied along with other regularization techniques.
+
+
+
+
+\newpage
+
+
+%%%%%%%%%%%%%%%%%%%
+\section{Appendix}
+%%%%%%%%%%%%%%%%%%%
+
+%%%%%%
+\subsection{Analytical Solutions to the Wave Equation with Multipole Sources}
+
+We first focus our attention to the second order wave equation, in particular
+\begin{equation}\label{eq:2DWE}
+        \left( \frac{\partial}{\partial t^2} - c^2 \nabla^2 \right) p(\mathbf x,t) = \tilde f(\mathbf x,t),
+\end{equation}
+with multipole source spatially centered at the origin,
+\[
+	\tilde f(\mathbf x,t) = \sum_{i} \tilde w_i D^{\mathbf s_i} \delta(\mathbf x).
+\]
+
+
+we relate equations \ref{eq:2Dansol0} and \ref{eq:2Dansol1} to analytical solutions for the acoustic equations in first order form by noting that $\tilde f = \tfrac{\partial}{\partial t}f$.
+
+
+
+
+
+\subsection{Deriving Analytical Solutions for 2D}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We focus our attention to the 2D case, since the 1D and 3D cases lead to simpler derivations.
+Consider the wave equation in an unbounded homogenous medium for pressure field $p$, with homogenous initial conditions and causal source term $\tilde f$ spatially centered at the origin,
+\begin{equation}\label{eq:2DWE}
+        \left( \frac{\partial}{\partial t^2} - c^2 \nabla^2 \right) p(\mathbf x,t) = \tilde f(\mathbf x,t),
+\end{equation}
+where $c$ is the speed of sound in the medium.
+An analytical solution to equation \ref{eq:2DWE} is given by convolving source term $\tilde f$ in time and space with the 2D Green's function $G$,
+\[
+        G(\mathbf x,t) = \frac{1}{2\pi c} \frac{H(t-\tfrac{|\mathbf x|}{c})}{\sqrt{c^2t^2 - |\mathbf x|^2}},
+\] 
+where $H$ denoting the Heaviside function.
+In the special case where $\tilde f$ is a point source, e.g., $\tilde f(\mathbf x,t) = \tilde w(t) \delta(\mathbf x)$, we obtain an expression for the pressure field in terms of a temporal deconvolution,
+\[
+        p(\mathbf x,t) = \int_{\mathbb R} g(\mathbf x,s) \tilde w(t-s) \; ds
+\]
+with Green's function
+\[
+        g(\mathbf x,t) = \frac{1}{2\pi c} \frac{H(t-\tfrac{|\mathbf x|}{c})}{\sqrt{c^2t^2-|\mathbf x|^2}} 
+\]
+Applying a change of variables simplifies the expression above and eliminates the singularity in the resulting integral for the pressure field;
+take $\sigma = \sqrt{s-\tfrac{|\mathbf x|}{c}}$, then the resulting integral takes the form
+\begin{equation}\label{eq:2Dansol0}
+        p(\mathbf x,t) = \frac{1}{\pi c^2} \int_{0}^{\sqrt{\tau}} \tilde w(\tau-\sigma^2) \Omega(\mathbf x,\sigma) \; d\sigma
+\end{equation}
+where we have introduced the variable $\tau$ and function $\Omega(\mathbf x,\sigma)$ in order to clean up our expressions;
+\[
+        \tau = t - \frac{|\mathbf x|}{c}, \quad \text{and} \quad \Omega(\mathbf x,\sigma) = \frac{1}{\sqrt{\sigma^2 + 2 \frac{|\mathbf x|}{c}}}.
+\]
+
+Analytical solutions to the wave equation with multipole sources can be derived by appropriately differentiating the pressure field from equation \ref{eq:2Dansol0}.
+For example, if $p_{\mathbf s}$ denotes the solution to the wave equation with $\tilde f(\mathbf x,t) = \tilde w(t) D^{\mathbf s} \delta(\mathbf x)$ for some multi-index $\mathbf s$, then it can be shown that $D^{\mathbf s}_{\mathbf x} p(\mathbf x,t) = p_{\mathbf s}(\mathbf x,t)$, where $D^{\mathbf s}_{\mathbf x}$ is the $\mathbf s$-mixed partial derivative with respect to $\mathbf x$.
+We give expressions for the case $|\mathbf s|=1$ here, i.e., $D^{\mathbf s} = \tfrac{\partial}{\partial x_i}$. 
+
+In order to differentiate equation \ref{eq:2Dansol0} with respect to $x_i$ we must invoke Leibniz rule: Let 
+\[ 
+   \phi(\mathbf x,t,\sigma) = \tilde w(\tau -\sigma^2)\Omega(\mathbf x,\sigma).
+\]
+and note that $\phi$ has continuous partial derivatives in $\sigma$ for $|\mathbf x|\neq 0$.
+Then
+\[
+        \frac{\partial}{\partial x_i} \left( \int_{0}^{b(\mathbf x,t)} \phi(\mathbf x,t,\sigma) \; d\sigma \right) = 
+        \phi(\mathbf x,t,b(\mathbf x,t)) \cdot \frac{\partial b}{\partial x_i}(\mathbf x,t) +
+        \int_{0}^{b(\mathbf x,t)} \frac{\partial}{\partial x_i} \phi(\mathbf x,t,\sigma) \; d\sigma,
+\]
+where we have taken $b(\mathbf x,t) = \sqrt{\tau}$.
+Computing partial derivatives,
+\begin{align*}
+        \frac{\partial}{\partial x_i} b(\mathbf x,t) = -\frac{1}{2c}\frac{\gamma_i}{\sqrt{\tau}} 
+        \quad \text{with} \quad \gamma_i=\frac{\partial}{\partial x_i}|\mathbf x| = \tfrac{x_i}{|\mathbf x|}. 
+\end{align*}
+Thus,
+\begin{align*}
+        \phi(\mathbf x,t,b(\mathbf x,t)) \cdot \frac{\partial b}{\partial x_i}(\mathbf x,t) 
+                     &= \frac{\tilde w(\tau-\tau)}{ \sqrt{\tau + 2\tfrac{|\mathbf x|}{c}} } \cdot  
+                        \left( -\frac{1}{2c} \frac{\gamma_i}{\sqrt{\tau}} \right) \\
+                               &= -\frac{\gamma_i}{2c} \frac{\tilde w(0)}{\sqrt{ t^2 - \tfrac{|\mathbf x|^2}{c^2} }}\\
+                                  &= 0,
+\end{align*}
+assuming $\tilde w$ is causal, that is $\tilde w(t)=0$ for $t\le 0$.
+Furthermore, 
+\begin{align*}
+        \frac{\partial}{\partial x_i} \phi(\mathbf x,t,\sigma) &= 
+                                 \tilde w'(\tau-\sigma^2) \left( -\frac{\gamma_i}{c}\right) \Omega(\mathbf x,\sigma)
+                                                   + \tilde w(\tau-\sigma^2) \left(-\frac{1}{2}\right)  \Omega^3(\mathbf x,\sigma) \left( \frac{2\gamma_i}{c} \right) \\
+                                                     &= -\frac{\gamma_i}{c}  
+                                                        \Big\{ \tilde w'(\tau-\sigma^2) \Omega(\mathbf x,\sigma) + \tilde w(\tau-\sigma^2)\Omega^3(\mathbf x,\sigma) \Big\}.
+\end{align*}
+Putting it all together we have the pressure field produced by a point dipole pressure source, for $|\mathbf s| = 1$,
+\begin{align}\label{eq:2Dansol1}
+        \frac{\partial }{\partial x_i} p(\mathbf x,t) = p_{\mathbf s}(\mathbf x,t) = -\frac{\gamma_i}{\pi c^3}  \int_{0}^{\sqrt{\tau}} \; 
+                       \Big\{ \tilde w'(\tau-\sigma^2) \Omega(\mathbf x,\sigma)
+                                                + \tilde w(\tau-\sigma^2)\Omega^3(\mathbf x,\sigma) \Big\} \; d\sigma.
+\end{align}
+
+Lastly, we relate equations \ref{eq:2Dansol0} and \ref{eq:2Dansol1} to analytical solutions for the acoustic equations in first order form by noting that $\tilde f = \tfrac{\partial}{\partial t}f$.
+The table below summarizes these analytical solutions, including the cases for 1D and 3D. 
+The sign function is denoted by ${\rm sgn}(x)$.
+
+
+
+%%%%%
+\subsection{Fractional Derivative/Integral Operators}
+
+We will follow the Gr\"unwald-Letnikov definition of the left fractional derivative as a basis for a numerical implementation; see \cite{Li:15} for a detailed account of numerical methods for fractional calculus.
+The left fractional derivative of order $\alpha>0$, of a given function $w(t)$, $t\in(0,T)$, is defined as
+\begin{equation}\label{eq:DGL}
+	\mathcal{D}^{\alpha}_{GL} w(t) := \lim_{\underset{N\Delta t=t}{\Delta t\to0}} \Delta t^{-\alpha} \sum_{j=0}^{N} (-1)^{j} {\alpha \choose j} w(t-j\Delta t),
+\end{equation}
+where ${\alpha \choose j}$ is interpreted to be the generalized binomial coefficient for $\alpha\in\mathbb R$, i.e.,
+\[
+	{\alpha \choose j} = \frac{\Gamma(\alpha+1)}{\Gamma(\alpha-j+1) j!}.
+\]
+The discrete operator, which we will simply denote by $\mathcal D^\alpha$, is given by not taking the limit in equation \ref{eq:DGL}, thus yielding a finite-difference-like approach to computing fractional derivatives. 
+Suppose we discretize the time interval $(0,T)$ uniformly into $N_t$ segments, where $\Delta t = \tfrac{T}{N_t}$.
+The discrete fractional derivative of order $\alpha>0$, for $w$ at time $t=n\Delta t$, $\forall n=0,1,...,N_t$, is defined as
+\begin{equation}\label{eq:Derv}
+	\mathcal D^{\alpha} w(t) :=  \Delta t^{-\alpha} \sum_{j=0}^{N^*} (-1)^{j}  \frac{\Gamma(\alpha+1)}{\Gamma(\alpha-j+1) j!} w((n-j)\Delta t).
+\end{equation}
+where
+\[
+	N^* = \left\{\begin{array}{cl}
+		\text{min}(n,\alpha), &\alpha\in\mathbb N, \\
+		n, & \text{otherwise}.
+	\end{array}\right.
+\]
+%For $\alpha\in\mathbb N$, it follows that $D^{\alpha}$ is equivalent the discrete matrix $\mathbf D$ to the $\alpha$ power;
+%\[
+%	\mathbf D = \frac{1}{\Delta t} \mat{1 \\
+%				 -1 & 1 \\
+%				     & -1 & 1\\
+%				     &     & \ddots & \ddots \\
+%				     &     &      &      & -1 & 1}.
+%\]
+
+The discrete fractional integral of order $\alpha>0$ is derived by taking $\alpha \to -\alpha$ in equation \ref{eq:DGL}, and making sense out of the binomial coefficients.
+First lets expand the binomial coefficient for $\alpha\in\mathbb N$,
+\[
+	{\alpha \choose j} = \frac{\alpha(\alpha-1)\cdots(\alpha-j+1)}{j!}.
+\]
+Replacing $\alpha$ with $-\alpha$ gives
+\begin{subequations}
+\begin{align*}
+	{-\alpha \choose j} 
+		&= \frac{-\alpha(-\alpha-1)\cdots(-\alpha-j+1)}{j!}, \\
+		&= (-1)^{j} \frac{\alpha(\alpha+1)\cdots(\alpha+j-1)}{j!}, \\
+		&= (-1)^{j} \frac{(\alpha+j-1)!}{(\alpha-1)! j!}.
+\end{align*}
+\end{subequations}
+The discrete fractional inetgral of order $\alpha>0$, for $f$ at time $t=n\Delta t$, $\forall n=0,1,...,N_t$, is defined as
+\begin{equation}\label{eq:Inte} 
+	\mathcal D^{-\alpha} w(t) :=  \Delta t^{\alpha} \sum_{j=0}^{n}   \frac{\Gamma(\alpha+j)}{\Gamma(\alpha) j!} w((n-j)\Delta t).
+\end{equation}
+
+
+%PLOTTING FIGS
+
+\inputdir{project}
+
+\multiplot{2}{test0-MPS,test0-MPS-spec}{width=0.45\textwidth}{10Hz Ricker wavelet time series (a) and its frequency spectrum (b).}
+
+\multiplot{6}{test0-data-0,test0-D-0,test0-data-1,test0-D-1,test0-data-2,test0-D-2}{width=0.45\textwidth}{Output pressure field (left column) and fractional time derivatives of input waveform (right column). First, second, and third rows of plots correspond to $\mathbf s=(0,0)$, $\mathbf s=(0,1)$, and $\mathbf s=(0,2)$ cases respectively. Plots (b), (d), and (f) correspond to fractional derivatives of order 1/2, 3/2, and 5/2 respectively.}
+
+
+\multiplot{4}{bmod-hom,buoy-hom,bmod-dome,buoy-dome}{width=0.45\textwidth}{Medium parameters: constant bulk modulus (a) and buoyancy (b) for tests 1-3; dome bulk modulus (c) and buoyancy (d) for test 4.}
+
+\multiplot{4}{test1-data-p,test2-data-p,test3-data-p,test4-data-p}{width=0.45\textwidth}{Time traces of pressure field at receiver locations: (a) test 1, (b) test 2, (c) test 3, (d) test 4.}
+
+
+%TEST 1
+
+\multiplot{2}{test1-CG-rnrm,test1-CG-gnrm}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 1, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test1-err}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 1, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\plot{test1-MPS}{width=1\textwidth}{True (solid) and minimal errors of multipole coefficient for test 1; CGLS {\color{red}(dashed)} after 28 and PCGLS {\color{blue}(dotted)} after 5 iterations.}
+
+%\multiplot{2}{test1-Lcurve,test1-Lcurve-PC}{width=0.8\textwidth}{L-curves}
+
+
+%TEST 2
+
+\multiplot{2}{test2-CG-rnrm,test2-CG-gnrm}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 2, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test2-err}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 2, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\plot{test2-MPS}{width=1\textwidth}{True (solid) and minimal errors of multipole coefficient for test 2; CGLS {\color{red}(dashed)} after 68 and PCGLS {\color{blue}(dotted)} after 5 iterations.}
+
+
+%TEST 3
+
+\multiplot{2}{test3-CG-rnrm,test3-CG-gnrm}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 3, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test3-err}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 3, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\multiplot{3}{test3-MPS-0,test3-MPS-1,test3-MPS-2}{width=0.45\textwidth}{True (solid) and minimal errors of multipole coefficients for test 3; CGLS {\color{red}(dashed)} after 150 and PCGLS {\color{blue}(dotted)} after 36 iterations. Multipole component 1 (a), component 2 (b), and component (3).}
+
+\multiplot{2}{test3-CG-rnrm-reg,test3-CG-gnrm-reg}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 3 with regularization, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test3-err-reg}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 3 with regularization, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\multiplot{3}{test3-MPS-reg-0,test3-MPS-reg-1,test3-MPS-reg-2}{width=0.45\textwidth}{True (solid) and minimal errors of multipole coefficients for test 3 with regularization; CGLS {\color{red}(dashed)} after 150 and PCGLS {\color{blue}(dotted)} after 79 iterations. Multipole component 1 (a), component 2 (b), and component (3).}
+
+%No PC
+%mu=0       , min_err = 0.37466
+%mu=1e-15, min_err = 0.37543
+%mu=1e-14, min_err = 0.37436
+%mu=1e-13, min_err = 0.37528
+%mu=1e-12, min_err = 0.37446
+%mu=1e-11, min_err = 0.37452
+%mu=1e-10, min_err = 0.37581 ***
+%mu=1e-09, min_err = 0.38843
+%mu=1e-08, min_err = 0.51442
+
+%with PC
+%mu=0       , min_err = 0.32676  k=36
+%mu=1e-13, min_err = 0.30634  k=41
+%mu=1e-12, min_err = 0.20584  k=39
+%mu=1e-11, min_err = 0.10887  k=78
+%mu=1e-10, min_err = 0.07561  k=79 ***
+%mu=1e-09, min_err = 0.29535  k=125
+
+
+
+%TEST 4
+
+\multiplot{2}{test4-CG-rnrm,test4-CG-gnrm}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 4, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test4-err}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 4, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\multiplot{3}{test4-MPS-0,test4-MPS-1,test4-MPS-2}{width=0.45\textwidth}{True (black, solid) and errors of ``best'' estimated multipole coefficient for test 4; without {\color{red}(dashed)} and with {\color{blue}(dotted)} preconditioning after 150 and 150 CGLS iterations respectively.}
+
+\multiplot{2}{test4-CG-rnrm-reg,test4-CG-gnrm-reg}{width=0.6\textwidth}{Convergence plots of residual {\color{red}(a)} and normal residual {\color{blue}(b)} for test 4 with regularization, CGLS (dashed) and PCGLS (solid).}
+
+\plot{test4-err-reg}{width=1\textwidth}{Relative error of estimated multipole coefficient for test 4 with regularization, CGLS (dashed) and PCGLS (solid). Error measured in the $L^2$-norm $\|\cdot\|_{\mathfrak W}$ {\color{red}(red)} and the weighted norm $\|\cdot\|_{\mathfrak W'}$ {\color{blue}(blue)}.}
+
+\multiplot{3}{test4-MPS-reg-0,test4-MPS-reg-1,test4-MPS-reg-2}{width=0.45\textwidth}{True (solid) and minimal errors of multipole coefficients for test 4 with regularization; CGLS {\color{red}(dashed)} after 150 and PCGLS {\color{blue}(dotted)} after 150 iterations. Multipole component 1 (a), component 2 (b), and component (3).}
+
+%No PC
+%mu=0       , min_err = 0.47596
+%mu=1e-14, min_err = 0.47581
+%mu=1e-13, min_err = 0.47610
+%mu=1e-12, min_err = 0.47618
+%mu=1e-11, min_err = 0.47626 
+%mu=1e-10, min_err = 0.47749 ***
+%mu=1e-09, min_err = 0.48270
+%mu=1e-08, min_err = 0.53256
+
+%with PC
+%mu=0       , min_err = 0.73065  k=5
+%mu=1e-12, min_err = 0.50234  k=150
+%mu=1e-11, min_err = 0.30488  k=150
+%mu=5e-11, min_err = 0.19310  k=150
+%mu=8e-11, min_err = 0.15954  k=150
+%mu=1e-10, min_err = 0.14998  k=150 ***
+%mu=5e-10, min_err = 0.15316  k=149
+%mu=1e-09, min_err = 0.19811  k=150
+%mu=1e-08, min_err = 0.47450  k=150
+
+%TABLE
+%\begin{table}
+%\renewcommand{\arraystretch}{2}
+%	\footnotesize
+%	\centering
+%	\begin{tabular}{ c |c | c | c | c | c | c }
+%		test \# & 
+%		CG alg. &
+%		$\frac{\|\mathbf r^{(i)}\|}{\|\mathbf r^{(0)}\|}$ & 
+%		$\frac{\|\mathbf g^{(i)}\|}{\|\mathbf g^{(0)}\|}$ & 
+%		$\frac{\|\mathbf w^{(i)}-\mathbf w_{\rm true}\|_{\mathfrak W}}{\|\mathbf w_{\rm true}\|_{\mathfrak W}}$ & 
+%		$\frac{\|\mathbf w^{(i)}-\mathbf w_{\rm true}\|_{\mathfrak W'}}{\|\mathbf w_{\rm true}\|_{\mathfrak W'}}$ & 
+%		\# iter.\\ 
+%		\hline
+%		\multirow{2}{*}{1} &
+%			CGLS &	  
+%		  	$1.84\times 10^{-4}$ &
+%		  	$9.63\times 10^{-5}$ & 
+%			$9.77\times 10^{-4}$ &
+%			- &
+%			$33$ 
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $4$
+%		\\ \hline\hline
+%		\multirow{2}{*}{2} &
+%			CGLS &	  
+%		  	$1.84\times 10^{-4}$ &
+%		  	$9.63\times 10^{-5}$ & 
+%			$9.77\times 10^{-4}$ &
+%			- &
+%			$33$ 
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $4$
+%		\\ \hline\hline
+%		\multirow{4}{*}{3} &
+%			CGLS &	  
+%		  	$2.20e-01$ &
+%		  	$1.25e-02$ & 
+%			$9.77\times 10^{-4}$ &
+%			- &
+%			$33$ 
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $4$
+%		\\ \cline{2-7}&
+%			CGLS+Reg &
+%		  	$8.53\times 10^{-5}$ &
+%		  	$1.03\times 10^{-4}$ &
+%			$1.73\times 10^{-4}$ &
+%			- &
+%			$4$
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS+Reg &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $150$
+%		\\ \hline\hline
+%		\multirow{4}{*}{4} &
+%			CGLS &	  
+%		  	$2.20e-01$ &
+%		  	$1.25e-02$ & 
+%			$9.77\times 10^{-4}$ &
+%			- &
+%			$150$ 
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $150$
+%		\\ \cline{2-7}&
+%			CGLS+Reg &
+%		  	$8.53\times 10^{-5}$ &
+%		  	$1.03\times 10^{-4}$ &
+%			$1.73\times 10^{-4}$ &
+%			- &
+%			$150$
+%		\\ \cline{2-7}&
+%			\cellcolor{Gray} PCGLS+Reg &
+%		  	\cellcolor{Gray} $8.53\times 10^{-5}$ &
+%		  	\cellcolor{Gray} $1.03\times 10^{-4}$ &
+%			\cellcolor{Gray} $1.73\times 10^{-4}$ &
+%			\cellcolor{Gray} $8.22\times 10^{-5}$ &
+%			\cellcolor{Gray} $150$
+%		\\ \hline
+%	\end{tabular}
+%	\caption{Summary of results for single scalar MPS inversions with and without preconditioning, containing data residual reduction, gradient reduction, and errors in MPS coefficients with respect to $\|\cdot\|_{\mathfrak W}$ and $\|\cdot\|_{\mathfrak W'}$ norms.}
+%	\label{tab:summary}
+%\end{table}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+

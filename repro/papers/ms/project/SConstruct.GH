@@ -1,0 +1,293 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+
+######### fetch list - non-reproducible data fetched from web archive.
+# the format for this dictionary is 
+#    filename : [<subdir of "data" directory in archive>, <archive URL>]
+# Example: 
+# fetches = {
+#            'line_fix.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+#            'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu'],	
+#           }
+
+CWPROOT         = os.getenv('CWPROOT')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sucov          = os.path.join(CWPROOT,'bin/sucov')
+suxcor          = os.path.join(CWPROOT,'bin/suxcor')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sumath          = os.path.join(CWPROOT,'bin/sumath')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suchw          = os.path.join(CWPROOT,'bin/suchw')
+sushw          = os.path.join(CWPROOT,'bin/sushw')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suspike          = os.path.join(CWPROOT,'bin/suspike')
+
+fetches = {
+           'vel_4layer.HH': ['obs', 'http://www.trip.caam.rice.edu']
+          }
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1]) 
+
+######### non-IWAVE flows - include these in standard Madagascar form
+#Flow('null',None,'spike n1=1200 d1=0.001 n2=151 o2=1 d2=1 mag=0')
+#Flow('head','null','window n1=1')
+
+#Flow('tracl','head','math output=x1               | dd type=int')
+#Flow('selev','head','math output=-200            | dd type=int')
+#Flow('gelev','head','math output=-100               | dd type=int')
+#Flow('sx',   'head','math output=1500            | dd type=int')
+#Flow('gx',   'head','math output="0+20*(x1-1)" | dd type=int')
+#Flow('offset','sx gx','add scale=-1,1 ${SOURCES[1]}')
+
+#Flow('tnull','null tracl selev gelev sx gx',
+#     '''
+#     segyheader 
+#     tracl=${SOURCES[1]} 
+#     selev=${SOURCES[2]}  
+#     gelev=${SOURCES[3]}  
+#     sx=${SOURCES[4]}  
+#     gx=${SOURCES[5]}  
+#     ''')
+
+#Flow('hdr12000.su','null tnull','suwrite tfile=${SOURCES[1]} endian=0')
+
+
+Flow('null12',None,'spike n1=1001 d1=0.004 n2=51 o2=1 d2=1 mag=0 n3=25 o3=0 d3=1')
+Flow('head12','null12','window n1=1')
+
+#Flow('tracl12','head12','math output="x1+101*x2"      | dd type=int') # 101 is number of source in the tracle
+Flow('tracl12','head12','math output="x1+25*x2"      | dd type=int') # 101 is number of source in the tracle
+Flow('selev12','head12','math output=-2500            | dd type=int')
+Flow('gelev12','head12','math output=-3500             | dd type=int')
+#Flow('sx12',   'head12','math output="0+20*(x2)"    | dd type=int')
+Flow('sx12',   'head12','math output="2500+40*x2"    | dd type=int')
+Flow('gx12',   'head12','math output="2500+20*(x1-1)" | dd type=int')
+Flow('delrt12','head12','math output="-2000" | dd type=int')
+
+
+Flow('tnull12','null12 tracl12 selev12 gelev12 sx12 gx12 delrt12',
+     '''
+     segyheader
+     tracl=${SOURCES[1]}
+     selev=${SOURCES[2]}
+     gelev=${SOURCES[3]}
+     sx=${SOURCES[4]}
+     gx=${SOURCES[5]}
+     delrt=${SOURCES[6]}
+     ''')
+
+Flow('hdr6km.su','null12 tnull12','suwrite tfile=${SOURCES[1]} endian=0')
+
+
+# sfadd writes output to stdout, so it must be left active - 
+# however there is not pipe input to this command, so stdin=0
+#Flow('vel_4layer.rsf', 'vel_4layer.HH', 'dd form=native');
+Flow('vel_c', None, '''
+     spike n1=301 n2=301 d1=20 d2=20 mag=2''') # true model
+Flow('null_c', None, '''
+     spike n1=301 n2=301 d1=20 d2=20 mag=0''') # true model
+Flow('vel_c0', None, '''
+     spike n1=301 n2=301 d1=20 d2=20 mag=2.2''') # initial guess
+Flow('vel_init.rsf','vel_c0 null_c', 'add  ${SOURCES[1]}')
+
+Flow('gaussian',None,'makevel n1=301 n2=301 d1=20 d2=20 dlens=150 tlens=150 v000=0 vlens=0.6 x1lens=3000 x2lens=3000 | sfput id1=0 id2=1 id3=2 dim=2 gdim=3 n3=1 o3=0 d3=1')
+
+# add gaussian in the background
+#Flow('vel_model.rsf','vel_c gaussian', 'add  ${SOURCES[1]}')
+Flow('vel_model.rsf','vel_c null_c', 'add  ${SOURCES[1]}')
+
+Flow('csq_model','vel_model.rsf',
+     'mul ${SOURCES[0]} | put data_type=csq ')
+Flow('csq_init','vel_init.rsf',
+     'mul ${SOURCES[0]} | put data_type=csq ')
+
+
+Result('vel_c', 'vel_c', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="vel_c" scalebar=y barreverse=y')
+Result('vel_c0', 'vel_c0', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title=vel_c0"" scalebar=y barreverse=y')
+
+#Result('vel_4layer', 'vel_4layer.rsf', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Atlantis Cartoon" scalebar=y barreverse=y')
+
+# smooth csq_4layer to make migration velocity model
+#Flow('csq_4layersm','csq_4layer','smooth rect1=200 rect2=200 repeat=4')
+#Flow('csq_4layersm2','csq_4layer','smooth rect1=100 rect2=100 repeat=4')
+#Flow('dcsq_4layer','csq_4layer csq_4layersm2','add scale=1,-1 ${SOURCES[1]}') 
+
+#Result('csq-4layer', 'csq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Atlantis Cartoon" scalebar=y barreverse=y')
+
+#Result('csq-4layersm', 'csq_4layersm', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="MigVel - Atlantis Cartoon" scalebar=y barreverse=y')
+# create base wavelet (just time series, without source position
+# information) via suwaveform
+
+import math 
+
+fpeak=10
+t0 = 1.0/fpeak
+s  = 1.0 /(math.sqrt(2)*math.pi*fpeak)
+
+# Gaussian derivative wavelet (type=gaussd in suwaveform)
+Flow('wavelet',None,
+     '''
+     math n1=101 d1=0.004
+     output="%g*(x1-%g)*exp(-%g*(x1-%g)^2)" | put o1=-0.1
+     ''' % (-0.01/(s*s*s*math.sqrt(2*math.pi)),t0,1/(2*s*s),t0))
+Flow('twavelet','wavelet','segyheader')
+Flow('wavelet_base.su','wavelet twavelet','suwrite endian=0 tfile=${SOURCES[1]}')
+
+
+Flow('delta_base.su',None, suspike + ' nt=501 ntr=1 offset=0 ix1=1 nspk=1 it1=250 dt=0.004 | ' + sushw + ' key=delrt a=-1000 ', stdin=0)
+
+Flow('delta.su',['delta_base.su','hdr6km.su'],
+   '''
+         towed_array
+         data=${SOURCES[1]}
+         src=${SOURCES[0]}
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+# add source coordinates from hdrfile to source AND receiver 
+# coordinates from wavelet to create "dressed" wavelet for array
+# source option in iwave. Note that iwave reads a source GATHER by
+# detecting new source coordinates (sx, sy, selev) but assigns source
+# trace GRID POSITIONS in the array by receiver coordinates (gx, gy, 
+# gelev). The towed array app sets these coordinates up so that each 
+# shot may have an array of sources, with the source traces in the 
+# same position relative to the data source coordinates - hence 
+# "towed_array".
+
+# use naming convention: time series stored in wavelet_base, 
+# headers for experiment foo stored in hdrfoo.su, wavelet in
+# waveletfoo.su
+
+for foo in ['6km']:
+    Flow('wavelet' + foo + '.su', ['wavelet_base.su', 'hdr' + foo + '.su'],
+         '''
+         towed_array
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+
+# initial data - near-impulse in u0, u1=0 - very wierd, should be fixed!!
+#Flow('init',None,'makevel n1=151 n2=151 d1=20 d2=20 dlens=100 tlens=100 v000=0 vlens=100 x1lens=200 x2lens=1500 | sfput id1=0 id2=1 id3=2 dim=2 gdim=3 n3=1 o3=0 d3=1')
+
+# movie-init output file
+#Flow('movieinit',['init', 'csq_4layer'],
+#     '''
+#     makevel n1=151 n2=151 n3=33 d1=20 d2=20 d3=160 v000=0  | 
+#     put id1=0 id2=1 id3=2 dim=2 gdim=3 > $TARGET &&				
+#     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 printact=0 mpi_np1=1 
+#     csq=${SOURCES[1]} init=${SOURCES[0]} sampord=1 movie=$TARGET
+#     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+
+# movie-src output file
+#Flow('moviesrc','wavelet12000.su csq_4layer',
+#     '''
+#     makevel n1=151 n2=151 n3=33 d1=20 d2=20 d3=160 v000=0  | 
+#     put id1=0 id2=1 id3=2 dim=2 gdim=3 > $TARGET &&
+#     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+#     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 movie=$TARGET
+#     ''',stdin=0,stdout=-1,workdir='moviesrc.work')
+
+# trace-src output file
+#Flow('shot12000.su','wavelet12000.su csq_4layer hdr12000.su',
+#     '''
+#     /bin/cp ${SOURCES[2]} $TARGET &&
+#     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+#     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+#     ''',stdin=0,stdout=-1,workdir='shot1200.work')
+
+# linearized modeling
+#Flow('born12000.su','wavelet12000.su csq_4layersm dcsq_4layer hdr12000.su',
+#     '''
+#     /bin/cp ${SOURCES[3]} $TARGET &&
+#     acd deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+#     csq=${SOURCES[1]} csq_d1=${SOURCES[2]} source=${SOURCES[0]} sampord=1 data=$TARGET
+#     ''',stdin=0,stdout=-1,workdir='born12000.work')
+
+# rtm
+#Flow('migr12000','born12000.su csq_4layersm dcsq_4layer wavelet12000.su',
+#     '''
+#     scale < ${SOURCES[2]} > $TARGET dscale=0.0 &&
+#     acd deriv=1 adjoint=1 nsnaps=10 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+#     csq=${SOURCES[1]} csq_b1=$TARGET source=${SOURCES[3]} sampord=1 data=${SOURCES[0]}
+#     ''',stdin=0,stdout=-1,workdir='migr12000.work')
+
+
+
+#Result('dcsq-4layer', 'dcsq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Delta V\_p\^\^2\_ - Atlantis Cartoon" scalebar=y barreverse=y')
+
+#Result('gauss', 'init', 'put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=100 title="Gaussian Data t=0.0 s" scalebar=y barreverse=y')
+
+#Result('frameinit', 'movieinit', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=300 title="Gaussian data t=5.12 s" scalebar=y barreverse=y')
+
+#Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa title="Gaussian deriv fmax=5 Hz" unit="GPa" |sfgraph')
+
+#Result('framesrc', 'moviesrc', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=1.e+8 title="Point source 5 Hz t=5.12 s" scalebar=y barreverse=y')
+
+#Result('shot12000','shot12000.su', 'suread endian=0 read=data | put labeldcsq_4layer.1=Time label2=Distance d2=0.025 o2=5 unit1=s unit2=km title="Node at 12 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+#Result('born12000','born12000.su', 'suread endian=0 read=data | put label1=Time label2=Trace unit1=s title="Born x_s=12000 m" unit="GPa" | grey')
+
+#Result('migr12000', 'migr12000', 'put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="RTM of Born Shot x_s = 12000"')
+
+
+## forward modeling to generate the synthesized data
+Flow('data.su','wavelet6km.su csq_model hdr6km.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='data.work')
+
+Result('data','data.su', 'suread endian=0 read=data | put label1=Time label2=Node d2=0.02km o2=0 unit1=s unit2=km title="Nodes @0.4km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+Flow('data0.su','delta.su csq_init hdr6km.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='data0.work')
+
+Result('data0','data0.su', 'suread endian=0 read=data | put label1=Time label2=Node d2=0.02km o2=0 unit1=s unit2=km title="Nodes @0.4km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+
+## Apply deconvolution to get Wiener filter;
+Flow('wiener.su','data.su data0.su',suwind +' tmax=4.0 |' + sucddecon +' sufile=${SOURCES[1]} panel=1 pnoise=0.0000001 | ' + suwind +' tmax=2.0 tmin=-2.0')
+
+
+Flow('wiener_t.su','wiener.su',sugain + ' tpow=2')
+
+Flow('W.su','wiener.su data0.su',suwind +' tmax=4.0 |' + sucddecon +' sufile=${SOURCES[1]} panel=1 pnoise=0.0000001 | ' + suwind +' tmax=2.0 tmin=-2.0')
+
+#Flow('adjsource.su','wiener_t.su W.su',suxcor +' sufile=${SOURCES[1]} panel=1 | ' + suchw +' key1=delrt a=-4000 |' + suwind +' tmax=1.5 tmin=0')
+Flow('adjsource.su','wiener_t.su W.su',suxcor +' sufile=${SOURCES[1]} panel=1 | ' + suchw +' key1=delrt a=-4000')
+
+# Apply the adjoint operator to construct the gradient
+Flow('gradient_awi','adjsource.su csq_model csq_init wavelet6km.su',
+     '''
+     scale < ${SOURCES[2]} > $TARGET dscale=0.0 &&
+     acd deriv=1 adjoint=1 nsnaps=10 order=2 cfl=0.5 cmin=1.0 cmax=5.0
+     csq=${SOURCES[1]} csq_b1=$TARGET source=${SOURCES[3]} sampord=1 data=${SOURCES[0]}
+     ''',stdin=0,stdout=-1,workdir='gradient.work')
+
+Flow('grad','gradient_awi','window f1=100 f2=100 n1=101 n2=101')
+
+
+
+Result('gradient', 'gradient_awi', 'put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Gradient of AWI for 10-shots" scalebar=y barreverse=y ')
+
+Result('gradient2', 'grad', 'put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Gradient of AWI for 10-shots" scalebar=y barreverse=y')
+
+End()
+End()
+

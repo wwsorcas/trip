@@ -1,0 +1,1590 @@
+
+\title{A Framework for the Representation and Estimation of Seismic Sources via Multipoles}
+\date{}
+%\lefthead{Huang \& Nammour \& Symes}
+\address{
+        \footnotemark[1]The Rice Inversion Project,\\ Rice University,\\ Houston, TX
+        77005-1892 USA\\
+        %\footnotemark[2]Total E\&P R\&T USA
+}
+\author{Mario J. Bencomo\footnotemark[1] and William Symes\footnotemark[1]}
+
+\righthead{MPS Framework}
+
+\maketitle
+\parskip 12pt
+
+
+%%%%%%%%%
+\begin{abstract}
+%%%%%%%%%
+
+%Seismic sources are commonly idealized as concentrated at a source point, due
+%to their small spatial extent relative to seismic wavelengths.
+%The acoustic isotropic point radiator is inadequate as a model of seismic wave
+%generation and propagation for seismic sources that are known to exhibit directivity.
+%Therefore accurate modeling of seismic wavefields must include energy 
+%source (right-hand side) representations generating anisotropic radiation patterns.
+%We present here a mathematical and computational framework for representating 
+%arbitrarily anisotropic seismic sources as linear combinations of base {\em multipole point-sources}.
+%Our framework couples source representation with generic finite-difference
+%solvers via multipole discretizations over uniform grids based on discrete moment matching criteria
+%as developed by \cite{Walden:1999} and \cite{TorEng:04}. 
+%We give a particular instance of our multipole source construction using the C++
+%packages \emph{IWave}, framework for finite difference solvers over uniform grids, 
+%and \emph{Rice Vector Library} (RVL), library containing classes for expression of
+%gradient-based optimization algorithms over Hilbert spaces;\citep{GeoPros:11,RVL_TOMS}.
+%Numerical tests in 2D and 3D acoustics demonstrate the accuracy of discretized multipole
+%sources coupled with finite-difference solvers for arbitrary source location of varying order. 
+%In particular, optimal convergence rates as suggested by spatial approximation order of numerical 
+%schemes are obtained when using appropriate source discretizations.
+
+Seismic sources are commonly idealized as concentrated at a source point, though they may exhibit anisotropy in their radiation pattern. 
+We present here a mathematical and computational framework for representing arbitrarily anisotropic seismic sources as linear combinations of base multipole point-sources. 
+Our framework couples source representation with generic finite difference solvers via multipole discretizations over uniform grids based on discrete moment matching criteria developed in the literature for the delta function. 
+We give a particular instance of our multipole source construction using the C++ packages IWave, framework for finite difference solvers over uniform grids, and Rice Vector Library (RVL), library containing classes for expression of gradient-based optimization algorithms over Hilbert spaces.
+As proof of concept we present some synthetic inversion examples, in particular a multipole source inversion and a joint source-medium inversion for acoustic wave modeling. 
+
+\end{abstract}
+
+
+%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%
+
+Seismic sources are typically idealized as concentrated at a point, i.e., of point support, due to their small spatial extent relative to the wavelengths of generated seismic waves.
+A seismic source is mathematically represented as a forcing term $f$ in some modeling equations, in particular $f$ is most commonly taken to be of the form
+\begin{equation}
+\label{eq:delta-src}
+	f(\mathbf x,t) = w(t)\delta(\mathbf x-\mathbf x^*)
+\end{equation}
+where $\delta(\mathbf x-\mathbf x^*)$ is the Dirac delta function shifted by $\mathbf x^*$, the spatial coordinates of where the source is localized.
+Using the acoustic wave equation,
+\begin{equation}
+\label{eqn:isorad}
+\begin{split}
+        \frac{\partial^2}{\partial t^2} p(\mathbf x,t) - c^2\nabla^2
+  	p(\mathbf x,t) =& f(\mathbf x,t)\\
+	p(\mathbf x,t) = & 0,  \quad t<<0,
+\end{split}
+\end{equation}
+to model the propagation of seismic waves, one observes that source term $f$ as given by \ref{eq:delta-src} results in a pressure field $p$ that is spherically symmetric\footnote{Assuming wave speed $c$ is constant, and in an unbounded medium.}; the solution for the isotropic point radiator problem \ref{eqn:isorad} in Euclidean 3-space \cite[]{CourHil:62} is given by
+\begin{equation}
+\label{eq:green3d}
+	p(\mathbf x,t) = \frac{w\left(t-\frac{r}{c}\right)}{4\pi c^2 r},
+	\quad r = \sqrt{\mathbf x^T \mathbf x}.
+\end{equation}
+In this context, $f$ given by \ref{eq:delta-src} is referred to as an {\em isotropic source}, that is, a source with isotropic response. 
+Both active and earthquake seismic sources, however, generate spatially asymmetric wavefields (see for example \cite{Shearer:2009}, \cite{Yil:01}), and thus an isotropic source representation is inadequate.
+
+Generic acoustic sources can be approximated by a truncated series of {\em multipole point-sources}, or simply multipoles, \cite[]{SantosaSymes:00},
+\begin{equation}
+\label{eq:MPSappx}
+	f(\mathbf x,t) \approx \sum_{|\mathbf s|\le N} w_{\mathbf s}(t) D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)
+\end{equation}
+in which we have introduced {\em multi-index notation}: for spatial dimension $d$ and multi-index (integer $d$-tuple) ${\bf s} = (s_1,...,s_d)$, the $\mathbf s$-mixed partial derivative operator denoted $D^{\bf s}$
+and its (total) order $|\mathbf s|$ are
+\begin{equation}\label{eq:PDO}
+        D^{\mathbf s} = \prod_{k=1}^d \left( \frac{\partial}{\partial x_k}\right)^{s_k}, \quad |\mathbf s| = \sum_{k=1}^{d} s_k.
+\end{equation}
+Approximation \ref{eq:MPSappx} is motivated by Peetre's Theorem \cite[]{Horm:69}, where any function concentrated entirely at a point in space (of {\em point support}) is a multipole of finite order; multipole \ref{eq:MPSappx} is said to be of order $N$.
+The number of terms required in the series \ref{eq:MPSappx} is dependent on how valid the point-source assumption is, source anisotropy, and the given error tolerance.
+
+%The coefficient time functions $w_{\mathbf s}(t)$ may be scalar-, vector-, or
+%tensor-valued, according to the nature of quantity being updated
+%(pressure, velocity, or stress) in the equation in which
+%$f(\mathbf x,t)$ appears as right-hand side.  
+%Multipoles may approximate arbitrary sources highly localized on the wavelength 
+%scale, in the sense of generating approximately the same field away from the
+%source location, and for this reason have enjoyed widespread use in
+%seismic source representation \cite[]{Shearer:2009}.
+
+This paper describes an implementation of the multipole representation \ref{eq:MPSappx} with
+\begin{itemize}
+	\item natural input, namely the time functions $\{w_{\mathbf s}\}$, 
+	\item systematic discrete approximations to singular sources of the form \ref{eq:MPSappx} that preserve the convergence order of finite difference solutions to wave equations, resulting in
+	\item natural output, namely time series attached to points on a regular grid that can be fed as source functions to a finite-difference wave equation solver, and
+	\item a flexible object-oriented implementation that follows closely the structure of the underlying mathematics.
+\end{itemize}
+To achieve the second goal, we use the approach of {\em matching discrete moments} pioneered by \cite{Walden:1999} to attain such singular source approximations over uniform grids, regardless of the actual location $\mathbf x^*$ (on- or off-grid). 
+
+%%FIX THIS
+%We refer to our previous paper, \cite{MPS_theory}, for a more detailed account of the singular source approximation as implemented here.
+%multipole source discretizations where
+%we give an overview of the theory and present numerical results demonstrating
+%point-wise convergence at optimal rates away from the source.
+
+We have realized the multipole source construction explained below using the C++ packages \emph{IWave} and \emph{Rice Vector Library} (RVL); \citep{GeoPros:11,RVL_TOMS}.  
+The IWave package is a framework for finite difference solvers over uniform grids while the RVL package provides a system of classes for expression of gradient-based optimization algorithms over Hilbert spaces.  
+IWave and RVL come together to form a modeling engine for seismic inversion and migration. 
+Implementation of multipole sources as RVL objects enables straightforward composition with IWave solvers and inclusion in inversion algorithms powered by RVL optimization code. 
+Any other wave equation solver wrapped in the appropriate RVL interfaces could be coupled to the multipole source objects in the same way.
+
+We describe the multipole source representation in detail in the first section, and review the mechanism of high-order convergence for the approximation/discretization of singular source-terms.  
+The second section summarizes IWave and RVL, and describes the implementation of the multipole source framework based on these packages and on the Madagascar and Seismic Unix open source libraries.  
+A number of reproducible tests accompanying this paper are discussed in the third section, demonstrating the structure of the implementation and the use of its principal components.
+In particular, we give explicit examples of some simple forward modeling and inversion code with multipole sources.
+
+In this paper we do not deal with several important issues, for example the number of multipole terms required to represent a source with a given degree of anisotropy, and the degree of anisotropy required in successful inversion of field data.  
+These topics are mostly outside the scope of our paper, but we mention them in the discussion section.
+We also avoid some of the mathematical challenges associated with the ill-posedness of the multipole source inverse problem, though we discuss the possibility of preconditioning the source-to-data map for more rapid convergence of iterative algorithms, a matter we will treat fully in another place.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Theory}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The localized sources modeled in this paper occur as right-hand sides in the first order forms of time domain linear acoustics and elasticity:\\
+{\em (velocity-pressure form of acoustic equations)}
+\begin{equation}
+\label{eq:acous}
+\begin{split}
+		\frac{\partial}{\partial t} p(\mathbf x,t) + \kappa(\mathbf x)\frac{\partial}{\partial x_j}v_j(\mathbf x,t) &= f(\mathbf x,t),\\
+                \frac{\partial}{\partial t} v_i(\mathbf x,t) + \beta(\mathbf x)\frac{\partial}{\partial x_i}p(\mathbf x,t) &= f_i(\mathbf x,t),
+\end{split}
+\end{equation}
+\emph{(velocity-stress form of linear elasticity equations)}
+\begin{equation}\label{eq:elas}
+\begin{split}
+		\frac{\partial}{\partial t} v_i(\mathbf x,t) - \beta(\mathbf x) \frac{\partial}{\partial x_j} \sigma_{ij}(\mathbf x,t) &= f_i(\mathbf x,t), \\
+		\frac{\partial}{\partial t} \sigma_{ij}(\mathbf x,t) - c_{ijmn}(\mathbf x) \frac{\partial}{\partial x_n} v_m(\mathbf x,t) &= f_{ij}(\mathbf x,t),
+\end{split}
+\end{equation}
+as well as the second order (constant density) acoustic wave equation:
+\begin{equation}
+\label{eq:wave_acous}
+		\frac{\partial^2}{\partial t^2} p(\mathbf x,t) - c(\mathbf x)^2 \nabla^2 p(\mathbf x,t) = f(\mathbf x,t),
+\end{equation}
+where
+\begin{singlespace}
+\begin{itemize}
+	\item $\beta =$ buoyancy (reciprocal of density), 
+	\item $\kappa =$ bulk modulus,
+	\item $c = \sqrt{\kappa\beta} = $ speed of sound, also referred to as the (wave) velocity,
+	\item $c_{ijmn} = $ $ijmn$-component of fourth-order Hooke's tensor $\bf C$,
+	\item $p = $ pressure field, 
+	\item $v_i =$ $i^{th}$-component of particle-velocity vector $\bf v$,
+	\item $\sigma_{ij} = $ $ij$-component of second-order stress tensor,
+	\item $f =$ scalar pressure source = defect in acoustic
+          constitutive law,
+	\item $f_i = $ $i^{th}$-component of velocity
+          source vector $\bf f=$ body force,
+	\item $f_{ij} = $ $ij$-component of second-order
+          tensor stress source $\bf F=$ defect in elastic constitutive law.
+\end{itemize}
+\end{singlespace}
+Indices $i,j,m,n$ run from $1,...,d$, where $d=$ space dimension. Einstein
+summation convention is assumed, that is, repeated indices are summed.
+Scalar, vector, and second-order tensor right-hand sides occur in
+these equations, representing energy sources of several types.
+There is some redundancy amongst these possibilities: for example a
+spatially localized
+constitutive law defect (pressure or stress source) may be exchanged
+for an equivalent body force that generates the same acoustic or
+elastic field away from the source location. Because of these
+trade-off possibilities, we will tacitly assume that only one of the
+three types of source field - scalar, vector, or tensor - is present at a time.
+
+%%%%%%
+\subsection{Multipole Representation: MPS Spaces}
+
+The scalar multipole of order $N$ concentrated at $\mathbf x^*\in\mathbb R^d$ has already been introduced in equation \ref{eq:MPSappx}.
+Expressions for vector and tensor multipoles of order $N$ are similar:
+\begin{equation}\label{eq:MPSappxVec}
+	f_i(\mathbf x,t) = \sum_{|\mathbf s| \le N} w_{i;\mathbf s}(t) \; D^{\mathbf s} \delta(\mathbf x- \mathbf x^*),
+\end{equation}
+\begin{equation}\label{eq:MPSappxTen}
+	f_{ij}(\mathbf x,t) = \sum_{|\mathbf s| \le N} w_{ij;\mathbf s}(t) \; D^{\mathbf s} \delta(\mathbf x- \mathbf x^*).
+\end{equation}
+
+Evidently, multipoles of each type and order form vector spaces. Subspaces of
+these spaces are determined by linear constraints (for example, tensor
+symmetry). To describe vector spaces of multipoles conveniently, we introduce the concept of
+{\em multipole bases} $\{b_i\}$, $\{\mathbf b_i\}$, and $\{\mathbf
+B_i\}$. These are simply linearly independent sets of multipoles, whose
+linear combinations with scalar time function coefficients $\{w_i\}$, called the
+{\em multipole coefficients}, span various vector spaces of multipoles:
+\begin{equation}\label{eq:MPS}
+\begin{split}
+        f(\mathbf x,t) &= \sum_{i} w_i(t) b_i(\mathbf x),\\
+        \mathbf f(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf b_i(\mathbf x),\\
+        \mathbf F(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf B_i(\mathbf x).
+\end{split}
+\end{equation}
+Each basis element combines a scalar, vector, or tensor
+coefficient $c_{ij},{\bf c}_{ij}$ or ${\bf C}_{ij}$, and mixed partial
+derivatives of the spatial delta function, parametrized by a multi-indices ${\bf
+  s}_{ij}$:
+\begin{equation}\label{eq:realdefn}
+\begin{split}
+	b_i(\bf x) = & \sum_j c_{ij} D^{{\bf s}_{ij}}\delta({\bf x}-{\bf x^*}),  \\
+	{\bf b}_i(\bf x) =& \sum_j {\bf c}_{ij} D^{{\bf s}_{ij}}\delta({\bf x}-{\bf x^*}), \\
+	{\bf B}_i(\bf x) =& \sum_j {\bf C}_{ij} D^{{\bf s}_{ij}}\delta({\bf x}-{\bf x^*}). 
+\end{split}
+\end{equation}
+Many choices of combinations $c_{ij},{\bf s}_{ij}$ (and so on) are
+possible - we show some of these possible choices below. We will assume in the sequel
+that such a choice has been made.
+
+For example, the scalar multipole basis of order zero centered 
+at $\mathbf x^*$ consists of one element, $b_1$, given by
+\[
+        b_1(\mathbf x) = \delta(\mathbf x-\mathbf x^*).
+\]
+A maximal choice of scalar multipole basis of order one (in 3-D) centered at $\mathbf x^*$ is
+\[
+        b_1(\mathbf x) = \delta(\mathbf x - \mathbf x^*), \quad 
+        b_2(\mathbf x) = \frac{\partial}{\partial x_1}\delta(\mathbf x-\mathbf x^*), \quad
+        b_3(\mathbf x) = \frac{\partial}{\partial x_2}\delta(\mathbf x-\mathbf x^*), \quad
+        b_4(\mathbf x) = \frac{\partial}{\partial x_3}\delta(\mathbf x-\mathbf x^*).
+\]
+A vector multipole basis for the space of order one (in 3-D) centered at $\mathbf x^*$ is
+\[
+        \mathbf b_1(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{1\\ 0\\0}, \quad 
+        \mathbf b_2(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0\\ 1\\0}, \quad 
+        \mathbf b_3(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0\\ 0\\1}.
+\]
+A maximal tensor multipole basis of order zero (in 3D)  centered at $\mathbf x^*$ is
+\[
+        \mathbf B_1(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{1,0,0\\ 0,0,0\\0,0,0}, \quad 
+        \mathbf B_2(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,1,0\\ 0,0,0\\0,0,0}, \quad 
+        \mathbf B_3(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,1\\ 0,0,0\\0,0,0}.
+\]
+\[
+        \mathbf B_4(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 1,0,0\\0,0,0}, \quad 
+        \mathbf B_5(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 0,1,0\\0,0,0}, \quad 
+        \mathbf B_6(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 0,0,1\\0,0,0}.
+\]
+\[
+        \mathbf B_7(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 0,0,0\\1,0,0}, \quad 
+        \mathbf B_8(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 0,0,0\\0,1,0}, \quad 
+        \mathbf B_9(\mathbf x) = \delta(\mathbf x-\mathbf x^*) \vet{0,0,0\\ 0,0,0\\0,0,1}.
+\]
+
+Some applications may require constraints on the source representation for physical reasons or assumptions on the radiation structure of the source. 
+For example, in the study of earthquake source mechanisms, sources are commonly represented by the seismic moment tensor, which in the terminology introduced here is precisely a tensor multipole source of order $N=0$.  
+Earthquake sources must preserve angular momentum, so the moment tensor source must be symmetric: $f_{ij} = f_{ji},$ for all $i,j=1,2,3$.
+This symmetry constraint suggests another tensor multipole basis for this corresponding multipole subspace,
+\[
+        \mathbf B_1(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{1,0,0\\0,0,0\\0,0,0}, \quad
+        \mathbf B_2(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{0,0,0\\0,1,0\\0,0,0}, \quad
+        \mathbf B_3(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{0,0,0\\0,0,0\\0,0,1},
+\]
+\[
+        \mathbf B_4(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{0,1,0\\1,0,0\\0,0,0}, \quad
+        \mathbf B_5(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{0,0,1\\0,0,0\\1,0,0}, \quad
+        \mathbf B_6(\mathbf x) = \delta(\mathbf x -\mathbf x^*) \mat{0,0,0\\0,0,1\\0,1,0}.
+\]
+
+The multipole expansions \ref{eq:MPS} are determined by 
+\begin{itemize}
+	\item the source location ${\bf x}^*$,
+	\item the choices of multipole basis functions $\{b_i\}$ 
+		(for the scalar case, similar for vector and tensor - in this discussion, we give results explicitly for the scalar case), and
+	\item the coefficient time functions $\{w_i\}$.
+\end{itemize}
+We collect the multipole coefficient time series together as the {\em multipole coefficient vectors} $\mathbf w = \{w_i: i=1,2,...\}$, and endow them with the obvious definition of linear combination: 
+for multipole coefficient vectors $\mathbf w^{1}$ and $\mathbf w^{2}$ and scalars $a_1, a_2\in\mathbb R$, 
+\begin{equation} \label{eq:linstruct}
+	a_1 \mathbf w^{1}(t) + a_2 \mathbf w^{2}(t) 
+	= \{a_1 w_{i}^{1}(t) + a_2  w_{i}^{2}(t) : i=1,2,...\}.
+\end{equation}
+With definition \ref{eq:linstruct}, the set of multipole coefficient vectors becomes a vector space, a {\em multipole source (MPS) space}. 
+We regard the other two identifying items listed above (source location, choice of multipole basis) as attributes of an MPS space as well.
+
+\noindent {\bf Remark:} While not important for the our current purposes, we should mention that norms and inner (``dot'') products can also be implemented for MPS spaces. 
+For example, the obvious (Euclidean or $L^2$) inner product is
+\begin{equation} \label{eq:euclid}
+	\langle \mathbf w^{1}, \mathbf w^{2}\rangle = \sum_i \int w^{1}_i(t)\; w^{2}_i(t) \;dt,
+\end{equation}
+however, many other inner products are possible. 
+As we shall show elsewhere, there is a better choice of inner product than that given in equation \ref{eq:euclid}, in that it improves the condition number of the linear map from multipole coefficient functions to data traces, hence accelerates the convergence of iterative inversion algorithms.
+
+Equation \ref{eq:MPS} defines a linear mapping $\mathbf L$ from corresponding MPS space to the distributions in physical space: in the scalar case,
+\begin{equation} \label{eq:mpstorhsdefn}
+	(\mathbf L\mathbf w)({\bf x},t)= \sum_{i} w_i(t) b_i(\mathbf x).
+\end{equation}
+We call $\mathbf L$ the {\em MPS-to-RHS} map, since $\mathbf L\mathbf w$ may be used as a right-hand side source-term ($f$ or ${\bf f}$ in the system \ref{eq:acous}, ${\bf f}$ or ${\bf F}$ in the system \ref{eq:elas}).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discretization of Multipoles}
+
+Let the collection of points associated with a Cartesian grid centered at $\mathbf x^0\in\mathbb R^d$ and with grid size $h>0$ be denoted by
+\[
+	\mathcal G(\mathbf x^0,h) = \{ \mathbf x^{\mathbf n}\in\mathbb R^d : 
+		\mathbf x^{\mathbf n}=(x_{1}^{n_1},...,x_{d}^{n_d}), \; \mathbf n\in\mathbb Z^d\}
+\] 
+where
+\[
+	x_{k}^{n_k} = x_{k}^0 + hn_k, \quad \forall k=1,...,d.
+\]
+For simplicity of presentation we continue to work with Cartesian grids hereon, though generalizations to regular grids are possible.
+We will denote grid functions and other grid-dependent quantities with an $h$ subscript.
+
+We obtain a discrete analog, the {\em discrete multipole representation}, by replacing $D^{{\bf s}_{ij}}\delta({\bf x} - {\bf x}^*)$ in equations \ref{eq:realdefn} with functions $\eta_h^{ij}(\mathbf x;\mathbf x^*)$ defined over a given grid, i.e., 
+\[
+	\eta_{h}^{ij}(\cdot;\mathbf x^*) : \mathcal G(\mathbf x^0,h) \to \mathbb R,
+\]
+for each $i,j$:
+\begin{equation}
+\label{eq:MPSdiscrete}
+\begin{split}
+        f_h(\mathbf x,t) &= \sum_{i} w_i(t) b_{h,i}(\mathbf x),\\
+        \mathbf f_h(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf b_{h,i}(\mathbf x)\\
+        \mathbf F_h(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf B_{h,i}(\mathbf x),
+\end{split}
+\end{equation}
+with
+\begin{equation}
+\label{eq:realdefndiscrete}
+\begin{split}
+	b_{h,i}(\mathbf x) & = \sum_j c_{ij} \eta_{h}^{ij}(\mathbf x;\mathbf x^*)  \\
+	\mathbf b_{h,i}(\mathbf x) & = \sum_j {\bf c}_{ij} \eta_{h}^{ij}(\mathbf x;\mathbf x^*) \\
+	\mathbf B_{h,i}(\mathbf x) & = \sum_j {\bf C}_{ij} \eta_{h}^{ij}(\mathbf x;\mathbf x^*).
+\end{split}
+\end{equation}
+Note that we parameterize grid functions $\eta_h^{ij}$ by $\mathbf x^*\in\mathbb R^d$ given their dependence on source location as discussed below.
+
+Grid functions $\eta_h^{ij}(\mathbf x;\mathbf x^*)$ correspond to discretizations of singular sources terms $D^{\mathbf s_{ij}}\delta(\mathbf x-\mathbf x^*)$ via the {\em discrete moment conditions} pioneered by \cite{Walden:1999}.
+In our previous paper, \cite{MPS_theory}, we give a detailed account of the theory and our implementation of the singular source approximation.
+Our main contribution in that paper is a novel error analysis for the discretization of multipole sources in wave propagation problems.
+In particular, we prove a weak error estimate that demonstrates convergence of numerical solutions.
+Strong convergence (point-wise in space) at optimal rates is however observed, away from the support of source approximation, in the reported numerical experiments.
+We briefly discuss some aspects of the singular source approximation here.
+Our primary focus will be to present the construction of singular source approximations, that is the $\eta_{h}^{ij}$ grid functions.
+
+In the simpler 1-D case, 
+we say that $\eta_h(x;x^*)$ is $q$-order approximation of $\tfrac{d^s}{dx^s}\delta(x-x^*)$ if the grid function satisfies \begin{equation}
+\label{eq:momcond}
+       h \sum_{x\in\mathcal G(x^0,h)} \eta_h(x;x^*) (x-x^*)^{\alpha} = 
+       \int \tfrac{d^s}{dx^s}\delta(x-x^*)(x-x^*)^{\alpha} \; dx,
+       \quad\quad \forall \alpha =0,1,... q+{\bf s}-1,
+\end{equation}
+also known as the {\em discrete $(q,s)$-moment conditions at $x^*$}.
+In practice we construct grid functions $\eta_{h}(x;x^*)$ of compact support proportional to grid size $h$.
+In particular, we assume the grid function is defined to be zero outside the interval $[x^*-\tfrac{N}{2},x^*+\tfrac{N}{2})$ for $N=q+s$.
+We denote the $N$ grid points contained within the interval $[x^*-\tfrac{N}{2},x^*+\tfrac{N}{2})$ by $\{\tilde x_\ell\}_{\ell=1}^N$, assuming $\tilde x_1 < \tilde x_2< \cdots < \tilde x_N$.
+The discrete $(q,s)$-moment conditions thus result in a $(q+s)\times(q+s)$ system of equations for $\eta_h(\tilde x_\ell;x^*)$,
+\[
+	\mathbf A \mathbf d = \mathbf b
+\]
+with
+\[
+	\{A\}_{kl} = (\tilde x_\ell - x^*)^{k-1}, \quad
+	\{d\}_\ell = \eta_{h}(\tilde x_\ell;x^*), \quad
+	\{b\}_k = \frac{s!(-1)^{s}}{h} \delta_{s,k-1}
+\]
+for $\ell,k=1,2,...,q+s$.
+Note that $\mathbf A$ is a Vandermonde matrix of full rank and is guaranteed to have a unique solution.
+In fact, using the Vandermonde matrix inverse formula, we have
+\begin{equation}\label{eq:eta}
+	 \eta_h(\tilde x_\ell;x^*) = \left\{ \begin{array}{cl}
+		\displaystyle
+		s! (-1)^{N-1} \; 
+		\frac{
+			\displaystyle
+			\sum_{\underset{m_1,...,m_{q-1}\neq \ell}{1\le m_1<\cdots<m_{q-1}\le N}}
+			 ( \tilde x_{m_1} - x^*) \cdots ( \tilde x_{m_{q-1}} -x^*)
+		}
+		{
+			\displaystyle
+			h^{N}\prod_{\underset{m\neq \ell}{1\le m\le N}} ( \ell - m)
+		}
+		,& \text{for} \; q>1  \vspace{10pt} \\ 
+		\displaystyle
+		\frac{
+			s! (-1)^{s}
+		}
+		{
+			\displaystyle
+			h^{N} \prod_{\underset{m\neq \ell}{1\le m\le N}} (\ell - m)
+		}
+		,& \text{for}\; q=1.
+	\end{array}\right.
+\end{equation}
+
+Higher dimensional approximations are generated by taking tensor products of 1-D approximations. 
+Namely $\eta_{h}:\mathcal G(\mathbf x^0,h) \to \mathbb R$, an approximation to $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$, is given by
+\[
+	\eta_h(\mathbf x;\mathbf x^*) = \prod_{k=1}^d \eta^k_h(x_k;x^*_k)
+\]
+where $\eta^k_h(x_k;x^*_k)$ satisfies the discrete $(q,s_k)$-moment conditions at $x^*_k$.
+
+
+Discretization of multipole sources produce gridded approximations \ref{eq:MPSdiscrete}, where the formula may be viewed as defining a discrete version of the MPS-to-RHS map (equation \ref{eq:mpstorhsdefn}):
+\begin{equation} \label{eq:mpstorhsdefndiscrete}
+	(\mathbf L_h \mathbf w)(\mathbf x,t) = \sum_{i} w_i(t) b_{h,i}(\mathbf x),
+\end{equation}
+over grid points $\mathbf x\in\mathcal G(\mathbf x_0,h)$ as before.
+We call $\mathbf L_h$ the {\em discrete MPS-to-RHS} map. 
+Its output (vector in range) may be used as the right-hand side in a finite difference approximation to acoustodynamics (equations \ref{eq:acous}, \ref{eq:wave_acous}) or elastodynamics (equations \ref{eq:elas}). 
+The domain of this map is a discrete version of the MPS space described in the preceding section. 
+
+\noindent {\bf Remark:} Throughout the mathematical development, we will continue to regard time as continuous, and write $w_i(t)$ for the multipole coefficients. 
+Of course, in any implementation time will be discretely sampled as well.
+
+The range of $\mathbf L_h$ consists of the discrete functions of space and time, limited in space to those grid points that actually appear in the discrete multipole basis functions (equation \ref{eq:realdefndiscrete}). 
+Thus the information that characterizes the range of the discrete MPS-to-RHS map is
+(i) the locations of the grid points required to express the moment-consistent discrete multipoles listed in equation \ref{eq:realdefndiscrete}, these locations depending on the choice of discrete multipole basis as in \ref{eq:MPSdiscrete}, 
+and (ii) the time sampling information (time grid) which for sake of simplicity we assume is the same for the right-hand side and for all of the multipole coefficients.
+
+
+
+
+
+
+
+
+%
+%A multipole representation of seismic sources poses an interesting mathematical challenge for the numerical solution of hyperbolic PDEs such as \ref{eq:acous}, \ref{eq:elas}, and \ref{eq:wave_acous}.
+%Namely, how should one discretize such singular source terms? 
+%Subsequently, how does the discretization affect the accuracy of numerical PDE methods used to solve such problems?
+%For numerical schemes based on variational forms, that is Galerkin methods, the discretization of $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ is rather straightforward, one simply applies the distribution definition of such singularities;
+%\begin{equation}
+%\label{eq:distribution}
+%	\int D^{\mathbf s}\delta(\mathbf x-\mathbf x^*) \phi(\mathbf x)\; d\mathbf x = (-1)^{|\mathbf s|} D^{\mathbf s}\phi(\mathbf x)|_{\mathbf x=\mathbf x^*}
+%\end{equation}
+%for any smooth test function $\phi$.
+%In this work, however, we focus on regular (rectangular) {\em staggered-grid} finite difference methods, which are widely used for basin- and exploration-scale modeling (see \cite{moczoetal:06} for an excellent overview and many older references). 
+%Such methods pose an immediate problem for singular source models such as multipole sources: finite difference algorithms ``know'' only gridded fields, so a source located at an arbitrary point $\mathbf x^*$ in space must be represented somehow by virtual sources at nearby grid points. 
+%This task is complicated by the nature of the field, as is evident for instance from inspection of the 3-D analytical solution \ref{eq:green3d}.
+%Similarly, solutions of the wave equations \ref{eq:acous}, \ref{eq:elas}, and \ref{eq:wave_acous} with singular right hand sides are generally themselves singular at the source point, so the Taylor-series based analysis of finite difference accuracy does not apply.
+%%Imitating finite-element singular source representation, for example
+%%by using adjoint interpolation, may reduce the accuracy of the modeled
+%%field, in the sense of convergence order: visually, large errors can
+%%pollute the field near the source, and propagate throughout the
+%%simulation domain. 
+%
+%\cite{Walden:1999} developed approximations to singular source terms in a finite difference and finite element setting for the 1D Helmholtz equation for which his analysis and numerical examples demonstrated point-wise convergence of numerical solutions with optimal convergence rates.
+%The key idea was for approximations to satisfy a set of {\em discrete moment conditions} depending on the derivative and desired approximation order, a generalization of previous work for discretizations of the Dirac delta function in the context of the immersed boundary method \citep{Pes:02}.
+%
+%%\cite{TorEng:04} refined these ideas and provided further error analysis, 
+%%primarily for finite difference solutions to simple ODEs, and parabolic and elliptic PDEs.
+%%Recently, \cite{hoss:16} presented a unified theory for the approximation, or 
+%%regularizations, of the delta function independent of numerical scheme and their
+%%application to prototypical elliptic and hyperbolic PDEs.
+%%Work by \cite{Petersson:2016} presented even more relevant analysis, in particular  
+%%singular source discretizations as related to central difference approximations of the 
+%%1-D advection equation.
+%%They demonstrated that the discrete moment conditions given by \cite{Walden:1999},
+%%along with smoothness conditions, were sufficient for convergence of finite difference
+%%solutions, though their analysis proved suboptimal convergence results.
+%
+%Other works have provided further error analysis and theory to understand the coupling between source approximations and PDE discretizations; see for example \cite{TorEng:04}, \cite{hoss:16}, \cite{Petersson:2016}.
+%However, the singular source approximation theory presented in the current literature does not provide the relevant error analysis for staggered-grid finite difference solutions to linear acoustics or elasticity (first order form) with multipole sources.
+%In our previous paper, \cite{MPS_theory}, we present a more relevant error analysis: we prove a weak error estimate that demonstrates convergence of numerical solutions.
+%Strong convergence (point-wise in space) at optimal rates is however observed, away from the support of source approximation, in the reported numerical experiments.
+%
+%%FIX THIS
+%In the following we give a short overview of the theory developed by \cite{Walden:1999} and \cite{MPS_theory}. 
+%Our primary focus will be to present the construction of singular source approximations for multipoles with arbitrary source location $\mathbf x^*$.
+%
+%Recall one way to view truncation order of a finite difference scheme is via the action of the difference operator on polynomials: the (truncation) order is the largest integer $p$ for which the difference operator, applied to a polynomial of degree $p$, gives the same result at grid points as the differential operator it is intended to approximate. 
+%\cite{Walden:1999} applies a version of this idea for constructing singular source approximations. 
+%We first define the (continuum) {\em moment} of a function: for the general $d$-dimensional case and $d-$tuple multi-index $\bs \alpha =(\alpha_1,...,\alpha_d)$, the {\em $\bs \alpha$-moment centered at $\mathbf x^*$} of some $L^1$ function with compact support, $\eta$, is defined by
+%\begin{equation}
+%\label{eq:cont_moment}
+%	M^{\bs \alpha}(\eta,\mathbf x^*):= \int_{\mathbb R^d} \eta(\mathbf x)\;(\mathbf x-\mathbf x^*)^{\bs \alpha} \; d\mathbf x,
+%\end{equation}
+%where the monomial term $({\bf x}-{\bf x}^*)^{\bs \alpha}$ is interpreted as the a product of monomials in each dimension, i.e.,
+%\[
+%        ({\bf x}-{\bf x}^*)^{\bs \alpha} = \prod_{k=1}^d (x_k-x_k^*)^{\alpha_k}.
+%\]
+%Using \ref{eq:distribution}, we can interpret the $\bs \alpha$-moment of $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ as
+%\[
+%	M^{\bs \alpha}(D^{\mathbf s}\delta(\cdot-\mathbf x^*),\mathbf x^*) = \left\{\begin{array}{rl}
+%								0, & \bs \alpha\neq \mathbf s, \\
+%								(-1)^{|\mathbf s|}{\mathbf s !}, & \bs \alpha=\mathbf s.
+%								\end{array}\right.
+%\]
+%
+%In a similar fashion, we define the {\em discrete moment} by replacing the integration in \ref{eq:cont_moment} with summation.
+%First, let the collection of points associated with a Cartesian grid centered at $\mathbf x^0\in\mathbb R^d$ and with grid size $h>0$ be denoted by
+%\[
+%	\mathcal G(\mathbf x^0,h) = \{ \mathbf x^{\mathbf n}\in\mathbb R^d : 
+%		\mathbf x^{\mathbf n}=(x_{1}^{n_1},...,x_{d}^{n_d}), \; \mathbf n\in\mathbb Z^d\}
+%\] 
+%where
+%\[
+%	x_{k}^{n_k} = x_{k}^0 + hn_k, \quad \forall k=1,...,d.
+%\]
+%For simplicity of presentation we continue to work with Cartesian grids hereon, though generalizations to regular grids are possible.
+%We will denote grid functions and other grid-dependent quantities with an $h$ subscript.
+%
+%The {\em discrete $\bs \alpha$-moment centered at $\mathbf x^*$} ($\mathbf x^*$ need not coincide with a grid point) of a grid function $\eta_h:\mathcal G(\mathbf x_0,h)\to\mathbb R$ is given by
+%\[
+%	M^{\bs \alpha}_h(\eta_h,\mathbf x^*) := h^d \sum_{\mathbf x \in\mathcal G(\mathbf x_0,h)} \eta_h(\mathbf x) \; (\mathbf x-\mathbf x^*)^{\bs \alpha}.
+%\] 
+%Given integer $q>0$ and multi-index $\mathbf s$, grid function $\eta_h$ is said to satisfy the {\em discrete $(q,\mathbf s)$-moment conditions at $\mathbf x^*$} if
+%\begin{equation}
+%\label{eq:momcond}
+%        M_h^{\bs \alpha}(\eta_h,\mathbf x^*) = M^{\bs \alpha}(D^{\bf s}\delta( \cdot-\mathbf x^*),\mathbf x^*), \quad \forall |\bs \alpha|\le q+|{\bf s}|-1.
+%\end{equation}
+%
+%In practice we construct approximations to $D^{\mathbf s}\delta(\mathbf x)$ with grid functions of compact support proportional to grid size $h$. 
+%The following theorem \citep{MPS_theory} gives error estimates for such approximations:
+%
+%\begin{theorem}\label{thm:discweakconv}
+%Let nonnegative integer $q$, multi-index $\mathbf s$, and $\mathbf x^*\in\mathbb R^d$ be given.
+%Suppose $\{\eta_h^\epsilon(\cdot;\mathbf x^*): \epsilon>0\}$ is a sequence of grid functions $\eta_h^\epsilon(\cdot;\mathbf x^*):\mathcal G(\mathbf x_0,h)\to\mathbb R$.
+%Furthermore, assume that the support of $\eta_h^\epsilon(\cdot;\mathbf x^*)$ is contained in $B(\mathbf x^*,\epsilon)$ with $\epsilon=O(h)$, and that there exists constant $K>0$ independent of $\epsilon$ such that
+%\begin{equation*}\label{eq:boundh}
+%	h^d \sum_{\mathbf x\in\mathcal G(\mathbf x_0,h)} |\eta_h^\epsilon(\mathbf x;\mathbf x^*)|\; |(\mathbf x-\mathbf x^*)^{\bs \alpha}| \le K, \quad \forall |\bs \alpha| = |\mathbf s|.
+%\end{equation*}
+%If $\{\eta_h^\epsilon(\cdot;\mathbf x^*): \epsilon>0\}$ satisfy the discrete $(q,\mathbf s)$-moment conditions at $\mathbf x^*$ and $\phi$ is of class $C^{q+|\mathbf s|}$ over $B(\mathbf x^*,\epsilon)$, then 
+%\begin{equation}
+%\label{eq:delta_error}
+%	\left| \int_{\mathbb R^d} D^{\mathbf s}\delta(\mathbf x- \mathbf x^*) \;\phi(\mathbf x)\; d\mathbf x - h^d \sum_{\mathbf x\in\mathcal G(\mathbf x_0,h)}\eta_h^\epsilon(\mathbf x;\mathbf x^*) \; \phi(\mathbf x)\right| = O(h^q).
+%\end{equation}
+%\end{theorem}
+%
+%Theorem \ref{thm:discweakconv} is a discrete extension of what is presented in \cite{hoss:16}, for $|{\bf s}|\neq0$.
+%Given equation \ref{eq:delta_error}, we refer to $q$ as the \emph{singular source approximation order} and $\eta^\epsilon_h(\mathbf x;\mathbf x^*)$ as being a $q$-order approximation of $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$.
+%
+%To construct approximations $\eta_h^\epsilon(\mathbf x;\mathbf x^*)$ for $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ we first focus on the 1-D case, where we assume that the support of our approximation contains exactly $N$ grid points, that is, $2\epsilon=N$.
+%For the case $N=q+s$, it can be shown that $\eta_h^\epsilon$ is uniquely determined:
+%for a given grid point $x\in\mathcal G(x_0,h)$,
+%\[
+%	\eta_h^\epsilon(x; x^*) = \eta^\epsilon(x-x^*)
+%\]
+%where the continuum function $\eta^\epsilon$ is a piecewise polynomial,
+% \begin{equation}\label{eq:eta}
+% 	\eta^\epsilon(x) = \left\{ \begin{array}{rl}
+%		P_\ell(x),& \quad x\in[a_\ell,a_{\ell+1}), \; \text{for}\; \ell=1,...,N\\
+%		0,& \quad \text{otherwise}
+%	\end{array}\right.
+% \end{equation}
+%with $P_\ell$ a polynomial over the considered interval, and $a_{\ell}=-\epsilon+ (\ell-1)h$ for $\ell=1,...,N+1$,
+%\begin{equation}\label{eq:poly}
+%	 P_\ell(x) = \left\{ \begin{array}{cl}
+%		\displaystyle
+%		s! (-1)^{N-1} \; 
+%		\frac{
+%			\displaystyle
+%			\sum_{\underset{m_1,...,m_{q-1}\neq \ell}{1\le m_1<\cdots<m_{q-1}\le N}}
+%			 ( h(m_1- \ell) + x) \cdots ( h(m_{q-1} - \ell) + x)
+%		}
+%		{
+%			\displaystyle
+%			h^{N}\prod_{\underset{m\neq \ell}{1\le m\le N}} ( \ell - m)
+%		}
+%		,& \text{for} \; q>1  \vspace{10pt} \\ 
+%		\displaystyle
+%		\frac{
+%			s! (-1)^{s}
+%		}
+%		{
+%			\displaystyle
+%			h^{N} \prod_{\underset{m\neq \ell}{1\le m\le N}} (\ell - m)
+%		}
+%		,& \text{for}\; q=1.
+%	\end{array}\right.
+%\end{equation}
+%Inspection of equation \ref{eq:poly} reveals that $\eta^\epsilon$ is a piecewise polynomial of degree $q-1$.
+%The explicit form for $\eta^\epsilon$ (equations \ref{eq:eta} and \ref{eq:poly}) can be derived from imposing the discrete $(q,s)$-moment conditions over all $x^*\in\mathbb R$.
+%
+%Higher dimensional approximations are generated by taking tensor products of 1-D approximations. Namely $\eta^\epsilon:\mathbb R^d\to \mathbb R$ is given by
+%\[
+%	\eta^\epsilon(\mathbf x) = \prod_{k=1}^d \eta^{\epsilon_k}(x_k)
+%\]
+%where $\eta^{\epsilon_k}:\mathbb R\to\mathbb R$ is the continuum function that satisfies the discrete $(q,s_k)$-moment conditions for all $x^*_k\in \mathbb R$.
+%
+%
+%A simple example in 1-D is given by taking $q=2$ and $s=0$, that is a second-order approximation to the delta function;
+%\begin{equation}
+%\label{eq:hat}
+%\begin{split}
+%       \eta^\epsilon(x) =& \left\{ \begin{array}{rc}
+%                             \frac{x+h}{h^2}, & x\in[-h,0)\\
+%                             \frac{h-x}{h^2}, & x\in[0,h)\\
+%                             0, & \text{otherwise}
+%                              \end{array}\right. \\
+%\end{split}
+%\end{equation}
+%which coincides with the familiar {\em hat function}.
+%It follows that the hat function is, for arbitrary $x^*$, only a second order approximation.
+%
+%
+%%%%%%%
+%\subsection{Discrete MPS-to-RHS Map}
+%
+%Recall our multipole source representation as given by equations \ref{eq:MPS} and \ref{eq:realdefn}. 
+%We obtain a discrete analog, the {\em discrete multipole representation}, by replacing $D^{{\bf s}_{ij}}\delta({\bf x} - {\bf x}^*)$ in equations \ref{eq:realdefn} with grid functions $\eta^\epsilon_{h,ij}(\mathbf x;\mathbf x^*)$ for each $i,j$, according to the singular source approximation discussed above:
+%\begin{equation}
+%\label{eq:MPSdiscrete}
+%\begin{split}
+%        f_h(\mathbf x,t) &= \sum_{i} w_i(t) b_{h,i}(\mathbf x),\\
+%        \mathbf f_h(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf b_{h,i}(\mathbf x)\\
+%        \mathbf F_h(\mathbf x,t) &= \sum_{i} w_i(t) \mathbf B_{h,i}(\mathbf x),
+%\end{split}
+%\end{equation}
+%with
+%\begin{equation}
+%\label{eq:realdefndiscrete}
+%\begin{split}
+%	b_{h,i}(\mathbf x) & = \sum_j c_{ij} \eta^\epsilon_{h,ij}(\mathbf x;\mathbf x^*)  \\
+%	\mathbf b_{h,i}(\mathbf x) & = \sum_j {\bf c}_{ij} \eta^\epsilon_{h,ij}(\mathbf x;\mathbf x^*) \\
+%	\mathbf B_{h,i}(\mathbf x) & = \sum_j {\bf C}_{ij} \eta^\epsilon_{h,ij}(\mathbf x;\mathbf x^*).
+%\end{split}
+%\end{equation}
+%According to our analysis and numerical experiments in our previous paper \citep{MPS_theory}, we take $q$ to be equal to the spatial order of the finite difference scheme.%, this will preserve numerical convergence rates.
+%
+%\noindent {\bf Remark:} Throughout the mathematical development, we will continue to regard time as continuous, and write $w_i(t)$ for the multipole coefficients. 
+%Of course, in any implementation time will be discretely sampled as well.
+%
+%Discretization of multipole sources produces gridded approximations \ref{eq:MPSdiscrete}, where the formula may be viewed as defining a discrete version of the MPS-to-RHS map (equation \ref{eq:mpstorhsdefn}):
+%\begin{equation} \label{eq:mpstorhsdefndiscrete}
+%	(\mathbf L_h \mathbf w)(\mathbf x,t) = \sum_{i} w_i(t) b_{h,i}(\mathbf x),
+%\end{equation}
+%over grid points $\mathbf x\in\mathcal G(\mathbf x_0,h)$ as before.
+%We call $\mathbf L_h$ the {\em discrete MPS-to-RHS} map. 
+%Its output (vector in range) may be used as the right-hand side in a finite difference approximation to acoustodynamics (equations \ref{eq:acous}, \ref{eq:wave_acous}) or elastodynamics (equations \ref{eq:elas}). 
+%The domain of this map is a discrete version of the MPS space described in the preceding section. 
+%
+%The range of $\mathbf L_h$ consists of the discrete functions of space and time, limited in space to those grid points that actually appear in the discrete multipole basis functions (equation \ref{eq:realdefndiscrete}). 
+%Thus the information that characterizes the range of the discrete MPS-to-RHS map is
+%(i) the locations of the grid points required to express the moment-consistent discrete multipoles listed in equation \ref{eq:realdefndiscrete}, these locations depending on the choice of discrete multipole basis as in \ref{eq:MPSdiscrete}, 
+%and (ii) the time sampling information (time grid) which for sake of simplicity we assume is the same for the right-hand side and for all of the multipole coefficients.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Methods}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+As mentioned in the introduction, the overarching software design
+principle of this project is to organize the computation in a fashion
+as parallel as possible with the underlying mathematics. The
+mathematical venue of the computations described in the preceding
+section is vector calculus and linear algebra. However, the key
+concepts of vector calculus - vectors, linear operators, vector-valued
+functions, derivatives, and so on - have no immediate reflection in
+the basic types of any high level programming language. The programmer
+of numerical algorithms such as those described here must define the
+missing types and provide them with the proper behavior. While
+straightforward programming with native arrays, in the fashion
+traditional to computational science, can express vector calculus
+algorithms, such expression does not encompass (for example) data
+stored on disk or in a network, and the additional code
+required to deal with such extensions inevitably intrudes into the
+expression of mathematical algorithms to which they are irrelevant.
+
+Programming with abstract types - that is, types defined by their
+behavior rather than their implementation or data structure details -
+provides a way out of this dilemma, allowing expression of abstract
+algorithms that apply transparently, regardless of data structure and
+low-level computational details. Code centered around
+programmer-defined types has come to be called {\em object oriented}. 
+While object oriented design can be implemented in almost
+any language environment, some programming languages (C++, Python,
+Java,...) offer explicit support for type definition and use. We chose
+to program in C++, representing abstract numerical types as C++ classes.
+
+%%%%%%
+\subsection{The Rice Vector Library}
+The Rice Vector Library (RVL) \cite[]{RVLTOMS} is an attempt to mimic
+the structure of vector calculus in a system of C++ classes, so that common linear
+algebra and optimization algorithms may be expressed in natural and
+portable form.
+
+RVL provides the basic interfaces for definition of abstract vector
+calculus types in C++ and coding of important numerical algorithms in
+terms of these types. Other packages offer a similar application
+programmer interface, but tend to imprint the needs of particular
+application areas in the core design. Recent examples include
+Trilinos Rapid Optimization Library for simulation-driven optimization
+\cite[]{ROL:15} and Operator Discretization Library for biomedical
+tomography \cite[]{ODL:16}. Amongst these, RVL alone is built on those
+interfaces, and only those interfaces, native to the mathematics
+underlying continuous optimization and linear algebra.
+
+The class {\tt RVL::Space} expresses the central abstraction of
+calculus in Hilbert space, namely the Hilbert space. It acts as an
+abstract factory for {\tt RVL::Vector}s, realizing in code the
+mathematical commonplace ``let $x$ be a member of $V$''. 
+%Most scientific vector objects have Cartesian product structure (traces in a
+%gather, gathers in a line...) so most RVL vector spaces are instances
+%of the subclass {\tt RVL::ProductSpace}. 
+{\tt RVL::LinearOp} subtypes implement matrix-vector and transpose (adjoint)
+matrix-vector product, without requiring explicit storage of a matrix.
+{\tt RVL::Operator}s are nonlinear vector-valued
+functions, with derivatives and second derivatives and their
+transposes. Just as a linear operator is a special type of operator,
+{\tt RVL::LinearOp} is a subclass of {\tt RVL::Operator}. Operators
+act as vectors - they can be added and multiplied by scalars - but
+there is no natural inner product on the vector space of
+operators. Since {\tt RVL::Space} realizes the structure of Hilbert
+space, {\tt RVL::LinearOp} cannot be regarded as a subclass of {\tt
+  RVL::Space}.  However linear-operator valued functions are useful
+and occur naturally. So we supply a separate {\tt RVL::LinOpValOp}
+class to express such behavior, as an appropriate subclass of {\tt
+  RVL::Operator}. We give an example of its use below.
+
+For much more detail, design considerations, and examples, see
+\cite{RVLTOMS}.
+
+%%%%%%
+\subsection{Out of core classes}
+
+We have built the framework described here on top two open source seismic data processing packages, Seismic Unix
+(SU, \cite[]{SU44}) and Madagascar \cite[]{Madagascar}. Both packages offer extensive file-to-file
+utilities based on two different file data formats. The SU variant of SEGY tape format consists of
+SEGY traces without reel headers. We refer to this as SU file format,
+and use it to represent time series data throughout the project. The
+Madagascar file format, Regularly Sampled Function (RSF) is ideal
+for rectangularly gridded data. Since we will couple the MPS
+representation to finite difference codes on regular grids, RSF format
+is natural to represent grids and spatial functions on  them.
+
+We have built {\tt RVL::Space} classes around these file formats, with
+appropriate in-core data structures mirroring the information content
+of the file data. These will be described in detail below. 
+
+%%%%%%
+\subsection{IWave}
+
+IWave is a wave equation simulator code, implementing several wave propagation models. 
+The ones used in our examples are staggered-grid finite difference for acoustodynamic equations \ref{eq:acous} \citep{Vir:84} and centered differences for wave equation \ref{eq:wave_acous}. 
+Each of these models defines an operator which we abstractly refer to as the {\em forward map} $\mathcal F$, mapping the pair of model parameters $(\mathbf m,\mathbf f)$ to data traces $\mathbf d$:
+\begin{equation} \label{eq:fwdmodel}
+	\mathcal F(\mathbf m,\mathbf f) = \mathbf d,
+\end{equation}
+where
+\begin{itemize}
+	\item $\mathbf m$ is the medium parameters, i.e., mechanical parameters in the modeling PDE,
+	\item $\mathbf f$ is the source-term, which in this context abstractly refers to any of the right-hand side source terms.
+\end{itemize}	
+In the discrete setting, $(\mathbf m,\mathbf f)$ will correspond to the space-time discretizations of medium and source functions.
+Similarly, $\mathbf d$ is typically space-time sampling of state variables, such as pressure field.
+
+It can be shown that $\mathcal F$ is in fact linear in the $\mathbf f$ argument, which will be of particular importance when formulating the source and joint source-medium inverse problems.
+In other words, $\mathcal F$ defines a linear operator (on $\mathbf f$) valued function of $\mathbf m$. 
+RVL supplies the class {\tt RVL::LinOpValOp} for abstracting the behavior of such objects, and we wrap the IWave simulation code in this interface under the operator subclass {\tt TSOpt::IWaveLOVOp}.
+The domain of these IWave operators are the Cartesian product of {\tt RVL:Space}'s encapsulating out-of-core RSF data for $\mathbf m$ and {\tt RVL::Space}'s based on SU trace data for $\mathbf f$.
+The range is also an {\tt RVL::Space} (or Cartesian product of same) based on SU trace data. 
+The action of the operator is file-to-file, very much like most SU and Madagascar utilities.
+ 
+Along with the modeling relation \ref{eq:fwdmodel}, IWave also
+provides access to derivatives and adjoints as is appropriate for
+assembling inversion code. See \cite{FehlerKeliher:11} for the use of
+an earlier version in QC of phase I of the SEAM project,
+\cite[]{GeoPros:11} discussion of the design and implementation of
+the IWave inversion interface, and \cite[]{trip14:struct} for a detailed
+description of the overall code design. \cite[]{trip14:struct} is also a
+reproducible paper, and can be found in the {\tt repro} subdirectory
+of the code package accompanying this paper.
+
+%%%%%%%%%%%
+\subsection{MPS Framework Implementation}
+
+The three fundamental constructs of the multipole point-source MPS framework are MPS spaces, the
+MPS-to-RHS operator, and the composition of the latter with a wave
+equation simulator to create an MPS-to-data modeling operator.
+The MPS framework is built out of RVL types, which are explicitly
+adapted to out-of-core data such as is stored in the SU and RSF data
+formats. 
+
+%%%%%%%%%%%
+\subsubsection{MPS Space}
+
+The subclass {\tt MPS\_Space} of {\tt RVL::Space}
+implements the MPS space abstraction described in the last section. 
+As MPS spaces are parametrized by their multipole bases, {\tt MPS\_Space} is an
+abstract or purely virtual class with three purely virtual member functions:
+\begin{itemize}
+	\item {\tt get\_MPS\_basis()}, returning a list of multipole basis vectors in the form of a \\
+		{\tt std::vector<MPS\_base>};
+	\item {\tt get\_type()} returns an identifying {\tt std::string} for use in error messages and the like;
+	\item {\tt clone()}, a virtual copy constructor mandated by the base class {\tt RVL::Space}.
+\end{itemize}
+The {\tt MPS\_base} struct stores a vector of derivative index vectors, for example $(0,0,0)$ for no derivative (monopole), $(1,0,0)$ for dipole in the first direction, $(1,1,0)$ for a double couple in the $x_1$-$x_2$ coordinate plane, $(0,0,2)$ for a second order multipole in the $x_3$-direction, etc. 
+Examples of {\tt get\_MPS\_basis()} for various MPS space types may be found in the directory {\tt iwave/mps/lib/MPS\_Space\_Examples.cc}. 
+These examples also show how to implement the virtual copy constructor {\tt clone()} of the {\tt RVL::Space} class, by calling operator {\tt new} using the copy constructor of the class. 
+Once {\tt get\_MPS\_basis()}, {\tt get\_type()}, and {\tt clone()} are defined in a subclass of {\tt MPS\_Space}, that subclass is fully defined and may be instantiated.
+
+The main constructor of {\tt MPS\_Space} is inherited by every subspace and may be used in lieu of a subspace constructor. 
+Its arguments are an {\tt MPS\_KEYS} struct, and a {\tt PARARRAY}.
+{\tt PARARRAY} is an associative array class, part of the {\tt iwave/base} package. 
+It stores {\tt key=value} pairs and offers a number of convenient manipulation routines. 
+A {\tt PARARRAY} can be read from the command line or from a file recording key-value pairs.
+The file format constraints are quite non-restrictive compared to other similar packages appearing in similar applications. 
+For example, white space is inconsequential, and key-value pairs are extracted by finding two strings without white space, separated by an ``='' sign surrounded by any amount of white space. 
+Any other string pattern is treated as a comment, which makes files defining {\tt PARARRAYS} easy to annotate.
+
+{\tt MPS\_KEYS} is a kitchen-sink struct listing all key strings needed by any of the MPS classes, spaces and operators, to extract values from {\tt  PARARRAY}s.
+For {\tt MPS\_Space}, the core members of {\tt MPS\_KEYS} that must be initialized are
+\begin{itemize}
+	\item {\tt grid\_file} - the key used to identify an RSF-formatted gridded data-file pair defining the simulation grid, usually the name of one of the spatial coefficient arrays such as bulk modulus or density, and
+	\item {\tt MPS\_file} - key used to identify an SU file containing traces with the correct source geometry.
+\end{itemize}
+Only the source geometry and time sampling info (SEGY keywords {\tt sx, sy, selev, ns, dt, delrt}) are extracted from the {\tt MPS\_file} file data. 
+The main purpose in passing the name of an SU file with these attributes, rather than the attributes
+themselves, is to provide a prototype file that can be simply copied to create new instances of {\tt RVL::Vector}'s in the {\tt MPS\_Space}. 
+SU provides excellent file initialization utilities, and the {\tt MPS\_file} file is likely to play other roles beyond specifying geometry, such as being the source for multipole coefficient data, so this is a convenient way to transfer the admittedly small amount of information needed to initialized a space.
+
+To illustrate these concepts with concrete, compilable code, we have created the {\tt MPS\_howto.cc} example, a driver defined in  the source directory {\tt iwave/mps/main}, 
+%FIX THIS
+which we run as part of the {\tt project/SConstruct} accompanying this paper. 
+This example shows how all of the fundamental
+constructs in our framework are built and used.
+
+Construction of {\tt MPS\_Space} requires that an {\tt MPS\_KEYS}
+struct be initialized with at least the two items listed above. A
+fragment from {\tt MPS\_howto.cc} shows how this is done:
+{\small
+\begin{verbatim}
+    MPS_KEYS mk_sp;
+    mk_sp.MPS_file  = "MPS_file"; 
+    mk_sp.grid_file = "bulkmod";  
+    ExScal_MPS_Space MPS_SP(mk_sp,*pars);
+\end{verbatim}
+}
+The {\tt ExScal\_MPS\_Space} is a subclass of {\tt MPS\_Space}, defined in header file {\tt MPS\_howto.hh} in the MPS package {\tt include} directory. 
+This particular space is an example of an MPS space for scalar multipoles with basis
+\[
+	b_1(\mathbf x) = \delta(\mathbf x-\mathbf x^*),\quad b_2(\mathbf x) = \left(\frac{\partial}{\partial x_1} + \frac{\partial}{\partial x_2}\right)\delta(\mathbf x-\mathbf x^*).
+\]
+Moreover, the {\tt MPS\_howto.cc} driver specializes with scalar source terms for the pressure equations of the acoustic system \ref{eq:acous} in either 2-D or 3-D. 
+
+Having constructed an {\tt MPS\_Space} instance, it is simple to
+create an object corresponding to a vector in the space:
+{\small
+\begin{verbatim}
+    RVL::Vector<float> mps(MPS_SP);
+    RVL::AssignFilename 
+      af_mps(RVL::valparse<string>(*pars,"MPS_file"));
+    mps.eval(af_mps);
+\end{verbatim}
+}
+Line 1 of this fragment constructs {\tt RVL::Vector} workspace {\tt
+  mps}, representing a vector in the space {\tt MPS\_SP}.
+Note that a floating point representation of real numbers (in this
+case, {\tt float}) parametrizes {\tt RVL::Vector} via the C++ template
+mechanism. In fact, {\tt MPS\_Space} is a subclass of {\tt
+  RVL::Space<float>}. RVL accommodates other scalar fields, notably
+{\tt double} and the {\tt std::complex} specializations, but MPS is
+entirely a float (single precision real) package.
+
+In line 3, {\tt mps} is connected to file storage through use of
+function object {\tt RVL::AssignFilename}, constructed in line 2. 
+Evaluation ({\tt eval(...)}) with this particular function object must
+be the first operation on the {\tt RVL::Vector} after its creation,
+else RVL will open a scratch file to hold the data array associated
+with the vector. Such scratch files are deleted upon return from the
+process in which they are created. For archival storage, the progammer
+must make explicit use of {\tt RVL::AssignFilename}.  In line 2, the
+{\tt valparse} function extracts a string from the {\tt PARARRAY}
+pointed to by {\tt pars}, using the key string {\tt
+  mks.MPS\_file}, and returns it for use as the archival filename,
+passed to the constructor of {\tt RVL::AssignFilename}.
+
+Lines 2 and 3 illustrate the encapsulation of data enforced throughout
+RVL: with few exceptions, the only interactions with the data
+underlying a vector - i/o, arithmetic, or otherwise - take place
+through evaluation of function objects such as {\tt
+  RVL::AssignFilename}. The white paper \cite[]{RVLTOMS} discusses at
+length the justification for this strict encapsulation.
+
+%Several MPS space subclasses are also defined in the file
+%\texttt{MPS\_Space\_Examples.cc}, in {\tt iwave/mps/lib}. 
+%One subclass used throughout our
+%numerical examples is the \emph{scalar MPS space}
+%(\texttt{Scal\_MPS\_Space} class), spanned by a single
+%multipole basis $b_1$,
+%\begin{equation}\label{eq:ScalMPS}
+%        b_1({\bf x}) = D^{\bf s}\delta({\bf x}-{\bf x^*}),
+%\end{equation}
+%for a given multi-index ${\bf s}$.
+%%MJB edit
+%%vector $b^h_{\bf n}$ ($bf n = (n_1,n_2,n_3)$)  chosen to match
+%%sufficiently many moments with a specified mixed
+%%partial derivative of spatial delta.
+
+%%%
+\subsubsection{MPS-to-RHS map}
+
+Our framework realizes the discrete MPS-to-RHS map $\mathbf L_h$ (equation
+\ref{eq:mpstorhsdefndiscrete}) as a subclass of {\tt
+  RVL::LinearOp}, an abstract base class encoding the behaviour of a linear map or
+operator. Amongst other things, linear operators have domain and range
+(vector) spaces. Just so, two of {\tt RVL::LinearOp}'s public member
+functions are {\tt getDomain()} and {\tt getRange()}, which return
+{\tt const} references to the {\tt RVL::Space}s representing domain
+and range respectively. Two other important functions are {\tt
+  applyOp} and {\tt applyAdjOp}, implementing the matrix-vector
+product and transpose matrix-vector product respectively. 
+
+The class {\tt MPS\_to\_RHS} implements the MPS-to-RHS map. The domain
+space of an instance is an {\tt MPS\_Space}, which is an argument to
+the constructor, along with {\tt MPS\_KEYS} and {\tt PARARRAY} objects
+as was the case for {\tt MPS\_Space}:
+{\small
+\begin{verbatim}
+    MPS_KEYS mk_m2r;
+    mk_m2r.MPS_file  = "MPS_file"; 
+    mk_m2r.grid_file = "bulkmod";  
+    mk_m2r.appx_ord  = "appx_ord"; 
+    mk_m2r.RHS_files.push_back("source_p");
+    MPS_to_RHS M2R(mk_m2r,*pars,MPS_SP);
+\end{verbatim}
+}
+The keys {\tt bulkmod} and {\tt source\_p} point to the names of files
+containing bulk modulus (a spatial field, therefore RSF format) and
+source traces for the pressure equation (first equation in system
+\ref{eq:acous}).
+
+Another code fragment from {\tt MPS\_howto.cc} illustrates a typical usage
+of the RVL version of the MPS-to-RHS map:
+{\small
+\begin{verbatim}
+    RVL::Vector<float> rhs(M2R.getRange());
+    RVL::AssignFilename
+      af_rhs(RVL::valparse<string>(*pars,"source_p"));
+    rhs.eval(af_rhs);
+    M2R.applyOp(mps,rhs);
+\end{verbatim}
+}
+Lines 1-3 show creation of a vector, this time in the range space of
+the {\tt MPS\_to\_RHS} operator {\tt M2R}, and link to archival file storage.
+In line 4, the {\tt MPS\_to\_RHS} operator {\tt M2R} is applied to the
+multipole coefficient vector {\tt mps}, created a few lines before, and the
+output written to {\tt rhs}.
+
+In our {\tt MPS\_howto} example, we provide the MPS-to-RHS map with 
+input SU file {\tt howto\_mps.su}, containing multipole coefficient vector $\mathbf w=(w_1,w_2)$ as shown in figure \ref{fig:howto-mps}.
+The output is a single SU file {\tt howto\_RHS.su}, plotted in figure \ref{fig:howto-RHS} 
+in the form of a collection of time traces plotted in grey scale.
+Each trace in {\tt howto\_RHS.su} has a spatial location corresponding to spatial grid points associated
+with the output of the discrete MPS-to-RHS map. 
+The number of traces in the output of an {\tt MPS\_to\_RHS} operator, 
+i.e., the number of grid points within the support of our singular source approximation,
+is given by
+\[
+	\prod_{k=1}^d (s_{k,max} +q)
+\]
+where $s_{k,max}$ is the maximum number of derivatives in the spatial $k$-axis for the MPS space in consideration.
+Note that there are a total of $100$ traces in {\tt howto\_RHS.su}, which is 
+to be expected for this example in 3-D with source approximation $q=4$,
+\[
+	(1+4)\times(1+4)\times 4 = 100.
+\]
+%The MPS-to-RHS map is implemented as the \texttt{MPS\_to\_RHS} class,
+%a derived class of \texttt{RVL::LinearOp}, templated by its
+%\texttt{MPS\_Space} domain.  The \texttt{MPS\_to\_RHS} class draws
+%from its domain {\tt MPS\_Space} all of the necessary information
+%required to implement the singular source approximation as a linear
+%operator (see \ref{eq:L}) to output IWave compatible RHS sources.
+
+%The \texttt{MPS\_to\_RHS} operator will also have ``make'' flags for both its domain and range, similar to the ``make'' flag for the \texttt{MPS\_Space} class.
+%The essential forward and adjoint actions of the \texttt{MPS\_to\_RHS} operator will be carried out by kernels, mainly \texttt{MPS\_to\_RHS\_kern} and \texttt{RHS\_to\_MPS\_kern} respectively, through low level function calls to standard SU I/O methods such as \texttt{fgettr(s)} and \texttt{fputtr()}.
+%See appendix A for more discussion on the forward action of \texttt{MPS\_to\_RHS} operator and a derivation of its adjoint.
+
+%Consider the forward modeling problem using the acoustic equations from \ref{eq:acous}. 
+%Let $F$ abstractly denote the operator (forward map) from both medium/model and source parameters to data,
+%\[
+%        F(\mathbf m,\mathbf f) = \mathbf d
+%\]  
+%where $\mathbf m=\{\beta,\kappa\}$ and $\mathbf f$ corresponds to IWave RHS source parameters.
+%For this example, and in our numerical tests, we take data vector $\mathbf d$ to be time traces of the pressure field at reciever locations.
+%Forward map $F$ has a special structure which will be exploited in
+%the context of joint medium-source inversion, namely $F$ is linear
+%with respect to a subset of parameters (in this case $\mathbf f$)
+%thus resulting in a \emph{separable} nonlinear least squares problem.
+
+%%%%
+\subsubsection{Composition of MPS and IWave}
+
+%The range space of the discrete MPS-to-RHS operator is a space-time
+%grid function, a discrete representation of a linear combination of
+%delta functions. This is in principle exactly what is required as a
+%right-hand side for the finite difference discretization of the wave
+%equations \ref{eq:acous} and \ref{eq:elas}. 
+
+IWave implements the forward modeling operator (equation \ref{eq:fwdmodel}) as an {\tt TSOpt::IWaveLOVOp}, a subtype of {\tt RVL::LinOpValOp}. 
+This operator has a product space domain, consisting of pairs (medium parameter fields, source fields). 
+To compute the data traces generated by a multipole represented by a multipole coefficient vector, the IWave operator must be chained or {\em composed} with the MPS-to-RHS map (equation \ref{eq:mpstorhsdefndiscrete}). 
+As just noted, the latter operator is represented as a {\tt RVL::LinearOp} in our framework.
+RVL provides a number of classes for  operator composition. 
+These are of the type sometimes known as ``decorator'' or ``wrapper'' classes: they combine instances of various types to obtain the behavior of yet another type. 
+In this instance, we use an {\tt RVL::LinCompLOVOp}, which implements the composition
+\begin{equation}
+\label{eq:iwavemps}
+	(\mathbf m,\mathbf w) \mapsto \mathcal F(\mathbf m,\mathbf L \mathbf w).
+\end{equation}
+
+The code fragment from {\tt MPS\_howto.cc} illustrates instantiation of a {\tt TSOpt::IWaveLOVOp} and its composition with the {\tt RVL::LinearOp} subtype {\tt MPS\_to\_RHS}:
+{\small
+\begin{verbatim}
+    TSOpt::IWaveLOVOp IWOP(M2R.get_pars(),stream);
+    RVL::LinCompLOVOp<float> F(M2R,IWOP);
+\end{verbatim}
+}
+At this point in the code, the {\tt MPS\_to\_RHS} instance {\tt M2R}
+has already been built. Its internal {\tt PARARRAY} object contains
+all parameters needed by {\tt TSOpt::IWaveLOVOp} as well. In
+particular, the file used by {\tt MPS\_to\_RHS} is listed under the
+key words used to generate the linear part of the domain for {\tt
+  TSOpt::IWaveLOVOp}, so that the domain/range sanity checks built
+into the {\tt RVL::LinCompLOVOp} are satisfied.  {\tt RVL::LinCompLOVOp} 
+builds a functional {\tt RVL:LinOpValOp} out of
+the two arguments to its constructor, implementing equation
+\ref{eq:iwavemps}.
+Figure \ref{fig:howto-data} plots the resulting output, a single trace of the pressure field for our running {\tt MPS\_howto} example; see {\tt hdr\_3D.su} for more details on source-receiver geometry.
+
+The singular source approximation, as discussed in the theory section, is encoded in the discrete MPS-to-RHS map and streamlined into IWave forward modeling via operator composition as mentioned above.
+With the resulting composition, it is possible to compute the data directly given the multipole coefficient vector and the acoustic or elastic medium parameter fields (density, bulk modulus,...). 
+Since the operator class built this way implements derivatives up to order two and their adjoints, it is possible to couple the results to RVL optimization code and so construct inversion applications. 
+In the next section we offer some examples of inversion code that take advantage of our multipole source framework.
+
+
+%The MPS and IWave framework come together through operator composition in the linear parameters. 
+%Let $\mathbb L$ denote the \texttt{MPS\_to\_RHS} operator and $\mathbf f_{\text{MPS}}$ an element %of some derived class of \texttt{MPS\_Space}.
+%Then we can define a forward map $F_{\text{MPS}}$ as an operator of $\mathbf f_{\text{MPS}}$ by 
+%\[
+%        F_{\text{MPS}}(\mathbf m,\mathbf f_{\text{MPS}}) := F(\mathbf m, \mathbb L\mathbf f_{\text{MPS%}}).
+%\]      
+
+%It is worth mentioning that $F_{\text{MPS}}$ is more than just a linear operator with respect to $\mathbf f_{\text{MPS}}$, it can be shown to be a multichannel convolution between MPS coefficients and proper Green's functions.
+%In fact, the \texttt{MPS\_IWaveLOVOp} implements $F_{\text{MPS}}$ as a multichannel convolution, and its adjoint as corresponding cross-correlation, by computing and storing appropriate Green's functions for a given set of model parameters through the use of \texttt{IWaveLOVOp}, \texttt{MPS\_to\_RHS} and other IWave operators.
+
+
+%%%%%%%%%%%%%%%%
+\section{Numerical Examples}
+%%%%%%%%%%%%%%%%
+
+In the numerical examples to come, we make use of our multipole source parametrization and computational framework to implement inversion code for source estimation problems.
+Numerical examples will pertain to inversion problems associated with forward modeling via the acoustic wave equation \ref{eq:wave_acous} in 2-D.
+Moreover, we consider scalar multipole sources spanned by the single base
+\begin{equation}\label{eq:singleMPS}
+	b_1(\mathbf x) = D^{\mathbf s}\delta(\mathbf x-\mathbf x^*),
+\end{equation}
+particularly for $\mathbf s=(0,0)$.
+
+%%%%%
+\subsection{Forward Modeling}
+
+As alluded to in our discussion of IWave and wave propagation modeling, we can define a modified forward map $\tilde{\mathcal F}$ as the abstract operator mapping model parameters $(\mathbf m,\mathbf w)$ to data $\mathbf d$ through operator composition with the MPS-to-RHS map $\mathbf L$ and the IWave forward map $\mathcal F$:
+\begin{equation}\label{eq:Fmap}
+	\tilde{\mathcal F}(\mathbf m,\mathbf w) := \mathcal F(\mathbf m,\mathbf L\mathbf w) = \mathbf d
+\end{equation}
+Note that $\tilde{\mathcal F}$ is also linear with respect to its second argument, and thus we use the following notation for convenience at times,
+\begin{equation}\label{eq:F_lin}
+	\tilde{\mathcal F}(\mathbf m,\mathbf w) = \tilde{\mathcal F}(\mathbf m)\mathbf w.
+\end{equation}
+
+The medium parameter $\mathbf m$ for acoustic wave modeling corresponds to the square of the wave velocity, i.e., $\mathbf m = c(\mathbf x)^2$.
+Also, given our choice of MPS space (scalar multipoles with basis \ref{eq:singleMPS}), we have $\mathbf w=w_1(t)$.
+Lastly, in our numerical examples, $\mathbf d$ consists of the pressure field $p$ sampled at receiver locations $\{\mathbf x_{i_r} : i_r=1,2,...\}$, that is,
+\[
+	\mathbf d = \{ p(\mathbf x_i,t) : i_r=1,2,...\}.
+\]
+
+Driver {\tt acd\_scal.cc} is used to generate ``observed'' data, $\mathbf d_{\rm obs}$, for our inversion examples.
+The driver implements forward map \ref{eq:Fmap}, as done in {\tt MPS\_howto.cc}, through operator composition of {\tt TSOpt::IWaveLOVOp} and {\tt MPS\_to\_RHS} operators.
+We discuss some of the input key-value pairs required for running {\tt acd\_scal}, see {\tt SConstruct} located in the {\tt project} directory of this paper:
+\begin{itemize}
+	\item {\tt csq=csq24.rsf}, input RSF file for medium parameter;
+	\item {\tt source=empty}, input SU file related to right-hand side source terms, it is set to {\tt empty} as a place holder since it is necessary for IWave code;
+	\item {\tt data=data.su}, output SU file containing pressure field time traces with specified source-receiver geometry;
+	\item {\tt MPS\_file=mps\_towed.su}, input SU file containing multipole coefficients and source locations;
+	\item {\tt MPS\_ord\_0=0 MPS\_ord\_1=0}, equivalent to multi-index $\mathbf s=(0,0)$ for multipole source \ref{eq:singleMPS};
+	\item {\tt appx\_ord=4}, singular source approximation order, $q=4$;
+	\item {\tt order=2}, spatial half-order of FD scheme, thus a fourth-order in space scheme here;
+	\item {\tt cfl=0.75 cmin=1.5 cmax=4.0}, CFL factor and bounds on wave velocity;
+\end{itemize}
+
+Input medium parameter file {\tt csq24.rsf} is plotted in figures \ref{fig:csq24}, it consists of a fraction of the Marmousi model with an added water layer to simulate a marine environment.
+The acoustic wave equation is discretized using a standard second-order in time and fourth-order in space centered finite difference scheme.
+The spatial grid size $h$ is taken from the medium parameter file which contains information of the underlying spatial grid; $h=24m$ in {\tt csq24.rsf}.
+Time step size $\Delta t$ is given by CFL relation
+\[
+	\Delta t = \alpha \frac{h}{c_{\rm max}},
+\] 
+which can be tweaked through user input CFL factor $\alpha$ and $c_{\rm max}$, corresponding to keys {\tt cfl} and {\tt  cmax} respectively.
+
+Source-receiver geometry for the generation of data file {\tt data.su} is based on marine seismic surveying, where the source is activated multiple times while being towed across the ocean by a boat, along with a string of trailing receivers.
+Each activation of the source is referred to as a {\em shot}, and each shot results in data measurements that are independent from each other.
+File $\tt data.su$ contains a concatenation of measured data for 16 shots.
+The first shot occurs at location $\mathbf x^* = (8,2500)$, where the coordinates correspond to depth and horizontal displacement, in meters, respectively.
+The first line of receivers are located at depth $12m$ spanning a horizontal displacement from $500$ to $2300m$, with $25m$ spacing between receivers.  
+The remainder of the shots consist of towing the initial source-receiver configuration to the right of the domain $100m$ at a time.
+Thus, the last shot is located at $4000m$ horizontal displacement.
+Input SU file {\tt mps\_towed.su} contains multipole coefficient $\mathbf w$ for each shot, consisting of a shifted Ricker wavelet of $5Hz$ peak frequency; see figure \ref{fig:mps-towed}.
+
+%%%%%
+\subsection{Multipole Source Inversion}
+
+We assume domain and range spaces of $\tilde{\mathcal F}$ have inner-product structure for which it makes sense to talk about norms and adjoints of linear operators; an obvious Euclidian inner-product for MPS spaces is given by \ref{eq:euclid}.
+Multipole source inversion is formulated as a (linear) least squares problem: given $\mathbf m$, find $\mathbf w^*$ such that it minimizes the misfit between predicted and observed data in a least squares sense, i.e.,
+\begin{equation}\label{eq:LLS}
+	\mathbf w^* = {\rm argmin}_{\mathbf w} \; 
+	\| \tilde{\mathcal F}(\mathbf m)\mathbf w - \mathbf d_{\rm obs}\|^2.
+\end{equation}
+Making use of our linear operator notation \ref{eq:F_lin}, it follows that least squares estimate $\mathbf w^*$ is also the solution to the normal equations.
+\begin{equation}\label{eq:normal}
+	\tilde{\mathcal F}(\mathbf m)^T (\tilde{\mathcal F}(\mathbf m)\mathbf w^* - \mathbf d_{\rm obs}) =0.
+\end{equation}
+
+Driver {\tt acd\_scal\_inv\_towed.cc} solves the multipole source inverse problem iteratively by solving normal equations \ref{eq:normal} via conjugate gradient.
+Recall that multi-shot data {\tt data.su} is generated from a single multipole source that is being towed horizontally.
+Therefore, we should only estimate a single multipole coefficient, rather than a multipole coefficient for each shot.
+To this end we introduce the {\tt MPS\_spread} operator, a subtype of the {\tt RVL::LinearOp} class, which implements the linear operation of taking a multipole source and copying (or spreading) it over many source locations specified by the range MPS space.
+The {\tt MPS\_spread} constructor requires only the domain and range {\tt MPS\_Space}'s to initialize such operators.
+The following piece of code from {\tt acd\_scal\_inv\_towed.cc} shows how to initialize an {\tt MPS\_spread} operator:
+{\small
+\begin{verbatim}
+    MPS_KEYS mk_sp;
+    mk_sp.MPS_file  = "MPS_file_inv";
+    mk_sp.grid_file = "csq";
+    Scal_MPS_Space MPS_SP(mk_sp,*pars);
+    MPS_KEYS mk_tw;
+    mk_tw.MPS_file  = "MPS_towed";
+    mk_tw.grid_file = "csq"
+    Scal_MPS_Space MPS_TW(mk_tw,*pars);
+    MPS_spread MPS_SPR(MPS_SP,MPS_TW);
+\end{verbatim}
+}
+Making use of operator composition we can create the target forward map, an operator from medium parameters and the single multipole source (rather than the towed source) to data traces:
+{\small
+\begin{verbatim}
+    MPS_KEYS mk;
+    mk.MPS_file   = "MPS_towed";
+    mk.grid_file  = "csq";
+    mk.appx_ord   = "appx_ord";
+    mk.delta_file = "MPS_delta";
+    mk.RHS_files.push_back("source");
+    mk.hdr_files.push_back("data");
+    mk.G_files.push_back("data_g");
+    MPS_IWaveLOVOp<Scal_MPS_Space> MPS_LOVO(mk,*pars,stream);
+    RVL::LinCompLOVOp<float> F(MPS_SPR,MPS_LOVO);
+\end{verbatim}
+}
+The {\tt MPS\_IWaveLOVOp} class is a subtype of {\tt RVL::LinOpValOp} and is templated by {\tt MPS\_Space}.
+This version of {\tt IWaveLOVOp} implements forward map $\tilde{\mathcal F}$ (equation \ref{eq:Fmap}) as a convolution between multipole coefficients and a kernel related to a Green's function.
+The convolution kernel is computed once and stored for a given medium parameter $\mathbf m$, this involves one PDE solve.
+Computing forward (and adjoint) actions of linear operator $\tilde{\mathcal F}(\mathbf m)$ during source estimation thus comes at a cost of a convolution, rather than a more costly PDE solve.
+%{\tt MPS\_KEY.delta\_file} refers to a compatible SU file containing a filtered $\delta(t)$ as multipole coefficients as input for computing the Green's function, stored in another SU file referred by {\tt MP\_KEY.G\_files}.
+{\tt MPS\_KEY}'s, {\tt "MPS\_delta"} and {\tt "data\_g"}, refer to SU files required for the computation of the convolution kernel, while the other keys are needed for an operator composition between {\tt MPS\_to\_RHS} and {\tt IWaveLOVOp} internal to {\tt MPS\_IWaveLOVOp}.
+
+Before we can apply a conjugate gradient algorithm to solve the normal equations, we must first extract the linear operator $\tilde{\mathcal F}(\mathbf m)$ from our linear operator valued operator $\tilde{\mathcal F}$.
+This is done through the {\tt RVL::LinearRestrictOp} class, a subtype of {\tt RVL::LinearOp}, which upon initialization takes an {\tt RVL::LinOpValOp} and an {\tt RVL::Vector} from the nonlinear domain of said operator and yields the desired linear operator;
+in our example code:
+{\small
+\begin{verbatim}
+    RVL::Vector<float> m(F.getProductDomain()[0]);
+    RVL::AssignFilename af_csq(valparse<string>(*pars,"csq"));
+    m.eval(af_csq);
+    RVL::LinearRestrictOp<float> F_lin(F,m);
+\end{verbatim}
+}
+
+Lastly, in the next lines of code we initialize and apply a {\em conjugate gradient for normal equations} (CGNE) algorithm \citep{Paige:82}, implemented by the {\tt RVLUmin::CGNEAlg} abstract class.
+Without going into too much detail, initializing an {\tt RVLUmin::CGNEAlg} object requires {\tt const} references to {\tt RVL::Vector}'s (estimated multipole coefficient vector {\tt w}, and observed data vector {\tt d}) and an {\tt RVL::LinearOp} (linear forward map {\tt F\_lin}), among other things:
+{\small
+\begin{verbatim}
+    Vector<float> w(F.getProductDomain()[1]);
+    Vector<float> d(F.getRange());
+    AssignFilename af_mps(valparse<string>(*pars,"MPS_file_inv"));
+    AssignFilename af_data(valparse<string>(*pars,"data"));
+    w.eval(af_mps);
+    d.eval(af_data);
+
+    RVLUmin::CGNEAlg<float> cgalg (w,F_lin,d,
+        rnorm,nrnorm,rtol,gtol,maxiter,trustrad,sstream);
+    cgalg.run();
+
+\end{verbatim}
+}
+The {\tt run()} method runs the CGNE algorithm, overwriting {\tt RVL::Vector w} with the computed solution.
+{\tt RVLUmin::CGNEAlg} is part of the unconstrained minimization library of RVL; codes can be found in the {\tt trip/rvl/umin} subdirectory.
+The estimated $\mathbf w^*$ for this example is plotted in figure \ref{fig:test2-mps} (dashed red curve), superimposed with the true solution (solid blue curve). 
+We remark that a constant zero function is used as the initial guess for this result.
+
+
+%%%%%
+\subsection{Joint Source-Medium Inversion}
+
+The joint source-medium inversion problem consists of estimating both source and medium parameters simultaneous in a similar minimum misfit least squares setting:
+\begin{equation}\label{eq:NLS}
+	(\mathbf m^*,\mathbf w^*) = {\rm argmin}_{\mathbf (\mathbf m,\mathbf w)} \;
+		\| \mathcal R(\mathbf m,\mathbf w)\|^2,
+\end{equation}
+where we now introduce the {\em residual function} $\mathcal R$,
+\[
+	\mathcal R(\mathbf m,\mathbf w) := \tilde{\mathcal F}(\mathbf m)\mathbf w - \mathbf d_{\rm obs}.
+\]
+Note that \ref{eq:NLS} is now a nonlinear least squares problem if $\mathcal R$ is nonlinear in $\mathbf m$, which typically is the case. 
+Nonetheless, we can capitalize on the particular structure of the resulting {\em separable nonlinear least squares} problem \ref{eq:NLS} by a reformulation known as the {\em variable projection method} accredited to \cite{GolubPereyra:73}.
+Let $\mathbf w_{\rm VP}(\mathbf m)$ denote the solution to the linear least squares problems \ref{eq:LLS} which is, as suggested by notation, dependent on the given medium parameter $\mathbf m$, and thus can be viewed as a function of $\mathbf m$.
+Replacing $\mathbf w$ with $\mathbf w_{\rm VP}(\mathbf m)$ in the residual function yields a reduced (still nonlinear) least squares problem, reduced in the sense that $\mathbf w$ is effectively eliminated from the inversion:
+\begin{equation}\label{eq:VPM}
+	\mathbf m^* = {\rm argmin}_{\mathbf m} \; \| \mathcal R_{\rm VP}(\mathbf m)\|^2
+\end{equation}
+where $\mathcal R_{\rm VP}$ is the {\em reduced residual function},
+\begin{equation}\label{eq:VPMfun}
+	\mathcal R_{\rm VP}(\mathbf m) := \mathcal R(\mathbf m,\mathbf w_{\rm VP}(\mathbf m)).
+\end{equation}
+
+Solving the reduced least squares problem \ref{eq:VPM} amounts to a nested optimization scheme, where linear parameter $\mathbf w$ and nonlinear parameter $\mathbf m$ are updated in the inner and outer optimization routines respectively.  
+In practice, variable projection coupled with Gauss-Newton type algorithms for solving nonlinear least squares has been proven to outperform other multiparameter estimation algorithms in some cases \citep{Ruhe:1980}.
+\cite{Rickett:SEG12} demonstrate the effectiveness of variable projection over simultaneous descent and alternating direction in the context of joint source-medium inversion.
+Future work regarding joint inversions will incorporate variable projection as means to mitigate the difficulty of multiparameter inversion.
+
+Driver {\tt acd\_scal\_Jinv\_towed.cc} implements the joint source-medium inversion code.
+The reduced residual operator is actualized in code by the {\tt RVLUmin::ReduceOp} class, part of RVL's unconstrained optimization library.
+Given the {\tt RVL::LinOpValOp} forward map, data {\tt RVL::Vector}, and a CGNE algorithm (for the inner linear least squares solves), initializes an {\tt RVLUmin::ReduceOp} object:
+{\small
+\begin{verbatim}
+    ReduceOp<float,CGNEPolicy<float>,CGNEPolicyData<float> > 
+        R_VP(F,d,cgne,sstream);
+\end{verbatim}
+}
+
+We solve nonlinear least squares problem \ref{eq:VPM} by a variant of the Steihaug-Toint trust region globalization of the Gauss-Newton (TRGN) algorithm, with flexible specification of the least-squares substep, implemented by {\tt RVLUmin::TRGNAlg}.
+See for instance \cite{Steihaug:83}, \cite{ConnGouldToint:00}, and \cite{NocedalWright}.
+
+%The {\tt RVLUmin::ReduceOp} class, applying the variable projection formulation, and the various linear and nonlinear least square iterative solvers (CGNE and TRGN respectively) used in the numerical examples here are defined in terms of abstract RVL classes, that is, with the defined behavior of operators (derivatives and adjoints thereof) and vectors over inner-product spaces.
+%These abstract algorithms can be found in the subdirectory {\tt trip/rvl/umin}.
+
+Figure \ref{fig:test4-csq-inv} plots the recovered medium parameter after three TRGN steps, with a maximum of 30 CGNE iterations for the inner optimization loop for multipole coefficients.
+Given that TRGN is a local optimization method, we started with an initial guess not too far from the true medium parameter, in fact a smooth version of {\tt csq24.rsf} given by {\tt csq24sm.rsf} and plotted in \ref{fig:csq24sm}.
+Figure \ref{fig:trace-compare} plots a 1-D slice of the recovered, starting, and true medium parameter as a function of depth at $3500m$ of horizontal displacement.
+Lastly, figure \ref{fig:test4-mps} plots a comparison of the true and estimated $w_1(t)$ function for the joint inversion. 
+
+
+
+%We use the code described in the last section to generate traces of pressure fields 
+%induced by multipole sources.
+%In particular, we focus on 3-D acoustics with unbounded homogenous medium.
+%%where we compare our numerical solutions to that of analytical solutions derived in the appendix.
+%We use the IWave implementation of staggered grid finite difference schemes for 
+%the acoustic system \ref{eq:acous} \cite[]{Vir:84}, of order 2 in time and order 4 in 
+%space - we refer to this as the 2-4 order scheme. 
+%In these experiments we use only scalar (pressure) sources and pressure trace data. 
+%Similar results are obtained with other choices. 
+%Boundary conditions are of PML type, as described by \cite{Habashy:07}, as to
+%simulate unbounded domains.
+%
+%The code used in these numerical examples incorporates sources of scalar type, 
+%namely, sources with multipole bases $\{b_1,b_2\}$ for the {\tt ExScal\_MPS\_Space} (from {\tt MPS\_howto.cc})
+%\[
+%	b_1(\mathbf x) = \delta(\mathbf x-\mathbf x^*), \quad b_2(\mathbf x) = \left( \frac{\partial}{\partial x_1} + \frac{\partial}{\partial x_2}\right)\delta(\mathbf x-\mathbf x^*),
+%\]
+%and a single base term $\{b_1\}$ for the {\tt Scal\_MPS\_Space} (from {\tt asg\_scal\_p.cc}),
+%\[
+%	b_1(\mathbf x) = D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)
+%\]
+%given multi-index ${\bf s}$. 
+%Discretization of multipole terms $b_{i}$ is chosen to match the spatial order of the finite difference method, namely $q=4$ for the 2-4 scheme.
+%
+%Multipole coefficients $w_1, w_2$ for the {\tt MPS\_howto} example are chosen to be the derivative of a Gaussian and a Ricker wavelet respectively, see figures 3 and 4.
+%Multipole coefficient $w_1($ for the simulated data when running $asg\_scal\_p.cc$ code is chosen to be a Gaussian wavelet of the form
+%\[
+%	w_1(t) = e^{-\pi^2f^2(t-t_c)^2}
+%\]
+%with $f=10Hz$ and $t_c = 0.4 s$, see figure \ref{fig:wlt-gauss}.
+%
+%Coordinates are oriented such that $x_1$ is the depth axis.
+%See figure \ref{fig:../../model-geo} for a diagram of the source-receiver geometry.
+%The following are some other specifications that apply to all experiments:
+%\begin{itemize}
+%	\item constant density $\rho=1kg/m^3$ and bulk modulus $\kappa = 9 Gpa$, i.e., constant velocity $c=3km/s$;
+%        \item total recording time is $1.5s$;
+%        \item spatial grid sizes $h=20m$;
+%        \item time step $\Delta t=0.002s$;
+%        \item source location $\mathbf x^* = (-298m,602m,303m)$;
+%        \item receiver location $\mathbf x_r$ = (-300m,2400m,300m).
+%\end{itemize}
+%Note that the source location is chosen as to not coincide with a grid point.
+%Moreover, the grid cell size is $20m$, which implies $5$ {\em grid points per wavelength} at $30Hz$ (see figure \ref{fig:wlt-gauss-fft}), thus minimizing the effects of grid dispersion.
+%
+%Figure \ref{fig:MPS-howto} plots the input MPS coefficient vector $w=\{w_1,w_2\}$, again a collection of waveforms associated with certain multipole bases, in particular two terms $\{b_1,b_2\}$ given our example.
+%The actual source that gets injected as a right-hand side term in the finite difference
+%scheme is given by figure \ref{fig:howto-RHS}; each trace corresponds to a point source on a grid point in the vicinity of the source location $\mathbf x^*$.
+%These effective sources are, as discussed in the methods section, the output of the 
+%discrete MPS-to-RHS operator that applies the singular source approximation given a multipole representation (i.e., an MPS space).
+%We have effectively gone form two point sources, i.e., multipoles $w_1b_1$ and $w_2b_2$, to a spread of 100 point sources, where the 100 can be accounted for by 
+%analyzing the support of our singular source approximation.
+%Let $s_{i,max}$ denote the maximum derivative order in the $x_i$-coordinate over all
+%MPS basis, thus we can expect the RHS source file to have a total number of traces
+%given by
+%\[
+%	\prod_{i=1}^d (s_{i,max} +q).
+%\]
+%Indeed, for the {\tt ExScal\_MPS\_Space}, we have
+%\[
+%	(1+4) \times (1+4) \times (0+4) = 100.
+%\]
+%
+%
+%As a way to validate the correctness of our MPS framework and implementation, 
+%we compare numerical and analytical solutions for the simplest scenario for which
+%we can derive such expressions, namely, in unbounded homogeneous media for single multipole sources.
+%We refer to the appendix for the derivation of analytical formulas used here.
+%Figures \ref{fig:test3D-s000}, \ref{fig:test3D-s010}, \ref{fig:test3D-s020} plot the analytical and numerical solutions, as well as the error, for different multipole sources; $\mathbf s=(0,0,0),(0,1,0),(0,2,0)$ respectively.
+%Results demonstrate that the numerical solutions, that is the finite difference and source discretizations, yield accurate approximations to the analytical solutions.
+%
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion}
+%%%%%%%%%%%%%%%%%%%%%%
+
+The RVL-based structure of our multipole source framework does get a solid workout in this study. 
+Inspection of the code and scripts shows that the framework is a convenient environment for implementing the numerical examples presented in the last section.
+For example, singular source approximation discussed in the theory section is implemented as an abstract linear operator and streamlined into IWave forward modeling via operator composition, e.g., {\tt MPS\_howto.cc} and {\tt acd\_scal.cc}.
+Moreover, this allowed for the seamless application of our multipole source parametrization into inversion application: source inversion ({\tt acd\_scal\_inv\_towed.cc}) and joint source-medium inversion ({\tt acd\_scal\_Jinv\_towed.cc}).
+
+Thus far we have been keen in avoiding some of the difficulties associated with multipole source inversion by presenting results for the simplest multipole possible, i.e., sources of the form $f(\mathbf x,t) = w_1(t)\delta(\mathbf x-\mathbf x^*)$.
+Going beyond the Dirac delta function results in a very ill-conditioned forward map stemming in part from the effect of the spatial delta derivatives on the output pressure field related to temporal (possibly fractional) derivatives of multipole coefficients.
+In other words, the linear forward map $\tilde{\mathcal F}(\mathbf m)$ resembles a differential operator defined over an $L^2$-normed domain resulting in an unbounded operator.
+In a future paper we plan on defining a weighted inner-product to better bound the forward map.
+Equivalently, we introduce a preconditioner in order to dramatically accelerate the convergence of source recovery by Krylov subspace iteration.
+Acceleration of the inner linear least squares problem will be vital for the overall computational cost of the joint source-medium inverse problem.
+
+Other sources of ill-conditioning of the forward map (i.e., poor data coverage, non-empty null space) can be addressed through other more standard means such as Tikhonov regularization.
+This of course leads to the proverbial question of how to choose the Tikhonov regularization parameter.
+The matter of the null space will be more important for higher order multipoles, given that these source representations can lead to the phenomena of null-radiating point-sources, that is, non-zero point-sources that produce null pressure responses outside a ball of finite radius. 
+
+We have not addressed two other important issues.
+The first is the order of multipole necessary to represent a given degree of source anisotropy. 
+Point support is an idealization: active source regions may be small or comparable to a wavelength in spatial extent. 
+\cite{SantosaSymes:00} showed that multipole approximation (equation \ref{eq:MPSappx}) of acoustic sources vanishing outside a small region of space exhibits a threshold effect, in that the error in the resulting acoustic fields drops abruptly as the length of the series ($N$ in the expression \ref{eq:MPSappx}) is increased past a critical value.
+This threshold in the number of terms necessary for accurate approximation depends on the size of the active region and a measure of energy output relative to energy input (related to the degree of anisotropy).
+The analysis in \cite[]{SantosaSymes:00} pertains to acoustics, however we expect similar results to hold for linear elastodynamics.
+Earthquake seismology has long used multipole source approximations in elastic media to describe earthquake mechanisms. 
+The seismic moment tensor represents earthquake source mechanisms
+ by a combinations of point-dipole body forces, that is, a first-order vector-valued multipole \cite[]{Backus:1976a,Shearer:2009}.
+Moment tensors of higher order (that is, higher order multipole series) have been shown to be important in cases where finiteness of the source is of issue, that is the fault size is comparable to propagating wavelengths \cite[]{Stump:1982}.
+
+A second natural question is: how much source anisotropy is really necessary to fit field data well?
+\cite{SymMink:97} show that inverting marine reflection data for multipole source parameters together with a layered viscoelastic model, resulted in fitting 25\% more of the data than was possible with any isotropic source, and allowed 90\% data fit to the target portion of the data. 
+Moreover, recovered p-wave and s-wave impedance parameters matched closely the expected seismic-lithologic signature of the gas sand only when viscoelastic model and anisotropic source parameters were simultaneously estimated.
+The order of multipole required to achieve this degree of data fit and
+well log tie was $N=6$. 
+Obviously the necessary order depends on many factors, and varies from survey to survey. 
+The framework we have provided here offers a platform in which to develop an approach to source anisotropy estimation as part of the overall inversion process.
+
+
+% For example, we have shown in
+%another place REFERENCE??? that a choice of norm in an MPS space, that
+%reflects the effect of the spatial delta derivatives on temporal
+%frequency, can dramatically accelerate the convergence of
+%source recovery by Krylov subspace iteration. For this, it was only
+%necessary to pass the {\tt RVL::LinOpValOp} representing the MPS-to-data 
+%trace map, and an {\tt RVL:LinearOp}
+%representing the Gram operator of the norm,  to an RVL implementation of the
+%preconditioned conjugate gradient method, used completely without
+%alteration. It will also be possible to incorporate the MPS based
+%operator into the RVL implementation of variable projection method
+%\cite[]{LiRickettAbubakar:13} for joint source-medium inversion
+%without any change either to the MPS code or to the RVL variable
+%projection algorithm.
+%
+%%We would be remised if we did not point out some of the attractive features present in this singular source approximation.
+%%For one, incorporating source approximations is rather straight-forward and minimaly invasive to the finite difference implementation, a matter of cooking up the correct collection of RHS sources and injecting them at proper grid points.
+%%Moreover, the relationship between our source parameterization via MPS coefficients and RHS source-terms for finite difference solvers is a linear one, aptly implemented by our \texttt{MPS\_to\_RHS} operator.
+%%Ultimately the singular source approximation implemented in our framework preserves linearity of the MPS-to-data map in a natural way that will be crucial for source inversion.
+%
+%We have not addressed two important issues in the work reported here.
+%The first is the order of multipole necessary to represent a given
+%degree of source anisotropy. Point support is an idealization: active source regions may
+%be small or comparable to a wavelength in spatial
+%extent. \cite{SantosaSymes:00} showed that multipole approximation
+%(equation \ref{eq:MPSappx}) of acoustic sources vanishing outside
+%a small region of space
+%exhibits a threshold effect, in that the error in the
+%resulting acoustic fields drops abruptly as the length of the series
+%($N$ in the expression \ref{eq:MPSappx})
+%is increased past a critical value.
+%This threshold in the number of terms necessary for accurate
+%approximation depends on the size of the active region and a measure of energy
+%output relative to energy input (related to the degree of
+%anisotropy).
+%The analysis in \cite[]{SantosaSymes:00} pertains to acoustics,
+%however we expect similar results to hold for linear elastodynamics.
+%Earthquake seismology has 
+%long used multipole source approximations in elastic media 
+%to describe earthquake mechanisms. 
+%The seismic moment tensor represents earthquake source mechanisms
+% by a combinations of point-dipole body forces, that is, a
+%first-order vector-valued multipole \cite[]{Backus:1976a,Shearer:2009}.
+%Moment tensors of higher order (that is, higher order multipole series) have been shown to be important in cases where finiteness of the source is of issue, that is the fault size is comparable to propagating wavelengths \cite[]{Stump:1982}.
+%
+%A second natural question is: how much source anisotropy is really
+%necessary to fit field data well?
+%\cite{SymMink:97} show that inverting marine reflection data for multipole source
+%parameters together with a layered viscoelastic model, resulted in fitting 25\% 
+%more of the data than was possible with any
+%isotropic source, and allowed
+%90\% data fit to the target portion of the data. Moreover, recovered
+%p-wave and s-wave impedance parameters matched closely the expected
+%seismic-lithologic signature of the gas sand only when viscoelastic model and anisotropic source parameters were simultaneously estimated.
+%The order of multipole required to achieve this degree of data fit and
+%well log tie was $N=6$. Obviously the necessary order depends on many
+%factors, and varies from survey to survey. The framework we have
+%provided here offers a platform in which to develop an approach to
+%source anisotropy estimation as part of the overall inversion process.
+
+%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+%%%%%%%%%%%%%%%%%%%%%
+
+In this paper we have presented a framework for representing 
+multipole sources as linear combinations of multipole bases.
+Sources are thus uniquely specified by their multipole coefficients 
+given an MPS space.
+We also briefly discussed how to deal with the singularity of multipole 
+source-terms in the context of finite difference solvers. 
+In particular, we implemented the singular source approximation 
+developed by \cite{Walden:1999}, \cite{TorEng:04}, and \cite{MPS_theory}
+as a linear map from MPS-to-RHS source terms.
+Mathematical constructs of the MPS space and the MPS-to-RHS 
+map were realized using RVL and pipelined into finite difference solvers via IWave.
+%Numerical results validate the correctness of our implementation by 
+%showing an agreement between numerical and analytical solutions, particularly for
+%3-D acoustics in first order form with an unbounded homogeneous medium.
+Numerical experiments demonstrate the applicability of our computational framework for forward modeling and inversion of multipole sources, as well as source-medium joint inversion.
+
+%\newpage
+%%%%%%%%%%%
+%\section{Appendix}
+%
+%Consider the system \ref{eq:acous} in an unbounded homogeneous medium with source term
+%\[
+%	f(\mathbf x,t) = w(t) D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)
+%\]
+%for some given multi-index $\mathbf s$.
+%Under constant medium parameters, we can derive the second order wave equation
+%from the first order system by taking an extra time derivative in the pressure equation
+%and use the velocity equation to substitute the derivative in time of the velocity field, 
+%thus yielding
+%\begin{equation}
+%\label{eq:acous_hom}
+%	\frac{\partial^2}{\partial t^2} p - c^2 \nabla^2 p = w'(t) D^{\mathbf s}\delta(\mathbf x-\mathbf x^*),
+%\end{equation}
+%where $c^2 = \kappa \rho$.
+%Note the extra time derivative on the source wavelet, due to the fact that the source
+%term $f(\mathbf x,t)$ originated from the first order system.
+%
+%Let $p_{\mathbf s}$ denote the analytical solution to \ref{eq:acous_hom} with given multi-index $\mathbf s$. In particular, for $\mathbf s=\mathbf 0$ we have
+%\[
+%	p_{\mathbf 0}(\mathbf x,t) =  \frac{w'(\tau)}{4\pi c^2 r},
+%\]
+%where
+%\[
+%	\tau = t - \frac{r}{c}, \quad \text{and} \quad r = \sqrt{\mathbf x^T\mathbf x}.
+%\]
+%For $\mathbf s\neq \mathbf 0$, it follows that
+%\[
+%	p_{\mathbf s} = D^{\mathbf s}p_{\mathbf 0},
+%\]
+%which can be shown by leveraging the smoothness of $p_{\mathbf 0}$ away from its singularity at $\mathbf x^*$.
+%The following table summarizes the analytical expressions for $p_{\mathbf s}$ used in the numerical experiments, where 
+%\[
+%	\gamma_i = \frac{x_i}{r}
+%\]
+%and $\delta_{ij}$ is the Kronocker delta;
+%
+%\begin{table}[!h]
+%	\centering
+%	\begin{tabular}{c | l }
+%		  Source Term	& Analytical Solution  \\  \hline 
+%		$w(t)\delta(\mathbf x)$ & $\displaystyle \frac{1}{4\pi c^2 r} w'(\tau)$ \\
+%		$w(t)\frac{\partial}{\partial x_i}\delta(\mathbf x)$ 
+%			& $ 	\displaystyle -\frac{1}{4\pi c^2} \left\{ 
+%					\frac{1}{c}\frac{\gamma_i}{r} w''(\tau) +
+%					\frac{\gamma_i}{r^2} w'(\tau) 
+%				\right\} $ \\
+%		$w(t)\frac{\partial^2}{\partial x_j\partial x_i}\delta(\mathbf x)$ 
+%			& $ 	\displaystyle \frac{1}{4\pi c^2} \left\{ 
+%					 \frac{\gamma_i\gamma_j}{c^2r} w'''(\tau) -
+%					\frac{1}{cr^2} \left( \delta_{ij}-3\gamma_i\gamma_j \right) w''(\tau) -
+%					\frac{1}{r^3}\left( \delta_{ij}-3\gamma_i\gamma_j \right) w'(\tau)					 
+%				\right\} $
+%	\end{tabular}
+%	\caption{Analytical solutions to first-order acoustic equations in 3-D, with unbounded homogeneous medium and a single multipole source term.}
+%	\label{tab:ansol}
+%\end{table}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Appendix: Deriving Adjoint Action of \texttt{MPS\_to\_RHS}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Deriving the adjoint of the MPS-to-RHS map $\mathbb L$ is rather straight forward using the tensor notation developed in the theory section.
+%First we must define the $L^2$-inner products of the input and output of $\mathbb L$\footnote{These are the inner product defined for the \texttt{SEGYSpace}s and tensor products of such spaces, and currently in use for domain and range of \texttt{MPS\_to\_RHS} operators.}:
+%\[
+%	\langle \mathbf F^{\text{MPS}}_1,\mathbf F^{\text{MPS}}_2 \rangle = 
+%        \Delta t \;\sum_{i_t,i_m} \mathbf F^{\text{MPS}}_1[i_t,i_m] \times \mathbf F^{\text{MPS}}_2[i_t,i_m],
+%\]
+%\[
+%	\langle \mathbf F^{\text{RHS}}_1, \mathbf F^{\text{RHS}}_2 \rangle = 
+%        \Delta t \; \sum_{i_t,i_c,i_s} \mathbf F^{RHS}_1[i_t,i_c,i_s] \times \mathbf F^{RHS}_2[i_t,i_c,i_s].
+%\]
+%Using \ref{eq:L},
+%\[
+%\begin{array}{rcl}
+%	\langle \mathbb L\mathbf F^{\text{MPS}}, \mathbf F^{\text{RHS}} \rangle 
+%		&=& \Delta t\; \sum_{i_t,i_c,i_s} \left( \sum_{i_m} \mathbf W[i_m,i_c,i_s] \times \mathbf F^{\text{MPS}}[i_t,i_m] \right) \times \mathbf F^{\text{RHS}}[i_t,i_c,i_s] \\
+%		&=& \Delta t\; \sum_{i_t,i_m} \mathbf F^{\text{MPS}}[i_t,i_m] \times \left( \sum_{i_c,i_s} \mathbf W[i_m,i_c,i_s] \times \mathbf F^{\text{RHS}}[i_t,i_c,i_s]\right)\\
+%		&=& \langle \mathbf F^{\text{MPS}}, \mathbb L^\dagger \mathbf F^{\text{RHS}} \rangle,
+%\end{array}
+%\]
+%from which we define adjoint of $\mathbb L$ by,
+%\[
+%	(\mathbb L^\dagger \mathbf F^{\text{RHS}})[i_t,i_m] = \sum_{i_c,i_s} \mathbf W[i_m,i_c,i_s] \times \mathbf F^{\text{RHS}}[i_t,i_c,i_s].
+%\]
+%The equation for the action of $L^\dagger$ states that the adjoint action of a \texttt{MPS\_to\_RHS} operators consists of linear combinations of time traces for different RHS components (index $i_r$) and stencil points (index $i_n$), point wise in time (index $i_t$) for each source (index $i_s$).
+
+
+
+
+
+
+
+
+
+%%%%%%%%%
+% PLOTS %
+%%%%%%%%%
+
+
+
+\inputdir{project}
+
+%\plot{../../model-geo}{width=0.8\textwidth}{Model and source-receiver geometry specifications; source position $\mathbf x^*=(-298m,602m,303m)$, receiver position $\mathbf x_r = (-300m,2400m,300m)$.}
+%
+%\multiplot{2}{wlt-gauss,wlt-gauss-fft}{width=0.45\textwidth}{Gaussian wavelet (a) and its power spectrum (b).}
+%
+%\multiplot{2}{wlt-dgauss,wlt-dgauss-fft}{width=0.45\textwidth}{Derivative of Gaussian wavelet (a) and its power spectrum (b).}
+%
+%\multiplot{2}{wlt-ricker,wlt-ricker-fft}{width=0.45\textwidth}{Ricker wavelet (a) and its power spectrum (b).}
+
+
+\multiplot{3}{howto-mps,howto-RHS,howto-data}{width=0.45\textwidth}{Plots from the how-to example: (a) input multipole coefficients, (b) output RHS or gridded source traces, (c) output pressure data.}
+
+\plot{csq24}{width=\textwidth}{True medium parameter $\mathbf m=c(\mathbf x)^2$ (velocity squared), fraction of Marmousi model with water layer.}
+
+\plot{data}{width=\textwidth}{Observed multi-shot data, in the form of pressure field time traces, for inversions.}
+
+\plot{mps-towed}{width=\textwidth}{Multipole coefficients for generating the observed multi-shot data.}
+
+\plot{test2-mps}{width=\textwidth}{Multipole source inversion results. Estimated $w_1(t)$ (dashed red curve) plotted against true solution (solid blue curve).}
+
+\multiplot{3}{csq24sm,test4-csq-inv,trace-compare}{width=0.5\textwidth}{Joint source-medium inversion results. (a) Initial guess and (b) estimated wave velocity squared. (c) Single trace comparison of medium parameter at $3500m$ horizontal displacement.}
+
+\plot{test4-mps}{width=\textwidth}{Joint source-medium inversion results. Estimated $w_1(t)$ (dashed red curve) plotted against true solution (solid blue curve).}
+
+%\multiplot{3}{test3D-s000,test3D-s010,test3D-s020}{width=0.45\textwidth}{Pressure field at a single receiver location $\mathbf x_r$ induced by a single multipole source $f(\mathbf x,t) = w(t)D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$.
+%Numerical solution given by dotted magenta curve.
+%Analytical solution given by solid blue curve.
+%Error given by dash-dot red curve.
+%${\bf s} = (0,0,0)$ in (a), ${\bf s}= (0,1,0)$ in (b), and ${\bf s}=(0,2,0)$ in (c).}
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

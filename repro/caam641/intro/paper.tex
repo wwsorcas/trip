@@ -1,0 +1,56 @@
+\title{0.0: Introduction}
+\author{William W. Symes}
+\address{The Rice Inversion Project,
+Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}
+
+\maketitle
+\parskip 12pt
+
+\lefthead{Symes}
+\righthead{CAAM 641 Section 0.0}
+
+\begin{abstract}
+For Spring semester 2017, CAAM 641 will be devoted to the foundations and algorithms of seismic imaging and inversion.
+\end{abstract}
+
+\section{Goals}
+This course will explore some of the core concepts and methods of seismic imaging and inversion from a mathematical point of view. The course will
+
+\begin{itemize}
+\item emphasize the close correspondence between mathematical foundations and practical algorithms, while allowing the participants to concentrate their attention on one or the other (or both) of these aspects, and
+\item offer structured opportunities to exercise and explore these concepts computationally, using open source software packages and public domain data, both synthetic and field.
+\end{itemize}
+
+\section{Syllabus}
+This course will divide into three segments, each consisting of several in-person lectures and work sessions, followed by internet-based project periods. Each segment consists of two parts, one oriented towards data processing, the other concerned with mathematical foundations. The two parts have points of contact but are not necessarily parallel. I will provide notes as needed, largely for the processing part. The mathematical part will read through some recent (and not-so-recent) papers, or notes in those cases where satisfactory references are not available. 
+
+\begin{itemize}
+\item {\bf Basic Imaging:} We will begin with basic processing exercise, using 2D marine survey data: NMO correction of CMP gathers, stack, and post-stack time and depth migration. The object of this part of the course is to identify the origin in wave theory of each process used in this exercise. Two approximations to solution of the wave equation are central to this project: linearization, aka single scattering, aka the Born approximation, and geometric optics, aka high frequency asymptotics, aka ray theory. Applied to ``locally layered'' modeling, these lead to the convolutional model, basic time processing of seismic reflection surveys (deconvolution, statics, NMO, stack), and NMO based velocity analysis. Applied to models with mild lateral variation, it leads to poststack imaging. NMO based velocity analysis provides a starting point for prestack imaging (the topic of the second part of the course) and migration velocity analysis, and serves as an interesting and accessible test bed for inversion algorithms.  
+
+The mathematical focus of this segment is the basic theory of the wave equation, following the lead of J.-L. Lions. The main reference is \cite{BlazekStolkSymes:13}, which is made available on the web site. We will work through existence of finite energy solutions, regularity as a function of the right hand side and of the coefficients, and the examples of acoustics and elasticity.
+
+\item {\bf Linear Inversion:} prestack depth imaging via diffraction sums (Kirchhoff migration), Generalized Radon Transform inversion for acoustics and elasticity, Reverse Time Migration, Least Squares Migration (iterative and true amplitude migration). This time we start with the theory, as the main examples will use Reverse Time and True Amplitude migration, but the justification for these is essentially the theory of the Generalized Radon Transform. We end by applying these techniques to the 2D marine survey of segment 1.
+
+The mathematical part of this segment has two goals: first, a rapid survey of the convergence theory of finite difference methods, used throughout the course (and seismology) to generate examples and process data; second, to extend high-frequency asymptotics beyond caustics. 
+
+\item {\bf Nonlinear Inversion:} Theory of reflection and transmission tomography, relation to migration velocity analysis in extended time and image domains. Inversion beyond single scattering - full waveform inversion.  Application to the marine survey of segment 1. 
+
+Mathematical topics: extended modeling and inversion, source and medium extensions, analysis of convergence for inversion via iterative solution of inner problems. 
+\end{itemize}
+
+Examples presented in course materials will use Seismic Unix, Madagascar, and TRIP software packages to realize the concepts introduced in class. In fact, the course notes are organized in the form of directory tree of Madagascar papers, each one with any examples and resulting figures produced from Python scripts in a project subdirectory. The participants can rebuild every one of these papers from scratch, and the scripts should serve as departure points for additional projects.
+
+I suggest questions in each paper that can serve as nuclei of projects, and welcome suggestions for others.
+
+\section{Schedule}
+The class schedule divides into three periods, each with two weeks of class meetings and three weeks of internet-based project work. Classes will meet on Tuesdays and Thursdays from 1600 to 1830 in Duncan Hall room 3076 on the Rice campus. A tentative schedule for class meetings is: January 10, 12, 17, and 19; February 14, 16, 21, and 23; and March 21, 23, 28, and 30. I will communicate with participants during the intervening project periods by email and, when appropriate, by skype.
+
+\section{Expectations}
+In view of the advanced graduate nature of this course, no general performance metrics are appropriate: each participant will determine their level of involvement and expectations for the course.
+
+\section{Resources}
+A number of good sources exist for the topics of this course, some with links to codes and computational exercises, and I will refer participants to them whenever appropriate. Probably the closest in ``Courant and Hilbert'' spirit is Laurent Demanet's 18.325 class notes \cite[]{Demanet:325notes}. These were written for a graduate course in mathematics at MIT, and it shows: topics such as NMO do not show up, but the foundations of imaging theory and the adjoint state method, amongst other things, receive an elegant and complete treatment. The now-classic book by Norm Bleistein, Jack Cohen, and John Stockwell \cite[]{BleisteinCohenStockwell:01} gives a very thorough treatment of high-frequency asymptotics and ``Kirchhoff'' imaging.  Gerry Schuster's book on seismic imaging basics \cite[]{Schuster:10} is an excellent overview of the fundamental geophysical and data processing concepts, with Matlab exercises. Gary Margrave's book \cite[]{Margrave:book} gives a comprehensive account of seismic data processing, with links to the extensive CREWES Matlab codes. Finally, several conventional texts, for example those by \cite{Yil:01} and \cite{DobSav:88}, are excellent resources. 
+
+\bibliographystyle{seg}  % style file is seg.bst 
+\bibliography{../../bib/masterref}

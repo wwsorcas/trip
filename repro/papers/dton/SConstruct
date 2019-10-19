@@ -1,0 +1,45 @@
+from rsf.tex import *
+
+
+End(
+lclass='georeport',
+options='notimes',
+color='bm1 by1 trace wtrace trace8k wtrace8k',
+use='hyperref,natbib,graphicx,color,listings,amsmath,amsthm,amscd,amssymb,amsbsy,float,wasysym,setspace,bm',
+include=r'''
+\newcommand{\Ti}{T^{\rm int}}
+\newcommand{\Te}{T^{\rm ext}}
+\newcommand{\ip}{p^{\rm int}}
+\newcommand{\ibv}{{\bf v}^{\rm int}}
+\newcommand{\ep}{p^{\rm ext}}
+\newcommand{\ebv}{{\bf v}^{\rm ext}}
+\newcommand{\du}{\delta u}
+\newcommand{\dm}{\delta m}
+\newcommand{\lu}{\lambda u}
+\newcommand{\lm}{\lambda m}
+\newcommand{\muu}{\mu u}
+\newcommand{\bF}{{\bf F}}
+\newcommand{\bff}{{\bf f}}
+\newcommand{\bn}{{\bf n}}
+\newcommand{\bS}{{\bf S}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bM}{{\bf M}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bu}{{\bf u}}
+\newcommand{\bw}{{\bf w}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\newcommand{\bk}{{\bf k}}
+\newcommand{\cS}{{\cal S}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\mm}{\,-\hspace{-0.1cm}-}
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{rem}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{exmp}{Example}
+\newtheorem{definition}{Defenition}
+''')
+

@@ -1,0 +1,81 @@
+\title{Extended IWAVE}
+\date{}
+\author{Raanan Dafni and William W. Symes, The Rice Inversion Project}
+
+\lefthead{Dafni and Symes}
+\righthead{Extended IWAVE}
+
+\maketitle
+\parskip 12pt
+\begin{abstract}
+IWAVE accommodates several extended modeling modes. This paper explains how to implement  shot record extension (independent simulation of shots with one model per shot), subsurface offset extension (mechanical parameters as non-diagonal operators), and source extension (independent source parameters for each trace, or each shot, or both), for constant-density acoustic modeling. The modeling operators and their first and second derivatives inherit all features of IWAVE simulation - dataflow design, shot and multidomain parallelism, computed memory allocation, command line job control, etc.  
+\end{abstract}
+
+\section{Introduction}
+
+\section{Mathematical Setting}
+The central design principle of IWAVE/RVL can be stated as follows: {\em the mathematics is the API}. So the first task is to describe the mathematics of extended modeling. 
+
+To make the illustrations in this paper as simple as possible, we choose constant density acoustic wave propagation as the underlying physics. The sole material parameter field is the velocity squared, $m=v^2$, proportional to bulk modulus by the (constant) density. The second order wave equation for causal acoustic dynamics is
+\be
+\label{awe}
+\frac{\partial^2 p}{\partial t^2} - m\nabla^2 p = f,\,\,p = 0, t<<0.
+\ee
+in which $p=p(\bx,t,\bx_s)$ is the pressure field, $\bx_s$ is the source parameter (which may be location, or slowness, or ...), $f = f(\bx,t,\bx_s)$ is the source field. The modeled seismogram is the trace, or sampling, of $p$ at (possibly $\bx_s$-dependent) receiver locations. For the moment, we will regard the source as known and fixed, and write $\cF(m)$ for the collection of traces, so determined, a point in the data space $D$, the range of the forward map $\cF$ whose  domain is the model space $M$.
+
+An extended model space $\oM$ is simply larger: $M$ ``$\subset$'' $\oM$ - as we will see, the inclusion need not be literally true. Typically extended modeling means parameters added somehow to the model, beyond those specified by the basic physics, but the fundamental requirement is that there be an extended modeling operator $\ocF: \oM \rightarrow D$ and an extension operator $E: M \rightarrow \oM$ so that 
+\be
+\label{ext}
+\ocF(E(m)) = \cF(m), \,\,m \in M.
+\ee
+
+\subsection{Shot Record Extension}
+
+\subsection{Subsurface Offset Extension}
+
+\subsection{Dataflow Control}
+IWAVE controls the selection of extension (or no extension) by {\em input and/or output data format}. This idea is described in \cite[]{trip14:struct}. Briefly,
+\begin{itemize}
+\item if the grid of the input fields (or output fields, in the case of the adjoint linearized map) contains one or more extended axes, then IWAVE computes an extended map. As explained in \cite[]{trip14:struct}, IWAVE uses an enhanced version of the Madagascar data structure to differentiate extended from non-extended axes: added keywords are
+\begin{itemize}
+\item {\tt dim} = spatial dimension, should be same as reference grid
+\item {\tt gdim} = global dimension, including extended axes - for typical 2D extended modeling, this is {\tt dim} + 1.
+\item {\tt idxxx} for {\tt xxx}=1,...{\tt dim}-1 are the id's of the spatial axes, {\tt xxx}={\tt dim} signifies the time axis, {\tt xxx}={\tt dim} + 1,...,99 are available for external extended axes such as shot number, and {\tt xxx}=100,... signify internal extended axes such as subsurface offset.  ``External'' means that only a single value participates in the simulation of a single shot; ``internal''  means that all (or many) points on the axis particpate in single shot simulation, as is the case for spatial axes.
+\item for linearized or adjoint linearized maps, 
+\begin{itemize}
+\item if the grid of the input reference fields is the same as the grid of the perturbation inputs or outputs ({\tt csq\_d1} or {\tt csq\_b1} for {\tt acd} first derivative and adjoint first derivative respectively), then IWAVE computes the linearization (or adjoint linearization) of the (extended or non-extended) forward map.
+\item if the grid of the input reference fields is not extended (has no extended axes), but one or more perturbations is extended, then IWAVE computes the extended linearization (or its adjoint) about the implicitly extended reference field. This case is typical for migration velocity analysis.
+\end{itemize}
+
+\end{itemize}
+In all cases, the identification keywords of extended axes tell IWAVE what sort of extension to compute.
+\end{itemize}
+
+\inputdir{project}
+
+\section{Example: Coarse Grid Marmousi}
+This example uses the Marmousi model subsampled to $dx = dz = $ 24 m. The Born simulation  uses a well-smoothed background model (Figure \ref{fig:csq24big}) and a reflectivity derived from the original model with a less agressive smoothing removed (Figure \ref{fig:dcsq24}). Velocity-squared and its perturbation are plotted, as these are the quantities used in the simulation. The acquisition geometry is the original, subsampled by a factor of 4 to give a 60-shot simulated towed streamer geometry. Time of recording is cut back to 2 s.
+
+\plot{csq24big}{width=0.8\textwidth}{Background model: square of smoothing of Marmousi velocity.}
+\plot{dcsq24}{width=0.8\textwidth}{Reflectivity model: difference of squares of Marmousi velocity and a smoothing.
+}
+
+All of the computations reported here were performed at the Texas Advanced Computing Center (TACC), University of Texas-Austin, using TACC's Stampede Linux cluster. The source directory for this paper contains the {\tt project/SConstruct} script file describing every command, and illustrates the configuration of reproducible computational experiments in a batch environment (SLURM). The (small) jobs described below ran on 32 threads (2 nodes) and complete in well under a minute. See the companion paper \cite{}{SymesIWPAR:15} for a description of the software tools used in these examples. Note that the number of tasks (keyword {\tt partask} = number of shots to execute in parallel) was also 32, for reasons explained in \cite[]{SymesIWPAR:15}. Since this example involves 60 shots, IWAVE idles some threads near the end of the run.
+
+\subsection{Shot Record Extension}
+All output (and, of course, input) data objects must exist for IWAVE to function properly. To build a prototype shot record extended model that can be used as an output object for shot record extended migration, use {\tt sfspray} to duplicate the perturbational model (or any other RSF data object with the reference grid) 60 times. [For implementations of this and all other computations described here, see the {\tt SConstruct} file in the {\tt project} subdirectory.] 
+
+In addition to duplicating the reference grid, your command must decorate the rsf header file as described above: use {\tt sfput} to add {\tt id1=0, id2=1, id3=3, dim=2,} and {\tt gdim=3} to the header file. Note that {\tt id3=3} sets the first axis numbered above the time axis (hence extended) to {\tt dim} + 1, which is the index of the shot record axis in the simulation grid (see \cite[]{trip14:struct} for explanation). These choices will cause IWAVE to overwrite a shot record extended image on the output (Figure \ref{fig:migsr}). As expected, the common image gathers reflect the correct velocity in being as flat as possible subject to the limited aperture of shot record migration and presence of edge effects (Figure \ref{fig:migsr}, right panel).
+
+\plot{migsr}{width=0.8\textwidth}{Shot record extended migration cube: front face is image}
+
+\subsection{Subsurface Offset Extension}
+In this case, use {\tt sfpad} to add a subsurface offset axis to the perturbational model to create a prototype for migration output. I chose to use 20 grid cells to the left and right of offset 0, with offset increment the same as the other spatial axis increments (24 m), so a maximum subsurface offset of 480 m. Header corrections for this case are {\tt id1=1, id2=0, id3=100, d3=24, o3=-480, dim=2,} and {\tt gdim=3}. Note all of the spatial fields are transposed in this case: while the model field fetched from the TRIP web site has $z$ as the fast axis, {\em horizontal} subsurface offset extension is {\em required} to use $x$ as fast axis. There are two reasons for this choice: (1) the organization of loops in the numerical kernals can be maximally vectorized with this choice, and (2) domain decomposition is not permitted on the fast axis, since the effective stencil width is very large in this dimension, and the restriction to $x$ allows a simple implementation of this restriction. Since the physical significance of the axes is part of the data structure, IWAVE can take axis ordering into account so that it is transparent to the simulation. The data setup must include transposing of the velocity squared field and all perturbations, of course, and to display the output of the migration in the normal way it must be transposed back to fast-$z$ order. The choice {\tt id3=100} toggles internal extension: at the level of IWAVE itself, this choice causes appropriate memory allocation to occur. The interpretation of the extended axis as horizontal subsurface offset is an attribute of the numerical kernels that go into {\tt acd} (not of the core IWAVE code).
+
+The resulting migration is reasonably well-focused at offset zero (Figure \ref{fig:migso}, right panel), and the zero-offset section is identical to non-extended migration (Figure \ref{fig:migso}, front panel).
+
+\plot{migso}{width=0.8\textwidth}{Subsurface offset extended migration cube: front face is image}
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

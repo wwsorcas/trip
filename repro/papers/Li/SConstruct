@@ -1,0 +1,53 @@
+from rsf.tex import *
+
+End(
+
+use='amssymb,amsthm,amsmath,amscd,bm,setspace,wasysym,graphicx,float,subfig',
+
+include=r'''
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\om}{\bar{m}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\oS}{\bar{S}}
+\newcommand{\of}{\bar{f}}
+\newcommand{\ofa}{\bar{f}_{\alpha}}
+\newcommand{\og}{\bar{g}}
+\newcommand{\oga}{\bar{g}_{\alpha}}
+\newcommand{\oD}{\bar{D}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\mybe}{\begin{equation}}
+\newcommand{\myee}{\end{equation}}
+\newcommand{\mybea}{\begin{eqnarray}}
+\newcommand{\myeea}{\end{eqnarray}}
+\everymath{\displaystyle}
+\newcommand{\be}{\begin{eqnarray}}
+\newcommand{\ee}{\end{eqnarray}}
+\newcommand{\ben}{\begin{eqnarray*}}
+\newcommand{\een}{\end{eqnarray*}}
+\newcommand{\bee}{\begin{equation}}
+\newcommand{\eee}{\end{equation}}
+
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\pa}{\partial}
+
+\newtheorem{lem}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{rem}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{exmp}{Example}
+\newtheorem{definition}{Defenition}
+
+''',
+color='ALL'
+)
+
+
+
+
+

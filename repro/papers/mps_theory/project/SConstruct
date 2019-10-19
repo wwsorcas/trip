@@ -1,0 +1,1214 @@
+#######################################################################
+############### COMMON DEFINITIONS ####################################
+#######################################################################
+from rsf.proj import *
+import os
+#######################################################################
+############### END COMMON DEFINITIONS ################################
+#######################################################################
+
+################### LOCAL DEFINITIONS #################################
+thispath = os.getcwd()
+
+CWPROOT = os.getenv('CWPROOT')
+IWAVE   = os.getenv('IWAVE')
+MPSCODE = os.path.join(IWAVE,'mps')
+
+ssappx_fun    = MPSCODE + '/main/ssappx_fun.x'
+genmdl        = MPSCODE + '/main/genmodel.x'
+tgs_n_cat     = MPSCODE + '/main/tgs_n_cat.x'
+
+my_waveform   = MPSCODE + '/main/my_waveform.x'
+asg_scal_p    = MPSCODE + '/main/asg_scal_p.x'
+
+appxrates     = 'python appxrates.py'
+appxrates2    = 'python appxrates2.py'
+weak_rates    = 'python weak_rates.py'
+snapshot      = 'python snapshot.py'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+sugain     = CWPROOT + '/bin/sugain'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+suread     = CWPROOT + '/bin/suread'
+suwind     = CWPROOT + '/bin/suwind'
+suresamp   = CWPROOT + '/bin/suresamp'
+sustrip    = CWPROOT + '/bin/sustrip'
+sufft      = CWPROOT + '/bin/sufft'
+suamp      = CWPROOT + '/bin/suamp'
+
+
+################ END LOCAL DEFINITIONS ################################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+
+#######################################################################
+#######################################################################
+# Plotting approximations to derivatives of the delta function
+#######################################################################
+#######################################################################
+
+h = 1
+
+s0 = 0
+o_x0 = -2
+f_x0 = 2
+d_x0 = 0.01
+n_x0 = int((f_x0-o_x0)/d_x0)+1
+
+s1 = 0
+o_x1 = -2
+f_x1 = 2
+d_x1 = 0.01
+n_x1 = int((f_x1-o_x1)/d_x1)+1
+
+a_ord = 2
+
+# s=0, a_ord=2
+Flow( 'ssappx_s'+str(s0)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+'q'+str(a_ord),'ssappx_s'+str(s0)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+'q'+str(a_ord),'ssappx_s'+str(s0)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,0), a_ord=2
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+a_ord = 4
+
+# s=0, a_ord=4
+Flow( 'ssappx_s'+str(s0)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+'q'+str(a_ord),'ssappx_s'+str(s0)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+'q'+str(a_ord),'ssappx_s'+str(s0)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,0), a_ord=4
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+s0 = 0
+o_x0 = -2.5
+f_x0 = 2.5
+d_x0 = 0.01
+n_x0 = int((f_x0-o_x0)/d_x0)+1
+
+s1 = 1
+o_x1 = -2.5
+f_x1 = 2.5
+d_x1 = 0.01
+n_x1 = int((f_x1-o_x1)/d_x1)+1
+
+a_ord = 2
+
+# s=1, a_ord=2
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s1)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,1), a_ord=2
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+a_ord = 4
+
+# s=1, a_ord=4
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s1)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,1), a_ord=4
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+s0 = 0
+o_x0 = -3
+f_x0 = 3
+d_x0 = 0.01
+n_x0 = int((f_x0-o_x0)/d_x0)+1
+
+s1 = 2
+o_x1 = -3
+f_x1 = 3
+d_x1 = 0.01
+n_x1 = int((f_x1-o_x1)/d_x1)+1
+
+a_ord = 2
+
+# s=2, a_ord=2
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s1)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,2), a_ord=2
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+a_ord = 4
+
+# s=2, a_ord=4
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s1)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2=1 data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2')
+
+# s=(0,2), a_ord=4
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',None,
+      ssappx_fun +' h='+str(h)+' a_ord='+str(a_ord)+\
+      ' s0='+str(s0)+' o_x0='+str(o_x0)+' d_x0='+str(d_x0)+' f_x0='+str(f_x0)+\
+      ' s1='+str(s1)+' o_x1='+str(o_x1)+' d_x1='+str(d_x1)+' f_x1='+str(f_x1)+\
+      ' filename=${TARGETS[0]}',stdin=0,stdout=0)
+
+Flow( 'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord)+'.txt',
+      ' echo in=${SOURCES[0]} n1='+str(n_x0)+' n2='+str(n_x1)+' data_format=ascii_float | sfdd form=native',
+      stdin=0)
+
+Result('ssappx-s'+str(s0)+str(s1)+'q'+str(a_ord),'ssappx_s'+str(s0)+str(s1)+'q'+str(a_ord),
+       'put o1='+str(o_x0)+' d1='+str(d_x0)+' o2='+str(o_x1)+' d2='+str(d_x1)+' | '+\
+       'grey color=j scalebar=y wanttitle=n ')
+
+
+
+#######################################################################
+#######################################################################
+# Build useful wavelets
+#######################################################################
+#######################################################################
+
+wlt_dt=0.0005
+wlt_T =0.8
+wlt_nt=int(wlt_T/wlt_dt)+1
+wlt_ci= int(wlt_nt/2)+1
+
+Flow( 'wlt_ricker.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+          ' nt='+str(wlt_nt)+' dt='+str(wlt_dt)+' fpeak=5 type=2 cit='+str(wlt_ci)+' scal=10000 ',
+      stdin=0,stdout=0 )
+
+
+Flow('wlt-ricker','wlt_ricker.su','suread read=data endian=0')
+Result('wlt-ricker','wlt-ricker','graph label2=Amplitude plotfat=3 wanttitle=n')
+
+Flow('wlt_ricker_fft.su','wlt_ricker.su',sufft +' | '+ suamp +' mode=amp ')
+Flow('wlt-ricker-fft','wlt_ricker_fft.su','suread read=data endian=0')
+Result('wlt-ricker-fft',
+       'put label1=Frequency units=Hz label2=Amplitude o1=0 d1=1.190476 | '+\
+       'window min1=0 max1=30 | '+\
+       'graph wanttitle=n plotfat=3 label1=Frequency unit1=Hz label2=Amplitude')
+
+
+#######################################################################
+#######################################################################
+# Build models
+#######################################################################
+#######################################################################
+cmin = 3
+cmax = 3
+rho  = 1 
+
+choose = {
+'dn': '2',
+'vp': '0',
+'bm': '1',
+'by': '3'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g'
+}
+
+dx = [10,20,40]
+
+#depth-axis
+f1=0.0
+e1=4000.0
+#horizontal-axis
+f2=0.0 
+e2=4000.0
+
+for d in dx:
+
+    n1=int(1.5+(e1-f1)/d) #nz
+    n2=int(1.5+(e2-f2)/d) #nx
+    
+    mdl = 'bmod'+ str(d) +'_2D_sq.rsf'    
+    Flow( [mdl,mdl+'@'], None,
+          genmdl +' model=0 choose='+ str(choose['bm'])+\
+              ' o1='+ str(f1) +' n1='+ str(n1) +' d1='+ str(d) +' label1=Depth unit1=m'+\
+              ' o2='+ str(f2) +' n2='+ str(n2) +' d2='+ str(d) +' label2=x-axis unit2=m'+\
+              ' o3=0 n3=1 d3=1 '+\
+              ' label='+ label['bm'] +' unit='+ unit['bm'] +\
+              ' datapath='+ thispath +' hfile='+ mdl +\
+              ' rho='+str(rho)+' c_min='+str(cmin)+' c_max='+str(cmax),
+          stdin=0,stdout=0) 
+
+    mdl = 'buoy'+ str(d) +'_2D_sq.rsf'    
+    Flow( [mdl,mdl+'@'], None,
+          genmdl +' model=0 choose='+ str(choose['by'])+\
+              ' o1='+ str(f1) +' n1='+ str(n1) +' d1='+ str(d) +' label1=Depth unit1=m'+\
+              ' o2='+ str(f2) +' n2='+ str(n2) +' d2='+ str(d) +' label2=x-axis unit2=m'+\
+              ' o3=0 n3=1 d3=1 '+\
+              ' label='+ label['by'] +' unit='+ unit['by'] +\
+              ' datapath='+ thispath +' hfile='+ mdl +\
+              ' rho='+str(rho)+' c_min='+str(cmin)+' c_max='+str(cmax),
+          stdin=0,stdout=0) 
+
+
+#######################################################################
+#######################################################################
+# Build hdr files
+#######################################################################
+#######################################################################        
+
+
+#source parameters
+sx_2D_sq= 2003.0 
+selev_2D_sq= -2003.0
+
+#time axis
+hdr_T=1.5    # final time [s]
+hdr_ot=0.0   # initial time [s]
+hdr_dt=0.0005 # time step [s]
+hdr_nt=int((hdr_T-hdr_ot)/hdr_dt)+1
+NT_2D_sq = hdr_nt
+
+#receiver parameters
+gx_o=0   
+gx_e=4000
+gx_d=40.0 
+gz_o=0 
+gz_e=-4000 
+gz_d=-40.0
+ntr_x = int((gx_e-gx_o)/gx_d)+1
+ntr_z = int((gz_e-gz_o)/gz_d)+1
+NTR_2D_sq = ntr_x*ntr_z
+
+output = 'hdr_2D_sq.su'
+cmd = sunull +' nt='+ str(hdr_nt) +' ntr='+ str(NTR_2D_sq) +' dt='+ str(hdr_dt) +' | '+\
+      sushw +' key=sx a='+ str(sx_2D_sq) +' c=0 | '+\
+      sushw +' key=selev a='+ str(selev_2D_sq) +' | '+\
+      sushw +' key=gx a='+ str(gx_o) +' c='+ str(gx_d) +' j='+ str(ntr_z) +' | '+\
+      sushw +' key=gelev a='+ str(gz_o) +' b='+ str(gz_d) +' j='+str(ntr_z) +' | '+\
+      sushw +' key=delrt a='+ str(hdr_ot*1.e+3)
+Flow(output,None,cmd)
+
+
+#######################################################################
+#######################################################################
+# Build MPS files
+#######################################################################
+#######################################################################        
+
+output = 'MPS_2D_sq.su'
+input = 'wlt_ricker.su'
+cmd = sushw +' key=selev a='+ str(selev_2D_sq) +' | '+\
+      sushw +' key=sx a='+ str(sx_2D_sq)
+Flow(output,input,cmd)
+
+
+#######################################################################
+#######################################################################
+# Test s00q2_fd2: running convergence test,
+#
+#           driver = asg 2-2
+#           data   = pressure
+#           source = pressure
+#        MPS order = 0 [MPS_scal]
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+# Computing data
+for d in dx:
+    
+    output = ['sq_test_s00q2_fd2_data'+str(d)+'.su',
+              'sq_test_s00q2_fd2_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=0'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx. rates of convergence
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s00q2-fd2-rates.rsf',
+     ['sq_test_s00q2_fd2_data10.su','sq_test_s00q2_fd2_data20.su','sq_test_s00q2_fd2_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     weak_rates+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=${TARGETS[0]} && '+\
+     ' /bin/rm tmp.par data10.bin data20.bin data40.bin'
+output = 'weakconv_s00q2_fd2.txt'
+input = ['sq_test_s00q2_fd2_data10.su','sq_test_s00q2_fd2_data20.su','sq_test_s00q2_fd2_data40.su']
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+# Plotting rates
+Result('sq-test-s00q2-fd2-plots','sq-test-s00q2-fd2-rates.rsf',
+       'put label1="z-axis" label2="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j maxval=7 minval=-3')
+Result('sq-test-s00q2-fd2-plots-wind','sq-test-s00q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s00q2-fd2-plots-wind2','sq-test-s00q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=3 min2=1')
+
+# Plotting snapshot of data
+cmd = sustrip +' <${SOURCES[0]} >tmp.bin outpar=tmp.par && '+\
+      snapshot +' infile=tmp.bin outfile=tmp.asc '+\
+      ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' it='+str(int(NT_2D_sq/2)+1)+' && '+\
+      ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp.asc tmp.bin tmp.par'
+Flow('sq-test-s00q2-fd2-snap.rsf','sq_test_s00q2_fd2_data10.su',
+     cmd, stdin=0,stdout=0)
+
+Result('sq-test-s00q2-fd2-plotsnap','sq-test-s00q2-fd2-snap',
+       'put label1="z-axis" label2="x-axis" unit1=m unit2=m o1=0 d1=40 o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y')
+
+
+#######################################################################
+#######################################################################
+# Test s01q2_fd2: running convergence test,
+#
+#           driver = asg 2-2
+#           data   = pressure
+#           source = pressure
+#        MPS order = 1 [MPS_scal], d/dx_2
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+
+# Computing data
+for d in dx:
+    
+    output = ['sq_test_s01q2_fd2_data'+str(d)+'.su',
+              'sq_test_s01q2_fd2_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=1'+\
+          ' dt=0.5'
+
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx. rates of convergence
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s01q2-fd2-rates.rsf',
+     ['sq_test_s01q2_fd2_data10.su','sq_test_s01q2_fd2_data20.su','sq_test_s01q2_fd2_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+
+# Plotting rates
+Result('sq-test-s01q2-fd2-plots','sq-test-s01q2-fd2-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s01q2-fd2-plots-wind','sq-test-s01q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s01q2-fd2-plots-wind2','sq-test-s01q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=3 min2=1')
+
+# Plotting snapshot of data
+cmd = sustrip +' <${SOURCES[0]} >tmp.bin outpar=tmp.par && '+\
+      snapshot +' infile=tmp.bin outfile=tmp.asc '+\
+      ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' it='+str(int(NT_2D_sq/2)+1)+' && '+\
+      ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp.asc tmp.bin tmp.par'
+Flow('sq-test-s01q2-fd2-snap.rsf','sq_test_s01q2_fd2_data10.su',
+     cmd, stdin=0,stdout=0)
+
+Result('sq-test-s01q2-fd2-plotsnap','sq-test-s01q2-fd2-snap',
+       'put label1="z-axis" label2="x-axis" unit1=m unit2=m o1=0 d1=40 o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y')
+
+
+
+#######################################################################
+#######################################################################
+# Test s02q2_fd2: running convergence test,
+#
+#           driver = asg 2-2
+#           data   = pressure
+#           source = pressure
+#        MPS order = 2 [MPS_scal], (d/dx_2)^2
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s02q2_fd2_data'+str(d)+'.su',
+              'sq_test_s02q2_fd2_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=2'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s02q2-fd2-rates.rsf',
+     ['sq_test_s02q2_fd2_data10.su','sq_test_s02q2_fd2_data20.su','sq_test_s02q2_fd2_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     weak_rates+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=${TARGETS[0]} && '+\
+     ' /bin/rm tmp.par data10.bin data20.bin data40.bin'
+Flow('weakconv_s02q2_fd2.txt',
+     ['sq_test_s02q2_fd2_data10.su','sq_test_s02q2_fd2_data20.su','sq_test_s02q2_fd2_data40.su'],
+     cmd,stdin=0)
+
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     weak_rates+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=${TARGETS[0]} && '+\
+     ' /bin/rm tmp.par data10.bin data20.bin data40.bin'
+Flow('weakconv_s02q2_fd2.txt',
+     ['sq_test_s02q2_fd2_data10.su','sq_test_s02q2_fd2_data20.su','sq_test_s02q2_fd2_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+# Plotting rates
+Result('sq-test-s02q2-fd2-plots','sq-test-s02q2-fd2-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s02q2-fd2-plots-wind','sq-test-s02q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s02q2-fd2-plots-wind2','sq-test-s02q2-fd2-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=3 min2=1')
+
+# Plotting snapshot of data
+cmd = sustrip +' <${SOURCES[0]} >tmp.bin outpar=tmp.par && '+\
+      snapshot +' infile=tmp.bin outfile=tmp.asc '+\
+      ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' it='+str(int(NT_2D_sq/2)+1)+' && '+\
+      ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+      ' sfdd form=native >${TARGETS[0]} && '+\
+      ' /bin/rm tmp.asc tmp.bin tmp.par'
+Flow('sq-test-s02q2-fd2-snap.rsf','sq_test_s02q2_fd2_data10.su',
+     cmd, stdin=0,stdout=0)
+
+Result('sq-test-s02q2-fd2-plotsnap','sq-test-s02q2-fd2-snap',
+       'put label1="z-axis" label2="x-axis" unit1=m unit2=m o1=0 d1=40 o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y')
+
+
+
+#######################################################################
+#######################################################################
+# Test s00q4_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 0 [MPS_scal]
+#   MPS appx order = 4
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s00q4_fd4_data'+str(d)+'.su',
+              'sq_test_s00q4_fd4_RHS'+str(d)+'.su']
+    
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=4'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=0'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s00q4-fd4-rates.rsf',
+     ['sq_test_s00q4_fd4_data10.su','sq_test_s00q4_fd4_data20.su','sq_test_s00q4_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+
+# Plotting rates
+Result('sq-test-s00q4-fd4-plots','sq-test-s00q4-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7 color=j')
+Result('sq-test-s00q4-fd4-plots-wind','sq-test-s00q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s00q4-fd4-plots-wind2','sq-test-s00q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=5 min2=3')
+
+
+#######################################################################
+#######################################################################
+# Test s01q4_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 1 [MPS_scal], d/dx_2
+#   MPS appx order = 4
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s01q4_fd4_data'+str(d)+'.su',
+              'sq_test_s01q4_fd4_RHS'+str(d)+'.su']
+    
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=4'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=1'+\
+          ' dt=0.5'
+
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s01q4-fd4-rates.rsf',
+     ['sq_test_s01q4_fd4_data10.su','sq_test_s01q4_fd4_data20.su','sq_test_s01q4_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+
+# Plotting rates
+Result('sq-test-s01q4-fd4-plots','sq-test-s01q4-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s01q4-fd4-plots-wind','sq-test-s01q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s01q4-fd4-plots-wind2','sq-test-s01q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=5 min2=3')
+
+
+#######################################################################
+#######################################################################
+# Test s02q4_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 2 [MPS_scal], (d/dx_2)^2
+#   MPS appx order = 4
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s02q4_fd4_data'+str(d)+'.su',
+              'sq_test_s02q4_fd4_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=4'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=2'+\
+          ' dt=0.5'
+
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s02q4-fd4-rates.rsf',
+     ['sq_test_s02q4_fd4_data10.su','sq_test_s02q4_fd4_data20.su','sq_test_s02q4_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+
+# Plotting rates
+Result('sq-test-s02q4-fd4-plots','sq-test-s02q4-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s02q4-fd4-plots-wind','sq-test-s02q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s02q4-fd4-plots-wind2','sq-test-s02q4-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=5 min2=3')
+
+
+#######################################################################
+#######################################################################
+# Test s00q2_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 0 [MPS_scal],
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s00q2_fd4_data'+str(d)+'.su',
+              'sq_test_s00q2_fd4_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=0'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s00q2-fd4-rates.rsf',
+     ['sq_test_s00q2_fd4_data10.su','sq_test_s00q2_fd4_data20.su','sq_test_s00q2_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+# Plotting rates
+Result('sq-test-s00q2-fd4-plots','sq-test-s00q2-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s00q2-fd4-plots-wind','sq-test-s00q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s00q2-fd4-plots-wind2','sq-test-s00q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=4 min2=0')
+
+
+#######################################################################
+#######################################################################
+# Test s01q2_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 1 [MPS_scal],
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s01q2_fd4_data'+str(d)+'.su',
+              'sq_test_s01q2_fd4_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=1'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2 && '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s01q2-fd4-rates.rsf',
+     ['sq_test_s01q2_fd4_data10.su','sq_test_s01q2_fd4_data20.su','sq_test_s01q2_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+# Plotting rates
+Result('sq-test-s01q2-fd4-plots','sq-test-s01q2-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s01q2-fd4-plots-wind','sq-test-s01q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s01q2-fd4-plots-wind2','sq-test-s01q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=4 min2=0')
+
+
+#######################################################################
+#######################################################################
+# Test s02q2_fd4: running convergence test,
+#
+#           driver = asg 2-4
+#           data   = pressure
+#           source = pressure
+#        MPS order = 2 [MPS_scal],
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+#Computing data
+for d in dx:
+    
+    output = ['sq_test_s02q2_fd4_data'+str(d)+'.su',
+              'sq_test_s02q2_fd4_RHS'+str(d)+'.su']
+
+    input  = ['bmod'+str(d)+'_2D_sq.rsf',
+              'buoy'+str(d)+'_2D_sq.rsf',
+              'hdr_2D_sq.su',
+              'MPS_2D_sq.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+          asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=2'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=2'+\
+          ' dt=0.5'
+    Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Computing approx convergence rates
+cmd = sustrip +' <${SOURCES[0]} >data10.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[1]} >data20.bin outpar=tmp.par && '+\
+     sustrip +' <${SOURCES[2]} >data40.bin outpar=tmp.par && '+\
+     appxrates2+ ' in_h=data10.bin in_2h=data20.bin in_4h=data40.bin '+\
+     ' nt='+str(NT_2D_sq)+' ntr='+str(NTR_2D_sq)+' outfile=tmp.asc norm=L2&& '+\
+     ' echo in=tmp.asc n1='+str(ntr_x)+' n2='+str(ntr_z)+' data_format=ascii_float | '+\
+     ' sfdd form=native >${TARGETS[0]} && '+\
+     ' /bin/rm tmp.asc tmp.par data10.bin data20.bin data40.bin'
+Flow('sq-test-s02q2-fd4-rates.rsf',
+     ['sq_test_s02q2_fd4_data10.su','sq_test_s02q2_fd4_data20.su','sq_test_s02q2_fd4_data40.su'],
+     cmd,stdin=0,stdout=0)
+
+# Plotting rates
+Result('sq-test-s02q2-fd4-plots','sq-test-s02q2-fd4-rates.rsf',
+       'put label2="z-axis" label1="x-axis" unit1=m o1=0 d1=40 unit2=m o2=0 d2=40 | '+\
+       'grey wanttitle=n scalebar=y barreverse=y bias=3 clip=4 color=j minval=-3 maxval=7')
+Result('sq-test-s02q2-fd4-plots-wind','sq-test-s02q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z/2))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=7 min2=-3')
+Result('sq-test-s02q2-fd4-plots-wind2','sq-test-s02q2-fd4-rates.rsf',
+       'window n1=1 n2='+str(ntr_x)+' f1='+str(int(ntr_z*2/5))+' | '+\
+       'put label2="Convergence-Rate" label1="x-axis" unit1=m o1=0 d1=40 | '+\
+       'graph wanttitle=n plotfat=3 grid1=y grid2=y gridfat=0.5 griddash=2 wherexlabel=top max2=4 min2=0')
+
+
+
+
+
+#######################################################################
+#######################################################################
+# The following is an extra test ..... not in the paper.
+# Test s00q2_fd2: running convergence test,
+#
+#           driver = asg 2-2
+#           data   = pressure
+#           source = pressure
+#        MPS order = 0 [MPS_scal]
+#   MPS appx order = 2
+#
+#######################################################################
+#######################################################################
+
+#computing dt
+dx = [10,20,40]
+dt = [0.0005,0.0005,0.0005] # time step [s]
+
+#source location
+sx= 2003.0 
+sz= -2003.0
+
+#time axis for hdr
+T=1.5    # final time [s]
+ot=0.0   # initial time [s]
+
+#time axis for wlt
+wlt_T  = 0.8 # final time [s] 
+
+#receiver parameters
+gx_o=0   
+gx_e=4000
+gz_o=0 
+gz_e=-4000 
+
+for i in range(3):
+
+    nt=int((T-ot)/dt[i])+1
+
+    gx_d = dx[i]
+    gz_d = -dx[i]
+    ntr_x = int((gx_e-gx_o)/gx_d)+1
+    ntr_z = int((gz_e-gz_o)/gz_d)+1
+    NTR = ntr_x*ntr_z
+
+    #hdr file
+    output = 'hdr_h'+str(dx[i])+'.su'
+    cmd = sunull +' nt='+ str(nt) +' ntr='+ str(NTR) +' dt='+ str(dt[i]) +' | '+\
+          sushw +' key=sx a='+ str(sx) +' c=0 | '+\
+          sushw +' key=selev a='+ str(sz) +' | '+\
+          sushw +' key=gx a='+ str(gx_o) +' c='+ str(gx_d) +' j='+ str(ntr_z) +' | '+\
+          sushw +' key=gelev a='+ str(gz_o) +' b='+ str(gz_d) +' j='+str(ntr_z) +' | '+\
+          sushw +' key=delrt a='+ str(ot*1.e+3)
+    Flow(output,None,cmd)
+
+    #wlt file
+    wlt_nt=int(wlt_T/dt[i])+1
+    cit=int(wlt_nt/2)+1
+    Flow( 'wlt_h'+str(dx[i])+'.su',None,
+          my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+          ' nt='+str(wlt_nt)+' dt='+str(dt[i])+' fpeak=5 type=2 cit='+str(cit)+' scal=10 ',
+          stdin=0,stdout=0 )
+
+    #MPS file
+    output = 'MPS_h'+str(dx[i])+'.su'
+    input = 'wlt_h'+str(dx[i])+'.su'
+    cmd = sushw +' key=selev a='+ str(sz) +' | '+\
+          sushw +' key=sx a='+ str(sx)
+    Flow(output,input,cmd)
+
+    # Computing data
+    output = ['s00_q2_fd2_data_p_h'+str(dx[i])+'.su',
+              's00_q2_fd2_RHS'+str(dx[i])+'.su']
+
+    input  = ['bmod'+str(dx[i])+'_2D_sq.rsf',
+              'buoy'+str(dx[i])+'_2D_sq.rsf',
+              'hdr_h'+str(dx[i])+'.su',
+              'MPS_h'+str(dx[i])+'.su']
+
+    cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+              asg_scal_p +\
+          ' bulkmod=${SOURCES[0]}'+\
+          ' buoyancy=${SOURCES[1]}'+\
+          ' source_p=${TARGETS[1]}'+\
+          ' data_p=${TARGETS[0]}'+\
+          ' deriv=0 adjoint=0 cfl=0.75 order=1'+\
+          ' cmin=1.0 cmax=3.0 dmin=0.4 dmax=1.0'+\
+          ' nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0'+\
+          ' appx_ord=2'+\
+          ' MPS_file=${SOURCES[3]}'+\
+          ' MPS_ord_0=0 MPS_ord_1=0'+\
+          ' dt='+str(dt[i]*1.e+3)
+    #Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+End()

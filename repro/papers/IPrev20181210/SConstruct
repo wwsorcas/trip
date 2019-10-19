@@ -1,0 +1,24 @@
+from rsf.tex import *
+
+End(
+
+options='manuscript,12pt',
+
+use='amsmath,setspace,wasysym',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bR}{\mathbf{R}}
+''',
+color='ALL'
+)
+
+
+
+
+

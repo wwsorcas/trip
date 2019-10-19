@@ -1,0 +1,1004 @@
+\title{Post-stack Migration}
+\maketitle
+\label{ch:post}
+\inputdir{project}
+
+\section{Introduction}
+The term ``migration'', as used in exploration geophysics, has a complicated origin. The reader should consult some of the standard texts on the subject, such as \cite{Dob:88}, or \cite{SheriffGeldart:1995}, for an account of this history. For these notes, the term ``migration'' is a synonym for ``imaging'' or ``image formation'', that is, a process of creating a subsurface image from data. 
+
+This chapter gives an idiosyncratic overview of post-stack migration, that is to say, creation of an image from the stack. The reader has already seen examples in Chapter \ref{ch:basic}. The term ``post-stack migration'' refers to techniques that convert zero-offset data to subsurface images. Since zero-offset data is seldom acquired, it is important that the stack and zero-offset data are roughly equivalent. I will explain this equivalence, and derive the {\em exploding reflector} model of zero-offset data. In terms of this model, I will pose a simple linear inverse problem for recovery of the square velocity (or bulk modulus) perturbation from the stacked data, by minimizing the mean square misfit between the stack and its exploding reflector prediction. From the various approximations and replacements necessary to get to this point, it will be clear that the field extracted from the data by solving this inverse problem cannot be expected to represent the actual values of a physical parameter - but perhaps can be expected to show the same geometric structure, that is, to be an {\em image} of the subsurface. Like all remotely reasonable formulations of the seismic inverse problem, this one is so large computationally that only iterative solution methods are remotely feasible. I introduce the {\em Conjugate Gradient} algorithm for iterative solution of linear systems, and apply it to the exploding reflector inverse problem. The first iterate, a multiple of the gradient of the mean squares error, is already a reasonably good image. I will explain why this is to be expected. Computation of the gradient is essentially equivalent to applying the {\em adjoint} or transpose of the simulation operator. I introduce the {\em adjoint state method} for computation of this adjoint, which is a verion of {\em reverse time migaration}, introduced into seismology in the early 80's and a key ingredient in many advanced processing methods.
+
+\section{Zero-Offset Modeling}
+Recall that in case of simple ray geometry (unique rays connecting sources and receivers to scattering points), geometric optics approximates the Born approximation, equation \ref{eqn:grt1}, as:
+\[
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) \approx 
+\]
+\begin{equation}
+\label{eqn:grt1r}
+= w*_t \frac{\partial^2}{\partial t^2}\int \, dx \, a(\bx_r,\bx)a(\bx_s,\bx)\delta(t-\tau(\bx_r,\bx)-\tau(\bx_s,\bx)) \frac{\delta v^2}{v^2}(\bx)
+\end{equation}
+``Zero offset'' means that $\bx_s = \bx_r=\bx_m$. So the zero-offset trace at receiver location $\bx_r$ is
+\[
+D\cF_{\rm ZO}[v^2]\delta v^2(\bx_r,t) \approx 
+\]
+\begin{equation}
+\label{eqn:grt1r1}
+= w*_t \frac{\partial^2}{\partial t^2}\int \, dx \, a^2(\bx_r,\bx)\delta(t-2\tau(\bx_r,\bx)) \frac{\delta v^2}{v^2}(\bx) 
+\end{equation}
+Recall that $\tau$ is a solution of the eikonal equation \ref{eqn:eik}, written concisely as $v(\bx)|\nabla \tau(\bx,\bx_r)|=1$. Obviously $2\tau(\bx,\bx_r)$ solves the same eikonal equation with the velocity $ v/2$: ``if you go half as fast, it takes twice as long to get there''.
+
+I claim that in fact the quantity $a \delta(t-2\tau)$ is the most singular (high frequency asymptotic) part of the Green's function $G_{v/2}(\bx,t;\bx_r)$ for the velocity $v/2$, with ``source'' at $\bx_r$, up to a factor of 2. Specifically, the relationship is
+\begin{equation}
+\label{eqn:2green}
+G_{v/2}(\bx,t;\bx_r) = \frac{1}{2}G_v\left(\bx,\frac{t}{2};\bx_r\right).
+\end{equation}
+To see this, substitute the right-hand side of \ref{eqn:2green} in the wave equation for velocity field $v/2$:
+\[
+\left(\frac{1}{\left(\frac{v}{2}(\bx)\right)^2} \frac{\partial^2}{\partial t^2} - \nabla^2\right) \frac{1}{2}G_v\left(\bx,\frac{t}{2};\bx_r\right)
+\]
+\[
+=\left(\frac{4}{v(\bx)^2}\frac{\partial^2}{\partial t^2} - \nabla^2\right)\frac{1}{2}G_v\left(\bx,\frac{t}{2};\bx_r\right)
+\]
+\[
+= \frac{1}{2}\left(\frac{1}{v(\bx)^2}\frac{\partial^2G_v}{\partial t^2} - \nabla^2G_v\right)\left(\bx,\frac{t}{2};\bx_r\right)
+\]
+\begin{equation}
+\label{eqn:2greenderiv}
+=\frac{1}{2}\delta(\bx-\bx_r)\delta\left(\frac{t}{2}\right) = \delta(\bx-\bx_r)\delta(t).
+\end{equation}
+The last step in the sequence of equations \ref{eqn:2greenderiv} is the identity $\delta(t) = c\delta(ct)$, which follows from the definition of the delta function and the substitution rule for integrals.
+
+Equation \ref{eqn:2greenderiv} shows that the right-hand side of \ref{eqn:2green} solves the defining wave equation of the Green's function $G_{v/2}$. Since both sides are causal, \ref{eqn:2green} is established. 
+
+The geometric optics computation from Chapter 5 shows that the leading singularity of $G_{v/2}$ takes the form
+\begin{equation}
+\label{eqn:gohalf1}
+G_{v/2}(\bx,t;\bx_r) \approx a_{v/2}(\bx,\bx_r)\delta(t-2\tau(\bx,\bx_r)) = \frac{1}{2}a_{v/2}(\bx,\bx_r)\delta\left(\frac{t}{2}-\tau(\bx,\bx_r)\right)
+\end{equation}
+However the same geometric optics computation shows that
+\begin{equation}
+\label{eqn:gohalf2}
+\frac{1}{2}G_v\left(\bx,\frac{t}{2};\bx_r\right) \approx \frac{1}{2}a_{v}(\bx,\bx_r)\delta\left(\frac{t}{2}-\tau(\bx,\bx_r)\right)
+ =a_v(\bx,\bx_r)\delta(t-2\tau(\bx,\bx_r)) 
+\end{equation}
+Combining equations \ref{eqn:2green}, \ref{eqn:gohalf1}, and \ref{eqn:gohalf2}, conclude that $a_{v/2} = a_v$, and that the integrand in the RHS of equation \ref{eqn:grt1r1} contains exactly the leading order approximation to the Green's function $G_{v/2}$:
+\[
+D\cF_{\rm ZO}[v^2]\delta v^2(\bx_r,t) \approx  w*_t \frac{\partial^2}{\partial t^2}\int \, dx \,a_v(\bx,\bx_r) G_{v/2}(\bx,t;\bx_r) \frac{\delta v^2}{v^2}(\bx) 
+\]
+\[
+= w*_t \frac{\partial^2}{\partial t^2}\int\, dt'\,\int \, dx \, a(\bx,\bx_r)G_{v/2}(\bx_r,t-t';\bx) \frac{\delta v^2}{v^2}(\bx) 
+\delta(t')
+\]
+\begin{equation}
+\label{eqn:grt1g}
+= \int\, dt'\,\int \, dx \, a(\bx,\bx_r)G_{v/2}(\bx_r,t-t';\bx) \frac{\delta v^2}{v^2}(\bx)\frac{d^2w}{dt^2}(t').
+\end{equation}
+
+Equation \ref{eqn:grt1g} unfortunately does {\em not} expresses the zero-offset data gather as sampling the solution of an acoustic wave equation, because of the extra amplitude factor under the integral sign. 
+The very creative step from zero-offset to exploding reflector modeling consists dropping $a$ and the factor $1/v^2\partial^2/\partial t^2$. Both are $a$ and $1/v^2$ positive and (under standing assumptions) slowly varying on the wavelength scale, so that the overall effect ought to be scaling oscillatory reflection events without modifying their local relative amplitudes or locations. The second time derivative modifies the phase also without modifying locations and orientations of events, and combines with the other factors to yield an overall dimensionless change. A complete mathematical justification requires tools developed later in these notes.
+
+Accepting these changes, re-interpret zero-offset data as represented by the {\em exploding reflector model}
+\begin{equation}
+\label{eqn:grt2g}
+D\cF_{\rm ZO}[v^2]\delta v^2(\bx_r,t) \approx  \int\, dt'\,\int \, dx \, G_{v/2}(\bx_r,t-t';\bx) \delta v^2(\bx)w(t').
+\end{equation}
+The Green's function $G_{v/2}$ is the solution operator of the initial value problem
+\begin{eqnarray}
+\label{eqn:cdawe7}
+\frac{\partial^2 p}{\partial t^2} - \frac{v^2}{4} \nabla^2 p & = & f \nonumber\\
+p & = & 0, \,t<<0
+\end{eqnarray}
+$D\cF_{\rm ZO}$ applies this solution operator to the right-hand side 
+\begin{equation}
+\label{eqn:explref}
+f(\bx,t) = \frac{\delta v^2}(\bx) w(t) 
+\end{equation}
+This observation explains the term {\em exploding reflector model} for the representation \ref{eqn:grt1g}: the reflectors ($\delta v^2$) ``explode'' with time dependence $w(t)$. 
+
+\section{Exploding Reflectors in Pressure-Velocity Acoustics}
+The pressure-velocity form of acoustics relates pressure $p$ and the particle velocity vector field $\bv$ through a pair of time-dependent PDEs: 
+\begin{eqnarray}
+\label{eqn:vdawe}
+\frac{\partial p}{\partial t}&=& -\kappa (\nabla \cdot \bv + g) \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p
+\end{eqnarray}
+In this system, $\kappa = \rho v^2$ where $\rho$ is the material density, and $\beta = 1/\rho$ is the {\em buoyancy}.  
+
+Each equation in \ref{eqn:vdawe} has clear physical meaning. The first is the constituitve law of linear acoustics: the rate of change of pressure is proportional to the rat of change of volume (the divergence of the velocity field), with the constant of proportionality being the bulk modulus. The the energy source is represented as a defect ($g$) in this constitutive law: more specifically, a defect in the infinitesimal volume rate field. The second equation is Newton's law.
+
+To make this system equivalent to the constant density second order equation \ref{eqn:cdawe7}, simply assume $\beta=\rho=1$ and set 
+\[
+\bv = \nabla \int_{-\infty}^t p,\,\,\kappa \frac{\partial g}{\partial t} = f.
+\]
+
+In terms of the pressure-velocity form of acoustics, the exploding reflector model from the previous section is expressed as
+\[
+D\cF_{\rm ZO}[v^2]\delta v^2(\bx_r,t) \approx p(x_r,t),
+\]
+where $(p,\bv)$ solve the system \ref{eqn:vdawe} with $\kappa= v^2/4$, that is, the physical bulk modulus is divided by 4, and the right-hand-side
+\begin{equation}
+\label{eqn:explrefderiv}
+g(\bx,t) = \frac{\delta v^2(\bx)}{v^2(\bx)}w_1(t). 
+\end{equation}
+where $w_1$ is the indefinite integral of $w$.
+
+At this point, I will take possibly unfair advantage of a point I have not raised until now - we have actually no knowledge of the wavelet $w(t)$. Of course, whatever it is (if indeed the isotropic point radiator is even a fair model of the seismic source) it can be changed by filtering. Therefore I will from now on assume that $w$ is the derivative of an approximate delta, filtered appropriately and with appropriate units, and therefore that $w_1$ is a filtered delta function. For convenience, I will even ignore the filter. Therefore the model of the right-hand side in the exploding reflector model becomes
+\begin{equation}
+\label{eqn:explrefdelta}
+g(\bx,t) = \frac{\delta v^2(\bx)}{v^2(\bx)}\delta(t). 
+\end{equation}
+
+\section{An Example}
+
+In Chapter \ref{ch:born}, I used the stack as input to various forms of migration to produce images in both time and depth, without explaining why the stack is appropriate input (or, indeed, what the migration algorithms did). This chapter will clear up some of those mysteries. However, as I have done in earlier chapters, I will begin by building an example based on migration of a stack.
+
+I construct an example similar to those in Chapter \ref{ch:born}, by using the $v^2$ model estimated by flattening NMO-corrected gathers for the Viking Graben data (Figure \ref{fig:paracsqer}), and for the perturbation $\delta v^2$ the PSPI post-stack depth migrated image Figure \ref{fig:parapspifixagcfilt}. The input data for the PSPI image is shown in Figure \ref{fig:parastackfixagcfilt}: it is the result of applying AGC to the stack of the NMO-corrected data from Chapter \ref{ch:born}, then applying a (2,5,20,25) Hz bandpass filter. The additinoal low-pass filter allows accurate finite difference calculations with a coarser grid than is possible with the original data, and is used only to make the computations a bit less time-consuming.  
+
+\plot{paracsqer}{width=0.9\textwidth}{Scaled bulk modulus $v^2/4$ ($\rho=1$) for exploding reflector simulation: obtained from Viking Graben data by flattening NMO gathers, as in Chapter \ref{ch:basic}.}
+
+\plot{parastackfixagcfilt}{width=0.9\textwidth}{AGC'd and filtered stack from Chapter \ref{ch:born}. Filter is (2, 5, 20, 25) Hz bandpass.}
+
+\plot{parapspifixagcfilt}{width=0.9\textwidth}{Bulk modulus perturbation $\delta v^2$ for exploding reflector simulation, obtained from Viking Graben data by Gazdag PSPI depth migration of filtered stack (Figure \ref{fig:parastackfixagcfilt}) using velocity model of Figure \ref{fig:paracsqer}.}
+
+The Viking Graben survey does not contain zero-offset data. The closest approximation is the near offset, at $h=-262$ m. With AGC to make the events more visible, this gather appears as Figure \ref{fig:paracdpnearoffagc}. Comparison with the result of the exploding reflector simulation, Figure \ref{fig:expldatanmo}, shows general agreement of positioning and orientation of events. I have plotted both field data and simulated data after AGC, to emphasize the similarity in apparent structure.
+
+\plot{paracdpnearoffagc}{width=0.9\textwidth}{Near offset section, after AGC.}
+\plot{expldata}{width=0.9\textwidth}{Exploding reflector simulated zero offset data based on PSPI depth image (Figure \ref{fig:parastackfixagcfilt}) as input reflectivity (right-hand side in equation \ref{eqn:explrefdelta}, and scaled NMO-derived velocity model (Figure \ref{fig:paracsqer}).}
+
+\section{The Stack As a Stand-In for ZO Data}
+Recall from the last chapter that the convolutional model predicts a simple relation between perfectly deconvolved CMP gathers $d(x_m,y_m,h,t)$ after NMO correction using event traveltime $T(t_0,h)$  as function of zero offset time $t_0$ and (half) offset $h$, and a reflectivity function $R(t_0)$:
+\begin{equation}
+\label{eqn:convt0rep}
+d(x_m,y_m,h,\bar{T}(h,t_0)) \approx \bar{A}(h,t_0) \frac{d\bar{R}}{dt_0}(x_m,y_m,t_0) 
+\end{equation}
+SInce $\bar{T}(0,t_0)=t_0$, this relation implies that for zero offset,
+\begin{equation}
+\label{eqn:convt0h0}
+d(x_m,y_m,0,t_0) \approx \bar{A}(0,t_0) \frac{d\bar{R}}{dt_0}(x_m,y_m,t_0). 
+\end{equation}
+It also yields an approximation to the stack:
+\begin{equation}
+\label{eqn:convstack}
+d_{\rm stack}(x_m,y_m,t_0) = \int \, dh \,d(x_m,y_m,h,\bar{T}(h,t_0)) \approx \bar{A}_{\rm stack}(t_0) \frac{d\bar{R}}{dt_0}(x_m,y_m,t_0). 
+\end{equation}
+where the stacked amplitude is defined by
+\begin{equation}
+\label{eqn:stackamp}
+\bar{A}_{\rm stack}(t_0) = \int \, dh \,\bar{A}(h,t_0) .
+\end{equation}
+Comparison of \ref{eqn:convt0h0} and \ref{eqn:convstack} shows that the stack is proportional to zero-offset data by the ratio of the zero-offset and stacked amplitudes, both of which are positive slow-varying functions of $t_0$. Thus if the deconvolved convolutional model \ref{eqn:convt0rep} is to be believed, the stack has precisely the same {\em locations in time} of high-frequency events as zero-offset data, so that as input to imaging for structure, the two are interchangeable.
+
+Of course, the deconvolved convolutional model is not entirely correct, as discussed in the last chapter, for (at least) three reasons. First, since perfect deconvolution is impossible, NMO stretch will decrease the frequency content of far offsets, hence lower decrease the energy content of the stack at high frequencies, hence its apparent resolution. Second, imperfectly defined NMO velocity will result in some averaging of the reflectivity, again depressing frequency content. Both of these effects are observable in the stacked data, shown in Figure \ref{fig:parastackfixagc} (also with AGC, but without low-pass filter) for comparison with the near-offset section (Figure \ref{fig:paracdpnearoffagc2}, repeated here for the reader's convenience).
+
+\plot{paracdpnearoffagc2}{width=0.9\textwidth}{Near offset section, after AGC.}
+\plot{parastackfixagc}{width=0.9\textwidth}{Stack of NMO-corrected Viking Graben data, AGC applied.}
+
+Finally, of course the convolutional model in any form is the result of several layers of approximation - linearization, high-frequency asymptotics, the ``locally layered'' assumption. Nontheless, in fact the stack is even more similar to the modeled exploding reflector data (Figure \ref{fig:expldataagc}) than is the zero offset section.
+
+\section{A Linear Inverse Problem}
+Seismic imaging is the construction of an image of the subsurface from seismic data - a statement which begs the question, ``what is an image?''. [One could give the Justice Potter Stewart answer, of course - ``I know it when I see it'' - but it's possible to do better.] To start with, I will pose the imaging problem in the simplest possible way: given the data, recover parameters that predict it. For the constant density acoustic model, ``parameters'' means the squared velocity field $v^2(\bx)$, and in principle the source model as well. Admitting the Born approximation, ``parameters'' means the source and the pair of squared velocity $v^2(\bx)$ and its perturbation $\delta v^2(\bx)$, with the former slowly varying on the wavelength scale hence transparent thanks to geometric optics, and the latter oscillatory and accounting for reflection dynamics. Recovery of these parameter fields must surely encompass producing their image, and therefore an image of earth structure, to the extent that the modeling assumptions underlying the formulation of the problem are valid.
+
+I will specialize this parameter recovery or {\em inverse} problem to the zero-offset (or stacked) data case with the exploding reflector approximation replacing the acoustic model. As it turns out, this combination of data and model does not permit all parameters to be determined. If the source model is fixed as in equation \ref{eqn:explrefdelta}, and the squared velocity is regarded as data, rather than as a parameter field to be determined, it turns out to be possible to estimate the remaining parameter, the square velocity perturbation $\delta v^2(\bx)$, so that the data is quite well predicted. The predicted exploding reflector data is linear in $\delta v^2(\bx)$, as the latter is essentially the right-hand side of a wave equation. Therefore the recovery of $\delta v^2(\bx)$ from $v^(\bx)$ and $d_{\rm stack}(x_m,y_m,t_0)$ is a {\em linear inverse problem}. Formally, the problem amounts to the (approximate) solution of the linear system
+\begin{equation}
+\label{eqn:psinv}
+D\cF_{\rm ZO}[v^2]\delta v^2(x_m,y_m,t_0) \approx  d_{\rm stack}(x_m,y_m,t_0). 
+\end{equation}
+
+Because of the very many approximations and unrealistic physical assumptions made in arriving at the system \ref{eqn:psinv}, actually solving it (even in the approximate sense that I will develop in this chapter) is overkill - asking too much of the data and modeling assumptions. The solution can't be confused with the ``real'' short-scale perturbations in compressional wave velocity occuring in the subsurface beneath the Norwegian North Sea. Nonetheless, one might hope first that some evidence of subsurface structure would emerge, and perhaps to see how the calculations might be short-circuited to provide just such image information without actually bothering to fit the data. Both hopes turn out to be realistic.
+ 
+It is very likely that equation \ref{eqn:psinv} cannot be solved by any choice of $\delta v^2$, that is, the data cannot be exactly fit, for example because the domain within which $\delta v^2$ is allowed to vary does not predict the full range of midpoints or times present in the stack. An example of exactly this type of behaviour appears below. Therefore it is natural to converte \ref{eqn:psinv} to a {\em best fit} problem. The mean square error is a misfit measure with pleasant mathematical and computational properties. It also enjoys some physical justification, see \cite{SantosaSymes:00}. Thus seek $\delta v^2$ to minimize (approximately)
+\begin{equation}
+\label{eqn:psinvls}
+J[\delta v^2] =\frac{1}{2} \sum_{x_m,y_m}\int \,dt_0\,|(D\cF_{\rm ZO}[v^2]\delta v^2)(x_m,y_m,t_0) -  d_{\rm stack}(x_m,y_m,t_0)|^2. 
+\end{equation}
+Since $J$ is a positive semidefinite quadratic form, all of its stationary points are global minimizers. A stationary point is a zero of the gradient:
+\begin{equation}
+\label{eqn:psinvgrad}
+\nabla J[\delta v^2] = D\cF_{\rm ZO}[v^2]^T( D\cF_{\rm ZO}[v^2]\delta v^2 -  d_{\rm stack})(x_m,y_m,t_0)) = 0
+\end{equation}
+or alternatively in the form of a linear system, the so-called {\em normal equation}:
+\begin{equation}
+\label{eqn:psinvnorm}
+(D\cF_{\rm ZO}[v^2]^T D\cF_{\rm ZO}[v^2]\delta v^2) (x,y,z) = D\cF_{\rm ZO}[v^2]^T d_{\rm stack})(x,y,z).
+\end{equation}
+The transpose, or adjoint, operator $D\cF_{\rm ZO}[v^2]^T$ is the unique operator making the {\em dot product test} true:
+\[
+\sum_{x_m,y_m}\int \,dt_0\,(D\cF_{\rm ZO}[v^2]\delta v^2)(x_m,y_m,t_0)d_{\rm stack}(x_m,y_m,t_0) 
+\]
+\begin{equation}
+\label{eqn:dotprodtest}
+=\int\int\int \,dx\,dy\,dz\,(D\cF_{\rm ZO}[v^2]^T d_{\rm stack})(x,y,z)\delta v^2(x,y,z).
+\end{equation}
+Note that the dot product test should hold for {\em any} choice of square velocity perturbation $\delta v^2$ and stacked data section $d_{\rm stack}$, not just the ones that you might be currently interested in.
+
+After discretization, say by finite differences as are used in the IWAVE package, the fields $\delta v^2$ and $d_{\rm stack}$ become vectors, and the linear operators $D\cF_{\rm ZO}[v^2]$, $D\cF_{\rm ZO}[v^2]^T$, and $D\cF_{\rm ZO}[v^2]^TD\cF_{\rm ZO}[v^2]$ become matrices. 
+The matrix of $D\cF_{\rm ZO}[v^2]^T$ is the transpose of the matrix of $D\cF_{\rm ZO}[v^2]$, and the matrix of the {\em normal operator} $D\cF_{\rm ZO}[v^2]^TD\cF_{\rm ZO}[v^2]$ is symmetric positive (semi-)definite.
+
+The integrals in the equation \ref{eqn:dotprodtest} become scaled versions of the dot product, scaled by the cell volume on each side. On the left, I have continued to write a sum over midpoints, rather than integrals over midpoint coordinates, because midpoint coordinates may not be uniformly sampled and devising a quadrature method is difficult. Instead, I presume that the midpoint sampling is sufficiently uniform that I can treat it as perfectly uniform and ignore the midpoint area factor that would go into an approximation to an integral. So the only cell volume on the left hand side is the time step. On the other hand, the spatial fields - $\delta v$ and the output of the transpose operator - are sampled on a regular finite difference grid, so the integral is well-approximated by the ordinary dot product multiplied by the volume of a grid cell. The consequence is the the results are stable against resampling in $t$ and in $x,y,z$.
+
+The inversion task boils down to solving (approximately, at least) the normal system \ref{eqn:psinvnorm}. A first impediment to computational implementation is the size of this system. For the example created in this book from the Viking Graben survey, $d_{\rm stack}$ has 1.6 $\times 10^6$ samples, and $\delta v^2$ about 0.5 $\times 10^6$. That is, there are more equations than unknowns, by about a factor of 3: the system \ref{eqn:psinv} is overdetermined, and is very unlikely to have a literal solution, justifying the least squares approach. Storing the matrix of $D\cF_{\rm ZO}[v^2]$ requires $O(10^{12})$ words of memory - not inconceivable for vintage 2017 high-end computing equipment, but a LOT of storage nonetheless. The normal marix is smaller, $O(10^{11})$ words, especially if one stores only the upper or lower triangle, taking advantage of symmetry. It is still an unpleasantly large amount of data, and the vast number of loads and stores necessary to manipulate it make efficient implementation difficult. Finally, Gaussian elimination requires $O(10^{18})$ floating point operations, or more than 100 days at 100 Gflops - and this for a rather academic 2D problem. 
+
+\section{Conjugate Gradient Iteration}
+Remarkably, it is possible to solve the least squares problem described in the last section (effectively, the normal equations \ref{eqn:psinvnorm}) to an acceptable level of approximation, by means of an efficient {\em iterative} method, in a tiny fraction of the time estimated above for Gaussian elimination, and using very modest computing resources - for the examples to be shown in the next section, a few minutes on a vintage 2015 Apple laptop with a single thread of execution.
+
+The efficient iterative method is Conjugate Gradient (CG) iteration \cite[]{NocedalWright,Golub:2012}. For completeness, I describe the general form of this computation, in the context of the least squares problem defined in the last section. To make the notation tractable, I introduce the two abbreviations:
+\begin{eqnarray}
+\label{eqn:Fdef}
+F & \leftarrow & D\cF_{\rm ZO}[v^2]\nonumber \\
+r & \leftarrow & \frac{\delta v^2}{v^2}
+\end{eqnarray}
+That is, $v^2$ is fixed for the course of the discussion, so suppress it from the notation, and abbreviate the notation for derivative. Also, the relative perturbation in $v^2$ is the source of reflection signal in the exploding reflector model: accordingly, abbreviate it as the reflectivity, denoted $r$, and regard the predicted signal as being a function of the relative perturbation rather than the perturbation itself - since $v^2$ is regarded as fixed, the two points of view are equivalent. Thus $r \mapsto Fr$ is a linear map, which would be represented after discretization by a (huge!) matrix if you were to be so foolish as to compute all of its entries. Instead, a perfectly good approach to computing the matrix-vector product $F r$ is available: use a finite difference method to approximately solve the exploding reflector problem \ref{eqn:vdawe}, \ref{eqn:explrefderiv}, which in the notation just introduced take the form
+\begin{eqnarray}
+\label{eqn:vdawer}
+\frac{\partial p}{\partial t}&=& -\kappa (\nabla \cdot \bv - r \delta(t)) \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p\nonumber \\
+p,\bv & = & 0, \,t<0 
+\end{eqnarray}
+
+The CG algorithm needs only the matrix-vector product, not the matrix entries themselves:
+\begin{itemize}
+\item Initialize:
+\begin{itemize}
+ \item $r_0 = 0$
+  \item $e_0 = d$
+  \item $s_0 = F^Td$
+\item $g_0 = s_0$
+  \item $k = 0$
+\end{itemize}
+\item Repeat:
+\begin{itemize}
+  \item $\alpha_k = \frac{\langle s_k,s_k \rangle}{\langle Fs_k,Fs_k\rangle}$
+  \item $r_{k+1} = r_k + \alpha_k s_k$
+ \item $e_{k+1} = e_k - \alpha_kFs_k$
+\item $g_{k+1} = g_k - \alpha_k F^TFs_k$
+  \item $\beta_{k+1} = \frac{\langle g_{k+1},g_{k+1}\rangle}{\langle g_k,g_k\rangle}$
+  \item $s_{k+1}= g_{k+1}+\beta_{k+1}s_k$
+  \item $k = k+1$
+\end{itemize}
+\item Until $\|e_k\|$ sufficiently small, or max iteration count exceeded 
+\end{itemize}
+
+These relations follow from the statement of the algorithm:
+\begin{eqnarray}
+\label{eqn:cgcons}
+e_k & = & d - Fr_k\nonumber \\
+g_k&=& F^T(d-Fr_k)
+\end{eqnarray}
+That is, $e_k$ is the data error (or residual) at the $k$th iteration, and $g_k$ is the gradient (also the normal residual). $s_k$ is the search direction, $\alpha_k$ is the correct multiple of $s_k$ to attain the minimum of the quadratic objective on the line through $r_k$ in the direction $s_k$. The justification for the direction update parameter ($\beta_k$) is more difficult to explain - see the cited references.
+
+The corner brackets are the scaled dot products mentioned in the previous section: for instance,
+ for data sections $d_1$ and $d_2$,
+\begin{equation}
+\label{eqn:dataip}
+\langle d_1, d_2 \rangle = \sum_{x_m,y_m}  \sum_{t_0}\Delta t_0\,d_1(x_m,y_m,t_0) d_2(x_m,y_m,t_0) 
+\end{equation}
+and for depth fields $g_1(x,y,z), g_2(x,y,z)$
+\begin{equation}
+\label{eqn:modelip}
+\langle g_1, g_2 \rangle = \sum_{x,y,z}  \Delta x \Delta y \Delta z g_1(x,y,z) g_2(x,y,z) 
+\end{equation}
+For any inner product, the corresponding norm is the square root of the inner product ssquare:
+$\|g\|=\sqrt{\langle g,g\rangle}$. 
+
+Conjugate Gradient iteration has many fascinating properties, explained in the books cited earlier. I will mention just one: in its application to least squares problems as in the algorithm explained above, the residual norm $\|e_k\|$ decreases monotonically with $k$, whereas the gradient norm $\|g_k\|$ does not, necessarily. 
+
+\section{Inversion of the Viking Graben Stack}
+I used CG iteration to solve the inverse problem set out in this chapter, assuming that the exploding reflector $r$ is zero outside of the subrectangle $\{3000 m \le x \le 27000m, 400 m \le z \le 2800 m\}$. The modeling is done in 2D, which means that some of the considerations developed above that depend on the nature of the leading singularity really ought to be changed. I ignored these conflicts, and simply used the system \ref{eqn:vdawer} without modification.
+
+In order to make sure that all inputs were correct, I first calculated a single iteration of the CG algorithm described in  the last section. The RVL implementation of CG outputs key information, as displayed in Table 
+%\ref{tab:cg1it}
+1.
+\begin{table}
+\label{tab:cg1it}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Iteration   &  Residual Norm &  Gradient Norm\\
+\hline 
+         1  &  2.18368799e+03    & 3.05936885e+00\\
+\hline 
+         2  &  9.36336853e+02    & 1.13921440e+00\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Conjugate Gradient first iteration.}
+\end{table} 
+Note that the RVL CG algorithm counts iterations Fortran-style, that is, starting from 1 instead of from 0, C style, as the algorithm pseudo-code in the last section would have it. I wonder why that is.
+
+The first iteration has dropped the data residual norm to 75\% of its initial value - not so impressive. The first iterate ($r_1$) is more interesting:
+\plot{explnmo1it}{width=0.9\textwidth}{Viking Graben ZO inversion: CG iteration 1} 
+Compare it with the PSPI migration in Figure \ref{fig:parapspifixagcfilt}).
+The resemblance is remarkable: in fact, the first iterate is a reasonably accurate {\em image}, in that it shows the same geometrical structures picked out in grey scale. Note from the CG listing that the first iterate is a multiple of the gradient of the least squares function at $r=0$. So this observation poses a question:
+
+{\em Why is the gradient an image?}
+
+The answer comes in the section after next. 
+
+Note that the obvious diffraction hyperbolae in the stack (Figure \ref{fig:parastackfixagc}) are absent in any of the depth images - collapsing of diffraction hyperbolae is a salient feature of migration (and indeed the first CG iterate is a migration).
+
+Since the setup seemed to be working I went ahead with 6 steps. The residual record appears in Table %\ref{tab:cg6it}. 
+2.
+Note that the next-to-last iteration actually increases the gradient norm, as is possible during CG iteration, but the data residual norm monotonically decreases as it should.
+\begin{table}
+\label{tab:cg6it}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Iteration   &  Residual Norm &  Gradient Norm\\
+\hline 
+         1  &  2.18368799e+03    & 3.05936885e+00\\
+\hline 
+         2  &  9.36336853e+02    & 1.13921440e+00\\
+\hline 
+         3  &  5.54742188e+02  & 3.24299669e+00\\
+\hline 
+         4  &  5.08972382e+02  & 8.39157641e-01\\
+\hline 
+         5  &  4.04111511e+02  & 4.64890152e-01\\
+\hline 
+         6  &  3.84719269e+02  & 1.62544572e+00\\
+\hline 
+         7  &  3.25789581e+02  & 5.23918450e-01\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Residual and Gradient norms, six Conjugate Gradient iterations.}
+\end{table}
+The recovered reflectivity $r$ after 6 iterations appears in Figure \ref{fig:explnmo6it}, and is somewhat less noisy than the 1 iteration result (Figure \ref{fig:explnmo1it}); both are very similar to the PSPI image in Figure \ref{fig:parapspifixagcfilt}.
+\plot{explnmo6it}{width=0.9\textwidth}{Viking Graben ZO inversion: CG iteration 6}
+
+The data predicted from this model (Figure \ref{fig:expldatanmo6it}) appears to match fairly well with the target data in Figure \ref{fig:parastackfixagcfilt} - the two figures are plotted on the same grey scale. According to the table above, the iteration has reduced the data misfit to less than 15\% of its initial size (RMS). Plotting the data residual on the same scale (Figure \ref{fig:resdatanmo6it}) shows how small the remaining error actually is.
+
+\plot{expldatanmo6it}{width=0.9\textwidth}{Simulated data from reflectivity produced by 6 CG iterations (Figure \ref{fig:explnmo6it}).}
+
+\plot{parastackfixagcfilt2}{width=0.9\textwidth}{Target data for inversion: duplicates Figure \ref{fig:parastackfixagcfilt}, filtered AGC'd NMO-corrected stack of Viking Graben line.}
+ 
+\plot{resdatanmo6it}{width=0.9\textwidth}{Data residual, Viking Graben ZO inversion: CG iteration 6}
+
+The alert reader will have possibly formulated a critical question. I have explained that manipulation of $F$ as a matrix is out of the question, even for this rather tame problem. If $F$ were represented as a matrix, then the meaning of $F^T$ would be clear, as would be its computation (swap the indices!).  However, $F$ is not represented as a matrix, but rather its action on a vector (representing an exploding reflecetor field) results from numerical solution of a wave equation. Accordingly,
+
+{\em How can $F^T$ be computed without accessing its matrix?}
+
+\section{Computation of the Adjoint: Reverse Time Migration}
+The transpose or adjoint operator is {\em defined} by the dot product test: in the notation introduced in the last two sections, 
+\begin{equation}
+\label{eqn:dotprodtest1}
+\sum_{x_m,y_m}\int \,dt_0\,(Fr)(x_m,y_m,t_0)d(x_m,y_m,t_0) 
+=\int\int\int \,dx\,dy\,dz\,r(x,y,z)(F^T d)(x,y,z).
+\end{equation}
+From the definition of F and the delta function, the left-hand side of equation \ref{eqn:dotprodtest1} is the same as
+\[
+=\sum_{x_m,y_m}\int \,dt_0\,p(x_m,y_m,,z_m,t)d(x_m,y_m,t) 
+\]
+\begin{equation}
+\label{eqn:dotprodrecast}
+=\int \int \int \int dx\,dy\,dz\,dt\,p(x,y,z,t)\left(\sum_{x_m,y_m}d(x_m,y_m,t) \delta(x-x_m)\delta(y-y_m)\delta(z-z_m)\right)
+\end{equation}
+In this last version of the dot product test, the data has been converted to a ``data source'', a collection of point radiators with the data traces as their time dependence. Note that data is only recorded for a finite time (a few seconds, for exploration data) so make the very important presumption that $d$ vanishes for $t$ larger than a maximum time of recording $t_{\rm max}$, 
+
+If \ref{eqn:dotprodtest1} can be re-written so that the integrand displays an explicit factor of $r$, then the $F^Td$ can be read off by inspection - whatever multiplies $r$ must then be $F^Td$. From the system \ref{eqn:vdawer}, $r$ is the right-hand side of an equation satisfied by {\em derivatives} of $p, \bv$. As it currently stands, $p$ appears {\em without} derivatives in \ref{eqn:dotprodtest1}. However, derivatives can be ``borrowed'' from one factor in an integral to another via integration by parts. So if we can replace the ``data source'' in \ref{eqn:dotprodtest1} by a suitable combination of derivatives of another field, then we could presumably ``borrow'' those derivatives to set up the left hand side of the first equation in \ref{eqn:vdawer} hence introduce $r$. 
+
+Suppose that the factor multiplying $p$ in equation \ref{eqn:dotprodrecast} were itself the right-hand side of a wave equation, one of a pair similar to \ref{eqn:vdawer}:
+\begin{eqnarray}
+\label{eqn:vdaweadj}
+\frac{\partial q}{\partial t}& = &-\kappa\left(\nabla \cdot \bw - \left(\sum_{x_m,y_m}d(x_m,y_m,t) \delta(x-x_m)\delta(y-y_m)\delta(z-z_m)\right)\right)\nonumber \\
+\frac{\partial \bw}{\partial t} & = & -\beta \nabla q,\nonumber \\
+q, \bw & = & 0, \, t > t_{\rm max}. 
+\end{eqnarray}
+It will become clear shortly why the fields $q, \bw$ should vanish for large positive time, instead of for large negative time as is the case of $p, \bv$. Then the right-hand side of equation \ref{eqn:dotprodrecast} becomes
+\[
+= \int \int \int \int dx\,dy\,dz\,dt\, p\left(\frac{\frac{1}{\kappa}\partial q}{\partial t}+\nabla \cdot \bw  \right)(x,y,z,t) 
+\]
+Integrate by parts in all space variables and time to move the derivatives onto $p$:
+\[
+= -\int \int \int \int dx\,dy\,dz\,dt\, \left((\frac{1}{\kappa}\frac{\partial p}{\partial t}q+\nabla p \cdot \bw  \right)x,y,z,t) 
+\]
+There are no boundary terms from integraion by parts in $t$ because $p$ vanishes for large negative time, and $q$ vanishes for large positive time. Since the midpoint (or receiver) locations occupy only a finite volume, and the data vanishes for $t>t_{\rm max}$ it follows from the finite speed of propagation of acoustic waves that at any fixed time, the fields $q, \bw$ vanish outside of a large ball, so there all the boundary terms in space also vanish. Now you know why the $q,\bw$ were required to vanish for large positive rather than negative time!
+
+Use the equations \ref{eqn:vdawer} to replace the partial derivatives of $p$ with those of $\bv$:
+\[
+= -\int \int \int \int dx\,dy\,dz\,dt\, \left((-\nabla \cdot \bv + r\delta(t))q+
+\frac{1}{\beta}\frac{\partial \bv}{\partial t} \cdot \bw  \right) (x,y,z,t) 
+\]
+then segregate the term involving $r$ and integrate by parts again:
+\[
+= - \int \int \int \int dx\,dy\,dz\,dt\, (r\delta(t) q) (x,y,z,t) 
+\]
+\[
++\int \int \int \int dx\,dy\,dz\,dt\, \bv \cdot \left(\nabla q + \frac{1}{\beta}\frac{\partial \bw}{\partial t}\right)
+\]
+The second summand vanishes because of the second equation in the system \ref{eqn:vdaweadj}, so the end result is
+\begin{equation}
+\label{eqn:asm}
+= - \int \int \int \int dx\,dy\,dz\,dt\, r(x,y,z) q(x,y,z,0)
+\end{equation}
+Comparing equations \ref{eqn:dotprodtest1} and \ref{eqn:asm}, conclude that
+\begin{equation}
+\label{eqn:adjer}
+(F^Td)(x,y,z)=-q(x,y,z,0).
+\end{equation}
+in which $q$ is the first component of the solution of system \ref{eqn:vdaweadj}.
+
+This remarkable formula is a simple instance of the {\em adjoint state method}: it computes the adjoint of the modeling operator via solution of another system of wave equations. A discrete version also holds, and that is what is implemented in the IWAVE exploding reflector adjoint calculation. 
+
+\section{Why the Gradient is an Image}
+Here is a slightly more ambitious statement about the meaning of ``image'': a function of 2 (or 3) variables is an image of another, if the two share the location and orientation of rapid oscillations. For example, this statement describes the relations between various subsurface images derived from the Viking Graben line in this text.
+
+Location and rapid oscillation are to some extent contradictory properties, according to Heisenberg's uncertainty principle: it is not possible to localize a function in both space and frequency simultaneously  with arbitrary precision. However it is possible to construct functions localized to some extent in space and spatial frequency, and use them as exploding reflector sources to see which parts of the data they influence. Figure \ref{fig:pulse45} shows a localized rapid oscillation, oriented 45 degrees to the vertical. The Fourier transform is quite localized in the spatial frequency plane, and the function itself is nonzero onliy over an ellipse of horizontal diameter 2 km and vertical diameter 0.5 km. The center of the ellipse is $z=2000, x=10000$. Exploding reflector modeling with this data and constant velocity $v/2 = 1 km/s$ produces the data shown in \ref{fig:pulsedata45}. You will note that the approximate center position of the enlongated blob of energy is $x=12000$: it appears that the signal moved about 2 km laterally and 2 km vertically, as if it has traveled along a ray oriented at 45 degrees to the vertical, that is, perpindicularly to the equal phase surfaces of the oscillation.
+
+In fact that is exactly what has happened, and it is possible to explain why with a variant of the geometric optics construction of Chapter \ref{ch:ray}.
+
+A movie of the exploding reflector pressure field can be viewed with
+\begin{verbatim}
+scons pulsemovie45.rsf
+sfgrey < pulsemovie45.rsf | xtpen
+\end{verbatim}
+for example - the reader should stretch the window horizontally so that the aspect ratio is closer to 1:1, to begin with. The pulse clearly moves up and to the right, in the direction normal to the equal phase surfaces.
+\plot{pulse45}{width=0.9\textwidth}{Exploding reflector oscillating pulse data.}
+\plot{pulsedata45}{width=0.9\textwidth}{Data with same geometry as Viking Graben stack, from data of Figure \ref{fig:pulse45} with constant (half-)velocity of 1 km/s, and density of 1 g/cm$^3$.}
+
+The exploding reflector source has the form
+\begin{equation}
+\label{eqn:explrefrhs}
+f(x,z,t) = cos(k(x \sin \theta + z \cos \theta))\delta(t).
+\end{equation}
+Since $\bv(x,z,t) = 0$ for $t<0$, it follows from the first equation of system \ref{eqn:vdawer} that
+\begin{equation}
+\label{eqn:explrefinit}
+\lim_{t \rightarrow 0^+} p(z,x,t) = \kappa(x,z)cos(k(x \sin \theta + z \cos \theta))
+\end{equation}
+(in this case $\kappa = 1$). The data plot \ref{fig:pulsedata45} and the movie mboth suggest that the solution takes the form
+\begin{eqnarray}
+\label{eqn:go}
+p(x,z,t) & \approx & cos(k \phi(x,z,t))p_0(x,z,t)\nonumber \\
+\bv(x,z,t) & \approx & cos(k \phi(x,z,t))\bv_0(x,z,t) 
+\end{eqnarray}
+with $\phi(x,z,t)$ roughly linear in $x,z$ and shifting with some velocity as $t$ changes. Also $p_0$ and $\bv_0$ represent the observed envelopes of the solution (observed for $p_0$ - if you were to plot the components of $\bv$ you would see the same), which appear to move along the direction normal to the oscillations at velocity $v/2 =1$ km/s.
+
+Plug the functional forms \ref{eqn:go} into the acoustic system \ref{eqn:vdawer}: for $t > 0$, obtain
+\begin{eqnarray}
+\label{eqn:go1}
+-k \sin k\phi \frac{\partial \phi}{\partial t} p_0 + \cos k\phi \frac{\partial p_0}{\partial t}
+& \approx & - \kappa (-k \sin k\phi \nabla \phi \cdot \bv_0 + \cos k\phi \nabla\cdot \bv_0)\nonumber \\
+-k \sin k\phi \frac{\partial \phi}{\partial t} \bv_0 + \cos k\phi \frac{\partial \bv_0}{\partial t} 
+& \approx & - \beta (-k \sin k\phi \nabla \phi p_0 + \cos k\phi \nabla p_0)
+\end{eqnarray}
+The terms with factors of $k$ are presumably dominant when $k >> 0$, so isolate them:
+\begin{eqnarray}
+\label{eqn:go1a}
+-k \sin k\phi \frac{\partial \phi}{\partial t} p_0 & \approx & - \kappa (-k \sin k\phi \nabla \phi \cdot \bv_0 )\nonumber \\
+-k \sin k\phi \frac{\partial \phi}{\partial t} \bv_0 & \approx & - \beta (-k \sin k\phi \nabla \phi p_0)
+\end{eqnarray}
+You can view this as a matrix system for the vector $u=(p_0,v_x,v_y,v_z)^T$, 
+\begin{equation}
+\label{eqn:go1b}
+k \sin k\phi Mu =0
+\end{equation}
+with matrix
+\begin{equation}
+\label{eqn:go1c}
+M =\left(\begin{array}{cccc}
+ \frac{\partial \phi}{\partial t} & \kappa\frac{\partial \phi}{\partial x} & \kappa\frac{\partial \phi}{\partial y} & \kappa\frac{\partial \phi}{\partial z} \nonumber \\
+\beta\frac{\partial \phi}{\partial x} &   \frac{\partial \phi}{\partial t} & 0 & 0\nonumber \\
+\beta\frac{\partial \phi}{\partial y} & 0 &  \frac{\partial \phi}{\partial t} & 0 \nonumber \\
+\beta\frac{\partial \phi}{\partial z} & 0 & 0 &  \frac{\partial \phi}{\partial t}
+\end{array}\right)
+\end{equation}
+Equation \ref{eqn:go1b} implies that (assuming that $p_0, \bv_0$ are not all zero) the matrix $M$ is singular. Its determinant is
+\begin{equation}
+\label{eqn:go1d}
+\left(\frac{\partial \phi}{\partial t}\right)^2 \left[\left(\frac{\partial \phi}{\partial t}\right)^2 -\kappa \beta \|\nabla \phi\|^2\right]
+\end{equation}
+Since $\kappa \beta = v^2$ and the first factor should be non-zero (why?), conclude that
+\begin{equation}
+\label{eqn:teik}
+\frac{1}{v^2} \left(\frac{\partial \phi}{\partial t}\right)^2 = \|\nabla \phi\|^2.
+\end{equation}
+This is the time-dependent version of the eikonal equation \ref{eqn:eik}. Just how close the relation is follows from the ray construction of the phase $\phi$. As before, start with the solutions of the physical space part of the ray equations, posed in terms of the phase and a dimensional parameter $\sigma$:
+\begin{eqnarray}
+\label{eqn:go2a}
+\frac{dX}{d\sigma} & = & -\nabla \phi(X,T) \nonumber \nonumber \\
+ \frac{dT}{d\sigma} & = & \frac{1}{v^2(X)}\frac{\partial \phi}{\partial t}(X,T)
+\end{eqnarray}
+Since $k\phi$ (the exponent, or argument of $\cos$) must be dimensionless, and $k$ is a spatial frequency, $\phi$ has units of length. $T$ is a time, Therefore from the second equation in \ref{eqn:go2a}, $\sigma$ must have dimensions of length. The first equation is then consistent, as both sides are dimensionless. In fact, it will turn out that $\sigma$ is arc length.
+
+The form of equations \ref{eqn:go2a} suggest the definition of a Hamiltonian:
+\[
+H(X,T,\xi,\omega) = \frac{1}{2}\left(\frac{\omega^2}{v^2(X)} - \|\xi\|^2\right)
+\]
+Then the system \ref{eqn:go2a} are the Hamilton equations for the evolution of $X$ and $T$:
+\begin{equation}
+\label{eqn:he1}
+\frac{dX}{d\sigma} = \nabla_{\xi}H(X,T,\xi,\omega) = -\xi=-\nabla \phi(X,T)
+\end{equation}
+and 
+\begin{equation}
+\label{eqn:he2}
+\frac{dT}{d\sigma} = \frac{\partial}{\partial \omega} H(X,T,\xi,\omega) = \frac{\omega}{v(X)^2} = \frac{1}{v^2}\frac{\partial \phi}{\partial t},
+\end{equation}
+ if you identify
+\begin{equation}
+\label{eqn:xiomega}
+\xi = \nabla \phi, \omega = \frac{\partial \phi}{\partial t}
+\end{equation}
+Then
+\[
+\frac{d\omega}{d\sigma} = \frac{d}{d\sigma} \frac{\partial \phi}{\partial t}(X,T) 
+\]
+\[
+= \nabla\frac{\partial \phi}{\partial t}\frac{dX}{d\sigma} + \frac{\partial^2 \phi}{\partial t^2}\frac{dT}{d\sigma}
+= -\nabla\frac{\partial \phi}{\partial t}\nabla\phi + 
+\frac{1}{v^2}\frac{\partial^2 \phi}{\partial t^2}\frac{\partial \phi}{\partial t}
+\]
+\[
+=\frac{1}{2}\frac{d}{dt} \left(-|\nabla \phi|^2+\frac{1}{v^2}\left(\frac{\partial \phi}{\partial t}\right)^2\right)
+\]
+\begin{equation}
+\label{eqn:he4}
+= 0 = -\frac{d}{dT}H(X,T,\xi,\omega).
+\end{equation}
+Similarly,
+\[
+\frac{d\xi}{d\sigma} = \frac{d}{d\sigma} \nabla \phi(X,T)
+\]
+\[
+=\nabla \nabla \phi(X,T)\frac{dX}{d\sigma} + \nabla \frac{\partial \phi}{\partial T} \frac{dT}{d\sigma}
+= -\nabla\nabla \phi{X,T}\nabla \phi(X,T) + \nabla \frac{\partial \phi}{\partial T} \frac{1}{v^2}\frac{\partial \phi}{\partial T}
+\]
+\[
+=\frac{1}{2}\nabla\left(-\|\nabla \phi\|^2 + \frac{1}{v^2}\left(\frac{\partial \phi}{\partial t}\right)^2\right)
+-\frac{1}{2}\nabla\frac{1}{v(X)^2} \left(\frac{\partial \phi}{\partial t}\right)^2
+\]
+\begin{equation}
+\label{eqn:he3}
+= \frac{1}{2}\nabla\frac{\omega}{v(X)^2} = -\nabla_X H(X,T,\xi,\omega)
+\end{equation}
+The equations \ref{eqn:he1}, \ref{eqn:he2}. \ref{eqn:he3}, and \ref{eqn:he4} form the Hamiltonian system for the Hamiltonian $H$. The foregoing calculations have shown that if $\phi$ is a solution of the time-dependent eikonal equation \ref{eqn:teik}, then the trajectories $X,T,\xi,\omega$ obtained by solving 
+\ref{eqn:go2a} and defining $\xi,\omega$ by \ref{eqn:xiomega} are solutions of Hamilton's equation. In Chapter \ref{ch:ray} I establihsed a similar set of identities for the time-independent eikonal \ref{eqn:eik}, then showed that one could start with the solution of the Hamilton system and construct a solution of the eikonal equation from it - that is, of course, what is commonly termed ray-tracing. Similarly, it is possible start with family of solutions of the time-dependent Hamiltonian system \ref{eqn:he1}, \ref{eqn:he2}. \ref{eqn:he3}, and \ref{eqn:he4}, and construct from them a solution of the time-dependent eikonal \ref{eqn:teik}. The apprriate initial conditions are (back to the 2D case!)
+\[
+X(\bx) = \bx, \,T(\bx) = 0,\, \xi(\bx) = -(\cos \theta, \sin \theta)^T,\, \omega(\bx)=\frac{1}{v(\bx)}
+\]
+Since $\frac{\partial T}{\partial \sigma} > 0$ (why?), you can parametrize the Hamiltonian trajectories by $T$, and 
+As was the case with time-independent geometric optics in Chapter \ref{ch:ray}, the amplitudes $p_0$, $\bv_0$ satisfy transport equations: they evolve along the rays, so that $p_0(X(\sigma),T(\sigma))/p_0(X(0),0)$ is a positive slowly varying (smooth) function of $X(0)$. 
+
+For the constant velocity case illustrated in the figures, the Hamilton equations can be solved by inspection:
+\[
+X = \bx + v \xi \sigma, T = \frac{\sigma}{v}
+\]
+with $\xi$ and $\omega$ both constant along each ray. Note that $\sigma = vT$ and $dX/dT = v$, so that $\sigma$ is arc length as stated earlier. The trajectories (``rays'') $X(T)$ take off perpindicular to the equal phase surfaces of the exploding reflector source \ref{eqn:go} and the amplitudes advect along the straight rays. 
+
+This construction completely explains the appearance of the examples, assuming that the geometric optics approximation \ref{eqn:go} is accurate. In fact, you can show that the error is $O(1/k)$, by an argument similar to that explained in Chapter \ref{ch:ray}.
+
+This reasoning does not quite explain why the first step of CG iteration produces an image. Instead of going further in this direction to construction such an explanation (as is certainly possible), I will take a different approach, that will prove useful in later chapters. This approach starts by noting that the first step of CG is proportional to the gradient ($F^Td$, in the notation of the last section) of the mean square error function $J$. 
+
+The goal is an analysis of the oscillatory behaviour of $F^Td$, in the case that the data $d$ is consistent with the approximation being used, that is, $d=Fr$ for a suitable $r$. That is, assume that $d$ is actually exploding reflector data for an exploding reflector source $r$. Then $F^Td = F^TFr$, so the question becomes:
+
+To what extent is $F^TFr$ an ``image'' of $r$ - that is, to what extent are its rapid oscillation present in the same locations and orientations as those of $r$?
+
+The key to the answer lies in the integral representation of the exploding reflector modeling operator, derived in section 2 as equation \ref{eqn:grt2g} (2D version), reproduced here for convenience: 
+\begin{equation}
+\label{eqn:erg0}
+D\cF_{\rm ZO}[v^2]\delta v^2(x_r,,t) \approx  \int\, dt'\,\int \, dx\,dz\, \, G_{v/2}(x_r,t-t';x,z) \delta v^2(x,z) w(t'). 
+\end{equation}
+I have several times made changes in the time wavelet $w(t)$, not to mention amplitudes, and the justification for accepting these various changes will emerge finallly from the analysis to follow. So I will go ahead with another such change. Also I will suppress $z_r$ from $\bx_r=(x_r,z_r)$, using the simplifying assumption about acquisition geometry that all receivers are located at the same fixed depth.
+In the notation introduced in the last section, and with the choice $w(t) = \delta(t)$, \ref{eqn:erg0} is equivalent to 
+\begin{equation}
+\label{eqn:erg}
+Fr(x_r,t) \approx \int \, dx \, G_{v/2}(x_r,t;x,z) r(x,z). 
+\end{equation}
+This expression the analogue of a matrix representation of $F$, with $G_{v/2}$ as the matrix. Note that $G_{v/2}$ is not computationally accessible: the motivation for the construction of the last section is very much still active. However it is certainly possible to represent the adjoint $F^T$ in terms of the ``matrix'' $G_{v/2}$, simply by reversing the roles of the arguments (``indices''):
+\begin{equation}
+\label{eqn:erg}
+F^Td(x,z) \approx  \int\, dt\,\int \, dx_r \, G_{v/2}(x_r,t;x,z) d(\bx_r,t). 
+\end{equation}
+Hence 
+\begin{equation}
+\label{eqn:norm0}
+F^TFr(x,z) \approx \int\, dt\,\int \, dx_r \, \int \, dx'\,\int\,dz' \, G_{v/2}(x_r,t;x,z) G_{v/2}(x_r,t;x',z') r(x',z')
+\end{equation}
+Introduce the geometric optics approximation \ref{eqn:gohalf2} for $G_{v/2}$ in \ref{eqn:norm0}:
+\[
+F^TFr(\bx) \approx 
+\]
+\begin{equation}
+\label{eqn:normgo}
+\int\, dt\,\int \, dx_r \, \int \, dx'\,\int\,dz'\, a(x_r,x,z)a(x_r,x',z')\delta(t-2\tau(x_r,x,z))\delta(t-2\tau(x_r,x',z'))r(x',z')
+\end{equation}
+You can justify the evaluation of the delta functions by an argument similar to that mentioned in Chapter \ref{eqn:ch2}. The upshot is
+\begin{equation}
+\label{eqn:normgo1}
+F^TFr(x,z) \approx \int \, dx_r \, \int \, dx'\,\int\,dz'\, a(x_r,x,z)a(x_r,x',z')\delta(2(\tau(x_r,x,z)-\tau(x_r,x',z')))r(x',z') 
+\end{equation}
+This integral is a distribution representation of a surface integral, over the family of surfaces 
+$\{(x',z'): \tau(x_r,x',z')=\tau(x_r,x,z)\}$ parametrized by $x_r,x,z$. For constant velocity, these surfaces are simply spheres of radii $v\tau(x_r,x,z)$. For velocities not too far from constant, and $x',z'$ not too far from $x,z$, it is possible to solve the equation $t = \tau(x_r,x',z')$ for $z'$ in terms of the horizontal variables $x',x_r$. [Note that the 3D case is quite similar, just messier!] Express the solution of $\tau(x_r,x',z')=t$ as $z' = \zeta(x_r,x',t)$. Change variables from $z'$ to $\tau(x_r,x',z')$ in the integral \ref{eqn:normgo1} requires the Jacobian factor
+\[
+\frac{dz'}{dt}(x_r,x',t) = \left(\frac{\partial \tau}{\partial  z'}(x_r,x',\zeta(x_r,x',t))\right)^{-1}.
+\]
+Making the change of variable and integrating out the delta function gives 
+\begin{equation}
+\label{eqn:normgo2}
+F^TFr(x,z) \approx \int \, dx_r \, \int \, dx'\, b(x_r,x,z,x')r(x',\zeta(x_r,x',\tau(x_r,x,z)) )
+\end{equation}
+in which I have abbreviated
+\begin{equation}
+\label{eqn:normgoamp}
+b(x_r,x,z,x')=a(x_r,x,z)a(x_r,x',\zeta(x_r,x',\tau(x_r,x,z))) \left(\frac{\partial \tau}{\partial z'}(x_r,x',\zeta(x_r,x',t))\right)^{-1}.
+\end{equation}
+
+Remember that the goal is to understand the relation between the high spatial frequency components of $r$ and $F^TFr$. Introduce the frequency components of $r$ into the relation \ref{eqn:normgo2} via the Fourier transform of $r$:
+\begin{equation}
+\label{eqn:normgoft}
+F^TFr(x,z) \approx \frac{1}{(2\pi)^2}\int\,dk_x \,\int \, dk_z \int \, dx_r \, \int \, dx'\, b(x_r,x,z,x')e^{i(k_xx'+k_z\zeta(x_r,x',\tau(x_r,x,z)) )}\hat{r}(k_x,k_z) 
+\end{equation}
+The goal is to understand the behaviour of this oscillatory integral for large $k_x,k_z$. For this purpose, use the {\em Stationary Phase Principle}. It approximates an oscillatory integral, with {\em amplitude} $g$, smooth and vanishing outside of a ball in  Euclidean n-space $\bR^n$, and a real-valued {\em phase} $\psi$ defined on the same ball and having the 
+
+\noindent {\bf Nondegenerate Stationary Point} property: if $\nabla \psi(\by^*) = 0$, then $\det \nabla \nabla \psi(\by^*) \ne 0$
+
+The approximation is
+\begin{equation}
+\label{eqn:statphase}
+\begin{aligned} 
+&\int_{\bR^n}dy g(\by)e^{i\omega \psi(\by)}\\
+&\approx \sum_{\nabla
+  \psi(\by^*)=0}\left(\frac{2\pi}{\omega}\right)^{\frac{n}{2}}e^{\frac{\pi
+    i}{4}\mathrm{sgn}\  \nabla\nabla\psi(\by^*)}
+|\det \nabla \nabla \psi(\by^*)|^{-\frac{1}{2}}g(\by^*)e^{i\omega \psi(\by^*)} + O(\omega^{-n-1}.
+\end{aligned}
+\end{equation}
+
+In the application to \ref{eqn:normgoft}, $n=2$, $x,z$ are static parameters, and $x_r,x$ are the integration variables. For the large parameter ($\omega$ in \ref{eqn:statphase}), take $k=\sqrt{k_x^2+k_z^2}$, and write  
+\begin{equation}
+\label{eqn:normgophase}
+\psi(x_r,x';x,z,\theta) = \sin \theta x' + \cos \theta \zeta(x_r,x',\tau(x_r,x,z))
+\end{equation}
+in which 
+\[
+\sin \theta = \frac{k_x}{k},\,\cos\theta=\frac{k_z}{k}
+\]
+The amplitude is $b$ as defined in \ref{eqn:normgoamp}, divided by $(2\pi)^2$.
+
+The stationary phase condition is
+\begin{eqnarray}
+\label{eqn:normgostat}
+\frac{\partial \psi}{\partial x'} = \sin \theta + \cos \theta \frac{\partial \zeta}{\partial x'} & = & 0\nonumber \\
+\frac{\partial \psi}{\partial x_r} = \cos \theta\left(\frac{\partial \zeta}{\partial x_r} + \frac{\partial \zeta}{\partial t}\frac{\partial \tau}{\partial x_r}\right)& =& 0
+\end{eqnarray}
+From the defining equation of $\zeta$ and implicit differentiation, obtain
+\[
+\frac{\partial \zeta}{\partial t} = \left(\frac{\partial \tau}{\partial z}\right)^{-1}; \,
+\frac{\partial \zeta}{\partial x'} = -\frac{\partial \tau}{\partial x'}\left(\frac{\partial \tau}{\partial z}\right)^{-1}; \,\frac{\partial \zeta}{\partial x_r} = -\frac{\partial \tau}{\partial x_r}\left(\frac{\partial \tau}{\partial z}\right)^{-1},
+\]
+with appropriate arguments prescribed. Hence the first stationary phase equation implies that
+\[
+\frac{\partial \tau}{\partial z'} \sin \theta - \frac{\partial \tau}{\partial x'}\cos \theta = 0,
+\]
+that is $\nabla \tau(x_r,x',z')$ is perpindicular to $(-\cos \theta, \sin \theta)$, hence parallel to 
+$(\sin \theta, \cos \theta)$ and therefore to $(k_x,k_z)$ at a stationary point $k_r,x'$, with $z'=\zeta(x_r,x',\tau(x_r,x,z))$ whence $\tau(x_r,x',z') = \tau(x_r,x,z)$. That is: $(x,z)$ and $(x',z')$ lie on the same isochron, and $(k_z,k_z)$ is parallel to $\nabla \tau$ at $(x',z')$.
+
+The second stationary phase condition is equivalent to 
+\begin{equation}
+\label{normgorays}
+\frac{\partial \tau}{\partial x_r}(x_r,x',z') = \frac{\partial \tau}{\partial x_r}(x_r,x,z).
+\end{equation}
+From the discussion in Chapter \ref{ch:rays}, the left hand side is the horizontal component of the ray slowness at $x=x_r, z=z_r$ for the ray connecting $(x,z)$ with $(x_r,z_r)$, and similarly for the right-hand side. A hidden hypothesis, implicit in our use of the convolutional model to justify replacing the zero-offset modeling with exploding reflector modeling, is that rays do not turn horizontal, so that both slownesses must have negative z-components at the receiver point. Therefore they are the same, by the eikonal equation. Since the two rays arrive at the same point, and with the same slownessess, all coordinates of the two rays are the same at the receiver point - therefore they are the same ray!!! Since both $(x,z)$ and $(x',z')$ lie on the same ray, and since they lie on the same isochron, as mentioned in the last paragraph, they are the same point. That is, we conclude that $x=x', z=z'$ and $(k_x,k_z)$ is parallel to $\nabla \tau(x_r,x,z)$. 
+
+Having identified the stationary point (there is only one), it remains to compute the Hessian $\nabla \nabla \psi$ and its signature. In fact, the signature is $0$, and I leave the Hessian as an exercise. Conclude that the oscillatory integral over $x_r,x'$ in \ref{eqn:normgoft} is 
+\begin{equation}
+\label{eqn:normgosymb}
+\int \, dx_r \, \int \, dx'\, b(x_r,x,z,x')e^{i(k_xx'+k_z\zeta(x_r,x',\tau(x_r,x,z)) )}\hat{r}(k_x,k_z)
+= \frac{2\pi}{k} B(x,z,k_x,k_z) e^{k_x x+k_z z}\hat{r}(k_x,k_z)
+\end{equation}
+to leading order in $k$. The quantity $B(x,z,k_x,k_z)$ is the product of the amplitude $b(x_r,x,z,x')$ and the Hessian determinant factor from the stationary phase principle, evaluated at $x=x',z=x'$ and $x_r$ equal to the receiver horizontal location at which the ray taking off from $(x,z)$ with initial slowness $(k_x,k_z)$ reaches the receiver depth $z=z_r$. Note that $(k_x,k_z)$ enters into the construction of $B$ only through the direction vector $(\sin \theta, \cos \theta)$, so that $B(x,z,k_x,k_z)$ is homogeneous in $(k_x,k_z)$ of  order 0. 
+
+Putting all of this together, obtain an approximation for highly oscillatory $r$ (that is, large $k$):
+\begin{equation}
+\label{eqn:normgopsido}
+F^TF(x,z) \approx \frac{1}{2\pi}\int \,dk_x\,dk_z\,\frac{1}{k} B(x,z,k_x,k_z) e^{k_x x+k_z z}\hat{r}(k_x,k_z)
+\end{equation}
+Oscillatory integral operators of this type have come to be called {\em pseudodifferential}, and will be discussed in some detail in the next chapter. The quantity multiplying the exponential, excluding the Fourier transform $\hat{r}$ is called the {\em symbol} of the operator, and in this case is homogeneous in $(k_x,k_z) $ of order -1.
+
+\noindent {\bf Note, 2/17 draft:} The careful reader will see that I have committed two errors in the preceding derivation: (1) I used the leading order asymptotic form of the 3D Green's function in a 2D calculation, and (2) the exploding reflector source is in effect used as the RHS in the 2nd order wave equation, not the first order system. These errors affect the details but not the overall conclusion of the argument. The operator $F^TF$ is correctly identified as a pseudodifferential operator, but the order and the detailed calculation of the symbol is wrong. The effect of the first error is to make the Green's function 1/2 order more singular than it should be. The correct $F^TF$ should be of one order less, that is, of order -2 rather than -1. The second error has the opposite effect: if the definition of $F$ rests on the system \ref{eqn:vdawer}, then the exploding reflector source must be differentiated in time to be used as the RHS in the 2nd order wave equation. The net result is that $F^TF$ defined by solving \ref{eqn:vdawer} is 0th order, and this conclusion is independent of space dimension. 
+
+The chief properties of pseudodifferential operators important at this point are these:
+\begin{itemize}
+\item Preservation of high frequency asymptotics: if $r$ does {\em not} oscillate rapidly in the direction $(\sin \theta,\cos\theta)$ near $(x,z)$, then neither does $F^TF$. If the symbol is positive on at $(x,z,\sin\theta,\cos\theta)$, then the converse is also true.
+\item Insensitivity to amplitude and frequency factors: the property just enunciated is preserved if the symbol is scaled by additional factors of spatial frequency or positive smooth amplitude.
+\item Changes of amplitude or spatial or temporal frequency in the representation of $F$ result in the sort of changes to the symbol mentioned in the previous bullet.
+\end{itemize}
+
+Taken together, these properties and equation \ref{eqn:normgopsido} validate the assertions made throughout this chapter about the exploding reflector model. In particular, the first step of CG iteration, that is, the application of the adjoint modeling operator to the data, results in an image - assuming that the data is itself consistent with the exploding reflector model. In other words, exploding reflector migration creates an output with the same localized high frequency oscillations as the exploding reflector source used to create the data. 
+
+The Viking Graben example was consistent with this conclusion, however the data was ``real'', that is, extracted from field data tapes. To verify this assertion in vacuo, synthetic examples are useful. Figure \ref{fig:pulse15} shows a oscillating pulse exploding reflector source, with the phase normal 15 degrees from vertical. Figure \ref{fig:pulsedata15} shows that exploding reflector data computed from it, and Figure \ref{fig:pulsemig15} the exploding reflector migration of, that is, application of the adjoint operator to, this data. The recovery of the location and orientation of the oscillations is virtually perfect - evidently the spatial frequency used in this example is high enough that the error in stationary phase approximation is unimportant.
+\plot{pulse15}{width=0.9\textwidth}{Exploding reflector oscillating pulse data - normal to phase surfaces 15 deg from vertical.}
+\plot{pulsedata15}{width=0.9\textwidth}{Data with same geometry as Viking Graben stack, from exploding reflector source of Figure \ref{fig:pulse15} with constant (half-)velocity of 1 km/s, and density of 1 g/cm$^3$.}
+\plot{pulsemig15}{width=0.9\textwidth}{Exploding reflector migration of data in Figure \ref{fig:pulsedata15}.}
+
+\section{A One-Step Approximate Inversion}
+A re-write of the linear inverse problem introduced earlier in this chapter (equation \ref{eqn:psinv}) in terms of the operator $F$ would be: given trace data $d$, find an exploding reflector source $r$ so that
+\begin{equation}
+\label{eqn:psinvr}
+Fr \approx d.
+\end{equation} 
+The analysis in the preceding section illuminates a feature of this problem that was not obvious before: in general, it does not have unique solutions. For purely dimensional reasons, \ref{eqn:psinvr} does not always have a solution, as indicated earlier: it is an overdetermined problem, at least for the data layout and discretization choices made in this chapter. 
+
+It is also an underdetermined problem. For example, the exploding reflector  depicted in Figure \ref{fig:pulse90}, with horizontal equal-phase normals, produces the data depicted in Figure \ref{fig:pulsedata90}. This figure is not a misprint - the data is effectively zero. Closer examination reveals that it is not exactly zero, but contains a region of apparent noise with amplitude $O(10^{-6})$ smaller than the data in Figure \ref{fig:pulsedata15}, for instance. These nonzero samples are a combination of finite difference and round-off error. 
+\plot{pulse90}{width=0.9\textwidth}{Exploding reflector oscillating pulse data - normal to phase surfaces 90 deg from vertical.}
+\plot{pulsedata90}{width=0.9\textwidth}{Data with same geometry as Viking Graben stack, from exploding reflector source of Figure \ref{fig:pulse90} with constant (half-)velocity of 1 km/s, and density of 1 g/cm$^3$. Grey scale at same level as that of Figure \ref{fig:pulsedata15}.}
+Since $d=0$, a perfectly good solution to equation \ref{eqn:psinvr} is $r=0$. The exploding reflector source in Figure \ref{fig:pulse90} is a null vector for $F$. It must also be a null vector for $F^TF$, so solutions of the least-squares version of the inverse problem, or the normal equation \ref{eqn:psinvnorm}, are also not unique.
+
+We can however single out a solution of the least-squares problem, namely the solution with least length. In effect, this {\em pseudoinverse} to the normal operator produces the part of the exploding reflector source that fits as much of the data as possible. A standard approximation is the solution of the {\em regularized least-squares problem}: choose $r$ to minimize
+\begin{equation}
+\label{eqn:psinvreg}
+J_{\lambda}[r] = \|Fr -d\|^2 + \lambda^2 \|r\|^2
+\end{equation}
+The minimizer is a solution of the regularized normal equation
+\begin{equation}
+\label{eqn:psinvregnorm}
+(F^TF + \lambda^2 I)r = F^Td.
+\end{equation}
+Since $F^TF + \lambda^2I$ is positive definite for $\lambda \ne 0$, this problem has unique solutions. For small $\lambda$, the solution approximates the least squares solution of least length.
+
+The regularized least squares problem can also be solved by conjugate gradient iteration, as before. [So why did we get away with solving the unregularized problem with CG? There is a good answer!]
+
+I will next describe an approximation to this solution that only involves a single application of $F^T$. To begin with, observe that any $r$ can be assembled to arbitrarily good approximation out of oscialling pulses similar to the last few examples: namely, choose a convenience partition of unity $\{\chi_i\}$ of $\bR^2$ (we will stay with the 2D problem in this section, but 3D follows exactly the same pattern). Then
+\[
+r(x,z) = \sum_i \frac{1}{(2\pi)^2}\int\,dx\,\int\,dz\,\hat{r}(k_x,k_z) \chi_i(x,z)\cos(k_x x + k_z z)
+\]
+and the right-hand side consists of sums and integrals of oscillating pulses. The data for a typical summand 
+\begin{equation}
+\label{eqn:pulsesource}
+r(x,z) = \chi(x,z)\cos(k_x x + k_z z) 
+\end{equation}
+can be read off from the time-dependent geometric optics approximation developed in the last section. The pressure component of the solution looks like
+\begin{equation}
+\label{eqn:pulsepressure}
+p(x,z,t) =  \cos(k \phi(x,z,t)) p_0(x,z,t) + O\left(\frac{1}{k}\right),\,\,k=\sqrt{k_x^2+k_z^2}.
+\end{equation}
+so the modeled data is
+\begin{equation}
+\label{eqn:pulsedata}
+Fr(x_r,t) = \cos(k \phi(x_r,z_r,t)) p_0(x_r,z_r,t) + O\left(\frac{1}{k}\right).
+\end{equation}
+The amplitude $p_0$ is transported along the ray field that begins at time $t=0$. If all of the rays starting in the support of $\chi$ arrive at the receiver depth within the recording time interval, then it appears that there is enough information to recover $r$ from the data traces: the amplitude $p_0$ can be reconstructed by solving the transport equation backwards in time, starting at points on the recording surface $z=z_r$ - the same goes for the phase, and then at $t=0$ one recovers the initial values of $\phi$ and $p_0$ and therefore of $r$, to good approximation for large $k$.
+
+This is correct, with the two important caveats. First, those who have viewed the propagating-pulse movies will understand that the soltion $(p,\bv)$ of the pressure-velocity system \ref{eqn:vdawer} contains not one, but two propagating pulses, that move in opposite directsions $\pm (k_x,k_z)$ from a monochromatic pulse source like that defined in \ref{eqn:pulsesource}. Correspondingly, two geometric optics solutions of the form \ref{eqn:pulsepressure} add together to approximate the pressure field. It is easy to see that the two amplitudes must be the same for $t=0$, therefore each is half of the initial pressure data:
+\[
+p_0(x,z,0) = \frac{1}{2}\chi(x,z).
+\]
+In the half-space geometry of the synthetic survey, if one of the two traveling pulses generated by $r$ travels upward toward the surface at an angle close enough to vertical that the entire signal (except for the $O(1/k)$ error) arrives at the receivers in the recorded interval, then the other pulse travels in the positive $z$ direction and is not recorded. [The 45 degree pulse movie shows this behaviour clearly.] So the recovered initial value of the amplitude must be doubled.
+
+The other caveat is that separating the recorded data into pulses and picking apart the amplitude and phase factors is a nontrivial task, best avoided if at all possible.
+
+In fact, it turns out that it can be avoided. The basic idea is simple: equation \ref{eqn:pulsedata} simply reads off the trace of the pressure field on the surface $z = z_r$. So you could regard the acoustic field $(p,\bv)$ as the solution of the boundary value problem
+\begin{eqnarray}
+\label{eqn:vdawerdir0}
+\frac{\partial p}{\partial t}&=& -\kappa (\nabla \cdot \bv - r \delta(t)) \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p\nonumber \\
+p(x,z_r,t) &= &Fr(x,z_r,t) \nonumber \\
+p,\bv & = & 0, \,t<0 
+\end{eqnarray}
+The additional third equation makes sense if the receivers are dense enough to be regarded as continuous - for the example used here, the receiver sampling is the same as the $x-$ increment, so the discretization is compatible with that assumption.
+
+The problem \label{eqn:vdawerdir0} is however posed in a circular way. I have assumed that the acoustic system is posed in all of $\bR^2$, and more than that, the region $z<z_r$ ``above the surface'' is filled with homogenous material that does not generate reflections. In effect, an {\em absorbing boundary condition} is posed at $z=z_r$ - in fact, in the computational implementation, that is exactlyl the setup. So it is not possible to specify another boundary condition at $z=z_r$ - any other boundary condition is redundant, and implies a compatibility condition with the absorbing condition that $(p,\bv)$ is already expected to satisfy.
+
+The resolution of this paradox comes in two steps. First, observe that the initial conditions (last equations in \ref{eqn:vdawerdir1}) imply  that $\lim_{t\rightarrow 0^+} \bv(x,z,t) = 0$, but the form of the exploding reflector source implies that $\lim_{t\rightarrow 0^+} p(x,z,t) = \kappa(x,z)r(x,z)$. So you could reformulate the exploding reflector source as an initial condition:
+\begin{eqnarray}
+\label{eqn:vdawerdir1}
+\frac{\partial p}{\partial t}&=& -\kappa \nabla \cdot \bv  \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p\nonumber \\
+p(x,z,0) & = & \kappa(x,z)r(x,z)\nonumber \\
+\bv(x,z,0) & = & 0. 
+\end{eqnarray}
+If you know the value of $p$ at $z=z_r$, that is, $d=Fr$, then you can drop the absorbing boundary condition and substitute a Dirichlet condition:
+\begin{eqnarray}
+\label{eqn:vdawerdir2}
+\frac{\partial p}{\partial t}&=& -\kappa \nabla \cdot \bv , \, z>z_r \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p, \, z>z_r \nonumber \\
+p(x,z_r,t) & = & d(x,t) \nonumber \\
+p(x,z,0) & = & \kappa(x,z)r(x,z), z > z_r \nonumber \\
+\bv(x,z,0) & = & 0, z > z_r. 
+\end{eqnarray}
+This problem has a unique solution, and it is the same as the solution of \ref{eqn:vdawerdir1} if indeed $d$ is the value at $z=z_r$ of $p$. 
+
+However the absorbing boundary condition has disappeared from the formulation of \ref{eqn:vdawerdir2}, so the relation between $r$ and $d$ is broken: it is possible to solve this system for {\em any} choice of $r$ and $d$. The connection between the two lies in $(p,\bv)$ actually being the solution of (say) \ref{eqn:vdawerdir1}, with absorbing boundary at $z=z_r$, restricted to $z>z_r$. This condition is difficult to check directly, however one of its consequences is obvious. If $r$ is the data of a pulse exploding reflector source of the form \ref{eqn:pulsesource} with large $k$ and wavenumber oriented sufficiently vertically that the part of the solution traveling in the negative $z$ direction passes $z=z_r$ in the negative $z$ direction, in the recording interval $0 \le t \le t_{\rm max}$, the the field $(p,\bv)$ at $t=t_{\rm max}$ in $z > z_r$ consists only of the other part of the pulse, propagating in the positive $z$ direction. That part of the pulse propagates independently of the part propagating upward ( = negative $z$ direction), so you can {\em reproduce the upward propagating part of the pulse by ignoring the downward propagating part}: that is, you can simply zero out the field at $t=t_{\rm max}$. In so doing, you have committed two errors: an error of leaving out the entire downward propagating pulse, and an $O(1/k)$ error stemming from the use of the geometric optics approximation. Setting the field at this later time is inconsistent with initial conditions at time $t=0$, so drop them:
+\begin{eqnarray}
+\label{eqn:vdawertr}
+\frac{\partial p}{\partial t}&=& -\kappa \nabla \cdot \bv , \, z>z_r \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p, \, z>z_r \nonumber \\
+p(x,z_r,t) & = & d(x,t) \nonumber \\
+p(x,z,t_{\rm max}) & = & 0, z > z_r \nonumber \\
+\bv(x,z,t_{\rm max}) & = & 0, z > z_r. 
+\end{eqnarray}
+Under the hypotheses presented above, the solution $(p,\bv)$ of this system should be an $O(1/k)$ approximation the the upward propagating pulse part of the geometric optics approximation.
+
+The relation to $r$ is recovered by remembering that the two parts of the pulse, upward and downward propagating, are each equal to half of the exploding reflector source at time $t=0$. Therefore 
+\[
+\frac{1}{2}\kappa(x,z)r(x,z) \approx p(x,z,0)
+\]
+for the solution $(p,\bv)$ of \ref{eqn:vdawertr}, under these assumptions. For this solution, define
+\begin{equation}
+\label{eqn:psinvpsinv}
+F^{\dagger}d(x,z) = \frac{2}{\kappa(x,z)} p(x,z,0).
+\end{equation}
+Then the principle of superposition (linearity of the wave equation) implies: 
+
+\noindent {\em For exploding reflector sources $r$ that can be decomposed into oscillating pulses with wavenumbers sufficiently close to vertical, }
+\[
+Fr = d \, \Rightarrow\, r \approx F^{\dagger}d
+\]
+
+Otherwise put, for exploding reflector sources $r$ that generate ``big'' data $d$, $F^{\dagger}F r \approx r$. Note that if $r$ generates near-zero data, that is, is in the approximate null space of $F$, then  $F^{\dagger}F r \approx 0$. The properties indicate the $F^{\dagger}$ is an approximate pseudoinverse of $F$.
+
+Because the initial data for \ref{eqn:vdawertr} is posed at the maximum simulation time $t=t_{\rm max}$, the system is actually solved backwards in time. Such a backwards-in-time system has appeared earlier in this chapter, namely the adjoint state system for computation of $F^T$, which I reproduce here for convenience, in its 2D version:
+\begin{eqnarray}
+\label{eqn:vdaweadj1}
+\frac{\partial q}{\partial t}& = &-\kappa\left(\nabla \cdot \bw - \sum_{x_m,y_m}d(x_t,t) \delta(x-x_r)\delta(z-z_r)\right)\nonumber \\
+\frac{\partial \bw}{\partial t} & = & -\beta \nabla q,\nonumber \\
+q, \bw & = & 0, \, t > t_{\rm max}. 
+\end{eqnarray}
+The difference between this system and the system \ref{eqn:vdawertr} is that \ref{eqn:vdaweadj1} is posed in all of $\bR^3\times \bR$, and its inhomogeneous term is a right hand side, whereas \ref{eqn:vdawertr} is posed only in the half-space $\{z > z_r\}$ and its inhomogenous term is a boundary condition. 
+
+It is possible to convert \ref{eqn:vdawertr} to a system in the whole space with inhomogeneous term, and thereby establish a relation between $F^{\dagger}$ and $F^T$. The convention in this book has been that the system \ref{eqn:vdawe} is defined in all of $\bR^4$, in particular that $\kappa$ and $\beta$ are defined in all of $\bR^3$. So it is possible replace $z>z_r$ in \ref{eqn:vdawertr} with $z<z_r$ and so define a second system in the complementary half-space. Note that the boundary condition for $p$ is the same in both cases, so if you regard $p$ as being defined in $\bR^4$, then it is {\em continuous} across $z=z_r$. It will turn out that $\bv$ is not generally continuous, but still $(p,\bv)$ is a vector-valued function and solves the homogeneous wave equation at any point in $\bR^4$ {\em except} on $z=z_r$. 
+
+Next observe that this extended version of $(p,\bv)$ solves a wave equation, but one with a non-zero right-hand side in the $p$ equation, supported (non-zero) on $z=z_r$. To figure out what this right-hand side is, write the condition for a weak solution of the acoustic system \ref{eqn:vdawe} (the only kind of solution $(p,\bv)$ can be if $\bv$ is discontinuous): for $(\phi,{\bf \psi}) \in C^{\infty}_0(\bR^3,\bR \times \bR^3)$, 
+\[
+\int_{\bR^3} \left(\frac{1}{\kappa}\frac{\partial \phi}{\partial t}+\nabla \cdot {\bf \psi}\right)p +\left(\frac{1}{\beta}\frac{\partial {\bf \psi}}{\partial t} + \nabla \phi\right)\cdot \bv
+\]
+\begin{equation}
+\label{eqn:vdaweweak}
+= \int \phi g
+\end{equation}
+To identify the right choice of $g$ to make \ref{eqn:vdawe} with initial condition at $t = t_{\rm max}$ (rather than $t=0$) equivalent to \ref{eqn:vdawertr}, divide the integral on the left into two integrals, one from $z=-{\infty}$ to $z=z_r$, the other from $z=z_r$ to $z=\infty$. Assume that $(p,\bv)$ are regular, and that integration by parts is legitimate, except at $z=z_r$. Then the left hand side above is
+\[
+= -\left[\int_{z\le z_r} dz dx dy dt + \int_{z\ge z_r} dz dx dy dt\right]\left(\phi\frac{1}{\kappa}\frac{\partial p}{\partial t}+{\bf \psi} \cdot\nabla p\right.
+\]
+\[
+\left. + {\bf \psi} \cdot\frac{1}{\beta}\frac{\partial \bv} {\partial t} + \phi \nabla \cdot \bv\right)
+\]
+\begin{equation}
+\label{eqn:vdawertrweak}
+- \int_{z=z_r}dx dy dt (\psi_z [p] + \phi [v_z])(x,y,z_r,t)
+\end{equation}
+in which the notation $[f]$ signifies the jump of a function $f$ across $z=z_r$:
+\[
+[f](x,y,z_r,t) = lim_{z\rightarrow z_r^+}f(x,y,z,t) - lim_{z\rightarrow z_r^-}f(x,y,z,t).
+\]
+As mentioned before, $[p]=0$ as its limit from both sides is the (same) Dirichlet condition. Comparing \ref{eqn:vdaweweak} and \ref{eqn:vdawertrweak} shows that in $z>z_r$, the solution $(p,\bv)$ of \ref{eqn:vdawertr} is the same as the weak (distribution) solution of 
+\begin{eqnarray}
+\label{eqn:vdawertrhs}
+\frac{\partial p}{\partial t}&=& -\kappa (\nabla \cdot \bv -  [v_z]\delta(z-z_r)) , \, \nonumber \\
+\frac{\partial \bv}{\partial t} &=& -\beta \nabla p, \, \nonumber \\
+p(x,z_r,t) & = & d(x,t) \nonumber \\
+p(x,z,t_{\rm max}) & = & 0,  \nonumber \\
+\bv(x,z,t_{\rm max}) & = & 0.
+\end{eqnarray}
+Comparing the systems \ref{eqn:vdawertrhs} and \ref{eqn:vdaweadj1}, the solution $(q,\bw)$ of the latter must be equal to the solution $(p,\bv)$ if $d$ is replaced by $[v_z]$. Since $F^Td = -q_{t=0}$, 
+\begin{equation}
+\label{eqn:pseudoadj}
+F^{\dagger}d = -\frac{2}{\kappa}F^T[v_z]
+\end{equation}
+
+\section{Dirichlet-to-Neumann map}
+
+
+I have not said how $\kappa$ and $\beta$ are extended to the exterior domain $z<z_r$. A simple choice is evenly: that is, impose the condition
+\[
+\kappa(x,y,z)=\kappa(x,y,2z_r-z), \,\beta(x,y,z)=\beta(x,y,2z_r-z).
+\]
+This condition may render $\kappa$ and $\beta$ only continuous, not differentiable, at $z=z_r$, but the concept of weak solution is still applicable, and weak solutions may be constructed out of ordinary solutions in the two half-spaces that and right-hand sides supported on $z=z_r$.
+
+Suppose $(p,\bv)$ is an ordinary (smooth) solution of \ref{eqn:vdawertr} in $z\ge z_r$. Then extending $p, v_x, v_y$ to be even and $v_z$ to be odd generates a solution of the same system in $z<z_r$, as is easily verified. Viewed as functions on all of $\bR^4$, the evenly-extended $p,v_x,v_y$ are continuous, whereas, $v_z$ generally acquires a discontinuity. Since the extension is odd, $[v_z](x,y,z_r,t) =2 \lim_{z \rightarrow z_r^+}v_z(x,y,z,t)$. 
+
+Newton's law (second equation in \ref{eqn:vdawe} implies - for anti-causal solutions such as specified in \ref{eqn:vdawertr} - that
+\[
+v_z(\bx,t) = \int^{\infty}_t \,ds\,\frac{\partial p}{\partial z}(\bx,s)
+\]
+so knowledge of the limiting value of $v_z$ at $z=z_r$ is equivalent to knowledge of $\partial p/\partial t$. Since the boundary value of $p$ (that is, $d$ in the system \ref{eqn:vdawertr}) determines the anti-causal solution in $z_r$ hence the boundary value of $\partial p/\partial z$ or equivalently $v_z$, in fact \ref{eqn:vdawertr} defines a (clearly linear) map 
+\begin{equation}
+\label{eqn:dtondef}
+\Lambda d =-2 \lim_{z \rightarrow z_r^+}v_z.
+\end{equation} 
+Since the boundary value of $p$ is conventionally termed {\em Dirichlet data}, and that of $\partial p/\partial z$ {\em Neumann data}, on $z=z_r$, the map $\Lambda$ is a version of the {\em Dirchlet-to-Neumann map}, which has figured in many works on inverse problems for partial differential equations (for example \cite{Uhl18}). 
+
+In terms of the Dirichlet-to-Neumann map, the relations \ref{eqn:psinvpsinv} and \ref{eqn:pseudoadj} imply that
+\begin{equation}
+\label{eqn:pseudodton}
+F^{\dagger} = \frac{2}{\kappa} F^T \Lambda .
+\end{equation}
+
+The Dirichlet-to-Neumann map has two very important properties: applied to higly oscillatory data,
+\begin{itemize}
+\item it is positive definite, at least when restricted to data that can be decomposed into upcoming pulses;
+\item it depends only on the properties of the material parameters $\kappa$ and $\rho$ in an arbitrarily thin layer $z_r\le z <z_{\rm max}$.
+\end{itemize}
+
+As a consequence of the first property, \ref{eqn:pseudodton} can be interpreted as meaning that $F^{\dagger}$ is the adjoint of $F$ in the weighted inner product
+\[
+\langle d_1, d_2 \rangle_{\rm data} = \langle d_1,\Lambda d_2 \rangle_{L^2}
+\]
+SInce $F^{\rm dagger}$ is an approximate inverse of $F$, \ref{eqn:pseudodton} implies tht $F$ is approimately unitary with resepct to the inner product $\langle \cdot,\cdot \rangle_{\rm data}$. That in turn implies that the CG algorithm, for instance, will converge rapidly if reformulated in terms of $\langle \cdot,\cdot \rangle_{\rm data}$.
+
+The second property implies that, insofar as highly osicllatory data is concerned, the 
+choice of extension of the density and bulk modulus does not matter: only the behaviour of these coefficients inside the half-space $z>z_r$, and in fact near the boundary $z=z_r$, are significant.
+
+Both properties follow from the high-frequency approximation for pulse data introduced earier. Recall the  form of the the time-dependent geometric optics approximate solution \ref{eqn:go}, which in 3D reads
+\begin{eqnarray}
+\label{eqn:go1}
+p_{go}(x,y,z,t) & \approx & cos(k \phi(x,y,z,t))p_0(x,y,z,t)\nonumber \\
+\bv_{go}(x,y,z,t) & \approx & cos(k \phi(x,y,z,t))\bv_0(x,y,z,t) 
+\end{eqnarray}
+If the phase $\phi$ satisfies the time-dependent eikonal equation, and the amplitudes $p_0$, $\bv_0$ the corresponding transport equations, then $(p_{go},\bv_{go})$ differs from a solution of the wave equation by a field that is $O(1/k)$ in any compact subset of space-time, as shown in Chapter \ref{ch:ray}. 
+It is possible to construct an approximate solution for which the phase is a given linear phase, when restricted to $z=z_r$:
+\[
+\phi(x,y,z_r,t) = t + \hat{k}_x x + \hat{k}_y y
+\]
+Then the eikonal equation determines the normal derivative of $\phi$ at the boundary:
+\begin{equation}
+\label{eqn:dphidz}
+\frac{\partial \phi}{\partial z}(x,y,z_r,t) = \pm \sqrt{\frac{1}{v(x,y,z_r)^2}-\hat{k}_x^2-\hat{k}_y^2}
+\end{equation}
+Evidently, for this prescription to make sense, a necessary condition is that
+\begin{equation}
+\label{eqn:timelike}
+1 > v(x,y,z_r)^2(\hat{k}_x^2+\hat{k}_y^2)
+\end{equation}
+over the support of $p_0,\bv_0$. We will come back to the significance of this condition below.
+
+Assuming that condition \ref{eqn:timelike} is satisfied, construct an upcoming pulse, i.e. one associated with rays along which $z$ decreases as $t$ increases by solving the Hamilton equations \ref{eqn:he1} and \ref{eqn:he2}. These equations imply that the correct sign above is $+$.  
+
+These relations imply that for an approximate solution of \ref{eqn:vdawertrhs} of the form \ref{eqn:go1}, representing an upcoming pulse,
+\[
+v_z(x,y,z_r,t) = \int_t^{\infty}\,ds\,\beta(x,y,z_r)\frac{\partial p}{\partial z}(x,y,z_r,t)
+\]
+\[
+=\int_t^{\infty}\,ds\,\beta(x,y,z_r)\left(\frac{\partial p_0}{\partial z} \cos(k\phi) - p_0(x,y,z_r,t)\sin(k\phi)k\frac{\partial \phi}{\partial z}\right) (x,y,z_r,t)
+\]
+\[
+=\int_t^{\infty}\,ds\,\beta(x,y,z_r)\left(\frac{\partial p_0}{\partial z} \cos(k\phi) + p_0(x,y,z_r,t)\frac{\partial}{\partial t}\cos(k\phi)\frac{\partial \phi}{\partial z}\left(\frac{\partial \phi}{\partial t}\right)^{-1}\right) (x,y,z_r,t)
+\]
+\[
+=-p_0(x,y,z_r,t)\cos(k\phi(x,y,z_r,t)) \left(\frac{\partial \phi}{\partial z}\left(\frac{\partial \phi}{\partial t}\right)^{-1} \right)(x,y,z_r,t)+ O\left(\frac{1}{k}\right)
+\]
+after integrating by parts, which due to \ref{eqn:dphidz} becomes
+\begin{equation}
+\label{eqn:dton1}
+=-p_0(x,y,z_r,t)\cos(k(t+\hat{k}_x x + \hat{k}_y y)) \sqrt{\frac{1}{v(x,y,z_r)^2}-\hat{k}_x^2-\hat{k}_y^2} + O\left(\frac{1}{k}\right)
+\end{equation}
+With this result, it is possible to write a high-frequency approximation to the Dirichlet-to-Neumann map. First construct a local approximation: presume that $d$ is supported near a single point on $z=z_r$, and let $p_0 \in C^{\infty}_0$ be $=1$ on the support of $d$. Then 
+\[
+d(x,y,z_r,t) = p_0(x,y,z_r,t)d(x,y,z_r,t) 
+\]
+\[
+= \frac{1}{(2\pi)^3} \int\,dk\,dk_{x}\,dk_y p_0(x,y,z_r,t)\hat{d}(k,k_{x},k_{y})cos(k(t+\hat{k}_x x +\hat{k}_y y))
+\]
+where $\hat{k}_x=k_x/k,\hat{k}_y=k_y/k$. From \ref{eqn:dton1}, the corresponding $v_z$ is 
+\[
+v_z(x,y,z_r,t) = -\frac{1}{(2\pi)^3} \int\,dk\,dk_{x}\,dk_y
+\]
+\[
+\times  p_0(x,y,z_r,t)\hat{d}(k,k_{x},k_{y})cos(k(t+\hat{k}_x x +\hat{k}_y y)) \sqrt{\frac{1}{v(x,y,z_r)^2}-\hat{k}_x^2-\hat{k}_y^2} +...
+\]
+where the elided terms have lower frequency content than the leading term displayed, as they derive from the $O(1/k)$ remainder in \ref{eqn:dton1}. Recalling the definition \ref{eqn:dtondef}, and the fact that $p_0$ is $=1$ on the support of $d$, we obtain the approximation
+\[
+\Lambda d (x,y,z_r,t) \approx 
+\]
+\begin{equation}
+\label{eqn:dtonpseudo}
+\frac{1}{(2\pi)^3} \int\,dk\,dk_{x}\,dk_y \hat{d}(k,k_{x},k_{y})cos(k(t+k_x x +k_y y)) \sqrt{\frac{1}{v(x,y,z_r)^2}-\left(\frac{k_x}{k}\right)^2-\left(\frac{k_y}{k}\right)^2} +...
+\end{equation}
+exhibiting $\Lambda$ in the form of a pseudodifferential operator on the boundary $z=z_r$.
+
+This derivation is incomplete in several ways. To begin with, I have dispensed with the constraint \ref{eqn:timelike}. It must be reintroduced, via a factor under the integral sign in \ref{eqn:dtonpseudo} that enforces it. The identity with the reconstructed pressure field at $t=0$ is then only correct if the data $d$ really does consist (at least in high-frequency limit) of Fourier components satisfying \ref{eqn:timelike}. That and other gaps in the reasoning above may be filled by invoking the theory of pseudodifferential operators more completely than I have done here.
+
+Note that the multiplier inside the integral in \ref{eqn:dtonpseudo} is positive (when it is well-defined). This means that $\Lambda$, as defined here, is a positive operator, modulo low frequency (relatively smoothing) error. Also, operators of this form are symmetric, again modulo low frequency error. Therefore $\Lambda$ may be used to define a norm in the data space, as noted above.
+
+
+
+
+
+\section{Computational Notes}
+
+\section{Suggested Projects}
+
+\bibliographystyle{seg}  % style file is seg.bst 
+\bibliography{../../bib/masterref}

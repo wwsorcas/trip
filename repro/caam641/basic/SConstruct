@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+End(
+options='short',
+use='hyperref,verbatim,natbib,graphicx,subfig,color,listings,amsmath,amssymb,amsbsy,amsthm,amscd',
+color='ALL'
+)
+

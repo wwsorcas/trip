@@ -1,0 +1,874 @@
+############### COMMON DEFINITIONS ####################################
+from rsf.proj import *
+import os
+############### END COMMON DEFINITIONS ################################
+
+################### LOCAL DEFINITIONS #################################
+thispath = os.getcwd()
+
+CWPROOT = os.getenv('CWPROOT')
+RSFROOT = os.getenv('RSFROOT')
+IWAVE   = os.getenv('IWAVE')
+MPSCODE = os.path.join(IWAVE,'mps')
+
+genmdl        = MPSCODE + '/main/genmodel.x'
+my_waveform   = MPSCODE + '/main/my_waveform.x'
+tgs_n_cat     = MPSCODE + '/main/tgs_n_cat.x'
+towed_mps     = MPSCODE + '/main/towed_mps.x'
+mps_howto     = MPSCODE + '/main/MPS_howto.x'
+ansol_wave    = MPSCODE + '/main/ansol_wave.x'
+asg_scal_p    = MPSCODE + '/main/asg_scal_p.x'
+acd_scal      = MPSCODE + '/main/acd_scal.x'
+acd_scal_Jinv_towed = MPSCODE + '/main/acd_scal_Jinv_towed.x'
+acd_scal_inv_towed  = MPSCODE + '/main/acd_scal_inv_towed.x'
+acd_trgn      = MPSCODE + '/main/acd_trgn.x'
+#WWS 2019.04.24
+#acd = IWAVE + '/acd/main/acd.x'
+acd = IWAVE + '/acd/main/sim.x'
+
+sunull     = CWPROOT + '/bin/sunull' 
+sushw      = CWPROOT + '/bin/sushw'
+suwaveform = CWPROOT + '/bin/suwaveform' 
+sugain     = CWPROOT + '/bin/sugain'
+suspike    = CWPROOT + '/bin/suspike'
+sufilter   = CWPROOT + '/bin/sufilter'
+suread     = CWPROOT + '/bin/suread'
+suwind     = CWPROOT + '/bin/suwind'
+suresamp   = CWPROOT + '/bin/suresamp'
+sustrip    = CWPROOT + '/bin/sustrip'
+sufft      = CWPROOT + '/bin/sufft'
+suamp      = CWPROOT + '/bin/suamp'
+
+################ END LOCAL DEFINITIONS ################################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+
+
+
+
+#######################################################################
+#######################################################################
+# Test 1
+#
+# Run 3-D simulated data and compares against analytical solutions. 
+# First-order acoustic equations are used as the modeling equations,
+#    dp/dt - (1/kappa)*div(v) = f
+#    dv/dt - beta*grad(p)     = 0
+# where
+#    kappa = bulk modulus
+#    beta  = buoyancy = 1/density
+#    p     = pressure field
+#    v     = velocity field
+#    f     = source term
+# Source term is given to be a single multipole of the form,
+#    f(x,t) = w(t)D^s delta(x-x^*)
+# for s=(0,0,0), (0,1,0), (0,2,0), and w(t)=gaussian wavelet.
+#######################################################################
+#######################################################################
+
+
+## Important parameters ###############################################
+
+#peak frequency
+f = 5 #[Hz]
+f_max = f*3
+#medium velocity
+c = 3 #[km/s]
+#density
+rho = 1 #[g/cm^3]
+#grid points per wavelenth
+gpw = 5
+
+#minimum wavelength
+L = c*1000/f
+L_min = c*1000/f_max #[m]
+#spatial grid size
+dx = int(L_min/gpw) #[m]
+#time step size
+dt = int(0.4*dx/c) #[ms]
+
+
+## Build useful wavelets ##############################################
+
+src_T  = 0.8
+src_dt = 0.004 
+src_nt = int(src_T/src_dt)+1
+src_cit = int(src_nt/2)+1
+src_scal = 100
+src_type = 0
+
+Flow( 'wlt_gauss.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+      ' type=0'+\
+      ' nt='+str(src_nt)+\
+      ' dt='+str(src_dt)+\
+      ' fpeak='+ str(f) +\
+      ' cit='+ str(src_cit)+\
+      ' scal='+str(src_scal),
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_dgauss.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+      ' type=1'+\
+      ' nt='+str(src_nt)+\
+      ' dt='+str(src_dt)+\
+      ' fpeak='+ str(f) +\
+      ' cit='+ str(src_cit)+\
+      ' scal='+str(src_scal),
+      stdin=0,stdout=0 )
+
+Flow( 'wlt_ricker.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+      ' type=2'+\
+      ' nt='+str(src_nt)+\
+      ' dt='+str(src_dt)+\
+      ' fpeak='+ str(f) +\
+      ' cit='+ str(src_cit)+\
+      ' scal='+str(src_scal*20),
+      stdin=0,stdout=0 )
+
+
+## Building models ####################################################
+
+choose = {
+'dn': '2',
+'vp': '0',
+'bm': '1',
+'by': '3'
+}
+
+label = {
+'dn': 'Density',
+'vp': 'Velocity',
+'bm': 'Bulk Modulus',
+'by': 'Buoyancy'
+}
+
+unit = {
+'bm': 'GPa',
+'by': 'cm\^3\_/g'
+}
+
+#depth-axis
+f1=0.0
+e1=2*L
+n1=int(1.5+(e1-f1)/dx)
+
+#x-axis
+f2=0.0 
+e2=10*L
+n2=int(1.5+(e2-f2)/dx)
+
+#y-axis
+f3=0.0
+e3=2*L
+n3=int(1.5+(e3-f3)/dx)
+
+mdl = 'bmod_'+ str(dx) +'_3D.rsf'    
+cmd = genmdl +' model=0 choose='+ str(choose['bm'])+\
+      ' o1='+ str(f1) +' n1='+ str(n1) +' d1='+ str(dx) +' label1=Depth unit1=m'+\
+      ' o2='+ str(f2) +' n2='+ str(n2) +' d2='+ str(dx) +' label2=x-axis unit2=m'+\
+      ' o3='+ str(f3) +' n3='+ str(n3) +' d3='+ str(dx) +' label3=y-axis unit3=m'+\
+      ' label='+ label['bm'] +' unit='+ unit['bm'] +\
+      ' datapath='+ thispath +' hfile='+ mdl +\
+      ' rho='+str(rho)+' c_min='+str(c)+' c_max='+str(c)
+Flow( [mdl,mdl+'@'], None, cmd, stdin=0, stdout=0 )
+    
+mdl = 'buoy_'+ str(dx) +'_3D.rsf'    
+cmd = genmdl +' model=0 choose='+ str(choose['by'])+\
+      ' o1='+ str(f1) +' n1='+ str(n1) +' d1='+ str(dx) +' label1=Depth unit1=m'+\
+      ' o2='+ str(f2) +' n2='+ str(n2) +' d2='+ str(dx) +' label2=x-axis unit2=m'+\
+      ' o3='+ str(f3) +' n3='+ str(n3) +' d3='+ str(dx) +' label3=y-axis unit3=m'+\
+      ' label='+ label['by'] +' unit='+ unit['by'] +\
+      ' datapath='+ thispath +' hfile='+ mdl +\
+      ' rho='+str(rho)+' c_min='+str(c)+' c_max='+str(c)
+Flow( [mdl,mdl+'@'], None, cmd, stdin=0, stdout=0 )
+
+        
+# Build hdr files #####################################################
+
+#source location
+sz = -L+1.11
+sx = 2*L+2.22
+sy = L+3.33
+
+#time axis
+hdr_T=2.5    # final time [s]
+hdr_ot=0.0   # initial time [s]
+hdr_dt=0.004 # time step [s]
+hdr_nt=int((hdr_T-hdr_ot)/hdr_dt)+1
+
+#receiver parameters
+gz = -L
+gx = 8*L
+gy = L
+
+output = 'hdr_3D.su'
+cmd = sunull +' nt='+ str(hdr_nt) +' ntr=1 dt='+ str(hdr_dt) +' | '+\
+      sushw +' key=selev a='+ str(sz) +' | '+\
+      sushw +' key=sx a='+ str(sx) +' | '+\
+      sushw +' key=sy a='+ str(sy) +' | '+\
+      sushw +' key=gelev a='+ str(gz) +' | '+\
+      sushw +' key=gx a='+ str(gx) +' | '+\
+      sushw +' key=gy a='+ str(gy) +' | '+\
+      sushw +' key=delrt a='+ str(hdr_ot*1.e+3)
+Flow(output,None,cmd)
+
+
+# Build MPS files #####################################################
+
+output = 'test1_mps.su'
+input = 'wlt_gauss.su'
+cmd = sushw +' key=selev a='+ str(sz) +' | '+\
+      sushw +' key=sx a='+ str(sx) +' | '+\
+      sushw +' key=sy a='+ str(sy)
+Flow(output,input,cmd)
+
+
+# Generating numerical solutions ######################################
+
+output = ['test1_s000_data.su',
+          'test1_s000_RHS.su']
+input  = ['bmod_'+ str(dx) +'_3D.rsf',
+          'buoy_'+ str(dx) +'_3D.rsf',
+          'hdr_3D.su',
+          'test1_mps.su']
+cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      asg_scal_p +\
+     ' bulkmod=${SOURCES[0]}'+\
+     ' buoyancy=${SOURCES[1]}'+\
+     ' source_p=${TARGETS[1]}'+\
+     ' data_p=${TARGETS[0]}'+\
+     ' deriv=0 adjoint=0 order=2'+\
+     ' cmin=1.0 cmax=4 dmin=0.4 dmax=1.0 cfl=0.75'+\
+     ' nl1=250 nr1=250 nl2=250 nr2=250 nl3=250 nr3=250 pmlampl=1.0'+\
+     ' appx_ord=4'+\
+     ' MPS_file=${SOURCES[3]}'+\
+     ' MPS_ord_0=0 MPS_ord_1=0 MPS_ord_2=0'+\
+     ' dt='+str(dt)
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+output = ['test1_s010_data.su',
+          'test1_s010_RHS.su']
+input  = ['bmod_'+ str(dx) +'_3D.rsf',
+          'buoy_'+ str(dx) +'_3D.rsf',
+          'hdr_3D.su',
+          'test1_mps.su']
+cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      asg_scal_p +\
+     ' bulkmod=${SOURCES[0]}'+\
+     ' buoyancy=${SOURCES[1]}'+\
+     ' source_p=${TARGETS[1]}'+\
+     ' data_p=${TARGETS[0]}'+\
+     ' deriv=0 adjoint=0 order=2'+\
+     ' cmin=1.0 cmax=4 dmin=0.4 dmax=1.0 cfl=0.75'+\
+     ' nl1=250 nr1=250 nl2=250 nr2=250 nl3=250 nr3=250 pmlampl=1.0'+\
+     ' appx_ord=4'+\
+     ' MPS_file=${SOURCES[3]}'+\
+     ' MPS_ord_0=0 MPS_ord_1=1 MPS_ord_2=0'+\
+     ' dt='+str(dt)
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+output = ['test1_s020_data.su',
+          'test1_s020_RHS.su']
+input  = ['bmod_'+ str(dx) +'_3D.rsf',
+          'buoy_'+ str(dx) +'_3D.rsf',
+          'hdr_3D.su',
+          'test1_mps.su']
+cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+      asg_scal_p +\
+     ' bulkmod=${SOURCES[0]}'+\
+     ' buoyancy=${SOURCES[1]}'+\
+     ' source_p=${TARGETS[1]}'+\
+     ' data_p=${TARGETS[0]}'+\
+     ' deriv=0 adjoint=0 order=2'+\
+     ' cmin=1.0 cmax=4 dmin=0.4 dmax=1.0 cfl=0.75'+\
+     ' nl1=250 nr1=250 nl2=250 nr2=250 nl3=250 nr3=250 pmlampl=1.0'+\
+     ' appx_ord=4'+\
+     ' MPS_file=${SOURCES[3]}'+\
+     ' MPS_ord_0=0 MPS_ord_1=2 MPS_ord_2=0'+\
+     ' dt='+str(dt)
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Generating analytical solutions #####################################
+
+output = ['test1_s000_ansol.su']
+input  = ['hdr_3D.su']
+cmd = '/bin/cp ${SOURCES[0]} ./${TARGETS[0]} && '+\
+      ansol_wave +\
+      ' pressure=${TARGETS[0]}'+\
+      ' src_type=0'+\
+      ' src_fpeak='+str(f)+\
+      ' src_off='+str((src_cit-1)*src_dt)+\
+      ' src_scal='+str(src_scal*1000)+\
+      ' PDE_ord=1'+\
+      ' c='+str(c)+\
+      ' s_0=0 s_1=0 s_2=0'
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+output = ['test1_s010_ansol.su']
+input  = ['hdr_3D.su']
+cmd = '/bin/cp ${SOURCES[0]} ./${TARGETS[0]} && '+\
+      ansol_wave +\
+      ' pressure=${TARGETS[0]}'+\
+      ' src_type=0'+\
+      ' src_fpeak='+str(f)+\
+      ' src_off='+str((src_cit-1)*src_dt)+\
+      ' src_scal='+str(src_scal*1000)+\
+      ' PDE_ord=1'+\
+      ' c='+str(c)+\
+      ' s_0=0 s_1=1 s_2=0'
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+output = ['test1_s020_ansol.su']
+input  = ['hdr_3D.su']
+cmd = '/bin/cp ${SOURCES[0]} ./${TARGETS[0]} && '+\
+      ansol_wave +\
+      ' pressure=${TARGETS[0]}'+\
+      ' src_type=0'+\
+      ' src_fpeak='+str(f)+\
+      ' src_off='+str((src_cit-1)*src_dt)+\
+      ' src_scal='+str(src_scal*1000)+\
+      ' PDE_ord=1'+\
+      ' c='+str(c)+\
+      ' s_0=0 s_1=2 s_2=0'
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Generating plots ####################################################
+
+# Plotting input (gaussian) wavelet
+output = ['wlt-gauss']
+input = ['wlt_gauss.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[0]}'
+Flow(output,input,cmd)
+
+output = 'wlt_gauss_fft.su'
+input = 'wlt_gauss.su'
+cmd = sufft +' | '+ suamp +' mode=amp'
+Flow(output,input,cmd)
+
+output = ['wlt-gauss-fft']
+input = ['wlt_gauss_fft.su']
+cmd = 'suread read=data endian=0'
+Flow(output,input,cmd)
+
+output = 'wlt-gauss'
+input = 'wlt-gauss'
+cmd = 'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+output = 'wlt-gauss-fft'
+input = 'wlt-gauss-fft'
+cmd = 'put label1=Frequency unit1=Hz label2=Amplitude o1=0 d1=1.190476 | '+\
+      'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+
+# Computing data differences
+output = ['test1-s000-diff.rsf',
+          'test1-s000-ansol.rsf',
+          'test1-s000-data.rsf']
+input = ['test1_s000_ansol.su',
+         'test1_s000_data.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[1]} && '+\
+      'suread read=data endian=0 <${SOURCES[1]} >${TARGETS[2]} && '+\
+      'add mode=a scale=1.0,-1.0 <${TARGETS[1]} ${TARGETS[2]}'
+#Flow(output,input,cmd,stdin=0)
+
+output = ['test1-s010-diff.rsf',
+          'test1-s010-ansol.rsf',
+          'test1-s010-data.rsf']
+input = ['test1_s010_ansol.su',
+         'test1_s010_data.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[1]} && '+\
+      'suread read=data endian=0 <${SOURCES[1]} >${TARGETS[2]} && '+\
+      'add mode=a scale=1.0,-1.0 <${TARGETS[1]} ${TARGETS[2]}'
+#Flow(output,input,cmd,stdin=0)
+
+output = ['test1-s020-diff.rsf',
+          'test1-s020-ansol.rsf',
+          'test1-s020-data.rsf']
+input = ['test1_s020_ansol.su',
+         'test1_s020_data.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[1]} && '+\
+      'suread read=data endian=0 <${SOURCES[1]} >${TARGETS[2]} && '+\
+      'add mode=a scale=1.0,-1.0 <${TARGETS[1]} ${TARGETS[2]}'
+#Flow(output,input,cmd,stdin=0)
+
+
+# Plotting differences
+output ='test1-s000'
+input =['test1-s000-ansol',
+        'test1-s000-diff',
+        'test1-s000-data']
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=6,5,4 dash=0,5,2 plotfat=3 wanttitle=n label2=Pressure unit2=GPa'
+#Result(output,input,cmd)
+
+output ='test1-s010'
+input =['test1-s010-ansol',
+        'test1-s010-diff',
+        'test1-s010-data']
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=6,5,4 dash=0,5,2 plotfat=3 wanttitle=n label2=Pressure unit2=GPa'
+#Result(output,input,cmd)
+
+output ='test1-s020'
+input =['test1-s020-ansol',
+        'test1-s020-diff',
+        'test1-s020-data']
+cmd = 'cat axis=2 ${SOURCES[1:3]} | '+\
+      'graph plotcol=6,5,4 dash=0,5,2 plotfat=3 wanttitle=n label2=Pressure unit2=GPa'
+#Result(output,input,cmd)
+
+
+
+#######################################################################
+#######################################################################
+# Running Howto example.
+# Will be using hdr and medium parameters from previous example.
+#######################################################################
+#######################################################################
+
+# Constructing MPS file ###############################################
+output = 'howto_mps.su'
+input = ['wlt_dgauss.su','wlt_ricker.su']
+cmd = tgs_n_cat +' out=tmp_MPS.su CWPROOT='+ CWPROOT +' N=2'+\
+    ' wlt_0=${SOURCES[1]} wlt_1=${SOURCES[0]} && '+\
+    sushw +' <tmp_MPS.su key=selev a='+ str(sz) +' | '+\
+    sushw +' key=sx a='+ str(sx) +' | '+\
+    sushw +' key=sy a='+ str(sy) +' >${TARGETS[0]} && '+\
+    ' /bin/rm tmp_MPS.su'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Generating output ###################################################
+output = ['howto_data.su',
+          'howto_RHS.su']
+input  = ['bmod_'+ str(dx) +'_3D.rsf',
+          'buoy_'+ str(dx) +'_3D.rsf',
+          'hdr_3D.su',
+          'howto_mps.su']
+cmd = '/bin/cp ${SOURCES[2]} ./${TARGETS[0]} && '+\
+     mps_howto +\
+     ' bulkmod=${SOURCES[0]}'+\
+     ' buoyancy=${SOURCES[1]}'+\
+     ' source_p=${TARGETS[1]}'+\
+     ' data_p=${TARGETS[0]}'+\
+     ' deriv=0 adjoint=0 order=2'+\
+     ' cmin=1.0 cmax=4 dmin=0.4 dmax=1.0 cfl=0.75'+\
+     ' nl1=250 nr1=250 nl2=250 nr2=250 nl3=250 nr3=250 pmlampl=1.0'+\
+     ' appx_ord=4'+\
+     ' MPS_file=${SOURCES[3]}'+\
+     ' dt='+str(dt)
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Generating plots #####################################################
+
+# Plotting dgaussian wavelet
+output = ['wlt-dgauss']
+input = ['wlt_dgauss.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[0]}'
+Flow(output,input,cmd)
+
+output = 'wlt_dgauss_fft.su'
+input = 'wlt_dgauss.su'
+cmd = sufft +' | '+ suamp +' mode=amp'
+Flow(output,input,cmd)
+
+output = ['wlt-dgauss-fft']
+input = ['wlt_dgauss_fft.su']
+cmd = 'suread read=data endian=0'
+Flow(output,input,cmd)
+
+output = 'wlt-dgauss'
+input = 'wlt-dgauss'
+cmd = 'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+output = 'wlt-dgauss-fft'
+input = 'wlt-dgauss-fft'
+cmd = 'put label1=Frequency unit1=Hz label2=Amplitude o1=0 d1=1.190476 | '+\
+      'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+# Plotting ricker wavelet
+output = ['wlt-ricker']
+input = ['wlt_ricker.su']
+cmd = 'suread read=data endian=0 <${SOURCES[0]} >${TARGETS[0]}'
+Flow(output,input,cmd)
+
+output = 'wlt_ricker_fft.su'
+input = 'wlt_ricker.su'
+cmd = sufft +' | '+ suamp +' mode=amp'
+Flow(output,input,cmd)
+
+output = ['wlt-ricker-fft']
+input = ['wlt_ricker_fft.su']
+cmd = 'suread read=data endian=0'
+Flow(output,input,cmd)
+
+output = 'wlt-ricker'
+input = 'wlt-ricker'
+cmd = 'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+output = 'wlt-ricker-fft'
+input = 'wlt-ricker-fft'
+cmd = 'put label1=Frequency unit1=Hz label2=Amplitude o1=0 d1=1.190476 | '+\
+      'graph plotfat=3 wanttitle=n '
+Result(output,input,cmd)
+
+# Plotting other
+Flow('howto-data','howto_data.su','suread read=data endian=0')
+Result('howto-data','howto-data',
+       'put label1="Time" unit1=s label2="Pressure" unit2=GPa| '+\
+       'graph plotfat=3 title="howto_data.su"')
+
+Flow('howto-mps','howto_mps.su','suread read=data endian=0')
+Result('howto-mps','howto-mps.rsf',
+       'put label1="Time" label2="MPS-coefficient" unit1=s o2=1 d2=1 | '+\
+       'wiggle poly=y plotfat=3 o2num=1 d2num=1 n2tic=2 plotcol=7 gridcol=7 title="howto_mps.su"')
+
+Flow('howto-RHS','howto_RHS.su','suread read=data endian=0')
+Result('howto-RHS','howto-RHS',
+       'put label1="Time" label2="Trace Number" unit1=s | '+\
+       'grey scalebar=y wherexlabel=bottom title="howto_RHS.su" wheretitle=top')
+       #'wiggle wanttitle=n poly=y plotfat=3 plotcol=7 gridcol=7 ')
+
+
+#######################################################################
+#######################################################################
+# Test 2, 3 and 4
+#
+# Modeling equation consists of acoustic constant density (acd), that 
+# is acoustic wave equation:
+#  (d/dt)^2 p - c^2 nabla p = f
+# where
+#   c = speed of sound
+#   p = pressure field
+#   f = source term
+# Source term f is given simply as a monopole,
+#   f(x,t) = w(t) delta(x-x^*).
+#
+#######################################################################
+#######################################################################
+
+fetches = {
+    'velocity.HH' : ['marmousi','http://www.trip.caam.rice.edu']
+}
+
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])
+
+x_o = 0
+x_d = 24
+x_e = 5500
+x_n = int((x_e-x_o)/x_d)+1
+
+z_o = 0
+z_d = 24
+z_e = 1500
+z_n = int((z_e-z_o)/z_d)+1
+
+h2o_w = 350
+h2o_n = int(h2o_w/z_d)+1
+
+## Building velocity model from windowed Marmousi with water layer
+Flow('ocean',None,
+     'makevel n1='+str(h2o_n)+\
+     ' d1='+str(z_d)+\
+     ' n2='+str(x_n)+\
+     ' d2='+str(x_d)+\
+     ' o1='+str(z_o)+\
+     ' o2='+str(x_o)+\
+     ' v000=1.5 | '+\
+     'put data_type=vel data_format=native_float label1=Depth unit1=m label2=Position unit2=m unit=m/ms esize=4',
+     stdin=0)
+Flow('vel24base','velocity.HH',
+     'dd form=native | '+\
+     'window j1=6 j2=6 | '+\
+     'window min1='+str(z_o)+' max1='+str(z_e)+' min2='+str(x_o)+' max2='+str(x_e))
+Flow('vel24',['ocean','vel24base'],
+     'window n1='+str(h2o_n)+' f1=0 | '+\
+     'cat axis=1 d='+str(z_d)+' ${SOURCES[1]}')
+Flow('vel24sm','vel24','smooth rect1=5 rect2=5 repeat=5')
+
+Flow('csq24','vel24','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('csq24sm','vel24sm','add mode=p ${SOURCES[0]} |put data_type=csq')
+
+## Build hdr files #####################################################
+
+#source locations
+sz   = -12
+sx_o = 2500
+sx_d = 100
+sx_e = 4000
+sx_n = int((sx_e-sx_o)/sx_d)+1 
+
+#receiver locations
+gz    = -8
+gx_o  = 500
+gx_d  = 25
+gx_e  = 2300
+gx_n  = int((gx_e-gx_o)/gx_d)+1
+
+# building header file 
+hdr_T = 1.5
+hdr_ot= 0.0
+hdr_dt= 0.004
+hdr_nt= int((hdr_T-hdr_ot)/hdr_dt)+1
+
+Flow( 'hdr_2D.su',None,
+      sunull + ' nt='+ str(hdr_nt) +' ntr='+ str(gx_n*sx_n) +' dt='+str(hdr_dt) +' | '+\
+      sushw + ' key=selev a='+ str(sz) +' | '+\
+      sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_d) +' j='+ str(gx_n) +' | '+\
+      sushw + ' key=gelev a='+ str(gz) +' | '+\
+      sushw + ' key=gx a='+ str(gx_o) +' b='+ str(gx_d) +' j='+ str(gx_n) +' c='+ str(sx_d) +' | '+\
+      sushw + ' key=tracl a=1 b=1 ',
+      stdin=0)
+
+# building MPS files
+Flow( 'wlt_delta.su',None,
+      suspike +' nt=201 dt=0.004 ntr=1 it1=101 ix1=1 | '+\
+      sufilter +' f=30,40 amps=1.,1. | '+\
+      sugain +' scale=250 | '+\
+      sushw +' key=delrt a=-400 ',
+      stdin=0)
+
+Flow('mps_null.su',None,
+     sunull +' nt=201 dt=0.004 ntr=1 | '+\
+     sushw +' key=delrt a=-225')
+
+Flow('mps_base.su','wlt_ricker.su',
+     sushw +' key=delrt a=-225 ')
+
+Flow('mps_towed.su',['mps_base.su','hdr_2D.su'],
+      towed_mps+' data=${SOURCES[1]} source=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0,stdout=0)
+
+Flow( 'delta_towed.su',['wlt_delta.su','hdr_2D.su'],
+      towed_mps+' data=${SOURCES[1]} source=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0,stdout=0)      
+
+# header for Green's functions
+hdr_T = 2.0
+hdr_ot= 0.0
+hdr_dt= 0.004
+hdr_nt= int((hdr_T-hdr_ot)/hdr_dt)+1
+
+Flow( 'hdr_2D_g.su',None,
+      sunull + ' nt='+ str(hdr_nt) +' ntr='+ str(gx_n*sx_n) +' dt='+str(hdr_dt) +' | '+\
+      sushw + ' key=selev a='+ str(sz) +' | '+\
+      sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_d) +' j='+ str(gx_n) +' | '+\
+      sushw + ' key=gelev a='+ str(gz) +' | '+\
+      sushw + ' key=gx a='+ str(gx_o) +' b='+ str(gx_d) +' j='+ str(gx_n) +' c='+ str(sx_d) +' | '+\
+      sushw + ' key=tracl a=1 b=1 ',
+      stdin=0)
+
+## Generating data #####################################################
+output = ['data.su',
+          'RHS_0_mps_towed.su']
+input  = ['csq24.rsf',
+          'mps_towed.su',
+          'hdr_2D.su']
+cmd = '/bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+\
+      acd_scal+\
+      ' order=2 cfl=0.75 cmin=1.5 cmax=4.0 sampord=1 '+\
+      ' csq=${SOURCES[0]} '+\
+      ' source=empty '+\
+      ' data=${TARGETS[0]} '+\
+      ' MPS_file=${SOURCES[1]} '+\
+      ' MPS_ord_0=0 MPS_ord_1=0 appx_ord=4'+\
+      ' partask=1 mpi_np1=1 mpi_np2=1'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+## Running source inversion #############################################
+output = ['test2_mps_inv.su',
+          'test2_data_res.su',
+          'test2_outfile.txt',
+          'test2_mps_towed.su',
+          'test2_delta_towed.su',
+          'RHS_0_test2_mps_towed.su',
+          'RHS_0_test2_delta_towed.su']
+input  = ['csq24.rsf',
+          'mps_null.su',
+          'mps_towed.su',
+          'delta_towed.su',
+          'data.su',
+          'hdr_2D_g.su'] 
+cmd = '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[4]} ${TARGETS[1]} && '+\
+      '/bin/cp ${SOURCES[2]} ${TARGETS[3]} && '+\
+      '/bin/cp ${SOURCES[3]} ${TARGETS[4]} && '+\
+      acd_scal_inv_towed +\
+      ' order=2 cfl=0.5 cmin=1.5 cmax=4.0 sampord=1 '+\
+      ' csq=${SOURCES[0]}' +\
+      ' source=empty ' +\
+      ' data=${SOURCES[4]}'+\
+      ' data_g=${SOURCES[5]}'+\
+      ' datares=${TARGETS[1]}'+\
+      ' MPS_file_inv=${TARGETS[0]}'+\
+      ' MPS_towed=${TARGETS[3]}'+\
+      ' MPS_delta=${TARGETS[4]}'+\
+      ' MPS_ord_0=0.0 MPS_ord_1=0.0'+\
+      ' order_0=0.0 order_d=0.0'+\
+      ' appx_ord=4'+\
+      ' CG_MaxIter=40'+\
+      ' CG_Verbose=1'+\
+      ' outfile=${TARGETS[2]}'+\
+      ' partask=1 mpi_np1=1 mpi_np2=1'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+## Running quick RTM example #############################################
+# checking if acd ajdoint is available
+output = ['test_csq_rtm']
+
+input  = ['csq24sm.rsf',
+          'mps_towed.su',
+          'data.su']
+cmd = 'sfcp < ${SOURCES[0]}> ${TARGETS[0]} && '+\
+      acd +\
+      ' deriv=1 adjoint=1 nsnaps=20'+\
+      ' order=2 cfl=0.5 cmin=1.5 cmax=4.0 sampord=1 '+\
+      ' csq=${SOURCES[0]}' +\
+      ' csq_b1=${TARGETS[0]}'+\
+      ' source=${SOURCES[1]} ' +\
+      ' data=${SOURCES[2]}'
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+## Running medium inversion #############################################
+output = ['test3_csq_inv',
+          'test3_data_res.su',
+          'test3_outfile.txt',
+          'test3_mps_towed.su',
+          'RHS_0_test3_mps_towed.su']
+input  = ['csq24sm.rsf',
+          'mps_towed.su',
+          'data.su',
+          'hdr_2D_g.su']
+cmd = 'sfcp < ${SOURCES[0]}> ${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[2]} ${TARGETS[1]} && '+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[3]} && '+\
+      acd_trgn +\
+      ' order=2 cfl=0.5 cmin=1.5 cmax=4.0 sampord=1 '+\
+      ' csq=${SOURCES[0]}' +\
+      ' csq_inv=${TARGETS[0]}'+\
+      ' source=empty ' +\
+      ' data=${SOURCES[2]}'+\
+      ' data_g=${SOURCES[3]}'+\
+      ' datares=${TARGETS[1]}'+\
+      ' MPS_towed=${TARGETS[3]}'+\
+      ' MPS_ord_0=0.0 MPS_ord_1=0.0'+\
+      ' order_0=0.0 order_d=0.0'+\
+      ' appx_ord=4'+\
+      ' GN_MaxIter=3'+\
+      ' CG_TrustRad=500'+\
+      ' MPS_MaxIter=10'+\
+      ' nsnaps=20'+\
+      ' outfile=${TARGETS[2]}'
+#Flow(output,input,cmd,stdin=0,stdout=0)
+
+## Running joint inversion #############################################
+output = ['test4_csq_inv',
+          'test4_mps_inv.su',
+          'test4_data_res.su',
+          'test4_outfile.txt',
+          'test4_mps_towed.su',
+          'test4_delta_towed.su',
+          'RHS_0_test4_mps_towed.su',
+          'RHS_0_test4_delta_towed.su']
+input  = ['csq24sm.rsf',
+          'mps_null.su',
+          'mps_towed.su',
+          'delta_towed.su',
+          'data.su',
+          'hdr_2D_g.su']
+cmd = 'sfcp <${SOURCES[0]} >${TARGETS[0]} && '+\
+      '/bin/cp ${SOURCES[4]} ${TARGETS[2]} && '+\
+      '/bin/cp ${SOURCES[1]} ${TARGETS[1]} && '+\
+      '/bin/cp ${SOURCES[2]} ${TARGETS[4]} && '+\
+      '/bin/cp ${SOURCES[3]} ${TARGETS[5]} && '+\
+      acd_scal_Jinv_towed +\
+      ' order=2 cfl=0.5 cmin=1.5 cmax=4.0 sampord=1 '+\
+      ' csq_inv=${TARGETS[0]}'+\
+      ' source=empty ' +\
+      ' data=${SOURCES[4]}'+\
+      ' data_g=${SOURCES[5]}'+\
+      ' datares=${TARGETS[2]}'+\
+      ' MPS_file_inv=${TARGETS[1]}'+\
+      ' MPS_towed=${TARGETS[4]}'+\
+      ' MPS_delta=${TARGETS[5]}'+\
+      ' MPS_ord_0=0.0 MPS_ord_1=0.0'+\
+      ' order_0=0.0 order_d=0.0'+\
+      ' appx_ord=4'+\
+      ' GN_MaxIter=3'+\
+      ' CG_TrustRad=500'+\
+      ' MPS_MaxIter=30'+\
+      ' nsnaps=20'+\
+      ' outfile=${TARGETS[3]}'
+Flow(output,input,cmd,stdin=0,stdout=0)
+
+
+# Plots
+Flow('data','data.su','suread read=data endian=0')
+Result('data','data',
+       'put label1="Time" unit1=s label2="ReceiverNumber" | '+\
+       'grey scalebar=y barlabel="Pressure" barunit="GPa" screenratio=0.5 title="data.su" wherexlabel=bottom wheretitle=top')
+
+Result('csq24','csq24',
+       'grey color=j clip=5 bias=4.5 scalebar=y barreverse=y barlabel="Velocity Squared" barunit="km\^2\_/s\^2" title="csq24.rsf" wherexlabel=bottom wheretitle=top')
+
+Result('csq24sm','csq24sm',
+       'grey color=j clip=5 bias=4.5 scalebar=y barreverse=y barlabel="Velocity Squared" barunit="km\^2\_/s\^2" title="csq24sm.rsf" wherexlabel=bottom wheretitle=top')
+
+Result('test4-csq-inv','test4_csq_inv',
+       'grey color=j clip=5 bias=4.5 scalebar=y barreverse=y barlabel="Velocity Squared" barunit="km\^2\_/s\^2" title="test4_csq_inv.rsf" wherexlabel=bottom wheretitle=top')
+
+Flow('csq24-trace','csq24','window min2=3500 max2=3500 min1=0 max1=1000')
+Flow('csq24sm-trace','csq24sm','window min2=3500 max2=3500 min1=0 max1=1000')
+Flow('test4-csq-inv-trace','test4_csq_inv',
+     'window min2=3500 max2=3500 min1=0 max1=1000')
+Result('trace-compare',['csq24-trace','csq24sm-trace','test4-csq-inv-trace'],
+       ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' put label2="Velocity-Squared" unit2="km\^2\_/s\^2" | '+\
+       ' graph wanttitle=n dash=0,2,4 plotcol=6,5,4 plotfat=3')
+
+#Result('test3-csq-inv','test3_csq_inv',
+#       'grey color=j bias=4.5 minval=1 maxval=9 scalebar=y barreverse=y barlabel="Velocity Squared" barunit="km\^2\_/s\^2" title="test3_csq_inv.su"')
+#Flow('test3-csq-inv-trace','test3_csq_inv',
+#     'window min2=3500 max2=3500 min1=0  max1=1000')
+
+Flow('mps-towed','mps_towed.su','suread read=data endian=0')
+Result('mps-towed','mps-towed',
+       'put label1="Time" unit1=s label2="ShotNumber" | '+\
+       'wiggle poly=y plotfat=3 o2num=0 d2num=1 n2tic=11 plotcol=7 gridcol=7 title="mps_towed.su"')
+
+Flow('mps-base','mps_base.su','suread read=data endian=0')
+
+Flow('test2-mps-inv','test2_mps_inv.su','suread read=data endian=0')
+Result('test2-mps',
+       ['mps-base','test2-mps-inv'],
+       ' cat axis=2 ${SOURCES[1:2]} | '+\
+       ' put label2=Amplitude label1=Time unit1=s | '+\
+       ' graph wanttitle=n dash=0,5 plotcol=6,5 plotfat=3')
+
+Flow('test4-mps-inv','test4_mps_inv.su','suread read=data endian=0')
+Result('test4-mps',
+       ['mps-base','test4-mps-inv'],
+       ' cat axis=2 ${SOURCES[1:2]} | '+\
+       ' put label2=Amplitude label1=Time unit1=s | '+\
+       ' graph wanttitle=n dash=0,5 plotcol=6,5 plotfat=3')
+
+
+
+End()

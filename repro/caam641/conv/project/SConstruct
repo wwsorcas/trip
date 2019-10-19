@@ -1,0 +1,55 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suaddevent      = os.path.join(CWPROOT,'bin/suaddevent')
+
+# create event
+Flow('event.su', None,
+     sunull + ' nt=500 dt=0.004 ntr=100 | ' +
+     sushw + ' key=offset a=-4000 b=40 | ' +
+     suaddevent + ' vel=3000 t0=0.8 | ' +
+     sufilter + ' f=2,5,25,35')
+Flow('nmoevent.su','event.su', sunmo + ' vnmo=3000 smute=3')
+
+# plot event w/wo correction
+Result('event','event.su', 'suread endian=0  read=data | put o2=-4000 d2=40 label1=Time label2=Offset unit1=s unit2=km | grey xinch=5 yinch=7 pclip=96')
+Result('nmoevent','nmoevent.su', 'suread endian=0  read=data | put o2=-4000 d2=40 label1=Time label2=Offset unit1=s unit2=km | grey xinch=5 yinch=7 pclip=96')
+
+End()

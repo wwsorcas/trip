@@ -1,0 +1,9 @@
+The project directory contains an SContruct for running tests and making
+Figs pertinent to the paper. Simly project/scons prior to compiling paper.
+
+NOTE:
+Just about every figure will be generated like this, except test*-plots.pdf
+figures that plot convergence results for the several tests. These figure 
+are included when downloading this directory but can be rebuilt from scratch
+after running the tests (i.e., after calling project/scons) and running matlab
+script project/Matlab_code/Mscript.m

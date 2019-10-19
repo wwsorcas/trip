@@ -1,0 +1,20 @@
+from rsf.tex import *
+
+End(
+lclass='segabs',
+
+use='amsmath,setspace,wasysym,graphicx',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bx}{\mathbf{x}}
+''',
+color='ALL'
+)
+
+
+
+
+

@@ -1,0 +1,2457 @@
+%\title{Discretization of Multipole Sources in a Finite Difference Setting for Wave Propagation Problems}
+%\date{}
+%\address{
+%        \footnotemark[1]Institute for Computational and Experimental Research in Mathematics,\\ Brown University,\\ Providence, RI 02912 USA\\
+%        \footnotemark[2]The Rice Inversion Project,\\ Rice University,\\ Houston, TX
+%        77005-1892 USA
+%}
+%\author{Mario J. Bencomo\footnotemark[1] and William Symes\footnotemark[2]}
+
+%\righthead{Multipole Source Discretizations}
+
+%\maketitle
+%\parskip 12pt
+
+
+
+%%%%%%%%%
+\begin{abstract}
+%%%%%%%%%
+
+Seismic sources are commonly idealized as point-sources due
+to their small spatial extent relative to seismic wavelengths.
+The acoustic isotropic point-radiator is inadequate as a model 
+of seismic wave generation for seismic sources that are known to exhibit directivity. 
+Therefore, accurate modeling of seismic wavefields must include source 
+representations generating anisotropic radiation patterns. 
+Such seismic sources can be modeled as 
+{\em multipoles}, that is, time-dependent linear combination of
+spatial derivatives of the spatial delta function. Since the solutions of linear hyperbolic
+systems with point-source right hand sides are necessarily singular, standard results on
+convergence of grid-based numerical methods (finite difference or
+finite element) do not imply convergence of numerical solutions.
+We present a method for discretizing multipole sources 
+in a finite difference setting, an extension of the moment matching 
+conditions developed for the Dirac delta function in other applications.
+along with numerical evidence demonstrating the accuracy of these approximations.
+Using this analysis, we develop a weak convergence theory for the discretization of 
+a family of symmetric hyperbolic systems of first-order partial
+differential equations, with singular source terms, solved via
+staggered-grid finite difference methods: we show that
+grid-independent space-time averages of the numerical solutions
+converge to the same averages of the continuum solution, and provide
+an estimate for the error in terms of moment matching and truncation
+error conditions.
+Numerical experiments confirm this result, but also suggest a stronger
+one: optimal convergence rates appear to be achieved
+achieved point-wise in space away from the source.
+
+\end{abstract}
+
+
+%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%
+
+%Seismic sources are commonly idealized as concentrated at a source point due
+%to their small spatial extent relative to seismic wavelengths.
+Linear wave propagation problems modeling physical systems with
+concentrated (in space) energy sources arise in a number of
+applications, such as seismology, nondestructive material evaluation,
+and radar. A familiar example of a wave propagation model with
+spatially concentrated 
+%energy
+energy
+source is the isotropic point-radiator problem
+for the acoustic wave equation in Euclidean 3-space \cite[]{CourHil:62}:
+\begin{equation}\label{eq:isorad}
+\begin{split}
+       \frac{1}{c^2} \frac{\partial^2}{\partial t^2} p(\mathbf x,t) - \nabla^2
+  p(\mathbf x,t) & = f(\mathbf x,t) \equiv w(t)\delta(\mathbf x),\\ 
+p(\mathbf x,t) & =  0,  \quad t<<0,
+\end{split}
+\end{equation}
+$\delta(\mathbf x)$ being the Dirac delta function.
+The solution $p$ is spherically symmetric:
+\begin{equation}
+\label{eq:green3d}
+	p(\mathbf x,t) = \frac{w\left(t-\frac{r}{c}\right)}{4\pi r}, \quad 
+	r= \sqrt{\mathbf x^T \mathbf x}.
+\end{equation}
+
+% here is a heaven-sent opportunity to tell the reader what the paper
+% is about
+
+The form \ref{eq:green3d} of the isotropic point radiator solution
+suggests an obstacle to successful  approximation by gridded (finite
+difference, finite element,...) numerical methods: the fundamental
+rationale for the accuracy of such methods, namely truncation error
+analysis based on Taylor expansion, is invalid in any neighborhood of
+the source point $\mathbf x = \mathbf 0$, as the solution is singular
+there. Moreover, due to the wave nature of both continuum and gridded
+approximate solutions for problems like \ref{eq:isorad}, errors
+arising near the source point propagate throughout the region in which
+the solution is computed. Examples presented later in this paper
+illustrate this generation and propagation of error due to source singularity. 
+
+The main result of this paper is that certain special approximations
+to wave dynamics problems such as \ref{eq:isorad} with (singular)
+right-hand sides of point support lead to finite difference solutions
+that converge globally in a weak sense - that is, averages over fixed
+regions converge as the grid cell size is reduced.
+
+In the remainder of this introduction, we describe the class of wave
+dynamics problems to which our arguments apply, the representation and approximation
+of right-hand sides,  the type of numerical
+approximation used in our work, and the weak convergence of approximate solutions.
+
+We focus our attention on a symmetric hyperbolic systems of the form
+\begin{equation}\label{eq:hyper_fam}
+\begin{split}
+	A \frac{\partial}{\partial t}u + P^T v &= f \\
+	B \frac{\partial}{\partial t}v  - P u & = g
+\end{split}
+\end{equation}
+connecting dynamical fields $u,v$, energy source fields $f,g$, and symmetric
+positive definite matrix fields $A,B$. The operator $P$ is a
+constant-coefficient differential operator of order 1; $P^T$ denotes its
+formal adjoint or transpose.
+Many important physical systems supporting wave propagation can be
+cast in the form \ref{eq:hyper_fam}. These include linear
+elastodynamics and Maxwell's equations. In all such examples, the
+matrices $A$ and $B$ encode time-independent physical parameters characteristic of the
+continuum mechanical model. For example, elastodynamics may be cast in
+the form \ref{eq:hyper_fam}, with $A$ being the compliance tensor,
+$B$ being the material density multiplied by the $3 \times 3$
+identity, and $P$ is the strain operator. As is well-known, the acoustic
+wave equation \ref{eq:isorad} is also equivalent to such a system, in the
+sense that its solution $p$ can be identified with $u$ above, with $v$
+chosen as the indefinite time integral of $-\nabla p$. In this case,
+$A$ is the $1 \times 1$ matrix with entry $c^2$, $B$ is the $3
+\times 3$ identity matrix, and $P$ is the gradient operator. The resulting system expresses
+acoustodynamics with material density normalized to 1, and $c^2$
+identified with bulk modulus of the fluid material. The dynamic fields
+$p$ and $v$ represent pressure and particle velocity respectively.
+
+Sources of small support relative to typical wavelengths are reasonable models
+for some seismic energy generation mechanisms. Such sources may be
+approximated by point support right hand sides such as occur in the
+isotropic radiator problem \ref{eq:isorad}. Of course, ``functions''
+of space and time having point support in space are not really
+functions at all, but (Schwarz) distributions. 
+Peetre's Theorem \cite[]{Horm:69} implies that any distribution in
+${\bf R}^{d+1}$ 
+supported on $\{\mathbf x^* \} \times {\bf R}$, ${\bf x^*} \in {\bf R}^d$, takes the form of a finite series
+\begin{equation}\label{eq:MPSappx}
+        f(\mathbf x,t) = \sum_{|\mathbf s|=0}^N w_{\mathbf s}(t) \; D^{\mathbf s}\delta(\mathbf x-\mathbf x^*),
+\end{equation}
+in which we have introduced {\em multi-index notation}: for spatial
+dimension $d$ and multi-index (integer d-tuple) ${\bf s} =
+(s_1,...,s_d)$, the $\mathbf s$-mixed partial derivative operator, denoted $D^{\bf s}$,
+and its (total) order $|{\bf s}|$, are defined as
+\begin{equation}\label{eq:PDO}
+        D^{\mathbf s} = \prod_{i=1}^d \left( \frac{\partial}{\partial x_i}\right)^{s_i}, \quad |\mathbf s| = \sum_{i=1}^{d} s_i.
+\end{equation}
+In the context of energy source representation, we shall refer to
+distributions of point support, necessarily taking the form
+\ref{eq:MPSappx}, as {\em multipole sources}, or simply {\em multipoles}.
+Such sources combine
+localization of energy and (possibly) anisotropic radiation pattern.
+%distribution in space and time. ?? MJB
+The coefficient distributions $w_{\mathbf s}(t)$ may be scalar-, vector-, or
+tensor-valued, according to the nature of the quantity (pressure, velocity, or stress) 
+in the equation in which
+$f(\mathbf x,t)$ appears as right-hand side.  Multipoles may
+approximate arbitrary sources highly localized on the wavelength scale, in
+the sense of generating approximately the same field away from the
+source location, and for this reason have enjoyed widespread use in
+the representation of seismic sources \cite[]{Shearer:2009}.
+
+The isotropic acoustic point radiator problem \ref{eq:isorad} is
+(equivalent to) a
+simple special case of the symmetric hyperbolic system
+\ref{eq:hyper_fam} with multipole
+right hand sides $f,g$. Therefore gridded approximation of the more general
+dynamics modeled by \ref{eq:hyper_fam} suffers from the difficulty
+pointed out earlier for \ref{eq:isorad}. 
+
+Our results pertain to a specific class of finite difference
+approximations for systems of the form \ref{eq:hyper_fam},
+the so called {\em staggered grid schemes}, defined in detail in below
+(equation \ref{eq:sg} and surrounding discussion). These schemes have the
+virtue of obeying {\em energy estimates}, which are the chief
+analytical tool in our work, and are widely used for basin-
+and exploration-scale seismic modeling, acoustics computations,
+structural dynamics, and many other purposes; see \cite{moczoetal:06} for an
+excellent overview and many older references. Other classes of finite
+difference approximations are also used in many of the same applications
+\cite[]{Cohen:01,moczoetal:06,Petersson:2010,Petersson:2016}, as are finite element 
+(spectral element, continuous and discontinous Galerkin) methods 
+\cite[]{KomTromp:00,Cohen:01,Ghattas:IP25}. Results similar to those
+reported here may hold for some of these approaches, however we do not
+address this question here.
+
+Staggered grid finite difference approximations $(u^n_h,v^{n+1/2}_h)$
+to a solution  $(u,v)$ of
+\ref{eq:hyper_fam} depend on the spatial grid cell size $h>0$ and the
+time step $\Delta t>0$: $u^n_h$ approximates $u(\cdot,n\Delta t)$,
+$v^{n+1/2}_h$ approximates $u(\cdot,(n+1/2)\Delta t)$. A sufficient
+condition for consistent staggered grid schemes to produce convergent
+approximations to 
+smooth solutions of systems \ref{eq:hyper_fam} takes
+the form of a {\em Courant-Friedrichs-Levy stability condition}, that is, a bound on
+$\Delta t/h$, depending on the coefficient matrices $A,B$. In order to
+express the error asymptotics of these schemes in a convenient way, we
+will assume that $\Delta t$ is a function of $h$, obeying the
+stability condition. 
+
+As pointed out earlier, point-wise convergence to singular solutions
+cannot be expected, as the truncation error analysis on which it is
+based makes no sense in the singular case. Instead, we turn to {\em
+  weak} approximation: the approximate
+solution $(u^n_h,v^{n+1/2}_h)$ converges weakly to continuum fields $(u,v)$ iff
+arbitrary positively weighted averages of $(u^n_h,v^{n+1/2}_h)$
+converge to the same weighted averages of
+samplings of $(u,v)$ on the space-time $(h,\Delta t)$ grid, as $h,
+\Delta t \rightarrow 0$ subject to the stability condition. 
+The averaging weights are smooth functions of position (or position and time)
+independent of grid, sampled at grid-points to create discrete weight functions.
+Precise definitions are supplied below. 
+
+Our main result is that staggered grid approximations
+$(u^n_h,v^{n+1/2}_h)$ 
+converges weakly to a solution of \ref{eq:hyper_fam} with multipole right-hand side $(f,g)$, provided that the
+finite-difference representation of the right-hand side
+satisfies certain {\em discrete moment conditions}
+\cite[]{Walden:1999,TorEng:04}, expressing accuracy of the 
+right-hand side
+approximation in a weak sense. ``Singular'' is used in
+this paper as a synonym for {\em non-smooth distribution}, that is,
+continuous linear functional on various topological vector spaces of
+smooth functions, not representable by integration against a smooth kernel. For example, the right-hand side of the isotropic
+radiator problem \ref{eq:isorad} defines a continuous linear
+functional on the space of continuous functions with the sup norm. The
+moment conditions used in this work simply specify that the numerical
+approximations (linear combinations of grid values, with coefficients
+depending on the grid diameter $h$) give the {\em same} result as the distribution being
+approximated on polynomials with degree less than a bound depending on
+the dimension $d$, the nature of the distribution (right-hand
+side). This degree bound must be at least the {\em multipole order}
+$N$, the highest derivative appearing in the definition
+\ref{eq:MPSappx}. Express the degree bound as $N+q$, $q \ge 0$: we
+call $q$ the {\em approximation order} of the discrete multipole representation.
+
+The weak error asymptotics of a staggered grid scheme applied to a
+problem with multipole right-hand side, using a discrete multipole
+representation satisfying a discrete moment condition, depend on the
+quantities introduced in the preceding paragraph, and on the error
+asymptotics of the staggered grid scheme for smooth solutions. The
+schemes we shall investigate produce approximations with error $O(\Delta t(h)^2 + h^p)$
+(abbreviated as order $(2,p)$) to smooth solutions of systems \ref{eq:hyper_fam}.
+%We give explicit rates of convergence, depending on on singular source
+%approximation order $q$, spatial order $p$ for a staggered-grid
+%finite difference scheme of with truncation error $O(\Delta t(h)^2,h^{p})$, the maximum multipole
+%order between $f$ and $g$ denoted by $N^*$, and spatial dimension $d$.
+%include explicitly the error bounds here
+For spatial dimension $d$, multipole right-hand sides $(f,g)$  in
+\ref{eq:hyper_fam}  of order $N$, discrete multipole
+representation of approximation order $q$, and staggered grid scheme
+of order $(2,p)$, we show that the error of averages with smooth averaging
+functions $\tilde f, \tilde g$ satisfies the estimate
+\begin{equation}
+\label{eq:intro_weak_est}
+\begin{split}
+	\left| \int_0^T  \Big\{ \langle u,\tilde f\rangle + \langle v,\tilde g\rangle \Big\} dt -
+		\Delta t \sum_{n=0}^N \Big\{ \langle u_h^{n}, \tilde f_h^{n} \rangle +
+						 	   \langle v_h^{n+1/2}, \tilde g_h^{n+1/2}  \rangle \Big\} \right|\\
+	= O(\Delta t(h)^2 + h^q + (\Delta t(h)^2+h^{p})h^{-N-d/2}).
+\end{split}
+\end{equation}
+(Theorem \ref{thm:conv}). As discussed in the subsection on weak
+convergence, staggered grid schemes typically involve multiple grids
+with diameter $h$. In the estimate \ref{eq:intro_weak_est},
+$\tilde{f}_h^{n}$ represents the samples on the grid(s) of diameter
+$h$ of the smooth function $\bx \mapsto \tilde{f}(\bx,n\Delta t)$, and
+similarly for $g$. Thus left-hand side of \ref{eq:intro_weak_est}
+compares continuum ($L^2$) and discrete (weighted $l^2$) inner
+products, the latter being the result of quadrature rules applied to
+the former.
+
+Note the implications of this estimate: to assure an error tending to
+zero like $O(h^m)$, it is sufficient to require that $\Delta t(h) = O(h^{p/2})$, $q
+\ge m$, $p \ge m +N+d/2$. These appear to be very stringent
+requirements, compared to those for point-wise convergence to smooth solutions: for example for $N=0$ (that is, isotropic point source),
+to achieve $m=2$ it is required that $q \ge 2$, $p \ge 2+d/2$ and $\Delta t(h) =
+O(h^{1+d/4})$. In remarks after the proof of Theorem \ref{thm:conv},
+we point out that if staggered grid approximations to {\em smooth} solutions can be shown to obey certain
+$L^{\infty}$ estimates, as opposed to the $L^2$ estimates used here,
+then the $h^{d/2}$ factor drops out of the right-hand side of the
+estimate \ref{eq:intro_weak_est}, and the error asymptotics would
+become optimal, that is, the same as those for smooth solutions. We
+conjecture that such sup norm estimates for convergence of averages
+hold, as our numerical results suggest, but their proof is beyond the
+scope of this paper.
+
+We assume throughout that the time-independent
+coefficient matrices $A,B$ in the system \ref{eq:hyper_fam} are
+smooth ($C^{\infty}$) in their dependence on the space variables. It
+is certainly possible to extend some of these results to larger
+classes of coefficients defined by weaker regularity
+conditions - indeed, the weak solutions for systems of
+the form \ref{eq:hyper_fam} exist if $A, B$ and their inverses are
+uniformly bounded and measurable functions of the space variables
+\cite[]{BlazekStolkSymes:13}. However the extent to which (and sense
+in which) convergence
+of finite difference methods might be established with such weak
+regularity assumptions is an open question, beyond the scope of this work.
+
+We analyze the approximation of waves in unbounded material models:
+the spatial domain of wave propagation is the entire space $\bR^d$. We
+consider only initial and right-hand side data of compact support in
+space, so that the solutions of the wave propagation systems also have
+compact support in space, for each time. Extension of our results to
+settings in which waves have nontrivial interaction with boundaries is
+possible in some cases, notably when the boundary conditions are
+conservative or energy-dissipative. However we do not explicitly
+formulate such generalizations, nor do we have anything to say about
+sources located on physical boundaries. An effective extension to free
+surface modeling in elasticity, for instance, is constrained by the
+lack of conservative boundary conditions of order higher than
+two. These are topics for further research.
+
+We should note that numerical tests presented in the last section of
+the paper suggest that, in the case of smooth coefficients, the actual 
+quality of finite difference approximate solutions is better than our 
+convergence result (or even the hypothetical ``optimal'') result
+mentioned above) indicates: in some cases, away from the source 
+point, we observe point-wise (strong) convergence with optimal 
+order. We will mention this phenomenon again in the discussion 
+section. The convergence behaviour suggested by the numerical examples 
+is local, in regions bounded away from the source point. The 
+convergence result proved here, on the other hand, is global.
+
+We begin this paper with a review of the (rather sparse) prior work on
+finite-difference approximation of linear partial differential 
+equations with singular right-hand sides, emphasizing results for 
+hyperbolic problems. Then we give a detailed discussion of the moment conditions which form the {\em a priori} conditions for accuracy of 
+source approximations. We then explain the convergence theory, based 
+on energy estimates, for hyperbolic systems with singular right-hand 
+sides. We introduce linear acoustics as an example. We have performed 
+a number of numerical experiments that illustrate the results of the 
+theory - we present these next. We conclude with a discussion of
+matters not addressed in the body of this paper, and a summary of the 
+results. 
+
+%Numerical results presented here, consistent with other similar works (e.g., \cite{Petersson:2010}), appear to %indicate, however, stronger convergence results: optimal convergence point-wise away from source.
+%In particular, we report second and fourth order rates when studying the spatial convergence of 2-2 and 2-4 %finite difference methods respectively, where the source approximation order matched the spatial order of th%e numerical scheme.
+
+%Though numerical results, both reported in other works (e.g., \cite{Petersson:2010}) and in this paper, demonstrate stronger results, mainly optimal convergence point-wise away from source, a weak convergence error estimate is an appropriate first step towards a complete theory. 
+
+
+%There are, of course, many ways to discretize/regularize singularities.
+%However, we are primarily concerned with direct discretization of the Dirac delta function and its derivatives through the use of discrete moment conditions, as done by \cite{Walden:1999} in a finite difference and finite element setting for source terms in the 1-D Helmholtz equation.
+%His analysis and numerical examples, though limited to his particular problem, demonstrated point-wise convergence of numerical solutions with optimal convergence rates (as suggested by the numerical scheme) away from the source location when appropriately discretizing the singular source term.
+
+\subsection{Literature Review} 
+
+The analysis and numerical examples presented by \cite{Walden:1999}, though limited to the 1-D Helmholtz equation, demonstrated point-wise convergence of numerical solutions with optimal convergence rates (as suggested by the numerical scheme) away from the source location when appropriately discretizing the singular source term.
+The theory of singular source approximations has been further extended to a range of applications, most notably for the Dirac delta function in the context of the {\em immersed boundary method} \citep{Pes:02}. 
+Several authors have addressed questions regarding the convergence of source approximations and subsequently their effect on solutions to more complicated differential equations.
+Consider the following abstract problem: find $u$ such that
+\begin{equation}\label{eq:pde}
+	\mathcal L u = f,
+\end{equation}
+in which $\mathcal L$ is a differential operator and the right-hand
+side $f$ may be singular.
+Define the regularization of problem \ref{eq:pde} by replacing $f$ with some regular (at least piecewise continuous) function $f^\epsilon$ parameterized by regularization parameter $\epsilon>0$, that is, find $u^\epsilon$ such that
+\begin{equation}\label{eq:pde_reg}
+	\mathcal L u^\epsilon = f^{\epsilon}.
+\end{equation}
+Regularized source term $f^\epsilon$ is said to approximate $f$ in that $f^\epsilon \to f$ as $\epsilon \to 0$ in some sense.
+The end goal is of course to have $u^\epsilon$ approximate the continuum solution $u$, i.e.,
+\[
+	\lim_{\epsilon\to 0}\|u^\epsilon-u\|_X = 0
+\]
+under some suitable norm $\|\cdot\|_X$.
+
+\cite{TorEng:03} have studied the regularization error $\|u^\epsilon - u\|_X$, point-wise away from the source location.
+Their analysis is based on a simple ODE case where they prove convergence of regularized solutions $u^\epsilon$ if $f^{\epsilon}$ satisfy what we call the {\em continuum moment conditions}. 
+We use the qualifier ``continuum'' to differentiate at times between the discrete moment conditions.
+Recent work by \cite{hoss:16} addresses the mode of convergence of $f^\epsilon\to f$ subject to regularized source terms satisfying the continuum moment conditions, mainly convergence in a weak-$*$ topology (distribution sense) and in a weighted Sobelev norm.
+Both \cite{TorEng:03} and \cite{hoss:16} argue that $f^{\epsilon}\to f$ implies $u^\epsilon\to u$ as $\epsilon \to 0$, point-wise away from the source location, in particular for elliptic operators $\mathcal L$. 
+This argument hinges on the integral representation of elliptic operators and the smoothness of their kernel (i.e., Green's functions) away from source location.
+
+Suppose that the regularized problem \ref{eq:pde_reg} is discretized, with mesh or cell size $h>0$;
+\begin{equation}\label{eq:pde_disc}
+	\mathcal L_h u^{\epsilon}_h = f^{\epsilon}_h.
+\end{equation}
+In the context of finite difference methods $\mathcal L_h$ is the finite difference approximation of differential operator $\mathcal L$.
+The discrete source term $f^\epsilon_h$ can be interpreted as the discretization 
+(e.g., sampling over grid points) of the regularized source term $f^\epsilon$  generated by the continuum moment conditions, or as the direct discretization of $f$ through the discrete moment conditions.
+In practice the regularization parameter $\epsilon$ is related to the discretization parameter $h$, that is, $\epsilon = \epsilon(h)$ such that
+\[
+	\lim_{h\to 0} \epsilon(h) = 0.
+\]
+\cite{TorEng:04} provided insight into the convergence of $f^\epsilon_h$ as $h\to 0$ for direct discretizations of $f$ via the discrete moment conditions, in particular for discretizations whose support is proportional to $\epsilon$ and $\epsilon(h) = O(h)$.
+Consistent with results by \cite{Walden:1999}, \cite{TorEng:04} demonstrated the convergence of numerical solutions $u^\epsilon_h$ for problem \ref{eq:pde_disc}, in particular
+\[
+	\| u^\epsilon_h - u\|_X = O(h^p)
+\]
+where $p$ is the convergence rate of the numerical scheme and $f^{\epsilon}_h$ satisfies a sufficient number of moment conditions. 
+The norm $\|\cdot\|_X$ in this case coincides with the sup-norm with a deleted neighborhood containing the source location.
+Theory presented by \cite{TorEng:04} is based on analysis of the 1-D Poisson equation discretized by second- and fourth-order finite difference approximations.%, in particular, studying the numerical Green's functions.
+
+Green's functions for hyperbolic problems are singular at the wavefront they propagate as well as at the source location, thus the analysis of \cite{TorEng:04} does not apply.
+\cite{Petersson:2016} studied a finite difference approximations to various
+advection systems, and to the linear acoustodynamics, with singular
+source terms. based on centered difference approximations and accurate
+Runge-Kutta time differentiation. An plane wave analysis revealed that
+both moment conditions of the type discussed here, and additional {\em smoothness}
+constraints on the source representation
+They show that the discrete moment conditions are necessary but not sufficient for the convergence of numerical solutions at optimal rates away from the source location.
+They demonstrated that {\emph smoothness constraints} on the numerical
+solution are also required to achieve convergence, due to the presence
+of spurious modes injected by the singular source approximation. 
+%The main result of \cite{Petersson:2016} is however suboptimal, in that
+%\[
+%	\|u^\epsilon_h - u\|_2 \le Ch^{p-\frac{1}{2m}}
+%\]
+%where $p$ is the order of the finite difference scheme and the number of moment and smoothness conditions satisfied by the source discretization, and integer $m$ is related to the regularity of the time-dependent component of the singular source term.
+
+%%%
+%Our main contribution is a weak convergence theory of
+% $u^\epsilon_h\to u$ that is, unlike current convergence analysis
+% that is limited by its particular application, applicable to a large
+% set of symmetric hyperbolic problems solved via staggered grid
+% finite difference methods.
+%%Though numerical results, both reported in other works and in this
+%% paper, demonstrate stronger results, mainly point-wise convergence
+%% away from source, we believe a weak convergence error estimate is
+%% an appropriate first step towards a complete theory.
+%The remainder of the paper is organized as follows: In the theory
+% section we begin by presenting an overview of the singular source
+% approximation method via continuum and discrete moment conditions.
+% perhaps include regularity error estimates for 3-D acoustics? We
+% focus primarily on source approximations of narrow support, as
+% discussed in \cite{TorEng:04}, though we provide explicit formulas
+% for approximations of arbitrary order. Moreover, we show that the
+% discrete moment conditions in fact define a sequence of continuum
+% functions that converge to target distributions in a weak sense, a
+% new result. The theory section also covers known convergence results
+% of staggered-grid finite difference methods via energy estimates,
+% applied to our set of differential equations under smooth
+% coefficients and smooth source terms. At this point we present our
+% weak convergence theory. The last section covers numerical results,
+% mainly for staggered-grid finite difference solutions to the 2-D
+% acoustic equations in first-order form with multipole
+% sources. Consistent with numerical results presented in the
+% literature (see for example \cite{Petersson:2010}), we observe
+% optimal convergence rates of our numerical solutions when the source
+% discretization satisfied the proper number of moment conditions.
+
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Theory}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The weak convergence theory of finite difference solutions to hyperbolic
+systems with multipole sources rests on two foundations: (i) the
+analysis of weak convergence conditions for gridded approximations to
+point support distributions, and (ii) the convergence theory for
+smooth solutions with smooth right-hand sides. The next two
+subsections develop these foundations.
+
+%%%%
+\subsection{Singular Source Approximation}
+%%%%
+
+
+
+%%%%%%%
+\subsubsection{(Continuum) Moment Conditions}
+%%%%%%%
+
+%
+
+Let $\mathcal D$ denote the {\em space of test functions} over $\mathbf R^d$, that is, the space of $C^\infty_0(\mathbf R^d)$ endowed with the standard topology of test functions.
+The set of \emph{distributions} is the topological dual of the space
+of test functions, and is commonly denoted by $\mathcal D'$.
+It is conventional to represent the application of a distribution on a function by the integral of the product, even when the distribution is not actually a function that can be integrated in the usual sense.
+For example, given multi-index $\mathbf s=(s_1,...,s_d)$, the $\mathbf s$-mixed partial derivative of the Dirac delta function, shifted by $\mathbf x^*\in\mathbf R^d$, is defined by
+\[
+	\int_{\mathbf R^d} D^{\mathbf s} \delta(\mathbf x-\mathbf x^*) \; \psi(\mathbf x)\; d\mathbf x =
+	(-1)^{|\mathbf s|} D^{\mathbf s} \psi(\mathbf x^*), \quad \forall \psi \in\mathcal D.
+\]
+%The distribution $D^{\mathbf s}\delta(\cdot;\mathbf 0)$ is simply denoted by $D^{\mathbf s}\delta$.
+%In the remainder of the paper we focus on deriving the approximation theory for $\mathbf x^*=\mathbf 0$ (assuming $\mathbf 0\in\Omega$) since the general case follows by simply shifting the approximation accordingly.
+
+%
+The key idea for constructing approximations to $D^{\bf s}\delta(\mathbf x-\mathbf x^*)$ is based on mimicking the behavior of the target distribution on polynomials, reminiscent of finite difference approximations for differential operators.
+Consider $\psi(\mathbf x) = (\mathbf x - \mathbf x^*)^{\alpha}$, with multi-index $\alpha=(\alpha_1,...,\alpha_d)$, where multi-indexed monomials are interpreted as the product of monomials in each dimension,
+\[
+       {\bf x}^{\alpha} = \prod_{k=1}^d x_k^{\alpha_k}.
+\] 
+It can be shown that
+\[
+	\int_{\mathbf R^d} D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)\; \psi(\mathbf x) \; d\mathbf x = \mathbf s! (-1)^{|\mathbf s|} \delta_{\mathbf s \alpha}
+\]
+where $\delta_{\mathbf s \alpha}$ is the Kronecker delta, defined as follows for multi-indexes,
+\[
+	\delta_{\mathbf s \alpha} := \prod_{k=1}^d \delta_{s_k \alpha_k}.
+\]
+
+%
+Given $\eta\in L^1_0(\mathbf R^d)$ (i.e., integrable function of compact support) and multi-index $\alpha$, the {\em $\alpha$-moment} of $\eta$ centered at $\mathbf x^*\in\mathbf R^d$, denoted by $M^\alpha(\cdot,\mathbf x^*)$, is defined as
+%definition of moment
+\begin{equation}\label{eq:def_mom}
+	M^\alpha(\eta,\mathbf x^*) := \int_{\mathbf R^d} \eta(\mathbf x) \; (\mathbf x-\mathbf x^*)^{\alpha} \; d\mathbf x.
+\end{equation}
+%Note that integration in equation \ref{eq:def_mom} is translation invariant hence $M_{\alpha}(\eta,\mathbf x^*)$ is constant with respect to $\mathbf x^*$, which I denote by $M_{\alpha}(\eta)$.
+For given nonnegative integer $q$ and multi-index $\mathbf s$, the function $\eta$ is said to satisfy the {\em continuum $(q,\mathbf s)$-moment conditions} at $\mathbf x^*\in \mathbf R^d$ if
+%definition of moment conditions
+\begin{equation}\label{eq:momcond}
+	M^\alpha(\eta,\mathbf x^*) = \mathbf s! (-1)^{|\mathbf s|} \delta_{\mathbf s \alpha}, \quad \forall |\alpha|=0,...,q+|\mathbf s|-1.
+\end{equation}
+
+If $\eta$ satisfies the $(q,\mathbf s)$-moment conditions at $\mathbf x^*$, then its associated distribution, that is
+\[
+	\int_{\mathbf R^d} \eta(\mathbf x) \; \psi(\mathbf x)\; d\mathbf x, \quad \forall \psi\in\mathcal D,
+\]	
+is an approximation to $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ in that it is exact on polynomials of order $q+|\mathbf s|-1$.
+
+The following theorem states that a sequence of (regular) distributions of compact support, satisfying the $(q,\mathbf s)$-moment conditions, will converge in the weak-$*$ topology at a rate $q$ to the target distribution as the width of the supports approach zero. 
+Let $B(\mathbf x^*,\epsilon)$ denote the $d$-dimensional ball of radius $\epsilon$ centered at $\mathbf x^*$.
+
+%theorem weak convergence of approximations to distribution
+\begin{theorem}\label{thm:weakconv}
+	Let nonnegative integer $q$, multi-index $\mathbf s$, and $\mathbf x^*\in\mathbf R^d$ be given.
+	Suppose $\{\eta^\epsilon\}\subset L^1_{0}(\mathbf R^d)$ is a sequence of functions as $\epsilon\to 0$, where $supp(\eta^\epsilon)\subset B(\mathbf x^*,\epsilon)$.
+	Furthermore, suppose that there exists a constant $K>0$ independent of $\epsilon$ such that 
+	\begin{equation}\label{eq:boundH}
+		\int_{\mathbf R^d} |\eta^\epsilon(\mathbf x)|\; |(\mathbf x-\mathbf x^*)^{\alpha}| \; d\mathbf x \le K, \quad \forall |\alpha| = |\mathbf s|.
+	\end{equation}
+	If $\{\eta^\epsilon\}$ satisfy the $(q,\mathbf s)$-moment conditions at $\mathbf x^*$, equation \ref{eq:momcond}, then the sequence of distribution they generate converges to $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ in the weak-$*$ topology as $\epsilon\to 0$.
+	In particular, if $\psi$ is of class $C^{q+|\mathbf s|}$ over $B(\mathbf x^*,\epsilon)$, then
+	\begin{equation}\label{eq:delta_error}
+		E:= \left| \int_{\mathbf R^d} D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)\;\psi(\mathbf x) \; d\mathbf x\; - 
+		\int_{\mathbf R^d} \eta^\epsilon(\mathbf x) \; \psi(\mathbf x)\; d\mathbf x \right| = O(\epsilon^q).
+	\end{equation}
+\end{theorem}
+
+%PROOF
+\begin{proof}
+We first apply multi-variate Taylor's theorem to $\psi$, centered at $\mathbf x^*$ and truncated after $N=q+|\mathbf s|-1$ terms \cite[]{konigsberger2013}, assuming $\psi$ is $C^{q+|\mathbf s|}$ over $B(\mathbf x^*,\epsilon)$,
+\begin{align*} 
+	\int_{\mathbf R^d} \eta^\epsilon (\mathbf x) \; \psi(\mathbf x) \; d\mathbf x
+	&= \int_{\mathbf R^d} \eta^\epsilon(\mathbf x) \left( \sum_{|\alpha|=0}^{N} \frac{D^{\alpha} \psi(\mathbf x^*)}{\alpha!} \; (\mathbf x - \mathbf x^*)^\alpha 
+	+ \sum_{|\beta|=N+1}R_{\beta}(\mathbf x) \; (\mathbf x - \mathbf x^*)^\beta \right)
+	d\mathbf x \\
+	&= \sum_{|\alpha|=0}^N \frac{D^{\alpha}\psi(\mathbf x^*)}{\alpha!}  \left( \int_{\mathbf R^d}  \eta^\epsilon(\mathbf x) \; (\mathbf x -\mathbf x^*)^\alpha \;d\mathbf x\right) 
+	+  \sum_{|\beta|=N+1} \int_{\mathbf R^d} \eta^{\epsilon}(\mathbf x) R_{\beta}(\mathbf x) \; (\mathbf x-\mathbf x^*)^\beta \; d\mathbf x,
+\end{align*}
+where $R_{\beta}$ is the remainder term,
+\[
+	R_\beta(\mathbf x) = \frac{|\beta|}{\beta!} \int_{0}^1 (1-t)^{|\beta|-1} D^\beta \psi(\mathbf x^* + t(\mathbf x-\mathbf x^*)) \; dt.
+\]
+Note that the term in the parenthesis in the bottom equation corresponds to the $\alpha$-moment centered at $\mathbf x^*$ with $|\alpha|\le q+|\mathbf s|-1$, hence the ($q,\mathbf s$)-moment conditions apply;
+\begin{align*}
+	\int_{\mathbf R^d} \eta^\epsilon(\mathbf x) \; \psi(\mathbf x)\;d\mathbf x
+	&= \sum_{|\alpha|=0}^{N} \frac{1}{\alpha!} D^{\alpha}\psi(\mathbf x^*) \Big( \mathbf s! (-1)^{|\mathbf s|}\delta_{\mathbf s \alpha} \Big) 
+	+  \sum_{|\beta|=N+1} \int_{\mathbf R^d} \eta^\epsilon(\mathbf x) R_{\beta}(\mathbf x)\; (\mathbf x-\mathbf x^*)^\beta \; d\mathbf x\\
+	&= (-1)^{|\mathbf s|}D^{\mathbf s} \psi(\mathbf x^*) 
+	+  \sum_{|\beta|=N+1} \int_{\mathbf R^d} \eta^\epsilon (\mathbf x) R_{\beta}(\mathbf x) \; (\mathbf x-\mathbf x^*)^\beta \; d\mathbf x.
+\end{align*}
+
+The remainder term is bounded uniformly over $B(\mathbf x^*,\epsilon)$,
+\[
+	\underset{\mathbf x\in B(\mathbf x^*,\epsilon)}{\sup} |R_\beta(\mathbf x)| \le C(\beta,\psi) := \frac{1}{\beta!} \max_{|\alpha|=|\beta|} \; \max_{\mathbf y\in B(\mathbf x^*,\epsilon)} |D^{\alpha}\psi(\mathbf y)|,
+\]
+using the fact that $\psi\in C^{N+1}$ in $B(\mathbf x^*,\epsilon)$.
+This gives the following error estimate,
+\begin{align*}
+	 E
+	 & \le \sum_{|\beta|=N+1} C(\beta,\psi) \int_{B(\mathbf x^*,\epsilon)} 
+	  |\eta^\epsilon(\mathbf x)| \; |(\mathbf x-\mathbf x^*)^\beta| \; d\mathbf x.
+\end{align*}
+Let $\gamma$ be a multi-index such that $|\gamma|=q$, thus $|\beta-\gamma| = |\mathbf s|$.
+This yields,
+\begin{align*}
+	E
+	&\le \sum_{|\beta|=N+1} C(\beta,\psi) \left( \sup_{\mathbf x\in B(\mathbf x^*,\epsilon)} \left|(\mathbf x-\mathbf x^*)^{\gamma}\right|\right) 
+	\int_{B(\mathbf x^*,\epsilon)} |\eta^\epsilon(\mathbf x)| \; |(\mathbf x-\mathbf x^*)^{\beta-\gamma}| \; d\mathbf x \\
+	&\le \sum_{|\beta|=N+1} C(\beta,\psi) \left( \sup_{\mathbf x\in B(\mathbf x^*,\epsilon)} \left|(\mathbf x-\mathbf x^*)^{\gamma}\right|\right)  K\\
+	&= O(\epsilon^q)
+\end{align*}
+\end{proof}
+%END PROOF
+
+Theorem \ref{thm:weakconv} and moment conditions given in equation \ref{eq:momcond} are extensions of what is presented in \cite{hoss:16} for $|{\bf s}|\neq0$.
+Given equation \ref{eq:delta_error}, we refer to $q$ as the \emph{singular source approximation order} and $\eta^\epsilon$ as being a $q$-order approximation of $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$.
+
+
+%%%%%%%
+\subsubsection{Discrete Moment Conditions}
+%%%%%%%
+
+Define the regular grid family $\mathcal G_h(\mathbf x_0,\mathbf l)$
+with mesh or scale $h$, offset $\bx_0 \in
+\bR^d$ and cell given by ${\bf l} \in \bR_+^d$, namely $\{\bx \in
+\bR^d: 0 \le x_i\le l_k\}$:
+\[
+	\mathcal G_h(\mathbf x_0,\mathbf l) = \{\bx_{\bf n} =
+        h((x_0)_1+n_1l_1,...,(x_0)_d+n_dl_d), {\bf n} \in {\bf Z}^d\}
+\]
+We will sometimes refer to the scaled cell side lengths $h_k=hl_k,k=1,...,d$.
+%The dependence of real-valued grid functions with respect to a given regular grid $\mathcal G_h(\mathbf x_0,\mathbf h)$, say $\eta^h: \mathcal G(\mathbf x_0,\mathbf h)\to \mathbf R$, is made implicit through the use of multi-indexing notation.
+%For example, given $\mathbf x_{\mathbf n}\in \mathcal G(\mathbf x_0,\mathbf h)$ for some multi-index $\mathbf n=(n_1,...,n_d)$,
+%\[
+%	\eta^h_{\mathbf n}= \eta^h(\mathbf x_{\mathbf n}).
+%\]
+Note that there is no reason to assume that the grid cell is cubical: it may have different lengths along different axes.
+
+The obvious definition of the \emph{discrete $\alpha$-moment}, centered at $\mathbf x^*\in\mathbf R^d$ (note that $\mathbf x^*$ need not coincide with a grid point in $\mathcal G_h(\mathbf x_0,\mathbf l)$), of a grid function $\eta_h:\mathcal G_h(\mathbf x_0,\mathbf l)\to \mathbf R$ is given as follows: 
+\begin{equation*}\label{eq:def_discmom}
+        M_h^\alpha(\eta_h,\mathbf x^*) := \left(\prod_{k=1}^{d} h_k \right) \sum_{\mathbf x\in\mathcal G_h(\mathbf x_0,\mathbf l)}  \eta_h(\mathbf x)\; ({\bf x}-{\bf x}^*)^{\alpha}.
+\end{equation*}
+It is worth pointing out that the discrete moment defined above is dependent on choice of grid, in particular dependent on the source location $\mathbf x^*$ relative to the grid.
+Similar to the continuum moment conditions (equation \ref{eq:momcond}), grid function $\eta_h$ is said to satisfy the \emph{discrete $(q,\mathbf s)$-moment conditions} at $\mathbf x^*\in\mathbf R^d$ if
+\begin{equation}\label{eq:discmomcond}
+	M_h^\alpha(\eta_h,\mathbf x^*) = \mathbf s! (-1)^{|\mathbf s|} \delta_{\mathbf s \alpha}, \quad \forall |\alpha|=0,...,q+|\mathbf s|-1.
+\end{equation}
+The following theorem is a discrete analogue of theorem \ref{thm:weakconv}.
+%the discrete $(q,\mathbf s)$-moment conditions imply convergence of gridded functions $\{S^h\}$ as the characteristic grid size $h$ is refined, assuming the support of $S^h$ is proportional to $h$, in a ``discrete'' weak-$*$ topology.
+%theorem discrete weak convergence for approximations to distribution
+
+\begin{theorem}\label{thm:discweakconv}
+Let nonnegative integer $q$, multi-index $\mathbf s$, and $\mathbf x^*\in\mathbf R^d$ be given.
+Suppose $\{\eta_h^\epsilon\}$ is a sequence of grid functions $\eta_h^\epsilon:\mathcal G_h(\mathbf x_0,\mathbf l)\to\mathbf R$ as $\epsilon\to 0$.
+Furthermore, assume that the support of $\eta_h^\epsilon$ is contained in $B(\mathbf x^*,\epsilon)$ with $\epsilon=O(h)$, and that there exists constant $K>0$ independent of $\epsilon$ such that
+\begin{equation*}\label{eq:boundh}
+	\left(\prod_{k=1}^d h_k \right) \sum_{\mathbf x\in\mathcal G_h(\mathbf x_0,\mathbf l)} |\eta_h^\epsilon(\mathbf x)|\; |(\mathbf x-\mathbf x^*)^{\alpha}| \le K, \quad \forall |\alpha| = |\mathbf s|.
+\end{equation*}
+If $\{\eta_h^\epsilon\}$ satisfy the discrete $(q,\mathbf s)$-moment conditions at $\mathbf x^*$ (equation \ref{eq:discmomcond}) and $\psi$ is of class $C^{q+|\mathbf s|}$ over $B(\mathbf x^*,\epsilon)$, then 
+\[
+	\left| \int_{\mathbf R^d} D^{\mathbf s}\delta(\mathbf x- \mathbf x^*) \;\psi(\mathbf x)\; d\mathbf x - \left(\prod_{k=1}^d h_k\right) \sum_{\mathbf x\in\mathcal G_h(\mathbf x_0,\mathbf l)}\eta_h^\epsilon (\mathbf x) \; \psi(\mathbf x)\right| = O(h^q).
+\]
+\end{theorem}
+
+%%
+\begin{proof}
+The proof of this theorem is omitted since it is nearly identical to that of the continuum case (theorem \ref{thm:weakconv}), replacing integrals with summations over grid points.
+The jump from $O(\epsilon^q)$ to $O(h^q)$ follows from $\epsilon=O(h)$.
+\end{proof}
+
+Theorem \ref{thm:discweakconv} and discrete moment conditions \ref{eq:discmomcond} are generalizations of work by \cite{TorEng:04} for $|\mathbf s|\neq 0$. 
+The discrete moment conditions are also an extension of \cite{Walden:1999} for dimensions higher than one.
+We now discuss with more detail how to construct said sequences of gridded and continuum functions starting in 1-D.
+
+%%%%
+\subsubsection{1-D Constructions}
+%%%%%
+
+We make the choice of having 1-D gridded approximations be centered around source location $x^*\in\mathbf R$, and define them to be zero outside the interval $[-\epsilon+x^*,\epsilon+x^*)$, with $2\epsilon=Nh$ for some positive integer $N$.
+In other words, there exists $N$ grid points, denoted by $\{\tilde x_\ell\}_{\ell=1}^{N}$, such that they are contained in the interval $[-\epsilon+x^*,\epsilon+x^*)$ for a given grid $\mathcal G_h(x_0,1)$\footnote{We assume $l=1$ for simplicity, since any scaling effects $l$ may have can be incorporated into $h$ in 1-D}.
+These grid points $\{\tilde x_\ell\}_{\ell=1}^N$ are referred to as the \emph{stencil points} of the approximation.
+We assume that the stencil points are ordered, i.e., $\tilde x_1<\tilde x_2<\cdots<\tilde x_{N}$.
+The discrete $(q,s)$-moment conditions thus results in a $N\times(q+s)$ system of equations for the grid function $\eta_h^\epsilon$ evaluated at stencil points,
+\[
+	\mathbf A \mathbf d = \mathbf b
+\]
+with 
+\[
+	\{\mathbf A\}_{k\ell} = (\tilde x_\ell-x^*)^{k-1}, \quad \{\mathbf d\}_{\ell}=\eta_h^\epsilon(\tilde x_\ell), \quad \{\mathbf b\}_{k}= \frac{s! (-1)^s}{h} \delta_{s,k-1},
+\]
+for $\ell=1,...,N$ and $k=1,...,q+s$.
+Note that $\mathbf A$ is a Vandermonde matrix of full rank and is guaranteed a solution if $N\ge q+s$ and no solution for $N<q+s$ under general $x^*\in\mathbf R$.
+%It will be of benefit to pick grid functions of minimal support, that is $N=q+s$; this will be more apparent when coupling source approximations with finite difference schemes.
+
+We choose the case where $N=q+s$, which we refer to as grid functions of narrow support.
+The system above will result in a unique solution for a given $x^*\in\mathbf R$.
+In fact the inverse matrix for $\mathbf A$ can be written explicitly using the following Vandermonde matrix inverse formula:
+%VANDERMONDE INVERSE
+\begin{equation*}\label{eq:vandinv}
+	\{\mathbf A^{-1} \}_{\ell k} = \left\{ \begin{array}{cl}
+		\displaystyle
+		(-1)^{N-k} \; 
+		\frac{
+			\displaystyle
+			\sum_{\underset{m_1,...,m_{N-k}\neq \ell}{1\le m_1<\cdots<m_{N-k}\le N}}
+			 (\tilde x_{m_1}-x^*) \cdots (\tilde x_{m_{N-k}}-x^*)
+		}
+		{
+			\displaystyle
+			\prod_{\underset{m\neq \ell}{1\le m\le N}} (\tilde x_\ell - \tilde x_m)
+		}
+		,& \text{for} \; 1\le k\le N  \vspace{10pt} \\ 
+		\displaystyle
+		\frac{
+			1
+		}
+		{
+			\displaystyle
+			\prod_{\underset{m\neq \ell}{1\le m\le N}} (\tilde x_\ell - \tilde x_m)
+		}
+		,& \text{for}\; k=N.
+	\end{array}\right.
+\end{equation*}
+Given the particular form of right-hand side vector $\mathbf b$, it follows that $\mathbf d$ is simply the scaled $(s+1)$-column of $\mathbf A^{-1}$, whence
+%GRID SOLUTION
+\begin{equation}\label{eq:gridfunsol}
+	\eta_h^\epsilon(\tilde x_\ell) = \left\{ \begin{array}{cl}
+		\displaystyle
+		s! (-1)^{N-1} \; 
+		\frac{
+			\displaystyle
+			\sum_{\underset{m_1,...,m_{q-1}\neq \ell}{1\le m_1<\cdots<m_{q-1}\le N}}
+			 (\tilde x_{m_1}-x^*) \cdots (\tilde x_{m_{q-1}}-x^*)
+		}
+		{
+			\displaystyle
+			h^{N} \prod_{\underset{m\neq \ell}{1\le m\le N}} (\ell - m)
+		}
+		,& \text{for} \; q>1  \vspace{10pt} \\ 
+		\displaystyle
+		\frac{
+			s!(-1)^{s}
+		}
+		{
+			\displaystyle
+			h^N \prod_{\underset{m\neq \ell}{1\le m\le N}} (\ell - m)
+		}
+		,& \text{for}\; q=1.
+	\end{array}\right.
+\end{equation}
+
+Note that the equation above above is dependent on $x^*$.
+To be more precise, approximation $\eta_h^\epsilon$ is actually dependent on the relative position of $x^*$ with respect to the stencil points $\{\tilde x_\ell\}_{\ell=1}^N$, or equivalently dependent on $x_0$ and $h$.
+For example, shifting the source location by $h$ would result in the same grid function $\eta_h^\epsilon$ though shifted by a grid point.
+However, arbitrary shifts in $x^*$ yield approximations that may vary by more than a simple translation.
+%Intuitively enough, the same cannot be said of the continuum case. 
+%In other words, if $\eta(x)$ is a $q$-order approximation of $D^{s}\delta(x)$ then it follows that $\eta(x-x^*)$ is also a $q$-order approximation of $D^{s}\delta(x-x^*)$, for all $x^*\in\mathbf R$.
+Given that equation \ref{eq:gridfunsol} is unique for a particular source location, we show that imposing the discrete moment conditions over all $x^*\in\mathbf R$ indeed defines a function over the reals.
+Moreover, we show that these continuum functions satisfy the continuum moment conditions and thus define a sequence of distributions that converge to $D^{s}\delta$ in the weak-$*$ topology, a result previously not known.
+
+%Equation \ref{eq:gridfunsol} is used to generate gridded functions $\eta^{h_k}$ satisfying the discrete $(q,s_k)$-moment conditions at $x^*_k\in\mathbf R$ on each dimension $k=1,...,d$.
+%Approximations on higher dimension are then constructed by taking the tensor product of the 1-D approximations.
+%Note, however, that in order for theorem \ref{thm:discweakconv} to apply it is required that the multi-variate grid function, that is $\eta^h(\mathbf x) = \eta^{h_1}(x_1) \cdots \eta^{h_d}(x_d)$, satisfy the discrete $(q,\mathbf s)$-moment conditions.
+%Though it may not appear obvious, the proposition below shows that my tensor construction indeed satisfies the appropriate discrete moment conditions.
+%
+%%theorem proving tensor prod appx satisfy discrete moment conditions
+%\begin{theorem}\label{thm:prodmomcond}
+%	Let $q\in\mathbf N$, multi-index $\mathbf s$, and $\mathbf x^*\in\mathbf R^d$ be given. 
+%Suppose $\eta^h:\mathcal G(\mathbf x_0,\mathbf h)\to \mathbf R$ is a multi-variate grid function given by the tensor product of 1-D grid functions $\eta^{h_k}:\mathcal G(x_{0,k},h_k)\to\mathbf R$.
+%If $\eta^{h_k}$ satisfy the discrete $(q,s_k)$-moment conditions at $x^*_k$ for all $k=1,...,d$, then it follows that $\eta^h$ satisfies the discrete $(q,\mathbf s)$-moment conditions at $\mathbf x^*$.
+%\end{theorem}
+%
+%%%
+%\begin{proof}
+%Suppose for each $k=1,...,d$ that $\eta^{h_k}$ satisfies the discrete $(q,s_k)$-moment conditions at $x^*_k$. 
+%Let $\alpha$ be some multi-index with $0\le |\alpha|\le q+|\mathbf s|-1$. 
+%Note that,
+%\[
+%	M^{h}_{\alpha}(S^{h},\mathbf x^*) = \prod_{k=1}^d M^{h_k}_{\alpha_k}(\eta^{h_k},x^*_k).
+%\]
+%Clearly, if $\alpha_k\le q+s_k-1$ for all $k=1,...,d$, then the result follows from the supposition. 
+%Same applies for $\alpha=\mathbf s$.
+%Suppose then, that there exists index $\ell$ such that $\alpha_\ell>q+s_\ell-1$, that is $a_\ell=q+s_\ell -1 +i$ for some $i\in\mathbf N$. Thus,
+%\begin{align*}
+%	& |\alpha| = \sum_{k\neq \ell} \alpha_k + \alpha_\ell = \sum_{k\neq \ell} \alpha_k + q+s_\ell-1+i \le q + |\mathbf s| -1\\
+%\Longrightarrow	&  \sum_{k\neq\ell} \alpha_k + i \le \sum_{k\neq \ell} s_k.
+%\end{align*}
+%which implies that $\alpha_k<s_k$ for at least one $k\neq\ell$;
+%for this particular $k$, it follows that 
+%\[
+%	M^{h_k}_{\alpha_k}(\eta^{h_k},x^*_k) = s_k!(-1)^{s_k} \delta_{s_k \alpha_k} = 0
+%\]
+%since it has been established that $\alpha_k\neq s_k$, i.e., the product over $k$ is zero if $\mathbf s\neq \alpha$.
+%\end{proof}
+%
+%It is important to note that grid functions $\eta^h$ as computed by equation \ref{eq:gridfunsol}, will be dependent on three things:
+%\begin{description}
+%	\item{1.} source location $\mathbf x^*$,
+%	\item{2.} choice of grid $\mathcal G(\mathbf x_0,\mathbf h)$,
+%	\item{3.} and choice of support of $\eta^h$.
+%\end{description}
+%The last point refers to the fact that the center of the support, that is $a^*$, was never specified above; different choices of $a^*$ will result in different grid functions.
+%In practice, however, I will consider only grid functions that are centered at source location $x^*$, as shown in section \ref{sc:examples}.
+
+%%%%%%%%
+%\subsection{Relating Discrete and Continuous Moments Conditions}
+%%%%%%%%
+
+%The discrete $(q,\mathbf s)$-moment conditions, for a given $\mathbf x^*$, yield gridded approximations from an explicit formula (equation \ref{eq:gridfunsol}) assuming that the diameter of the support of the grid function is equal to $(q+s_k)h_k$ in each dimension.
+
+%%%%%%
+\subsubsection{Connection between Continuum and Discrete Moment Conditions}
+
+We first focus on the $x^*=0$ case and define our continuum approximation $\eta^\epsilon$ to be zero outside $[-\epsilon,\epsilon)$, with $2\epsilon=Nh$ for $N=q+s$. 
+Furthermore, we define $\eta^\epsilon$ to be piecewise polynomial over $N$ \hl{intervals}: 
+%ETA
+ \begin{equation}\label{eq:eta}
+ 	\eta^\epsilon(x) = \left\{ \begin{array}{rl}
+		P_\ell(x),& \quad x\in[a_\ell,a_{\ell+1}), \; \text{for}\; \ell=1,...,N\\
+		0,& \quad \text{otherwise}
+	\end{array}\right.
+ \end{equation}
+where $P_\ell$ is some polynomial over the considered interval, and $a_{\ell}=-\epsilon+ (\ell-1)h$ for $\ell=1,...,N+1$.
+Given the support of our approximation, and a regular grid $\mathcal G_h(x_0,1)$, it follows that there are $N$ grid points contained in the interval $[-\epsilon,\epsilon)$, again denoted by $\{\tilde x_\ell\}_{\ell=1}^N$.
+In fact,
+\[
+	\tilde x_\ell \in [a_\ell,a_{\ell+1}), \quad \forall \ell=1,...,N.
+\]
+Let $\ell^*$ be the index such that $0\in[a_{\ell^*},a_{\ell^*+1})$ and define $\zeta\in(0,h]$ by $\zeta=a_{\ell^*+1}-\tilde x_{\ell^*}$.
+Thus, if we vary $x^*$ within the interval $(-\zeta,h-\zeta]$ if follows that
+\[
+	\tilde x_\ell - x^* \in [a_\ell,a_{\ell+1}), \quad \ell=1,...,N.
+\]
+
+
+Let $\eta_h^\epsilon(\cdot;x^*)$ denote the grid function that satisfies the discrete $(q,s)$-moment conditions for a given $x^*\in(-\zeta,h-\zeta]$.
+Then $\eta^\epsilon(\tilde x_\ell - x^*) := \eta_h^\epsilon(\tilde x_\ell; x^*)$  defines $\eta^\epsilon$ over $[a_\ell,a_{\ell+1})$ by allowing $x^*$ to vary over the prescribed interval. 
+Moreover, slightly modifying equation \ref{eq:gridfunsol} as a function of $x=\tilde x_\ell - x^*$ defines the $P_\ell(x)$ polynomials of $\eta^\epsilon$,
+%POLY P_L
+\begin{equation}\label{eq:poly}
+	 P_\ell(x) = \left\{ \begin{array}{cl}
+		\displaystyle
+		s! (-1)^{N-1} \; 
+		\frac{
+			\displaystyle
+			\sum_{\underset{m_1,...,m_{q-1}\neq \ell}{1\le m_1<\cdots<m_{q-1}\le N}}
+			 ( h(m_1- \ell) + x) \cdots ( h(m_{q-1} - \ell) + x)
+		}
+		{
+			\displaystyle
+			h^{N}\prod_{\underset{m\neq \ell}{1\le m\le N}} ( \ell - m)
+		}
+		,& \text{for} \; q>1  \vspace{10pt} \\ 
+		\displaystyle
+		\frac{
+			s! (-1)^{s}
+		}
+		{
+			\displaystyle
+			h^{N} \prod_{\underset{m\neq \ell}{1\le m\le N}} (\ell - m)
+		}
+		,& \text{for}\; q=1.
+	\end{array}\right.
+\end{equation}
+Inspection of equation \ref{eq:poly} reveals that $P_\ell$ is a polynomial of degree $q-1$.
+
+%By construction of our approximations, it follows that $\eta_H(x-x^*)$ satisfies the discrete $(q,s)$-moment conditions at $x^*$ in a manner that is independent of how the grid $\Omega^h$ is centered, or grid origin in other words.
+
+%%%
+\begin{theorem}\label{thm:DCmomcond}
+	Let nonnegative integer $q$, positive integer $s$, and $x^*\in \mathbf R$ be given. 
+	Suppose $\eta^\epsilon$ is constructed according to equations \ref{eq:eta} and \ref{eq:poly} for a given $h>0$.
+	Then it follows that $\eta^\epsilon(x)$ is a $q$-order approximation of $D^s\delta(x)$. 
+\end{theorem}
+
+%%%
+\begin{proof}
+	In order to apply theorem \ref{thm:weakconv} we need to verify that $\eta^\epsilon$ indeed satisfies the (continuum) $(q,s)$-moment conditions at $0$ as well as the estimate given by equation \ref{eq:boundH}.
+	We first evaluate the $\alpha$-moment of $\eta^\epsilon$ for $\alpha=0,...,q+s-1$;
+	\begin{subequations}
+	\begin{align*}
+		M^\alpha(\eta^\epsilon,0) &= \int_{\mathbf R} \eta^\epsilon(x) \;x^\alpha\; dx \\
+			&= \sum_{\ell=1}^N \int_{a_\ell}^{a_{\ell+1}} P_\ell(x) \;x^\alpha \; dx.
+	\end{align*}
+	\end{subequations}
+	Applying the following change of variables, $x= a_\ell + \xi$ with $\xi\in[0,h)$, over each interval yields
+	\begin{subequations}
+	\begin{align*}
+		M^\alpha(\eta^\epsilon,0) &= \sum_{\ell=1}^N \int_{0}^h P_\ell(a_\ell+\xi) (a_\ell+\xi)^\alpha \; d\xi \\
+			&= \int_{0}^h \frac{1}{h} \left[ h \sum_{\ell=1}^N P_\ell(a_\ell+\xi) (a_\ell+\xi)^\alpha \right]\; d\xi.
+	\end{align*}
+	\end{subequations}
+	Note that the term in the bracket coincides with the discrete $\alpha$-moment of $\eta^\epsilon$ with respect to a uniform grid $\mathcal G_h(a_1,1)$ (containing stencil points $\{a_\ell\}_{\ell=1}^{N+1}$) for a source located at $x^*=-\xi$.
+	In other words,
+	\[
+		h \sum_{\ell=1}^N P_\ell(a_\ell+\xi) (a_\ell+\xi)^\alpha = M_h^\alpha(\eta_h^\epsilon,-\xi)
+	\]
+	where $\eta_h^\epsilon:\mathcal G_h(a_1,1)\to \mathbf R$ defined by $\eta_h^\epsilon(x) = \eta^\epsilon(x+\xi)$ satisfies the discrete $(q,s)$-moment conditions at $-\xi$ by construction.
+	We can conclude
+	\begin{align*}
+		M^\alpha(\eta^\epsilon,0) &= \int_{0}^h  \frac{1}{h} \left[ s! (-1)^{s} \delta_{s\alpha}\right]  \; d\xi \\
+		&= s! (-1)^{s} \delta_{s\alpha}.
+	\end{align*}
+	Lastly, since $\eta^\epsilon$ consist of piecewise polynomials of order $q-1$ divided by a factor of $h^N$, where $N=q+s$, and $\epsilon=O(h)$, we have that
+\[
+	\sup_{x\in B(0,\epsilon)} |\eta^\epsilon(x)| = O(\epsilon^{-s-1}).
+\] 
+Thus
+\[
+	\int_{B(0,\epsilon)} dx\; |\eta^\epsilon(x)| \; |x^s| \le \sup_{B(0,\epsilon)} |\eta^\epsilon(x)|  \; \int_{B(0,\epsilon)} dx\; |x^s| = O(1),
+\]
+as required for estimate \ref{eq:boundH}
+
+\end{proof}
+
+
+%%%%%
+\subsubsection{Constructions in Higher Dimensions via Tensor Products}
+%%%%%
+
+We construct approximations in general $d$-dimension by taking tensor products of 1-D approximations, similar to work by \cite{TorEng:04} for $\mathbf s=\mathbf 0$.
+Namely, given approximation order $q$ and multi-index $\mathbf s$, multivariate continuum approximation $\eta:\mathbf R^d\to \mathbf R$ is given by
+\begin{equation}\label{eq:tensor_eta}
+	\eta(\mathbf x) = \prod_{k=1}^{d} \eta^k(x_k) 
+\end{equation}
+where $\eta^k:\mathbf R\to \mathbf R$ is a continuum function over the $k$-th axis as given by equations \ref{eq:eta} and \ref{eq:poly}, satisfying the $(q,s_k)$-moment conditions for each $k=1,...,d$.
+It follows that these tensor approximations are indeed approximations to multipoles in the higher spatial dimension.
+
+\begin{theorem}\label{thm:prodmomcond}
+	Let nonnegative integer $q$, multi-index $\mathbf s$, and $\mathbf x^*\in\mathbf R^d$ be given. 
+Suppose $\eta:\mathbf R^d\to\mathbf R$ is a multi-variate grid function given by the tensor product of 1-D approximations $\eta^{k}:\mathbf R\to\mathbf R$.
+If $\eta^{k}$ satisfy the discrete $(q,s_k)$-moment conditions at $x^*_k$ for each $k=1,...,d$, then it follows that $\eta$ satisfies the discrete $(q,\mathbf s)$-moment conditions at $\mathbf x^*$.
+\end{theorem}
+
+%%
+\begin{proof}
+Suppose for each $k=1,...,d$ that $\eta^{k}$ satisfies the $(q,s_k)$-moment conditions at $x^*_k$. 
+Let $\alpha$ be some multi-index with $|\alpha|\le q+|\mathbf s|-1$. 
+Note that,
+\[
+	M^\alpha(\eta,\mathbf x^*) = \prod_{k=1}^d M^{\alpha_k}(\eta^{k},x^*_k).
+\]
+Clearly, if $\alpha_k\le q+s_k-1$ for all $k=1,...,d$, then the result follows from the supposition. 
+Same applies for $\alpha=\mathbf s$.
+Suppose then, that there exists index $\ell$ such that $\alpha_\ell>q+s_\ell-1$, that is $a_\ell=q+s_\ell -1 +i$ for some $i\in\mathbf N$. Thus,
+\begin{align*}
+	& |\alpha| = \sum_{k\neq \ell} \alpha_k + \alpha_\ell = \sum_{k\neq \ell} \alpha_k + q+s_\ell-1+i \le q + |\mathbf s| -1\\
+\Longrightarrow	&  \sum_{k\neq\ell} \alpha_k + i \le \sum_{k\neq \ell} s_k.
+\end{align*}
+which implies that $\alpha_k<s_k$ for at least one $k\neq\ell$;
+for this particular $k$, it follows that 
+\[
+	M^{\alpha_k}(\eta^{k},x^*_k) = s_k!(-1)^{s_k} \delta_{s_k \alpha_k} = 0
+\]
+since it has been established that $\alpha_k\neq s_k$, i.e., the product over $k$ is zero if $\mathbf s\neq \alpha$.
+\end{proof}
+
+
+%%%%%%%%
+\subsubsection{1-D and 2-D Examples}
+%%%%%%%%
+
+%MOD
+%Numerical convergence rate tests in the following section will employ the singular source approximation discussed here, replacing multipole terms with grid functions to be used in finite difference schemes.
+\hl{Numerical examples in this paper will employ the singular source approximation discussed here, replacing multipole terms with grid functions to be used in finite difference schemes.}
+Equation \ref{eq:gridfunsol} gives an explicit formula for such grid functions, depending on the source location $\mathbf x^*$, multi-index $\mathbf s$, approximation order $q$, and of course the underlying finite difference grid.
+Alternatively, equations \ref{eq:eta} and \ref{eq:poly} define the continuum form of the approximations, where grid functions are obtained by shifting and sampling over the grid.
+The following figures plot 1-D and 2-D continuum approximations $\eta^\epsilon$,
+in particular, we plot second- and fourth-order approximations of 
+%MOD
+$D^s\delta(\mathbf x)$ for $s=0,1,2$ in 1-D \hl{(figure 1)} and $\mathbf s=(0,0),(0,1),(0,2)$ in 2-D \hl{(figure 2)}, with $h=1$.
+Two dimensional approximations are constructed via tensor product of 1-D approximations as discussed.
+In particular, the $q=2$ approximation for the 1-D Dirac delta function $(s=0)$ is none other than the well known hat/triangular function of unit mass.
+
+
+%%%%%%%%%
+\subsection{Convergence of finite difference approximations to smooth solutions}
+%%%%%%%%%
+
+%We prove weak convergence of finite difference solutions with discrete multipole
+%sources satisfying the discrete moment conditions discussed above. 
+%Convergence theory for smooth solutions is in some sense standard. 
+%However 
+%The easily available results (those based on Lax's Equivalence Theorem) 
+%pertain to $L^2$ convergence for smooth solutions and smooth source terms,
+%which we begin with.
+%whereas weak convergence of multipole solutions depends on uniform 
+%($L^{\infty}$) error estimates for smooth solutions. 
+%Therefore we begin with a full account of the convergence of smooth solutions.
+
+With smooth Cauchy data and
+right-hand sides, symmetric hyperbolic systems have unique smooth solutions depending
+continuously in the sense of ${\cal D}$ on the data
+\cite[]{CourHil:62,Lax:PDENotes}. Moreover, restriction of the
+solution to constant-time hyperplanes is well-defined, and if the data has compact
+support, then the restrictionts have compact support as well - this is
+the finite propagation speed property.
+
+Finite difference approximation to smooth solutions of hyperbolic PDE has been
+extensively studied \cite[]{RichMor:67,Cohen:01,Leveque:07}. Rather
+than quote results from the literature, however, we prove suitable
+convergence results for staggered grid approximation to systems of the
+form \ref{eq:hyper_fam} directly, by introducing a type of energy estimate
+appropriate to such approximations. This technique of proof will be
+central to our approach to weak convergence for singular solutions,
+developed in the next subsection.
+
+%Theoretical results presented here pertain to the family of symmetric hyperbolic
+%systems of  first-order partial differential equations for vector-valued fields $(u,v)$,
+%defined over a domain $\Omega\subset \mathbf R^d$ in $d=\{1,2,3\}$ dimension
+%space and some interval in time, given by \ref{eq:hyper_fam} which we restate 
+%with greater detail.
+
+\subsubsection{Smooth and Distribution Solutions}
+
+From here on, we will denote by $k_1, k_2 \in {\bf N}$ the dimensions of
+the two subsystems in \ref{eq:hyper_fam}.  The references cited above
+establish (result which imply) the following theorem.%something missing here?? MJB
+
+\begin{theorem}
+\label{thm:well-posed}
+Suppose
+\begin{itemize}  
+\item $f \in C_0^{\infty}(\bR^{d+1},\bR^{k_1})$, $g \in
+  C_0^{\infty}(\bR^{d+1},\bR^{k_2})$;
+\item $u^0 \in C_0^{\infty}(\bR^d,\bR^{k_1}), v^0 \in C_0^{\infty}(\bR^d,\bR^{k_1})$;
+\item $A \in C^{\infty}(\bR^d, \bR^{k_1 \times k_1})$, $B \in
+  C^{\infty}(\bR^d, \bR^{k_2 \times k_2})$ are symmetric for all $\mathbf x\in\Omega$ 
+  and uniformly bounded and positive definite , i.e., there exist constants 
+  $0< A_*\le A^*$ and $0< B_*\le B^*$ for which
+  \[
+    A_*I \le A(\bx) \le A^*I,\,\,   B_*I \le B(\bx) \le B^*I, \quad \forall \mathbf
+    x\in \bR^d;
+  \]
+  
+\item $P$ is a constant coefficient, 
+  first-order differential operator of the form
+  \[
+    Pu = \sum_{j=1}^d P_j \frac{\partial u}{\partial x_j}, \quad P_j\in \bR^{k_2\times k_1},
+  \]
+  for $u\in C^{\infty}(\bR^d,\bR^{k_1})$.
+\end{itemize}
+Then there exist unique $u \in C^{\infty}(\bR^{d+1},\bR^{k_1})$, $v \in
+  C^{\infty}(\bR^{d+1},\bR^{k_2})$ satisfying the following system,
+  identically in  $t \in \bR, \bx \in \bR^d$:
+\begin{equation}\label{eq:cont_system}
+\begin{split}
+	A(\mathbf x)\frac{\partial}{\partial t}u(\mathbf x,t) + P^T v(\mathbf x,t) 
+		&= f(\mathbf x,t), \\
+	B(\mathbf x)\frac{\partial}{\partial t}v(\mathbf x,t) - Pu(\mathbf x,t) 
+		&= g(\mathbf x,t), \\
+        u(\bx,0) & = u^0(\bx),\\
+        v(\bx,0) & = v^0(\bx), 
+\end{split}
+\end{equation}
+Moreover, for each $t \in \bR$, the restrictions $u(\cdot,t), v(\cdot,t)$ have compact support.
+\end{theorem}
+
+Solution of the system \ref{eq:cont_system} defines a linear map from from
+$u^0,v^0,f,g$ to $u,v$, continuous in the $C_0^{\infty}$ respectively
+$C^{\infty} $ topologies. The restriction of the formal adjoint of
+this map to smooth input will play an important role in the sequel. 
+
+It will be sufficient to restrict $u^0=v^0=0$, so that the restricted map
+has inputs $f,g$. A function $f \in C^{\infty}(\bR^{d+1},\bR^k)$ is {\em causal} if there 
+is $t_0 \in \bR$ so that $f(\bx,t)=0$ for $t<t_0, \bx \in
+\bR^d$. Similarly, $f$ is {\em anticausal} if there is $t_0 \in \bR$
+so that $f(\bx,t)=0$ for $t>t_0$.
+
+%should \tilde f and \tilde g be anticausal ?? MJB
+\begin{theorem}\label{thm:adjointstate}
+In addition to the hypotheses of Theorem \ref{thm:well-posed},
+suppose that (i) $u^0=v^0=0$, and (ii)
+$\tilde{f} \in C_0^{\infty}(\bR^{d+1},\bR^{k_1})$, $\tilde{g} \in
+C_0^{\infty}(\bR^{d+1},\bR^{k_2})$. Let $u,v$ be the unique causal
+solution of the system \ref{eq:cont_system}, and $\tilde{u},\tilde{v}$
+the unique anticausal solution of the system
+\begin{equation}\label{eq:adj_system}
+\begin{split}
+	A(\mathbf x)\frac{\partial}{\partial t}\tilde{u}(\mathbf x,t) - P^T \tilde{v}(\mathbf x,t) 
+		&= -\tilde{f}(\mathbf x,t), \\
+	B(\mathbf x)\frac{\partial}{\partial t}\tilde{v}(\mathbf x,t) + P\tilde{u}(\mathbf x,t) 
+		&= -\tilde{g}(\mathbf x,t).
+\end{split}
+\end{equation}
+Then
+\begin{equation}
+\label{eq:contadj}
+\int (\langle u,\tilde{f} \rangle + \langle v, \tilde{g} \rangle) \, dt
+= \int (\langle\tilde{u}, f \rangle + \langle \tilde{v},g \rangle) \, dt.
+\end{equation}
+\end{theorem}
+
+%The integrals appearing in the identity \ref{eq:contadj} are
+%well-defined, as the integrands have uniformly bounded support in
+%$\bx$ for each $t$, and vanish outside of a bounded interval in $t$
+%due to the presence of both causal and anticausal factors in each term. 
+
+%First time t=0 and t=T appear in integrals, should we mention 
+%perhaps that causality begins at t0=0 and anticausality at t0=T ?? MJB
+\begin{proof}
+\[
+\int (\langle u,\tilde{f} \rangle + \langle v, \tilde{g} \rangle) \, dt
+=
+\int \left(\left\langle u,-A\frac{\partial \tilde{u}}{\partial t} -
+    P^T \tilde{v}\right\rangle\right.
++
+\left. \left\langle v,-B\frac{\partial \tilde{v}}{\partial t} + P
+    \tilde{u}\right\rangle\right) \, dt
+\]
+\[
+=
+\int \left(\left\langle A\frac{\partial u}{\partial
+      t},\tilde{u}\right\rangle
+-\langle P u,\tilde{v}\rangle + \left\langle B\frac{\partial
+    v}{\partial t},\tilde{v}\right\rangle + \langle
+P^Tv,\tilde{u}\rangle
+\right) \, dt
+\]
+\[
+=
+\int \left(\left\langle A\frac{\partial u}{\partial
+      t} + P^Tv,\tilde{u}\right\rangle + \left\langle B\frac{\partial
+    v}{\partial t}-Pu,\tilde{v}\right\rangle\right) \, dt
+\]
+\[
+= \int (\langle\tilde{u}, f \rangle + \langle \tilde{v},g
+\rangle) \, dt.
+\]
+\end{proof}
+
+The definition of distribution solution is related to the definition
+of the adjoint system \ref{eq:adj_system}. A pair $(u,v)$ of
+distributions is a {\em weak} or {\em distribution} solution of
+%what is mathcal E ?? MJB
+%may be missing a mathcal ?? MJB
+\ref{eq:cont_system} with right-hand sides $(f,g) \in \mathcal
+D'(\bR^{d+1},\bR^{k_1}) \times \mathcal D'(\bR^{d+1},\bR^{k_2})$ if for any pair $(\phi,\psi) \in
+C_0^{\infty}(\bR^{d+1},\bR^{k_1}) \times C_0^{\infty}(\bR^{d+1},\bR^{k_2})$,
+\[
+\int \left( \left\langle u, -A\frac{\partial \phi}{\partial 
+    t} + P^T \psi\right\rangle + \left\langle v, -B\frac{\partial\psi}{\partial t} + P\phi\right\rangle \right) \, dt
+\]
+\begin{equation}
+\label{eq:defdistsol}
+= \langle f,\phi \rangle + \langle g,\psi \rangle
+\end{equation}
+
+The references cited above show that unique causal (or anticausal)
+distribution solutions exist for distribution right hand sides of
+compact support. Moreover, it is implicit in the definition that these
+distribution solutions satisfy the relation \ref{eq:contadj}, with the
+$\langle \cdot, \cdot \rangle$ interpreted as the pairing of
+distribution and test function rather than as the $L^2$ inner product
+(the former is in a sense a generalization of the latter, of course).
+
+% WWS added 2018/01/03
+In particular, unique causal distribution solutions of the system
+\ref{eq:cont_system} exist for multipole right-hand sides $(f,g)$ of
+the form \ref{eq:MPSappx}, provided that the multipole coefficients
+$w_{\mathbf s}$ are distributions of compact support.
+  %\item we assume solution $(u,v)$ and source terms $(f,g)$ are causal, i.e., for $t < 0$
+%		\[
+%			u(\mathbf x,t) = f(\mathbf x,t) = 0, \quad 
+%			v(\mathbf x,t) = g(\mathbf x,t) = 0.
+%		\]
+%\end{itemize}
+%See \cite{BlazekStolkSymes:13} for proof of existence of solutions, stability, and other mathematical properties for a larger class of partial (integro-)differential systems for wave modeling, applicable to system \ref{eq:cont_system}.
+
+%As an example, consider the acoustic equations in first-order (pressure-velocity) form:
+%\begin{equation}\label{eq:acoustics}
+%\begin{split}
+%	\frac{1}{\kappa(\mathbf x)} \frac{\partial}{\partial t} p(\mathbf x,t) + \nabla\cdot \mathbf v(\mathbf x,t) 
+%		&= f(\mathbf x,t)\\
+%	\rho(\mathbf x) \frac{\partial}{\partial t} \mathbf v(\mathbf x,t) + \nabla p(\mathbf x,t) 
+%		&= \mathbf g(\mathbf x,t)
+%\end{split}
+%\end{equation}
+%where $u=p$ is the scalar pressure field and $v=\mathbf v\in\mathbf R^d$ is the vector particle velocity field; we take $\mathcal H_1=H^1_0(\Omega)$ and $\mathcal H_2=H^1(\Omega)^d$. %MOD
+%Coefficient operator $A(\mathbf x)=1/\kappa(\mathbf x)$ and $B(\mathbf x)=\rho(\mathbf x) I$, with $\kappa$ denoting bulk-modulus and $\rho$ density of the medium; here $I\in\mathbf R^{d\times d}$ is the identity matrix.
+%Lastly, the differential operator $P$ coincides with the gradient and its adjoint with the negative of the divergence,
+%\[
+%	P = \mat{\frac{\partial}{\partial x_1}\\ \vdots \\ \frac{\partial}{\partial x_d}}, \quad 
+%	P^T = - \mat{\frac{\partial}{\partial x_1},...,\frac{\partial}{\partial x_d}}.
+%\]
+%%ADDED
+%Given homogenous boundary conditions for the pressure field, it can be shown that $P$ given as the gradient operator satisfies the skew-adjoint relation \ref{eq:skew}.
+
+%%%%%%%%%%%
+\subsubsection{Staggered grid discretization}
+Staggered grid discretizations of hyperbolic systems can be quite
+complex in structure, as examples presented by \cite{moczoetal:06}
+show. Fortunately the essential properties of these discrete dynamical
+systems can be captured in a fairly simple abstraction.
+
+%We don't make use of <,>_h or || ||_h notation throughout ?? MJB
+We presume a family $\{H^1_h, H^2_h: h \in \bR_+\}$ of inner product
+space pairs, and surjections $S^i_h:
+C_0^{\infty}(\bR^d,\bR^{k_i}) \rightarrow H^i_h$, $i=1,2$. We will
+denote the inner product in $H^i_h$ by $\langle \cdot,\cdot\rangle$, 
+with the index $i = 1,2$ and inferred from context. 
+Moreover, distinguishing inner products between elements in
+$H_h^i$ or continuum functions (e.g., $C^\infty$ functions) is discerned by context.
+The corresponding induced norm is denoted $\|\cdot\|$.  
+In the examples that motivate this work, $H^i_h$ consists of vector valued
+functions of compact support on uniform rectangular grids in $\bR^d$ of mesh $h$, and $S^i_h$
+samples the smooth input on grid points. Several
+grids may figure in the definition of each of these spaces, and
+with some components defined on each grid - see \cite{moczoetal:06}
+for numerous examples.
+
+The next ingredient is a uniformly bounded family $\{Q_h \in {\cal
+  B}(H^1_n,H^2_h)\}$ of linear maps. This family defines an 
+approximation to the differential operator $P$, in a sense to be made
+precise below. 
+
+For future use, set
+\[
+Q^* = \sup_{h \in \bR_+} \|Q_h\|.
+\]
+
+Taking advantage of a bit of hindsight, we define an abstract staggered grid
+dynamical system to be the recursion for a sequence of vector pairs $(u^n_h,v^{n-1/2}_h)
+\in H^1_h \times H^2_h: n \in {\bf Z}$:
+\begin{equation}\label{eq:sg}
+\begin{split}
+	A_h(u^{n+1}_h - u^n_h)  + P_h(r)^T v^{n+1/2}_h &= rh\,   f_h^{n+1/2} \\
+	B_h(v^{n+1/2}_h-v^{n-1/2}_h) -  P_h(r) u^n_h &=  rh\, g_h^{n} 
+\end{split}
+\end{equation}
+in which
+\begin{itemize} 
+
+	\item $A_h, \, B_h$ are bounded self-adjoint positive-definite operators 
+\[
+	A_h: H_h^1 \rightarrow H_h^1,\quad B_h: H_h^2 \rightarrow H_h^2
+\]
+with upper and lower bounds uniform in $h$: there exists constants $0<A_*\le A^*$ and $0<B_*\le B^*$ such that
+\begin{equation*}
+\begin{split}
+	A_*\|u_h\|^2 \le \langle A_h u_h,u_h \rangle \le A^*\|u_h\|^2, 
+	\quad \forall u_h\in H_h^1, \\
+	B_*\|v_h\|^2 \le \langle B_h v_h,v_h \rangle \le B^*\|v_h\|^2,
+	\quad \forall v_h\in H_h^2; \\
+\end{split}
+\end{equation*}
+\item $f_h^{n+1/2} \in H^1_h,\,\, g_h^{n} \in H^2_h$,
+\item $P_h(r) = rQ_h, \,\ r > 0$.
+\end{itemize}
+
+%Consider again the acoustic case (related to problem \ref{eq:acoustics}).
+%For simplicity we assume we are dealing with rectangular grids, in 2-D for this example, of the form
+%\[
+%	\mathcal G(\mathbf 0,\mathbf h) = \{ \mathbf x_{i,j} = (ih,jh) \; : \; i,j\in\mathbf Z \}.
+%\]
+%The simplest staggered-grid finite difference scheme, second-order in time and space, is given by
+%\begin{equation}\label{eq:acoustics_sgfd}
+%\begin{split}
+%	\frac{1}{\kappa(ih,jh)} \frac{1}{\Delta t} \Big[  (p_h)^{n+1}_{i,j} - (p_h)^{n}_{i,j} \Big] + \hspace{7cm}\\
+%	\frac{1}{h} \Big[ (v_{1,h})_{i+1/2,j}^{n+1/2} - (v_{1,h})_{i-1/2,j}^{n+1/2} + 
+%				(v_{2,h})_{i,j+1/2}^{n+1/2} - (v_{2,h})_{i,j-1/2}^{n+1/2} \Big] 
+%		&= (f_h)^{n+1/2}_{i,j}\\
+%	\rho((i+1/2)h,jh) \frac{1}{\Delta t} \Big[ (v_{1,h})^{n+1/2}_{i+1/2,j} - (v_{1,h})^{n-1/2}_{i+1/2,j} \Big] +
+%	\frac{1}{h} \Big[ (p_h)_{i+1,j}^{n} - (p_h)_{i,j}^{n} \Big] 
+%		&= (g_{1,h})_{i+1/2,j}^{n}\\
+%	\rho(ih,(j+1/2)h) \frac{1}{\Delta t} \Big[ (v_{2,h})^{n+1/2}_{i,j+1/2} - (v_{2,h})^{n-1/2}_{i,j+1/2} \Big] +
+%	\frac{1}{h} \Big[ (p_h)_{i,j+1}^{n} - (p_h)_{i,j}^{n} \Big] 
+%		&= (g_{2,h})_{i,j+1/2}^{n}
+%\end{split}
+%\end{equation}
+%where finite difference solution $(p_h,v_{1,h},v_{2,h})$ approximates the continuum fields $(p,v_1,v_2)$,% for system \ref{eq:cont_system}, mainly,
+%\begin{equation*}
+%\begin{split}
+%	(p_h)_{i,j}^{n} &\approx p(ih,jh,n\Delta t), \\
+%	(v_{1,h})_{i+1/2,j}^{n+1/2} &\approx v_1((i+1/2)h,jh,(n+1/2)\Delta t),\\
+%	(v_{2,h})_{i,j+1/2}^{n+1/2} &\approx v_2(ih,(j+1/2)h,(n+1/2)\Delta t).
+%\end{split}
+%\end{equation*}
+%We emphasize that the velocity fields for finite difference scheme \ref{eq:acoustics_sgfd} are staggered with respect to spatial grids, more specifically each component is shifted by half a cell size in its respective axis.
+%
+%Relating system \ref{eq:acoustics_sgfd} with \ref{eq:sg}, we see
+%\[
+%	(u_h)_{i,j} = (p_h)_{i,j}, \quad 
+%	(v_h)_{i,j} = \mat{(v_{1,h})_{i+1/2,j}\\ 
+%				  (v_{2,h})_{i,j+1/2} }.
+%\]
+%The space $H_{1,h}$ corresponds to the set of square summable scalar-valued
+%%MOD
+%functions on rectangular grids that satisfy the homogenous boundary condition, and $H_{2,h}$ is the set of square summable $\mathbf R^2$-valued functions on half-cell shifted grids, both equipped with a discrete $L^2$ inner-products,  
+%\begin{equation*}
+%\begin{split}
+%	\langle u_h,\tilde u_h\rangle = h^2 \sum_{i,j} (u_h)_{i,j} (\tilde u_h)_{i,j} &\quad 	\text{for } u_h,\tilde u_h \in H_{1,h}\\
+%	\langle v_h, \tilde v_h \rangle = h^2 \sum_{i,j} (v_h)_{i,j} \cdot (\tilde v_h)_{i,j} &\quad
+%	\text{for } v_h,\tilde v_h \in H_{2,h}.
+%\end{split}
+%\end{equation*}
+%Inner-products and norms of the spaces $\mathcal H_1, \mathcal H_2, H_{1,h}, H_{2,h}$ are all denoted by $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ and interpreted given the context, unless otherwise specified.
+%
+%Sampling operators $S_{1,h}$ and $S_{2,h}$ coincide with evaluating continuum functions on grid or shifted grid points accordingly,
+%\[
+%	(S_{1,h} u)_{i,j} = u(ih,jh), \quad 
+%	(S_{2,h} v)_{i,j} = \mat{v_{1}((i+1/2)h,jh)\\ 
+%				  v_{2}(ih,(j+1/2)h) }.
+%\]
+%Discretized coefficient operators $A_h$ and $B_h$ are given by,
+%\[
+%	(A_h u_h)_{i,j} = \frac{1}{\kappa(ih,jh)} (u_h)_{ij}, \quad
+%	(B_h v_h)_{i,j} = \mat{ \rho((i+1/2)h,jh) (v_{1,h})_{i+1/2,j} \\
+%					 \rho(ih,(j+1/2)h) (v_{2,h})_{i,j+1/2} }.
+%\]
+%Lastly, $P_h$ and $P_h^T$ correspond to second-order approximations of the gradient and the negative of the divergence respectively;
+%\begin{equation*}
+%\begin{split}
+%	(P_{h}(r) u_h)_{i,j} &= r \mat{ (u_h)_{i+1,j} - (u_h)_{i,j} \\
+%					     (u_h)_{i,j+1} - (u_h)_{i,j} }, \\
+%	(P_{h}(r)^T v_h)_{i,j} &= -r \Big[ (v_{1,h})_{i+1/2,j} - (v_{1,h})_{i-1/2,j} + (v_{2,h})_{i,j+1/2} - (v_{2,h})_{i,j-1/2} \Big]
+%\end{split}
+%\end{equation*}
+%again, with $r =  \Delta t/h$.
+%In general, the differential operator $P$ can be approximated by a family of central difference operators $P_h$ of even order $2p$ for $p\in\mathbf N$, resulting in the 2-$2p$ staggered-grid finite difference schemes.
+%%ADDED
+%Similar to the continuum case, it can be shown that the $P_h$ indeed satisfy the skew-adjoint relation \ref{eq:skew_h}.
+
+%%%%%%%
+\subsubsection{Energy Estimates}
+
+%We aren't consistent between E or E_h ?? MJB
+Inspired by the work of Gustafsson and colleagues on staggered grid
+schemes for acoustics \cite[]{GusWahl:04a,GusWahl:04b,GusMoss:04},
+define $E: H^1_h \times H^2_h \rightarrow \bR_+$ by
+\begin{equation*}
+\begin{split}
+	E(u_h,v_h) &:= \frac{1}{2} \Big( \langle A_h u_h,u_h\rangle + 
+				       \langle B_hv_h,v_h\rangle +
+				       \langle P^T_h v_h,u_h\rangle \Big).
+%	&= \frac{1}{2} \mat{ u_h^n \\ v_h^{n-1/2}}^T
+%			     \mat{ A_h & \frac{1}{2}P^T_h\\
+%			     	     \frac{1}{2}P_h & B_h }
+%			     \mat{ u_h^n\\ v_h^{n-1/2} }.
+\end{split}
+\end{equation*}
+
+\begin{theorem}
+Denote by $SPD_k$ the set of symmetric positive definite $k\times k$
+matrices. Then there exist $R, C_*, C^*: SPD_{k_1} \times SPD_{k_2} \times
+\bR^{k_2\times k_1} \rightarrow \bR_+$ so that 
+\begin{itemize}
+\item if
+\begin{equation}
+\label{eq:cfl}
+r < R(A_h,B_h,Q_h)
+\end{equation}
+then
+\begin{equation}
+\label{eqn:pd}
+	C_*(A_h,B_h,Q_h) \Big( \|u_h\|^2 + \|v_h\|^2 \Big) \le E(u_h,v_h) \le C^*(A_h,B_h,Q_h)\Big( \|u_h\|^2 +\|v_h\|^2 \Big).
+\end{equation}
+\item $R(A_h,B_h,Q_h) \ge \sqrt{A_*B_*}/Q^*$.
+\end{itemize}
+\end{theorem}
+
+\begin{proof}
+The upper bound in \ref{eqn:pd} is clear from $h$-uniform bounds $A^*$on $A_h$, $B_h$, 
+$Q_h$. 
+The lower bound follows from the inequality
+\[
+	E(u_h,v_h) \ge A_*\|u_h\|^2 + B_*\|v_h\|^2 - rQ^*\|u_h\|\|v_h\|
+\]
+and the RHS is positive definite in $\|u_h\|,\|v_h\|$ when $rQ^* <\sqrt{A_*B_*}$. 
+\end{proof}
+
+That is,  the quadratic form $E$ defines a norm equivalent to the
+product norm $\|\cdot\|$ on $H^1_h \times H^2_h$, provided that $r$
+is sufficiently small relative to spectral bounds for the coefficient
+matrices. This condition is in fact the Courant-Friedrichs-Levy
+condition for staggered grid schemes.
+
+\begin{theorem}
+Suppose that $\{(u_h^n,v^{n-1/2}_h): n \in {\bf Z}\}$ is a solution of
+system \ref{eq:sg} with $(f^{n+1/2}_h, g^n_h)\equiv 0$ for all n. 
+Then $E^n=E(u_h^n,v^{n-1/2}_h)$ is independent of time index $n$.
+\end{theorem}
+
+\begin{proof}
+\begin{equation*}
+\begin{split}
+	E^{n+1} - E^n =\langle A_h( u^{n+1}_h-u^n_h ), (u^{n+1}_h+u^n_h)\rangle 
+		&+ \langle B_h( v^{n+1/2}_h-v^{n-1/2}_h ), (v^{n+1/2}_h+v^{n-1/2}_h)\rangle \\
+		&+ \langle P_h^T v^{n+1/2}_h, u^{n+1}_h\rangle - \langle P_h^T v^{n-1/2}_h, u^n_h\rangle
+\end{split}
+\end{equation*} 
+\begin{equation*}
+\begin{split}
+	= \langle -P_h^Tv^{n+1/2}_h,(u^{n+1}_h+u^n_h) \rangle 
+		&+ \langle P_hu^n_h, (v^{n+1/2}_h+v^{n-1/2}_h) \rangle\\
+		&+\langle P_h^Tv^{n+1/2}_h,u^{n+1}_h\rangle - \langle P^T_h v^{n-1/2}_h,u^n_h\rangle
+	=0.
+\end{split}
+\end{equation*}
+\end{proof}
+
+%%%%%%%%
+
+%Inhomogeneous system:
+%\begin{equation}\label{eqn:in}
+%\begin{split}
+%A(u^{n+1}_h - u^n_h) & =  -D^T v^{n+1/2}_h + hf^{n+1/2}_h \\
+%B(v^{n+1/2}_h-v^{n-1/2}_h) & =  D u^n_h + h g^n_h 
+%\end{split}
+%\end{equation}
+
+\begin{theorem}
+\label{thm:inhom}
+Suppose that $\{(u_h^n,v^{n-1/2}_h): n \in {\bf Z}\}$ is a solution of
+system \ref{eq:sg}. Assume that $r$ sufficiently small that $E$ is
+positive definite, recall the lower bound $C_*$ in the 
+equivalence relation \ref{eqn:pd}. Set $a = 2/C_*$. For $n \ge 0$ and $h < C_*/r$,
+\begin{equation}
+\label{eq:inhom}
+	E^n \le e^{anrh} \left(E^0 + 
+	C_* \sup_{0 \le m \le n-1}(\|f^{m+1/2}_h\|^2 + \|g^m_h\|^2)\right)
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The same arithmetic as used in the homogeneous case leads to
+\begin{equation*}
+\begin{split}
+	E^{n+1}-E^n 
+	&= rh\langle f^{n+1/2}_h, u^{n+1}_h+u^n_h\rangle + rh\langle g^n_h,
+v^{n+1/2}_h+v^{n-1/2}_h\rangle\\
+	&\le \frac{rh}{2\alpha^2} (\|f^{n+1/2}_h\|^2 + \|g^n_h\|^2) +
+\frac{\alpha^2rh}{C_*}(E^{n+1}+E^n)
+\end{split}
+\end{equation*}
+for any $\alpha \in (0,1)$. Choose $\alpha^2=1/2$. From the assumption $rh \le C_* <2C_*$,
+$\alpha^2 rh < C_*$. Set 
+\begin{equation}\label{eq:K}
+	\lambda = \left(1+\frac{rh}{2C_*}\right) \left(1-\frac{rh}{2C_*}\right)^{-1}
+	\quad
+	\text{and}
+	\quad
+	K = \frac{1}{ \left(1+\frac{rh}{2C_*}\right) }.
+\end{equation}
+Then $\lambda > 1$ and 
+\begin{equation*}
+\begin{split}
+	\lambda^{-1}E^{n} - E^{n-1} &\le Krh (\|f^{n-1/2}_h\|^2 + \|g^{n-1}_h\|^2)  \\
+	\Longrightarrow
+	\lambda^{-n}E^{n} - \lambda^{-(n-1)}E^{n-1} &\le \lambda^{-(n-1)}Krh (\|f^{n-1/2}_h\|^2 + \|g^{n-1}_h\|^2) 
+\end{split}
+\end{equation*}
+whence
+\begin{equation}
+\label{eq:est1}
+\lambda^{-n}E^n \le E^0 +
+Krh\sum_{m=0}^{n-1}\lambda^{-m}(\|f^{m+1/2}_h\|^2 + \|g^m_h\|^2). 
+\end{equation}
+
+Set $M_n=\sup_{0 \le m \le n-1}(\|f^{m+1/2}_h\|^2 +
+\|g^m_h\|^2)$. Then the inequality \ref{eq:est1} implies 
+
+\[
+\lambda^{-n}E^n \le E^0 +
+Krh \frac{1-\lambda^{-n}}{1-\lambda^{-1}} M_n
+\]
+\[
+\le E^0 + Krh\frac{1}{1-\lambda^{-1}} M_n
+\]
+\[
+\le E^0 + Krh \frac{1 + \frac{rh}{2C_*}}{2\left(
+    \frac{rh}{2C_*}\right)}M_n
+\]
+From the definition \ref{eq:K} of $K$, this is equivalent to 
+\begin{equation}
+\label{eq:est2}
+\lambda^{-n}E^n \le E^0 + C_* M_n.
+\end{equation}
+The simple inequality 
+\[
+\frac{1+x}{1-x} \le e^{4x},\, 0\le x \le \frac{1}{2}
+\]
+together with the hypothesis that $rh \le C_*$ so that $rh/2C_* < 1/2$, and the definition
+\ref{eq:K} of $\lambda$ implies that 
+\[
+\lambda \le e^{2\frac{rh}{C_*}}
+\]
+Thus the estimate \ref{eq:est2} implies the conclusion \ref{eq:inhom}.
+\end{proof}
+
+In view of the relation between the continuum adjoint and the system
+\ref{eq:adj_system}, it is not surprising that a similar relation
+exists between the adjoint of the map defined by the system
+\ref{eq:sg} and a related discrete adjoint state system. 
+
+A sequence $\{f^n\}$ (or $\{f^{n+1/2}\}$) vector-valued functions is {\em causal} if there is
+$n_{\rm min} \in {\bf Z}$ so that $f^n=0$ (or $f^{n+1/2}=0$) for
+$n<n_{\rm min}$. Likewise, such a function is {\em anticausal} if
+there is $n_{\rm max}$ for which  $f^n=0$ (or $f^{n+1/2}=0$) for
+$n>n_{\rm max}$. 
+
+\begin{theorem}
+Suppose that $\{(f_h^{n+1/2},g_h^{n})\}$ is a causal sequence,
+$\{(\tilde{f}_h^{n},\tilde{g}_h^{n+1/2})\}$ an anticausal
+sequence in $H^1_h \times H^2_h$.
+Let $\{ (u_h^n,v_h^{n+1/2})\}$ be the unique causal solution of 
+the system \ref{eq:sg}, and
+ $\{(\tilde u_h^{n+1/2},\tilde v_h^{n})\}$ the unique anticausal
+solution of
+\begin{equation}\label{eqn:inadj}
+\begin{split}
+	A_h( \tilde u_h^{n-1/2}-\tilde u_h^{n+1/2} ) - P_h^T \tilde v^n & =  rh\, \tilde f_h^{n} \\
+	B_h( \tilde v^{n} - \tilde v^{n+1} ) + P_h \tilde u^{n+1/2} &=  rh \, \tilde g_h^{n+1/2}. 
+\end{split}
+\end{equation}
+Then 
+\begin{equation}
+\label{eqn:weak}
+	 rh\sum_{n} \Big( \langle \tilde u_h^{n+1/2}, f_h^{n+1/2} \rangle +
+	 			 	  \langle \tilde v_h^n, g_h^n \rangle \Big) 
+	= rh\sum_{n} \Big( \langle \tilde f_h^n, u_h^n \rangle + 
+					     \langle \tilde g_h^{n+1/2}, v_h^{n+1/2}\rangle \Big). 
+\end{equation}
+\end{theorem}
+
+Note that both sums in the identity \ref{eqn:weak} are finite, as all
+terms have both causal and anticausal factors.
+
+\begin{proof}
+\[
+\sum_{n} \Big( \langle \tilde u_h^{n+1/2}, f^{n+1/2}\rangle +
+					   \langle \tilde v_h^n, g_h^n \rangle \Big)
+\]
+\begin{equation*}
+\begin{split}
+	= \sum_n \Big( \langle \tilde u_h^{n+1/2}, 
+					A_h( u_h^{n+1} - u_h^n) + P_h^T v_h^{n+1/2} \rangle 
+			  +  \langle \tilde v_h^n, 
+					B_h ( v_h^{n+1/2}-v_h^{n-1/2} ) - P_h u_h^n \rangle \Big)
+\end{split}
+\end{equation*}
+\begin{equation*}
+\begin{split}
+	= \sum_n \Big( \langle A_h ( \tilde u_h^{n-1/2}-\tilde u_h^{n+1/2} ), u_h^n \rangle 
+			       -\langle P_h \tilde u_h^{n+1/2}, v_h^{n+1/2}\rangle 
+	 		       +\langle B_h ( \tilde v_h^{n} - \tilde v_h^{n+1} ), v_h^{n+1/2} \rangle
+			       +\langle P_h^T \tilde v_h^n, u_h^n\rangle \Big)
+\end{split}
+\end{equation*}
+\begin{equation}\label{eqn:sbp}
+\begin{split}
+	= \sum_n \Big( \langle A_h (\tilde u_h^{n-1/2} - \tilde u_h^{n+1/2}) - P_h^T \tilde v_h^n, 
+				u_h^n\rangle 
+	                      +	\langle B_h (\tilde v_h^{n} - \tilde v_h^{n+1}) + P_h \tilde u_h^{n+1/2},
+	                      	v_h^{n+1/2}\rangle
+\end{split}
+\end{equation}
+In view of the system \ref{eqn:inadj}, the last line is equal to the
+right hand side of \ref{eqn:weak}.
+
+
+\end{proof}
+
+%%%%%%%%%
+\subsubsection{Norm Convergence to Smooth Solutions}
+
+We will suppose from now on that $Q_h$ approximates $P$ to order $p\in {\bf N}$, in the sense that
+for all $u_i \in C_0^{\infty}(\bR^d,\bR^{k_i}),\, i=1,2$,
+\begin{equation}
+\label{eq:fdord}
+\begin{split}
+\left\| S^2_hPu_1 - \frac{1}{h}Q_h S^1_h u_1\right\| &= O(|h|^p),\\
+\left\| S^1_hP^Tu_2 - \frac{1}{h}Q_h^T S^2_h u_2\right\| &= O(|h|^p).
+\end{split}
+\end{equation}
+For the grid-based examples described earlier, this
+condition defines precisely the usual truncation-based order of
+accuracy. In the second equation, the transpose $P^T$ is the usual
+formal adjoint, whereas $Q_h^T$ is the adjoint with respect to the
+assumed inner product structure on $H^i_h, \,i=1,2$. 
+
+Since we have assumed nothing {\em a priori} about the relation between distribution
+pairing in $\bR^d$ and the inner products on $H^i_h, \,i=1,2$, 
+the second estimate \ref{eq:fdord} does not follow from the first, and must be
+asserted explicitly. In many examples, on the other hand, such as the
+acoustic staggered grid approximation to be described later, the 
+transpose automatically has the same order of accuracy.
+
+Note that the implicit constants hiding behind the ``big O'' symbols
+depend on the functions $u_1, u_2$, . 
+
+\begin{theorem}
+\label{thm:smconvg}
+Suppose that $Q_h$ approximates $P$ to order $p$, $T>0$, and that $\Delta t:
+\bR_+ \rightarrow \bR_+$ satisfies $\Delta t(h) <
+hR(A,B,Q)$ as in condition \ref{eq:cfl}. Suppose also that $u \in C^{\infty}(\bR^{d+1},\bR^{k_1})$, $v \in
+  C^{\infty}(\bR^{d+1},\bR^{k_2})$ solve the hyperbolic system
+  \ref{eq:cont_system} with coefficients $A,B$, right hand sides
+  $f,g$, and Cauchy data $u^0,v^0$ satisfying the conditions of
+  Theorem \ref{thm:well-posed}. Define
+  $A_h,B_h,f^{n+1/2}_h,g^{n}_h,$ and $u^0_h,v^{-1/2}_h$ by
+\begin{itemize}
+\item $A_h S^1_hw_1=S^1_h Aw_1, \,\,B_hS^2_hw_2 = S^2_hBw_2$ for any $w_i
+  \in C_0^{\infty}(\bR^d,\bR^{k_i})$; 
+\item $f^{n+1/2}_h = S^1_hf(\cdot,(n+1/2)\Delta t(h)),\,\, g^n_h=S^2_h
+  g(\cdot,n\Delta t(h))$
+\item $u^0_h=S^1_hu(\cdot,0),\,\, v^{-1/2}_h=S^2_hv(\cdot,-1/2 \Delta
+  t(h))$
+\end{itemize}
+Let $(u^n_h,v^{n-1/2}_h)$ denote the solution of the staggered grid
+scheme \ref{eq:sg} with data $A_h,B_h,f^{n+1/2}_h,g^{n}_h,$ and
+$u^0_h,v^{-1/2}_h$, $N(h)=T/\Delta t(h)$, and $r(h) = \Delta
+t(h)/h$. Then for $h>0$ and $0 \le n \le N(h)$, 
+\begin{equation}
+\label{eq:errest}
+\begin{split}
+\|S^1_hu(\cdot,n \Delta t(h)) - u^n_h\| &= O(\Delta t(h)^2+h^p)\\
+\|S^2_hv(\cdot,(n-1/2)\Delta t(h)) - v^{n-1/2}_h\| & = O(\Delta
+t(h)^2 +h^p).
+\end{split}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Recall that $\Delta t = rh$ and that $r=r(h)$, hence $\Delta t=\Delta
+t(h)$, is a (possibly linear) function of $h$, satisfying the
+stability condition \ref{eq:cfl} for all $h>0$. For the remainder of
+the proof, we suppress the dependence on $h$ from the notation.
+Set
+\begin{equation}\label{eqn:tr}
+\begin{split}
+  \delta u^n_h &  = S^1_hu(\cdot,n \Delta t) - u^n_h\\
+  \delta v^{n-1/2}_h & = S^2_hv(\cdot,(n-1/2)\Delta t) - v^{n-1/2}_h\\
+  \delta f^{n+1/2}_h & = \frac{1}{rh} \Big( A_h( S^1_h u(\cdot,(n+1)\Delta t) - S^1_h u(\cdot,n\Delta t)) + 
+  P_h(r(h))^T S^2_h v(\cdot,(n+1/2)\Delta t) \Big) + f_h^{n+1/2}\\
+  \delta g^{n}_h  &= \frac{1}{rh} \Big( B_h (S^2_h v(\cdot,(n+1/2)\Delta t) - S^2_h v(\cdot,(n-1/2)\Delta t) ) - 
+  P_h(r(h)) S^1_h u(\cdot,n\Delta t) \Big) + g_h^{n}.
+\end{split}
+\end{equation}
+Then the truncation error vector $(\delta u^n_h, \delta v^{n-1/2}_h)$ solves the staggered grid
+system
+\begin{equation}\label{eq:truncsg}
+\begin{split}
+  A_h(\delta u^{n+1}_h - \delta u^n_h)  + P_h(r)^T \delta
+  v^{n+1/2}_h &= rh\,   \delta f_h^{n+1/2} \\
+  B_h(\delta v^{n+1/2}_h-\delta v^{n-1/2}_h) -  P_h(r) \delta
+  u^n_h &=  rh\, \delta g_h^{n} 
+\end{split}
+\end{equation}
+which is precisely of the form \ref{eq:sg}. Note that $\delta u^0_h = 0,
+\delta v^{-1/2}_h=0$. Therefore from Theorem
+\ref{thm:inhom},
+\begin{equation}
+\label{eq:truncest1}
+E(\delta u^n_h, \delta v^{n-1/2}_h) \le e^{anr(h)h}C_*\sup_{0 \le m
+  \le n-1}(\|\delta f^{m+1/2}_h\|^2 + \|\delta g^m_h\|^2)
+\end{equation}
+
+From the definitions of $A_h$, $f^{n+1/2}_h$, 
+\[
+rh \delta f_h^{n+1/2} =  A_h(\delta u^{n+1}_h - \delta u^n_h)  + P_h(r)^T \delta
+  v^{n+1/2}_h 
+\]
+\[
+= A_h(S^1_h(u(\cdot,(n+1)\Delta t)-u(\cdot,n\Delta t)) - A_h(u^{n+1}_h-u^n_h) +
+P_h(r(h))^T (S^2_h(v(\cdot,(n+1/2)\Delta t)) - v^{n+1/2}_h)
+\]
+\[
+= S^1_h(A(u(\cdot,(n+1)\Delta t)-u(\cdot,n\Delta t))-P_h(r(h))^T
+S^2_h(v(\cdot,(n+1/2)\Delta t))
+-rh f^{n+1/2}_h
+\]
+where we have used the first of the two equations in \ref{eq:sg} to
+eliminate the discrete fields $u^n_h,v^{n-1/2}_h$ in favor of $f^{n+1/2}_h$.
+Because of the smoothness of $u$, 
+\begin{equation}
+\label{eq:truncdt}
+u(\cdot,(n+1)\Delta t)-u(\cdot,n\Delta t) = 2\Delta t \frac{\partial u}{\partial 
+  t}(\cdot,(n+1/2)\Delta t) +
+O(\Delta t^3).
+\end{equation}
+From the order assumption \ref{eq:fdord} on $P_h = r Q_h$, 
+\begin{equation}
+\label{eq:truncdx}
+P_h(r)^T S^2_h(v(\cdot,(n+1/2)\Delta t) = \Delta t S^1_h (P^T v)(\cdot,(n+1/2)\Delta t) + O(\Delta
+t h^p)
+\end{equation}
+We conclude that 
+\[
+\Delta t \delta f_h^{n+1/2} = \Delta t  S^1_h\left(A \frac{\partial u}{\partial 
+  t}(\cdot,(n+1/2)\Delta t) + (P^T v)(\cdot,(n+1/2)\Delta t) -  f(\cdot,(n+1/2)\Delta
+t)\right)
+\]
+\[
+ + O(\Delta t^3) + O(\Delta t h^p)
+\]
+\[
+= O(\Delta t^3) + O(\Delta t h^p)
+\]
+since $(u,v)$ are smooth solutions of \ref{eq:cont_system}.
+Similarly,
+\[
+\Delta t \delta g_h^n =  O(\Delta t^3) + O(\Delta t  h^p).
+\]
+The constants hiding inside the big ``O''s are uniform over compact
+sets. Since $0 \le n\Delta t \le T$ for $0 \le n \le N(h)$, and the
+data of the problem \ref{eq:cont_system} has compact support, the
+domain in which the errors are evaluated has compact support, so these
+inequalities imply that
+\[
+\|\delta f^{n+1/2}_h\|^2 + \|\delta g^n_h\|^2 = (O(\Delta t^2) + O(
+h^p))^2
+\]
+uniformly for $0 \le n \le N(h)$. Combined with the inhomogeneous
+energy estimate \ref{eq:inhom}, this observation implies the
+conclusion of the theorem.
+\end{proof}
+
+%MOD
+%If $(u,v)$ is a smooth solution of the acoustic (pressure-velocity) system 
+%\ref{eq:acoustics} with smooth right-hand sides $(f,g)$,
+%and $(u_h,v_h)$ is the staggered-grid finite difference approximation of 
+%order $2$-$2p$, then, from standard truncation error calculations, for 
+%each time slice of compact support we have,
+%\hl{If $(u,v)$ is a smooth solution of the continuum problem} \ref{eq:cont_system}
+%\hl{with smooth right-hand sides $(f,g)$, and $(u_h,v_h)$ is the finite difference 
+%solution where $P_h$ is of order $2p$,} then, from standard truncation error 
+%calculations, for each time slice of compact support we have,
+%\begin{equation*}
+%\begin{split}
+%	\delta f_h^{n+1/2} &= O( \Delta t^2+h^{2p})\\
+%	\delta g_h^{n} &= O( \Delta t^2+h^{2p})
+%\end{split} 
+%\end{equation*}
+%point-wise and uniformly in $i,j$. 
+%Since the support is uniformly bounded if $0\le n\Delta t \le T$, 
+%the $O$ statements apply to the $L^2$ norms as well.
+%Thus, by equivalency of the energy form with the $L^2$-norm, and the \hl{theorem} above, 
+%we can conclude
+%\[
+%	\|u_h-S_{1,h}u\| + \|v_h-S_{2,h}v\| = O(\Delta t^2+h^{2p}),
+%\]
+%that is, $2$-$2p$ order convergence in the $L^2$ sense.
+
+%Let $u$ denote the solution of \ref{eqn:sg} with
+%$(u^0,v^{-1/2})=S(h)(U^0,V^{-1/2})$. Then $(u,v)-S(h)(U,V)$ solves
+%\ref{eqn:in} with $f,g$ as just given.  Therefore the error estimate
+%\ref{eqn:ee} implies that 
+%\[
+%\|(u,v)-S(h)(U,V)\| = O(h^{2p} + \Delta t^2),
+%\]
+%that is, $(2,2p)$-th order convergence in the $L^2$ sense.
+
+%As mentioned at the beginning, to establish weak convergence of
+%multipole solutions requires $L^{\infty}$, rather than $L^2$,
+%convergence of smooth solutions. We obtain the stronger convergence
+%theory by imitating the proof of the Sobolev Embedding Theorem.
+%
+%Sketch:
+%
+%apply difference operators $D_j$ to difference equations, commute with
+%coefficients, note that same error estimates inherited by $D_j(u,v)$
+%(with respect to $\partial_j (U,V)$) assuming that data is smooth enough
+%
+%iterate, addemup to show that discrete Laplacian of $(u,v)$ converges
+%at same rate, that is, discrete Laplacian of $(u,v)-S(h)(U,V)$ is
+%$O(h^{2p} + \Delta t^2)$ also (in $L^2$ sense)
+%
+%use discrete FT, Plancherel identity, and C-S inequality to bound
+%$(u,v)-S(h)(U,V)$ pointwise. This requires only energy estimate on
+%Laplacian for dimensions 1 and 2; for dimension 3, requires square of
+%Laplacian for dimension 3.
+
+ 
+%%%%%%%
+\subsection{Weak Convergence to Singular Solutions}
+
+In order to combine the moment-based analysis of gridded multipole
+approximations with the convergence theory developed in the last
+section, it is necessary to explicitly identify the Hilbert space
+families $H^1_h,H^2_h$ with vector spaces of grid functions. In order
+to accommodate the structure of commonly used staggered grid schemes
+\cite[]{moczoetal:06}, this definition must allow for participation of
+multiple grid types in each of these spaces.
+
+Recall the definition of a regular grid family $\mathcal G_h(\mathbf
+x_0,\mathbf l)$ with mesh $h \in \bR_+$, offset $\bx_0 \in
+\bR^d$ and cell given by ${\bf l} \in \bR_+^d$, namely $\{\bx \in
+\bR^d: 0 \le x_i\le l_k\}$:
+\[
+	\mathcal G_h(\mathbf x_0,\mathbf l) = \{\bx_{\bf n} =
+        h((x_0)_1+n_1l_1,...,(x_0)_d+n_dl_d), {\bf n} \in {\bf Z}^d\}.
+\]
+We define the {\em grid Hilbert space} $\mathcal H_h(\bx_0, {\bf l})$ to be the real-valued
+functions $f_h$ on $\mathcal G_h(\mathbf x_0,\mathbf l)$ for which
+\[
+\|f_h\|^2 = h^d \left(\Pi_{i=1}^dl_i\right) \sum_{\bx \in \mathcal G_h(\mathbf x_0,\mathbf l)}\,
+|f_h(\bx)|^2
+\]
+is finite. That is, $\| \cdot \|$ is the standard $l_2$ norm, scaled
+by the scaled cell volume.
+
+The sampling operator defined by a grid $\mathcal G_h(\mathbf
+x_0,\mathbf l)$ is the map
+\[
+\mathcal S_h(\bx_0,{\bf l}): C^{\infty}_0(\bR^d) \rightarrow \mathcal
+H_h(\bx_0, {\bf l})
+\]
+defined by evaluating $f_h$ at gridpoints:
+\[
+(\mathcal S_h(\bx_0,{\bf l})f_h)(\bx) = f_h(\bx).
+\]
+
+Define the spaces $H^1_h,H^2_h$ to be direct sums of grid Hilbert
+spaces with common mesh $h$. That is, given offsets $\bx_0^{j,i}$ and
+cell side vectors ${\bf l}^{j,i}, \,1 \le j \le k_i, i=1,2$, set
+\begin{equation}
+\label{eq:def-hilb}
+H^i_h = \oplus_{j=1}^{k_i}\mathcal H_h(\bx_0^{j,i},{\bf l}^{j,i})
+\end{equation}
+with the usual product Hilbert structure. The sampling operators
+\[
+S^i_h: C^{\infty}_0(\bR^d,\bR^{k_i}) \rightarrow H^i_h
+\]
+are diagonal:
+\begin{equation}
+\label{eq:def-samp}
+(S^i_h f)_j = \mathcal S_h(\bx_0^{j,i},{\bf l}^{j,i})(f_j),
+\,j=1,...,k_i
+\end{equation}
+
+With these preliminaries, we can state the central result of this paper:
+
+\begin{theorem}\label{thm:conv}
+Choose $q, N^*\ge 0$, $p>0$. Assume that $Q_h$ approximates $P$ to
+order $p$. Let $(u,v)$ be the weak causal solution to continuum
+problem \ref{eq:cont_system} with singular source terms $(f,g)$
+given by order $N^*$ multipoles,
+\begin{equation*}
+\begin{split}
+	f(\mathbf x,t) &=  \sum_{|{\bf s}_1| \le N^*}w_{{\bf s}_1}(t) D^{{\bf s}_1}\delta(\mathbf x-\mathbf x^*),  
+        \; w_{{\bf s}_1} \in C_0^{\infty}(\bR,\bR^{k_1});\\
+	g(\mathbf x,t) &= \sum_{|{\bf s}_2| \le N^*} z_{{\bf s}_2}(t) D^{{\bf s}_2}\delta(\mathbf x-\mathbf x^*),  
+	\;z_{{\bf s}_2} \in C_0^{\infty}(\bR,\bR^{k_2}). 
+\end{split}
+\end{equation*}
+Let $A_h,B_h$ be defined as in the statement of Theorem
+\ref{thm:smconvg}. Suppose that $(f^{n+1/2}_h,g^n_h)$ to be discrete
+multipoles
+\begin{equation}
+\label{eq:mprhs}
+\begin{split}
+	f^{n+1/2}_h &=  \sum_{|{\bf s}_1| \le N^*}w_{{\bf
+            s}_1}((n+1/2)\Delta t) \eta_h^{\bf s_1},  \\
+	g^n_h &= \sum_{|{\bf s}_2| \le N^*} z_{{\bf
+            s}_2}(n\Delta t) \eta_h^{\bf s_2}
+\end{split}
+\end{equation}
+in which $\eta_h^{\bf s_i} \in H^i_h, i=1,2$ satisfies the discrete $(q,{\bf s_{\bf i}})$-moment condition
+\ref{eq:discmomcond} {\em in each of its components}. Let
+$(u^n_h,v^{n-1/2}_h)$ be the causal solution of \ref{eq:sg}
+with right-hand sides given by \ref{eq:mprhs}. 
+
+Suppose that $(\tilde f,\tilde g) \in
+C^{\infty}_0(\bR^{d+1},\bR^{k_1}) \times
+C^{\infty}_0(\bR^{d+1},\bR^{k_2})$, and set
+\begin{equation}
+\label{eq:defadjrhs}
+\begin{split}
+\tilde{f}^n_h &= S^1_h\tilde{f}(\cdot,n\Delta t)\\
+\tilde{g}^{n+1/2}_h &= S^2_h\tilde{g}(\cdot,(n+1/2)\Delta t).
+\end{split}
+\end{equation}
+
+
+Then
+\begin{equation}\label{eq:weak_conv}
+\begin{split}
+	\mathcal E &:= \left| \int_0^T  \Big\{ \langle u,\tilde f\rangle + \langle v,\tilde g\rangle \Big\} dt -
+		\Delta t \sum_{n=0}^N \Big\{ \langle u_h^{n}, \tilde f_h^{n} \rangle +
+						 	   \langle v_h^{n+1/2}, \tilde g_h^{n+1/2}  \rangle \Big\} \right|\\
+	&= O(\Delta t^2 + h^q + (\Delta t^2+h^{p})h^{-N^*-d/2}),
+\end{split}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Denote by $(\tilde u, \tilde v)$ the unique anticausal solution of the adjoint system \ref{eq:adj_system}
+with right-hand sides $(\tilde f,\tilde g)$. Likewise, denote by $(\tilde{u}^{n-1/2}_h,\tilde{v}^n_h)$ the unique
+anticausal solution of the discrete adjoint system \ref{eqn:inadj}
+with right-hand sides $(\tilde{f}^{n}_h,\tilde{g}^{n+1/2}_h) $ as in
+equation \ref{eq:defadjrhs}.
+
+Using \ref{eqn:weak}, and its continuum version \ref{eq:adj_system}, error $\mathcal E$ is rewritten in terms of inner products with the singular source terms, both in the continuum and discrete sense, i.e.,
+\[
+	\mathcal = \left| \int_0^T  \Big\{ \langle f,\tilde u \rangle + \langle g,\tilde v\rangle \Big\} dt -
+		\Delta t \sum_{n=0}^N \Big\{ \langle f_h^{n+1/2}, \tilde u_h^{n+1/2} \rangle +
+						 	   \langle g_h^{n}, \tilde v_h^{n}  \rangle \Big\} \right|.
+\]
+%MOD Note $(\tilde p,\tilde v)$
+Note \hl{$(\tilde u,\tilde v)$} are solutions to problem \ref{eq:cont_system} with smooth source terms 
+$(-\tilde f,-\tilde g)$, and $(\tilde u_h,\tilde v_h)$ is the respective staggered grid finite difference solution with sources $(-\tilde f_h,-\tilde g_h)$.
+Furthermore,
+\begin{equation*}
+\begin{split}
+\mathcal E &= \left| \int_0^T  \Big\{ \langle f,\tilde u \rangle + \langle g,\tilde v\rangle \Big\} dt -
+		\Delta t \sum_{n=0}^N \Big\{ \langle f_h^{n+1/2}, \tilde u_h^{n+1/2} \pm S_{h}^1\tilde u(\cdot,(n+1/2)\Delta t) \rangle +
+						 	   \langle g_h^{n}, \tilde v_h^{n} \pm S_{h}^2 \tilde v(\cdot,n\Delta t) \rangle \Big\} \right|\\
+	& \le \mathcal E_1 + \mathcal E_2.
+\end{split}
+\end{equation*}
+with
+\[
+\mathcal E_1 := \left|  \int_0^T  \Big\{ \langle f,\tilde u \rangle + \langle g,\tilde v\rangle \Big\} dt
+			-\Delta t \sum_{n=0}^{N} \Big\{  \langle f_h^{n+1/2}, S_{h}^1\tilde u(\cdot,(n+1/2)\Delta t) \rangle +
+			\langle g_h^n, S_{h}^2 \tilde v(\cdot,n\Delta t) \rangle \Big\} \right|
+\]
+\[
+\mathcal E_2 := \left| \Delta t \sum_{n=0}^N \Big\{ \langle f_h^{n+1/2}, 
+				\tilde u_h^{n+1/2} - S_h^1 \tilde u(\cdot,(n+1/2)\Delta t) \rangle 
+			+ \langle g_h^n, \tilde v_h^n - S_h^2 \tilde v(\cdot,n\Delta t) \rangle \Big\} \right|.
+\]
+
+For $\mathcal E_1$, we first focus on the terms involving $f$ and $\tilde u$;
+\begin{equation*}
+\begin{split}
+	\left| \int_0^T \langle f, \tilde u\rangle \;  dt -
+		\Delta t \sum_{n=0}^N \langle f_h^{n+1/2}, S_{h}^1\tilde u(\cdot,(n+1/2)\Delta t)\rangle \right| \\
+	\le
+	\left| \int_0^T \langle f,\tilde u \rangle \; dt - \Delta t \sum_{n=0}^N \langle f(\cdot,(n+1/2)\Delta t),\tilde u(\cdot,(n+1/2)\Delta t)\rangle \right| \\
+	+ \left| \Delta t \sum_{n=0}^N \Big\{ \langle f_h^{n+1/2}, S_{h}^1\tilde u(\cdot,(n+1/2)\Delta t)\rangle - 
+							     \langle f(\cdot,(n+1/2)\Delta t), \tilde u(\cdot,(n+1/2)\Delta t) \rangle \Big\} \right |,
+\end{split}
+\end{equation*}
+which is nothing more than quadrature error for the time integration and the singular source discretization error.
+In particular,
+\[
+	\left| \int_0^T \langle f,\tilde u \rangle \; dt - \Delta t \sum_{n=0}^N \langle f(\cdot,(n+1/2)\Delta t),\tilde u(\cdot,(n+1/2)\Delta t)\rangle \right| = O(\Delta t^2)
+\]
+from standard error estimates of the midpoint rule, and
+\[
+	\left| \Delta t \sum_{n=0}^N \Big\{ \langle f_h^{n+1/2}, S_{h}^1\tilde u(\cdot,(n+1/2)\Delta t)\rangle - 
+							     \langle f(\cdot,(n+1/2)\Delta t), \tilde u(\cdot,(n+1/2)\Delta t) \rangle \Big\} \right |
+	= O(h^q)
+\]
+from the singular source approximation theory (theorem 2).
+Similar error estimates can be derived for the terms involving $g$ and $\tilde v$.\footnote{$O(\Delta t^2)$ quadrature error estimates follow from noting that the summation term coincides with the trapezoidal rule, assuming that $g(t)$ and $\tilde v(t)$ satisfy homogenous initial and final time conditions respectively.}
+
+We bound $\mathcal E_2$ using $L^2$-error estimates of finite difference solutions for smooth problems (i.e., theorem \ref{thm:smconvg}), and using $L^2$-bounds of the discrete singular source approximations; one can show
+\[
+ 	\| \eta_h^{\bf s_{\bf i}}\| = O(h^{-|{\bf s_{\bf i}}|-d/2}), \; i=1,2.
+\]
+%The abounds above need a summation over  |s_i| <= N^*
+%Maybe consider simpler source case of a single multipole ?? MJB
+Whence,
+\begin{equation*}
+\begin{split}
+	\mathcal E_2 &\le \Delta t \sum_{n=0}^N \Big\{ \|f_h^{n+1/2}\| \; 
+				\| \tilde u_h^{n+1/2} - S_h^1 \tilde u(\cdot,(n+1/2)\Delta t) \|
+			+ \|g_h^{n}\|  \; \| \tilde v_h^n - S_h^2 \tilde v(\cdot,n\Delta t) \| \Big\}\\
+					&= O((\Delta t^2+h^p)h^{-N^*-d/2}).
+\end{split}
+\end{equation*}
+Estimate \ref{eq:weak_conv} thus follows.
+\end{proof}
+
+Consider the simpler case where only multipoles of order zero are present, that is $N^*=0$.
+According to estimate \ref{eq:weak_conv}, we have weak convergence at rate $2-d/2$ if we choose $q=p$ and $\Delta t = O(h)$.
+In other words, convergence (in the weak sense) is guaranteed though at a suboptimal rate.
+For multipoles of order $N^*>0$, to retrieve the smooth solution behavior, we would require $p > N^*+d/2$ and $\Delta t\to 0$ like a positive power of $h$.
+
+
+
+The (weak) error estimate we present here can be improved by making the following observation: the $h^{-d/2}$ factor originates from $L^2$-bounds of multipole source approximations.
+In particular, we can remove this factor by using $L^1$-bounds instead, mainly
+\[
+	\| \eta_h^{\mathbf s_{\bf i}}\|_1 = O(h^{-|\mathbf s_{\bf i}|}), \; i=1,2.
+\] 
+Applying H\"older's inequality to $\mathcal E_2$ yields
+\begin{equation}
+\label{eq:weak_conv_infty}
+\begin{split}
+	\mathcal E_2 &\le \Delta t \sum_{n=0}^N \Big\{ \|f_h^{n+1/2}\|_1 \; 
+			\| \tilde u_h^{n+1/2} - S_h^1 \tilde u(\cdot,(n+1/2)\Delta t) \|_{\infty}
+			+ \|g_h^{n}\|_1  \; \| \tilde v_h^n - S_h^2 \tilde v(\cdot,n\Delta t) \|_{\infty} \Big\}\\
+					&= O((\Delta t^2+h^{p})h^{-N^*}).
+\end{split}
+\end{equation}
+We conjecture point-wise bounds hold for smooth $\tilde u$ and $\tilde v_h$, whence
+\begin{equation}\label{eq:conjecture}
+	\mathcal E = O(\Delta t^2 +h^q + (\Delta t^2+h^{p})h^{-N^*}),
+\end{equation}
+yielding optimal rates for the $N^*=0$ case, again if $q\ge p$.
+Note that \ref{eq:weak_conv_infty} follows through if $L^\infty$ error terms $\| \tilde u_h - S_h^1 u \|_\infty$ and $\| \tilde v_h - S_h^2 v \|_\infty$ have optimal rates.
+The authors are not aware of any such $L^\infty$ error
+estimates for the types of hyperbolic systems considered here, see
+however \cite{Brenner:06} and \cite{Layton:82} for some work in this
+direction.
+
+%see \cite{Brenner:06}, an overview of the theory for $L^p$ estimates and stability for initial value problems, this theory is based on Fourier multipliers and Besov spaces.
+%Alternatively, there is a way to produce $L^\infty$ estimates requiring only $L^2$ stability (this is also discussed in \cite{Brenner:06}).
+%In particular, we highlight work by \cite{Layton:82}, for his $L^\infty$ estimates (with $L^2$ stability) based on simple $L^2$-techniques demonstrating optimal convergence rates, albeit for a simple hyperbolic initial value problem.
+%Again, we reiterate that the current theory on $L^\infty$ error estimate finite difference approximations is not immediately applicable to the class of hyperbolic systems considered here, and thus the improved convergence rates remain as a conjecture. 
+
+
+
+%Any discrete multipole of order zero (not a lot of variety there) is
+%uniformly bounded in $L^1$. Therefore this last estimate shows that
+%the multipole solution is weakly convergent of the same order as a
+%smooth solution, mainly $2$-$2p$ convergence if source approximation order $q\ge 2p$.
+%For a multipole of order $N^*$, to retrieve the smooth
+%solution behaviour must have $2p > N^*$ and
+%$\Delta t$ must go to zero like a positive power of $h$.
+
+
+
+
+%\newpage
+%So it follows from
+%\ref{eqn:weak} that
+%\[
+%\Delta t \sum_{n} \langle r^n,u^n \rangle + \langle
+%z^{n+1/2},v^{n+1/2}\rangle
+%\]
+%\[
+%=\Delta t \sum_{n} \langle S(h)(W((n+1/2)\Delta t),Q(n\Delta t)),
+%(f^{n+1/2},g^n)\rangle + O(h^{2p}+\Delta t^2) \times \|(f^{n+1/2},g^n)\|_{L^1}
+%\]
+%using the $L^{\infty}$ error estimate for the smooth solution $(w,q)$
+%proved at the end of the last subsection. 
+%
+%Any discrete multipole of order zero (not a lot of variety there) is
+%uniformly bounded in $L^1$. Therefore this last estimate shows that
+%the multipole solution is weakly convergent of the same order as a
+%smooth solution. For a multipole of order $k$, to retrieve the smooth
+%solution behaviour must have $2p > k$ and
+%$\Delta t$ must go to zero like a positive power of $h$.
+
+%ADDED
+\subsubsection{Acoustic Case}
+
+As an example, consider the acoustic equations in first-order (pressure-velocity) form:
+\begin{equation}\label{eq:acoustics}
+\begin{split}
+	\frac{1}{\kappa(\mathbf x)} \frac{\partial}{\partial t} p(\mathbf x,t) + \nabla\cdot \mathbf v(\mathbf x,t) 
+		&= f(\mathbf x,t)\\
+	\rho(\mathbf x) \frac{\partial}{\partial t} \mathbf v(\mathbf x,t) + \nabla p(\mathbf x,t) 
+		&= \mathbf g(\mathbf x,t)
+\end{split}
+\end{equation}
+where $u=p$ is the scalar pressure field and $v=\mathbf v\in\mathbf R^d$ is the vector particle velocity field.
+Coefficient operator $A(\mathbf x)=1/\kappa(\mathbf x)I$ and $B(\mathbf x)=\rho(\mathbf x) I$, with $\kappa$ denoting bulk-modulus and $\rho$ density of the medium; here $I\in\mathbf R^{d\times d}$ is the identity matrix.
+Lastly, the differential operator $P$ coincides with the gradient and its adjoint with the negative of the divergence,
+\[
+	P = \mat{\frac{\partial}{\partial x_1}\\ \vdots \\ \frac{\partial}{\partial x_d}}, \quad 
+	P^T = - \mat{\frac{\partial}{\partial x_1},...,\frac{\partial}{\partial x_d}}.
+\]
+
+
+For the remainder of this section, we assume that the spatial
+dimension $d=2$. 
+The simplest staggered-grid finite difference scheme, second-order in time and space, is given by
+\begin{equation}\label{eq:acoustics_sgfd}
+\begin{split}
+	\frac{1}{\kappa(ih,jh)} \frac{1}{\Delta t} \Big[  (p_h)^{n+1}_{i,j} - (p_h)^{n}_{i,j} \Big] + \hspace{7cm}\\
+	\frac{1}{h} \Big[ (v_{1,h})_{i+1/2,j}^{n+1/2} - (v_{1,h})_{i-1/2,j}^{n+1/2} + 
+				(v_{2,h})_{i,j+1/2}^{n+1/2} - (v_{2,h})_{i,j-1/2}^{n+1/2} \Big] 
+		&= (f_h)^{n+1/2}_{i,j}\\
+	\rho((i+1/2)h,jh) \frac{1}{\Delta t} \Big[ (v_{1,h})^{n+1/2}_{i+1/2,j} - (v_{1,h})^{n-1/2}_{i+1/2,j} \Big] +
+	\frac{1}{h} \Big[ (p_h)_{i+1,j}^{n} - (p_h)_{i,j}^{n} \Big] 
+		&= (g_{1,h})_{i+1/2,j}^{n}\\
+	\rho(ih,(j+1/2)h) \frac{1}{\Delta t} \Big[ (v_{2,h})^{n+1/2}_{i,j+1/2} - (v_{2,h})^{n-1/2}_{i,j+1/2} \Big] +
+	\frac{1}{h} \Big[ (p_h)_{i,j+1}^{n} - (p_h)_{i,j}^{n} \Big] 
+		&= (g_{2,h})_{i,j+1/2}^{n}
+\end{split}
+\end{equation}
+where grid functions $\{p_h,v_{1,h},v_{2,h}\}$ approximate the continuum fields $\{p,v_1,v_2\}$ respectively, % for system \ref{eq:cont_system}, mainly,
+\begin{equation*}
+\begin{split}
+	(p_h)_{i,j}^{n} &\approx p(ih,jh,n\Delta t), \\
+	(v_{1,h})_{i+1/2,j}^{n+1/2} &\approx v_1((i+1/2)h,jh,(n+1/2)\Delta t),\\
+	(v_{2,h})_{i,j+1/2}^{n+1/2} &\approx v_2(ih,(j+1/2)h,(n+1/2)\Delta t).
+\end{split}
+\end{equation*}
+We emphasize that the velocity fields for finite difference scheme \ref{eq:acoustics_sgfd} are staggered with respect to spatial grids, more specifically each component is shifted by half a cell size in its respective axis.
+Relating system \ref{eq:acoustics_sgfd} with \ref{eq:sg}, we see
+\[
+	(u_h)_{i,j} = (p_h)_{i,j}, \quad 
+	(v_h)_{i,j} = \mat{(v_{1,h})_{i+1/2,j}\\ 
+				  (v_{2,h})_{i,j+1/2} }.
+\]
+The space $H_h^1$ in this example corresponds to the set of square summable 
+scalar-valued functions on rectangular grid
+\[
+	\mathcal G((0,0),(1,1)) = \{ \mathbf x_{i,j} = (ih,jh) \; : \; i,j\in\mathbf Z \}.
+\]
+In other words, $H_h^1 = \mathcal H_h((0,0),(1,1))$.
+$H_h^2$ is the set of square summable $\mathbf R^2$-valued functions on half-cell shifted grids, that is, 
+\[
+	H_h^2 = \mathcal H_h((1/2,0),(1,1)) \times \mathcal H_h((0,1/2),(1,1)).
+\]  
+
+
+%\begin{equation*}
+%\begin{split}
+%	\langle u_h,\tilde u_h\rangle = h^2 \sum_{i,j} (u_h)_{i,j} (\tilde u_h)_{i,j} &\quad 	\text{for } u_h,\tilde u_h \in H_h^1\\
+%	\langle v_h, \tilde v_h \rangle = h^2 \sum_{i,j} (v_h)_{i,j} \cdot (\tilde v_h)_{i,j} &\quad
+%	\text{for } v_h,\tilde v_h \in H_h^2.
+%\end{split}
+%\end{equation*}
+%Inner-products and norms of the spaces $\mathcal H_1, \mathcal H_2, H_{1,h}, H_{2,h}$ are all denoted by $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ and interpreted given the context, unless otherwise specified.
+
+
+Sampling operators $S_h^1$ and $S_h^2$ coincide with evaluating continuum functions on grid or shifted grid points accordingly,
+\[
+	(S_h^1 u)_{i,j} = u(ih,jh), \quad 
+	(S_h^2 v)_{i,j} = \mat{v_{1}((i+1/2)h,jh)\\ 
+				  v_{2}(ih,(j+1/2)h) }.
+\]
+Discretized coefficient operators $A_h$ and $B_h$ are given by,
+\[
+	(A_h u_h)_{i,j} = \frac{1}{\kappa(ih,jh)} (u_h)_{ij}, \quad
+	(B_h v_h)_{i,j} = \mat{ \rho((i+1/2)h,jh) (v_{1,h})_{i+1/2,j} \\
+					 \rho(ih,(j+1/2)h) (v_{2,h})_{i,j+1/2} }.
+\]
+Lastly, $P_h$ and $P_h^T$ correspond to second-order approximations of the gradient and the negative of the divergence respectively;
+\begin{equation*}
+\begin{split}
+	(P_{h}(r) u_h)_{i,j} &= r \mat{ (u_h)_{i+1,j} - (u_h)_{i,j} \\
+					     (u_h)_{i,j+1} - (u_h)_{i,j} }, \\
+	(P_{h}(r)^T v_h)_{i,j} &= -r \Big[ (v_{1,h})_{i+1/2,j} - (v_{1,h})_{i-1/2,j} + (v_{2,h})_{i,j+1/2} - (v_{2,h})_{i,j-1/2} \Big]
+\end{split}
+\end{equation*}
+with $r =  \Delta t/h$.
+In general, the differential operator $P$ can be approximated by a family of central difference operators $P_h$ of even order $p=2p^*$ for $p^*\in\mathbf N$, resulting in the $(2,2p^*)$ staggered-grid finite difference schemes.
+
+%\hl{It follows that our weak convergence analysis applies to this example.}
+
+\newpage
+%%%%%%%%%%%%%%%%
+\section{Numerical Tests}
+%%%%%%%%%%%%%%%%
+
+We have implemented the singular source approximation as discussed in the theory section
+using the C++ packages \emph{IWave} and \emph{Rice Vector Library} (RVL);
+\citep{GeoPros:11,RVL_TOMS}.  The IWave package %serves as
+is a framework for finite difference solvers over uniform grids while
+the RVL package provides a system of classes for expression of
+gradient-based optimization algorithms over Hilbert spaces.  IWave and
+RVL come together to form a modeling engine for seismic inversion and
+migration. Implementation of multipole sources as RVL objects enables
+straightforward composition with IWave solvers and inclusion in
+inversion algorithms powered by RVL optimization code. Any other wave
+equation solver wrapped in the appropriate RVL interfaces could be
+coupled to the multipole source objects in the same way.
+
+A convergence rate study is performed to corroborate theoretical results
+pertaining to the accuracy of moment-consistent approximations to multipole sources.
+In particular, our numerical experiments explore the semi-discrete error of staggered-grid finite difference solutions (time discretization errors are 
+minimized by taking sufficiently small time steps).
+We used the IWave implementation of staggered-grid finite difference schemes 
+for the acoustic system \ref{eq:acoustics} \cite[]{Vir:84}, of order 2 in time and orders 2 and 4 in space - we
+refer to these as the $(2,2)$ and $(2,4)$ order schemes respectively. In these
+experiments we use only scalar (pressure) sources and pressure trace
+data. Similar results are obtained with other choices. Boundary
+conditions are of PML type, as described by \cite{Habashy:07},
+
+The numerical experiments carried out concern multipoles in 2-D of the form
+\[
+	f(\mathbf x,t) = w(t) D^{\mathbf s} \delta(\mathbf x-\mathbf x^*),
+\]
+for $\mathbf s =(0,0),(0,1),(0,2)$.
+The discretizations of $D^{\mathbf s}\delta$ are chosen as to achieve a target order of
+convergence for the difference schemes, in most cases the nominal
+spatial order ($q=2$ for the $(2,2)$ scheme, $q=4$ for the $(2,4)$ scheme). 
+Again, the time step is fixed small enough that the time discretization error plays
+essentially no role in the global error - it reflects truncation error
+of the spatial derivative and the source approximation only.
+Time-dependent function $w(t)$ is chosen to be a Ricker wavelet with peak 
+frequency of $5Hz$, see figure \ref{fig:wlt-ricker}.
+
+We approximate the convergence rate $R(\mathbf x)$ at a given location $\mathbf x$ via Richardson extrapolation,
+\[
+        R(\mathbf x) = \text{log}_2 \left( \frac{\| p_{h}(\mathbf x,\cdot)-p_{h/2}(\mathbf x,\cdot)\| }{\|p_{h/2}(\mathbf x,\cdot)-p_{h/4}(\mathbf x,\cdot)\| } \right)
+\] 
+where $p_h$ denotes the computed pressure field via finite difference using a grid size $h$ respectively.
+The norm $\|\cdot\|$ is chosen to be 
+\[
+        \|p(\mathbf x,\cdot) \| := \sqrt{ \Delta t \sum_{k} |p(\mathbf x,t_k)|^2},
+\]
+
+Coordinates are aligned such that $\mathbf x = (z,x)$, 
+where $z$ and $x$ refer to depth and horizontal distance respectively.  
+%Similarly for 3-D, $\mathbf x=(z,x,y)$ where $y$ is
+%measured along the remaining perpendicular direction.  
+The computational domain consists of a $4km$ by $4km$ square medium
+with a constant bulk modulus of $9 GPa$ and buoyancy of $1 cm^3/kg$,
+thus a constant velocity of $3 km/s$.
+%Receivers are placed in a 2-D grid covering the entire domain at every $40 m$ in each direction.
+The source is placed slightly off of the center, $(z^*,x^*)=(-2003m,2003m)$, 
+as to not coincide with a grid point for any of the computational uniform grids.
+The following are some other specifications that apply to all tests carried out here:
+\begin{itemize}
+        \item total recording time is $1.5s$;
+        \item spatial grid sizes $h=40m$, $h/2=20m$, $h/4=10m$;
+        \item time step $\Delta t=0.5ms$;
+\end{itemize}
+%Note that the coarsest grid cell size is $40m$ which implies that at least $15$ 
+%grid {\em points per wavelength (gpw)} at peak frequency of $5Hz$ or $5$ gpw at $15Hz$ 
+%(see figure \ref{fig:wlt-ricker-fft}), in all numerical experiments, 
+%thus minimizing the effects of grid dispersion on approximated convergence rates.
+
+%Figures \ref{fig:model-geo-2D} and \ref{fig:model-geo-3D} describe the model 
+%and source-receiver geometry for convergence rate tests in 2-D and 3-D respectively.
+%The following are some other specifications that apply to all tests carried out here:
+%\begin{itemize}
+%        \item total recording time is $1.5s$;
+%        \item spatial grid sizes $h=40m$, $h/2=20m$, $h/4=10m$;
+%        \item time step $\Delta t=0.5ms$;
+%\end{itemize}
+%Note that the source location is chosen as to not coincide with a grid point for any of the computational uniform grids.
+%Moreover, the coarsest grid cell size is $40m$, which implies at least $15$ grid {\em points per wavelength (gpw)}
+%at peak frequency of $5Hz$ or $5$ gpw at $15Hz$ (see figure \ref{fig:wlt-ricker-fft}), in all numerical experiments, 
+%thus minimizing the effects of grid dispersion on approximated convergence rates.
+
+%%%%%%%%%%%%%%%%
+\subsection{Results}
+
+
+Figures \ref{fig:sq-test-s00q2-fd2-plotsnap} -- \ref{fig:sq-test-s02q2-fd2-plotsnap} 
+plot a snapshot of the computed pressure field for different multipole sources.
+Consistent with analytical formulas for the homogeneous unbounded medium case, 
+the observed pressure field exhibited a polarity reversal (or lack of), a symmetry about the $x$-axis (i.e., $z=2003$), and an overall decrease in amplitude dependent on the multipole.
+
+%Figures \ref{fig:test-s00q2-fd2-data10} -- \ref{fig:test-s02q2-fd2-data10} 
+%and \ref{fig:test-s000q2-fd2-data10} -- \ref{fig:test-s020q2-fd2-data10} 
+%plot pressure field traces versus horizontal location for different multipole sources in 2-D and 3-D respectively.
+%Consistent with analytical formulas for the homogeneous unbounded medium case, 
+%traces exhibited a polarity reversal (or lack of) and an overall decrease in amplitude dependent on 
+%the multipole.
+
+Convergence rates are plotted for the $\mathbf s=(0,0)$ case in figure 5, 
+over the entire domain and at a particular depth of $z=2000$ in the left and right column plots respectively.
+The first row of graphs shows results when using the $(2,2)$ finite difference scheme and the second-order source approximation.
+We observe that second order convergence is indeed achieved away from the source.
+Similarly, fourth order convergence results are observed when using the $(2,4)$ finite difference scheme and the fourth-order source approximation, i.e., second row in figure 5.
+Lastly, the third row of plots demonstrates the negative effects of using a lower order source approximation relative to the spatial finite difference order, namely a second-order source approximation with a fourth-order method in space.
+Clearly, fourth order rates are not achieved and moreover, there seems to be regions 
+where rates dip below or above the expected second order.
+Convergence results for $\mathbf s=(0,1)$ and $\mathbf s=(0,2)$ are given in figures 6 and 7 respectively with similar results.
+The green line in figure \ref{fig:sq-test-s01q4-fd4-plots-wind} coincides with the nodal plane of the dipole source, that is, a line in the $zx$-plane where the source produces a null response. 
+
+%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion}
+%%%%%%%%%%%%%%%%%%%%%%
+
+Numerical results presented here validate the accuracy of moment-consistent singular source discretizations for controlling the propagation of finite difference truncation error for multipole sources.  
+In particular, optimal spatial convergence rates for the $(2,2)$ and $(2,4)$ staggered grid finite difference methods are achieved, point-wise in space away from source location, when the source approximation order is equal to that of the spatial finite difference approximation order.
+
+The onset distance of optimal order convergence is consistent with the support of the source approximation for the coarsest grid used in the convergence study, that is, $h(q+|{\bf s}|)$ with $h=40m$.
+The erratic behavior of numerical convergence rates within the support of source approximations can be explained in part by how convergence rates were approximated.
+Namely, numerical solutions over consecutively refined grids are essentially compared, though over the coarsest grid.
+It follows that the support of $f_{h}$, the source approximation with respect to grid with cell size $h$, will contain the support of $f_{h/2}$ and a region in the $h$-grid outside the direct influence of $f_{h/2}$, resulting in irregular convergence rates.
+
+As mentioned in the Literature Review, \cite{Petersson:2016}
+demonstrated that optimal convergence rates can be achieved if the
+source discretization satisfied moment as well as smoothness
+conditions. \cite{Petersson:2016} used central difference
+approximations to the space derivatives and Runge-Kutta time
+integration, for various advection problems and for acoustics. The
+staggered grid schemes used in our work, however, do not require
+additional constraints beyond the moment conditions for the multipole
+source approximations.
+
+%As our numerical tests demonstrate, smoothness conditions were not necessary here, which is attributed to the fact that we use staggered-grid finite difference schemes. 
+%In particular, the central finite difference operator used in \cite{Petersson:2016} have an associated grid spacing of $2h$ with respect to an $h$-sized grid, coupled with a source approximation of narrow support, i.e., $2\epsilon=(q+|\mathbf s|)h$, results in the triggering of spurious modes unresolved by the numerical solution.
+%The finite difference operators used here however have a grid spacing of $h$ given that they approximate derivatives over staggered grids.
+%Thus, in essence our narrow source approximations ``seem'' twice as wide, and therefore smoother, from the point of view of the difference operator $P_h$.
+%For this reason, smoothness conditions are not necessary for staggered-grid finite difference schemes.
+
+
+
+
+%
+%%MJB edit
+%As mentioned in our discussion of singular source approximation theory,
+%current literature fails to provide analysis directly applicable to the solution of 
+%acoustodynamics (equations \ref{eq:acous}) or elastodynamics (equations \ref{eq:elas}) with multipole sources.
+%The most complete account, as far as we are aware, of the analysis of approximations 
+%to PDEs with singular sources is given by \cite{hoss:16} in the context
+%of regularizations of the delta distribution.
+%\citeauthor{hoss:16} developed a unified framework for analyzing approximation errors 
+%that can be readily applied to any numerical scheme.
+%Their work in particular addressed two fundamental questions: 
+%(i) What form of convergence should be used to examine $f^h\to f$? 
+%That is, how does our source approximations converge to multipoles as distributions?
+%(ii) What form of convergence should be used to examine $u^h\to u$, 
+%convergence of numerical solution $u^h$ with source approximation $f^h$ to true
+%solution $u$ with source $f$?
+%Authors showed that convergence of $f^h\to f$ in the distribution sense (weak-* topology),
+%and in some weighted Sobolev norm, can be achieved at a desired rate if a set of 
+%{\em continuous moment conditions} are satisfied by the approximation $f^h$, 
+%analogous to the discrete moment conditions discussed here.
+%Furthermore, they discussed answers to question (ii) and the interplay of approximation $f^h$ with
+%the convergence of $u^h\to u$ for protopical elliptic and hyperbolic PDEs.
+%
+%%MJB edit
+%Numerical results presented here, and by \cite{Petersson:2010}, 
+%help motivate the use of approximations to multipoles as suggested by
+%\cite{Walden:1999} and \cite{TorEng:04}.
+%Moreover, we believe it is possible to provide a formal error analysis of our conjecture 
+%by building upon the theoretical framework laid out by \cite{hoss:16}.
+%%This would entail answering the following questions:
+%%Can the theory be extended to distributions of the form $D^{\bf s}\delta$?
+%%If so, do source approximations that satisfy discrete moments (equation \ref{eq:qmom})
+%%also satisfy some version of the continuous moments as given by \cite{hoss:16}?
+%%Question (ii) and the interplay of approximation $f^h$ with
+%This would entail analyzing the interplay of approximations $f^h$ with
+%the convergence of $u^h\to u$ for our particular PDEs and choice of 
+%numerical scheme.
+%
+%The RVL-based structure of our MPS framework does not really get a
+%solid workout in this study. Inspection of the code and scripts
+%shows that the framework is a convenient environment for 
+%implementing the numerical examples presented in the last
+%section. However the capabilities of this mode of code organization
+%emerge much more clearly in inversion applications. For example, we have shown in
+%another place REFERENCE??? that a choice of norm in an MPS space, that
+%reflects the effect of the spatial delta derivatives on temporal
+%frequency, can dramatically accelerate the convergence of
+%source recovery by Krylov subspace iteration. For this, it was only
+%necessary to pass the {\tt RVL::LinOpValOp} representing the MPS-to-data 
+%trace map, and an {\tt RVL:LinearOp}
+%representing the Gram operator of the norm,  to an RVL implementation of the
+%preconditioned conjugate gradient method, used completely without
+%alteration. It will also be possible to incorporate the MPS based
+%operator into the RVL implementation of variable projection method
+%\cite[]{LiRickettAbubakar:13} for joint source-medium inversion
+%without any change either to the MPS code or to the RVL variable
+%projection algorithm.
+%
+%%We would be remised if we did not point out some of the attractive features present in this singular source approximation.
+%%For one, incorporating source approximations is rather straight-forward and minimaly invasive to the finite difference implementation, a matter of cooking up the correct collection of RHS sources and injecting them at proper grid points.
+%%Moreover, the relationship between our source parameterization via MPS coefficients and RHS source-terms for finite difference solvers is a linear one, aptly implemented by our \texttt{MPS\_to\_RHS} operator.
+%%Ultimately the singular source approximation implemented in our framework preserves linearity of the MPS-to-data map in a natural way that will be crucial for source inversion.
+%
+%We have not addressed two important issues in the work reported here.
+%The first is the order of multipole necessary to represent a given
+%degree of source anisotropy. Point support is an idealization: active source regions may
+%be small or comparable to a wavelength in spatial
+%extent. \cite{SantosaSymes:00} showed that multipole approximation
+%(equation \ref{eq:MPSappx}) of acoustic sources vanishing outside
+%a small region of space
+%exhibits a threshhold effect, in that the error in the
+%resulting acoustic fields drops abruptly as the length of the series
+%($N$ in the expression \ref{eq:MPSappx})
+%is increased past a critical value.
+%This threshhold in the number of terms necessary for accurate
+%approximation depends on the size of the active region and a measure of energy
+%output relative to energy input (related to the degree of
+%anisotropy).
+%The analysis in \cite[]{SantosaSymes:00} pertains to acoustics,
+%% the leap to linear elasticity is rather justifiable. (REALLY?)
+%however we expect similar results to hold for linear elastodynamics.
+%Earthquake seismology has 
+%%indeed benefitted from the applicability of
+%long used multipole source approximations in elastic media 
+%%particularly for the determination of
+%to describe earthquake mechanisms. 
+%The %basic earthquake representation is  
+%%what is referred to as 
+%%the 
+%seismic moment tensor
+%%which is 
+%represents earthquake source mechanisms by a combinations of point-dipole body forces, that is, a
+%first-order vector-valued multipole \cite[]{Backus:1976a,Shearer:2009}.
+%Moment tensors of higher order (that is, higher order multipole series) have been shown to be important in cases where finiteness of the source is of issue, that is the fault size is comparable to propagating wavelengths \cite[]{Stump:1982}.
+%
+%%WWSAccurate source representation and estimation is crucial to the seismic inversion problem, whos focus is the recovery of medium parameters.
+%%The moderate success of
+%%Joint determination of medium and source parameters
+%% in 
+%%for improving seismic inversion 
+%%has motivated 
+%%motivates our work on MPS representation of seismic sources.
+%A second natural question is: how much source anisotropy is really
+%necessary to fit field data well?
+%%Since source radation pattern anisotropy has a first-order effect on
+%%seismic amplitudes, it is natural to expect that 
+%%anisotropic source representation, such as multipole series, would be
+%%an important ingredient in seismic inversion.
+%\cite{SymMink:97} 
+%%motivate the need for joint medium-source parameter inversion and a source representation that accounts for anisotropy in the context of plane-wave viscoelastic modeling of marine reflection data.
+%%Their results 
+%show that inverting marine reflection data for multipole source
+%parameters together with a layered viscoelastic model,% as oppose to
+%%using a given isotropic modeled source or even inverting for an
+%%isotropic source, %allowed them to account 
+%resulted in fitting 25\% more of the data than was possible with any
+%isotropic source, and allowed
+%%were even able to achieve a dramatic 
+%90\% data fit to the target portion of the data. Moreover, recovered
+%p-wave and s-wave impedance parameters matched closely the expected
+%seismic-lithologic signature of the gas sand only when %jointly
+%                                %estimating for 
+%viscoelastic model and anisotropic source parameters were simultaneously esitmated.
+%The order of multipole required to achieve this degree of data fit and
+%well log tie was $N=6$. Obviously the necessary order depends on many
+%factors, and varies from survey to survey. The framework we have
+%provided here offers a platform in which to develop an approach to
+%source anisotropy estimation as part of the overall inversion process.
+
+%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+%%%%%%%%%%%%%%%%%%%%%
+
+In this paper we have covered the singular source approximation theory
+based on moment conditions, which essentially has approximations mimic 
+the behavior of the target distribution $D^{\mathbf s}\delta(\mathbf x-\mathbf x^*)$ on polynomials.
+Moreover, we give explicit forms of source approximations with narrow support,
+based on the discrete moment conditions in the context of finite difference solvers:
+diameter $2\epsilon = (q+|\mathbf s|) h$ for a multipole of order $|\mathbf s|$
+over a grid of size $h$.
+As a new result, we connect the discrete and continuum singular source approximation
+theory by proving that continuum functions generated from the discrete moment conditions 
+indeed satisfy the continuum moment conditions.
+
+Our main contribution was the development of a weak convergence theory that is applicable to a large set of wave propagation problems (including acoustics and elasticity in first-order form) solved via a family of staggered-grid finite difference schemes.%MOD, larger than what is reported in the current literature.
+Posing the convergence mode of numerical solutions in terms of weak convergence was indeed a natural choice given that source terms are derivatives of the Dirac delta function, that is, distributions.
+%ADDED
+\hl{
+The weak convergence theory relied on the structure of the the general continuum problem} \ref{eq:cont_system} \hl{and the ability for its discretization to preserve this structure, i.e, coefficient operators ($A,B,A_h,$ and $B_h$) are symmetric and bounded.% and the differential operators $P$ and $P_h$ satisfy a skew-adjoint relation.
+The general staggered finite difference scheme} \ref{eq:sg} \hl{is also assumed to be staggered in time, in particular a central difference approximation of the time derivative was applied.
+Given the aforementioned assumptions on the continuum problem and its discretization, energy estimates along with the singular source approximation theory (theorem }\ref{thm:discweakconv} \hl{) are the key ingredients that gives us our main weak convergence result, theorem} \ref{thm:conv}.
+%END ADDED
+Numerical results, however, give evidence of stronger convergence, namely 
+optimal convergence rates given by numerical scheme under smooth conditions,
+point-wise away from source location for appropriate source discretizations and
+in particular for multipoles of order $|\mathbf s |=0,1$ and $2$.
+
+
+
+
+
+
+%%%%%%%%%
+\section{Acknowledgements}
+
+We are grateful to the sponsors of The Rice Inversion Project for their long-term support,
+and to the Rice Graduate Education for Minorities (RGEM) and XSEDE scholarship programs for their support of M. Bencomo's Ph.D. research.
+This material is also based upon work supported by the National Science Foundation under Grant No. DMS-1439786 while the author was in residence at the Institute for Computational and Experimental Research in Mathematics in Providence, RI, during the Fall 2017 semester.
+
+
+
+
+%%%%%%%%%
+% PLOTS 
+%%%%%%%%%
+\inputdir{project}
+
+\multiplot{6}{ssappx-s0q2,ssappx-s0q4,ssappx-s1q2,ssappx-s1q4,ssappx-s2q2,ssappx-s2q4}{width=0.33\textwidth}{Plots of $\eta^\epsilon(x)$, 1-D approximations to $D^s\delta(x)$ with $h=1$. (a) $s=0$ and $q=2$, (b) $s=0$ and $q=4$, (c) $s=1$ and $q=2$, (d) $s=1$ and $q=4$, (e) $s=2$ and $q=2$, (f) $s=2$ and $q=4$.}
+
+\multiplot{6}{ssappx-s00q2,ssappx-s00q4,ssappx-s01q2,ssappx-s01q4,ssappx-s02q2,ssappx-s02q4}{width=0.33\textwidth}{Plots of $\eta^\epsilon(\mathbf x)$, 2-D approximations to $D^{\mathbf s}\delta(\mathbf x)$ with $\mathbf l=(1,1)$ and $h=1$. (a) $\mathbf s=(0,0)$ and $q=2$, (b) $\mathbf s=(0,0)$ and $q=4$, (c) $\mathbf s=(0,1)$ and $q=2$, (d) $\mathbf s=(0,1)$ and $q=4$, (e) $\mathbf s=(0,2)$ and $q=2$, (f) $\mathbf s=(0,2)$ and $q=4$.}
+
+\multiplot{2}{wlt-ricker,wlt-ricker-fft}{width=0.6\textwidth}{Ricker wavelet with peak frequency $5Hz$: (a) time plot, (b) power spectrum plot.}
+
+
+\multiplot{3}{sq-test-s00q2-fd2-plotsnap,sq-test-s01q2-fd2-plotsnap,sq-test-s02q2-fd2-plotsnap}{width=0.48\textwidth}{Snapshot of pressure field ($t=0.75$ sec) computed using $(2,2)$ finite difference scheme ($h=10m, \Delta t=0.5$ ms) and second-order approximation of multipole source $D^{\bf s}\delta({\bf x}-{\bf x^*})$: (a) ${\bf s}=(0,0)$, (b) ${\bf s}=(0,1)$, and (c) ${\bf s}=(0,2)$.}
+
+\multiplot{9}{sq-test-s00q2-fd2-plots,sq-test-s00q2-fd2-plots-wind,sq-test-s00q2-fd2-plots-wind2,sq-test-s00q4-fd4-plots,sq-test-s00q4-fd4-plots-wind,sq-test-s00q4-fd4-plots-wind2,sq-test-s00q2-fd4-plots,sq-test-s00q2-fd4-plots-wind,sq-test-s00q2-fd4-plots-wind2}
+{width=0.25\textwidth}{Convergence rates results for ${\mathbf s}=(0,0)$. Using (a) $(2,2)$ FD scheme and second-order source approximation, (d) $(2,4)$ FD scheme and fourth-order source approximation, (g) $(2,4)$ FD scheme and second-order source approximation. Plots (b), (e), (h) correspond to convergence rates at $z=2000$, related to the first column from the left. Similarly, plots (c), (f), (i) show rates at $z=-1600$.}
+
+\multiplot{9}{sq-test-s01q2-fd2-plots,sq-test-s01q2-fd2-plots-wind,sq-test-s01q2-fd2-plots-wind2,sq-test-s01q4-fd4-plots,sq-test-s01q4-fd4-plots-wind,sq-test-s01q4-fd4-plots-wind2,sq-test-s01q2-fd4-plots,sq-test-s01q2-fd4-plots-wind,sq-test-s01q2-fd4-plots-wind2}
+{width=0.25\textwidth}{Convergence rate results for ${\mathbf s}=(0,1)$. Using (a) $(2,2)$ FD scheme and second-order source approximation, (d) $(2,4)$ FD scheme and fourth-order source approximation, (g) $(2,4)$ FD scheme and second-order source approximation. Plots (b), (e), (h) correspond to convergence rates at $z=2000$, related to the first column from the left. Similarly, plots (c), (f), (i) show rates at $z=-1600$.}
+
+\multiplot{9}{sq-test-s02q2-fd2-plots,sq-test-s02q2-fd2-plots-wind,sq-test-s02q2-fd2-plots-wind2,sq-test-s02q4-fd4-plots,sq-test-s02q4-fd4-plots-wind,sq-test-s02q4-fd4-plots-wind2,sq-test-s02q2-fd4-plots,sq-test-s02q2-fd4-plots-wind,sq-test-s02q2-fd4-plots-wind2}
+{width=0.25\textwidth}{Convergence rate results for ${\mathbf s}=(0,2)$. Using (a) $(2,2)$ FD scheme and second-order source approximation, (d) $(2,4)$ FD scheme and fourth-order source approximation, (g) $(2,4)$ FD scheme and second-order source approximation. Plots (b), (e), (h) correspond to convergence rates at $z=2000$, related to the first column from the left. Similarly, plots (c), (f), (i) show rates at $z=-1600$.}
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+

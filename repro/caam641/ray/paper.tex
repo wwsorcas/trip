@@ -1,0 +1,986 @@
+\title{Geometric Optics}
+\maketitle
+
+\label{ch:ray}
+
+\inputdir{project}
+
+\section{Introduction}
+The ``geometric optics'' of the section title refers to a high frequency asymptotic approximation to wave motion. In combination with the Born approximation explained in the last section, this approximation leads to most of the intuition and many of the methods used in practical seismic data processing. Recall that the Born approximation is particularly accurate when the background is smooth and the perturbation oscillatory on the wavelength scale. This is exactly the setting in which geometric optics is effective in approximating the Born approximation.
+
+\section{Progressing Wave Expansion}
+
+%To understand the perturbational field $\delta p$, it is evident from 
+%\ref{pert}
+%(2)
+%that we must first understand the background field $p$.  As might be guessed
+%from the point-source assumption, this field is singular --- in fact, 
+Begin once again with the wave equation \ref{eqn:cdawe}, which we
+repeat here for convenience:
+\begin{eqnarray}
+\label{eqn:raycdawe}
+\frac{\partial^2 p}{\partial t^2} -v^2 \nabla^2 p& = & f\\
+p &= & 0, \,t<<0 \nonumber 
+\end{eqnarray} 
+Denote by $G(\bx,t;\bx_s)$ the Green's function, that is, the solution of equation \ref{eqn:raycdawe} for 
+$f(\bx,t) = \delta(t)\delta(\bx-\bx_s)$. In view of the linearity of the wave equation and the time-independence of the coefficients, the solution of \ref{eqn:raycdawe} may be expressed as 
+\begin{equation}
+\label{eqn:green}
+p(\bx,t ) = \int dt_s \int dx_s \,f(\bx_s,t-t_s)G(\bx,t_s;\bx_s)
+\end{equation}
+As noted in the last section, if $v$ is constant, then in 3D 
+\begin{equation}
+\label{eqn:green3d}
+G(\bx,t;\bx_s) = \frac{\delta(t-r/v)}{4\pi r}, \,r=|\bx-\bx_s| = \sqrt{(\bx-\bx_s)^T(\bx-\bx_s)}.
+\end{equation}
+whereas in 2D,
+\begin{equation}\label{eqn:green2d}
+G(\bx,t;\bx_s)=\frac{1}{\pi v^2} \int_0^{\sqrt{t-r/v}}d\sigma \frac{\delta(t-\sigma^2-r/v)}{\sqrt{\sigma^2 + 2r/c}}. 
+\end{equation}
+While it is not possible to write such explicit expressions for the
+fundamental solution in , it is possible
+to describe the leading singularity of $G$, assuming smoothness of the
+wave velocity $v$ (physically, separation of scales).  This is accomplished {\em via} the
+{\em progressing wave expansion} (~\cite{CourHil:62}, Ch. VI).  Each
+of the formulas for $G$ above is of the form $a(\bx,\bx_s)S(t-\tau(\bx,\bx_s))$
+where $a$ and the travel time function $\tau$ are smooth except possibly at
+$\bx=\bx_s$, and $S(t)$ is singular at $t=0$.  The progressing wave expansion
+allows the extension of this expression away from $\bx=\bx_s$, up to a limit
+signaled by a fundamental change in the nature of the wavefield, and with an
+error which is {\em smoother} than $S$: it takes the form
+\begin{equation}
+\label{eqn:progwave}
+G(\bx,t;\bx_s) = a(\bx,\bx_s)S(t-\tau(\bx,\bx_s)) + R(\bx,t;\bx_s)
+\end{equation}
+where $R$ is in some sense to be smoother than $S$, and $a$ and $\tau$ are
+assumed to be smooth in some as-yet unspecified region. The first term
+clearly expresses wave motion: if it is possible to show that it is
+truly identifiable as separate (more singular) than the remainder $R$,
+then the progressing wave expansion justifies the name of the wave equation.
+
+Applying the wave
+operator to the right-hand side of equation \ref{eqn:progwave}, we obtain
+\begin{eqnarray}
+\label{eqn:progwaveexp}
+\lefteqn{\left(\frac{\partial^2}{\partial t^2} - v^2\nabla^2 \right)
+  G} \nonumber \\[1ex]
+& = & a( 1 - v^2|\nabla \tau|^2)S''(t-\tau) \nonumber\\[1ex]
+  && - \;  v^2( 2\nabla a \cdot \nabla \tau +a \nabla^2 \tau)
+     S'(t-\tau) \nonumber \nonumber \\[1ex]
+  && - v^2\nabla^2 a S(t-\tau) 
+   + \frac {\partial ^2 R}{\partial t^2} -  v^2 \nabla^2 R \nonumber \\[1ex]
+&=&  \delta(\bx-\bx_s)\delta(t) \;.
+\end{eqnarray}
+Formally, the terms written in the above order have decreasing orders of
+singularity, so that if $G$ is to solve the wave equation for $\bx \ne
+\bx_s$, each of the coefficients above ought to vanish.  Certainly, if
+\begin{equation} 
+  \label{eqn:eik}
+|\nabla \tau|^2 = \frac{1}{v^2} 
+\end{equation}
+\begin{equation}
+   \label{eqn:transp} 
+2\nabla a \cdot \nabla \tau + a\nabla
+^2\tau = 0  
+\end{equation}
+then the first two terms vanish. The last term vanishes if
+\begin{equation}
+\label{eqn:rem0}
+\delta(\bx-\bx_s)\delta(t) + v^2 \nabla^2 a S(t-\tau) = \frac {\partial ^2 R}{\partial t^2} -  v^2
+\nabla^2 R,
+\end{equation}
+an inhomogeneous wave equation for the remainder $R$.
+
+Equation \ref{eqn:eik} is the {\em eikonal equation} of geometric optics (of which the
+progressing wave expansion is a variant). Inspecting the Green's functions \ref{eqn:green2d} and \ref{eqn:green3d}, evidently $\tau(\bx,\bx_s) = |\bx-\bx_s|/v$ for constant $v$, and indeed it is easy to verify that this function satisfies the eikonal equation \ref{eqn:eik}. The correct ``initial'' condition at $\bx=\bx_s$ forces $\tau$ to be asymptotic to the constant $v$ solution there:
+%(3) 
+\begin{equation}
+\label{eqn:eik_init}
+\tau(\bx,\bx_s)/|\bx-\bx_s| = v(\bx_s) \mbox{ as }  |\bx-\bx_s| \rightarrow 0.
+\end{equation}
+
+The second condition, the {\em transport equation} \ref{eqn:transp},
+may be rewritten as
+\begin{equation}
+\label{eqn:transpalt}
+\nabla\cdot (a^2 \nabla \tau) = 0
+\end{equation}
+Reference to the constant-coefficient Green's functions suggests that
+solutions will need a specified singularity at $\bx=\bx_s$. This topic
+will be addressed in the next section.
+
+As stated above, the progressing wave expansion is not much of an
+expansion. In fact, the decompositionn $G = aS(t-\tau)+R$ is the first
+term of a series, 
+\begin{equation}
+\label{eqn:progwaveN}
+G(\bx,t;\bx_s) = \sum_{n=0}^N a_n(\bx,\bx_s) S_n(t-\tau(\bx,\bx_s)  + R_N(\bx,t;\bx_s)
+\end{equation}
+in which $S_k$ is the $k$th primitive of $S$, that is,
+\[
+S_0 = S;\,\, a_0=a;\,\,\frac{dS_k}{dt} = S_{k-1}, \,k=1,2,...
+\]
+That is, \ref{eqn:progwaveN} decomposes $G$ into successively less
+singular terms. The case $N=1$ will be important in understanding the
+singularity of $G$:
+\begin{equation}
+\label{eqn:progwave1}
+G(\bx,t;\bx_s) = a_0(\bx,\bx_s) S_0(t-\tau(bx,\bx_s) +
+a_1)\bx,\bx_s)S_1(t-\tau(\bx,\bx_s) + R_1(\bx,t;\bx_s).
+\end{equation}
+Applying the wave operator, one sees that $G$ solves the wave equation
+for $\bx \ne \bx_s$ provided that
+\begin{eqnarray}
+\label{eqn:transp1}
+2\nabla a_1 \cdot \nabla \tau + a_1 \nabla^2 \tau &=& \nabla^2 a_0 \nonumber \\
+v^2 \nabla^2 a_1 & = & \frac {\partial ^2 R_1}{\partial t^2} -  v^2 \nabla^2 R_1
+\end{eqnarray}
+\section{Ray Theory}
+
+The {\em method of characteristics} extrapolates $\tau$ away from $\bx_s$. To see how this works,
+suppose first that $\tau$ solves the eikonal equation, and let $\bX(t)$
+be a solution of the system of ordinary differential equations
+\begin{equation}
+\label{eqn:xeqn}
+\frac{d\bX}{dt} = v^2(\bX) \nabla\tau(\bX).
+\end{equation}
+Then
+\begin{eqnarray}
+\frac{d}{dt} \tau (\bX(t)) & = & \nabla\tau(\bX(t))\cdot
+\frac{d\bX}{dt}(t)\\
+& = & v^2(\bX(t)) |\nabla\tau(\bX(t))|^2 = 1 \;\;.
+\end{eqnarray}
+Therefore we can identify $\tau$ with $t$: 
+if the segment $\{\bX(t'):t_0 \le t' \le t\}$
+lies entirely in a domain in which $\tau$ is defined, then
+\begin{equation}
+\label{eqn:tausig}
+\tau(\bX(t)) = \tau(\bX(t_0)) + t - t_0
+\end{equation}
+Thus from knowledge of the characteristic curves (rays) $\bX(t)$, we can
+construct $\tau$.  
+
+Somewhat more surprisingly, it is possible
+to construct the rays directly, which furnishes a construction of $\tau$ as
+well. Define the vector 
+\begin{equation}
+\label{eqn:pdef}
+\bP(t) = \nabla\tau(\bX(t))
+\end{equation}
+with units of time/length, or {\em slowness}. Note that you can write \ref{eqn:xeqn} in the form
+\begin{equation}
+\label{eqn:xeqn1}
+\frac{d\bX}{dt} = v^2(\bX) \nabla\tau(\bX) = v^2(\bX) \bP.
+\end{equation}
+$\bP$ also solves a differential equation in terms of $\tau$:
+\begin{eqnarray}
+\label{eqn:pderiv}
+\frac{d \bP}{dt}(t) & = & (\nabla\nabla\tau)(\bX(t)) \cdot \dot{\bX}(t)\\
+& = & v^2(\bX(t))\nabla\nabla\tau(\bX(t)) \cdot \nabla\tau(\bX(t))\\
+& = & \frac{1}{2} v^2(\bX(t))\nabla | (\nabla\tau)(\bX(t))|^2\\
+& = & \frac{1}{2} v^2(x)(\nabla v^{-2})(\bX(t))\\
+& = & - \frac{1}{2} |\nabla\tau(x)|^2(\nabla v^{2})(\bX(t)).
+\end{eqnarray}
+Define the {\em Hamiltonian}
+\begin{equation}
+\label{eqn:hamdef}
+H(\bx,\bP) = \frac{1}{2}v^{2}(\bx)|\bP|^2
+\end{equation}
+then the equation \ref{eqn:xeqn1} for $\bX$ and \ref{pderiv} for $\bP$ can be written in the form
+\begin{eqnarray}
+\label{eqn:ham}
+\dot{\bX} & = & \nabla_{\bP} H(\bX,\bP)\\
+\dot{\bP} & = & -\nabla_{\bx} H(\bX,\bP)
+\end{eqnarray}
+These are  {\em Hamilton's equations} of classical mechanics, a system
+of $2n$ autonomous ordinary differential equations. If $(\bX,\bP)$ is
+a solution of the system \ref{eqn:ham}, both
+\[
+t \mapsto \bX(t)
+\]
+and
+\[
+t \mapsto (\bX(t),\bP(t))
+\]
+are called rays; in the mathematical literature, the latter
+trajectory, with values in phase space, is known as a {\em
+  bicharacteristic strip} or just a {\em bicharacteristic}. 
+
+It's an easy exercise to see that the equations \ref{eqn:ham} implies that $H$ is constant along rays, that is,
+\begin{equation}
+\label{eqn:constH}
+\frac{d}{dt}H(\bX(t),\bP(t)) = 0
+\end{equation}
+if $(\bX,\bP)$ is a ray. The rays that figure in construction of the traveltime $\tau$ 
+are related to $\tau$ through equations \ref{eqn:xeqn} and \ref{eqn:pdef}, so because of the iekonal equation satisfy $v(\bX)|\bP| = 1$ - so along such rays,
+$H(\bX,\bP)=1/2$. Since $H-1/2$ generates the same Hamiltonian system,
+these rays are also called {\em null bicharacterisitics}. 
+
+The rays that play a role in the construction of the Green's function
+for a source at $\bx=\bx_s$ are those for which 
+\begin{equation}
+\label{eqn:initH}
+\bX(0)=\bx_s, \, \bP(0) = \bP_s, \, v(\bX_s)|\bP_s|=1.
+\end{equation}
+Solving the system \ref{eqn:ham} and initial conditions
+\ref{eqn:initH} generates a mapping
+\begin{equation}
+\label{eqn:polar}
+(t,\bP_s) \mapsto (\bX(t,\bP_s), \bP(t,\bP_s)) 
+\end{equation}
+called the ray (polar) coordinate system centered at $\bx_s$. For
+sufficiently small $t>0$, the Jacobian of the map \ref{eqn:polar} is
+nonsingular for any $\bP_s$ with $v(\bx_s)|\bP_s|=1$ (exercise!). It
+follows that ray polar coordinates define an invertible differentiable
+coordinate system on an open set $\Omega(\bx_s)$ containing
+$\bx_s$. For constant $v$, of course, $\Omega(\bx_s)$ consists of all
+of Euclidean space, and
+\begin{eqnarray}
+\label{eqn:polar0}
+\bX(t,\bP_s) &=& \bx_s + t v(\bx_s)^2\bP_s,\\
+\bP(t,\bP_s)) &=& \bP_s. 
+\end{eqnarray}
+
+Given a ray coordinate system centered at $\bx_s$ and valid in the set
+$\Omega(\bx_s)$, define
+\begin{equation}
+\label{eqn:taudef}
+\tau(\bx, \bx_s) = t \mbox{ for } \bx=\bX(t,\bP_s).
+\end{equation}
+That is, $\tau(\bx,\bx_s)$ is the ``radius'' in the polar coordinate
+system.
+
+The first step in showing that $\tau$, so defined, satisfies the eikonal equation in
+$\Omega(\bx_s)$ is the proof of the
+
+\noindent {\bf Claim} The ray tangent vector $d\bX/dt$ at
+$\bX(t,\bP_s)$ is perpindicular to the surface (isochron) $\{\bx=\bX(t,\bP_s):\mbox{ all } \bP_s \mbox{ such that } v(\bx_s)|\bP_s|=1\}$. 
+
+That is, for any vector $\delta \bP_s \perp \bP_s$, 
+\begin{equation}
+\label{eqn:perp}
+(\nabla_{\bP_s} \bX(t,\bP_s) \delta \bP_s) \cdot d\bX(t,\bP_s)/dt = 0.
+\end{equation}
+since all of the tangent vectors to the isochron take the form of the
+vector on the left. To see this, differentiate the left hand side of
+\ref{eqn:perp}:
+\[
+\frac{d}{dt} \left((\nabla_{\bP_s}\bX \delta \bP_s) \cdot \frac{d\bX}{dt}\right) 
+\]
+\begin{equation}
+\label{eqn:dperp}
+= \left(\nabla_{\bP_s}\frac{d \bX}{dt} \delta \bP_s\right) \cdot \frac{d \bX}{dt}  + (\nabla_{\bP_s}\bX \delta \bP_s) \cdot \frac{d^2\bX}{dt^2}
+\end{equation}
+Differentiation of the first equation in \ref{eqn:ham} and using both
+equations and the constant-$H$ condition \ref{eqn:constH} yields the
+second-order ray equation, useful in its own right:
+\begin{equation}
+\label{eqn:rayde}
+\frac{d^2\bX}{dt^2} = 2 \left(\frac{\nabla v}{v} \cdot
+  \frac{d\bX}{dt}\right)\frac{d\bX}{dt} - v \nabla v
+\end{equation}
+The first term in \ref{eqn:perp} may be rewritten as 
+\[
+\frac{1}{2}\left(\nabla_{\bP_s} \left|\frac{d \bX}{dt}\right|^2\right)\delta \bP_s =
+\frac{1}{2}\nabla_{\bP_s}v^2 \delta \bP_s
+\]
+\begin{equation}
+\label{eqn:perp1}
+=v \nabla v \cdot \nabla_{\bP_s}\bX \delta \bP_s.
+\end{equation}
+Re-write equation \ref{eqn:dperp} using the second-order ODE
+\ref{eqn:rayde} in the first term and the identigy \ref{eqn:perp1} in
+the second: net result is that the second term cancels, leaving
+\begin{equation}
+\label{eqn:perp2}
+\frac{d}{dt} \left(\nabla_{\bP_s}\bX \delta \bP_s\right) \cdot \frac{d\bX}{dt} = 2 \left(\frac{\nabla v}{v} \cdot
+  \frac{d\bX}{dt}\right)\frac{d\bX}{dt} \cdot (\nabla_{\bP_s}\bX \delta \bP_s) 
+\end{equation}
+This is a homogeneous linear ordinary differential equation for the
+quantity
+\begin{equation}
+\label{eqn:perp3}
+\frac{d\bX}{dt} \cdot (\nabla_{\bP_s}\bX \delta \bP_s).
+\end{equation}
+Rays are asymptotic to the frozen-coefficient trajectories specified
+in \ref{eqn:polar0} as $t \rightarrow 0$, and for these, the dot
+product in \ref{eqn:perp3} is zero identically - at the origin of the polar coordinates, the ray direction is perpindicular to the directions of constant $|\bP_s|$. Therefore the
+effective initial condition for the ODE \ref{eqn:perp2} is zero, and
+so the inner produce in \ref{eqn:perp3} vanishes identically,
+establishing the Claim.
+
+Choose any basis for the $d-1$-dimensional subspace of $\bR^d$
+perpindicular to $\bP_s$ (reminder - $d$ = space dimension). Think of
+$\bX(t,\bP_s$ as a function of $t$ and the $d-1$ coefficients of this
+basis, which generate a vector perpindicular to $\bP_s$. For a
+coefficient vector near the origin, this vector added to $\bP_s$
+projects uniquely onto the sphere of radius $1/v(\bx_s)$. A
+restatement of the Claim is that the first column ($d\bX/dt$) of the
+Jacobian of $(t,\bP_s) \rightarrow \bX$ is orthogonal to to the other
+columns. Therefore the first row of the inverse, which by the chain
+rule is $\nabla \tau(\bx,\bx_s)$, has length reciprocal to that of
+$d\bX/dt$. Since the latter has length $v$, the eikonal equation
+follows.
+
+The identification $\tau(\bx,\bx_s) = t$ when $\bx=\bX(t,\bP_s)$
+shows that $\tau$ is the time of arrival of the ray from
+$\bx_s$ to $\bx$. So $\tau$ is often called the travel- or arrival-time.
+
+Note that this ``ray-tracing'' construction of $\tau$ works only in
+regions $\Omega(\bx_s)$ within which ray polar coordinates are
+valid. The loss of validity comes when rays with two different values
+of takeoff slowness $\bP_s$ intersect - that is, when two or more rays
+pass over both $\bx_s$ and $\bx$. If such {\em conjugate points}
+exist, then it is not hard to see that envelopes of ray families
+(defined by ranges of $\bP_s$) must exist; these envelopes are known
+as {\em caustics}. Analysis of progressing waves near such caustics is
+somewhat harder than for the non-caustic case. The developments of
+this and the next few sections assumes that all of the important
+energy in the wavefield may be explained with rays that have not yet
+touched a caustic in their travel from the source point $\bx_s$, that
+is, the analysis will be confined to the region $\Omega(\bx_s)$ of
+{\em simple ray geometry}.
+
+The Hamiltonian system \ref{eqn:ham} is the basis for the most common
+approach to computing $\tau$, by solving the initial value problem for
+this system of ODEs. The main difficulty to be overcome in this
+approach is that the rays do not generally pass over grid points, so a
+gridded version of $\tau$ is not an immediate by-product. Many clever
+workarounds have been proposed \cite[]{Chapman:85,Vinje:93a}.
+
+It is also possible to treat $\tau$ as a solution of the eikonal
+equation \ref{eqn:eik}, as an initial value problem for a partial
+differential equation. However $\tau$ appears to be no longer a
+function if one uses the ray construction above, outside of the region
+$\Omega(\bx_s)$ in which each point is connected to $\bx_s$ by a
+unique ray. One approach constructs a function that is equal to $\tau$
+in $\Omega(\bx_s)$ and elsewhere is the least value of $t$ along all
+of the rays connecting to $\bx_s$. This first-arrival-time
+construction may be approximated by solving special gridded finite difference or
+finite element discretizations of the eikonal equation (~\cite{Vid:88}, 
+~\cite{VantrSy:90}). For recent viewpoint and many references see
+\cite[]{LuoQianBurridge:14}. It has also been possible to extend this
+``Eulerian'' point of view, via appropriately posed PDE problems, to
+computing global (multi-valued) travel time fields
+\cite[]{FomelSethian:02,QianChengOsher:03}.
+
+A simple 2D example exhibiting many of the features just described
+appears in Figure \ref{fig:lensmedium}, showing a velocity field ($v(\bx)$)
+with a slow (low value) anomaly below the source point $\bx_s$ at the
+top of the figure. Figure \ref{fig:lensrayswavefronts} shows both rays
+$t \mapsto \bX(t,\bP_s)$, and wavefronts $\tau=$ constant. The rays
+and wavefronts are perpindicular: this is precisely equation
+\ref{eqn:perp}, established above. The rays bend towards the lower
+velocity region in the center, as follows directly from the 2nd order
+equation \ref{eqn:rayde}. The envelope of rays (caustic) are clearly
+visible. In the region beyond the caustics, three rays pass over each point.
+
+\plot{lensmedium}{width=0.9\textwidth}{Low velocity lens in constant
+  velocity (2 km/s) background. Dark bar at depth = 2 km is a
+  reflector, used in later examples but not here. Borrowed from \cite{StolkSymes:04}.}
+\plot{lensrayswavefronts}{width=0.9\textwidth}{Rays and wavefronts
+  emanating from a source point above the center of the lens. Note
+  that rays are perpindicular to wavefronts, consistent with the
+  theory developed in the text, and that the bending of rays towards
+  low velocity leads to the development of a caustic (ray envelope),
+  which itself has a cusp singularity just below the lens. This
+  ``butterfly'' caustic joins two ``fold'' caustic branches at the
+  cusp. Below the caustic, each point is joined to the source by three
+  rays: one (with greater traveltime) passing through the slow lens,
+  and two passing around the lens through the faster background
+  medium.  Borrowed from \cite{StolkSymes:04}.}
+
+\section{Amplitudes}
+Having computed $\tau$, it is easy to compute $a$.  Indeed, the em
+transport equation \ref{eqn:transp}
+%(4) 
+may be re-written as an ordinary differential equation along rays
+\[
+\frac{d}{dt} a (\bX(t)) - b(\bX(t))a(\bX(t)) = 0
+\]
+where
+\[ 
+b = \frac{1}{2} \nabla^2\tau.
+\]
+Thus $a$ may be computed by quadrature along the ray family associated with
+$\tau$.  Initial values (for small $t$) for $a(\bX(t))$ cannot be read
+off directly for $t=0$, since the amplitude is singular at
+$\bx=\bx_s$, but must be inferred from the $t \rightarrow 0$ asymptotics. 
+
+Rather than go through that exercise, note that the solution of the
+transport equation has a nice geometric interpretation.
+Construct a ``ray tube'' $R$ (note - this is not the remainder term R, defined above and discussed in the next section!), whose lateral boundary surface $B$ is swept out
+by rays, and whose
+ends are surfaces $l$ and $L$ on which $\tau =$ constant:
+$\partial R
+= B \cup l \cup L$. A 2D schematic appears in Figure \ref{fig:amp}. 
+
+\plot{amp}{width=0.9\textwidth}{Sketch of ``ray tube'' construction. The segment ``dx'' is a projection onto the horizontal surface - it is useful in understanding prestack amplitudes, discussed in a later section. Borrowed from \cite{HouSymes:15}.}
+
+Now integrate both sides of the re-written transport equation
+\ref{eqn:traspalt} over $R$. The divergence theorem implies that 
+\begin{equation}
+\label{eqn:raytubeident}
+\int_{R} \nabla\cdot(a^2\nabla\tau)=\int_{l\cup L}a^2\nabla\tau\cdot \mathbf{n}dA =0
+\end{equation}
+where $\mathbf{n}$ is the outward normal vector on $\partial \Gamma$.
+The integral over the lateral boundary $B$ vanishes as the normal is
+perpindicular to the rays that form it, hence to $\nabla \tau$. A
+second consequence of the orthogonality \ref{eqn:perp} is that 
+$\nabla \tau = v^{-1}{\bf n}$ on $L$, $=-v^{-1}{\bf n} $ on $l$ so the identity
+\ref{eqn:raytubeident} implies that
+\begin{equation}
+\label{eqn:transpsoln}
+\int_{l} a^2 v^{-1} =\int_{L} a^2 v^{-1}. 
+\end{equation}
+Shrinking the ray tube to a single central ray, one obtains in the limit
+\begin{equation}
+\label{eqn:transpsolnpt}
+\frac{a^2(\bX(t_0))}{v(\bX(t_0))} = J(t_0,t_1)
+\frac{a^2(\bX(t_1))}{v(\bX(t_1))}
+\end{equation}
+in which $J$ is the transverse Jacobian determinant, that is, the Jacobian determinant of the
+map from $l$ to $L$ at the central ray intersection, defined by
+tracing rays from $l$ to $L$. This determinant is the limit of the
+volume ratio $|L|/|l|$ as the tube shrinks to the central ray. 
+
+The Jacobian and its determinant satisfy evolution 
+equations along rays - solving these equations is {\em dynamic ray 
+  tracing}, see \cite{cer85}. Equation \ref{eqn:transpsolnpt} implies that this construction fails
+when the Jacobian becomes singular, which happens precisely at the
+intersection of the central ray with a caustic (envelope of rays), and
+at the source point itself (a sort of degenerate caustic). In principle, the
+amplitude grows without bound near such points. 
+
+The actual behaviour
+of the wavefield near caustics can't be inferred from the progressing wave expansion
+in the form presented so far: extensions are required, discussed in a
+later section. However, The analysis of the remainder term in
+the next section requires an explicit description of the behaviour of
+$a(\bx,\bx_s)$ as $\bx \rightarrow \bx_s$. 
+
+The 3D case is slightly
+simpler. Introduce polar coordinates for the ray field $\bX$ centered at $\bx_s$:
+\[
+\bX = \bx_s + 
+\left(\begin{array}{c}
+r \cos \theta \cos \phi\\
+r \sin \theta \cos\phi\\
+r \sin \phi 
+\end{array}\right),
+\,\,r > 0, -\pi \le \theta \le \pi, -\frac{\pi}{2} \le \phi \le 
+\frac{\pi}{2}
+\]
+and parametrize the initial slowness $\bP_s$ in terms of initial
+azimuth and polar angles $\theta_s,\phi_s$:
+\[
+\bP_s(\theta_s,\phi_s) = \frac{1}{v(\bx_s)}
+\left(\begin{array}{c}
+\cos \theta_s \cos \phi_s\\
+\sin \theta_s \cos\phi_s\\
+\sin \phi_s 
+\end{array}\right).
+\]
+Denote by $\bP^0_s = \bP_s(\theta^0_s,\phi^0_s)$ the initial slowness
+for the central ray of the ray tube construction, and define the tube
+to have distorted square cross section, of radius $\delta > 0$:
+\[
+R = \{\bX(t,\theta_s,\phi_s): 0 < t_0 \le t \le t_1,
+|\theta_s-\theta_s^0| \le \delta, |\phi_s-\phi_s^0|<\delta\}.
+\]
+Then
+\begin{equation}
+\label{eqn:transpsoln}
+\int_{l} a^2 v^{-1} =\int_{L} a^2 v^{-1}. 
+\end{equation}
+\begin{eqnarray}
+\label{eqn:tubeends}
+\int_{l} a^2 v^{-1}  & = & \int_{\theta^0_s-\delta}^{\theta^0_s+\delta}\,d\theta_s \,
+\int_{\phi^0_s-\delta}^{\phi^0_s+\delta}\,d\phi_s 
+          \,\mu(t_0,\theta_s,\phi_s)
+                           (a^2v^{-1})(\bX(t_0,\theta_s,\phi_s))d\theta_s
+                           d\phi_s \nonumber \\
+\int_{L} a^2 v^{-1} & = & \int_{\theta^0_s-\delta}^{\theta^0_s+\delta}\,d\theta_s \,
+\int_{\phi^0_s-\delta}^{\phi^0_s+\delta}\,d\phi_s 
+          \,\mu(t_1,\theta_s,\phi_s)
+          (a^2v^{-1})(\bX(t_0,\theta_s,\phi_s)) d\theta_s d\phi_s
+\end{eqnarray}
+The surface area density $\mu(t,\theta_s,\phi_s)$ satisfies
+\begin{equation}
+\label{eqn:areaelt}
+\mu(t,\theta_s,\phi_s)d\theta_s \wedge d\phi_s =
+\bX(t,\theta_s,\phi_s)^*dS_t
+\end{equation}
+in which $dS_t$ is the area element on the isochron surface
+$S_t = \{\bx:\tau(\bx,\bx_s) = t\}$. By definition, $dS_t$ satisfies 
+\begin{equation}
+\label{eqn:areaeltprop}
+dS_t({\bf V}_1,{\bf V}_2) = 1
+\end{equation}
+for any vector fields ${\bf V}_1,{\bf V_2}$ on  $S_t$ that form an
+orthonormal oriented basis at every point. The orientation of $S_t$ is
+given by choosing $v^{-1}\nabla \tau$ to be the unit normal vector.
+
+Note that 
+\begin{equation}
+\label{eqn:drdt}
+\frac{\partial \bX}{\partial t} = 
+\frac{\partial r}{\partial t} e_r
++
+r \cos \phi\frac{\partial \theta}{\partial t} e_{\theta}
++
+r\frac{\partial \phi}{\partial t} e_{\phi}
+\end{equation}
+where
+\[
+e_r = 
+\left(\begin{array}{c}
+\cos \theta \cos \phi\\
+\sin \theta \cos\phi\\
+\sin \phi 
+\end{array}\right),\,\,
+e_{\theta}=\left(\begin{array}{c}
+-\sin \theta \\
+\cos \theta \\
+0 
+\end{array}\right),\,\,
+e_{\phi}=\left(\begin{array}{c}
+-\cos \theta \sin \phi\\
+-\sin \theta \sin\phi\\
+\cos \phi 
+\end{array}\right),
+\]
+form an orthonormal basis of $\bR^3$. Similarly,
+\begin{equation}
+\label{eqn:drdtheta}
+\frac{\partial \bX}{\partial \theta_s} = 
+\frac{\partial r}{\partial \theta_s} e_r
++
+r \cos \phi\frac{\partial \theta}{\partial \theta_s} e_{\theta}
++
+r\frac{\partial \phi}{\partial \theta_s} e_{\phi}
+\end{equation}
+\begin{equation}
+\label{eqn:drdphi}
+\frac{\partial \bX}{\partial \phi_s} = 
+\frac{\partial r}{\partial \phi_s} e_r
++
+r \cos \phi\frac{\partial \theta}{\partial \phi_s} e_{\theta}
++
+r\frac{\partial \phi}{\partial \phi_s} e_{\phi}
+\end{equation}
+Suppose ${\bf W_1},{\bf W_2}$ are arbitrary vector fields on $S_t$:
+orthogonalizing them and using the algebraic properties of the 2-form
+$dS_t$, it follows from the volume element property
+\ref{eqn:areaeltprop} that 
+\[
+dS_t({\bf W}_1,{\bf W}_2) = \sqrt{|{\bf W}_{1}|^2|{\bf W}_2|^2 -
+  \langle {\bf W}_1,{\bf W}_2\rangle^2}
+\]
+So 
+\[
+\mu_t = (\mu_t d\theta_s\wedge d\phi_s) \left(\frac{\partial}{\partial 
+    \theta_s},\frac{\partial}{\partial \phi_s}\right)
+\]
+\[
+= \bX^* dS_t \left(\frac{\partial}{\partial 
+    \theta_s},\frac{\partial}{\partial \phi_s}\right) = dS_t
+\left(\frac{\partial \bX}{\partial 
+    \theta_s},\frac{\partial \bX}{\partial \phi_s}\right)
+\]
+\[
+= \left(\left|\frac{\partial \bX}{\partial 
+    \theta_s}\right|^2\left|\frac{\partial \bX}{\partial 
+    \phi_s}\right|^2 - \left\langle \frac{\partial \bX}{\partial 
+    \theta_s}, \frac{\partial \bX}{\partial \phi_s}\right\rangle^2
+\right)^{\frac{1}{2}}
+\]
+Using the orthonormality of $e_r, e_{\theta}$, and $e_{\phi}$ and
+the chain rules \ref{eqn:drdtheta} and \ref{eqn:drdphi}, see that this is
+\[
+= \left\{
+\left[
+\left(\frac{\partial r}{\partial \theta_s}\right)^2 
++
+r^2\left(\cos^2 \phi\left(\frac{\partial \theta}{\partial \theta_s}\right)^2 
++
+\left(\frac{\partial \phi}{\partial \theta_s}\right)^2\right)\right]
+\left[
+\left(\frac{\partial r}{\partial \phi_s}\right)^2 
++
+r^2\left(\cos^2 \phi\left(\frac{\partial \theta}{\partial \phi_s}\right)^2 
++
+\left(\frac{\partial \phi}{\partial \phi_s}\right)^2\right)\right]\right.
+\]
+\begin{equation}
+\label{eqn:mucalc}
+\left.-
+\left[
+\left(\frac{\partial r}{\partial \theta_s}\right) 
+\left(\frac{\partial r}{\partial \phi_s}\right)
++
+r^2\left(\cos^2 \phi
+\left(\frac{\partial \theta}{\partial \theta_s}\right)
+\left(\frac{\partial \theta}{\partial \phi_s}\right) 
++
+\left(\frac{\partial \phi}{\partial \theta_s}\right) 
+\left(\frac{\partial \phi}{\partial \phi_s}\right)
+\right)
+\right]^2
+\right\}^{\frac{1}{2}}
+\end{equation}
+
+So asymptotic behaviour of the density $\mu$ as $t
+\rightarrow 0$ follow from the asymptotics of $r,\theta,$ and $\phi$
+and their angular derivatives.
+I have implicitly assumed that the velocity field $v$ has as many
+derivatives as are convenient; for the following argument, three
+continuous derivatives are certainly sufficient. Then the solutions of
+Hamilton's equations \ref{eqn:ham} are several times differentiable as
+functions of $t$ and of the initial conditions, that is, of the
+azimuth and polar angles, so
+\ref{eqn:initH} imply that
+\[
+\bX(t,\theta_s,\phi_s) = \bx_s + t v(\bx_s)^2\bP_s(\theta_s,\phi_s) + t^2{\bf
+  Y}(t,\theta_s,\phi_s)
+\]
+in which ${\bf Y}$ is smooth in $t \ge 0, \theta_s,\phi_s$. Therefore
+\begin{equation}
+\label{eqn:rasympt}
+r(t,\theta_s,\phi_s) = v(x_s)t + t^2 y(t,\theta_s,\phi_s),
+\end{equation}
+where $y$ is several times differentiable for $t\ge 0$ and
+real-valued. This equation in turn implies that for a non-vanishing
+range of times $0 \le t < t^*$, there are constants $0 < v_* \le v^*$
+so that
+\begin{equation}
+\label{eqn:rasgoodast}
+v_*t \le r(t,\theta_s,\phi_s) \le v^* t,
+\end{equation}
+uniformly in $\theta_s,\phi_s$. 
+
+Under these conditions, the map $(t_0,\theta_s,\phi_s) \mapsto
+(r,\theta,\phi)$ is a $C^k$ diffeomorphism on $[0,t^*)\times
+(-\pi,\pi) \times (-\pi/2,\pi/2)$, into the slit $\bR^3$. Of course
+part of $\bR^3$ is left out, but by using several versions of polar
+coordinates with different polar axes, it is possible to cover all of
+$\bR^3$ except the origin. For all of these rotated coordinates, the
+coordinate change is of class $C^k$ up to $t_0=0$, so derivatives are
+bounded uniformly on compact subsets of the domain. I will assume that
+derivatives of order at least two are continuous.
+
+Equation \ref{eqn:rasympt} also implies that
+\begin{eqnarray}
+\label{eqn:partr}
+\frac{\partial r}{\partial \theta_s} & =& O(t^2)\nonumber \\
+\frac{\partial r}{\partial \phi_s}    & =& O(t^2) 
+\end{eqnarray}
+Together with equation \ref{eqn:rasgoodast}, this shows that
+\begin{eqnarray}
+\label{eqn:quadr}
+\frac{1}{r}\frac{\partial r}{\partial \theta_s} & =& O(t)\nonumber \\
+\frac{1}{r}\frac{\partial r}{\partial \phi_s}    & =& O(t) 
+\end{eqnarray}
+A similar examination of the Hamilton equation for the slowness yields
+the conclusion that
+\begin{eqnarray}
+\label{eqn:angles}
+\theta &=& \theta_s + O(t) \nonumber\\
+\phi    &=& \phi_s + O(t) \nonumber\\
+\frac{\partial \theta}{\partial \theta_s} &=& 1 + O(t) \nonumber\\
+\frac{\partial \theta}{\partial \phi_s} &=& O(t) \nonumber\\
+\frac{\partial \phi}{\partial \theta_s} &=& O(t) \nonumber\\
+\frac{\partial \phi}{\partial \phi_s} &=& 1 + O(t) 
+\end{eqnarray}
+In all cases, the remainders hiding inside the big $O$s are several 
+times differentiable in $t \ge 0,\theta_s,\phi_s$. 
+
+Putting together equations \ref{eqn:mucalc}, \ref{eqn:quadr}, and
+\ref{eqn:angles}, conclude that
+\begin{equation}
+\label{eqn:muasympt}
+\mu((t,\theta_s,\phi_s) = r^2 \cos \phi_s(1 +t^2\nu(t,\theta_s,\phi_s)), 
+\end{equation}
+with $\nu$ of class $C^k([0,t^*) \times (-\pi,\pi) \times
+(-\pi/2,\pi/2))$, $k \ge 2$.
+
+That is,  $\mu$ is to leading order the same as the Euclidean area
+element on the sphere of radius $r$. So the relations
+\ref{eqn:tubeends} imply
+\[
+\int_{\theta^0_s-\delta}^{\theta^0_s+\delta}\,d\theta_s \,
+\int_{\phi^0_s-\delta}^{\phi^0_s+\delta}\,d\phi_s 
+          \,r(t_0,\theta_s,\phi_s)^2 \cos \phi_s (1 +t_0\nu(t_0,\theta_s,\phi_s))(a^2v^{-1})(\bX(t_0,\theta_s,\phi_s)) 
+\]
+\begin{equation}
+\label{eqn:tubeends1}
+= \int_{\theta^0_s-\delta}^{\theta^0_s+\delta}\,d\theta_s \,
+\int_{\phi^0_s-\delta}^{\phi^0_s+\delta}\,d\phi_s 
+          \,r(t_1,\theta_s,\phi_s)^2 \cos \phi_s (1 +t_1\nu(t_1,\theta_s,\phi_s))(a^2v^{-1})(\bX(t_1,\theta_s,\phi_s))
+\end{equation}
+Dividing by $4\delta^2$ and letting $\delta \rightarrow 0$, obtain
+\begin{equation}
+\label{eqn:tubeends2}
+r(t_0,\theta_s,\phi_s)^2 \cos \phi_s (1
++t^2_0\nu(t_0,\theta_s,\phi_s))(a^2v^{-1})(\bX(t_0,\theta_s,\phi_s))=
+r(t_1,\theta_s,\phi_s)^2 \cos \phi_s (1
++t^2_1\nu(t_1,\theta_s,\phi_s))(a^2v^{-1})(\bX(t_1,\theta_s,\phi_s))
+\end{equation}
+Changing variables to $r,\theta,\phi$ and discarding the factor $\cos
+\phi_s$,
+\begin{equation}
+\label{eqn:tubeends3}
+r_0^2 (1 +
+\tau(r_0,\theta,\phi)^2\nu(r_0,\theta,\phi))(a^2v^{-1})(r_0,\theta,\phi) =
+r_1^2 (1 +
+\tau(r_1,\theta,\phi)^2\nu(r_1,\theta,\phi))(a^2v^{-1})(r_1,\theta,\phi)
+\end{equation}
+Divide both sides of \ref{eqn:tubeends1} by $v^{-1}(r_0,\theta,\phi)1 +\tau(r_0,\theta,\phi)^2\nu(r_0,\theta,\phi) $
+and denote by $\gamma(\theta,\phi)$ the limit of the modiffiedLHS as  $r_0
+\rightarrow 0$:
+\begin{equation}
+\label{eqn:tubeend4}
+\gamma(\theta,\phi) = r_1^2 (1 +
+\tau(r_1,\theta,\phi)^2\nu(r_1,\theta,\phi))(a^2v(\bx_s)v^{-1})(r_1,\theta,\phi)
+\end{equation}
+Since the RHS is $>0$, so is $\gamma$. Since the RHS is actually the
+same as the LHS of \ref{eqn:tubeends3} with $r_0 \leftrightarrow r_1$,
+there is $r^* >0$ so that
+\[
+a(r,\theta,\phi)\sqrt{\frac{v(\bx_s)}{v(r,\theta,\phi)}} = 
+\frac{\sqrt{\gamma(\theta,\phi)}}{r} + r \tilde{b}(r,\theta,\phi), \,\tilde{b}\in C^k([0,r^*] \times
+(-\pi,\pi) \times (-\pi/2,\pi/2)) 
+\]
+To put this relation in the form that will be useful in analyzing the remainder
+term in the progressing wave expansion, Taylor-expand
+$(v(\bx)v(\bx_s))^{1/2}$ to second order and amalgamate the
+second-order remainder with $\tilde{b}$ above to obtain
+\begin{equation}
+\label{eqn:ampfinal}
+a(\bx,\bx_s) = \frac{\sqrt{\gamma(\theta,\phi)}}{r} +
+\frac{\sqrt{\gamma(\theta,\phi)}}{r} {\bf g}\cdot (\bx-\bx_s) + r b(r,\theta,\phi), \,b\in C^k([0,r^*] \times
+(-\pi,\pi) \times (-\pi/2,\pi/2)) 
+\end{equation}
+where ${\bf g} = (v(\bx_s)^{-1/2}(\nabla v^{1/2})(\bx_s)$.
+
+\section{Remainder}
+
+The entire construction is justified by the final step, showing that
+the remainder
+$R$ in equation \ref{eqn:progwave} is actually less singular than the
+leading term $aS(t-\tau)$, which justifies separating the two. The
+remainder satisfies equation 
+\ref{eqn:rem0}, which I repeat for convenience:
+\begin{equation}
+\label{eqn:rem}
+(v^2\nabla^2 a) S(t-\tau) + \delta(\bx-\bx_s)\delta(t)
+   = \frac {\partial ^2 R}{\partial t^2} -  v^2 \nabla^2 R).
+\end{equation}
+
+Introduce the {\em energy form}: for (any) function $p(\bx,t)$,
+\begin{equation}
+\label{eqn:energy2}
+E(t) = \frac{1}{2}\int\, dx\, \left[\frac{1}{v^2(\bx)}\left(\frac{\partial p}{\partial
+    t}(\bx,t)\right)^2 + |\nabla p(\bx,t)|^2\right].
+\end{equation}
+For solutions of the wave equation \ref{eqn:raycdawe}, the {\em energy
+  identity} holds:
+\begin{equation}
+\label{eqn:energy2id}
+E(t_1)-E(t_0) = \int_{t_0}^{t_1}\,dt\,\int \,dx\, \frac{1}{v^2(\bx)}\frac{\partial p}{\partial
+    t}(\bx,t)f(\bx,t).
+\end{equation}
+To see this, differntiate the definition \ref{eqn:energy2} with respect to time. Passing the time derivative under the integral sign, obtain
+\[
+\frac{dE}{dt}(t) = \int\, dx\, \left[\frac{1}{v^2(\bx)}\left(\frac{\partial p}{\partial
+    t}\frac{\partial^2 p}{\partial
+    t^2}(\bx,t)\right) + \nabla p(\bx,t) \cdot \nabla \frac{\partial p}{\partial
+    t}\right]
+\]
+\[
+=\int\, dx\, \frac{\partial p}{\partial
+    t}(\bx,t)\left(\frac{1}{v^2(\bx)}\frac{\partial^2 p}{\partial
+    t^2}(\bx,t) - \nabla^2 p(\bx,t) \right)
+\]
+after integrating by parts to shift $\nabla$ (this step assumes that $p=0$ for large $|\bx|$).
+Use the wave equation satisfied by $p$ to substitute $f$ for the factor in parantheses, and so obtain 
+\begin{equation}
+\label{eqn:energy2idt}
+= \int \,dx\, \frac{1}{v^2(\bx)}\frac{\partial p}{\partial
+    t}(\bx,t)f(\bx,t).
+\end{equation}
+Integrate \ref{eqn:energy2idt} in time from $t_0$ to $t_1$ to obtain \ref{eqn:energy2id}.
+
+The Cauchy-Schwarz inequatity and the observation that the square of
+$\partial p/\partial t$ is part of the energy form \ref{eqn:energy2} leads to the
+inequality
+\begin{equation}
+\label{eqn:energy2ineq}
+E(t_1)-E(t_0) \le C
+\left(\int_{t_0}^{t_1}\,dt\,E(t)\right)^{\frac{1}{2}} \|f\|_{[t_0,t_1]}
+\end{equation}
+in which $\|\cdot\|$ denotes the space-time $L^2$ norm:
+\begin{equation}
+\label{eqn:L2}
+\|f\|_{[t_0,t_1]} = \left(\int_{t_0}^{t_1}\,dt\,\int \,dx\, f(\bx,t)^2
+  \right)^{\frac{1}{2}},
+\end{equation}
+and $C>0$ depends on the minimum of $v$. Using the famous inequality
+$ab \le \frac{\alpha}{2}a^2 + \frac{1}{2\alpha}b^2$ with proper choice
+of $\alpha>0$, inequality \ref{eqn:energy2ineq} implies in turn that
+\begin{equation}
+\label{eqn:energy2gron}
+E(t_1)-E(t_0) \le 
+\int_{t_0}^{t_1}\,dt\,E(t) + C \|f\|_{[t_0,t_1]}^2
+\end{equation}
+This integral inequality can be solved (a fact that goes under the
+name ``Gronwall's inequality''): the result is a bound on the growth
+of $E$ in terms of the 
+\begin{equation}
+\label{eqn:energy2final}
+E(t_1)-E(t_0) \le Ce^{t_1-t_0}((t_1-t_0)E(t_0) + \|f\|_{[t_0,t_1]}).
+\end{equation}
+
+Apply this bound to $R_1$. From equation \ref{eqn:rem1}, for this case
+$f = (v^2\nabla^2 a) H(t-\tau)$, which is square-integrable (but see
+remark below), take $t_0 \le 0$ so that $E(t_0) =0$. Note that
+$\partial R_1/\partial t_0 = R$ is part of $E$, so the specialization
+of inequality \ref{eqn:energy2final} to this case leads to
+\begin{equation}
+\label{eqn:rem2}
+\|R\|_{[0,t]} \le Ce^t
+\end{equation}
+in which $C$ depends on the transport coefficient $a$ and the
+traveltime $\tau$ (which determines the size of the set $\{(\bx,t):
+\tau(\bx,\bx_s) \le t\}$). 
+
+Continuing as in the last section, I will discuss explicitly the 3D
+case, $S = \delta$ per \ref{eqn:green3d}. In order to apply the energy
+estimates just explained to $R$, the main requirement that the
+the inhomogeneous term in \ref{eqn:rem} be square-integrable. That is
+obviously not the case, no matter what the properties of $a$, because
+$\delta(t-\tau)$ is not. So the first step is to modify \ref{eqn:rem} to
+correct this deficiency.
+
+Recall that the Green's function defined here is the causal one,
+therefore zero for t<0. Integrating both sides of equation
+\ref{eqn:rem} in $t$ from $-\infty$ to $t$, obtain for 
+\begin{equation}
+\label{eqn:R1def}
+R_{1}(\bx,t) = \int_{-\infty}^t dt' R(\bx,t')
+\end{equation}
+\begin{equation}
+\label{eqn:rem1}
+-(v^2\nabla^2 a) H(t-\tau) + \delta(\bx-\bx_S)H(t-\tau)
+   = \frac {\partial ^2 R_1}{\partial t^2} -  v^2 \nabla^2 R_1) \;. 
+\end{equation}
+with $H$ being the Heaviside function. Square-integrability of the RHS
+clearly depends on the properties of $a$ near $\bx=\bx_s$, given by
+equaiton \ref{eqn:ampfinal}.
+
+From \ref{eqn:ampfinal}, $a$ is the sum of three terms. The
+Laplacian of  the first term is 
+
+\[
+\sqrt{\gamma(\theta,\phi)}  \frac{\partial^2}{\partial r^2} + \frac{2}{r}\frac{\partial}{\partial 
+  r} \frac{1}{r} + \frac{1}{r^3} \Delta_S\sqrt{\gamma(\theta,\phi)} 
+\]
+in which 
+\[
+\Delta_S = \frac{1}{\cos^2 \phi}\frac{\partial^2}{\partial \theta^2} +
+\frac{1}{\cos \phi} \frac{\partial}{\partial \phi}\cos \phi 
+\frac{\partial}{\partial \phi}
+\]
+is the spherical Laplacian. In order for the second term to define a
+disribution of order zero (like $\delta(\bx-\bx_s)$), the coefficient
+of $1/r^3$ must vanish, implying that $\gamma$ is constant, and the
+second term drops out. The first
+term is the same as 
+\[
+\sqrt{\gamma} \nabla^2 {1}{r} = \gamma 4 \pi \delta(\bx-\bx_s)
+\]
+So if we chose 
+\[
+\gamma = \frac{1}{4 \pi v^2(\bx_s)}
+\]
+then the Laplacian of the first term in \ref{eqn:ampfinal} cancels the
+space-time delta in \ref{eqn:rem}.
+
+Assume for the moment that the second term in \ref{eqn:ampfinal}
+vanishes, that is, $\nabla v$ vanishes at $\bx=\bx_s$. The Laplacian
+of the third term is
+\[
+\left(\frac{\partial^2}{\partial r^2} + \frac{2}{r}\frac{\partial}{\partial 
+  r} + \frac{1}{r^2 \cos^2 \phi}\frac{\partial^2}{\partial \theta^2} +
+\frac{1}{r^2 \cos \phi} \frac{\partial}{\partial \phi}\cos \phi 
+\frac{\partial}{\partial \phi}\right) r b(r,\theta,\phi)
+\]
+\[
+\frac{1}{r}h(r,\theta,\phi), \, h \in C^0([0,r^*] \times (-\pi,\pi)
+\times (-\pi/2,\pi/2))
+\]
+The singularity is square-integrable in 3D, and remains so in 4D after
+multiplication by $H(t-\tau)$. That is, equation \ref{eqn:rem1}
+reduces to 
+\begin{equation}
+\label{eqn:rem1r}
+\frac{1}{r}h(r,\theta,\phi) H(t-\tau)
+   = \frac {\partial ^2 R_1}{\partial t^2} -  v^2 \nabla^2 R_1) \;. 
+\end{equation}
+with a square-integrable left-hand side. The energy estimate
+\ref{eqn:energy2final} applies: the first derivatives of $R_1$ are
+square-integrable. In particular, $R = \partial R_1/\partial t$ is
+square integrable, justifying the progressing wave expansion in this
+case.
+
+For the general case in which $\nabla v$ does not vanish at
+$\bx=\bx_s$, the left-hand side of \ref{eqn:rem} has the additional summand
+\begin{equation}
+\label{eqn:term2}
+-v^2(\bx)\nabla^2\frac{1}{4\pi v^2(\bx_s) r} {\bf g}\cdot (\bx-\bx_s) 
+= v^2(\bx)\frac{1}{4\pi v^2(\bx_s)}\frac{{\bf g}\cdot(\bx-\bx_s)}{r^3} = O(r^-2).
+\end{equation}
+This function is not square-integrable, so the energy argument does
+not apply directly. 
+
+\section{Suggested Projects}
+
+\begin{enumerate}
+\item In the ray theory section, I used the idea that the traveltime
+ should be asymptotic to the constant velocity
+  specializations as $\bx \rightarrow \bx_s$. I made a similar
+  implicit argument for the amplitude in the following
+  section. However both traveltime and amplitude are singular at
+  $\bx=\bx_s$. Supply the missing justification.
+
+\item Singularity is measured by the rate of growth/decay of the
+  Fourier transform at infinite frequency. Recast the progressing wave
+  expansion in terms of frequency:
+\[
+u(\bx,\omega) = a(\bx)e^{i\omega (t-\tau(\bx))}  +
+\frac{1}{i\omega}R(\bx,\omega)
+\] 
+with $R$ bounded as $\omega \rightarrow \infty$. A classic reference
+from this point of view is \cite{Lax:57}.
+
+\item What really happens at a caustic? The actual behaviour of the
+  wavefield was first understood in the 1960's. Major contributors,
+  whose papers are well worth a read, are ~\cite{Lud:66} and
+~\cite{Krav:68}, and \cite{StickAhl:81} provide a very readable
+account.
+
+\item Having worked that out, create an example like the low-velocity
+  lens (Figure \ref{fig:lensmedium}) and compute the wavefield with a
+  finite difference code, for example IWave. What actually happens to
+  the wavefield in the vicinity of the caustic shown in Figure
+  \ref{fig:lensrayswavefronts}? Why? How is this consistent with
+  theory?
+
+\item Work out all the missing details in the argument presented in
+  the last section, and in particular answer the question posed in the
+  last paragraph.
+\end{enumerate}
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

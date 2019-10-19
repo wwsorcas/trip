@@ -1,0 +1,61 @@
+\title{Planewave Inversion with IWAVE and RVL}
+\author{William. W. Symes}
+
+\address{The Rice Inversion Project,
+Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}
+
+\maketitle
+\parskip 12pt
+
+
+\begin{abstract}
+IWAVE implements forward modeling operators, and their derivatives and adjoint derivatives up to second order. RVL supplies optimization algorithms and a vector calculus interface, including windowing, muting, scaling, and other operators useful in constructing inversion algorithms. This paper shows how to use these tools to invert plane wave data for the long spatial wavelengths of velocity models.
+\end{abstract}
+
+\inputdir{project}
+
+\section{Normal Incidence Plane Wave}
+Model = Marmousi, 6x subsampled to 24 m grid, supports roughly 12 Hz max with acceptable dispersion over 2 s.  
+
+Modifications: extended to 12000 m by layered addition on right. 384 m of ``water'' added on top, then model is extended by 33 m of ``water'' in negative depth. See (\ref{fig:deepcsq24}).
+
+FD method = (2,8) scheme, cmin=1.0 m/ms, cmax=6.0 m/ms, cfl=0.5.
+
+Trust region method implemented in RVL:
+
+{\tt rvl/umin/include/trgnalg.hh}.
+
+ Includes standard trust region adjustment rules plus ``internal doubling'' logic to extend step in case of high ratio of actual to predicted decrease, linear solver passed by policy. Use conjugate gradient method for normal equation in this set:
+
+{\tt rvl/umin/include/cgne.hh}
+
+Attempt to fit plane wave data by modifying velocity model in window $[384,3384] \times [0, 12000]$ m. Initial velocity is 1.5 m/ms throughout $[-3384,3384] \times [0,12000]$ m. Velocity (squared) represented as initial model plus update in window, injected into global grid.
+
+Implementation: composed IWAVE modeling operator, instance of {\tt IWaveOp}, defined in
+
+{\tt iwave/core/include/iwop.hh}
+
+with affine windowing operator, instance of {\tt GridWindowOp}, defined in 
+
+{\tt iwave/grid/include/gridops.hh}
+
+via RVL operator composition {\tt OpComp}, defined in 
+
+{\tt rvl/rvl/include/op.hh}.
+
+\plot{deepcsq24}{width=0.8\textwidth}{Modified Marmousi Model, windowed.}
+
+\plot{deepshot1ph}{width=0.8\textwidth}{Response of Marmousi model to vertical incidence (p=0.0) Heaviside plane wave. Heaviside pulse filtered by 10 Hz (half power) Gaussian wavelet. Sources and receivers at z=0. Sources extend over entire surface z=0, at every grid point. Receivers from x=3000 to x=9000, at every grid point. Max = 8.0e+03 GPa.}
+
+\plot{deepshot1pg}{width=0.8\textwidth}{Response of Marmousi model to vertical incidence (p=0.0) zero phase Gaussian 10 Hz plane wave. Same source-receiver geometry as Figure \ref{fig:deepshot1ph}.}
+
+\plot{deepshot1p}{width=0.8\textwidth}{Response of Marmousi model to vertical incidence (p=0.0) zero phase trapezoidal [1, 2.5, 10, 12.5] Hz bandpass plane wave. Same source-receiver geometry as Figure \ref{fig:deepshot1ph}.}
+
+\plot{heavifinal}{width=0.8\textwidth}{Three iteration of Gauss-Newton Trust Region algorithm, with initial model = constant 1.5 km/s, data = Figure \ref{fig:deepshot1ph}. (Display is velocity-squared.) Three steps each with 10 inner CGNE iterations. Objective reduction by 0.005, gradient norm by 0.014.}
+
+\plot{gauss10Hzfinal}{width=0.8\textwidth}{Three iteration of Gauss-Newton Trust Region algorithm, with initial model = Figure \ref{fig:heavifinal}, data = Figure \ref{fig:deepshot1pg}. (Display is velocity-squared.) Three steps each with 10 inner CGNE iterations. Objective reduction by 0.005, gradient norm by 0.014.}
+
+\plot{deepbandfinal}{width=0.8\textwidth}{Three iteration of Gauss-Newton Trust Region algorithm, with initial model = Figure \ref{fig:gauss10Hzfinal}, data = Figure \ref{fig:deepshot1p}. (Display is velocity-squared.) Direct wave muted in data and simulation. Three steps each with 10 inner CGNE iterations. Objective reduction by 0.05, gradient by 0.14.}
+
+\plot{deepbandres}{width=0.8\textwidth}{Final residual for model displayed in Figure \ref{fig:deepbandfinal}. Most eerror in last 0.2 s; error reduction (re Figure \ref{fig:deepshot1p}) in time interval 0-1.6 s is 0.19.}

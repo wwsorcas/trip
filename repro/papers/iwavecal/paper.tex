@@ -1,0 +1,184 @@
+\title{Calibrating IWAVE}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\lefthead{Symes}
+\righthead{Calibrating IWAVE}
+
+\maketitle
+\parskip 12pt
+\begin{abstract}
+IWAVE simulation of wavefields involves many individual computations combined into a single command. While each computation can be tested for accuracy on its own, it is also important to ensure that the final result accurately approximates the solution of the target continuum problem by direct comparison with solutions of known accuracy. This paper presents comparison of acoustic simulations on staggered and non-staggered grids with numerical implementations of analytic solutions in homogeneous media. The comparisons suggest that IWAVE correctly solves these problems with reasonable accuracy.
+\end{abstract}
+
+\section{Theory}
+Linear acoustics describes small amplitude motions of a compressible fluid in terms of the evolution of (excess) pressure $p(\bx,t)$ and particle velocity $\bv(\bx,t)$: 
+\begin{eqnarray}
+\label{eqn:aws}
+\frac{\partial p}{\partial t}(\bx,t) & = &\kappa(\bx) (-\nabla \cdot \bv(\bx,t) + f(\bx,t))\nonumber\\
+\frac{\partial \bv}{\partial t}(\bx,t) & = & -\beta(\bx) \nabla p(\bx,t)\nonumber\\
+p, \bv &=& 0,\, t << 0.
+\end{eqnarray}
+(\cite[]{gur81}, section 19, or \cite[]{Frie:58}, Chapter 1). The linear acoustic constitutive law makes relative change of volume and pressure proportional by the the bulk modulus $\kappa$, which therefore has units of pressure = force/area. The first of the equations in \ref{eqn:aws} therefore represents input of energy into the system via a defect in the acoustic consitutive relation: the forcing (or source) term $f$ has units of 1/time, that is, relative rate of change. The second equation in \ref{eqn:aws} expresses Newton's law relating acceleration and force for the acoustic model in which stress is scalar and its divergence (by definition) equal to the negative pressure gradient. The buoyancy $\beta$ is the reciprocal of density, $\beta=1/\rho$. The final condition in \ref{eqn:aws} specifies causal solutions.
+
+The system \ref{eqn:aws} is equivalent to a single second order PDE for pressure: differentiate the first equation with respect to time, then use the second equation to eliminate $\bv$ and obtain
+\begin{eqnarray}
+\label{eqn:awe}
+\frac{\partial^2 p}{\partial t^2}(\bx,t) & = &\kappa(\bx)\left(\nabla \cdot \beta(x) \nabla p(\bx,t) + \frac{\partial f}{\partial t}(\bx,t)\right) \nonumber\\
+p & = & 0, \,t<<0
+\end{eqnarray}
+
+The systems \ref{eqn:aws} and \ref{eqn:awe} describe linear acoustodynamics in any dimension, in particular in 2D or 3D, and far from physical boundaries, or in Euclidean space without boundaries. Appropriate boundary conditions must be supplied to complete the description of acoustics in  domains with boundaries. 
+
+In this section we will develop analytic expressions for the pressure field $p$ in \ref{eqn:aws} or \ref{eqn:awe} for 2D and 3D, assuming that $\kappa$ and $\beta$ are constant and $f$ has the form of an {\em isotropic point radiator} located at the origin:
+\begin{equation}
+\label{eqn:ipr}
+f(\bx,t) = w(t) \delta(\bx).
+\end{equation}
+The source pulse, or wavelet, $w$ is smooth and of compact support.
+Since $f$ has units of rate (1/time), $w$ must have units of volume rate.
+
+Note that in this case \ref{eqn:awe} simplifies to 
+\begin{eqnarray}
+\label{eqn:aweccipr}
+\frac{1}{c^2}\frac{\partial^2 p}{\partial t^2}(\bx,t) & = &\nabla^2 p(\bx,t) + \rho\frac{dw}{dt}(t)\delta(\bx) \nonumber\\
+p & = & 0, \,t<<0 
+\end{eqnarray}
+using the wave velocity $c=\sqrt{\kappa\beta}$. Note that the forcing term has units of density rate, or force/distance. The same for would be obtained starting with a version of \ref{eqn:aws} with a body force, that is, inhomogenous term in Newton's law, in which case the source would be the divergence of a force.
+
+\subsection{3D}
+The solution of the point radiator problem is well-known, see for example \cite{CouHil:62}, Chapter 6 or \cite{GuiSte:79}, Chapter 1. I repeat it here for completeness. Since the isotropic point radiator \ref{eqn:ipr} is rotationally symmetric, it is natural to expect the same of the pressure field, i.e. that $p(\bx,t) = P(r,t)$ with $r=|\bx|$. The simple identity
+\begin{equation}
+\label{eqn:calc}
+\nabla^2 \frac{F(r)}{r} = \left(\frac{\partial^2}{\partial r^2} + \frac{2}{r}\frac{\partial}{\partial r}\right) \frac{F(r)}{r} = \frac{1}{r}\frac{\partial^2 F}{\partial r}^2(r)
+\end{equation}
+shows that $rP(r,t)$ obeys the homogeneous 1D wave equation for $r>0$. To achieve causality, necessarily $rP(r,t)$ is a function of $t-r/c$. Set
+\[
+P(r,t) = \frac{g(t-r/c)}{r}
+\]
+and assume $g$ to be smooth and of compact support. Then $P$ has an integrable singularity at $r=0$, and is a distribution solution of \ref{eqn:aweccipr} exactly if
+\[
+g(t) = \frac{\rho\frac{dw}{dt}(t)}{4\pi}
+\]
+as one sees by writing the equation in weak form, expressing the integration against at test function image under the wave operator as the limit of integrals over the exterior of the ball of radius $\epsilon >0$, integrating by parts, and taking the limit $\epsilon \rightarrow 0$. Therefore we obtain for $p=p_{3D}$ the analytic expression
+\begin{equation}
+\label{eqn:awsol3D}
+p_{3D}(\bx,t) = \frac{\rho\frac{dw}{dt}(t-r/c)}{4\pi r}
+\end{equation}
+
+As stated in the introduction, the IWAVE discretizations of systems \ref{eqn:aws} and \ref{eqn:awe} normalize the source as a black-box right-hand side. The IWAVE acoustic constant density (ACD) solver (code in {\tt iwave/acd}) approximates the solution of 
+\begin{eqnarray}
+\label{eqn:acd}
+\frac{\partial^2 p_{ACD}}{\partial t^2}(\bx,t) & = &c^2\nabla^2 p_{ACD}(\bx,t) + f_{ACD}(\bx,t)\nonumber\\
+p_{ACD} & = & 0, \,t<<0 
+\end{eqnarray}
+The point source version of this problem has
+\begin{equation}
+\label{eqn:acdipr}
+f_{ACD} = w_{ACD}(t)\delta(\bx)
+\end{equation}
+Comparing equations \ref{eqn:aweccipr}, \ref{eqn:acd} and \ref{eqn:acd}, one sees that $p_{ACD} = p$ if 
+\[
+w_{ACD}(t) = \rho c^2 \frac{dw}{dt}(t) 
+\]
+so for 3D one obtains the solution of \ref{eqn:acd}, \ref{eqn:acdipr}:
+\begin{equation}
+\label{eqn:acdsol3D}
+p_{ACD3D}(\bx,t) = \frac{ w_{ACD}(t-r/c)}{4\pi c^2 r}.
+\end{equation}
+
+The IWAVE acoustic staggered grid (ASG) solver (code in {\tt iwave/asg}) approximates the solution of
+\begin{eqnarray}
+\label{eqn:asg}
+\frac{\partial p_{ASG}}{\partial t}(\bx,t) & = &-\kappa(\bx) \nabla \cdot \bv_{ASG}(\bx,t) + f_{ASG}(\bx,t)\nonumber\\
+\frac{\partial \bv_{ASG}}{\partial t}(\bx,t) & = & -\beta(\bx) \nabla p_{ASG}(\bx,t)\nonumber\\
+p_{ASG}, \bv_{ASG} &=& 0,\, t << 0.
+\end{eqnarray}
+This system differs from \ref{eqn:aws} only by having the right-hand side vector scaled by $1/\kappa$ - that is, $p_{ASG} = p$ if $f_{ASG} = \kappa f$. Thus for the 3D point source problem, that is, the solution of \ref{eqn:asg} with 
+\[
+f_{ASG}(\bx,t) = w_{ASG}(t) \delta(\bx),
+\]
+the source pulse $w_{ASG}=\kappa w$ has units of pressure $\cdot$ volume / time, and equation \ref{eqn:awsol3D} implies
+\[
+p_{ASG3D}(\bx,t) = \frac{\rho\frac{dw_{ASG}}{dt}(t-r/c)}{4\pi \kappa r}
+\]
+\begin{equation}
+\label{eqn:asgsol3d}
+= \frac{\frac{dw_{ASG}}{dt}(t-r/c)}{4\pi c^2 r}.
+\end{equation}
+
+An interesting consequence of that for any space dimension, isotropic point source wavelets used in \ref{eqn:asg} and \ref{eqn:acd} will produce the same pressure field if 
+\begin{equation}
+\label{eqn:acdasg}
+w_{ACD} = \frac{\partial w_{ASG}}{\partial t}.
+\end{equation}
+Equation \ref{eqn:acdasg} is consistent with $w_{ASG}$ having units of force $\cdot$ velocity, and $w_{ACD}$ force $\cdot$ acceleration, as follows from equations \ref{eqn:asg} and \ref{eqn:acd} respectively.
+
+\subsection{2D}
+I will regard 2D solutions of equations \ref{eqn:aws} and \ref{eqn:awe} as line source solutions of the 3D equations. In this subsection, I use the notation $\bx=(x,z)$ for the 2D position vector in the ``inline'' plane perpindicular to the $y$ axis, and $\bx_{3D} = (x,y,z)$. The isotropic line radiator appropriate for the ASG version of the acoustic system \ref{eqn:asg} is 
+\begin{equation}
+\label{eqn:ilr}
+f(\bx_{3D},t) = w_{ASG2D}(t)\delta(\bx).
+\end{equation}
+For constant $\kappa$ and $\beta$, the weak solution $(p_{ASG2D}, \bv_{ASG2D})$ of system \ref{eqn:asg} is also independent of $y$. Since $\delta(\bx)$ has units of 1/area, $w_{ASG2D}$ must have units of pressure $\cdot$ area / time. 
+ 
+To find an analytic form for the pressure field of an isotropic line radiator, use D'Alembert's method of descent (\cite[]{CouHil:62}, Ch. 6). This approach begins with the observation that
+\[
+\delta(\bx) = \int dy \delta(\bx_{3D})
+\]
+(with the right-hand side interpreted as a pull-back). Therefore the solution of system \ref{eqn:asg} with $f$ given by equation \ref{eqn:ilr} is  
+\begin{equation}
+\label{eqn:descent}
+p_{ASG2D}(\bx,t) = \int dy \tilde{p}_{ASG3D}(\bx_{3D},t).
+\end{equation}
+where $\tilde{p}_{3D}$ is the solution of the isotropic point radiator problem given by equation \ref{eqn:asgsol3d}, but with $w_{ASG}$ replaced by $w_{ASG2D}$, so that $\tilde{p}_{ASG3D}$ has units of pressure/length and $p_{ASG2D}$ is a pressure.
+
+From equation \ref{eqn:asgsol3d},
+\[
+p_{ASG2D}(\bx,t) = \int dy \tilde{p}_{ASG3D}(\bx_{3D},t).
+\]
+\[
+= \int dy \frac{\frac{dw_{ASG2D}}{dt}(t-r/c)}{4\pi c^2 r}
+\]
+\[
+= \int_{-\infty}^{\infty} dy \frac{\frac{dw_{ASG2D}}{dt}(t-\sqrt{|\bx|^2 + y^2}/c)}{4\pi c^2 \sqrt{|\bx|^2 + y^2}}
+\]
+\[
+= 2 \int_0^{\infty} dy \frac{\frac{dw_{ASG2D}}{dt}(t-\sqrt{|\bx|^2 + y^2}/c)}{4\pi c^2 \sqrt{|\bx|^2 + y^2}}
+\]
+\begin{equation}
+\label{eqn:green2dpart1}
+= 2 \lim_{\epsilon \rightarrow 0}\int_{\epsilon}^{\infty} dy \frac{\frac{dw_{ASG2D}}{dt}(t-\sqrt{|\bx|^2 + y^2}/c)}{4\pi c^2\sqrt{|\bx|^2 + y^2}}
+\end{equation}
+since the integrand is continuous, of compact support, and even in $y$. Set $\tau = \sqrt{|\bx|^2 + y^2}/c$. Then $y \rightarrow \tau$ is a nonsingular diffeomorphism $[\epsilon,\infty) \rightarrow [\sqrt{|\bx|^2+\epsilon^2}/c,\infty)$. Changing variables in the \ref{eqn:green2dpart1} gives
+\[
+= 2 \lim_{\epsilon \rightarrow 0} \int_{\sqrt{|\bx|^2+\epsilon^2}/c}^{\infty} \frac{c^2 \tau d\tau}{\sqrt{c^2 \tau - |\bx|^2}} \frac{\frac{dw_{ASG2D}}{dt}(t-\tau)}{4\pi c^3 \tau} 
+\]
+\[
+=\lim_{\epsilon \rightarrow 0} \frac{1}{2\pi c}\int_{\sqrt{|\bx|^2+\epsilon^2}/c}^{\infty} d\tau \frac{\frac{dw_{ASG2D}}{dt}(t-\tau)}{\sqrt{c^2 \tau^2 -|\bx|^2}}
+\]
+so taking the limit $\epsilon \rightarrow 0$ and introducing the Heavyside function to express the integral as a convolution, obtain
+\begin{equation}
+\label{eqn:asgsol2d}
+p_{ASG2D}(\bx,t) = \frac{1}{2\pi c}\int d\tau \frac{dw_{ASG2D}}{dt}(t-\tau)\frac{H(c\tau-|\bx|)}{\sqrt{c^2 \tau^2 -|\bx|^2}}
+\end{equation}
+
+The integral \ref{eqn:asgsol2d} is singular, and inconvenient for computation. The singular factor in the denominator is $\sigma = \sqrt{\tau -|\bx|/c}$, which if used as an alternate integration variable desingularizes the integral. Note that
+$\tau = \sigma^2 + |\bx|/c$, $d\tau = 2 \sigma d\sigma$, that the range of $\sigma$ is $[0,\sqrt{t-|\bx|/c}]$, and that
+\[
+\sqrt{c^2\tau^2-|\bx|^2} = c\sigma \sqrt{\sigma^2 + 2|\bx|/c}.
+\]
+So
+\begin{equation}\label{eqn:asgsol2dalt}
+p_{ASG2D}(\bx,t)=\frac{1}{\pi c^2} \int_0^{\sqrt{t-|\bx|/c}}d\sigma \frac{\frac{dw_{ASG2D}}{dt}(t-\sigma^2-|\bx|/c)}{\sqrt{\sigma^2 + 2|\bx|/c}}. 
+\end{equation}
+Discrete evaluation for this expression requires interpolation of $f$, but the integral is proper so ordinary numerical quadrature works well.
+
+From the relation \ref{eqn:asgacd}, 
+\begin{equation}\label{eqn:acdsol2dalt}
+p_{ACD2D}(\bx,t)=\frac{1}{\pi c^2} \int_0^{\sqrt{t-|\bx|/c}}d\sigma \frac{w_{ACD2D}(t-\sigma^2-|\bx|/c)}{\sqrt{\sigma^2 + 2|\bx|/c}}. 
+\end{equation}
+Here $p_{ACD2D}$ solves the 2D version of the system \ref{eqn:acd} with line source pulse $w_{ACD2D}$.
+
+It is easily checked that the right-hand sides of equations \ref{eqn:asgsol2d}, \ref{eqn:asgsol2dalt}, and \ref{eqn:acdsol2dalt} have units of pressure.
+

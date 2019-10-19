@@ -1,0 +1,44 @@
+from rsf.tex import *
+
+Paper('siamgs19',
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,amsmath,amsthm,amssymb,amsbsy,wasysym,setspace,bm,float,hyperref,algorithm,algpseudocode',
+include=r'''
+      \newcommand{\oS}{\bar{S}}
+      \newcommand{\of}{\bar{f}}
+'''    
+)
+
+End(
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,amsmath,amsthm,amssymb,amsbsy,wasysym,setspace,bm,float,hyperref,algorithm,algpseudocode',
+include=r'''
+      \newcommand{\ip}{p^{\rm int}}
+      \newcommand{\ibv}{{\bf v}^{\rm int}}
+      \newcommand{\ep}{p^{\rm ext}}
+      \newcommand{\ebv}{{\bf v}^{\rm ext}}
+      \newcommand{\du}{\delta u}
+      \newcommand{\dm}{\delta m}
+      \newcommand{\lu}{\lambda u}
+      \newcommand{\lm}{\lambda m}
+      \newcommand{\muu}{\mu u}
+      \newcommand{\bF}{{\bf F}}
+      \newcommand{\bff}{{\bf f}}
+      \newcommand{\bn}{{\bf n}}
+      \newcommand{\bS}{{\bf S}}
+      \newcommand{\bH}{{\bf H}}
+      \newcommand{\bM}{{\bf M}}
+      \newcommand{\bR}{{\bf R}}
+      \newcommand{\bu}{{\bf u}}
+      \newcommand{\bw}{{\bf w}}
+      \newcommand{\bx}{{\bf x}}
+      \newcommand{\bv}{{\bf v}}
+      \newcommand{\bk}{{\bf k}}
+      \newcommand{\cS}{{\cal S}}
+      \newtheorem{thm}{Theorem}
+      \newtheorem{cor}{Corollary}      
+''',
+color='ALL')
+

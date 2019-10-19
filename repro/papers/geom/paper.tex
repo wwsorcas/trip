@@ -1,0 +1,163 @@
+\title{Geometry of Extended Reflection}
+\author{
+\ William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Symes}
+
+\righthead{Extended Reflection Geometry}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+Subsurface offset extended modeling implies relations between reflection properties (reflector dip, scattering angle) and ray geometry. The relation is similar to that of non-extended modeling, but differs in that a simple relation between scattering angle and image wavenumber holds only for zero offset...
+\end{abstract}
+
+\section{Introduction}
+\cite{SavaFomel:03} introduced the construction of angle domain extended images by Radon transform of subsurface offset extended images. Notably, the ``scattering angle'' was identified by \cite{SavaFomel:03} as linked to the image wavenumber in offset. 
+
+Generally, the physical meaning of this ``angle domain'' has been misunderstood. 
+For example, the ``scattering angle'' computed via Radon transform is the opening angle between incident and reflected rays only when these rays meet at the scattering point - that is, for zero subsurface offset. All of the energy is focused at zero offset when the velocity if correct (in the infinite frequency limit, of course), but not otherwise. 
+
+The ray geometry of the subsurface offset extension has been explored in a number of papers. I use here the account of \cite{HouSymes:15}, which completely and rigorously develops the geometry of extended reflection. Note that essentially the same relations appear in \cite{tenKroode:12}, and possibly elsewhere; these relations are implicit in the asymptotic analysis of extended modeling and migration.
+
+\section{Theory}
+In constant-density acoustic Born modeling extended by horizontal subsurface offset, the model perturbation $\delta v$ is a function of horizontal spatial coordinates $\bx$, horizontal subsurface offset $\bh$, and depth $z$. For 2D modeling, $\bx $ and $\bh $ are 1D vectors, whereas for 3D modeling they are 2D: we will use the same notation in either case.
+
+The dual wavevectors to these coordinates are $\bk_x, \bk_h,$, and $k_z$.Two distinguished wavevector subspaces play a key role, namely $\bk_h=0$ with coordinates $\bk_x,k_z$ and $\bk_x=0$ with coordinates $\bk_h,k_z$. We will write 
+\begin{equation}
+\label{eqn:hyp}
+k_{xz}=\sqrt{|\bk_x|^2 + k_z^2},\,\,k_{hz}=\sqrt{|\bk_h|^2+k_z^2}.
+\end{equation} 
+For 2D, the angle subtended with the distinguished axis, which for horizontal subsurface offset is of course the $k_z$ axis, are denoted $\nu $ for the $\bk_x,k_z$ subspace, and $\gamma $ for the $\bk_h,k_z$ subspace:
+\begin{equation}
+\label{eqn:cos}
+\cos \nu = \frac{k_z}{k_{xz}},\,\, \cos \gamma = \frac{k_z}{k_{xz}}.
+\end{equation}
+For 3D, these angles are denoted $\nu_1$ and $\gamma_1$, and
+the corresponding azimuths are $\nu_2 $ and $\gamma_2 $ respectively. Equations (\ref{eqn:cos}) are still correct, with $\nu$ replaced by $\nu_1$ and $\gamma$ by $\gamma_1$. 
+
+In the high-frequency asymptotics of reflection, the wavevector $(\bk_x,\bk_h,k_z)$ is an extended reflector normal. For physical reflectors, the reflectivity Fourier transform is independent of $\bk_h$, and the subvector with coordinates $(\bk_x,k_z)$ is thus the physical reflector normal. Accordingly, $nu$ (2D) or $\nu_1$ (3D) is the dip (polar) angle and $\nu_2 $ is the dip azimuth. The physical significance of the angle $\gamma$, or $\gamma_1$ and $\gamma_2$ in the 3D case, is not as obvious, as it is related to the ray geometry of reflection.
+
+For the purposes of this paper, assume that all traveltimes between source or receiver and reflecting point are single-valued, that is, that no caustics occur in the scattering domain. For a particular pair $\bx_r,\bx_s$ of source and receiver coordinates (assuming that these lie on horizontal planes), the two-way traveltime $T$ is defined in terms of the one-way traveltime $\tau$ by
+\begin{equation}
+\label{eqn:twoway}
+T(\bx,\bh,z;\bx_r,\bx_s) = \tau(\bx+\bh,z,\bx_r) + \tau(\bx-\bh,z,\bx_s).
+\end{equation}
+$T$ is closely related to the phase function in the expression of the scattering normal operator - see \cite{HouSymes:15}, Appendix A, equation (A-1). Note that in this reference $T$ is denoted $\phi$, and the one-way times are denoted as $T_r$ and $T_s$ respectively. The computations leading up to equation (A-6) are essentially the same, with $x$ replaced by $\bx$ and $k_x,k_h$ by $\bk_x,\bk_h$ and so on to accommodate the 3D case. Note that in 3D, two time integrations are required for each copy of $\bar{F}$ on the left-hand side of equation (A-1), in order that the resulting expression be equivalent to integration over a surface. The upshot is essentially the same stationary phase conditions as expressed in (A-6). In particular,
+\begin{eqnarray}
+\label{eqn:statph-x}
+(\bk_x,k_z) &\mbox{ is parallel to }& \nabla_{\bx,z} T,\\
+\label{eqn:statph-h}
+(\bk_h,k_z) &\mbox{ is parallel to }& \nabla_{\bh,z} T,
+\end{eqnarray}
+from which it follows that
+\begin{eqnarray}
+\label{eqn:statphquot-x}
+\frac{k_z}{k_{xz}} & = & \frac{\nabla_z T}{|\nabla_{\bx,z}T|},\\
+\label{eqn:statphquot-h}
+\frac{k_z}{k_{hz}} & = & \frac{\nabla_z T}{|\nabla_{\bh,z}T|},
+\end{eqnarray}
+and
+\begin{eqnarray}
+\label{eqn:statphquot-x-tan}
+\tan \nu & = & \frac {|\nabla_{\bx}T|}{\nabla_z T},\\
+\label{eqn:statphquot-h-tan}
+\tan \gamma & = & \frac {|\nabla_{\bh}T|}{\nabla_z T}.
+\end{eqnarray}
+
+The $\bx,z$ gradient of $T$ is the sum of the $\bx,z$ gradients of $\tau$ for the arguments indicated in equation (\ref{eqn:twoway}). These gradients are in turn the ray velocity vectors from source and receiver. 
+For $\bh=0$, the eikonal equation states that these gradients have the same length, so that their sum is their bisector. Thus in this case equation (\ref{eqn:statph-x}) states Snell's law of reflection, and the bisector of the angle subtended by incident and reflected rays is the dip (reflector normal) vector. For $\bh \ne 0$, the values of velocity at the points of evaluation $(\bx \pm \bh,z)$ are not necessarily the same, so that while the reflector normal is still parallel to the isochron normal, it is not necessarily the bisector of the incident and reflected ray pair.
+
+The scattering (or opening) (half-) angle $\gamma_{\rm scat}$ is one-half the angle subtended by the incident and reflected rays. Denoting $s=v^{-1}(\bx,z), s_{\pm} = v^{-1}(\bx \pm \bh,z)$, and using the eikonal equation several times,
+\[
+|\nabla_{\bx,z}T(\bx,\bh,z;\bx_r,\bx_s)|^2 = s_+^2 + s_-^2 + 2s_+s_-\cos 2 \gamma_{\rm scat}
+\]
+\begin{equation}
+\label{eqn:len}
+= 4s_+s_-\left(\frac{s_+}{2s_-}+\frac{s_-}{2s_+}  -1 + \cos^2 \gamma_{\rm scat}\right). 
+\end{equation}
+This equation is difficult to interpret in general, however in the special case $\bh=0$ it takes on a familiar meaning:
+\begin{equation}
+\label{eqn:lenh0}
+|\nabla_{\bx,z}T(\bx,0,z;\bx_r,\bx_s)|^2 = 4 s^2 \cos^2 \gamma_{\rm scat}
+\end{equation}
+On the other hand,
+\begin{equation}
+\label{eqn:lenh0-1}
+|\nabla_{\bx,z}T|^2 = |\nabla_{\bx}T|^2 + |\nabla_zT|^2 
+=\sec^2\nu |\nabla_z T|^2.
+\end{equation}
+The computation of $|\nabla_zT|^2$ is accomplished in equations (A-21) through (A-26) and accompanying discussion in Appendix A of \cite{HouSymes:15}, and needs no change other than the lexicographic ones already noted to accommodate 3D: the starting point is the stationary phase (A-6), or its rewrite (\ref{eqn:statph-x}), (\ref{eqn:statph-h}) above. The net result is (for general $\bh$, rewritten from equations (A-24), (A-25) and (A-26))
+\begin{equation}
+\label{eqn:tz}
+|\nabla_z T|^2 = \frac{-b + \sqrt{b^2-4ac}}{2a}
+\end{equation}
+in which
+\begin{equation}
+\label{eqn:tzabc}
+a = \frac{k_{xz}^2k_{hz}^2}{k_z^4},\,b=-2\left[(s_+^2=s_-^2)\frac{\bk_x\cdot \bk_h}{k_z^2}+(s_+^2+s_-^2)\right],\, c=(s_+^2-s_-^2)^2.
+\end{equation}
+For $\bh=0$, these expressions collapse to
+\begin{equation}
+\label{eqn:tzh0}
+|\nabla_z T|^2 = 4s^2 \frac{k_z^4}{k_{xz}^2k_{hz}^2}
+\end{equation}
+so from (\ref{eqn:lenh0}), (\ref{eqn:lenh0-1}, and (\ref{eqn:cos})
+\[
+4 s^2 \cos^2 \gamma_{\rm scat} = 4 s^2 \sec^2\nu  \frac{k_z^4}{k_{xz}^2k_{hz}^2}
+\]
+\begin{equation}
+\label{scatid}
+=4 s^2 \cos^2 \gamma
+\end{equation}
+so the angles $\gamma$ and $\gamma_{\rm scat}$ are identical for $\bh=0$. Inspection of (\ref{eqn:tz}), (\ref{eqn:tzabc}) suggests that otherwise, when $s_+ \ne s_-$, these two angles are not necessarily equal.
+
+For the 2D case with $\bh=0$, reference to (\ref{eqn:cos}), (\ref{eqn:statph-x}), (\ref{eqn:statph-h}) and (\ref{eqn:tzh0}) yield identities previously stated by \cite{SavaFomel:03}:
+\begin{eqnarray}
+\label{savafomel}
+\frac{\partial T}{\partial x} &=& 2 s \sin\nu \cos\gamma, \nonumber \\
+\frac{\partial T}{\partial h} &=& 2 s \cos\nu \sin\gamma, \nonumber \\
+\frac{\partial T}{\partial z} &=& 2 s \cos\nu \cos\gamma,
+\end{eqnarray}
+and
+\begin{eqnarray}
+-\frac{\partial z}{\partial x} = \tan \nu &=& -\frac{k_x}{k_z} \nonumber \\
+-\label{savafomeltan}
+-\frac{\partial z}{\partial h} = \tan \gamma &=& -\frac{k_h}{k_z}
+\end{eqnarray}
+which are simply the equations (\ref{eqn:statphquot-x-tan}) and (\ref{eqn:statphquot-h-tan}) with sign normalization. On the left-hand side, $z$ is regarded implicitly as a function of $x,h$ describing the plane tangent to the extended reflector at the reflection point.
+Note that the identities (\ref{savafomel}) are correct in general {\em only} for $\bh=0$, whereas from the point of view developed in this paper, equations (\ref{savafomeltan}) are valid in general. 
+
+For completeness, we state the 3D generalizations of these relations, in coordinates, using $h_x$ and $h_y$ for the $x-$ and $y-$ components of subsurface offset:
+\begin{eqnarray}
+\label{savafomel3D}
+\frac{\partial T}{\partial x} &=& 2 s \sin\nu_1 cos\nu_2 \cos\gamma_1, \nonumber \\
+\frac{\partial T}{\partial y} &=& 2 s \sin\nu_1 sin\nu_2 \cos\gamma_1, \nonumber \\
+\frac{\partial T}{\partial h_x} &=& 2 s \cos\nu_1 \sin\gamma_2\cos\gamma_2, \nonumber \\
+\frac{\partial T}{\partial h_y} &=& 2 s \cos\nu_1\sin\gamma_1\sin\gamma_2, \nonumber \\
+\frac{\partial T}{\partial z} &=& 2 s \cos\nu_1\cos\gamma_1,
+\end{eqnarray}
+and 
+\begin{eqnarray}
+\label{savafomeltan3D}
+-\frac{\partial z}{\partial x} = \tan \nu_1\cos\nu_2 &=& -\frac{k_x}{k_z},\nonumber\\
+-\frac{\partial z}{\partial y} = \tan \nu_1\sin\nu_2 &=& 
+-\frac{k_y}{k_z}, \nonumber\\
+-\frac{\partial z}{\partial h_x} = \tan \gamma_1\cos\gamma_2  &=& -\frac{k_{h_x}}{k_z}, \nonumber\\
+-\frac{\partial z}{\partial h_y} = \tan \gamma_1\sin\gamma_2  &=& -\frac{k_{h_y}}{k_z}.
+\end{eqnarray}
+Again, equations (\ref{savafomel3D}) relate rays to reflectors and hold only for $h=0$, whereas equations (\ref{savafomeltan3D}) simply identify the angles in relation to the reflector wavenumbers and hold in general.
+\section{Conclusion}
+The geometrical reasoning developed by \cite{HouSymes:15} encapsulates the relations between ray angles and reflector normals. These relations take the usual form proposed by \cite{SavaFomel:03} only for physical reflection, that is, zero subsurface offset.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
+
+
+
+

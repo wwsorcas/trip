@@ -1,0 +1,38 @@
+
+\title{Perturbations by a Pool}
+\date{}
+\address{
+        \footnotemark[1]{West Sound, Orcas Island}
+}
+\author{William Symes\footnotemark[1]}
+
+\righthead{Perturbations}
+
+\maketitle
+\parskip 12pt
+
+It may be that my take on this misses the point, but here is a try at an answer.
+
+In this horizontally layered business, every trace depends on the same reflectivity $r(t_0)$.
+
+The trace $d(t,x)$ at offset $x$ has an amplitude $a(t,x)$ and a moveout function $\tau_0(t,x) = t_0$ corresponding to arrival time $t$ at offset $x$ - ignore the noise series and the wavelet.
+
+Officially, 
+\[d(t,x) = a(t,x) r(\tau_0(t,x))\]
+
+I think of the last factor as a non-stationary convolution - the moveout function stretches $t$ to $t_0$.
+
+introduce velocity perturbation $\delta v$ and reflectivity perturbation $\delta r$. $\delta v$ results in perturbations $\delta a$ in amplitude and $\delta \tau_0$ in moveout function.
+
+by Taylor, Leibnitz, chain rule, etc., the resulting data perturbation $\delta d$  is to first order
+\[
+\delta d(t,x) = \delta a(t,x) r(\tau_0(t,x)) + a(t,x) \delta \tau_0(t,x) \frac{dr}{dt_0} (\tau_0(t,x)) + a(t,x) \delta r(\tau_0(t,x))
+\]
+So, yes, the effect of small velo and refl changes is a sum of three nonstationary convolutions.
+
+However note that $\delta v$ appears implicitly - notably through $\delta \tau_0$ - rather than as the explicit target of a non-stationary filter. It is the reflectivity and its perturbation that are subject to non-stationary filter.
+
+The middle term is "blue", that is, preferentially emphasizes short wavelengths in the reflectivity. The other two are "white".
+
+But maybe I have gone completely off the rails, so will stop here.
+

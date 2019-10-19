@@ -1,0 +1,34 @@
+from rsf.tex import *
+
+End(
+#lclass='segabs',
+lclass='georeport',
+use='amsmath,setspace,wasysym,graphicx',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\tp}{\tilde{p}}
+\newcommand{\td}{\tilde{d}}
+\newcommand{\tdl}{\tilde{d}_{\lambda}}
+\newcommand{\tw}{\tilde{w}}
+\newcommand{\tf}{\tilde{f}}
+\newcommand{\tc}{\tilde{c}}
+\newcommand{\tv}{\tilde{v}_z}
+\newcommand{\tS}{\tilde{S}}
+\newcommand{\tk}{\tilde{\kappa}}
+\newcommand{\tA}{\tilde{A}}
+\newcommand{\wl}{w_{\lambda}}
+\newcommand{\bR}{\mathbf{R}}
+\newcommand{\cF}{{\cal F}}
+\newtheorem{exmp}{Example}
+''',
+color='ALL'
+)
+
+
+
+
+

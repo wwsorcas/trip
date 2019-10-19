@@ -1,0 +1,536 @@
+\title{The Convolutional Model}
+\maketitle
+\label{ch:conv}
+\inputdir{project}
+
+\section{Introduction}
+The model of the title relates a seismic data trace $d(t)$, a {\em reflectivity} $r(t)$, a wavelet $w(t)$, and a noise function $n(t)$ by
+\begin{equation}
+\label{eqn:convmod}
+d = w * r + n
+\end{equation}
+An enormous literature addresses various properties of this model - see \cite{RobTrei:80} and many works cited there. A large part of this literature is deveoted to suppressing or otherwise managing the influence of the noise term $n$ on the recovery of $r$ from $d$ given $w$ and just some properties of $n$.
+
+Equation \ref{eqn:convmod} is understood to hold for every data trace, after NMO correction as carried out as in Chapter \ref{ch:basic}. Two questions suggest themselves: 
+\begin{itemize}
+\item what is NMO correction, and 
+\item why does it lead to the very simple relation \ref{eqn:convmod}, presumed to hold for every source-receiver combination?
+\end{itemize}
+The aim of this chapter is to answer these two questions, {\em starting with the wave equation}. The approximations developed in the preceding two chapters play central roles in the answer.
+
+\section{Integral Representation of the Singly Scatterered Field}
+At first, one might be tempted to say, well {\em of course} the convolution relation \ref{eqn:convmod} holds. Assuming that the pressure field $p(\bx,t;\bx_s)$ is a solution of the wave equation \ref{eqn:raycdawe}, with isotropic point radiator source $f(\bx,t) = w(t)\delta(\bx-\bx_s)$, then the representaion of the solution by the Green's function (equation \ref{eqn:green}) implies that
+\begin{equation}
+\label{eqn:greenpt}
+p(\bx_r,t;\bx_s) = \int\, dt_r\, w(t-t_r) G(\bx_r,t_r;\bx_s).
+\end{equation}
+If we model the data as traces of the pressure field, then this would appear to give us the convolutional model \ref{eqn:convmod}, though without the noise term on the right-hand side. Apparently $r(t)$ is idenfied as the same trace of the Green's function. So Q. E. D.
+
+There are two big things wrong with this point of view. First, the Green's function is a pressure field - a particular solution of the wave equation. It is not a property of the material. However, the reflectivity $r(t)$ is meant to correspond {\em directly and locally}  to properties of earth material - and there is no obvious reason why the Green's function should have any relation to a local measurement of these properties (density, stiffness, etc.). In fact, $r(t)$ must somehow encode properties at depth, whereas the Green's function is evaluated at the source and receiver points in equation \ref{eqn:greenpt}, and at best encodes all of the properties that the field encounters in propagating over the time interval $[0,t_r]$. Second, nominallly $G$ is a pressure, and even if it were a local earth property (which it is not), it is not clear what combination of the basic parameters of the acoustic model it represents, or why.
+
+We can make some progress towards a resolution of this conundrum by assuming a {\em known background square velocity $v^2$} and regarding the data as traces of the perturbational field due to a perterbation $\delta v^2$. The perturbational pressure field $\delta p$ satisfies the inhomogeneous wave equation \ref{eqn:pcdawe}, reproduced for convenience here:
+\begin{eqnarray}
+\label{eqn:pcdaweconv}
+\frac{\partial^2 \delta p}{\partial t^2} -v^2 \nabla^2 \delta p& = & \delta v^2 \nabla^2 p\\
+\delta p &= & 0, \,t<<0 \nonumber 
+\end{eqnarray} 
+The traces of $\delta p$ make up the image of the linearized map $D\cF[v^2]$. Recalling that the solution of an inhomogenous wave equation may be expressed in terms of the Green's function, obtain
+\[
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) = \int \, dt_r \, \int \,dx\, G(\bx_r,t_r;\bx) \delta v^2(\bx) \nabla^2 p(\bx,t-t_r;\bx_s).
+\]
+Using equation \ref{eqn:greenpt} to replace $p$ results in
+\begin{eqnarray}
+\label{eqn:intrep1}
+= w *_t \int \,dt_r\, \int \, dx \, G(\bx_r,t_r;\bx)\delta v^2(\bx) \nabla^2 G(\bx,t-t_r;\bx_s).
+\end{eqnarray}
+It is convenient to use the wave equation for $G$ to replace the space derivatives in the integrand \ref{eqn:intrep1} with time derivatives. This is possible under the assumption:
+\begin{equation}
+\label{eqn:deltasupp}
+\delta v^2(\bx) = 0 \mbox{ for } \bx \mbox{ near } \bx_s.
+\end{equation}
+Granted assumption \ref{eqn:deltasupp}, 
+\begin{equation}
+\label{eqn:intrep}
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) = w *_t \frac{\partial^2}{\partial t^2}\int \,dt_r\, \int \, dx \, G(\bx_r,t_r;\bx)\frac{\delta v^2}{v^2}(\bx) G(\bx,t-t_r;\bx_s).
+\end{equation}
+This relation has the great advantage over equation \ref{eqn:greenpt} that a physical parameter, namely the perturbation in square velocity, appears directly. The influence of this parameter, however still appears to be non-local. To see that it is in fact local, one more level of approximation is needed.
+
+\section{Generalized Radon Transform}
+Add to the accumulating hypotheses the assumption that the background square velocity $v^2$ is slowly varying on the wavelength scale, and $\delta v^2$ is rapidly varying (oscillatory) with small mean over regions a wavelength in diameter. Also assume that no caustics develop in the ray fields centered at either source or receiver, at least in the region where $\delta v^2$ is non-zero. Then the result of Chapter \ref{ch:ray} suggests that we might write $G$ in terms of its progressing wave expansion \ref{eqn:progwave}, with $S = \delta$ (3D):
+\begin{equation}
+\label{eqn:greenprog}
+G(\bx,t;\bx_s) = a(\bx,\bx_s)\delta(t-\tau(\bx,\bx_s)) + R(\bx,t;\bx_s)
+\end{equation}
+Since the first term will be most significant for high frequency waves, keep it and drop the second, insert in \ref{eqn:intrep} to obtain
+\[
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) \approx 
+\]
+\[
+w*_t \frac{\partial^2}{\partial t^2}\int \,dt_r\, \int \, dx \, a(\bx_r,\bx) \delta(t_r-\tau(\bx_r,\bx) \frac{\delta v^2}{v^2}(\bx) a(\bx,\bx_s)\delta(t-t_r-\tau(\bx,\bx_s))
+\]
+(since $\tau$ and $a$ are symmetric functions of their arguments)
+\begin{equation}
+\label{eqn:grt1}
+= w*_t \frac{\partial^2}{\partial t^2}\int \, dx \, a(\bx_r,\bx)a(\bx_s,\bx)\delta(t-\tau(\bx_r,\bx)-\tau(\bx_s,\bx)) \frac{\delta v^2}{v^2}(\bx)
+\end{equation}
+That is, apart from the convolution with the wavelet $w$, $D\cF$ acts (approximately) by integrating the relative  perturbation $\delta v^2/v^2$ over the {\em isochron surface of equal two-way traveltime} $\{\bx: t=\tau(\bx_r,\bx)+\tau(\bx_s,\bx)\}$.
+
+One additional assumption needs to be made for this reasoning to be correct: the last step in the above argument was this identity:
+\begin{equation}
+\label{eqn:noscatoverpi}
+\int dt_r \delta(t_r-\tau(\bx,\bx_r))\delta(t-t_r-\tau(\bx,\bx_s)) = \delta(t - \tau(\bx_r,\bx)-\tau(\bx_s,\bx)).
+\end{equation}
+This identity does not hold in general. To take an extreme example, if $t-\tau(\bx,\bx_s) = \tau(\bx,\bx_r)$ over a small region of $\bx$, then in that region the integrand is the square of a delta function, which is not a legal distribution. This is only a hint of what goes wrong, which I am not going to discuss in detail. Suffice it to quote a result from \cite[]{GelShil:58}: the left-hand side of equation \ref{eqn:noscatoverpi} is well-defined, and equal to the right-hand side, when 
+\begin{equation}
+\label{eqn:noraymeet}
+\nabla_{\bx}\tau(\bx,\bx_r) \ne - \nabla_{\bx}\tau(\bx,\bx_s)
+\end{equation}
+for all $\bx_r,\bx_s$ in the survey geometry and $\bx$ in the support of $\delta v^2$, that is, the region where $\delta v^2 \ne 0$. 
+
+Condition \ref{eqn:noraymeet} has a significant physical interpretation: according to the ray equation \ref{eqn:xeqn}, the gradient of $\tau$ is proportional to the ray velocity vector. Thus condition \ref{eqn:noraymeet} means that the ray from $\bx_r$ to $\bx$ should arriva at $\bx$ with a velocity vector unequal to the {\em negative} of the velocity vector of the ray from $\bx_s$ to $\bx$, which is the velocity vector of the ray from $\bx$ to $\bx_s$. If this condition is violated, then the curve got by concatenating the rays from $\bx_s$ to $\bx$ and from $\bx$ to $\bx_r$ is itself a ray (thanks to the uniqueness theory for ordinary differential equations). Thus in that case there is a ray from $\bx_s$ to $\bx_r$, that is, a direct or diving ray connecting source and receiver. This circumstance must be ruled out if equation \ref{eqn:noscatoverpi} is to hold: specifically, {\em no diving ray may intersect the support of $\delta v^2$.}  
+
+Add this no-diving-rays hypothesis to the standing assumptions. Two remarks are worth making:
+\begin{itemize}
+\item A more refined analysis shows that it's OK for diving rays to pass over the support of $\delta v^2$, so long as directions in which $\delta v^2$ oscillates strongly are not perpindicular to the rays. The ideas necessary to properly formulate and justify this assertion will appear later in the book.
+\item It is ironic that contemporary FWI relies almost entirely on diving waves, that is, waves associated to the very rays outlawed by condition \ref{eqn:noraymeet}. This point will also get some attention later in the book.
+\end{itemize}
+
+The formula \ref{eqn:grt1} is surprisingly accurate under the conditions assumed, as I showed by explicit example in my old notes \cite[]{SymesNotes}. With numerical methods for computation of traveltimes and amplitudes, \ref{eqn:grt1} turns into a so-called Kirchhoff integral operator approximation to $D\cF$. Such numerical integral operator representations are very useful, and widely used.
+
+\section{Layered Models}
+The convolutional model is the result of all of the assumptions and approximations made so far, plus a few more. The first of these, in its strictest form, is that {\em the earth is layered}: that is that the phsyical properties of rock affecting seismic wave propagation (meaning $v^2$, in the constant density acoustic model) depend only on $x_3=z$. Also, the sources and receivers are arrayed on horizontal surfaces, that is, $z = z_s$ and $z=z_r$ respectively. 
+
+In fact, the earth is not layered (even locallly) - if it were, then the results of seismic experiments would be translation-invariant, and they are not. For example, Figure \ref{fig:cdp-every50th} shows every 50th {\em Common Midpoint} gather. Common midpoint (``CMP'') gathers are the collections of traces sharing a common {\em midpoint} $x_m=(x_r+x_s)/2, y_m=(y_r+y_s)/2$, more on that later).
+The half-offset $h=|(x_r-x_s,y_r-y_s)|/2$ indexes traces in a CMP gather. The scalar half offset defined here suffices for present purposes, since the layered hypothesis implies rotational symmetry of the traces in a CMP about the midpoint.
+
+The CMP gathers in Figure \ref{fig:cdp-every50th} change quite a bit one to another, but they are 625 m apart. Figure \ref{fig:cdp1002-1040} on the other hand shows the same number of CMP gathers, but chosen contiguously, with spacing of 12.5 m. Over this range of CMPs, the data changes quite slowly, so perhaps it is not so dreadfully inaccurate to model the earth as layered on this scale.
+\plot{cdp-every50th}{width=0.9\textwidth}{Every 50th Common Midpoint Gather from the Viking Graben line introduced in Chapter \ref{ch:basic}. Midpoint spacing is 625 m.}
+\plot{cdp1002-1040}{width=0.9\textwidth}{Common Midpoint Gathers 1002-1040 from the Viking Graben line introduced in Chapter \ref{ch:basic}. Midpoint spacing is 12.5 m.}
+
+Due to the rotational symmetry already noted,
+\begin{equation}
+\label{eqn:cmpdf}
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) = D\cF[v^2]\delta v^2(\bx_m + (h,0,0),t; \bx_m-(h,0,0))
+\end{equation}
+This identity suggests a change of coordinates: replace
+\begin{equation}
+\label{eqn:cmpdfc}
+D\cF[v^2]\delta v^2(x_m,y_mh,t) \leftarrow D\cF[v^2]\delta v^2((x_m + h,y_m,z_r)t; (x_m-h,y_m,z_s)).
+\end{equation}
+These {\em midpoint-offset} coordinates are in common use. To honor the actual non-layered nature of the earth, a vector half-offset $h_x = (x_r-x_s)/2, h_y=(y_r-y_s)/2$ may be used instead.
+
+\section{Stationary Phase}
+Analysis of the layered case uses yet another approximation. Write the integral representation \ref{eqn:grt1} in terms of the Fourier transform in time: 
+\[
+D\cF[v^2]\delta v^2(\bx_r,t;\bx_s) \approx -\frac{1}{2\pi}\int\, d\omega \,\omega^2\hat{w}(\omega)\int \,dz \,\left( \int\,dx\int\,dy \, \right.
+\]
+\begin{equation}
+\label{eqn:grt2}
+\left. a(\bx_r,(x,y,z))a(\bx_s,(x,y,z))e^{i\omega(t-\tau(\bx_r,(x,y,z))-\tau(\bx_s,(x,y,z)))}\right)\frac{\delta v^2}{v^2}(z)
+\end{equation}
+
+Since $w$ is assumed highly oscillatory on the wavelength scale, its Fourier transform is concentrated a ``large'' frequencies. The principle of stationary
+phase \cite[]{GuiSte:79,BleisteinCohenStockwell:01} gives an asymptotic evaluation of integrals such as the $dx$ integral in \ref{eqn:grt2} for large frequency.
+To state the general principle: the integral of a rapidly fluctuating function
+$g(\mathbf{y})e^{i\omega\psi(\mathbf{y})}$ for large $\omega$ is approximated to every order in $\omega$ by a
+sum of terms, one for each stationary phase point $\mathbf{y^*}$ (that is $\nabla\psi(\mathbf{y^*})=0$): 
+\begin{equation}
+\label{eqn:statphase}
+\begin{aligned} 
+&\int_{\mathbf{R}^m}d\mathbf{y} g(\mathbf{y})e^{i\omega \psi(\mathbf{y})}\\
+&\approx \sum_{\nabla
+  \psi(\mathbf{y^*})=0}\left(\frac{2\pi}{\omega}\right)^{\frac{m}{2}}e^{\frac{\pi
+    i}{4}\mathrm{sgn}\ \mathrm{Hess} \ \psi(\mathbf{y}^*)}
+|\mathrm{det}\ \mathrm{Hess}\psi(\mathbf{y}^*)|^{-\frac{1}{2}}g(\mathbf{y}^*)e^{i\omega \psi(\mathbf{y}^*)}
+\end{aligned}
+\end{equation}
+The main condition for validity of this approximation is that the Hessian determinant not vanish at the stationary points (that is, that the stationary points are {\em nondegenerate}).
+
+\noindent {\bf Note:} The symbol $\mathrm{sgn}$ in \ref{eqn:statphase} means the {\em signature} of the symmetric matrix $\mathrm{Hess}  \psi(\mathbf{y}^*$, that is, the number of positive eigenvalues minus the number of negative eigenvalues.
+
+The stationary phase principle \ref{eqn:statphase} may be applied to approximate the integral in \ref{eqn:grt2} over the horizontal variables $x_1=x,x_2=y$, identifying $m=2$, $\psi(\bx) = t - \tau(\bx,\bx_r) - \tau(\bx,\bx_s)$ and $g(\bx) = -(a(\bx,\bx_r)a(\bx,\bx_s)/2\pi)(\delta v^2(\bx)/v^2(\bx))$. This requires (a) finding the stationary points, and (b) verifying that the Hessian is nonsingular there.
+
+The rotational symmetry implicit in the layered assumption strictly constrains the locatino of stationary points. To see how, note that rotational symmetry implies that $\tau(\bx,\bx_s)$ depends only $|(x-x_s,y-y_s)| = r_s$:
+\begin{equation}
+\label{eqn:bartaudef}
+\tau(\bx,\bx_s) = \bar{\tau}(r_s,z,z_s),
+\end{equation}
+and similarly $\tau(\bx,\bx_r) = \bar{\tau}(r_r,z,z_r)$. Note that $\bar{\tau}$ also solves the eikonal equation, in 2D:
+\begin{equation}
+\label{eqn:eikr}
+\left(\frac{\partial \bar{\tau}}{\partial r}\right)^2(r,z,z_s) +\left(\frac{\partial \bar{\tau}}{\partial z}\right)^2(r,z,z_s) = \frac{1}{v^2(z)}
+\end{equation}
+The locations of the stationary points of $\psi$, and their non-degeneracy, follows from several properties of $\bar{\tau}$:
+\begin{itemize}
+\item There exists a decreasing positive function $z_s < z \mapsto r_{\rm max}(z)$ so that a unique solution  $\bar{\tau}$ of \ref{eqn:eikr} exists on $\{(r,z): z_s< z, |r| < r_{\rm max}\}$ satisfying 
+\begin{equation}
+\label{eqn:initeikr}
+\bar{\tau}(r,z,z_s) \sim \frac{\sqrt{(z-z_s)^2+r^2}}{v(z_s)} \mbox{ as } z \rightarrow z_s, \, r \rightarrow 0.
+\end{equation}
+and similarly for $z_r$;
+\item in $\{(r,z): z_s< z, |r| < r_{\rm max}\}$,
+\begin{itemize}
+\item \begin{equation}
+\label{eqn:bartauincr}
+r\frac{\partial \bar{\tau}}{\partial r} >0 \mbox{ if }|r|>0
+\end{equation}
+\item \begin{equation}
+\label{eqn:bartauconv}
+\frac{\partial^2 \bar{\tau}}{\partial r^2} (r,z,z_s) > 0,
+\end{equation}
+\end{itemize}
+and similarly for $z_r$.
+\end{itemize}
+Granted these results, note that 
+\[
+\nabla_{x,y} \psi(\bx) = -\nabla_{x,y}\tau(\bx,\bx_r) - \nabla_{x,y}\tau(\bx,\bx_s)
+\]
+\begin{equation}
+\label{eqn:statcondr}
+=-\frac{(x-x_r,y-y_r)}{|(x-x_r,y-y_r)|}\frac{\partial \bar{\tau}}{\partial r}(r_r,z,z_r)
+-\frac{(x-x_s,y-y_s)}{|(x-x_s,y-y_s)|}\frac{\partial \bar{\tau}}{\partial r}(r_s,z,z_s)
+\end{equation}
+For $\bx$ to be a stationary point of $\psi$, it follows from \ref{eqn:statcondr} that the two unit vectors appearing there must be colinear, that is, $(x,y)$ must be on the line joining $(x_r,y_r)$ and $(x_s,y_s)$. Let 
+\[
+r_{sr} = |(x_r-x_s,y_r-y_s)|, \,\, (e_x,e_y) = \frac{(x_r-x_s,y_r-y_s)}{r_{sr}}
+\]
+Then for a suitable $r$,
+\[
+(x-x_s,y-y_s) = r(e_x,e_y), \,\,(x-x_r, y-y_r) = (r-r_{sr})(e_x,e_y).
+\]
+ and the stationary phase condition \ref{eqn:statcondr} hold if and  only if
+\[
+{\rm sgn}(r)\frac{\partial \bar{\tau}}{\partial r}(r_{sr}-r_s,z,z_r) + {\rm sgn}(r-r_{sr})\frac{\partial \bar{\tau}}{\partial r}(r_s,z,z_s) = 0
+\] 
+Either the two signs are the same, or they are different. In fact, it follows from the condition \ref{eqn:bartauincr} that they cannot be the same (exercise!). Thus stationary phase \ref{eqn:statcondr} implies that 
+\begin{equation}
+\label{eqn:midptcond}
+\frac{\partial \bar{\tau}}{\partial r}(r_{sr}-r,z,z_r) = \frac{\partial \bar{\tau}}{\partial r}(r,z,z_s).
+\end{equation}
+The meaning of condition \ref{eqn:midptcond} is easiest to understand when $z_s=z_r$: in that case, the two sides of \ref{eqn:midptcond} are the same function with reversed argument. Since this function of $r$ is increasing (result \ref{eqn:bartauincr}), the unique solution is $r=r_{sr}/2$, from which it follows that 
+\begin{equation}
+\label{eqn:midpt}
+x = x_m = \frac{x_r-x_s}{2}, \, y=y_m=\frac{y_r-y_s}{2}.
+\end{equation}
+That is, the stationary point $\bx$ lies beneath the {\em midpoint} $(x_m,y_m)$ of the line segment between source and receiver. The horizontal distance from either is $r=r_{rs}/2 = h$, the half-offset, so write from now on $h$ instead of $r$.
+
+It is not hard to see that the for typical $z_r,z_s$ in towed streamer marine surveys - both a few meters - and typical target depth $z$ - kilometers - the error caused by assuming $z_s=z_r$ in this calculation is negligible. Therefore \ref{eqn:midpt} is assumed to hold in the following, and I will also assume $z_s=z_r$ to simplify various expressions.
+
+Having found the only stationary points, the other issue that must be settled in order to apply the stationary phase approximation \ref{eqn:statphase} is the nondegeneracy of the phase Hessian. From the definition \ref{eqn:bartaudef} of $\bar{tau}$ and its eikonal \ref{eqn:eikr} it follows that at the midpoint \ref{eqn:midpt}, 
+\[
+\left(
+\begin{array}{cc}
+\frac{\partial^2 \psi}{\partial x^2} & \frac{\partial^2 \psi}{\partial x \partial y}\\
+\frac{\partial^2 \psi}{\partial x \partial y} & \frac{\partial^2 \psi}{\partial y^2} 
+\end{array}
+\right) (\bx^*)
+=
+\]
+\begin{equation}
+\label{eqn:hess}
+-\left(
+\begin{array}{cc} 
+e_y^2\frac{2}{r}\frac{\partial \bar{\tau}}{\partial r} + e_x^2\frac{\partial^2 \bar{\tau}}{\partial r^2} & 
+-e_xe_y\left( \frac{2}{r}\frac{\partial \bar{\tau}}{\partial r} + \frac{\partial^2 \bar{\tau}}{\partial r^2}\right) \\
+-e_xe_y\left( \frac{2}{r}\frac{\partial \bar{\tau}}{\partial r} + \frac{\partial^2 \bar{\tau}}{\partial r^2} \right) &
+e_x^2\frac{2}{r}\frac{\partial \bar{\tau}}{\partial r} + e_y^2\frac{\partial^2 \bar{\tau}}{\partial r^2}
+\end{array}
+\right) (h,z)
+\end{equation}
+In view of the inequalities \ref{eqn:bartauincr} and \ref{eqn:bartauconv}, the determinant of this matrix is nonzero (in fact, positive). Thus the stationary point of $\psi$ (for each $z,t$) is nondegenerate.
+
+The identity \ref{eqn:hess} implies that the Hessian has two negative eigenvalues. The easiest way to see this is to check the case in which the offset vector is parallel to the $x$-axis, so that $|e_x|=1, e_y=0$. Then the Hessian is diagonal, and the diagonal entries are exactly twice the negatives of the quantities estimated in \ref{eqn:bartauincr} and \ref{eqn:bartauconv}. Since the Hessian for other orientations of the offset is related to the $x$-axis case by rotational similarity, the eigenvalues are always these quantities. Conclude that
+\begin{equation}
+\label{eqn:signat}
+{\rm sgn} {\rm Hess}\psi(\bx^*) = -2 \Rightarrow e^{\frac{i \pi}{4} {\rm sgn} {\rm Hess}\psi(\bx^*)} = -i
+\end{equation}
+
+Since the stationary point is below the midpoint, rotational symmetry implies that this determinant is a function of $h$ and $z$: abuse notation by writing
+\begin{equation}
+\label{eqn:hessdef}
+{\rm Hess}(h,z) = \left(
+\begin{array}{cc}
+\frac{\partial^2 \psi}{\partial x^2} & \frac{\partial^2 \psi}{\partial x \partial y}\\
+\frac{\partial^2 \psi}{\partial x \partial y} & \frac{\partial^2 \psi}{\partial y^2} 
+\end{array}
+\right) (\bx^*)
+\end{equation}
+where $h=r_{rs}/2 = |(x_r-x_s,y_r-y_s)|/2$ and $\bx^*=(x_m,y_m,z)$.
+
+The preceding paragraphs have supplied all of the ingredients necessary to apply the stationary phase approximation \ref{eqn:statphase} to the frequency-domain expression of the Generalized Radon Transform approximation \ref{eqn:grt2}. As the reader will verify, the result is 
+\begin{equation}
+\label{eqn:grt2sp}
+D\cF[v^2]\delta v^2(x_m,y_m,h,t) \approx 
+\approx \int\,d\omega\,i\omega \hat{w}(\omega)\int\,dz\,e^{i\omega(t-2\bar{\tau}(h,z,z_s))} a(\bx_s,\bx)a(\bx_r,\bx) |Hess(h,z)|^{-1/2}\delta v^2(z)
+\end{equation}
+(including a minus sign from the signature of the Hessian, which is 2).
+
+Rotational symmetry also applies to the transport equation \ref{eqn:transp}, and shows that $a(\bx_s,\bx_m) = a(\bx_r,\bx_m)=\bar{a}(h,z)$ (defining $\bar{a}$). Insert this identity and use the Fourier representation of the delta function to arrive at 
+\begin{equation}
+\label{eqn:convz}
+D\cF[v^2]\delta v^2(x_m,y_m,h,t) \approx w *_t \frac{\partial}{\partial t}\int\,dz\,
+\delta(t-2\bar{\tau}(h,z,z_s)) \bar{a}^2(h,z)|\det {\rm Hess}(h,z)|^{-1/2}\frac{\delta v^2}{v^2}(z)
+\end{equation}
+This approximation is very close to the desired model - the remaining steps will be taken in the next section.
+
+The key inequalities \ref{eqn:bartauincr} and \ref{eqn:bartauconv} still require justification. The key observation in this argument is that $\bar{\tau}$ can also be constructed via rays, as shown in Chapter \ref{ch:ray}. The assocated Hamilton's equations \ref{eqn:ham} for the phase space vector $(r,z,p,q)$ read
+\begin{eqnarray}
+\label{eqn:hamr}
+\frac{dr}{dt} & = & v^2(z)p\\
+\frac{dz}{dt} & = & v^2(z)q\\
+\frac{dp}{dt} & = & 0\\
+\frac{dq}{dt} & = & \frac{d \log v}{dz}(z)
+\end{eqnarray}
+In particular, $p$ is constant along rays. Divding the first equation by the second and using the eikonal equation $v^2(z) (p^2 + q^2) = 1$, obtain 
+\begin{equation}
+\label{eqn:drdz}
+\frac{dr}{dz} = \frac{v(z)p}{\sqrt{1-v(z)^2 p^2}}
+\end{equation} 
+which gives the evolution of $r$ as a function of $z$ along the ray so long as $q > 0$, that is, $v(z)|p|<1$. The latter condition characterizes rays for which $dz/dt > 0$, implying also that along such rays, $\partial\tau/\partial z > 0$ .Rays violate this condition by turning horizontal. It is not too hard to see that a horizontal ray velocity vector implies the presence of a caustic, violating the conditions that ensure that the approximations \ref{eqn:grt1} and \ref{eqn:grt2} are accurate. Therefore, we assume that over the depth range of interest, and over the rays that are important in this construction, $v(z)|p| < 1$. This assumption will be justified ex post facto.
+
+Integrating \ref{eqn:drdz}, obtain
+\begin{equation}
+\label{eqn:intrz}
+r(z,p)=\int_{z_s}^z \,dz' \, v(z')p (1-v(z')^2 p^2)^{-\frac{1}{2}}
+\end{equation}
+Then 
+\begin{equation}
+\label{eqn:drdp}
+\frac{\partial r}{\partial p}(z,p) = \int_{z_s}^z \,dz' \, v(z') (1-v(z')^2 p^2)^{-\frac{3}{2}} >0
+\end{equation}
+under the assumptions made above. That is, define $p_{\rm max}(z) = \min \{1/v(z'): z_s \le z' \le z\}$. Then the function
+$p \mapsto r(z,p)$ is strictly increasing on $(-p_{\rm max}(z),p_{\rm max}(z))$ hence invertible: write $p(r,z)$ for the inverse, which is well-defined on $(-r_{\rm max}(z),r_{\rm max}(z))$ with $r_{\rm max}(z) = r(p_{\rm max}(z),z)$.
+
+Of course, in equation \ref{eqn:drdz} and following, $p$ is the $x$-component of the slowness vector $\bP$ in Hamilton's equations (that is, the system \ref{eqn:hamr}). So from \ref{eqn:pdef} and the strict increase of $r \mapsto p(r,z)$ follows inequality \ref{eqn:bartauconv}. Symmetry implies that 
+\[
+\frac{\partial \bar{\tau}}{\partial r}(0,z) = 0;
+\]
+together with the convexity result, that's enough to establish inequality \ref{eqn:bartauincr}.
+
+\section{Hyperbolic Normal Moveout}
+Transform the integral in equation \ref{eqn:convz} by the change of variable $z \rightarrow T(h,z,z_s) = 2\bar{\tau}(h,z,z_s)$. $T$ is the {\em two-way time} from $(0,z_s)$ to $(h,z)$. Because of the standing hypothesis that $dz/dt>0$ along all rays from source or receiver to $(h,z)$  in the region of defined by the inequalities $h<r_{\rm max}(z,p)$, this change of variables is invertible, and defines depth as a function of two-way time: $Z(h,T(h,z,z_s),z_s) = z$. Thus equation \ref{eqn:convz} can be re-written as 
+\[
+D\cF[v^2]\delta v^2(x_m,y_m,h,t) \approx 
+\]
+\[
+w *_t \frac{\partial}{\partial t}\int\,dT\,
+\approx \int\,dz\,\delta(t-T) \left(\frac{\partial Z}{\partial T}\bar{a}^2|\det {\rm Hess}|^{-1/2}\right)(h,Z(h,T,,z_s)\frac{\delta v^2}{v^2}(Z(h,T,z_s))
+\]
+\begin{equation}
+\label{eqn:convt1}
+= w*_t\frac{d}{dt}A(h,t,z_s) R(h,t,z_s)
+\end{equation}
+in which
+\[
+A(h,t,z_s) = \left(\frac{\partial Z}{\partial t}\bar{a}^2|\det {\rm Hess}|^{-1/2}\right)(h,Z(h,t,,z_s),\,\, R(h,t,z_s)  = \frac{\delta v^2}{v^2}(Z(h,t,z_s))
+\]
+
+Now rely on the separation of scales assumed to justify the use of geometric optics. Since $v^2$ is much smoother than $\delta v^2$, which is oscillatory on the scale of a wavelength, derivatives of $A$ (depending on traveltime and amplitude, which are as smooth as $v^2$ or smoother) are much smaller than corresponding derivatives of $R$. Make another approximation of the same quality as those that have been used to arrive at \ref{eqn:convt1} to arrive at
+\begin{equation}
+\label{eqn:convt}
+D\cF[v^2]\delta v^2(x_m,y_m,h,t) \approx  w*_t A(h,t,z_s) \frac{dR}{dt}(h,t,z_s)
+\end{equation}
+
+The hyperbolic normal moveout approximation takes two further steps:
+\begin{itemize}
+\item replacing the depth coordinate $z$ by the zero-offset two-way time
+$T_0(z,z_s) = T(0,z,z_s)$ with inverse $Z_0(t_0,z_s)$ (so that $Z_0(T_0(z,z_s),z_s) = z$), and 
+\item replacing the non-zero offset time $T(h,z,z_s)$ with the lowest order nontrivial Taylor series in $h$, which may be expressed as
+\begin{equation}
+\label{eqn:hnmo}
+\bar{T}(h,t_0) = \sqrt{t_0^2 + \frac{h^2}{v_{\rm RMS}^2(t_0)}} = T(h,Z_0(t_0,z_s),z_s)+ O(h^4).
+\end{equation}
+\end{itemize}
+To prove \ref{eqn:hnmo}, begin by noting that
+\begin{equation}
+\label{eqn:eik2w}
+\left(\frac{\partial T}{\partial z}\right)^2+
+\left(\frac{\partial T}{\partial h}\right)^2 =\frac{4}{v^2}
+\end{equation}
+Differentiate this twice with respect to $h$ and use the vanishing of
+odd-order $h$ derivatives at $h=0$ (implied by symmetry) to conclude
+that 
+\begin{equation}
+\label{eqn:eiktwh0}
+\partial T(0,z,z_s)/\partial z = \frac{2}{v(z)}
+\end{equation}
+so the second $h$ derivative
+\[
+q(z)=\frac{\partial^2 T}{\partial h^2}(0,z)
+\]
+satisfies
+\[
+\frac{2}{v}\frac{dq}{dz}+q^2=0
+\]
+Introduce temporarily a new depth coordinate
+\[
+\sigma(z)=\frac{1}{2}\int_{z_s}^z \, v
+\]
+Then in terms of $\sigma$, $q$ satisfies the Ricatti equation
+\[
+\frac{dq}{d\sigma}+q^2=0
+\]
+The solution which is singular at $\sigma=0$, i.e. $z=z_s$, is
+\[
+q(\sigma)=\frac{1}{\sigma}=\frac{2}{\int_{z_s}^z \,dz\,v}
+\]
+From equation \ref{eqn:eiktwh0}, you can also write this as
+\[
+\frac{\partial ^2\bar{T}}{\partial h^2}(0,t_0) = \frac{\partial^2 T}{\partial h^2}(0,Z_0(t_0,z_s),z_s)  q(\sigma(Z_0(t_0,z_s))=\frac{1}{\int_0^{t_0}\,dt_0\,\bar{v}^2}
+\]
+where $\bar{v}(t_0) = v(Z_0(t_0,z_s))$.
+
+\noindent {\bf Note:} In the seismic literature, $v(z)$ is called the interval velocity as a function of $z$, $\bar{v}(t_0)$ is called the interval velocity as a function of time - see self-doc for the SU utility {\tt velconv}).
+
+Thus 
+\[
+\bar{T}(h,t_0)=t_0 + \frac{h^2}{2}\frac{\partial^2 \bar{T}}{\partial h^2}(h,t_0) +...
+\]
+\[
+= t_0 + \frac{h^2}{2\int_0^{t_0}\,dt_0\,\bar{v}^2}+...
+\]
+Since
+\[
+\frac{\partial^2}{\partial h^2}(\bar{T}(h,t_0))^2_{h=0}=2 t_0\frac{\partial^2 \bar{T}}
+{\partial h^2}(0,t_0)
+\]
+the above can be rewritten as
+\[
+\bar{T}(h,t_0)^2 = t_0^2 + \frac{h^2}{\frac{1}{t_0}\int_0^{t_0}\,dt_0\,\bar{v}^2}+...
+\]
+\begin{equation}
+\label{eqn:hnmo2}
+=t_0^2+\frac{h^2}{v_{\rm RMS}^2(t_0)} + ...
+\end{equation}
+where 
+\begin{equation}
+\label{eqn:vrmsdef}
+v_{\rm RMS}(t_0) = \sqrt{\frac{1}{t_0}\int_0^{t_0}\,dt_0\,\bar{v}^2}
+\end{equation}
+is the Root-Mean Square (RMS) velocity as function of $t_0$. Evidently equation \ref{eqn:hnmo2} is equivalent to \ref{eqn:hnmo}.
+
+\section{NMO Correction}
+The NMO correction is a change of variable in the data, namely 
+\begin{equation}
+\label{eqn:nmo}
+d(x_m,y_m,h,t) \rightarrow d(x_m,y_m,h,\bar{T}(h,t_0)).
+\end{equation}
+
+This operation has a simple interpretation under the assumption that an effective source signature deconvolution has been performed in the convolutional model \ref{eqn:convt}, that is, that an inverse to the convolution with the source wavelet $w$ has been performed. This would remove $w*_t$ from the right-hand side of \ref{eqn:convt}. Actually exact source signature deconvolution is impossible, as realistic source wavelets are band-limited. Therefore there must be a residual source signature built into the data even after any sort of deconvolution is applied, consisting (at best!!) of a bandpass filter. I will comment further on this matter at the end of the chapter, but for now presume that deconvolution has removed $w*_t$ from the right-hand side of \ref{eqn:convt}, to yield the {\em deconvolved convolutional model} of the NMO-corrected data:
+\begin{equation}
+\label{eqn:convtdecon}
+d(x_m,y_m,h,\bar{T}(h,t_0))  \approx  A(h,t,z_s) \frac{dR}{dt}(h,t,z_s)
+\end{equation}
+Recall that
+\[
+R(h,t,z_s) = \frac{\delta v^2}{v^2}(Z(h,t,z_s)) ,
+\]
+so 
+\[
+R(h,\bar{T}(h,t_0),z_s) = \frac{\delta v^2}{v^2}(Z(h,\bar{T}(h,t_0),z_s))
+=\frac{\delta v^2}{v^2}(Z(h,T(h,Z_0(,t_0,z_s),z_s))) = \frac{\delta v^2}{v^2}(Z_0(t_0,z_s))
+\]
+since $T$ and $Z$ are an inverse pair. Note that $R(h,\bar{T}(h,t_0),z_s)$ is {\em independent of $t$}. Define \begin{equation}
+\label{eqn:refldef}
+\bar{R}(t_0) = \frac{\delta v^2}{v^2}(Z_0(t_0,z_s)),
+\end{equation}
+\begin{equation}
+\label{eqn:ampdef}
+ bar{A}(h,t_0) = A(n,\bar{T}(h,t_0),z_s)\left(\frac{\partial \bar{T}}{\partial t_0}(h,t_0)\right)^{-1}
+\end{equation}
+In terms of of $\bar{R}$ and $\bar{A}$, the deconvolved convolutional model \ref{eqn:convtdecon} of a CMP gather is
+fantastically simple:
+\begin{equation}
+\label{eqn:convt0}
+d(x_m,y_m,h,\bar{T}(h,t_0)) \approx \bar{A}(h,t_0) \frac{d\bar{R}}{dt_0}(t_0) 
+\end{equation}
+The second factor is the {\em reflectivity} - simply the derivative of the relative perturbation in $v^2$, parametrized by vertical two-way time $t_0$. The first is a combination of various amplitude effects, including the geometric amplitudes from source/receiver at offset $h$, the reciprolcal square root of the phase Hessian (measuring wavefront curvature), and the rate of change of two-way time at offset $h$ with respect to two-way time at offset zero.
+
+In the case of constant $v$, $\bar{A}$ can certainly be computed explicitly. However, its most important feature is that it is {\em smooth}, that is slowly varying on the wavelength scale, as it combines various geometric optics quantities that are smooth under the standing assumptions on $v$.  The reflectivity on the other hand is not, so a grey-scale plot of NMO-corrected will have {\em flat wavefronts} - rapidly oscillating vertically, slowly varying horizontally. That is what you see in Figures \ref{fig:nmo200}, \ref{fig:nmo700}, \ref{fig:nmo1300}, and \ref{fig:nmo2000}. This feature is an indication that the data $d$ and the velocity $v$ are compatible, that is, that $v$ adequately explains the kinematic features of the data.
+
+On the other hand, if the NMO-corrected CMP gathers are not flat, then the velocity used to compute the NMO correction is not compatible with the data. Figure \ref{fig:nmo2000lo} showed an example of this. 
+
+Careful inspection of the relation \ref{eqn:convt0} reveals the reason. To clarify the role of velocity, include it as an argument of $\bar{T}$: that is, $\bar{T}[v](t_0,h)$ 
+\begin{equation}
+\label{eqn:hnmov}
+\bar{T}[v](h,t_0) = \sqrt{t_0^2 + \frac{h^2}{v_{\rm RMS}^2(t_0)}} 
+\end{equation}
+Denote by $\bar{T}_0[v](h,t)$ its inverse function, that is, 
+\[
+\bar{T}[v](h,\bar{T}_0[v](h,t)) = t
+\]
+Suppose that the data are compatible with $v$, that is that relation \ref{eqn:convt0} holds. Choose another velocity $v'$, and construct the NMO-corrected CMP for this velocity: 
+\begin{equation}
+\label{eqn:convt0}
+d(x_m,y_m,h,\bar{T}[v'](h,t_0)) \approx \bar{A}(h,\bar{T}_0[v](h,\bar{T}[v'](h,t_0))) \frac{d\bar{R}}{dt_0}(\bar{T}_0[v](h,\bar{T}[v'](h,t_0)))
+\end{equation}
+The surfaces of equal phase for the last factor - these delineate the visible wavefronts in the NMO corrected gather, since the other factor is smooth - are the curves defined by 
+\[
+h \mapsto \bar{T}_0[v](h,\bar{T}[v'](h,t_0)).
+\]
+To describe these curves conveniently, introduce the {\em two way time discrepancy} between $v$ and $v'$, denoted $\Delta T[v,v'](h,t_0)$, by
+\begin{equation}
+\label{eqn:tdiscrep}
+\sqrt{t_0^2 + \Delta T[v,v'](h,t_0)^2} = \bar{T}_0[v](h,\bar{T}[v'](h,t_0))
+\end{equation}
+Since $\bar{T}$ and $\bar{T}_0$ are an inverse pair, evaluating $\bar{T}[v](h,\cdot)$ at the right-hand-side of equation \ref{eqn:tdiscrep} gives
+\[
+t_0^2 + \Delta T[v,v'](h,t_0)^2 +\frac{h^2}{v_{\rm RMS}^2(\bar{T}_0[v](h,\bar{T}[v'](h,t_0)))} = t_0^2 + \frac{h^2}{(v')_{\rm RMS}^2(t_0)}
+\]
+so 
+\begin{equation}
+\label{eqn:tdiscrep1}
+\Delta T[v,v'](h,t_0)^2 =  h^2\left(\frac{1}{(v')_{\rm RMS}^2(t_0)}-\frac{1}{v_{\rm RMS}^2(\bar{T}_0[v](h,\bar{T}[v'](h,t_0)))} \right)
+\end{equation}
+
+It is worth taking a moment to understand the geometric meaning of equation \ref{eqn:tdiscrep1}. Equal phase surfaces $t=\bar{T}[v](h,t_0)$ are called {\em moveout curves} (or surfaces, in 3D). The inverse function $\bar{T}_0[v](h,t)$ gives the zero-offset two-way time for the moveout curve passing through $(h,t)$, for the velocity $v$. So the {\em residual moveout} $\bar{T}_0[v](h,\bar{T}[v'](h,t_0))$ is the zero-offset intercept of the moveout curve for $v$, passing through the point $(h,\bar{T}[v'](h,t_0))$ on the moveout curve for $v'$. $\Delta T[v,v'](h,t_0)$ is the difference between $t_0^2$ and this two-way time (squared) obtained by starting at $(0,t_0)$ on the moveout curve for $v'$, traveling out to offset $h$, and then back to $h=0$ on the moveout curve for $v$. Residual moveout is a direct measure of the difference in the NMO-corrected phase. Equation \ref{eqn:tdiscrep1} relates residual moveout directly to the values of the two velocities $v$ and $v'$.
+
+Since the residual moveout formula samples the two velocities at two different places, one of those depending on the velocities themselves, it is not entirely obvious exactly what equation \ref{eqn:tdiscrep1} tells us about the relation with the velocity difference. The easy case to understand is when both $v$ and $v'$ are constant. Then $v_{\rm RMS} = v$, $v'_{\rm RMS} = v'$, and  \ref{eqn:tdiscrep1} becomes
+\begin{equation}
+\label{eqn:tdiscrepcv}
+\Delta T[v,v'](h,t_0)^2 =  h^2\left(\frac{1}{(v')^2}-\frac{1}{v^2} \right)
+\end{equation}
+This tells you that if you NMO-correct with a wrong constant velocity, the gathers will definitely not be flat, in fact residual moveout curvature is proportional to the error between $1/v^2$ and $1/(v')^2$. This in this case at least gather flatness directly measures error in velocity. 
+
+The non-constant velocity case is harder, but not impossible, to analyse, and the conclusion is the same: velocity errors large enough to cause significant traveltime errors on the scale of a wavelength show up in non-flat NMO corrected CMP gathers. See \cite[]{Symes:99a} for details.
+
+\section{NMO Stretch}
+As mentioned earlier, the ``deconvolved convolutional model'' is necessarily a myth, as ideal source signature deconvolution is impossible. Even granted strict validity of the acoustic constant density Born approximation with the isotropic point radiator source model, the optimal result still bandpass filters the Born impulse response (equation \ref{intrep}). This fact has a striking consequence for NMO correction. 
+
+Compose both sides of the deconvolved convolutional model equation \ref{eqn:convt0} with the {\em inverse NMO} function $\bar{T}_0$ to obtain tthe perfectly deconvolved trace in terms of the amplitude $\bar{A}$ and the reflectivity $\bar{R}$, both parametrized by offset $h$ and vertical two-way time $t_0$:
+\begin{equation}
+\label{eqn:convt}
+d_{\rm imp}(x_m,y_m,h,t) \approx \bar{A}(h,t_0) \frac{d\bar{R}}{dt_0}(\bar{T}_0(h,t)).
+\end{equation}
+I've renamed the left-hand side as $d_{\rm imp}$, for the impulsive (perfectly deconvolved) trace. Then admit that there is indeed a wavelet $w$ in the mix:
+\[
+d(x_m,y_m,h,t) = w *_t d_{\rm imp}(x_m,y_m,h,t)
+\]
+\[
+\approx \int\,dt'\,w(t-t') \bar{A}(h,\bar{T}_0(h,t')) \frac{d\bar{R}}{dt_0}(\bar{T}_0(h,t'))
+\]
+So the NMO-corrected trace is NOT the convolution of $w$ with its perfectly-deconvolved cousin:
+\begin{equation}
+\label{eqn:stretch}
+d(x_m,y_m,h,\bar{T}(h,t_0)) \approx \int\,dt_0'\,w(\bar{T}(h,t_0)-\bar{T}(h,t_0')) \frac{\partial \bar{T}}{\partial t_0}(h,t_0')\bar{A}(h,t_0') \frac{d\bar{R}}{dt_0}(h,t_0')
+\end{equation}
+Note that the argument of $w$ inside the integral is (generally) nonlinear in $t$ and $t'$: this is not a convolution. The ratio
+\[
+\frac{\bar{T}(h,t_0)-\bar{T}(h,t_0')}{t_0-t_0'}
+\]
+measures the distortion of convolution: it is roughly the Jacobian factor inside the integral, namely the rate of change of time with respect to zero-offset time. This factor is known as {\em NMO stretch}, in honor of its graphical effect.
+
+To see how this works, start with the idealized convolutional model seismogram depicted in Figure \ref{fig:event}. This is a ``pure event'', that is, $\bar{R}$ is a Heaviside function so that its $t_0$ derivative is a delta function, and the amplitude $\bar{A}$ is set to 1. The SU command {\tt suaddevent} is very convenient for creating such idealized reflections with hyperbolic moveout. The RMS velocity is chosen as 3000 m/s (the default), and the zero-offset intercept (of the moveout curve) as $t_0$ = 0.8 s - these two choices completely determine the moveout curve.  The source wavelet is a [2,5,25,35] Hz trapezoidal bandpass filter. 
+
+Figure \ref{fig:nmoevent} shows the NMO correction. Notice that the wavelet seems to spread as offset increases: that's why the non-convolution of equation \ref{eqn:stretch} is called ``NMO stretch''.  If you were to add more events to the data, you would find that the degree of stretch varies with $t_0$.
+
+\multiplot{2}{event,nmoevent}{width=0.45\textwidth}{Left: idealized event created with {\tt suaddevent}, with [2,5,25,35] Hz bandpass wavelet; Right: result of NMO correction}
+
+Note that Viking Graben NMO-corrected CMP gathers (Figures \ref{fig:nmo200}, \ref{fig:nmo700}, \ref{fig:nmo1300}, and \ref{fig:nmo2000}) inherit a {\em mute} from the CMP gathers themselves, and this mute is chosen so that the NMO-corrected events are cut off before the offset becomes large enough to exhibit severe NMO stretch as in Figure \ref{fig:nmoevent}. However careful inspection will reveal that even the Viking Graben events are stretched a bit. 
+
+The implication of NMO stretch is that NMO correction does not actually reproduce a material parameter, the reflectivity, even accounting for amplitude. Instead, it produces a nonlinearly filtered version of a material parameter, with the degree of filtering varying with offset and vertical travel time. This feature is a fundamental defect of the convolutional model and NMO correction, with which the community has struggled for decades. See for example \cite{Harlan:14} for a clever use of optimization to choose a {\em time-varying wavelet} so model, and eventually remove, NMO stretch and similar effects, also many references to older work.  
+
+
+\section{Suggested Projects}
+\bibliographystyle{seg}  % style file is seg.bst 
+\bibliography{../../bib/masterref}

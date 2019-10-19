@@ -1,0 +1,20 @@
+Wall clock time: 
+\begin{itemize}
+\item Macbook pro, 3.1 GHz Intel Core i7 (2 cores), OSX 10.10.5, 16 GB DRAM, gcc 6.0.0 2015.08.13 
+\begin{itemize}
+\item serial: 60 s 
+\item OMP, 2 threads: 30 s 
+\item MPI partask=3: 28 s (only 2 cores!) 
+\end{itemize}
+\item Linux box Intel Core i5 (Sandybridge) (12 hardware cores), icc 13.0.0 
+\item serial: 37 s 
+\item OMP, 2 threads: 31 
+\item OMP, 4 threads: 24 
+\item OMP, 8 threads: 24 
+\item MPI partask=3, 1 thread: 13 
+\item MPI partask=3, 4 threads: 10 
+\item MPI partask=3, 1 thread, 1x2 DD: 8 
+\item MPI partask=3, 2 threads, 1x2 DD: 8.5 
+\item MPI partask=3, 4 threads, 1x2 DD: 8.5 
+\item 
+\item 

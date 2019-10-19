@@ -1,0 +1,32 @@
+from rsf.tex import *
+
+End(
+
+options='manuscript,12pt',
+
+use='amsmath,setspace,wasysym,graphicx,float,algorithm,algpseudocode',
+
+include=r'''
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\ga}{g_{\alpha}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\obr}{\bar{r}}
+\newcommand{\tJ}{\tilde{J}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bR}{\mathbf{R}}
+''',
+color='ALL'
+)
+
+
+
+
+

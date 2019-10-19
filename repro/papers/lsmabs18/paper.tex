@@ -1,0 +1,409 @@
+\title{Accelerated Acoustic Least Squares Migration}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} \author{Raanan
+  Dafni, William W. Symes\footnotemark[1], The Rice Inversion Project,
+  Rice University}
+\captionsetup{font=scriptsize,labelfont=scriptsize}
+\righthead{Accelerated LSM}
+\lefthead{Dafni and Symes}
+\maketitle
+
+\begin{abstract}
+Least squares migration cost depends on the number of iterations
+required to produce a satisfactory image volume and/or fit to data. The
+cost can be reduced considerably through effective
+preconditioning. One such preconditioner derives from true-amplitude
+or asymptotic approximate inversion. We describe implementation details of a
+true-amplitude preconditioned least squares migration algorithm, and illustrate
+its performance using a synthetic 2D example.
+\end{abstract}
+
+\section{Introduction}
+Least squares migration (LSM) based on two-way wave equation modeling
+produces optimized image volumes - in fact inversions - that correct
+many of the basic defects of reverse time migration images
+\cite[]{Dutta:SEG14,DaiBS:2010,DaiSchuster2013,Nemeth:99,ChaventPlessix:98}. LSM
+accommodates any wave physics that can be modeled in the linearized
+(``Born'') sense \cite[]{duan2017elastic,sun:SEG15,DuttaSchuster:14},
+and can produce information about the earth's structure well beyond a
+mere image. However LSM is necessarily an iterative process, as the
+linear least squares problem it defines is far to large to admit
+matrix solution methods at any interesting scale. Each iteration
+requires a combination of modeling (demigration) and migration. The
+computational expense can therefore be considerable.
+
+\cite{HouSymes:EAGE16} have described the use of asymptotic approximate
+  inverse formulae (``true amplitude migration'') of an appropriate form, derived by
+  \cite{HouSymes:15}, to accelerate the
+  convergence of conjugate gradient LSM. Here we base the construction
+  of a preconditioner instead on an alternative construction of approximate inversion 
+  \cite[]{HouSymes:17,tenKroode:12}, leading to a simpler and equally
+  effective algorithm. We explain several crucial 
+  implementation details which have not been described elsewhere but
+  which are essential for successful convergence
+  acceleration, and illustrates the speedup obtainable in the acoustic
+  case via a synthetic example.
+
+\section{Method}
+In this section we explain our approach to acoustic modeling and RTM, the
+structure of the approximate inverse and its key role in successful
+preconditioning of the LSM iteration, and several computational
+constraints and short-cuts that lead to a practical and efficient
+algorithm.
+
+\subsection{Modeling and Migration}
+Born acoustic modeling is the solution of the system
+\ref{eqn:awe}-\ref{eqn:icwe} of partial differential equations for the
+excess pressure and particle velocity fields $p, \bv$ and their
+perturbations $\delta p, \delta \bv$ in response to perturbations
+$\delta \kappa, \delta \beta$ in the bulk modulus and
+buoyancy (reciprocal density) fields $\kappa$, $\beta$:
+\begin{equation}
+\label{eqn:awe}
+\frac{\partial p}{\partial t} = - \kappa \nabla \cdot \bv + f;
+\,\frac{\partial \bv}{\partial t} = - \beta \nabla p
+\end{equation} 
+\begin{equation}
+\label{eqn:bwe}
+\frac{\partial \delta p}{\partial t} = -\delta  \kappa \nabla \cdot
+\bv - \kappa \nabla \cdot \delta \bv ;
+\,\frac{\partial \delta \bv}{\partial t} = - \delta \beta \nabla p -
+\beta \nabla \delta p
+\end{equation} 
+\begin{equation}
+\label{eqn:icwe}
+p, \delta p, \bv, \delta \bv, f =0,\, t<<0
+\end{equation}
+In addition to the initial conditions \ref{eqn:icwe}, boundary
+conditions are also required to make the solution unique. In all of
+the examples presented here, we solve the system
+\ref{eqn:awe}-\ref{eqn:icwe} in a rectangular subdomain of the 2D
+half-space $z \ge 0$, use PML absorbing boundary conditions \cite[]{Habashy:07} on the
+lateral sides and bottom, and impose either the pressure-release
+condition $p=0$ or a PML condition (both are needed, as will be seen)
+on the top surface $z=0$ 
+
+The source fields $f$ represent isotropic point sources
+$f(\bx,t)=w(t)\delta(\bx-\bx_s)$ for a line of source positions
+$\bx_s$. The linearized, or Born, traces $\delta d(\bx_s,\bx_r,t)$ are
+the samples of $\delta p$ at source-receiver pairs
+$\bx_s,\bx_r$. Since these depend on both the background parameters
+$\kappa$, $\beta$ and the perturbations $\delta \kappa$, $\delta
+\beta$, and are linear in the latter, this relation defines the
+absorbing and free surface Born modeling operators $F$ and $F_0$ respectively:
+\begin{eqnarray}
+\label{eqn:afdef}
+\{\delta p(\bx_r,t;\bx_s)\} &=& F[\kappa,\beta][\delta \kappa, \delta \beta]\mbox{
+  (abs. surface)}\\
+\label{eqn:ffdef}
+\{\delta p(\bx_r,t;\bx_s)\} &=& F_0[\kappa,\beta][\delta \kappa, \delta \beta]\mbox{ (free. surface)}
+\end{eqnarray}
+Since in LSM the background fields $\kappa, \beta$ are not updated, we
+drop them from the notation. Also, we will set $\delta \beta = 0$
+throughout, for simplicity, thus writing $F \delta \kappa$ for the
+output of the Born modeling operator. 
+
+ We use the well-known staggered grid
+finite difference method, of order 2 in time and 2$k$ in space
+($k=$ 4 in the example below) to approximate solutions of the system
+\ref{eqn:awe}-\ref{eqn:icwe}.
+
+Reverse-time migration is taken to mean application of the {\em
+  transpose} $F^T$ or $F^T_0$ of the Born modeling operator. We use the
+well-known adjoint state method to compute the action of these operators
+\cite[]{Plessix:06}. We
+do not specify the adjoint system of differential
+equations  here, as
+we do not directly discretize it, but rather create the transpose
+mapping of the discrete Born modeling operator as produced by the
+finite difference method. This approach guarantees that the computed
+$F^T$ (resp. $F_0^T$) is actually the transpose of the discrete $F$
+(resp. $F_0$), that is, passes the ``dot
+product test'' to machine precision. This discrete adjointness
+relation is very important in ensuring that the conjugate gradient
+method exhibits its theoretical convergence properties. 
+
+Our method for computing $F^T$, $F_0^T$ with these properties relies on the
+automatic differentiationn software {\em TAPENADE}
+\cite[]{TapenadeRef13} to create finite
+difference kernels for the Born fields (equation \ref{eqn:bwe}) and
+their corresponding adjoint kernels, and iterating these in an
+abstract loop framework adaptable to any wave physics \cite[]{GeoPros:11}. The adjoint state method requires backwards-in-time
+reconstruction of the source wavefields $p,\bv$: we use optimal
+checkpointing \cite[]{Griewank:00,Symes:06a-pub} to avoid introducing any error
+beyond round-off in this step.
+
+We also note that in the theoretical derivation of the adjointness
+relation, and the asymptotics calculations in the next section,
+$F^T$ and $F_0^T$ involve an {\em integral} over source and
+receiver positions. Thus the sum over source and receiver positions
+found in naive descriptions of RTM must be replaced by a
+quadrature. If the source and receiver spacings are uniform, then a
+simple cell-size factor is sufficient - we have taken advantage of
+that observation in the synthetic example below.
+
+\subsection{Asymptotic Inversion}
+Beginning with \cite{CohBlei:77}, high frequency asymptotics has been
+used to construct approximate inverses to Born modeling. All such
+constructions require normalization of the energy source. In terms of
+the system \ref{eqn:awe}-\ref{eqn:icwe}, the relevant normalization is
+the step/Heaviside point source, $f(\bx,t) =
+H(t)\delta(\bx-\bx_s)$. In practice this idealized source must be
+modified by a bandpass filter. For data supplied with a source pulse
+estimate, a shaping filter should be constructed outputting a
+bandlimited Heaviside pulse, and applied to the data.
+
+We focus first on the absorbing surface operator
+$F$. The results derived in \cite{HouSymes:17} imply that with the source normalized as just
+described,
+\begin{equation}
+\label{eqn:alt1}
+F^{\dagger} = V_m^{-1}F^TV_d,\, V_m^{-1}= 32\beta \kappa^3 \partial_z,\, 
+V_d = I_t (I_t\partial_{z_s})(I_t\partial_{z_r}) 
+\end{equation}
+defines an asymptotic (in frequency) inverse $F^{\dagger}$ for $F$,
+that is,
+\begin{equation}
+\label{eqn:appinv}
+F^{\dagger}F \approx I.
+\end{equation}
+In equation
+\ref{eqn:alt1}, $I_t$ represents the indefinite $t$ integral, and
+$\partial$ signifies the partial derivative with respect to the
+variable in the subscript.
+
+Actually, the result of \cite{HouSymes:17} pertains to the {\em
+  subsurface offset} extension of Born modeling, not to the operators
+discussed here which do not require extended modeling calculations. In
+fact equation \ref{eqn:alt1}, with the meaning of the various symbols
+as defined here, expresses the {\em zero (subsurface) offset} section
+of the inversion defined by \cite{HouSymes:17}, possible because the
+operators $V_m^{-1}$ and $V_d$ operate trace-by-trace so can be
+restricted to the zero subsurface offset section. In the extended
+modeling context, the analogs of $F^{\dagger},F$ are approximately
+inverse to each other, as asserted in equation \ref{eqn:appinv}. The
+zero-offset section of the extended approximate inverse, namely
+$F^{\dagger}$ as defined here, cannot be exactly inverse to $F$, as
+the energy in the extended inverse is necessarily spread over at least
+a wavelength in the offset direction. Recovery of the bulk modulus
+perturbation from the extended image volume requires a {\em stack},
+approximating the integral over subsurface offset, discretely
+the sum multiplied by the offset step (which must be the same as the
+horizontal space step $\Delta x$). Thus the zero offset section gives
+an image smaller by roughly the number of gridpoints per wavelength,
+multiplied by $\Delta x$, than would be the case for an approximate
+inverse. We introduce a factor of $\Delta x$ in the approximate
+inverse output, so that the remaining scale difference is roughly the
+number of gridpoints per wavelength - a less well-defined quantity. As
+shall be shown below this residual scale error is absorbed in the LSM
+process.
+
+Two amendments are necessary to render $F^{\dagger}$ as defined above
+a useful accelerator for LSM.
+$F^{\dagger}$ would be the adjoint of $F$ with respect to weighted inner
+products with Gram operators $V_m$ and $V_d$, if it were the case that these have
+the necessary properties of Gram operators, namely symmetry and
+positivity. Neither $V_m$ (or $V_m^{-1}$) nor $V_d$, as defined above,
+have either property. We can however alter the definitions to recover
+these properties. Note that $\partial_t = H |\partial_t|$, in which
+$H$ is the Hilbert transform and $|\partial_t|$ is represented in the
+Fourier domain by multiplication with
+the absolute value of frequency. A well-known result from analysis
+(Egorov's Theorem, \cite{Tay:81}) allows us to pass $H$ from one
+side of $F^T$ to the other in equation \ref{eqn:alt1}, where it is
+``absorbed'' by its inverse $-H$ coming from the first $I_t$. The
+upshot is an alternate expression 
+\begin{eqnarray}
+\label{eqn:alt2}
+F^{\dagger} & = & W_m^{-1}F^TW_d, \nonumber \\
+ W_m^{-1}&=&32\beta^{1/2} \kappa^{3/2} K_z \beta^{1/2}
+             \kappa^{3/2},\nonumber \\
+W_d &=& -K_t^{-3} \partial_{z_s}\partial_{z_r}.
+\end{eqnarray}
+Here $K_z$ is defined in the frequency domain by multiplication with
+$|k_z|$, supplemented with an appropriate bandpass filter, and $K_t$
+is defined similarly. $W_m^{-1}$ is manifestly symmetric and positive.
+
+Concerning $W_d$, \cite{HouSymes:15} demonstrated
+that $-\partial_{z_s}\partial_{z_r}$ is symmetric and
+positive if the source wavefield is downgoing near the surface, and
+the receiver wavefield is upcoming. In general guaranteeing this
+property requires decomposition of the fields into up- and down-going
+components. However, when sources and receivers are embedded in a
+reflector-free layer (simulating the ocean) then these properties
+necessarilly hold. Therefore it is only necessary in that setting to
+apply a taper operator on the input side of $F$ (and the output side
+of $F^T$) to make sure that no artificial reflectors
+appear in the water column. Note that if this step is left
+out, reflectors inevitably develop in the water column, $W_d$ loses
+its positivity, and the algorithm defined in the next section fails to
+converge.
+
+We have idenfitied several methods to compute the $z_s, z_r$ derivatives in the definition of $W_d$. If the $z$ component of motion is measured at the receiver (eg. OBN or
+Geostreamer$^{TM}$ data), then the second equation of motion
+\ref{eqn:bwe} supplies $\partial_{z}\delta p|_{\bx=\bx_r}
+= \partial_{z_r}F$. In general, if the source and receiver wavefields
+are separated into up- and down-going components, then each obeys a
+one-way wave equation, which specifies the $z$ derivative in terms of
+the $t$ derivative and other spatial derivatives.
+
+In the example reported below, we have used yet another method,
+mentioned briefly by \cite{HouSymes:15}. We
+presume that the source and receiver depths for the absorbing surface
+fields are both $=0$. The corresponding free surface ($z=0$) acquisition geometry satisfies the {\em shallow tow depth}
+assumption if
+\begin{equation}
+\label{eqn:std}
+\partial_{z_s}\partial_{z_r} \delta p_{z_s = z_r=0} \approx
+\frac{1}{4z_sz_r}Z\delta p_0
+\end{equation}
+In equation \ref{eqn:std}, $\delta p_0$ is the free surface Born field at prescribed $z_s, z_r$, and $Z$ sets the source and receiver depths in
+each free surface trace to zero and leaves all other header words and
+data samples unchanged. The level of error implicit in the $\approx$
+symbol should be on the order of the discretization error in the finite
+difference scheme, which is the case if $z_s$ and $z_r$ are comparable
+to the grid step in $z$. If the condition \ref{eqn:std} holds, then 
+\begin{equation}
+\label{eqn:stdop}
+\partial_{z_s}\partial_{z_r} F \approx \frac{1}{4z_sz_r}Z F_0.
+\end{equation}
+Therefore the definition \ref{eqn:alt2} translates to
+\begin{equation}
+\label{eqn:appinvab}
+F^{\dagger} \approx - W_m^{-1} \frac{1}{4z_sz_r}F_0^TZ^TK_t^{-3}.
+\end{equation}
+That is, we have used the ghosted traces to emulate the $z_s,z_r$
+derivatives. Such emulation is only valid up to the first ghost notch,
+however that is precisely the frequency range for which the criterion
+mentioned above assures accuracy of the finite difference simulation.
+
+The examples below employ the free surface condition. Similar logic
+leads to the approximate inverse formula
+\begin{equation}
+\label{eqn:appinvfr}
+F_0^{\dagger} \approx - W_m^{-1} \frac{1}{4z_sz_r}F^TK_t^{-3}Z.
+\end{equation}
+
+Note that the absorbing surface RTM operator appears in the expression
+for the free surface true amplitude migration, and vis-versa.
+
+\subsection{Preconditioned Conjugate Gradient Iteration}
+Use of the inner products with weight operators $W_m$ and $W_d$ in
+model and data spaces and the transpose $F^{\dagger}$ with respect to
+these inner products in conjugate gradient iteration produces a rapidly convergent algorithm, since
+with respect to the weighted inner products $F$ is approximately
+unitary (up to a scale factor). The computation of the weighted inner products is
+tedious. Fortunately, the preconditioned conjugate gradient method
+\cite[]{Golub:2012} is
+mathematically equivalent, and uses only the Euclidean inner
+products. Define $F_0^*$ to be the transpose of $F_0$ with respect to the
+Euclidean inner product in model space, and the $W_d$-weighted inner
+product in data space:
+\begin{equation}
+\label{eqn:uwadj}
+F_0^* = F_0^T W_d = - \frac{1}{4z_sz_r}F^TK_t^{-3}Z
+\end{equation}
+Use $F_0$, $F_0^*$ to define the least squares problem and and
+$W_m^{-1}$ as the preconditioner. The iteration converges to the minimizer of the
+data-weighted mean square error
+\begin{equation}
+\label{eqn:obj}
+J[\delta \kappa] = \frac{1}{2}(F_0\delta \kappa -\delta d)^T W_d
+(F_0\delta \kappa -\delta d).
+\end{equation}
+
+\section{Numerical Example}
+We present a 2D synthetic numerical illustration based on the Marmousi
+blind test model \cite[]{BoLaVe:91}. We take $\beta = 1, \delta \beta = 0$
+throughout. The smoothed background bulk modulus $\kappa$ appears in
+Figure \ref{fig:bulk}, and the target bulk modulus perturbation in
+Figure \ref{fig:dbulk}.  We discretized the model on a 12 m $\times$
+12 m grid, and used a [2.5, 5, 20, 25] Hz zero-phase bandpass filter, integrated
+once to yield a bandlimited Heaviside function, as the source in both
+modeling and migration. 180 source positions at $z_s=12 m$ and 360
+receiver positions at $z_r=12 m$ were spread across the top of the
+model (free surface, full aperture, fixed spread). 
+%A typical shot gather appears as
+%Figure \ref{fig:shot151}. 
+
+LSM via 20 iterations of (unpreconditioned) conjugate gradient
+iteration produces the estimated bulk modulus perturbation in Figure
+\ref{fig:lsm}, plotted on the same color scale as Figure
+\ref{fig:dbulk}. While relative amplitudes above 2500 m depth are
+reasonably well recovered, the deeper part of the model is not, and
+the data residual is reduced only to 40\% of its initial value. 
+Application of the approximate inverse yields the estimate in Figure
+\ref{fig:appinv}, with relative amplitudes that are actually more
+accurate (for the price of 1 RTM) than was achieved with 20 LSM
+iterations. The preconditioned LSM achieves the result displayed in
+Figure \ref{fig:plsm} after 20 iterations. The recovered approximation
+of the bulk modulus perturbation is roughly as accurate as the data
+bandwidth allows, and the data residual is under 10\%. The convergence
+curves in Figure \ref{fig:conv} show clearly the cost reduction
+achieved through true amplitude preconditioning.
+
+\section{Discussion}
+
+%\cite{HouSymes:SEG16b} show that the same technique used here to
+%accelerate LSM may be used to accelerate Full Waveform
+%Inversion (FWI). Acceleration does not mean avoidance of cycle-skipping: if
+%basic FWI does not converge to a useful result, the accelerated
+%algorithm simply achieves the useless result faster. However the
+%improvement in convergence is as dramatic as shown here for LSM, and
+%could conceivably be combined with other techniques that render FWI
+%more robust.
+
+The preconditioning approach presented here is not the
+only one suggested for acceleration of LSM iteration
+\cite[]{Aoki:09,Berkhout:09d,HuangNammourSymes:16,RochaSavaGuitton:17,Guitton:17}. A
+very limited comparison suggests that true-amplitude preconditioning
+may be more effective than some of the other techniques discussed in
+these references, when it applies. However, as described here, it is
+limited to recovery of a single parameter (we have used bulk
+modulus). True amplitude recovery of multiple parameters is possible,
+but in principle requires the use of extended modeling and migration
+\cite[]{YuZhang:14}. On the other hand, analogous results should be
+possible for various forms of
+pseudo-acoustic anisotropy.
+
+\section{Conclusion}
+We have presented details of a true-amplitude acceleration of LSM. The
+accelerated iteration has essentially the same cost per step as
+ordinary LSM, but converges substantially more rapidly. We have
+presented the 2D version here, corresponding to our example, but
+similar acceleration formulae are available for 3D, at the same low cost.
+
+\section{ACKNOWLEDGMENTS}
+We are grateful to the sponsors of The Rice Inversion Project (TRIP)
+for their long-term support, to Shell International Exploration
+and Production Inc for its support of Raanan Dafni's postdoctoral work
+and  Jie Hou's PhD studies in TRIP, and to Fons ten Kroode for inspiring our
+work on this topic. We acknowledge the Texas Advanced Computing
+Center (TACC) and the Rice University Research Computing Support Group
+(RCSG) for providing essential HPC resources. 
+
+\plot{bulk}{width=0.45\textwidth}{Marmousi bulk modulus sampled to 12
+  m $\times$ 12 m grid, smoothed with 4 iterations of a 3 $\times$ 3
+  rectangular moving average.}
+
+\plot{dbulk}{width=0.45\textwidth}{Marmousi bulk modulus perturbation
+  = difference between original bulk modulus and slightly milder
+  smoothing than that shown in Figure \ref{fig:bulk}.}
+
+\plot{lsm}{width=0.45\textwidth}{LSM from data described in text, via
+  20 conjugate gradient iterations. Note that color scale
+  is same as in Figure \ref{fig:dbulk}.}
+
+\plot{appinv}{width=0.45\textwidth}{True amplitude migration of
+  Marmousi data described in text. Note that relative amplitudes are
+  quite similar to target bulk modulus perturbation (Figure
+  \ref{fig:dbulk}), however overall amplitude is smaller by a nearly
+  position independent factor.}
+
+\plot{plsm}{width=0.45\textwidth}{LSM from data described in text, via
+  20 preconditioned conjugate gradient iterations. Note that color
+  scale is same as that in Figure \ref{fig:dbulk}.}
+
+\plot{conv}{width=0.45\textwidth}{Mean square data error as function
+  of iteration, with (blue) and without (red) true amplitude preconditioning.}
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

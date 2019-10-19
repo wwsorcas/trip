@@ -1,0 +1,1617 @@
+\title{Asymptotic Inversion of the Variable Density Acoustic
+  Model\\Part 1: Theory}
+
+\author{
+Raanan Dafni\thanks{Department of Computational and Applied Mathematics, Rice University, 
+Houston, TX, 77005, USA, 
+{\tt symes@rice.edu}},
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University, 
+Houston, TX, 77005, USA, 
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Dafni Symes}
+
+\righthead{Asymptotic Acoustic Inversion}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+Techniques developed for asymptotic wave equation based inversion of
+subsurface offset extended constant density acoustics also apply to variable density
+acoustics. The data may be matched by proper choice of an extended
+relative bulk modulus perturbation, with zero density
+perturbation. This bulk modulus perturbation may be treated as an
+offset-dependent reflectivity volume, and AVA-like techniques applied
+to extract asymptotically correct estimates of velocity and density
+perturbations, assuming that the background velocity is kinematically
+consistent with the data. This first part of the paper presents a 
+theoretical justification of the inversion algorithm. The second part
+describes implementation details and shows numerical examples.
+\end{abstract}
+\setlength{\parindent}{0cm}
+\section{Extended Variable Density Acoustics}
+The dynamical laws of linear acoustics may be written
+\begin{eqnarray}
+\label{eqn:awe}
+\frac{1}{\kappa}\frac{\partial p}{\partial t}& =& -\nabla \cdot \bv +
+g,\nonumber \\
+\rho \frac{\partial \bv}{\partial t} & = & -\nabla p.
+\end{eqnarray}
+In this system, $p$ is pressure, $\bv$ is particle velocity, $\kappa$
+is bulk modulus, $\rho$ is material density, and $g$ is the defect
+representation of an energy source. The first equation is the
+constitutive law relating stress (pressure) rate to strain rate (actually to its
+trace, which is proportional to the velocity divergence). The second
+expresses momentum balance. When completed by suitable initial and
+boundary conditions, the system (\ref{eqn:awe}) has a unique finite
+energy solution $(p,\bv)$ under very mild constraints on $\kappa,
+\rho$ \cite[]{BlazekStolkSymes:13}.
+
+Define the acoustic forward map as
+\begin{equation}
+\label{eqn:afm}
+{\cal F}[\kappa,\rho] = {\cal S}[p,\bv],
+\end{equation}
+in which ${\cal S}$ is a (linear) sampling operator, extracting traces of pressure
+and/or velocity at receiver points $\bx_r$ for $t \in [0,T]$. Note that
+the source function $g$ also depends on an experimental
+parameter. While other possibilities are interesting, for present
+purposes assume that $g$ depends on a location $\bx_s$, so the value of
+$\cal{F}$ does as well. 
+
+The subsurface offset extension of this system generalizes $\kappa$
+and $\rho$ to be operators. That is, the relations between stress
+and strain and between force and acceleration may be non-local.
+Of course one
+can think of the ordinary stress-strain relation as being mediated by
+an operator, namely  the operator of multiplication by
+$\kappa$. Multiplication by $1/\kappa$ is just the inverse of this
+operator. Extended model replaces multiplication by $\kappa$ by the
+action of a (possibly non-local) operator $\bar{\kappa}$, and multiplication by
+$\rho$ by the action of a (possibly non-local) operator $\bar{\rho}$. Just as $\kappa$ is
+positive and multiplication by (real) $\kappa$ is a symmetric
+operator, require $\bar{\kappa}$ to be symmetric positive
+definite and bounded on $L^2$, and similar for $\bar{\rho}$.
+
+As it happens, the extension of both parameters $\kappa$ and $\rho$,
+as opposed to just $\kappa$, is not
+terribly useful. Also the quasi-physical justification for extending just
+$\kappa$ is clearer. However it is no more difficult to work through the
+consequences of extending both, so we shall do so, and specialize at
+the end to draw conclusions for $\kappa$-only extended inversion, and
+for ordinary non-extended inversion for
+$\kappa$ and $\rho$.
+
+The extended acoustics system for extended pressure and velocity
+fields $\bar{p}$ and $\bar{\bv}$ is
+\begin{eqnarray}
+\label{eqn:eawe}
+\bar{\kappa}^{-1}\frac{\partial \bar{p}}{\partial t}& =& -\nabla \cdot
+\bar{\bv} + g,\nonumber \\
+\bar{\rho} \frac{\partial \bar{\bv}}{\partial t} & = & -\nabla \bar{p}.
+\end{eqnarray}
+\cite{BlazekStolkSymes:13} show that $\bar{p}$ and $\bar{\bv}$ are
+well-defined, as is the extended forward map, defined as 
+\begin{equation}
+\label{eqn:eafm}
+\bar{{\cal F}}[\bar{\kappa},\bar{\rho}] = {\cal S}(\bar{p},\bar{\bv}).
+\end{equation}
+
+\section{Linearization}
+Using the symbol $\delta$ as shorthand for perturbation, obtain for the
+perturbation $\delta \bar{p}, \delta \bar{\bv}$ in the solution of
+(\ref{eqn:eawe}) resulting from $\delta \bar{\kappa}, \delta{\rho}$ the
+system
+\begin{eqnarray}
+\label{eqn:leawe}
+\bar{\kappa}^{-1}\frac{\partial \delta \bar{p}}{\partial t}& =& -\nabla \cdot
+\delta \bar{\bv} +
+\bar{\kappa}^{-1}\delta\bar{\kappa}\bar{\kappa}^{-1}\frac{\partial \bar{p}}{\partial t},\nonumber\\
+\bar{\rho} \frac{\partial \delta \bar{\bv}}{\partial t} & = & -\nabla \delta
+\bar{p} - \delta \bar{\rho} \frac{\partial \bar{\bv}}{\partial t}.
+\end{eqnarray}
+The linearized forward map is defined in terms of the solution of
+(\ref{eqn:leawe}) as 
+\begin{equation}
+\label{eqn:leafm}
+D\bar{{\cal F}}[\bar{\kappa},\bar{\rho}][\delta \bar{\kappa},\delta \bar{\rho}] =
+{\cal S}(\delta \bar{p},\delta \bar{\bv}),
+\end{equation}
+thanks to the linearity of ${\cal S}$.
+
+Physically, of course, the extended system is nonsense, in that it
+violates the continuum mechanical axiom of
+no-action-at-a-distance. 
+
+\section{Expression in terms of Green's Functions}
+From here on, assume that the reference fields are physical.
+
+Differentiate the first equation in (\ref{eqn:leawe}) and
+(\ref{eqn:awe}) with respect to $t$,
+and use the second equation to eliminate $\delta \bar{\bv}$ and $\bv$ to arrive at
+the second order wave equations for $p,\delta \bar{p}$:
+\begin{eqnarray}
+\label{eqn:awe2}
+\frac{1}{\kappa}\frac{\partial^2 p}{\partial t^2} &=&
+\nabla \cdot \frac{1}{\rho} \nabla p + \frac{\partial g}{\partial t}\\
+\label{eqn:leawe2}
+\frac{1}{\kappa}\frac{\partial^2 \delta \bar{p}}{\partial t^2} &=&
+\nabla \cdot \frac{1}{\rho} \nabla \delta \bar{p} + \frac{1}{\kappa}
+\delta \bar{\kappa} \frac{1}{\kappa}\frac{\partial^2 p}{\partial t^2} -
+  \nabla \cdot \frac{1}{\rho}\delta \bar{\rho}\frac{1}{\rho} \nabla p. 
+\end{eqnarray}
+Note that the two copies of $1/\kappa$ must be kept separate, on
+either side of $\delta \bar{\kappa}$, as the latter is an operator and
+does not commute with multiplication by $1/\kappa$ unless $\delta
+\bar{\kappa}$ is itself physical, that is, multiplication by a
+function. The same applies to $1/\rho$.
+
+To express the relation between $\delta \bar{\kappa}$, $\delta \rho$
+and $D\bar{{\cal F}}[\bar{\kappa},\rho][\delta \bar{\kappa},\delta
+\rho]$ in integral form, assume that (at least formally) $\delta
+\bar{\kappa}$, $\delta \bar{\rho}$ are integral operators:
+\begin{eqnarray}
+\label{eqn:dkappa}
+(\delta \bar{\kappa} u)(\bx) &=& \int d\by \delta 
+  \bar{\kappa}(\bx,\by)u(\by),\\
+(\delta \bar{\rho} u)(\bx) &=& \int d\by \delta 
+  \bar{\rho}(\bx,\by)u(\by),\\
+\end{eqnarray}
+and introduce the Green's function $G(\bx,t;\by)$, the causal solution
+of
+\begin{equation}
+\label{eqn:green}
+\left(\frac{1}{\kappa}\frac{\partial^2 G}{\partial t^2} - \nabla_{\bx} \cdot
+  \frac{1}{\rho} \cdot \nabla_{\bx}G\right)(\bx,t;\by) =
+\delta(\bx-\by)\delta(t), \,\, G=0 \mbox{ for } t < 0.
+\end{equation}
+Then, by superposition,
+\[
+\delta \bar{p}(\bx,t)  = \int d\by \int d\tau G(\bx,t-\tau;\by)
+\frac{1}{\kappa(\by)}  \int d\bz \delta \bar{\kappa}(\by,\bz) \frac{1}{\kappa(\bz)}
+ \frac{\partial^2 p}{\partial t^2}(\bz,\tau) 
+\]
+\begin{equation}
+\label{eqn:intrep1}
+- \int d\by \int d\tau G(\bx,t-\tau;\by)\nabla_{\by} \cdot \left(
+\frac{1}{\rho(\by)}\int d\bz \delta \bar{\rho}(\by,\bz)\frac{1}{\rho(\bz)}) \nabla_{\bz} p(\bz,\tau)\right). 
+\end{equation}
+It is conventional to introduce alternate integration variables
+\begin{eqnarray}
+\label{eqn:jon}
+\bx &=& \frac{1}{2}(\by + \bz) \nonumber\\
+\bh &=& \frac{1}{2}(\by - \bz).
+\end{eqnarray}
+These play the roles of Claerbout's sunken midpoint and half-offset
+vectors (REF). Re-parametrize $\delta\bar{\kappa}(\by,\bz) \rightarrow
+\delta\bar{\kappa}(\bx,\bh)$, and similarly for $\delta \bar{\rho}$. Then (\ref{eqn:intrep1}) becomes
+\[
+\delta \bar{p}(\bx,t)  = \int d\bx\int d\bh \int d\tau
+\left( G(\bx_r,t-\tau;\bx+\bh) 
+\frac{1}{\kappa(\bx+\bh)}  \delta \bar{\kappa}(\bx,\bh) \frac{1}{\kappa(\bx-\bh)}
+ \frac{\partial^2 p}{\partial t^2}(\bx-\bh,\tau)
+\right.
+\]
+\begin{equation}
+\label{eqn:intrep2}
+-\left.  G(\bx_r,t-\tau;\bx+\bh) \nabla \cdot \left[
+\frac{1}{\rho(\bx+\bh)}  \delta \bar{\rho}(\bx,\bh) \frac{1}{\rho(\bx-\bh)}\nabla
+ p(\bx-\bh,\tau)\right]\right)
+\end{equation}
+
+\section{The Impulse Response}
+We make two restrictions on the source term $g$ in the systems
+\ref{eqn:awe} and \ref{eqn:eawe}:
+\begin{itemize}
+\item For each source position $\bx_s$, $g$ represents an isotropic
+  point radiator located at $\bx_s$;
+\item The source spectrum is flat, at least for frequencies in the
+  passband of significant S/N.
+\end{itemize}
+Neither assumption reflects the reality of sources recorded in the
+field. While the localization assumption may be acceptable, many field
+sources have significant radiation patterns, and certainly non-flat
+spectra. We are in effect ignoring directional variation in radiation,
+and assuming that (in principle perfect) source signature
+deconvolution has been performed.
+
+Introduction of a multipole source
+expansion would allow us to carry out an analysis similar to that to
+follow, while accounting for significantly directional
+sources, however we reserve that opportunity for another
+work. Similarly, while source estimation could be folded into the
+estimation of the material parameters, but that is for another time.
+
+Since the time dependence is equivalent to an impulse over the data
+bandwidth, we go ahead and treat it as an impulse with infinite
+bandwidth. This assumption is standard in work on asymptotics since
+its outset \cite[]{CohBlei:77}, and has some negative consequences, for example
+inaccuracy at passband edges. However we will stick with it for
+convenience.
+
+The upshot is 
+\begin{equation}
+\label{eqn:isopt}
+g(\bx,t) = \delta(t)\delta(\bx-\bx_s).
+\end{equation}
+Then $p(\bx,t) = \frac{\partial G}{\partial t}(\bx,\cdot;\bx_s)(t)$ depends on $\bx_s$ as
+does its perturbation. 
+
+Further assume that the sampling operator simply sampling pressure at receiver
+points $\bx_r$. Then
+\[
+D\bar{{\cal F}}[\kappa,\rho][\delta 
+\bar{\kappa},\delta\bar{\rho}](\bx_r,t;\bx_s) 
+\]
+\[
+= \int d\bx\int d\bh \int d\tau \left(G(\bx_r,t-\tau;\bx+\bh) 
+\frac{1}{\kappa(\bx+\bh)}  \delta \bar{\kappa}(\bx,\bh) \frac{1}{\kappa(\bx-\bh)}
+ \frac{\partial^3 G}{\partial t^3}(\bx-\bh,\tau;\bx_s) 
+\right. 
+\]
+\[
+-\left.  G(\bx_r,t-\tau;\bx+\bh) \nabla \cdot \left[
+\frac{1}{\rho(\bx+\bh)}  \delta \bar{\rho}(\bx,\bh) \frac{1}{\rho(\bx-\bh)}\nabla 
+ \frac{\partial G}{\partial t}(\bx-\bh,\tau;\bx_s)\right]\right)
+\]
+\[
+= \int d\bx\int d\bh \int d\tau \left(G(\bx_r,t-\tau;\bx+\bh) 
+\frac{1}{\kappa(\bx+\bh)}  \delta \bar{\kappa}(\bx,\bh) \frac{1}{\kappa(\bx-\bh)}
+ \frac{\partial^3 G}{\partial t^3}(\bx-\bh,\tau;\bx_s) 
+\right.
+\]
+\begin{equation}
+\label{eqn:intrep3}
++\left. \nabla G(\bx_r,t-\tau;\bx+\bh) \cdot \left[
+\frac{1}{\rho(\bx+\bh)}  \delta \bar{\rho}(\bx,\bh) \frac{1}{\rho(\bx-\bh)}\nabla 
+\frac{ \partial G}{\partial t}(\bx-\bh,\tau;\bx_s)\right]\right)
+\end{equation}
+after integration by parts.
+
+For future reference, we include the integral expression for the
+adjoint of $D\bar{{\cal F}}[\kappa,\rho]$:
+\[
+D\bar{{\cal F}}[\kappa,\rho]^Td(\bx,\bh) =
+\]
+\begin{equation}
+\label{intrep3adj}
+\left[
+\begin{array}{c}
+\frac{1}{\kappa(\bx+\bh)}\frac{1}{\kappa(\bx-\bh)}\int d\bx_r d\bx_s dt d\tau G(\bx_r,t-\tau;\bx+\bh) 
+ \frac{\partial^3 G}{\partial t^3}(\bx-\bh,\tau;\bx_s)
+  d(\bx_r,t;\bx_s)  \\
+\frac{1}{\rho(\bx+\bh)}\frac{1}{\rho(\bx-\bh)}\int d\bx_r d\bx_s dt
+  d\tau \nabla G(\bx_r,t-\tau;\bx+\bh) \cdot \nabla \frac{ \partial
+  G}{\partial t}(\bx-\bh,\tau;\bx_s) d(\bx_r,t;\bx_s)
+\end{array}
+\right].
+\end{equation}
+
+It is convenient for analysis (and for QC!) to make the perturbations
+$\delta \bar{\kappa}$ and $\delta \bar{\rho}$ relative to the
+reference quantities. Define the {\em extended reflectivities} $\bar{r}_{\kappa}$
+and $\bar{r}_{\rho}$ as 
+\begin{eqnarray}
+\label{eqn:relfs}
+\bar{r}_{\kappa}(\bx,\bh)& = & \frac{\delta
+                               \bar{\kappa}(\bx,\bh)}{\sqrt{\kappa(\bx+\bh)\kappa(\bx-\bh)}}
+                               \nonumber \\
+\bar{r}_{\rho}(\bx,\bh)& = & \frac{\delta \bar{\rho}(\bx,\bh)}{\sqrt{\rho(\bx+\bh)\rho(\bx-\bh)}}
+\end{eqnarray}
+Define the relative linearized forward operator $\bar{F}[\kappa,\rho]$ by
+\begin{equation}
+\label{eqn:nondim}
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}] =
+D\bar{{\cal F}}[\kappa,\rho][\delta 
+\bar{\kappa},\delta\bar{\rho}](\bx_r,t;\bx_s) 
+\end{equation}
+where $\bar{r}_{\kappa},\bar{r}_{\rho}$ are related to $\delta 
+\bar{\kappa},\delta\bar{\rho}$ by equation \ref{eqn:relfs}. Then
+\[
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}](\bx_r,t;\bx_s) 
+=\int d\bx\int d\bh \int d\tau 
+\]
+\[
+\left(G(\bx_r,t-\tau;\bx+\bh) 
+\frac{1}{\sqrt{\kappa(\bx+\bh)}}  \bar{r}_{\kappa}(\bx,\bh) \frac{1}{\sqrt{\kappa(\bx-\bh)}}
+ \frac{\partial^3 G}{\partial t^3}(\bx-\bh,\tau;\bx_s) 
+\right.
+\]
+\begin{equation}
+\label{eqn:intrep3nd}
++\left. \nabla G(\bx_r,t-\tau;\bx+\bh) \cdot \left[
+\frac{1}{\sqrt{\rho(\bx+\bh)}} \bar{r}_{\rho}(\bx,\bh) \frac{1}{\sqrt{\rho(\bx-\bh)}}\nabla 
+ \frac{\partial G}{\partial t}(\bx-\bh,\tau;\bx_s)\right]\right)
+\end{equation}
+
+
+\section{Simple Ray Geometry}
+
+Suppose that unique rays connect sources and receivers to scattering
+points, as is the case for smooth $\kappa, \rho$ when sources,
+receivers, and scatterers are sufficiently close together. Then in 2D,
+\begin{equation}
+\label{eqn:simp2d}
+G(\bx,t;\by) = a(\bx,\by)t_+^{-1/2}(t-T(\bx,\by)) 
+\end{equation}
+whereas in 3D,
+\begin{equation}
+\label{eqn:simp3d}
+G(\bx,t;\by) = a(\bx,\by)\delta(t-T(\bx,\by)) 
+\end{equation}
+in which $T$ is traveltime and $a$ is geometric amplitude. 
+
+For simplicity assume dimension = 3 for the remainder of this
+section. The following section will present analgous computations for 2D.
+
+Up to a lower order error,
+\[
+\nabla G \approx -a \delta'(t-T)\nabla T.
+\]
+Substituting this approximation and using $\delta'*\delta''=\delta'''$, \ref{eqn:intrep3} becomes
+\[
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}](\bx_r,t;\bx_s) 
+\]
+\[
+\approx \int d\bx\int d\bh a(\bx_r,\bx+\bh) a(\bx_s,\bx-\bh) 
+\delta'''(t-(T(\bx_r,\bx+\bh)+T(\bx_s,\bx-\bh))) 
+\]
+\[
+\times \left(
+\frac{1}{\sqrt{\kappa(\bx+\bh)}}  \bar{r}_{\kappa}(\bx,\bh) \frac{1}{\sqrt{\kappa(\bx-\bh)}}
+%\frac{1}{\kappa(\bx+\bh)}  \delta \bar{\kappa}(\bx,\bh) \frac{1}{\kappa(\bx-\bh)}
+\right.
+\]
+\begin{equation}
+\label{eqn:intrep4}
++\left. 
+   \nabla  T(\bx_r,\bx+\bh) \cdot \nabla T(\bx_s,\bx-\bh) 
+\frac{1}{\sqrt{\rho(\bx+\bh)}} \bar{r}_{\rho}(\bx,\bh) \frac{1}{\sqrt{\rho(\bx-\bh)}}
+%\frac{1}{\rho(\bx+\bh)}  \delta \bar{\rho}(\bx,\bh) \frac{1}{\rho(\bx-\bh)}
+\right)
+\end{equation}
+We remove the third 
+time derivative by applying the causal time antiderivative by $I_t$,
+\[
+I_t^3 \bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}](\bx_r,t;\bx_s) 
+\]
+\[
+= \int d\bx\int d\bh a(\bx_r,\bx+\bh) a(\bx_s,\bx-\bh) 
+\delta(t-(T(\bx_r,\bx+\bh)+T(\bx_s,\bx-\bh)) ) 
+\]
+\[
+\times \left(
+\frac{1}{\sqrt{\kappa(\bx+\bh)}}  \bar{r}_{\kappa}(\bx,\bh) \frac{1}{\sqrt{\kappa(\bx-\bh)}}
+%\frac{1}{\kappa(\bx+\bh)}  \delta \bar{\kappa}(\bx,\bh) \frac{1}{\kappa(\bx-\bh)}
+\right. 
+\]
+\begin{equation}
+\label{eqn:intrep5}
++\left. 
+   \nabla  T(\bx_r,\bx+\bh) \cdot \nabla T(\bx_s,\bx-\bh) 
+%\frac{1}{\rho(\bx+\bh)}  \delta \bar{\rho}(\bx,\bh)
+%\frac{1}{\rho(\bx-\bh)}
+\frac{1}{\sqrt{\rho(\bx+\bh)}} \bar{r}_{\rho}(\bx,\bh) \frac{1}{\sqrt{\rho(\bx-\bh)}}
+\right)
+\end{equation}
+%The normal operator of $I_t^2D{\cal F}$ is a operator matrix of the
+%form
+%\begin{equation}
+%\label{eqn:normalop}
+%(I_t^2D{\cal F}[\kappa,\rho])^*(I_t^2D{\cal F}[\kappa,\rho])
+%=\left(\begin{array}{cc}
+%M_{\kappa \kappa} & M_{\kappa \rho}\\
+%M_{\kappa \rho}^* & M_{\rho \rho}
+%\end{array}
+%\right)
+%\end{equation}
+%in which $M_{i,j}, i,j \in \{\kappa, \rho\}$ take the form of the GRT
+%operator defined by a 3D form of \cite{HouSymes:17}, equation 4, 
+%\begin{equation}
+%\begin{aligned}
+%\label{eqn:grt3d}
+%M u(\bx,\bh) =& \int d\bx_r d\bx_s d\bx' d\bh' A(\bx_r,\bx_s,\bx,\bh,\bx',\bh')\\
+%&\times \delta(\phi(\bx_r,\bx_s,\bx,\bh) - \phi(\bx_r,\bx_s,\bx',\bh')) u(\bx',\bh'),
+%\end{aligned}
+%\end{equation}
+
+\section{Two Dimensions and Horizontal Offset}
+Since the 2D case is a bit simpler, we now turn to it, and also
+introduce the horizontal offset restriction. Instead of $\bx$ we shall
+write $(x,z)$, also $x_r,x_s$ rather than $\bx_r,\bx_s$, suppressing
+the $z$ coordinates of the sources and receiver, idealized to
+constants. [So the following derivation would have to be modified to
+model so-called broadband acquisition with variable streamer depth.] 
+Since offset is now one-dimensional (and horizontal), we
+will write $(x,z,h)$ instead of $(\bx,\bh)$, and $(x\pm h,z)$ instead
+of $\bx\pm \bh$.
+
+For 2D, the $t^{-1/2}_+$ singularity of the Green's function removes
+one of the time derivatives appearing in \ref{eqn:intrep5}, due to the
+identity
+\begin{equation}
+\label{eqn:convsq}
+t_+^{-1/2}*t_+^{-1/2} = \pi H(t)
+\end{equation}
+(see \cite{GelShil:58}, p. 116, formula (3')), so
+\[
+I_t^2\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+%\bar{{\cal F}}[\kappa,\rho][\delta 
+%\bar{\kappa},\delta\bar{\rho}](x_r,t;x_s) 
+\]
+\[
+= \pi\int dx \int dz \int dh a(x_r,x+h,z) a(x_s,x-h,z) 
+\delta(t-(T(x_r,x+h,z)+T(x_s,x-h,z))) 
+\]
+\[
+\times \left(\frac{1}{\sqrt{\kappa(x+h,z)}} \bar{r}_{\kappa}(x,z,h) \frac{1}{\sqrt{\kappa(x-h,z)}}
+\right. 
+\]
+\begin{equation}
+\label{eqn:intrep2d}
++\left. \left. 
+   \nabla_{x,z}  T(x_r,x+h,z) \cdot \nabla_{x,z} T(x_s,x-h,z) 
+\frac{1}{\sqrt{\rho(x+h,z)}}  \bar{r}_{\rho}(x,z,h) \frac{1}{\sqrt{\rho(x-h,z)}}
+\right)\right\}
+\end{equation}
+
+Note the following relation btween
+partial derivatives of $T$ and the ray takeoff angles {\em at the
+  source and receiver surfaces}
+$\theta_r,\theta_s$ of the rays from $(x_r,z_r)$ respectively
+$(x_s,z_s)$ to the scattering points $(x+h,z)$ respectively $(x-h,z)$:
+\begin{eqnarray}
+\frac{\partial T}{\partial z_r}(x_r,x+h,z)  &=& -\frac{\cos 
+  \theta_r}{v(x_r,z_r)} \nonumber \\
+\label{eqn:dtdxr}
+\frac{\partial T}{\partial z_s}(x_s,x-h,z)  &=& -\frac{\cos 
+  \theta_s}{v(x_s,z_s)}\\
+\end{eqnarray}
+Thus
+\[
+I_t^2\frac{\partial^2}{\partial z_s \partial z_r}
+I_t^2\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+\]
+\[
+=\pi\int dx \int dz \int dh \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos \theta_s(x_s,x-h,z)}{v(x_s,z_s)}
+\]
+\[
+\times a(x_r,x+h,z) a(x_s,x-h,z) 
+\delta(t-(T(x_r,x+h,z)+T(x_s,x-h,z)))  
+\]
+\[
+\times \left(\frac{1}{\sqrt{\kappa(x+h,z)}} \bar{r}_{\kappa}(x,z,h) \frac{1}{\sqrt{\kappa(x-h,z)}}
+\right. 
+\]
+\begin{equation}
+\label{eqn:intrep2dsr}
++\left. \left. 
+   \nabla_{x,z}  T(x_r,x+h,z) \cdot \nabla_{x,z} T(x_s,x-h,z) 
+\frac{1}{\sqrt{\rho(x+h,z)}}  \bar{r}_{\rho}(x,z,h) \frac{1}{\sqrt{\rho(x-h,z)}}
+\right)\right\}
+\end{equation}
+The operator matrix 
+\begin{equation}
+\label{eqn:dwnop}
+{\bf M} = (I_t^2\bar{F}[\kappa,\rho])^T
+I_t^2\frac{\partial^2}{\partial z_s \partial z_r}I_t^2\bar{F}[\kappa,\rho]
+\end{equation}
+thus has components of the form given by
+\cite{HouSymes:17}, equation 4,
+% which we repeat 
+%here for the readers convenience:
+\begin{equation}
+\begin{aligned}
+\label{eqn:grt2d}
+M u(x,z,h) =& \int dx_r dx_s dx' dz' dh' \tilde{A}(x_r,x_s,x,z,h,x',z',h')\\
+&\times \delta(\phi(x_r,x_s,x,z,h) - \phi(x_r,x_s,x',z',h')) u(x',z',h'),
+\end{aligned}
+\end{equation}
+in which $\phi(x_r,x_s,x,z,h) = T(x_r,x+h,z) + T(x_s,x-h,z)$. The
+coefficients $\tilde{A} = \tilde{A}_{i,j}, i,j \in \{\kappa, \rho\}$ are
+\[
+\tilde{A}_0(x_r,x_s,x,z,h,x',z',h')=
+\]
+\[
+\pi^2 a(x_r,x+h,z) 
+a(x_s,x-h,z) \frac{\cos \theta_r(x_r,x'+h',z')}{v(x_r,z_r)}
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff1}
+\times \, \frac{\cos \theta_s(x_s,x'-h',z')}{v(x_s,z_s)} a(x_r,x'+h',z')a(x_s,x'-h',z')
+\end{equation}
+\begin{equation}
+\label{eqn:grt2dcoeff2}
+\tilde{A}_{\kappa,\kappa}(x_r,x_s,x,z,h,x',z',h') = 
+\frac{\tilde{A}_0(x_r,x_s,x,z,h,x',z',h')}{\sqrt{\kappa(x+h,z)}\sqrt{\kappa(x-h,z)}\sqrt{\kappa(x'+h',z')}\sqrt{\kappa(x'-h',z')}}
+\end{equation}
+\[
+\tilde{A}_{\rho,\kappa}(x_r,x_s,x,z,h,x',z',h') =
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff3}
+\frac{\tilde{A}_0(x_r,x_s,x,z,h,x',z',h')\nabla T(x_r,x+h,z)
+\cdot\nabla T(x_s,x-h,z)}
+{\sqrt{\rho(x+h,z)}\sqrt{\rho(x-h,z)}\sqrt{\kappa(x'+h',z')}\sqrt{\kappa(x'-h',z')}}
+\end{equation}
+\begin{equation}
+\label{eqn:grt2dcoeff4}
+\tilde{A}_{\kappa,\rho}(x_r,x_s,x,z,h,x',z',h') =
+\tilde{A}_{\rho,\kappa}(x_r,x_s,x',z',h',x,z,h)
+\end{equation}
+\[
+\tilde{A}_{\rho,\rho}(x_r,x_s,x,z,h,x',z',h') =\tilde{A}_0(x_r,x_s,x,z,h,x',z',h') \times
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff5}
+\frac{ \nabla_{x,z}  T(x_r,x+h,z)\cdot\nabla_{x,z}  T(x_s,x-h,z)
+\nabla_{x',z'} T(x_r,x'+h',z')\cdot \nabla_{x',z'}T(x_s,x'-h',z')}
+{\sqrt{\rho(x+h,z)}\sqrt{\rho(x-h,z)}\sqrt{\rho(x'+h',z')}\sqrt{\rho(x'-h',z')}}
+\end{equation}
+
+Asymptotic evaluation of the operator matrix $\bf{M}$ leads to one of
+our two major results. The other follows by asymptotic evaluation of a
+related integral. Note that
+
+\[
+\frac{\partial}{\partial t}I_t^2\frac{\partial^2}{\partial z_s \partial z_r}
+I_t^2\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+\]
+\[
+=\pi\int dx \int dz \int dh \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos \theta_s(x_s,x-h,z)}{v(x_s,z_s)}
+\]
+\[
+\times a(x_r,x+h,z) a(x_s,x-h,z) 
+\delta'(t-(T(x_r,x+h,z)+T(x_s,x-h,z))) 
+\]
+\[
+\times \left(\frac{1}{\sqrt{\kappa(x+h,z)}} \bar{r}_{\kappa}(x,z,h) \frac{1}{\sqrt{\kappa(x-h,z)}}
+\right. 
+\]
+\[
++\left. \left. 
+   \nabla_{x,z}  T(x_r,x+h,z) \cdot \nabla_{x,z} T(x_s,x-h,z) 
+\frac{1}{\sqrt{\rho(x+h,z)}}  \bar{r}_{\rho}(x,z,h) \frac{1}{\sqrt{\rho(x-h,z)}}
+\right)\right\}
+\]
+\[
+=\pi\int dx \int dz \int dh \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos \theta_s(x_s,x-h,z)}{v(x_s,z_s)}
+\]
+\[
+\times a(x_r,x+h,z) a(x_s,x-h,z) 
+\frac{\partial}{\partial z}\delta(t-(T(x_r,x+h,z)+T(x_s,x-h,z))) 
+\]
+\[
+  \times \left[-\left(\frac{\partial T}{\partial 
+  z}(x_r,x+h,z) + \frac{\partial T}{\partial z}(x_s,x-h,z)\right)^{-1}\right] 
+\]
+\[
+\times \left(\frac{1}{\sqrt{\kappa(x+h,z)}} \bar{r}_{\kappa}(x,z,h) \frac{1}{\sqrt{\kappa(x-h,z)}}
+\right. 
+\]
+\[
++\left. \left. 
+   \nabla_{x,z}  T(x_r,x+h,z) \cdot \nabla_{x,z} T(x_s,x-h,z) 
+\frac{1}{\sqrt{\rho(x+h,z)}}  \bar{r}_{\rho}(x,z,h) \frac{1}{\sqrt{\rho(x-h,z)}}
+\right)\right\}
+\]
+\[
+\approx \pi\int dx \int dz \int dh \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos \theta_s(x_s,x-h,z)}{v(x_s,z_s)}
+\]
+\[
+\times a(x_r,x+h,z) a(x_s,x-h,z) 
+\delta(t-(T(x_r,x+h,z)+T(x_s,x-h,z))) 
+\]
+\[
+  \times \left(\frac{\partial T}{\partial 
+  z}(x_r,x+h,z) + \frac{\partial T}{\partial z}(x_s,x-h,z)\right)^{-1}
+\]
+\[
+\times \left(\frac{1}{\sqrt{\kappa(x+h,z)}} \frac{\partial}{\partial z}\bar{r}_{\kappa}(x,z,h) \frac{1}{\sqrt{\kappa(x-h,z)}}
+\right. 
+\]
+\begin{equation}
+\label{eqn:intrep2dsrbis}
++\left. \left. 
+   \nabla_{x,z}  T(x_r,x+h,z) \cdot \nabla_{x,z} T(x_s,x-h,z) 
+\frac{1}{\sqrt{\rho(x+h,z)}}  \frac{\partial}{\partial z} \bar{r}_{\rho}(x,z,h) \frac{1}{\sqrt{\rho(x-h,z)}}
+\right)\right\}
+\end{equation}
+after integration by parts in $z$. The approximation in the last step
+consists of leaving out all terms except those involving the $z$
+derivative of $\bar{r}_{\kappa}, \bar{r}_{\rho}$, as is consistent
+with the asymptotic evaluation to come: the reflectivities will be
+presumed oscillatory, while all other quantities appearing in the
+integral \ref{eqn:intrep2dsrbis} are smooth. In the limit of infinite
+spatial frequency components dominating $\bar{r}_{\kappa},
+\bar{r}_{\rho}$, that is, for singular reflectivities, the terms
+retained on the RHS of \ref{eqn:intrep2dsrbis} dominate. 
+
+Thus the operator matrix 
+\[
+{\bf M_1} = (I_t^2\bar{F}[\kappa,\rho])^{*}
+\frac{\partial}{\partial t}I_t^2\frac{\partial^2}{\partial z_s \partial z_r}I_t^2\bar{F}[\kappa,\rho]
+\]
+\begin{equation}
+\label{eqn:dwnopbis}
+ = (I_t^2\bar{F}[\kappa,\rho])^{*}
+I_t\frac{\partial^2}{\partial z_s \partial z_r}I_t^2\bar{F}[\kappa,\rho]
+\end{equation}
+also has components of the integral form \ref{eqn:grt2d}  
+(\cite{HouSymes:17}, equation 4), in fact precisely the same as in
+\ref{eqn:grt2dcoeff1}-\ref{eqn:grt2dcoeff5}, except that in the integrand,
+$\partial \bar{r}_{\kappa}/\partial z$ and $\partial
+\bar{r}_{\rho}/\partial z$ replace $\bar{r}_{\kappa},\bar{r}_{\rho}$ on the RHS and there is an extra factor of $(\partial
+\phi/\partial z)^{-1}$.
+
+\cite{HouSymes:17} develop an asymptotic evaluation
+of the operator $M$ in definition \ref{eqn:grt2d}. 
+This result involves the
+rate of change of the takeoff angles {\em at the scattering points}
+$\alpha_r,\alpha_s$ with respect to the source and receiver
+coordinates, and also the mapping from the extended phase space point
+$(x,z,h,k_x,k_z,k_h)$ to the source and receiver coordinates
+$x_r,x_s$. \cite{tenKroode:12} intoduced this map and explained its
+central importance: it defines the scattering (``canonical'') relation of
+$D{\cal F}$. \cite{HouSymes:15} present an alternate description,
+which we will follow here: the extended phase space
+point determines the ray pair, by determining the traveltime gradients
+which are also the ray takeoff vectors at the extended scattering
+point $(x,z,h)$. The relation is homogeneous in the wavevector
+$(k_x,k_h,k_z)$, so can be expressed in terms of projective
+coordinates $(k_x/k_z,k_h/k_z)$ under the assumption (implicit in the
+use of the horizontal offset extension) that $k_z > 0$. Accordingly we
+will write $x_{r,s} = x_{r,s}(x,z,h,k_x/k_z,k_h/k_z)$ for the
+emergence points of the receiver, respectively source, rays. In terms
+of these quantities, the asymptotic evaluation of $M$ is given by
+equation A-4 in \cite[]{HouSymes:17}:
+\[
+Mu(x,z,h) \approx \int 
+dk_{x}dk_{z}dk_{h}\frac{e^{i(xk_{x}+zk_{z}+hk_{h})}\widehat{u}(k_{x},k_{z},k_{h})}{2\pi 
+  k^2_z}
+\]
+\[
+\times \, A(x_r(x,z,h,k_x/k_z,k_h/k_z),x_s(x,z,h,k_x/k_z,k_h/k_z),x,z,h) 
+\]
+\[
+\times \left(\frac{\partial T}{\partial 
+    z}(x_r(x,z,h,k_x/k_z,k_h/k_z),x+h,z) +
+\frac{\partial T}{\partial 
+    z}(x_s(x,z,h,k_x/k_z,k_h/k_z),x-h,z) \right)^{-1}
+\]
+\begin{equation}
+\label{eqn:grt2deval}
+\times |\det \mbox{
+  Hess}(x_r(x,z,h,k_x/k_z,k_h/k_z),x_s(x,z,h,k_x/k_z,k_h/k_z),x,z,h)|^{-1/2} . 
+\end{equation}
+The coefficient $A$ is the diagonal value of the coefficient
+$\tilde{A}$ in equation \ref{eqn:grt2d}, for $x'=x,z'=z,h'=h$:
+\begin{equation}
+\label{eqn:diag}
+A(x_r,x_s,x,z,h) = \tilde{A}(x_r,x_s,x,z,h,x,z,h).
+\end{equation}
+The restriction $x'=x,z'=z,h'=h$ is one of the stationary phase
+conditions that results from 
+asymptotic evaluation of the integral in \ref{eqn:grt2d}. This
+calculation also leads to the
+conclusion that the vectors $(k_x,k_z)$ and $(k_h,k_z)$ are parallel
+to $\nabla_{x,z}T(x_r,x+h,z)+\nabla_{x,z}T(x_s,x-h,z)$ and
+$\nabla_{h,z}T(x_r,x+h,z)+\nabla_{h,z}T(x_s,x-h,z)$ respectively. This
+condition in turn leads to the determination of
+$\nabla_{x,z}T(x_r,x+h,z)$ and $\nabla_{x,z}T(x_s,x-h,z)$
+individually, hence the rays connecting $(x\pm h,z)$ with $(x_r,z_s)$
+and $(x_s,z_s)$ respectively, from the phase space vector
+$(x,z,h,k_x,k_z,k_h)$, as
+explained by \cite{HouSymes:15}. The determination of the rays in turn
+determines $x_r,x_s$ as functions of  $(x,z,h,k_x,k_z,k_h)$, as
+mentioned above.
+
+The Hessian factor $|\det \mbox{ Hess}|^{-1/2}$ is most
+conveniently expressed in terms of the ray slownesses, velocity $v
+= \sqrt{\kappa/\rho}$, and slowness $s=1/v$, for which we
+introduce abbreviations, regarding the arguments as understood and
+dropping them from the notation:
+\begin{eqnarray}
+p_r & = & \frac{\partial T}{\partial x}(x_r,x+h,z) \nonumber \\  
+p_s & = & \frac{\partial T}{\partial x}(x_s,x-h,z) \nonumber \\  
+q_r & = & \frac{\partial T}{\partial z}(x_r,x+h,z) \nonumber \\
+q_s & = & \frac{\partial T}{\partial z}(x_s,x-h,z) \nonumber \\
+v_{\pm} & = & v(x\pm h,z) \nonumber \\
+\label{eqn:rayslow}   
+s_{\pm} & = & 1/v_{\pm}
+\end{eqnarray}
+Then
+\begin{equation}
+\label{eqn:hess}
+|\det \mbox{ Hess}|^{-1/2} =\frac{1}{2} (q_r+q_s)^4\left(\frac{\partial 
+    \alpha_r}{\partial x_r}\frac{\partial \alpha_s}{\partial 
+    x_s}\right)^{-1}[s_-^2q_r^2 + s_+^2q_s^2 + (s_+^2+s_-^2)q_rq_s]^{-1}
+\end{equation}
+%Note that the right-hand sides in the system \ref{eqn:rayslow} are all
+%functions of $(x,z,h,k_x,k_z,k_h)$, because of the stationary phase
+%conditions, as already explained. Thus $Q$ is also a function of
+%$(x,z,h,k_x,k_z,k_h)$. Since $Q$ is homogeneous of degree zero in
+%$(k_x,k_z,k_h)$, it can be expressed as a function of $(k_x/k_z,
+%k_h,k_z)$, as indicated in equation \ref{eqn:grt2deval}. 
+(\cite{HouSymes:15}, equation A-19).
+
+Because of the stationarity conditions $x'=x, z'=z, h'=h$, the
+coefficients appearing in the asymptotic evalution of the integral
+defining the matrix operator $\bf M$ simplify. It is convenient to
+introduce the generalized scattering angle $\theta =
+\theta(x,z,h,k_x/k_z,k_h/k_z)$, usually defined as half the angle
+between source and receiver rays at the scattering point:
+\[
+\nabla_{x,z}T(x_r(x,z,h,k_x/k_z,k_h/k_z),x+h,z)\cdot 
+\nabla_{x,z}T(x_s(x,z,h,k_x/k_z,k_h/k_z),x-h,z) 
+\]
+\begin{equation}
+\label{eqn:thetadef}
+= \frac{\cos 2\theta(x,z,h,k_x/k_z,k_h/k_z)}{v(x+h,z) v(x-h,z)} =
+\frac{(1-2\sin^2\theta(x,z,h,k_x/k_z,k_h/k_z))}{v(x+h,z) v(x-h,z)}
+\end{equation}
+Then the 
+coefficients $A = A_{i,j}, i,j \in \{\kappa, \rho\}$ appearing in the
+asymptotic evaluation \ref{eqn:grt2deval} of $\bf M$ are 
+\[
+A_0(x_r,x_s,x,z,h)=
+\]
+\[
+\pi^2 a(x_r,x+h,z)^2  
+a(x_s,x-h,z)^2 
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff1red}
+\times \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)} \frac{\cos\theta_s(x_s,x-h,z)}{v(x_s,z_s)} 
+\end{equation}
+\begin{equation}
+\label{eqn:grt2dcoeff2red}
+A_{\kappa,\kappa}(x_r,x_s,x,z,h) = 
+\frac{A_0(x_r,x_s,x,z,h)}{\kappa(x+h,z)\kappa(x-h,z)}
+\end{equation}
+\[
+A_{\rho,\kappa}(x_r,x_s,x,z,h) 
+\]
+\[
+=\frac{A_0(x_r,x_s,x,z,h) \cos 2 \theta(x,z,h,k_x/k_z,k_h/k_z)}
+{v(x+h,z)
+  v(x-h,z)\sqrt{\rho(x+h,z)}\sqrt{\rho(x-h,z)}\sqrt{\kappa(x+h,z)}\sqrt{\kappa(x-h,z)}}
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff3red}
+=\frac{A_0(x_r,x_s,x,z,h) \cos 2 \theta(x,z,h,k_x/k_z,k_h/k_z)}
+{\kappa(x+h,z)\kappa(x-h,z)}
+\end{equation}
+\begin{equation}
+\label{eqn:grt2dcoeff4red}
+A_{\kappa,\rho}(x_r,x_s,x,z,h) =
+A_{\rho,\kappa}(x_r,x_s,x,z,h)
+\end{equation}
+\[
+A_{\rho,\rho}(x_r,x_s,x,z,h) =
+\]
+\[
+=\frac{A_0(x_r,x_s,x,z,h) \cos^2 2 \theta(x,z,h,k_x/k_z,k_h/k_z)}
+{v(x+h,z)^2v(x-h,z)^2\rho(x+h,z)\rho(x-h,z)}
+\]
+\begin{equation}
+\label{eqn:grt2dcoeff5red}
+=\frac{A_0(x_r,x_s,x,z,h) \cos^2 2 \theta(x,z,h,k_x/k_z,k_h/k_z)}
+{\kappa(x+h,z)\kappa(x-h,z)}
+\end{equation}
+whence
+\[
+{\bf M} 
+\left(\begin{array}{c}
+\bar{r}_{\kappa} \\
+\bar{r}_{\rho}
+\end{array}
+\right) = 
+\]
+\[
+= \int dk_x dk_z dk_h \frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  k^2_z(q_r + q_s)\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\begin{equation}
+\label{eqn:rk2}
+\times 
+\left(
+\begin{array}{c}
+\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta \\ 
+(...) 
+\end{array}
+\right)
+\end{equation}
+Following the remark after equation \ref{eqn:dwnopbis}, $\bf M_1$ has
+a similar expression:
+\[
+{\bf M_1} 
+\left(\begin{array}{c}
+\bar{r}_{\kappa} \\
+\bar{r}_{\rho}
+\end{array}
+\right) = 
+\]
+\[
+= \int dk_x dk_z dk_h \frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  (-ik_z)(q_r + q_s)^2\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\begin{equation}
+\label{eqn:rk2bis}
+\times 
+\left(
+\begin{array}{c}
+\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta \\ 
+(...) 
+\end{array}
+\right)
+\end{equation}
+
+%Define
+%\begin{equation}
+%\label{eqn:rsig}
+%\bar{r}_{\sigma} \equiv \frac{1}{2}(\bar{r}_{\kappa} + \bar{r}_{\rho})
+%\end{equation}
+%Note that for $h=0$, or alternatively for physical perturbations
+%$\delta \bar{\kappa}(x,z,h) = \delta \kappa(x,z)\delta(h),
+%\delta \bar{\rho}(x,z,h) = \delta \rho(x,z)\delta(h)$, 
+%\[
+%\bar{r}_{\kappa} = \frac{\delta \kappa}{\kappa}\delta(h),
+%\bar{r}_{\rho} = \frac{\delta \rho}{\rho}\delta(h),
+%\]
+%whence
+%\[
+%\bar{r}_{\sigma} = \frac{\delta \sigma}{\sigma} \delta(h), \,\sigma =
+%\rho v = \sqrt{\kappa \rho}.
+%\]
+%That is, in the physical case, $\bar{r}_{\sigma}$ is the relative
+%perturbation in acoustic impedance. In general, $\bar{r}_{\sigma}$
+%does not have a simple physical meaning.
+
+%In terms of $\bar{r}_{\sigma}$, the $\kappa$ component in equation
+%\ref{eqn:rk2} may be expressed as
+%\[
+%{\bf M} 
+%\left(\begin{array}{c}
+%2\bar{r}_{\sigma}-\bar{r}_{\rho} \\
+%\bar{r}_{\rho}
+%\end{array}
+%\right) = 
+%\]
+%\[
+%= \int dk_x dk_z dk_h \frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+%  k^2_z(q_r + q_s)\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+%\]
+%\begin{equation}
+%\label{eqn:rk2sigma}
+%\times 
+%\left(
+%\begin{array}{c}
+%2(\hat{\bar{r}}_{\sigma} - \hat{\bar{r}}_{\rho} \sin^2 \theta) \\ 
+%(...) 
+%\end{array}
+%\right)
+%\end{equation}
+
+Equations \ref{eqn:hess} and
+\ref{eqn:grt2dcoeff1red} combine to show that the common scalar factor in
+the integral \ref{eqn:rk2} takes the form
+\[
+\frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  k^2_z(q_r + q_s)\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\[
+=\pi^2 a(x_r,x+h,z)^2  a(x_s,x-h,z)^2 
+ \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos\theta_s(x_s,x-h,z)}{v(x_s,z_s)} 
+\]
+\[
+\times \frac{1}{2} (q_r+q_s)^4\left(\frac{\partial 
+    \alpha_r}{\partial x_r}\frac{\partial \alpha_s}{\partial 
+    x_s}\right)^{-1}[s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s]^{-1}
+\]
+\begin{equation}
+\label{eqn:rk3}
+\times \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  k^2_z(q_r + q_s)\kappa_+\kappa_-} 
+\end{equation}
+Similarly,  the common scalar factor in
+the integral \ref{eqn:rk2bis} takes the form
+\[
+\frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  (-ik_z)(q_r + q_s)^2\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\[
+=\pi^2 a(x_r,x+h,z)^2  a(x_s,x-h,z)^2 
+ \frac{\cos \theta_r(x_r,x+h,z)}{v(x_r,z_r)}
+\frac{\cos\theta_s(x_s,x-h,z)}{v(x_s,z_s)} 
+\]
+\[
+\times \frac{1}{2} (q_r+q_s)^4\left(\frac{\partial 
+    \alpha_r}{\partial x_r}\frac{\partial \alpha_s}{\partial 
+    x_s}\right)^{-1}[s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s]^{-1}
+\]
+\begin{equation}
+\label{eqn:rk3bis}
+\times \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  (-ik_z)(q_r + q_s)^2\kappa_+\kappa_-} 
+\end{equation}
+
+Invoke the crucial observation of Norm Bleistein, Yu
+Zhang, and others, that the geometric amplitude $a(...)$ may be
+expressed in terms of the rate of change of arrival time and takeoff
+angles of rays reaching the source and receiver surfaces with respect
+to the source or receiver coordinate
+\cite[]{ZhangBleistein:03,ZhangBleistein:05,ZhangSunGray:07,ZhangYuSun:08}.
+Specifically,
+\[
+\frac{a(x_r,x+h,z)^2}{\rho(x+h,z)}\frac{\cos
+  \theta_r(x_r,x+h,z)}{v_r(x_r,z_r)}\left(\frac{\partial
+    \alpha_r}{\partial x_r}(x_r,x+h,z)\right)^{-1} 
+\]
+\[
+ = \frac{a(x_s,x-h,z)^2}{\rho(x-h,z)}\frac{\cos
+   \theta_s(x_s,x-h,z)}{v_s(x_s,z_s)}\left(\frac{\partial
+     \alpha_s}{\partial x_s}(x_s,x-h,z)\right)^{-1}
+\]
+\begin{equation}
+\label{eqn:raytube}
+= \frac{1}{8\pi^2}. 
+\end{equation}
+(\cite[]{HouSymes:15}, equations B-6, B-7 - note that for variable
+density acoustics, the transport equation reads $\nabla \cdot
+(a^2/\rho) \nabla T=0$). Thus writing $\rho(x\pm h,z)=\rho_{\pm}$, the
+right-hand side of equation \ref{eqn:rk3} becomes
+\[
+\frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}\rho_+\rho_-}{2\pi 
+  k^2_z(q_r + q_s)\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\[
+=\pi^2 \left(\frac{1}{8\pi^2}\right)^2 
+ \frac{1}{2} (q_r+q_s)^4[s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s]^{-1}
+\]
+\begin{equation}
+\label{eqn:rk4}
+\times \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  k^2_zv_+^2v_-^2(q_s+q_r)} 
+\end{equation}
+and the right-hand side of equation \ref{eqn:rk3bis} becomes
+\[
+\frac{A_0 e^{i(xk_{x}+zk_{z}+hk_{h})}\rho_+\rho_-}{2\pi 
+  (-ik_z)(q_r + q_s)^2\kappa_+\kappa_-} |\mbox{det Hess}|^{-1/2} 
+\]
+\[
+=\pi^2 \left(\frac{1}{8\pi^2}\right)^2 
+ \frac{1}{2} (q_r+q_s)^4[s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s]^{-1}
+\]
+\begin{equation}
+\label{eqn:rk4bis}
+\times \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}}{2\pi 
+  (-ik_z)v_+^2v_-^2(q_s+q_r)^2} 
+\end{equation}
+
+Combining equations \ref{eqn:rk4}, respectively \ref{eqn:rk4bis}, and \ref{eqn:grt2dcoeff1red}-\ref{eqn:grt2dcoeff5red}, obtain
+\[
+{\bf M} 
+\left(\begin{array}{c}
+\bar{r}_{\kappa} \\
+\bar{r}_{\rho}
+\end{array}
+\right) = 
+\]
+\[
+= \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}(q_r+q_s)^3}{256\pi^3 
+  k^2_z(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\begin{equation}
+\label{eqn:rk3sigma}
+\times 
+\left(
+\begin{array}{c}
+\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta) \\ 
+(...) 
+\end{array}
+\right)
+\end{equation}
+and
+\[
+{\bf M_1} 
+\left(\begin{array}{c}
+\bar{r}_{\kappa} \\
+\bar{r}_{\rho}
+\end{array}
+\right) = 
+\]
+\[
+= \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}(q_r+q_s)^2}{256\pi^3 
+  (-ik_z)(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\begin{equation}
+\label{eqn:rk3sigmabis}
+\times 
+\left(
+\begin{array}{c}
+\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta) \\ 
+(...) 
+\end{array}
+\right)
+\end{equation}
+
+The computations done so far are formal in nature, that is,
+restrictions necessary to ensure that rays with appropriate slowness
+vectors actually exist have not been imposed, nor have the
+reflectivities $\bar{r}$ or the data $d$ been constrained so that the
+expressions \ref{eqn:rk3sigma},  \ref{eqn:rk3sigmabis} and related equations are correct to
+leading order in frequency. To make such constraints manifest and
+recover an asymptotically correct result from \ref{eqn:rk3sigma}, \ref{eqn:rk3sigmabis}
+requires a closer study of the ray geometry of extended acoustics.
+
+\section{The Canonical Relation}
+To make sense of the integrand in equation \ref{eqn:rk3sigma}, it is
+necessary to
+understand how to compute the generalized scattering angle $\theta$ in
+terms of the extended phase space coordinates $(x,z,h,k_x/k_z,
+k_h/k_z)$. This in turn requires computation of the ray slowness
+vectors $(p_r,q_r)$ and $(p_s,q_s)$ in terms of the same
+quantities. 
+
+The critical hypothesis for horizontal subsurface offset extended
+scattering is that rays carrying significant energy do not turn
+horizontal, that is, $q_r, q_s > 0$ at all points on such
+rays. \cite{deHoopStolk:05,deHoopStolk:06} call this assumption the
+``DSR'' (double square root) hypothesis, as it is also the assumption
+that permits to the wave equation to be replaced by an asymptotically
+equivalent evolution equation in depth known as the double square root equation.
+
+The stationary phase conditions include 
+\begin{eqnarray}
+p_r & = & \frac{1}{2}\frac{k_x+k_h}{k_z}(q_r+q_s) \nonumber \\
+\label{eqn:stat}
+p_s & = & \frac{1}{2}\frac{k_x-k_h}{k_z}(q_r+q_s) 
+\end{eqnarray}
+(\cite[]{HouSymes:15}, equation A-20). Introduce projective
+coordinates $p_x=k_x/k_z,
+p_h=k_h/k_z$. Then an equivalent system is
+\begin{eqnarray}
+p_r & = & \frac{1}{2}(p_x+p_h)(q_r+q_s) \nonumber \\
+\label{eqn:stat1}
+p_s & = & \frac{1}{2}(p_x-p_h)(q_r+q_s) 
+\end{eqnarray}
+Rearranging,
+\begin{eqnarray}
+p_x & = &\frac{p_r+p_s}{q_r+q_s} \nonumber \\
+\label{eqn:stat2}
+p_h & = &\frac{p_r-p_s}{q_r+q_s} 
+\end{eqnarray}
+Since $(p_r,q_r)$ and $(p_s,q_s)$ traverse the product of hemispheres
+$q_r,q_s > 0$ of
+radius $s_+$ and $s_-$ respectively, $(p_x,p_h)$ must lie in the image
+of this product of hemispheres under the map defined in equation
+\ref{eqn:stat2}. This set is not so easy to describe explicitly in
+general, however for the case $h=0$ (or, more precisely, $s_+=s_-=s$),
+the description is simple: in that case, 
+\[
+p_xp_h = \frac{p_r^2-p_s^2}{(q_r+q_s)^2} = - \frac{q_r-q_s}{q_r+q_s}
+\]
+\begin{equation}
+\label{eqn:stat3}
+=-\frac{\frac{q_r}{q_s}-1}{\frac{q_r}{q_s}+1}
+\end{equation}
+The map $q_r/q_s \mapsto p_xp_h$ so defined is a bijection from
+$\bR^+$ to $(-1,1)$. That is, for $h=0$ necessarily
+\begin{equation}
+\label{eqn:stat4}
+|p_xp_h| < 1.
+\end{equation}
+See \cite[]{tenKroode:12}, definition of the set $\Omega_X$ for a related
+construction. As in that reference, we shall see that for $(p_x,p_h)$
+satisfying equation \ref{eqn:stat4}, there is a unique DSR ray pair
+with slowness vectors $(p_r,q_r)$ and $(p_s,q_s)$ satisfying equation 
+\ref{eqn:stat1}.
+
+To begin the construction of the inverse map from
+$p_x=k_x/k_z,p_h=k_h/k_z$ to $(q_s,q_r)$ and hence the rays connecting
+scattering points with sources and receivers, note that the eikonal
+equation together with equation \ref{eqn:stat} implies that
+\begin{eqnarray}
+q_r & = & \left(s_+^2 -
+          \frac{1}{4}\frac{(k_x+k_h)^2}{k_z^2}(q_s+q_r)^2\right)^{1/2} \nonumber \\
+\label{eqn:eik}
+q_s & = & \left(s_-^2 -
+          \frac{1}{4}\frac{(k_x-k_h)^2}{k_z^2}(q_s+q_r)^2\right)^{1/2}
+\end{eqnarray}
+whence
+\[
+s_+s_-\cos 2 \theta = p_rp_s + q_r q_s 
+= \frac{1}{4}\frac{k_x^2-k_h^2}{k_z^2}(q_r+q_s)^2
+\]
+\begin{equation}
+\label{eqn:theta1}
++  \left(s_+^2 -
+          \frac{1}{4}\frac{(k_x+k_h)^2}{k_z^2}(q_s+q_r)^2\right)^{1/2}
+\left(s_-^2 -
+          \frac{1}{4}\frac{(k_x-k_h)^2}{k_z^2}(q_s+q_r)^2\right)^{1/2}
+\end{equation}
+
+Thus the vertical ray slownesses $q_s$ and $q_r$ (equation
+\ref{eqn:eik}), the phase Hessian factor in the evaluation $\bf M$
+(equation \ref{eqn:hess}), and the scattering angle (equation
+\ref{eqn:theta1}) may all be expressed in terms of the vertical
+gradient of the two-way time at the stationary point, $q_r+q_s$. This
+quantity is in turn a function of the generalized phase
+coordinates: it follows from equations \ref{eqn:stat} and
+\ref{eqn:eik} that its square solves a quadratic with coefficients
+that are algebraic functions of $s_+,s_-$ and $k_x/k_z, k_h/k_z$
+(\cite[]{tenKroode:12}, also \cite[]{HouSymes:15}, equations A-20
+through A-28). Explicitly, 
+\begin{equation}
+\label{eqn:dphidz}
+(q_r+q_s)^2 = \frac{-b+\sqrt{b^2-4ac}}{2a}
+\end{equation}
+where
+\begin{eqnarray}
+a & = & \frac{(k_x^2+k_z^2)(k_h^2+k_z^2)}{k_z^4}\nonumber \\
+b & = & -2 \left[(s_+^2-s_-^2)\frac{k_xk_h}{k_z^2} +
+        (s_+^2+s_-^2)\right] \nonumber \\
+\label{eqn:abc}
+c & = & (s_+^2-s_-^2)^2.
+\end{eqnarray}
+ 
+While explicit, the expression \ref{eqn:dphidz} is somewhat
+opaque. Fortunately it simplifies considerably in the physical case,
+that is, $h=0$: then $s_+=s_-$, $b=-4 s^2$, $c=0$, and 
+\begin{equation}
+\label{eqn:dphidzh0}
+(q_r+q_s)^2 = 4\frac{k_z^4s^2}{(k_x^2+k_z^2)(k_h^2+k_z^2)}=\frac{4s^2}{(p_x^2+1)(p_h^2+1)}
+\end{equation}
+whence
+\begin{eqnarray}
+q_r & = & s\left(1 -
+          \frac{(p_x+p_h)^2}{(p_x^2+1)(p_h^2+1)}\right)^{1/2} \nonumber \\
+\label{eqn:eikh0}
+q_s & = & s\left( 1 -
+          \frac{(p_x-p_h)^2}{(p_x^2+1)(p_h^2+1)}\right)^{1/2}.
+\end{eqnarray}
+Since $s_+=s_-=s$ when $h=0$, all factors of $s$ in equation
+\ref{eqn:theta1} are common and can be eliminated, leading to
+\[
+\cos 2 \theta
+= \frac{(p_x^2-p_h^2)}{(p_x^2+1)(p_h^2+1)}
+\]
+\begin{equation}
+\label{eqn:theta2}
++  \left(1 -
+          \frac{(p_x+p_h)^2}{(p_x^2+1)(p_h^2+1)}\right)^{1/2}
+\left(1 -
+          \frac{(p_x-p_h)^2}{(p_x^2+1)(p_h^2+1)}\right)^{1/2}
+\end{equation}
+A bit of algebra, which we leave
+to the reader, togerther with the condition that (equation
+\ref{eqn:stat4}) $|p_xp_h|<1$ for $h=0$  yields
+\begin{equation}
+\label{eqn:theta3}
+\cos 2 \theta = 
+\frac{1-p_h^2}{1+p_h^2}, \, \sin \theta = \frac{p_h}{\sqrt{1+p_h^2}},
+  \, \tan \theta = p_h.
+\end{equation}
+(Again, these identities hold only for $h=0$). It is easy to check
+that $q_r,q_s$ given by \ref{eqn:eikh0} are positive, and finally set
+$p_r,p_s$ by \ref{eqn:stat1}. That is, we have described a homogeneous
+bijective map from $k_x,k_z,k_h$ to rays satisfying the DSR condition
+in the special case of coincident scattering points $h=0$. The
+explicit description of the domain of this map description for
+$h \ne 0$ is less straightforward than condition \ref{eqn:stat4}.
+
+Following \cite{tenKroode:12}, we denote by $\Omega_X$ the set of
+points $(x,z,h,k_x,k_z,k_z)$ in phase space, satsifying the scattering
+(stationary phase) conditions for a pair of downgoing rays. In view of
+equation \ref{eqn:stat4}, 
+\begin{equation}
+\label{eqn:omegaxh0}
+(x,z,0,k_x,k_z,k_z) \in \Omega_X \Leftrightarrow
+\left|\frac{k_xk_h}{k_z^2}\right| < 1
+\end{equation}
+Let $B$ be
+the symbol of a pseudodifferential operator essentially supported on this (conic)
+set, a smoothing of the characteristic function of $\Omega_X$. When
+convenient we will treat $B$ as if it were the characteristic function
+of $\Omega_X$. Under the assumption that only downgoing rays carry
+significant energy (technically, singularities), $D{\cal F}$ produces
+asymptotically (up to a smooth error)
+the same data from $(\delta \kappa,\delta \rho)$ and from 
+$(Op(B)\delta \kappa, Op(B)\delta \rho)$. Thus $B$ may be regarded as
+being part of the symbol of $\bf M$, without loss of generality.
+
+\section{Near-focus Approximation}
+The asymptotic evaluation in equation \ref{eqn:rk3sigma} implies that
+\[
+({\bf M}(\bar{r}_{\kappa},\bar{r}_{\rho})^T)_{\kappa} = \left((I_t^2\bar{F}[\kappa,\rho])^{*}
+I_t^2\frac{\partial^2}{\partial z_s \partial z_r}I_t^2\,
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]\right)_{\kappa}
+\]
+\[
+ \approx \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}(q_r+q_s)^3}{256\pi^3 
+  k^2_z(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\begin{equation}
+\label{eqn:rk3mig}
+\times 
+(\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta)
+\end{equation}
+Similarly, \ref{eqn:rk3sigmabis} implies that
+\[
+({\bf M_1}(\bar{r}_{\kappa},\bar{r}_{\rho})^T)_{\kappa} = \left((I_t^2\bar{F}[\kappa,\rho])^{*}
+I_t\frac{\partial^2}{\partial z_s \partial z_r}I_t^2\,
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]\right)_{\kappa}
+\]
+\[
+ \approx \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})}(q_r+q_s)^2}{256\pi^3 
+  (-ik_z)(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\begin{equation}
+\label{eqn:rk3migbis}
+\times 
+(\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta)
+\end{equation}
+These relation
+significantly simplify using the evaluation of slownesses $q_s,q_r$ for $h=0$,
+explained in the last section. The error resulting from these
+approximations amounts to inserting a 
+pseudodifferential operator $P$ of order zero, whose symbol is $\equiv
+1$ for $h=0$.
+  
+To begin with, \ref{eqn:dphidzh0} implies that
+\[
+\frac{(q_r+q_s)^3}{128\pi^3 
+  k^2_z(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\[
+\approx  
+\frac{2sk_z^2}{(k_x^2+k_z^2)^{1/2}(k_h^2+k_z^2)^{1/2}}\frac{1}{256  
+  \pi^3 s^2k_z^2v^4}
+\] 
+\begin{equation}
+=\frac{1}{128\pi^3 v^3 \sqrt{k_x^2+k_z^2}\sqrt{k_h^2+k_z^2}}
+\label{eqn:kksymbh0}
+\end{equation} 
+and 
+\[
+\frac{(q_r+q_s)^2}{256\pi^3 
+  (-ik_z)(s_-^2q_r^2 + s_+^2q_s^2 +
+(s_+^2+s_-^2)q_rq_s)v^2_+v^2_-} 
+\]
+\begin{equation}
+\label{eqn:kksymbh0bis}
+\approx 
+\frac{1}{256 \pi^3 (-ik_z)v^2}
+\end{equation}
+
+
+
+``Approximately'' here means ``up to multiplication by a symbol that
+is $\equiv 1$ for $h=0$''. So 
+\[
+({\bf M}(\bar{r}_{\kappa},\bar{r}_{\rho})^T)_{\kappa} 
+\approx \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})} }{128 \pi^3 v^3 \sqrt{k_x^2+k_z^2}\sqrt{k_h^2+k_z^2}}PB 
+\]
+\begin{equation}
+\label{eqn:rk4sigma}
+\times 
+(\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta ) 
+\end{equation}
+in which $P=P(x,z,h,k_x,k_z,k_h)$ is a symbol of order 0 satisfying
+$P=1$ for $h=0$, and $B$ is the symbol mentioned at the end of the
+last section. We claim that these symbols are actually of class
+$S^0_{1,0}$, that is, classical symbols of order zero, and that the
+RHS of equation \ref{eqn:rk4sigma} defines a classical
+pseudodifferential operator of order zero. We defer the proof.
+
+Similarly,
+\[
+({\bf M_1}(\bar{r}_{\kappa},\bar{r}_{\rho})^T)_{\kappa} 
+= \int dk_x dk_z dk_h \frac{e^{i(xk_{x}+zk_{z}+hk_{h})} }{256 \pi^3 (-ik_z)v^2}P_1B 
+\]
+\begin{equation}
+\label{eqn:rk4sigmabis}
+\times 
+(\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta ) 
+\end{equation}
+in which $P_1$ has the same properties as $P$, that is, it is also a
+classical symbol of order 0. 
+
+\begin{theorem}
+Define
+\begin{equation}
+\label{eqn:defL}
+L=(-\nabla^2_{x,z})^{1/2}(-\nabla^2_{h,z})^{1/2},
+\end{equation}
+\begin{eqnarray}
+\label{eqn:defWm}
+W_m & = & \frac{1}{16}v^{-\frac{3}{2}}L^{-1}v^{-\frac{3}{2}},\\
+\label{eqn:defWminv}
+W_m^{-1} & = & 16 v^{\frac{3}{2}}Lv^{\frac{3}{2}},\\
+\label{eqn:defWd}
+W_d &=& I_t^2 I_t\frac{\partial}{\partial z_s}I_t\frac{\partial}{\partial z_r}I_t^2
+\end{eqnarray}
+and 
+\begin{equation}
+\label{eqn:rk5sigma} 
+\bar{F}[\kappa,\rho]^{\dagger}  = W_m^{-1} (\bar{F}^T W_d)_{\kappa} 
+\end{equation}
+Then
+\begin{equation}
+\label{eqn:rk6sigma}
+\bar{F}[\kappa,\rho]^{\dagger}\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+\approx  
+\frac{1}{8 \pi^3}\int dk_x dk_z dk_h e^{i(xk_{x}+zk_{z}+hk_{h})}B P  
+ (\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta )  
+\end{equation} 
+\end{theorem}
+\begin{proof}
+The concluion \ref{eqn:rk6sigma} follows from \ref{eqn:rk4sigma} and the calculus of 
+pseudodifferential operators.
+\end{proof}
+
+The definition \ref{eqn:rk5sigma} is equivalent to equation 21 in \cite[]{HouSymes:15}, or
+equation 10 in \cite[]{HouSymes:17}, once the translation from
+$\kappa$ to $v$ (with $\rho=1$) is accounted for, for the focused case
+where most energy in $R$ is concentrated at $h=0$. This equivalence
+will be explained in detail in the next section. 
+
+Recall from \cite[]{HouSymes:15} that $W_d$ (defined in
+\ref{eqn:defWd}) is acts as a pseudodifferential operator with a
+positive real symbol of order -2, when restricted to a conic set of
+covectors corresponding to downgoing source and upcoming receiver
+wavefields. Therefore, for data satisfying the downgoing/upcoming
+constraint, $W_d$ defines a weighted norm equivalent to the Sobolev
+$-2$ norm. Since $\bar{F}$ and $\bar{F}^T$ are of order zero, in the
+sense that they preserve the order of Sobolev classes, and $W_m$ is
+plainly of order 2, $F^{\dagger}$ is also of order zero. Furthermore,
+since $W_m$ is also positive (semi-)definite symmetric, it also
+defines a norm on the a subspace of relative model perturbations equivalent
+to the Sobolev 2-norm. We conclude that when restricted to relative
+perturbations of the form $[\bar{r}_{\kappa},0]$,  $\bar{F}^{\dagger}$ is the
+adjoint of $\bar{F}$ with respect to the norms in model and data
+spaces defined by $W_m$ and $W_d$. This observation was used to
+accelerate the solution of the least squares inverse problem in
+\cite[]{HouSymes:16}.
+
+A similar result is possible based on the second approximationt
+developed above. Define 
+\begin{eqnarray}
+\label{eqn:defVminv}
+V_m & = & 32 v^2 \frac{\partial}{\partial z} \\
+\label{eqn:defVd}
+V_d &=& -\frac{\partial}{\partial t}I_t^2 I_t\frac{\partial}{\partial z_s}I_t\frac{\partial}{\partial z_r}I_t^2
+\end{eqnarray}
+and 
+\begin{equation}
+\label{eqn:rk5sigmabis} 
+\bar{F}[\kappa,\rho]^{\ddagger}  = V_m (\bar{F}^T V_d)_{\kappa} 
+\end{equation}
+Using the calculus again, together with equation \ref{eqn:rk4sigmabis}, obtain
+\begin{equation}
+\label{eqn:rk6sigmabis}
+\bar{F}[\kappa,\rho]^{\ddagger}\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+\approx  
+\frac{1}{8 \pi^3}\int dk_x dk_z dk_h e^{i(xk_{x}+zk_{z}+hk_{h})}B P_1
+ (\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta ) 
+\end{equation}
+This result is equivalent to conclusion of \cite{HouSymes:17}, as will
+be explained below.
+
+One key difference between the representations \ref{eqn:rk5sigma} and
+\ref{eqn:rk5sigmabis} is that the operators figuring in the latter,
+$V_m$ and $V_d$, are not even symmetric, let alone positive definite,
+so do not define alternate norms. Thus \ref{eqn:rk5sigmabis} does not
+appear to exhibit $\bar{F}^{\dagger}$ as an adjoint. This appearance
+is however deceptive. Note that $ik_z = |k_z|i{\rm sgn}\,k_z$. The
+first factor is positive real, and the rest (the
+Fourier multiplier defining the Hilbert transform)  is skew symmetric;
+both can be made into symbols of order 1 and 0 respectively by
+modification around $k_z=0$.  Define
+\begin{eqnarray}
+\label{eqn:kzkt1} 
+K_zu(x,z,h) &=& \int dk_z e^{i(k_xx+k_z z+k_hh)}
+                (1-\phi(k_z))|k_z|\hat{u}(k_x,k_z,k_h)\\
+\label{eqn:kzkt2} 
+H_zu(x,z,h) &=& \int dk_z e^{i(k_xx+k_z z+k_hh)}
+                (1-\phi(k_z))i\rm{sgn}\,k_z\,\hat{u}(k_x,k_z,k_h)\\
+\label{eqn:kzkt3} 
+K_tu(x_r,t;x_s) &=& \int d\omega e^{i(k_{x_r} x_r+k_{x_s} x_s+\omega
+                    t)}
+                    (1-\phi(\omega))|\omega|\hat{u}(k_{x_r},\omega;k_{x_s}) \\
+\label{eqn:kzkt4} 
+H_tu(x_r,t;x_s) &=& \int d\omega e^{i(k_{x_r} x_r+k_{x_s} x_s+\omega
+                    t)}
+                    (1-\phi(\omega))i\rm{sgn}\,\omega\,\hat{u}(k_{x_r},\omega;k_{x_s}) 
+\end{eqnarray}
+in which $\phi \in C^{\infty}_0(\bR)$ is $=1$ in a neigborhood of
+$0$. 
+\begin{theorem} The operators defined in
+  \ref{eqn:kzkt1}-\ref{eqn:kzkt4}  satisfy
+\begin{eqnarray}
+\frac{\partial}{\partial z} & \approx& K_z H_z = H_z K_z, \nonumber \\
+\frac{\partial}{\partial t} &\approx& K_t H_t = H_t K_t, \nonumber\\
+H_z \bar{F}^T &\approx& \bar{F}^T H_t.
+\label{eqn:kzkt5}
+\end{eqnarray}
+Define 
+\begin{eqnarray}
+\label{eqn:defbarWm}
+\bar{W}_m^{-1} &=& 32 v^2 K_z \\
+\label{eqn:defbarWd}
+\bar{W}_d & = & K_t I_t^2 I_t\frac{\partial}{\partial 
+  z_s}I_t\frac{\partial}{\partial z_r}I_t^2\\
+\label{eqn:defdd}
+\bar{F}^{\ddagger} &=& \bar{W}_m^{-1}
+(\bar{F}^T\bar{W}_d)_{\kappa}.
+\end{eqnarray}
+Then
+\begin{equation}
+\label{eqn:rk6sigmaterce}
+\bar{F}[\kappa,\rho]^{\ddagger}\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}]
+\approx  
+\frac{1}{8 \pi^3}\int dk_x dk_z dk_h e^{i(xk_{x}+zk_{z}+hk_{h})}B P_1
+ (\hat{\bar{r}}_{\kappa} + \hat{\bar{r}}_{\rho} \cos 2 \theta ) .
+\end{equation}
+\end{theorem}
+\begin{proof}
+The first two approximations in \ref{eqn:kzkt5} follow directly from
+the definitions, the third from Egorov's Theorem \cite[]{Tay:81}.
+Since $H_t^2 \approx -I$,  
+\[ 
+V_m \bar{F}^T V_d =- 32 v^2 \frac{\partial}{\partial z} \bar{F}^T  
+\frac{\partial}{\partial t}I_t^2 I_t\frac{\partial}{\partial 
+  z_s}I_t\frac{\partial}{\partial z_r}I_t^2  
+\]
+\begin{equation}
+\label{eqn:getspd}
+=32 v^2 K_z \bar{F}^T K_t I_t^2 I_t\frac{\partial}{\partial 
+  z_s}I_t\frac{\partial}{\partial z_r}I_t^2  
+\end{equation} 
+and  equations \ref{eqn:getspd} and \ref{eqn:rk5sigmabis} combine to 
+yield the results \ref{eqn:rk6sigmaterce}.
+\end{proof}
+
+Since $\bar{W}_m$ and $\bar{W}_d$ are positive (semi-)definite
+symmetric under the same circumstances as $W_m$ and $W_d$,
+$\bar{F}^{\ddagger}$ can actually be viewed as an adjoint, hence
+the representation \ref{eqn:rk6sigmaterce} gives another way of seeing
+$\bar{F}$ as almost-unitary.
+
+\section{Focused Inversion}
+In this section, assume that
+$\bar{r}_{\kappa}$ and $\bar{r}_\rho$ are physical,
+  that is,
+\[
+\bar{r}_{\kappa} = r_{\kappa}\delta(h), r_{\kappa} =\frac{\delta
+  \kappa}{\kappa}; \,\,
+\bar{r}_{\rho} = r_{\rho}\delta(h), r_{\rho}=\frac{\delta \rho}{\rho} 
+\]
+Also, as noted before,
+\[
+r_{\kappa} = r_{\rho} + 2 r_{v}, \,\,r_{\sigma} = r_{\rho}+r_{v} =
+\frac{1}{2}(r_{\kappa}+r_{\rho})
+\]
+
+The first task of this section is to establish the equivalence of the
+inversion formulae \ref{eqn:rk6sigma} and \ref{eqn:rk6sigmabis} with the
+results presented by \cite{HouSymes:15,HouSymes:17}. The remainder
+will be devoted to estimation of $r_{\kappa}$ and $r_{\rho}$ (or the
+equivalent) separately.
+
+The papers \cite[]{HouSymes:15,HouSymes:17} analyzed the mapping
+$\delta v \rightarrow \delta d$, assuming that $\rho = 1$, $\delta \rho =
+0$. Denote this map by $F_v$, and its subsurface offset extension by
+$\bar{F}_v$. Since $\delta \rho = 0$ implies that $r_{\kappa} = 2 r_v
+= 2 \delta v / v$, $F_v$ is related to $F$ by 
+\[
+Fr_{\kappa} = F_v \delta v = F_v (v r_{\kappa}/2
+\]
+whence 
+\[ 
+F = \frac{1}{2}F_v v
+\]
+For nearly focused extended models $\bar{r}_{\kappa}$, supported near
+$h=0$, this implies that 
+\[
+\bar{F} \approx \bar{F}_v \frac{v}{2}
+\]
+so in that case
+\begin{equation}
+\label{eqn:vkap}
+\bar{F}^{\dagger} \bar{F} = W_m^{-1} \bar{F}^T W_d \bar{F}  \approx
+W_m^{-1} \frac{v}{2} \bar{F}_v^T W_d \bar{F}_v \frac{v}{2} \approx
+W_m^{-1}\frac{v^2}{4} \bar{F}_v^T W_d \bar{F}_v
+\end{equation}
+From equations \ref{eqn:rk6sigma} and \ref{eqn:defWminv}, it follows
+that for focused extended models, 
+\begin{equation}
+\label{eqn:hou1}
+\bar{F}_v^{\dagger} \bar{F}_v \approx P_v
+\end{equation}
+where $P_v$ is a pseudodifferential operator that acts as an
+approximate identity on focused extended models, and 
+\begin{eqnarray}
+\label{eqn:hou2}
+\bar{F}_v^{\dagger} &=& W_v^{-1}\bar{F}_v^TW_d\\
+\label{eqn:hou3}
+W_v^{-1} &=& 4 v^5 L.
+\end{eqnarray}
+Equations \ref{eqn:hou1}, \ref{eqn:hou2}, and \ref{eqn:hou3} precisely
+recapitulate the main result of \cite{HouSymes:15}.
+
+
+The factor $B$ did not appear in these earlier analyses - for the constant density
+case, it plays little role, since the method for extracting an
+estimate of $r_v$ is simply stacking over $h$. The stack weight in
+principle can be any function of $h$ that $=1$ at $h=0$. The choice
+made in \cite[]{HouSymes:15} is to use the full range (in principle,
+infinite) of $h$, which is equivalent to sampling at $k_h=0$, or $p_h=0$.
+As noted in the last section, for $h=0$, $B=1$ for $|p_xp_h| < 1$, and
+therefore for the purposes of extracting $r_v$ the factor $B$ can also
+be ignored.
+
+However to extract both $r_{\sigma}$ and $r_{\rho}$, it is no longer
+possible to sample at $k_h=0$, since that also implies $\theta=0$,
+i.e. normal incidence reflection, at which $r_{\rho}$ has no influence.
+According to the identities \ref{eqn:theta3}, valid at $h=0$, the
+non-oscillatory part of the integrand in \ref{eqn:rk5sigma} is
+\[
+B (\hat{r}_{\sigma} - \hat{r}_{\rho} \sin^2 \theta )
+ = B \left(\hat{r}_{\sigma} - \hat{r}_{\rho} \frac{k_h^2}{k_z^2+k_h^2}\right)
+\]
+To isolate $r_{\rho}$, note that
+\[
+\left.-\frac{1}{2}\frac{\partial^2}{\partial k_h^2}
+  k_z^2\left(\hat{r}_{\sigma} -
+  \frac{k_h^2}{k_z^2+k_h^2}\hat{r}_{\rho}(k_x,k_z)\right)\right|_{k_h=0} = \hat{r}_{\rho}(k_x,k_z)
+\]
+The second $k_h$ derivative corresponds to multiplication by $-h^2$,
+and multiplication by $k_z^2$ to application of
+$-(\partial_z^2+\partial_h^2)$. Finally, restriction to $k_h=0$ is
+equivalent to (unweighted) stacking over $h$. Note once again that
+stacking in effect makes $B=1$, to leading order in frequency. 
+
+The upshot is that in the focused case, the relative impedance and
+density perturbations  can be extracted from the modified migrated
+image volume $\bar{R}$:
+\begin{eqnarray}
+r_{\sigma}(x,z) &=& \int \, dh \, \bar{R}(x,z,h) \nonumber \\
+r_{\rho}(x,z) &=& -\frac{1}{2}\int \, dh \,h^2
+                  \frac{\partial^2}{\partial z^2}\bar{R}(x,z,h) 
+\label{eqn:vdinv}
+\end{eqnarray}
+
+Note that if $\bar{R}$ is defined by \ref{eqn:rk5sigma}, then $d \approx
+\bar{F}[\kappa,\rho](\bar{R},0)$. That is, the $\kappa$ component
+defines an asymptotic right inverse. A precise statement of this type requires microlocal
+constraints on $d$, following ten Kroode. Modulo these constraints,
+this observation may be paraphrased, ``the extended
+model fits everything'', in which by ``extended model'' is understood
+the offset-dependent relative bulk modulus perturbation constructed
+above, constructed with possibly variable background density
+but zero density perturbation.
+
+The estimates \ref{eqn:vdinv} are asymptotically correct hence can be
+used to precondition the least squares estimation of the acoustic parameters.
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

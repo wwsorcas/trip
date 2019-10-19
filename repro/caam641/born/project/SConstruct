@@ -1,0 +1,294 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+MYAPPS          = os.getenv('MYAPPS')
+acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/acd.x')
+towed_array     = os.path.join(MYAPPS,'trip/iwave/trace/main/towed_array.x')
+
+# files from basic: bp05103040.su, paracdpf.su, paravintz.rsf
+# zero phase bandpass filter a la Jie
+PULS = 'bp05103040.su'
+DATA = 'paracdpf.su'	
+VELO = 'paravintz.rsf'
+VBIN = 'paravintz.bin'
+IMAGE= 'parapspif.rsf'
+BASIC='../../basic/project' 
+
+if not os.path.exists(BASIC):
+   print 'you must install basic on the same level as'
+   print 'the parent directory (born) to build this project'
+   Exit(1)
+else:
+   for i in [PULS, DATA, VELO, VBIN, IMAGE]:
+       SRC = os.path.join(BASIC,i)
+       if not os.path.exists(SRC):
+           print 'you must build the target ' + SRC
+	   print 'before building this project'	
+	   Exit(1)
+       Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+	  
+#       if os.path.exists(SRC):	
+#       	  Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+#       else:
+#          Flow(i,None,
+#	       'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
+#	       myscons + ' ' + i + '; cd ' + 
+#	       thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+
+# add offset to each trace
+Flow('paracdpfoff.su', 'paracdpf.su', suchw + ' key1=offset key2=gx key3=sx b=1 c=-1')
+
+# extract the shot at 10012 m
+Flow('sx10012.su', 'paracdpfoff.su', suwind + ' key=sx min=10012 max=10012 tmax=3')
+
+# change units to m/ms = km/s in interval velocity 
+Flow('paravintzmms', ['paravintz.rsf','paravintz.bin'], 'add scale=0.001')
+
+# square to form bulk mod
+Flow('paracsq','paravintzmms','add mode=p ${SOURCES[0]} |put data_type=csq')
+
+# form 5-10-30-40 Hz source with correct receiver data = source position
+Flow('src10012.su',['sx10012.su', 'bp05103040.su'],towed_array + ' data=${SOURCES[0]} src=${SOURCES[1]} towed=$TARGET',stdin=0,stdout=-1)
+
+# shift horizontal origin to correct location in pspi image
+Flow('parapspifix', 'parapspif', 'put o2=1617.5')
+
+# zero phase 2-5-20-25 bandpass filter 
+Flow('bp02052025.su', None, suspike + ' nt=101 ntr=1 dt=0.004 offset=0 nspk=1 ix1=1 it1=51 | ' + sushw + ' key=delrt a=-200 | ' + sufilter + ' f=2,5,20,25')
+
+# form 2-5-20-25 Hz source with correct receiver data = source position
+Flow('src10012lo.su',['sx10012.su', 'bp02052025.su'],towed_array + ' data=${SOURCES[0]} src=${SOURCES[1]} towed=$TARGET',stdin=0,stdout=-1)
+
+# low pass filtered data
+Flow('paracdplooff.su','paracdpfoff.su',sufilter + ' f=2,5,20,25')
+
+# extract filtered shot at 10012 m
+Flow('sx10012lo.su', 'paracdplooff.su', suwind + ' key=sx min=10012 max=10012 tmax=3')
+
+# movies - both sources, 3.0 s @ 0.1 s
+Flow('movieref',['paracsq', 'src10012.su'],
+     '''
+     spray axis=3 n=31 d=100 o=0.0 unit=ms label=time < ${SOURCES[0]} | 
+     put id1=0 id2=1 id3=2 dim=2 gdim=3 |
+     add scale=0.0 > $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+Flow('moviereflo',['paracsq', 'src10012lo.su'],
+     '''
+     spray axis=3 n=31 d=100 o=0.0 unit=ms label=time < ${SOURCES[0]} | 
+     put id1=0 id2=1 id3=2 dim=2 gdim=3 |
+     add scale=0.0 > $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+     
+# reference trace data - low freq source
+Flow('data10012.su', ['paracsq', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+
+# build perturbed model - first cut off garbage at left of pspi result
+Flow('parapspimdlpert','parapspifix','window min2=3000')
+
+# truncate background similarly
+Flow('paracsqtrunc','paracsq','window min2=3000');
+
+# combine 15% pspi with background
+Flow('parapspimdl',['paracsqtrunc', 'parapspimdlpert'], 'add mode=a ${SOURCES[1]} scale=1,0.15')
+
+# combine 5% pspi with background
+Flow('parapspimdl05',['paracsqtrunc', 'parapspimdlpert'], 'add mode=a ${SOURCES[1]} scale=1,0.05')
+
+# combine 15% with 2% background
+Flow('parapspimdllf',['parapspimdl','paracsqtrunc'], 'add mode=a ${SOURCES[1]} scale=1,0.02')
+
+Flow('moviereflop',['parapspimdl', 'src10012lo.su'],
+     '''
+     spray axis=3 n=31 d=100 o=0.0 unit=ms label=time < ${SOURCES[0]} | 
+     put id1=0 id2=1 id3=2 dim=2 gdim=3 |
+     add scale=0.0 > $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+     
+# perturbed model trace data - low freq source
+Flow('data10012p.su', ['parapspimdl', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+
+# perturbed model trace data - low freq source, smaller pert
+Flow('data10012p05.su', ['parapspimdl05', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+
+# perturbed model trace data - low freq source, long scale pert
+Flow('data10012plf.su', ['parapspimdllf', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='movieinit.work')
+
+# residual: perturbed - reference, remainder in 0th order Taylor series
+Flow('data10012res.su',['data10012p.su','data10012.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+Flow('data10012res05.su',['data10012p05.su','data10012.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+Flow('data10012reslf.su',['data10012plf.su','data10012p.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+
+# L2 norms
+GREP = 'grep \'2-norm\''
+Flow('data10012resnrm.txt', 'data10012res.su','suread endian=0  read=data| attr | '+ GREP)
+Flow('data10012res05nrm.txt', 'data10012res05.su','suread endian=0  read=data| attr | '+ GREP)
+Flow('data10012reslfnrm.txt', 'data10012reslf.su','suread endian=0  read=data| attr | '+ GREP)
+
+# Born model trace data - low freq source
+Flow('data10012born.su', ['paracsqtrunc', 'parapspimdlpert', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[3]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=1 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} csq_d1=${SOURCES[1]} source=${SOURCES[2]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# Born model trace data - low freq source, long scale pert
+Flow('data10012bornlf.su', ['parapspimdl', 'paracsqtrunc', 'src10012lo.su', 'sx10012.su'],
+     '''
+     /bin/cp ${SOURCES[3]} $TARGET &&
+     ''' + acd + 
+     '''
+      deriv=1 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} csq_d1=${SOURCES[1]} source=${SOURCES[2]} data=$TARGET sampord=1
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# scaled Born = linear term in Taylor series
+Flow('data10012bornsc.su','data10012born.su',sugain + ' scale=0.15')
+Flow('data10012bornsc05.su','data10012born.su',sugain + ' scale=0.05')
+Flow('data10012bornsclf.su','data10012bornlf.su',sugain + ' scale=0.02')
+
+# difference Born - remainder in 1st order Taylor series
+Flow('data10012bornres.su',['data10012bornsc.su','data10012res.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+Flow('data10012bornres05.su',['data10012bornsc05.su','data10012res05.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+Flow('data10012bornreslf.su',['data10012bornsclf.su','data10012reslf.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+
+# L2 norm of difference
+Flow('data10012bornresnrm.txt', 'data10012bornres.su','suread endian=0  read=data| attr | '+ GREP)
+Flow('data10012bornres05nrm.txt', 'data10012bornres05.su','suread endian=0  read=data| attr | '+ GREP)
+Flow('data10012bornreslfnrm.txt', 'data10012bornreslf.su','suread endian=0  read=data| attr | '+ GREP)
+ 
+# make windowed const movie of ref bulkmod
+Flow('paracsqconst','paracsq','window min2=5000 max2=15000 | spray axis=3 n=31 d=100 o=0.0 unit=ms label=time')
+
+# make windowed const movie of perturbed bulkmod
+Flow('parapspimdlconst','parapspimdl','window min2=5000 max2=15000 | spray axis=3 n=31 d=100 o=0.0 unit=ms label=time')
+
+Result('paracsq','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
+
+# movie vpl file of wavefield overlain on bulk mod backdrop
+Result('moviereflooverlay',['moviereflo','paracsqconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} |grey color=j')
+
+# frames 5, 10, 15
+Result('movereflooverlay-frame05',['moviereflo','paracsqconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=5 | grey color=j')
+Result('movereflooverlay-frame10',['moviereflo','paracsqconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=10 | grey color=j')
+Result('movereflooverlay-frame15',['moviereflo','paracsqconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=15 | grey color=j')
+
+# data @sx=10012
+Result('data10012','data10012.su','suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8')
+
+# perturbation = pspi image (from agc'd stack)
+Result('parapspimdlpert','put label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 color=j')
+
+# perturbed model = nmo vintz + 0.15 * pspi image (from agc'd stack)
+Result('parapspimdl','put label2="Midpoint" unit1=m unit2=m d1=10 d2=12.5 | grey xinch=10 yinch=5 color=j')
+
+# movie vpl file of perturbation wavefield overlain on bulk mod backdrop
+Result('moviereflopoverlay',['moviereflop','parapspimdlconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} |grey color=j')
+
+# frames 5, 10, 15
+Result('moviereflopoverlay-frame05',['moviereflop','parapspimdlconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=5 |grey color=j')
+Result('moviereflopoverlay-frame10',['moviereflop','parapspimdlconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=10 |grey color=j')
+Result('moviereflopoverlay-frame15',['moviereflop','parapspimdlconst'],'window min2=5000 max2=15000 | add scale=10000 | add mode=a ${SOURCES[1]} | window n3=1 f3=15 |grey color=j')
+
+# perturbation data @sx=10012
+Result('data10012p','data10012p.su','suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8')
+
+# perturbation data minus ref data @sx=10012
+Result('data10012res', 'data10012res.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+Result('data10012res05', 'data10012res05.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.000005')
+Result('data10012reslf', 'data10012reslf.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+
+# field gather
+Result('sx10012lo', 'sx10012lo.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8')
+
+# Born data @sx=1001
+Result('data10012born', 'data10012bornsc.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+Result('data10012born05', 'data10012bornsc05.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.000005')
+Result('data10012bornlf', 'data10012bornsclf.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+
+# Born data minus res data @sx=10012 = remainder in 1st order Taylor series
+Result('data10012bornres', 'data10012bornres.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+Result('data10012bornres05', 'data10012bornres05.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.000005')
+Result('data10012bornreslf', 'data10012bornreslf.su', 'suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8 clip=0.00005')
+
+End()

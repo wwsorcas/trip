@@ -1,0 +1,158 @@
+
+\section{Solution: $\oF$ is microlocally unitary}
+
+\begin{frame}
+\only<1>{
+Assumption: $\oF$ {\em microlocally unitary} wrt $\oM, D$ norms: 
+
+$\sigma_0(\odF\oF) = 1$ in open conic set $\Gamma$, smoothing outside of larger conic set
+
+Examples: surface and volume source extensions 
+
+[Subsurface offset is not microlocally unitary except in restricted sense - see next section]
+}
+\only<2>{
+Essential idea: {\em locally filtered data} drives outer VPM loop 
+
+filter disappears at convergence
+
+main theoretical ingredients: 
+\begin{itemize}
+\item convergence criteria for {\em dynamic optimization} = suite of locally defined problems - needed for almost all wave inverse problems because of {\em model-dependent data aperture}
+\item parametrized data family $\ddl$ satisfying asymptotic estimates 
+\[
+\|\ddl\|_s \le C \alpha \|\ddl\|_{s+1}, s \in \bR
+\]
+with $C$ indep of $s$
+\end{itemize}
+}
+\only<3>{
+$\odF\oF$ not coercive $\Rightarrow$ must regularize LS problem: assume
+
+$A^{\dagger}A > 0$ (if necessary replace original $A$ by $(A,\beta I)^T$)
+
+$\Rightarrow$ $\Na$ coercive, $\dom[m]$ well-defined by Lax-Milgram
+}
+\only<4>{
+Choose open $\Gamma_1 \subset \Gamma$, $\Pi \in OPS^0$ with ess supp $\Pi \subset \Gamma$, $\sigma_0(\Pi) = 1$ in $\Gamma_1$
+
+\[
+\odF\oF + \alpha^2 A^{\dagger}A = I +\alpha^2 A^{\dagger}A  + (\odF\oF-I)\Pi + (\odF\oF-I)(I-\Pi)
+\]
+
+\[(\odF\oF-I)\Pi \in OPS^{-\infty}
+\]
+
+\[\mbox{ ess supp }(\odF\oF-I)(I-\Pi) \cap \Gamma_1 = \emptyset\]
+}
+\only<5>{
+$\Gamma,\Gamma_1,\Pi$ depend on $m$
+
+Choose open $U \subset M$, $\tilde{\Pi}_0,\tilde{\Pi}_1 \in OPS^0$ so that for $m \in U$, 
+
+\[
+\odF[m]\tilde{\Pi}_1 \approx \Pi_1[m]\odF[m], \mbox{ ess supp }\Pi_1[m] \subset \Gamma_1[m]
+\]
+
+\[
+\sigma_0(\tilde{\Pi}_1) = 1 \mbox{ on ess supp }\tilde{\Pi}_0 \Rightarrow \tilde{\Pi}_1\tilde{\Pi}_0 \approx \tilde{\Pi}_0
+\]
+
+{\em Filter data:} Replace $\ddl$ with $\tilde{\Pi}_0\ddl$, redefine $\dom$ as solution of 
+$\Na \dom = \odF\tilde{\Pi}_0\ddl$
+}
+
+\only<6>{
+$\Rightarrow$
+
+\[
+(I-\Pi[m])\Na\dom[m]= (I-\Pi[m])\odF[m]\tilde{\Pi_0}\ddl
+\]
+
+\[
+(I-\Pi[m])\odF[m]\tilde{\Pi_0} = (I-\Pi[m])\odF[m]\tilde{\Pi_1}\tilde{\Pi_0} \mbox{ mod } OPS^{-\infty}
+\]
+
+\[
+= (I-\Pi[m])\Pi_1[m]\odF[m]\tilde{\Pi_0} \mbox{ mod } OPS^{-\infty} \in OPS^{-\infty}
+\]
+
+}
+\only<7>{
+\[
+(I-\Pi[m])\Na = \Na[m](I-\bar{\Pi}[m]) \mbox{ mod } OPS^{-\infty}
+\]
+
+ess supp $\bar{\Pi}$ same as $\Pi$ and $\Pi-\bar{\Pi} \in OPS{-1}$, 
+
+\[
+= \Na^{\dagger}[m](I-\Pi[m])\odF[m]\tilde{\Pi_0}\ddl + R[m]\dom = \tilde{R}[m] \ddl 
+\]
+
+$R[m] \in OPS^{-1}$, $\tilde{R}[m]$ smoothing $\Rightarrow$
+
+\[
+\dom = \Pi[m]\dom + R[m]\dom+ \tilde{R}[m] \ddl 
+\]
+}
+\only<8>{
+$\Rightarrow$ for properly filtered data = $\tilde{\Pi}_0\ddl$, $m \in U$
+
+\[
+\Na[m]\dom[m] \approx [(I + \alpha^2A^{\dagger}A) + (\odF[m]\oF[m]-I)(\Pi[m] + R[m]]\dom[m] + \tilde{R}[m] \ddl 
+\]
+
+\[
+= (I + \alpha^2A^{\dagger}A + S[m])\dom[m], S \in OPS^{-\infty}
+\]
+
+\[
+\Rightarrow \dom[m] = (I + \alpha^2 A^{\dagger}A)^{-1}(\odF[m]\tilde{\Pi}_0\dd -S[m]\dom[m]) 
+\]
+
+exactly relation obtained on p. 13 in asymptotically unitary case, rest of construction of stable gradient approximation goes as before
+}
+\only<9>{
+Remarks:
+
+1. stable gradient construction requires $(I-\Pi)\dom_a$ uniformly smooth - consequence of Krylov iteration
+
+2. building $\tilde{\Pi}_0$, in theory:
+\begin{itemize} 
+\item data mute $\phi$ implicit in definition $\oF$ - defines aperture $\Gamma$ = takeoff data for rays passing over acquisition set in support of $\phi$ 
+\item Choose $m_0v \in M$ (current iterate), $U$ = nbhd of $m_0$, $\phi_0$ so that 
+\begin{itemize}
+\item $\phi=1$ in supp $\phi_0$, 
+\item any ray for $m_0$ passing over supp $\phi_0$ $\Rightarrow$ rays for $m\in U$, nearby data, pass over supp $\phi$
+\end{itemize}
+\item $\tilde{\Pi}_0 = \phi_0\odF[m_0]\oF[m_0]\phi_0$
+\end{itemize}
+}
+\only<10>{
+3. building $\tilde{\Pi}_0$, in practice:
+\begin{itemize}
+\item choose data cutoffs $\phi, \phi_0$ so that $\phi=1$ in supp $\phi_0$
+\item $m_0$ = current VPM outer iterate, $U$ {\em implicitly} defined, don't need to describe explicitly
+\item update $\tilde{\Pi}_0$ every outer iteration - get stable approx gradient, guaranteed decrease of filtered-data objective for short enough step
+\end{itemize}
+
+Similar dynamic optimization needed for all problems with model-dependent aperture - i.e. all problems!
+}
+\end{frame}
+
+\section{Solution: $F$ is microlocally unitary on physical subspace}
+\begin{frame}
+Example: subsurface offset (Hou \& S., 15, 17): $\odF\oF$ is $\Psi$DO, order = 0
+
+symbol = $1 + O(|h|)$ in DSR migration aperture (conic set = union of source, receiver rays passing over point in extended subsurface and never turning horizontal)
+
+$\Rightarrow$ $\odF\oF = I + S$, $S$ = $\Psi$DO order -1 microlocally over $\{h=0\}$
+
+Proposed solution: combine method of last section w Lei Fu thesis technique for shrinking range of $h$ dynamically along with wavelength, control norm of $D\oF$ - once again dynamic optimization
+
+Details - stay tuned
+\end{frame}
+
+
+\end{document}
+

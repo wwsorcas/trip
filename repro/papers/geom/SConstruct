@@ -1,0 +1,22 @@
+from rsf.tex import *
+
+End(
+#options='manuscript',
+lclass='georeport',
+
+use='amsmath,setspace,wasysym,graphicx,float,algorithm,algpseudocode',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bk}{\mathbf{k}}
+\newcommand{\dv}{\delta v}
+''',
+color='ALL'
+)
+
+
+
+
+

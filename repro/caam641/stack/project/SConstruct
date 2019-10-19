@@ -1,0 +1,367 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+import math
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+suplane         = os.path.join(CWPROOT,'bin/suplane')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+MYAPPS          = os.getenv('MYAPPS')
+explref         = os.path.join(MYAPPS,'trip/iwave/explref/main/explref.x')
+
+# files from basic: bp05103040.su, paracdpf.su, paravintz.rsf
+# zero phase bandpass filter a la Jie
+# stack masquerading as zero-offset data
+PSDATA = 'paracdp.su'
+DATA = 'parastackf.su'	
+VELO = 'paravintz.rsf'
+VBIN = 'paravintz.bin'
+IMAGE= 'parapspif.rsf'
+BASIC='../../basic/project' 
+
+if not os.path.exists(BASIC):
+   print 'you must install basic on the same level as'
+   print 'the parent directory (born) to build this project'
+   Exit(1)
+else:
+   for i in [PSDATA, DATA, VELO, VBIN, IMAGE]:
+       SRC = os.path.join(BASIC,i)
+       if not os.path.exists(SRC):
+           print 'you must build the target ' + SRC
+	   print 'before building this project'	
+	   Exit(1)
+       Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+	  
+#       if os.path.exists(SRC):	
+#       	  Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+#       else:
+#          Flow(i,None,
+#	       'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
+#	       myscons + ' ' + i + '; cd ' + 
+#	       thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+
+# clean up stack - remove redundant traces, compute midpoint and assign to gx,
+# set sx=0 so it's treated as one shot
+Flow('parastackfix.su','parastackf.su',
+     suchw + ' key1=gx,sx key2=gx,sx key3=sx,sx ' + 
+     ' a=0,0 b=0.5,0 c=0.5,0| ' + sushw + ' key=scalel,scalco a=0,0')
+
+# new pspi based on filtered data
+Flow('parastackfixagc.su','parastackfix.su', sugain + ' agc=1')
+Flow('parastackfixagcfilt.su','parastackfixagc.su',sufilter + ' f=2,5,20,25')
+
+# Gazdag PSPI poststack depth migration
+Flow('vtransp.bin','paravintz.bin',transp + ' n1=401')
+Flow('parapspifixagcfilt.su', ['parastackfixagcfilt.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCES[1]} nz=401 dz=10 dx=12.5 tmpdir=/var/tmp')
+Flow('parapspifixagcfilt','parapspifixagcfilt.su','suread endian=0 read=data|put d1=10 unit1=m d2=12.5 unit2=m o2=1617.5')
+
+# change units to m/ms = km/s in interval velocity 
+Flow('paravintzmms', ['paravintz.rsf','paravintz.bin'], 'add scale=0.001')
+
+# square to form bulk mod - here rho=1 gm/cc all wet
+Flow('paracsq','paravintzmms','add mode=p ${SOURCES[0]} |put data_type=bulk')
+Flow('paracsqer','paracsq','add scale=0.25')
+
+# unit buoyancy
+Flow('unitbuoy','paracsq',
+     'add scale=0.0 | add add=1.0')
+     
+# exploding reflector modeling
+Flow(['expldata.su'],['paracsqer','unitbuoy','parapspifixagcfilt','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector cg inv 1 it nmo bg
+Flow(['explnmo1it'],['paracsqer','unitbuoy','parapspifixagcfilt','parastackfixagcfilt.su'],
+     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} explref_inv=${TARGETS[0]}
+     data_p=${SOURCES[3]}
+     order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 MaxIter=1 outfile="cgrec.txt"
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector cg inv 6 it nmo bg
+Flow(['explnmo6it'],['paracsqer','unitbuoy','parapspifixagcfilt','parastackfixagcfilt.su'],
+     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} explref_inv=${TARGETS[0]}
+     data_p=${SOURCES[3]}
+     order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 MaxIter=6 outfile="cgrec.txt"
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, nmo v, refl from 1 its cg
+Flow(['expldatanmo1it.su'],['paracsqer','unitbuoy','explnmo1it','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, nmo v, refl from 6 its cg
+Flow(['expldatanmo6it.su'],['paracsqer','unitbuoy','explnmo6it','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# residual
+Flow('resdatanmo6it.su',['expldatanmo6it.su','parastackfixagcfilt.su'],
+     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+
+# exploding reflector migration, nmo model
+Flow(['reflnmo'],['paracsqer','unitbuoy','parapspifixagcfilt','parastackfixagcfilt.su'],
+     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${TARGETS[0]} data_p=${SOURCES[3]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 adjoint=1
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+
+# near offset data
+Flow('paracdpnearoff.su', 'paracdp.su', suwind + ' key=offset min=-270 max=-260 tmax=3')
+Flow('paracdpnearoffagc.su', 'paracdpnearoff.su', sugain + ' agc=1')
+
+# pulse rad deg
+RAD00 = str(0.0)
+RAD05 = str(math.pi*5.0/180.0)
+RAD10 = str(math.pi*10.0/180.0)
+RAD15 = str(math.pi*15.0/180.0)
+RAD45 = str(math.pi*45.0/180.0)
+RAD90 = str(math.pi*90.0/180.0)
+Flow('pulse00',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD00 + ')*x1-sin(' + RAD00 + ')*x2)))"')
+Flow('pulse05',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD05 + ')*x1-sin(' + RAD05 + ')*x2)))"')
+Flow('pulse10',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD10 + ')*x1-sin(' + RAD10 + ')*x2)))"')
+Flow('pulse15',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD15 + ')*x1-sin(' + RAD15 + ')*x2)))"')
+Flow('pulse45',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD45 + ')*x1-sin(' + RAD45 + ')*x2)))"')
+Flow('pulse90',None,'makevel n1=401 n2=2142 d1=10 d2=12.5 o2=1617.5 dlens=2000 tlens=500 x1lens=2000 x2lens=10000 v000=0 vlens=1.0 |put o2=1617.5 | math output="input*(cos(0.05*(cos(' + RAD90 + ')*x1-sin(' + RAD90 + ')*x2)))"')
+
+# exploding reflector modeling, reflectivity = pulse00
+Flow(['pulsedata00.su'],['unitbuoy','unitbuoy','pulse00','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, reflectivity = pulse05
+Flow(['pulsedata05.su'],['unitbuoy','unitbuoy','pulse05','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, reflectivity = pulse10
+Flow(['pulsedata10.su'],['unitbuoy','unitbuoy','pulse10','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, reflectivity = pulse15
+Flow(['pulsedata15.su','pulsemovie15','pulsevz15.su'],['unitbuoy','unitbuoy','pulse15','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[2]} && ' +	
+     'spray axis=3 n=25 o=0 d=100 < ${SOURCES[0]} | ' +
+     'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]}
+     data_v0=${TARGETS[2]} movie_p=${TARGETS[1]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector migration, data = pulsedata15
+Flow(['pulsemig15'],['unitbuoy','unitbuoy','pulse15','pulsedata15.su'],
+     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +	
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${TARGETS[0]} data_p=${SOURCES[3]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 adjoint=1
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+     
+# exploding reflector modeling, reflectivity = pulse45
+Flow(['pulsedata45.su','pulsemovie45'],['unitbuoy','unitbuoy','pulse45','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +	
+     'spray axis=3 n=31 o=0 d=100 < ${SOURCES[0]} | ' +
+     'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]} movie_p=${TARGETS[1]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# exploding reflector modeling, reflectivity = pulse90
+Flow(['pulsedata90.su','pulsemovie90'],['unitbuoy','unitbuoy','pulse90','parastackfixagcfilt.su'],
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +	
+     'spray axis=3 n=25 o=0 d=100 < ${SOURCES[0]} | ' +
+     'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
+     explref + ' CWPROOT=' + CWPROOT + ' ' +
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     explref=${SOURCES[2]} data_p=${TARGETS[0]} movie_p=${TARGETS[1]}
+     deriv=0 order=2 cfl=0.5 cmin=0.5 cmax=2.5 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='$TARGET.work')
+
+# background bulk mod
+Result('paracsqer','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
+
+# pspi image
+Result('parapspifixagcfilt','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5')
+
+# stack, agc, filter
+Result('parastackfix','parastackfix.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
+Result('parastackfixagc','parastackfixagc.su', 'suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
+Result('parastackfixagcfilt','parastackfixagcfilt.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=3')
+Result('parastackfixagcfilt2','parastackfixagcfilt.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=3')
+
+# agc'd near offset
+Result('paracdpnearoffagc','paracdpnearoffagc.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
+Result('paracdpnearoffagc2','paracdpnearoffagc.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
+
+# exploding reflector data
+Result('expldata','expldata.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
+
+# cg 1 it image
+Result('explnmo1it','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5')
+
+# cg 6 it image
+Result('explnmo6it','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5')
+
+# 6 iteration sim data
+Result('expldatanmo6it','expldatanmo6it.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=3')
+
+#rtm image
+Result('reflnmo','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5')
+
+# pulse data 00 deg
+Result('resdatanmo6it','resdatanmo6it.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=3')
+
+# pulse 00 deg
+Result('pulse00','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | window min2=9000 max2=13000  | grey xinch=10 yinch=5')
+
+# pulse data 00 deg
+Result('pulsedata00','pulsedata00.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=.003')
+
+# pulse 05 deg
+Result('pulse05','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | window min2=9000 max2=13000 | grey xinch=10 yinch=5')
+
+# pulse data 05 deg
+Result('pulsedata05','pulsedata05.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=.003')
+
+# pulse 10 deg
+Result('pulse10','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | window min2=9000 max2=13000 | grey xinch=10 yinch=5')
+
+# pulse data 10 deg
+Result('pulsedata10','pulsedata10.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=.003')
+
+# pulse 15 deg
+Result('pulse15','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa| window min2=7000 max2=15000  | grey xinch=10 yinch=5')
+
+# pulse data 15 deg
+Result('pulsedata15','pulsedata15.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | window min2=7000 max2=15000 |grey xinch=10 yinch=5 clip=.003')
+
+# pulse migration 15 deg
+Result('pulsemig15','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa| window min2=7000 max2=15000  | grey xinch=10 yinch=5')
+
+# pulse 45 deg
+Result('pulse45','put d1=10 label1="Depth" unit1=m d2=12.5 o2=1617.5 label2="Midpoint" unit2=m unit=GPa | window min2=7000 max2=15000 | grey xinch=10 yinch=5')
+
+# pulse data 45 deg
+Result('pulsedata45','pulsedata45.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | window min2=7000 max2=15000 | grey xinch=10 yinch=5 clip=.003')
+
+# pulse 90 deg
+Result('pulse90','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m unit=GPa | grey xinch=10 yinch=5')
+
+# pulse data 90 deg
+Result('pulsedata90','pulsedata90.su','suread endian=0  read=data | put label1=Time label2=midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 clip=.003')
+
+
+End()

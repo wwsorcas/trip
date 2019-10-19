@@ -1,0 +1,1834 @@
+\title{Solution of an Inverse Problem for the Wave Equation by means of the Source-Receiver Extension}
+%\author{Guanghui Huang and William. W. Symes}
+
+%\address{The Rice Inversion Project,
+%Rice University,
+%Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}
+
+\author{
+Guanghui Huang\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt ghhuang@rice.edu}} \ and \ William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Huang and Symes}
+
+\righthead{Source-Receiver Extension}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+  Iterative gradient-based minimization of mean-square misfit often
+  results in suboptimal estimation of sound speed from remote
+  recordings of waves. Model extension, that
+  is, enlargement of the model space (domain of the simulation
+  operator), coupled with a penalty for deviation from the original
+  domain, permits descent methods to converge to a global minimizer of
+  mean-square misfit. This paper applies the model extension concept
+  to a simple transmission inverse problem for the wave equation modeled on crosswell
+  tomography. The model extension studied here permits the energy
+  source to depend source and receiver coordinates, whereas the
+  modeled physics dictates that all energy sources should be the same
+  (and given a priori). Minimization of a suitable penalty for
+  deviation from the prescribed source model drives the sound velocity
+  towards a global solution of the least squares data fit problem. An
+  analysis based on geometric optics explains why the straightforward
+  least-squares formulation fails to yield a useful algorithm, and why the
+  extended formulation succeeds. The analysis requires the absence of
+  caustics; we show that a substantial modification of the algorithm
+  is required if these are present, and suggest such a modification
+  for which numerical experiments provide some evidence of
+  effectiveness.
+\end{abstract}
+
+\section{Introduction}
+Estimation of sound speed in the wave equation from by least-squares
+fitting of time-like seismic trace data (``full waveform inversion''
+or FWI, in the seismic literature) has demonstrated potential to
+produce highly detailed maps of the earth's sound speed
+distribution. As an optimization problem, however, FWI is notoriously
+difficult. Many realistic examples, using both synthetic and field
+data, appear to show that iterative descent methods tend to stagnate
+quite far from any global minimizer, at points in parameter space
+having little to do with any accurate rendition of earth
+structure. This commonly-observed stagnation has led many authors to
+infer the existence of local minimizers of the least-squares
+objective, caused by serendipitous partial fits of oscillatory data,
+better than those produced by any nearby model, and preventing
+improvement of fit by local optimization. A combination of data accuracy
+at sufficiently low frequency and sufficiently accurate initial
+velocity estimates will overcome this obstacle, but such combinations
+are not always available, and in any case difficult to verify.
+% This ``cycle
+%skipping'' phenomenon has been conclusively demonstrated in only
+%trivial cases, but is widely believed to be generic.  In any case,
+%premature stagnation of iterative optimization methods is the biggest
+%impediment to routine use of least-squares data fitting. It may be
+%overcome by use of either sufficiently low-frequency data that the
+%correct cycles in the simulated data overlap those in the measured
+%data for reasonable initial estimate of sound velocity, or
+%sufficiently accurate initial estimate that the correct cycles overlap
+%for the measured frequency range. However frequency content of seismic
+%data is limited by experimental design, and a priori knowledge of
+%earth structure on the required scales is limited. It is not
+%necessarily possible to achieve the right combination of frequency
+%content and initial sound velocity accuracy, or even to know whether
+%it has been achieved. 
+See \cite{VirieuxOperto:09} for a good overview
+%of FWI as currently construed by industrial and academic
+seismologists.
+
+This paper explores another solution of the FWI stagnation problem,
+via extending the modeling operator to a larger  {\em infeasible} domain, so that the
+data is easy to fit (in principle perfectly) by local optimization. We discuss the structure of FWI, and of its
+{\em source-receiver} extension, for a simple acoustic transmission
+problem, idealizing crosswell waveform tomography. Extended
+(infeasible) solutions must be driven towards feasibility somehow.
+We introduce measures of infeasibility, in the form of {\em
+  annihilation} operators, the kernels of which are the original (feasible, physical)
+domain of the modeling operator. We use these operators to define
+auxiliary constrained minimization problems, and show that these
+problems are convex over much larger domains than is the feasible
+least squares problem (FWI).
+
+The data of the idealized crosswell tomography problem
+are functions of time, representing the acoustic
+fields recorded at receivers position on a line in the plane. Source
+processes generating these fields lie on another line in the plane,
+and the sound velocity of the region between the lines is to  be
+recovered from the data. It is assumed a priori that source processes
+differ only by position on the line, and that this unique source
+process is known. This assumption is an idealization: the effective
+source process in actual crosswell surveys may well change from one
+source position to another, even if the energy source apparatus
+remains the same, due to coupling with the rock formation and other
+near-field effects. Also, this source is seldom measured directly in
+any usable way. For the purpose of this paper, however, we set aside
+these issues.
+
+The {\em source-receiver} extension discussed here models each
+function of time, recording the acoustic field for each source and
+receiver posiiton, as resulting from an independent source
+process. That is, the source processes are permitted to depend on both
+source and receiver coordinates, whereas physically they should be
+independent of these coordinates. The larger model space consists of
+the sound velocity field together with a set of source/receiver
+dependent filters, one for each time function (``trace'') in the
+data), which modify the output of the simulation operator at each
+source/receiver combination. Unsurprisingly, the addition of so many
+parameters to the domain of the modeling operator makes data fitting
+considerably easier - in fact, for essentially any distribution of
+sound velocity, it is possible to adjust the filters provided by the
+extension to fit the data. Of the myriad possible measures of
+non-physicality, we single out two for careful study - the mean square
+of the image under multiplication by $t$, and the mean square of the derivative with respect to source and
+receiver coordinates. Forcing either
+quantity toward zero, while maintaining data fit, implicitly recovers a minimizer of the original
+mean-square misfit function, for model-consistent data, provided that
+none of the velocity fields encountered along the way produce
+conjugate points, or caustics. Our main result in this case is that
+the objective functions described above closely approximate objectives
+for the traveltime inverse problem (``tomography''), hence inherit
+their good properties, including in some cases global convergence.  
+
+In the presence of caustics, the close relation between tomography and
+the source-receiver extended source inverse problems breaks down. We describe the
+mechanism of this failure: it results from implicit attempts to match
+different branches of traveltime. We show how to overcome this
+problem, at least to some extent, via exponential weighting of data, a
+technique introduced by Pratt (REF) to force emphasize fitting of
+first-arriving waveforms in FWI.  
+
+\section{A model problem based on crosswell tomography'}
+
+Crosswell seismic tomography  aims to  estimate acoustic structure between
+two wells from seismic signals (``traces'') recorded in one of the wells due to seismic
+energy sources in the other. The simplest useful realization of this
+inverse problem uses linear acoustics to describe the generation and
+propagation of seismic waves in the earth between the source and
+receiver wells. In this paper we adopt the further simplifying
+assumption that material density is constant and can be absorbed in
+other quantities. The remaining parameter of linear acoustics is the
+sound velocity, which varies with position, to reflect the
+spatial heterogeniety of sedimentary rocks. With these assumptions,
+crosswell tomography seeks to recover the sound velocity, or an
+equivalent quantity, in the region
+between the wells from measurements of acoustic fields at the wells.
+
+Linear acoustics is a gross approximation to actual seismic wave
+physics. We will make quite a few other approximations and
+idealizations. The discussion section will offer some thoughts about
+how important or limiting these assumptions are, and what prospects
+exist for transcending them. 
+
+To describe the problem setting more precisely, we introduce
+notation that will be used throughout the discussion. Coordinates in
+$\bR^3$ are $\bx=(x,y,z)$, $z$ representing depth. We assume that the
+source and receiver wells are 
+perfectly straight and vertical line segments in $\bR^3$(certainly an
+idealization!), lying in the plane $y=0$: the
+source ``well'' $W_s$and receiver ``well'' $W_r$ are defined by the
+limit depths $z_s^{\rm min}$,$z_s^{\rm max}$,$z_r^{\rm min}$,$z_r^{\rm
+  max}$: 
+\begin{eqnarray}
+\label{eqn:wells} 
+W_s & = & \{\bx_s = (x_s,0,z_s): z_s^{\rm min} \le z_s \le z_s^{\rm 
+          max}\} \nonumber \\
+W_r & = & \{\bx_r = (x_r,0,z_r): z_r^{\rm min} \le z_r \le z_r^{\rm 
+          max}\} 
+\end{eqnarray}
+As we will frequently need to refer to the depth ranges in the wells,
+introduce
+\begin{eqnarray}
+\label{eqn:depths} 
+Z_s & = & Z_s\} \nonumber \\
+Z_r & = & Z_r\} 
+\end{eqnarray}
+We idealize energy sources as isotropic point radiators. A radiator at
+$\bx=\bx_s$ appears as the right-hand side in the acoustic wave
+equation, of the form $\delta(\bx-\bx_s)f(t)$. 
+The function $f(t)$ is causal (vanishes on a negative half-axis, that
+is,  for $t<<0$), and has units of
+mass/time/time. The idealized model posits that every
+source is has the same mechanism, modeled by the
+isotropic point radiator with the same time dependence $f$, differing only in
+depth $z=z_s$ in the source well.
+
+Slowness (reciprocal velocity) turns out to be a more convenient
+choice than velocity to represent the spatially varying acoustic
+properties of the interwell material. We denote the slowness by $m$.
+For physical reasons, $m$ should be positive and bounded uniformly above and 
+below, say by $0 < m_{\rm min} < m_{\rm max}$. We assume that the
+material is {\em acoustically transparent}, that is, generates no
+reflected waves of significant energy in the seismic band. The geometric
+optics approximation, to be summarized below, shows that a convenient
+mathematical proxy for transparency is the assumption that $m$is
+smooth, with derivatives up to
+order 2 bounded by another constant $\mu > 0$. These conditions are
+summarized in the definition of the feasible set of slowness models $M$:
+\begin{equation}
+\label{eqn:vfeas}
+M=\{m \in C^{\infty}(\bR^3): m_{\rm min} < m(\bx) < m_{\rm max},
+|D^{\alpha}m(\bx)| \le \mu,
+\bx \in \bR^3, |\alpha| \le 2\}
+\end{equation}
+
+The pressure field 
+$p(\bx,t;\bx_s)$ due to the isotropic point radiator source at 
+$\bx_s=(x_s,0,z_s)$, with time dependence $f(t)$, is the solution of the initial value problem 
+\begin{eqnarray}
+\left(m^2 \frac{\pa^2 p}{\pa t^2} - \nabla^2 p\right)(\bx,t) &=&
+     \delta(\bx-\bx_s) f(t), \nonumber \\
+ p&=&0, \, t<<0 \label{eqn:pressure}
+\end{eqnarray}
+We will establish the existance, uniqueness, and essential properties
+of solutions $p$ in the next section. Proceeding formally for the moment,
+define the modeling operator $S[m]$ to relate the slowness $m$ and
+source function $f$ to the pressure field at the receiver locations
+$\bx_r$ and source locations $\bx_s$, for a finite time interval $0
+\le t \le t^{\rm max}$. Since the horizontal coordinates of sources and
+receivers are fixed as part of the idealized cross-well acquisition
+geometry, we regard the output of $S[m]$ as a function of $z_s,z_r,$
+and $t$, with domain
+\begin{equation}
+\label{eqn:omdef}
+\Omega = Z_r\times Z_s \times \bR
+\end{equation}
+ A smooth cutoff factor provides
+convenient way to incorporate the limited time duration of measured
+signals, and to smoothly taper the measured data to zero near the
+boundary of the measurement domain, with favorable signal-processing
+consequences. We denote this factor by
+\begin{equation}
+\label{eqn:wdef}
+w \in C_0^{\infty}( \Omega): \,{\rm supp}\,w \subset 
+Z_r\times Z_s \times (0,t^{\rm max}).
+\end{equation}
+Proceeding formally, define
+\begin{equation}
+\label{eqn:sdef}
+S[m]f(z_r,t;z_s) = w(z_r,t;z_s) p(\bx_r,t;\bx_s), 
+\end{equation}
+The crosswell waveform inversion problem, in the highly idealized form 
+studied here, is: given data $d$, a function of on $\Omega$,
+find slowness $m \in M$ and source function $f$ such that 
+$S[m]f \approx wd$. 
+
+
+\section{Properties of the Modeling Operator}
+
+The problem formulation just stated begs several questions. For
+example, what sort of functions $d$, $f$, and $m$ should be admitted?
+Under what circumstances is the restriction of the pressure field $p$
+to the submanifold $W_s \times W_r \times \bR$ well-defined?
+
+For numerical convenience, and on physical grounds
+\cite[]{SantosaSymes:00}, $f$ and $d$ should be square-integrable and
+the natural (and conventional) measure for the data misfit $S[m]f-d$
+is $L^2$. Indeed, iff $m \in M$ is constant, $f \in C_0^{\infty}(\bR)$,
+$\bx \ne \bx_s$, then
+\be\label{eqn:cv} 
+p(\bx,t;\bx_s) = 
+\frac{f(t-mr)}{4\pi r}, \,\,r=|\bx-\bx_s|.  
+\ee 
+The distribution on the right-hand side of equation \ref{eqn:cv} has a
+well-defined restriction to $\bx=\bx_r$, for reasons to be reviewed
+shortly. so that $S[m]$ given by
+equation \ref{eqn:sdef} is well-defined, and extends continuously to a
+map $f \in L^2(\bR) \mapsto S[m]f \in L^2(\bar{\Omega})$. 
+
+More generally, 
+
+\begin{theorem}
+\label{thm:trace}
+For any $m \in M$, $f \in {\cal E}'(\bR)$, there exists a unique solution $p \in {\cal D}'(\bR^4)$ of problem
+\ref{eqn:pressure}. Define $\chi_{\bx_r}: \bR \rightarrow \bR^4$ by
+$\chi_{\bx_r}(t) = (\bx_r,t)$. For any $\bx_r \in \bR^3\setminus
+\{\bx_s\}$ , the map $f\mapsto \chi_{\bx_r}^*p$ is continuous: ${\cal E}'(\bR) \rightarrow
+{\cal D}'(\bR)$. Denote by $G(\cdot,\cdot;\bx_s) \in {\cal D}'(\bR^4)$
+the solution of the initial value problem
+\ref{eqn:pressure} with $f = \delta$. Then $\chi_{\bx_r}^*p =
+(\chi_{\bx_r}^*G(\cdot,\cdot;\bx_s))*f =
+\chi_{\bx_r}(G(\cdot,\cdot;\bx_s)*(\delta_{\bR^3}\otimes f))$. 
+\end{theorem}
+\begin{proof}
+  A proof of the existence and uniqueness of causal distribution
+  solutions to \ref{eqn:pressure} may be found in \cite{Lax:PDENotes},
+  Chapter 6. Alternatively, since $\delta(\cdot-\bx_s)\otimes f \in
+  H^s(\bR^4)$ for some $s < -2$, \cite{Tay:81} 2.1-2.2 shows
+  how to construct local solutions, which can be patched together
+  taking advantage of the uniformly bounded speed of propagation
+  implicit in $m \in M$. From the definition (\cite{Tay:81}, Chapter VI), the wave front set
+  $WF(p)$ is contained in the set
+\[
+C \cup \Pi^{-1}({\{\bx_s\} \times \bR})
+\]
+in which $C$ is the characteristic variety of the wave operator,
+\begin{equation}
+\label{eqn:charvar}
+C[m] = \{(\bx,t,\xi,\omega) \in T^*(\bR^4): m^2(\bx)\omega^2 =
+|\xi|^2\}
+\end{equation}
+and  $\Pi: T^*(\bR^4) \rightarrow \bR^4$ is the fiber projection.
+
+The normal bundle of $\{\bx_r\} \times \bR$ consists of covectors with
+coordinates $(\bx_r,t,\xi,0)$, hence has trivial intersection with
+$C[m]$. Therefore the restriction of $p$ to $\{\bx_r\} \times \bR$ is
+well-defined (\cite{Dui:95}, Proposition 1.3.3), as is the pull-back
+by $\chi_{\bx_r}$. Convolution in time
+with $f$ is by definition convolution in space-time with
+$\delta_{\bR^3} \otimes f \in {\cal E}'(\bR^4)$, a continuous map on ${\cal
+  D'}(\bR^4)$,  and this latter convolution commutes with
+the wave operator in \ref{eqn:pressure}. This convolution also maps
+the right-hand side for $G$ to the right-hand-side for $p$.
+\end{proof}
+
+\begin{rem} $G$ is of course the causal Green's function, or distribution
+  kernel of the retarded fundamental solution \cite[]{CourHil:62}.
+\end{rem}
+
+An immediate consequence of this result is a proper definition of the
+map $S[m]$.
+
+\begin{theorem}
+\label{thm:gather}
+Denote by $\Delta = \{(\bx,\bx): \bx \in \bR^3\}$ the diagonal. With
+notation as in Theorem \ref{thm:trace}, the map $(\bR^3 \times \bR^3)
+\setminus \Delta \times {\cal E}'(\bR) \rightarrow {\cal D}'(\bR)$ defined by $(\bx_r,\bx_s,f)
+\mapsto \chi_{\bx_r}^*p(\cdot,\cdot;\bx_s)$ is continuous. 
+\end{theorem}
+\begin{proof}
+The right-hand side of \ref{eqn:pressure} is a continuous
+${\cal E}'(\bR^4)$- valued function of $\bx_s$. Denote by $N$ the
+normal bundle of the fibration $\{\{\bx\} \times \bR: \bx \in \bR^3\}$.
+Denote by $\Gamma$ a closed conic submanifold of
+$T^*(\bR^4)$ containing $C$ in its interior. chosen so that $\Gamma
+\cap N=\{0\}$. The solution of the wave equation is a continuous
+${\cal D}'(\bR^4)$-valued function of the ${\cal E}'(\bR^4)$- valued
+right-hand side. Therefore solution of \ref{eqn:pressure} is a continuous
+${\cal D}'(\bR^4)$-valued function of $\bx_s\in \bR^3$ and $f\in {\cal
+  E}'(\bR)$, and also continous in the sense of 
+${\cal D}_{\Gamma}'(\bR^4\setminus \{\bx_s\})$ as a consequence of the
+propagation of singularities theorem. Since $N \cap \Pi^{-1}(\bx_r) =\{\bx_r\} \times \bR$,
+$\chi_{\bx_r}^*$ is continuous: $\bR^3 \times {\cal D_{\Gamma}}'(\bR^4) \rightarrow
+{\cal D}'(\bR)$. Putting all of this together, obtain the 
+statement of the theorem. 
+\end{proof}
+
+Theorem \ref{thm:gather} permits a precise rewrite of the
+formal definition \ref{eqn:sdef}: define $S[m]: {\cal E}'(\bR)
+\rightarrow C(Z_r \times [z_x^{\rm min},z_s^{\rm max}], {\cal E}'(\bR))$ by 
+\[
+S[m]f(z_r,\cdot;z_s) = w(z_r,\cdot;z_s) \chi_{\bx_r}^*p(\cdot,\cdot;\bx_s)
+\]
+
+To formulate the inverse problem as envisioned in the last section, an
+analogous result is needed with $L^2$ replacing ${\cal E}'$. This step
+requires the introduction of geometric optics.
+
+Recall that the rays of geometric optics are trajectories
+$(X(t),P(t))$ in $\bR^3 \times (\bR^3 \setminus \{0\})$ satisfy 
+\begin{eqnarray}
+\label{eqn:ham}
+\frac{dX}{dt} &=&m(X)^{-2}P,\nonumber \\
+\frac{dP}{dt} &=&\nabla \log m(X), \nonumber\\
+|P| &=& m(X).
+\end{eqnarray}
+The condition $m \in M$ implies that trajectories exist that solve the
+first two conditions in \ref{eqn:ham} for all $t>0$, for any initial
+values of $X$ and $P$. The third condition is compatible with the
+other two: if the initial $X$, $P$ satisfy it, then it is satisfied
+along the entire ray.
+
+Define the {\em geodesic exponential map}
+\[
+\exp(t,P_s; \bx_s) = X(t)
+\]
+where $(X(t),P(t))$ solves \ref{eqn:ham} with $X(0)=\bx_s$,
+$P(0)=P_s, |P_s|=m(\bx_s)$: $(t,P_s)$ are {\em
+  geodesic normal coordinates} centered at $\bx_s$. Denote by
+$S_m(\bR^3)$ the sphere bundle defined by the Riemannian metric $m (dx
+\otimes dx + dy \otimes dy + dz \otimes dz)$ defined by the slowness
+$m \in M$. It is a standard
+result that $t^*:S_m(\bR^3) \rightarrow \bR_+$ exists for which
+$\exp$ is a diffeomorphism from 
+\begin{equation}
+\label{eqn:prenorm}
+\tilde{{\cal N}} = \{(\bx_s,t,P_s) \in
+\bR^3 \times \bR_+ \times m(\bx_s)S^2: 0 < t < t^*(\bx,P_s)\}
+\end{equation}
+ onto a punctured
+neighborhood ${\cal N}(\bx_s) \setminus \{\bx_s\}$ of $\bx_s$. A {\em normal neighborhood}
+${\cal N}$ is an open subset of $\bR^3$ for which ${\cal N} \subset
+{\cal N}(\bx)$ for every $\bx \in {\cal N}$. It is also a standard
+result that every point $\bx \in \bR^3$ has a normal neighborhood (\cite{Friedlander:75}, Chapter 2). 
+
+In a normal neighborhood of $\bx_s$, the inverse of the exponential
+map expresses $t$ as a function of $\bx$: this function is the
+{\em travel time} $\tau(\bx,\bx_s)$.
+The travel time is differentiable and satisifies the eikonal equation in the punctured normal
+neighborhood (and in a suitable generalized sense in the entire normal
+neighborhood):
+\begin{eqnarray}
+\label{eqn:eik}
+|\nabla_{\bx} \tau(\bx,\bx_s)|&=&m(\bx), \bx \in {\cal N}, \nonumber \\
+\tau(\bx,\bx_s) & \sim & m(\bx_s)|\bx-\bx_s| \mbox{ as } \bx \rightarrow 
+\bx_s. 
+\end{eqnarray}
+
+A slowness field $m \in M$ satisfies the {\em simple ray geometry}
+hypothesis iff for every $\bx_s \in W_s$, the
+the receiver well $W_r$ is contained in a
+normal neighborhood ${\cal N}(\bx_s)$ centered at $\bx_s$. In this case, there is a common
+neighborhood ${\cal N}$, normal for all points $\bx_s$ in the source
+well and containing the closure of the receiver well.
+
+
+A slowness fails to satisfy simple ray geometry hypothesis if the
+exponential map at some source point $\bx_s$ fails to be a
+diffeomorphism in a neighborhood of the receiver well, by failing to
+be injective, that is, more than one ray (``path'') connects $\bx_s$
+with another point,
+
+In the simple ray geometry case, the Green's function has a useful
+decomposition. 
+
+\begin{theorem}
+\label{thm:simplegreen}
+Suppose that $m$ satisfies the simple ray geometry assumption. Then there exists $t^{\rm max} >
+\max\{\tau(\bx_r,\bx_s): \bx_r \in W_r, \bx_s \in W_s\}$, and 
+functions $a \in C^{\infty}(W_r\times W_s), b\in
+C^{\infty}(W_r,W_s,(0,t^{\rm max})$ so that for
+$\bx_r \in W_r, \bx_s \in W_s, t <t^{\rm max}$,
+\begin{equation}
+\label{eqn:simplegreen}
+G(\bx_r,t;\bx_s) = a(\bx_r,\bx_s)\delta(t-\tau(\bx_r,\bx_s)) + b(\bx_r,t;\bx_s)H(t-\tau(\bx_r,\bx_s)).
+\end{equation}
+\end{theorem}
+\begin{proof}
+The starting point is the parametrix contruction due to Hadamard, as described
+by \cite{Friedlander:75}, Theorem 4.3.2. In the
+notation used here, for $\bx,\bx_s \in {\cal N}$ (a normal
+neighborhood), there exist $U, V \in C^{\infty}({\cal N}\times{\cal N}
+\times \bR)$ so that
+\begin{equation} 
+\label{eqn:parametrix}
+\tilde{G}(\bx,t;\bx_s) = U(\bx,t;\bx_s)\delta^+(t^2-\tau^2(\bx,\bx_s))
++ V(\bx,t;\bx_s)H^+(t^2-\tau(\bx,\bx_s))
+\end{equation}
+Here $\delta^+(t^2-\tau^2)$ is defined as the limit
+\[
+\delta^+(t^2-\tau^2) = \lim_{\epsilon \rightarrow
+  0^+}H(t-\tau)\delta(t^2-\tau^2-\epsilon)
+\]
+The product on the right is well-defined, as the singular supports of
+the factors are disjoint, and picks out the positive-time sheet of the
+distorted hyperboloid $t^2 = \tau^2$. The limit exists in the sense of
+${\cal D}'$.
+
+$\tilde{G}$ is a $C^{\infty}$ parametrix, in the sense that 
+\[
+\left(m\frac{\partial^2}{\partial
+    t^2}-\nabla^2\right)\tilde{G}(\bx,t;\bx_s) =
+\delta(\bx-\bx_s) + R(\bx,t;\bx_s), \,\,R \in C^{\infty}({\cal
+  N}\times{\cal N}\times \bR),\,R=0 \mbox{ for } t<\tau.
+\]
+Define $\tilde{R}$ to be the solution of the initial value problem
+\[
+\left(m\frac{\partial^2}{\partial
+    t^2}-\nabla^2\right)\tilde{R} = -R; \,\,\tilde{R}=0, t<0
+\]
+This problem has a unique $C^{\infty}$ solution. The
+domain-of-dependence property implies that $\tilde{R}=0$ for $t <
+\tau$ also. 
+
+Any singularity of $G$ in ${\cal N}\times{\cal N}\times \bR$ lies
+either on the light cone $t=\tau$ or must occur in $t > t^{\rm
+  max}$. So on ${\cal N}\times{\cal N}\times (0,t^{\rm max})$, 
+\[
+G = \tilde{G} + \tilde{R}.
+\]
+
+Finally, since 
+\[
+\delta^+(t^2-\tau^2) = \frac{\delta(t-\tau)}{2\tau}
+\]
+for $t>0$, or equivalently, $\tau>0$, set $a = U/2\tau, b = V +
+\tilde{R}$ to obtain \ref{eqn:simplegreen}.
+\end{proof}
+
+\begin{rem}
+In the notation used here, 
+\[
+U(\bx,\bx_s) = \frac{m(\bx_s)}{2\pi} + O(|\bx-\bx_s|)
+\]
+so for constant $m$,
+\[
+a(\bx_r,\bx_s) = \frac{m}{4\pi\tau(\bx,\bx_s)} +
+O(1)=\frac{1}{4\pi|\bx-\bx_s|} + O(1)
+\]
+which recovers \ref{eqn:cv} approximately for $\bx_r$ close to $\bx_s$
+- of course, the error term actually vanishes in this case.
+\end{rem}
+
+\begin{cor}
+\label{thm:gosimple}
+Under the assumptions of Theorem \ref{thm:simplegreen}, 
+for $\bx_r \in W_r, \bx_s \in W_s$, and $t < t^{\rm max}$, set $A(z_r,z_s) = a(\bx_r,\bx_s),
+T(z_r,z_s)=\tau(\bx_r,\bx_s), B(z_r,t;z_s) = b(\bx_r,t;\bx_s)$. Then
+$A,T \in C^{\infty}(Z_r \times 
+Z_s)$,
+$B \in \in C^{\infty}(Z_r \times Z_s\times (-\infty,t^{\rm max}))$, $T>0$. For $f \in
+L^2(\bR)$,
+\begin{equation}
+\label{eqn:gosimple} 
+S[m]f (z_r,t;z_s) = w(z_r,t;z_s)\left(A(z_r,z_s)f(t-T(z_r,z_s)) + \int_{T(z_r,z_s)}^{\infty}
+\,ds\,B(z_r,s;z_s)f(t-s)\right). 
+\end{equation}
+\end{cor}
+
+For highly oscillatory $f$, the first term in (\ref{eqn:gosimple}) is much
+larger than the second, and can be taken as a high frequency
+asymptotic approximation of $S[m]f$. 
+
+Analysis of the inverse problem requires some information on 
+the smooth dependence of $S$ on $m$. 
+
+\begin{theorem}
+\label{thm:smdep}
+Denote by $M^k$ be the interior of the closure of $M$ in $C^k({\cal
+  N})$; $M^k$ is defined by the same conditions as $M$ but with
+$C^{\infty}$ replaces by $C^k$.  Then
+\begin{itemize}
+
+\item[1. ] If $N$ is a normal neighborhood for $m_0 \in M^k$,
+  $k \ge 2$, and $\tilde{\cal N}$ is its pre-image under the
+  exponential map for $m_0$ as defined in \ref{eqn:prenorm}, then there is an open neighborhood ${\cal U}$ of $m_0$ in
+  $M^k$ so that ${\cal N}$ is a normal neighborhood for every
+  $m \in {\cal U}$.
+\item[2. ] For ${\cal N}, \tilde{\cal N}$, and ${\cal U}$ as defined
+  in item 1, 
+\begin{equation}
+\label{eqn:expreg}
+\exp \in C^0({\cal U}, C^k(\tilde{\cal N},{\cal N})) \cap C^1({\cal
+  U}, C^{k-1}(\tilde{\cal N},{\cal N}))
+\end{equation}
+\item[3. ] Suppose that the simple ray geometry assumption holds for
+an open set ${\cal U} \subset M^k$ (that is, for every $m \in {\cal
+  U}$ and that ${\cal N}$ is a normal neighborhood for every $m \in
+{\cal U}$ containing $W_r$ and $W_s$. Then $T, A,$ and
+$B$ extend to functions on ${\cal U}$ for $k \ge 2$ so that
+\begin{itemize}
+\item[3.1 ]$T \in C^1({\cal U},C^{k-2}({\cal N}\times{\cal N}))$ 
+\item[3.2 ]$A \in C^1({\cal U},C^{k-2}({\cal N}\times{\cal N}))$ 
+\item[3.3 ]$B \in C^1({\cal U},,C^{k-2}({\cal N}\times{\cal N}\times(-\infty,t^{\rm
+    max})))$
+\item[3.4 ]$S \in C^0({\cal U},{\cal L}_s(L^2(\bR),
+C^0(Z_r\times Z_s))),
+  L^2(\bR))))$
+\item[3.5 ]$S \in G^1({\cal U},{\cal L}_s(H^1_0(\bR),
+C^0(Z_r\times Z_s))),
+  L^2(\bR))))$
+\end{itemize} 
+\end{itemize}
+\end{theorem}
+\begin{proof}
+The items 1., 2., 3.1, 3.2, and 3.3 follow from the standard theorem
+  on continuous dependence of solutions of ordinary differential
+  equations on parameters applied to the Hamiltonian system
+  \ref{eqn:ham}, and to the transport equations defining the functions
+  $U$ and $V$ appearing in the Hadamard construction, and the inverse
+  function theorem applied to the exponential map. Note that $B$ is
+  implicitly extended smoothly to $t < \tau(\bx,\bx_s)$, possible
+  because the intersection of the light cone $t=\tau(\bx,\bx_s)$ with
+  $W_r$ is a smooth curve. In items 3.4 and
+  3.5, ${\cal L}_s({\cal B}_1,{\cal B}_2)$ denotes the topological
+  vector space of continuous linear maps from Banach space
+  ${\cal B}_1$ to Banach space $ {\cal B}_2$, endowed with the strong
+  operator topology, that is, the topology of pointwise
+  convergence. That is, if $m_j \rightarrow m$ in
+  ${\cal U} \subset M^k$, then for each $f \in L^2(\bR)$,
+  $S[m_j]f \rightarrow S[m]f$ in the sense indicated in item
+  3.4. In item 3.5, $G^1$ indicates the class of
+  G\^{a}teaux-differentiable functions: that is, for each $m \in {\cal
+    U}$, there exists a linear map 
+\[
+DS[m]: M^k \rightarrow {\cal L}_s(H^1_0(\bR),
+C^0(Z_r\times Z_s,L^2(\bR))),
+\]
+so that for each $\delta m \in M^k$, $f \in L^2(\bR)$,
+\[
+\|(S[m + h\delta m]-S[m]-hDS[m]\delta m) f \| = o(h) \mbox{ as }
+h\rightarrow 0.
+\]
+Items 3.4 and 3.5 follow directly from the the other
+  conclusions and Corollary \ref{thm:gosimple}.
+\end{proof}
+
+\begin{rem}
+\label{rem:nounif}
+  It is not possible to replace ${\cal L}_s$ with ${\cal L}$, the same
+  vector space of continuous linear maps with the (Banach) topology of
+  uniform convergence, in the statements of items 3.4 and 3.5. To see
+  this, suppose that $m_j \rightarrow m$ in $M^k$. Assume that $m$
+  satisfies the simple ray geometry condition with normal neighborhood
+  ${\cal N}$ containing $W_r$ and $W_s$, and that the sequence
+  $\{m_j\}$ lies inside an open ball ${\cal U}$ sufficiently small
+  that ${\cal N}$ is a normal neighborhood for every member of this
+  sequence. Finally suppose that
+\[
+\inf\{\tau[m_j](z_s,z_r) -\tau[m](z_s,z_r)\}=\epsilon_j > 0.
+\]
+This condition can be arranged, for example, by taking
+$m_j=(1+c2^{-j})m$ for sufficiently small $c>0$. For each $j$, choose
+$f_j \in L^2(\bR)$ so that 
+\[
+\|f_j\|=1,\,\,{\rm supp}\,f_j \subset [0,\epsilon_j/2].
+\]
+Then ${\rm supp}\,f_j(\cdot-\tau[m_j])$ and ${\rm supp}\,f_j(\cdot-\tau[m])$ are
+disjoint. It is easy to see that the integrated term in the expansion
+\ref{eqn:gosimple} tends to zero,  and item 2 above implies that
+$A[m_j] \rightarrow A[m]$, so 
+\[
+\|S[m_j]f_j-S[m]f_j\|^2\rightarrow \|A[m_j]f_j(\cdot-\tau[m_j])\|^2 + \|A[m]f_j(\cdot-\tau[m])\|^2 
+\]
+\[
+\rightarrow 2 \int_{z_r^{\rm min}}^{z_r^{\rm
+    max}}\,dz_r\,\int_{z_s^{\rm min}}^{z_s^{\rm
+    max}}\,dz_s\,|A[m](z_r,z_s)|^2 > 0
+\]
+Thus $S[m_j]$ does not tend to $S[m]$ in operator norm. 
+
+This observation captures a very important characteristic of all
+inverse problems in wave propagation in which wave velocity is an
+unknown: the data prediction map is not uniformly continuous in
+material parameters and source parameters jointly. This fact explains
+the character of the full waveform inversion problem, to be analyzed
+in the next section.
+\end{rem}
+
+\begin{rem}
+\label{rem:derivloss}
+Note that for $m, \delta m \in M^k$, $DS[m]\delta m$ is continuous
+on a smaller domain than is the case for $S[m]$. In fact, it follows
+from Corollary \ref{thm:gosimple} that for $f \in H^1_0(\bR)$,
+\[
+D(S[m]f)\delta m  = w\left(-A[m](DT[m]\delta m)\frac{df}{dt}(t-T[m]) +
+((DA[m]\delta m)\right.
+\]
+\begin{equation}
+\label{eqn:preq}
+\left. -B[m](DT[m]\delta m))f(t-T[m]) + \int_{T(z_r,z_s)}^{\infty} \,ds\,
+(DB[m]\delta m)(s)f(t-s)\right)
+\end{equation}
+This observation shows that the statement of item 5 is sharp.
+\end{rem}
+
+\begin{rem}
+\label{rem:multipath}
+In general, geometric optics predicts more than one traveltime between
+each source and receiver (the multipath case), hence a principal term
+involving multiple shifted copies f. It is possible to show that in a
+subset of $W_r \times W_s$ of second Baire category, smooth travel times
+$T_i$, amplitudes $a_i$, and remainders $B_i$ exist so that
+\begin{equation}
+\label{eqn:gomultipath} 
+S[m]f (z_r,t;z_s) = w(z_r,t;z_s)\left(\sum_{i=0}^NA_i(z_r,z_s)f(t-T_i(z_r,z_s)) + \int_{T_i(z_r,z_s)}^{\infty} 
+\,ds\,B_i(z_r,s;z_s)f(t-s)\right). 
+\end{equation}
+We will not give a detailed justification of this expansion, but will
+note one of its consequences later.
+\end{rem}
+
+\section{Full Waveform Inversion (FWI)}
+
+In view of the mapping property described in the previous section, a
+natural explicit formulation of the inverse problem is via least
+squares: given $d\in L^2(\Omega)$ and $f\in L^2(\bR)$, find $m \in M$ to minimize 
+\be\label{eqn:ls}
+ J_{\rm LS}[m;f,d] =
+\frac{1}{2}\|(S[m]f-d)\|^2.  
+\ee 
+
+The first consequence to draw from the expansion \ref{eqn:gosimple}
+is a very strong limitation on the possible convexity of $J_{\rm
+  LS}$. To state this fact conveniently, introduce a family of source
+functions based on a ``mother'' function $f_1 \in
+C^{\infty}_0(\bR)$, for which
+\begin{equation}
+\label{eqn:mutha}
+\|f_1\|_{L^2(\bR)} = 1.
+\end{equation}
+For $\epsilon>0$, define
+\be\label{eqn:srcfam}
+f_{\epsilon} =
+\frac{1}{\sqrt{\epsilon}}f_1\left(\frac{t}{\epsilon}\right).
+\ee
+
+\begin{theorem}\label{thm:FWIconv}
+Suppose that $k \ge 2$, ${\cal U} \subset M^k$ is open and convex and that the
+simple ray geometry hypothesis (Definition \ref{def:srg}) is satisfied
+at every $m \in {\cal U}$.  Suppose that $m_*, m_0 \in {\cal U}$, and
+for some $\rho < 1$,
+\be\label{eqn:ttgap}
+T[m_*](z_s,z_r) \le \rho T[m_0](z_s,z_r).
+\ee
+ for every $\bx_s \in W_s, \bx_r \in W_r$,  Define $d_{\epsilon} = S[m_*]f_{\epsilon}$. Then there exists
+$\epsilon_*>0$ so that for $0 <\epsilon \le \epsilon_*$, $J_{\rm LS}(\cdot,d_{\epsilon},f_{\epsilon})$
+is {\em not} convex on ${\cal U}$.
+\end{theorem}
+\begin{rem}
+\label{rem:scale}
+The relation \ref{eqn:ttgap} is easy to achieve. If $m_0 \in {\cal U}$ and
+$1-\rho$ is sufficiently small that $m_* = \rho m_0 \in {\cal U}$, then
+\ref{eqn:ttgap} holds.
+\end{rem} 
+\begin{proof}
+It sufficies to show that the function $j:[0,1] \rightarrow \bR$ defined by 
+\[
+j(\sigma) = J_{\rm LS}[\sigma m_* + (1-\sigma)m_0;d_{\epsilon},f_{\epsilon}]
+\]
+is not convex.
+
+The crux of the matter is the representation \ref{eqn:gosimple}. To signify the dependence of the quantities $A, T,$ and $B$ from
+equation \ref{eqn:gosimple} on the slowness field, throughout this
+argument and subsequent discussion we write $A=A[m]$ and so on.
+
+Theorem \ref{thm:smdep} that implies that given $\alpha>0$, there
+exists $\sigma_0 \in [0,1)$ for which 
+\[
+(1+\alpha) \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2.
+\]
+\[
+\ge \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[\sigma m_* +
+(1-\sigma)m_0](z_r,z_s)|^2 
+\]
+\[
+\ge (1-\alpha) \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2.
+\]
+for $\sigma \in [\sigma_0,1]$.
+
+Define $S_0$ to be the first term in the expansion \ref{eqn:gosimple},
+\[
+S_0[m]f(z_r,t;z_s) = A[m](z_r,z_s)f(t-T(z_r,z_s)).
+\]
+Condition \ref{eqn:ttgap} implies that there exists $\epsilon_*>0$,
+depending on $\alpha$, so that if $0 <\epsilon\le \epsilon_*$, then the supports of $S_0[\sigma m_* + (1-\sigma)m_0]f_{\epsilon}$ and
+$S_0[m_*]f_{\epsilon}$ are disjoint if $\sigma_0 \le \sigma \le \frac{1}{2}(1+\sigma_0)$, so
+\[
+\|S_0[\sigma m_* + (1-\sigma)m_0]f_{\epsilon}-S_0[m_*]f_{\epsilon}\|^2 =
+\|S_0[\sigma m_* + (1-\sigma)m_0]f_{\epsilon}\|^2 + \|S_0[m_*]f_{\epsilon}\|^2 
+\]
+\[
+= \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[\sigma m_* + (1-\sigma)m_0](z_r,z_s)|^2 +
+|A[m_*](z_r,z_s)|^2 
+\]
+\begin{equation}
+\label{eqn:orthominus}
+\ge (2-\alpha)\left(\int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2\right) 
+\end{equation}
+Similarly, for $\sigma \in [\sigma_0, \frac{1}{2}(1+\sigma_0)]$,
+\begin{equation}
+\label{eqn:orthoplus}
+\|S_0[\sigma m_* + (1-\sigma)m_0]f_{\epsilon}-S_0[m_*]f_{\epsilon}\|^2 
+\le (2+\alpha)\left(\int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\, \int_{z_s^{\rm
+    min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2\right) 
+\end{equation}
+
+Since $ B[\sigma m_* + (1-\sigma)m_0]$ is uniformly bounded in
+$C^{k-2}$,
+\[
+\sup_{t \in (0,t^{\rm max})} \left|\int_{T(z_r,z_s)}^{\infty}
+  \,ds\,B[\sigma m_* + (1-\sigma)m_0](z_r,s;z_s)f_{\epsilon}(t-s)\right| = O(\sqrt{\epsilon})
+\]
+If $\epsilon_*>0$ is chosen possibly smaller yet, again depending on
+$\alpha$, then for $0 <\epsilon\le\epsilon_*$,
+\[
+\|S[\sigma m_* + (1-\sigma)m_0]f_{\rm epsilon}-S_0[\sigma m_* +
+(1-\sigma)m_0]f_{\rm epsilon}\|^2 
+\]
+\begin{equation}
+\label{eqn:lot}
+\le \alpha \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\,
+  \int_{z_s^{\rm min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2
+\end{equation}
+Combining \ref{eqn:orthoplus} and \ref{eqn:lot} for $\sigma=\sigma_0$, obtain
+\begin{equation}
+\label{eqn:ub}
+\|S[\sigma_0 m_* + (1-\sigma_0)m_0]f_{\epsilon}-S[m_*]f_{\epsilon}\|^2 
+\le (\sqrt{2+\alpha}+2\sqrt{\alpha})^2 \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\,
+  \int_{z_s^{\rm min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2 
+\end{equation}
+Similarly, combining \ref{eqn:orthominus} and \ref{eqn:lot} for
+$\sigma=\frac{1}{2}(1+\sigma_0)$, 
+\[
+\|S[\frac{1}{2}(1+\sigma_0) m_* + (1-\frac{1}{2}(1+\sigma_0))m_0]f_{\epsilon}-S[m_*]f_{\epsilon}\|^2 
+\]
+\begin{equation}
+\label{eqn:lb}
+\ge (\sqrt{2-\alpha}-2\sqrt{\alpha})^2 \int_{z_r^{\rm min}}^{z_r^{\rm max}}\,dz_r\,
+  \int_{z_s^{\rm min}}^{z_s^{\rm max}}\,dz_s\,|A[m_*](z_r,z_s)|^2 
+\end{equation}
+Since 
+\[
+\frac{\sqrt{2-\alpha}-2\sqrt{\alpha}}{\sqrt{2+\alpha}+2\sqrt{\alpha}}
+\rightarrow 1 \mbox{ as } \alpha \rightarrow 0,
+\]
+inequalities \ref{eqn:ub} and \ref{eqn:lb} imply that for $\alpha$
+small enough (and consequenty $\epsilon_*$ small enough,
+\[
+\frac{1}{2}j(\sigma_0) = \frac{1}{2}(j(\sigma_0) + j(1)) <
+j\left(\frac{1}{2}(1+\sigma_0)\right),
+\]
+\end{proof}
+
+\begin{rem} Since 
+\[
+\frac{\int d\omega \omega^2 |\hat{f}_{\epsilon}(\omega)|^2}{\int
+  d\omega |\hat{f}_{\epsilon}(\omega)|^2}
+= \frac{\int dt \left(\frac{df_{\epsilon}}{dt}(t)\right)^2}{\int dt
+  \left(f_{\epsilon}(t)\right)^2}
+\]
+\[
+=\epsilon^{-2}\frac{\int dt \left(\frac{df_{1}}{dt}(t)\right)^2}{\int dt
+  \left(f_{1}(t)\right)^2}
+\]
+and the left-hand side can be interpreted as mean square frequency in
+$f_{\epsilon}$, $\epsilon$ can be interpreted as relative wavelength
+(relative to the root mean square wavelength in $f_1$). Thus the maxiumum
+diameter of an inscribed sphere in the domain of convexity of $J_{\rm
+  LS}$ is proportional to a wavelength. This fact is often expressed
+in the literature by stating that to ensure success of FWI, the
+initial estimate of slowness must be sufficient to predict traveltimes
+within a half-wavelength. Of course, Theorem \ref{thm:FWIconv} does not show that
+local optimization would not succeed, that is, that stationary points
+other than the global minimizer exist, merely that the domain of
+convexity has diameter on the order of a mean wavelength. 
+
+Note that the conclusion of Theorem \ref{thm:FWIconv} holds regardless of whether
+$f_1$ is oscillatory or mean-zero, so the common description of this
+phenomenon as ``cycle-skipping'' is somewhat misleading.
+\end{rem}
+
+\section{A Synthetic Example: FWI}
+A simple 2D synthetic example illustrates the impact of Theorem
+\ref{thm:FWIconv}. We will also use this example throughout the paper
+to illustrate alternative solution methods for the crosswell inverse
+problem.
+
+The target slowness $m_*$ is the reciprocal of a piecewise
+linear velocity (Figure
+\ref{fig:velbig}). This corresponding velocity has a constant $2$ km/s layer near $x=0$ and
+increases linearly for $x\ge 0.5$ km. Boundary conditions are Dirichlet
+for pressure on all parts of the boundary, although the wavefields
+occuring in the experiments described here interact only with the $x=0$
+surface so that the effective geometry is that of a half-space. Data
+for a single source at depth $x_s=$ 10 m, $z_s=$ 5100 m (coordinates as
+depicted in Figure \ref{fig:velbig}. A line of receivers is positioned
+at depth $x_r=$ 3000 m, with 4000 m $\le z_r \le$ 7000 m, spaced
+$\Delta z_r$=30 m apart. 
+
+The source pulse ($f$ in equation (\ref{eqn:pressure})) is a [2.5, 5, 25, 30]
+Hz trapezoidal bandpass filter produces the synthetic data
+depicted in Figure \ref{fig:shot6kmbig}. Note that the finite
+difference scheme used to produce this data approximates 2D wave
+propagation rather than the 3D propagation mentioned in the discussion
+so far, so that the data waveform is asymmetric, unlike the
+source. Also the presence of the pressure-free surface near the source
+contributes effectively another derivative. Nonetheless the data
+resemble the prediction of the constant velocity calculation (equation
+(\ref{eqn:cv})).
+
+For a very smooth $m$ such as that depicted in Figure
+\ref{fig:velbig}, the curve $z_r \mapsto \tau[m](z_s,z_r)$ resembles a hyperbola, as one sees from Figure
+\ref{fig:shot6kmbig}. The onset time of the signal in this figure
+depends on the slowness used in the simulation. For
+$m_0 \equiv 0.5$ s/km, the predicted data $S[m_0]f$ are depicted in
+Figure \ref{fig:shot6kmhom}. The general appearance is similar to   Figure
+\ref{fig:shot6kmbig}, but the onset time of the wave is later, due to
+the slower wave velocity.
+
+Now consider the inverse problem (\ref{eqn:ls}) with $d=S[m_*]f$. Since
+$m_*=m_0$ near the source point, it is not unreasonable to take $m_0$
+as an initial guess for the wave velocity. Conventional FWI uses
+iterative optimization algorithm to minimize $J_{\rm LS}$. Descent
+algorithms related to Newton's method have been favored for FWI, due
+to the computational cost of function evaluation
+\cite[]{VirieuxOperto:09}. Of course, any such algorithm finds a
+stationary point of the objective, assuming convergence, and not
+necessarily a global minimizer.
+
+A plot (Figure \ref{fig:fwicurve}) 
+of $J_{\rm LS}$ along the line
+segment from $m_0$ to $m_*$ immediately shows the difficulty faced by
+a local optimization approach: as one
+would predict from Theorem \ref{thm:FWIconv} and its proof, the predicted data change
+little in size along this segment and have support nearly disjoint
+from that of the target data $d$, hence are orthogonal to it, until the trial slowness becomes
+quite close to the target $m_*$, so that the local behaviour of $J_{\rm LS}$ in a small
+neighborhood of $m_0$ gives little or
+no hint about a constructive update direction. One would not expect a
+local optimization algorithm to be effective under such circumstances.
+
+Most descent methods require computed gradient, as input to the
+computation of a descent step. Assuming that $f \in H^1_0(\bR)$, the gradient of $J_{\rm LS}$ is 
+\be\label{eqn:gradls}
+\nabla J_{\rm LS}[m] = D(S[m]f)^T(w^2(S[m]f-d)).
+\ee
+In the expression \ref{eqn:gradls}, note that $m \rightarrow S[m]f$ is
+a map from $M$ to $L^2(\Omega)$, the derivative of which is given in
+equation  \ref{eqn:preq}. The symbol $D(S[m]f)^T$ denotes the
+transpose of this derivative with respect to a Hilbert space norm
+chosen for $M$, about which we have said nothing up to this point. We
+will mention some sensible possibilities in the Discussion section;
+for now, we simply identify $M$ with $L^2(\bR^2)$ for the purpose of
+computing the transpose, hence the gradient of $J_{\rm LS}$. Thus the
+gradient as computed here is the image of the formal or $L^2$ adjoint
+of $D(S[m]f)$, applied
+to the time-cutoff residual $w^2(S[m]f-d)$. 
+%There is no reason to suppose that this
+%image would be smooth, given the weak constraints on $f$ and $d$, so
+%in general it will not define an acceptable update direction for
+%velocity. One way out of this predicament is to extend the domain of
+%$S$ to a subset of a larger Hilbert space containing
+%$C^{\infty}(\bR^2)$, defined by control of finitely many derivatives,
+%such as a Sobolev space, and define the adjoint with respect to this
+%inner product structure, obtained by concatenating a smoothing
+%operator with the formal adjoint. The reader can consult for instance
+%\cite{KerSy:94} for more on this idea. For the purposes of this
+%discussion we will display the formal gradient (\ref{eqn:gradls})..
+
+Figure \ref{fig:fwigrad6kmbighom} shows the result of the computation
+(\ref{eqn:gradls}) for the example given previously, $m=m_0$, $d=S[m_*]f$. The adjoint $D(S[m]f)^T$ is
+computed by the adjoint state method
+\cite[]{Chavent:74,GauTarVir:86,Plessix:06}. Geometric optics explains
+the apparent interrogation of only the triangle spanning the source
+and the receiver segment - perturbations of velocity outside of it do
+not affect the geometric optics travel times (rays are straight lines,
+in constant velocity) connecting source and receivers. However there
+is very little indication of a productive update: the edge effects one
+sees in this figure (``rabbit ears'') average to very nearly zero when
+weighted by the difference between $m_0$ and $m_*$ - that is, the
+gradient is essentially orthogonal to the best search direction.
+
+If we use the gradient as a search direction, as one would for the
+steepest descent algorithm, for instance, then one obtains the values
+of $J_{\rm LS}$ displayed in Figure \ref{fig:fwigrad} - clearly not a
+productive search direction.
+
+\section{Source-Receiver Extension}
+
+As illustrated in the previous section, mean-square data misfit tends
+to be large, and instensitive to small
+velocity changes, except in the immediate vicinity of its global
+minimizer. This misfit saturation is the root cause of the poor
+performance of local optimization methods for $J_{\rm LS}$..
+
+Several cures for this pathology have been explored. The state of the
+art relies on small enough error in the initial velocity estimate,
+relative to the longest wavelengths reliably present in the data. The non-overlapping
+signal supports of the example given in the last section are
+impossible if enough low-frequency signal exists in the
+data. Unfortunately frequency content is limited by acquisition
+technology. Sometimes it is possible to supply a sufficiently
+accurate initial model in view of spectral limitations, and sometimes
+it is not, or even to know
+whether one has been successfully supplied
+
+Another class of alternatives extends the simulation map
+$(m,f) \mapsto S[m]f$ to a larger domain, so chosen that the ``relaxed''
+inverse problem set in this larger domain always has a small-residual
+solution. Some alternative objective must then be supplied, for which
+a minimizer (at least for model-consistent data) is a model of the
+original type, which by construction also fits the data.
+This section introduces and analyzes such a data-fitting {\em
+  extension} for the idealized crosswell tomography problem.
+
+Before we introduce the extended simulation map, we redefine $S$ so
+that $S[m], m\in M$ is injective, and the linear least squares problem
+for $f$ coercive.
+
+Suppose that ${\cal U} \subset M$ consists of slowness fields
+satisfying the simple ray geometry hypothesis, having a common normal
+neighborhood ${\cal N}$ containing $W_s$ and $W_r$. Suppose also that
+${\cal U}$ contains at least one constant.
+For typical $\bx_s \in W_s, \bx_r \in W_r$, denote by $r$ and $r_0$
+the ray generated by the exponential map connecting $\bx_s,\bx_r$, respectively
+the straight line segment between $\bx_s$ and $\bx_r$. Note that there
+may be other connecting rays, but any such rays must exit ${\cal N}$ and be associated to larger
+travel times than $\tau[m](\bx_s,\bx_r)$, which is the travel time
+along $r$. Also, Fermat's principle holds: the travel time along $r$
+is minimum amongst travel time along all paths from $\bx_s$ to
+$\bx_r$, lying entirely inside of ${\cal N}$. Write
+\[
+\tau[m](\bx_s,\bx_r) = \int_r \,dl\, m,
+\]
+with $dl$ denoting the Euclidean arc length element. it follows that
+\[
+\tau[m](\bx_s,\bx_r) \le \int_{r_0} \,dl, m \le m_{\rm max}|\bx_r -\bx_s|
+\bx_s|.
+\]
+Also, 
+\[
+\tau[m](\bx_s,\bx_r) \ge \int_r \,dl m_{\rm min} \ge m_{\rm min}
+|\bx_r-\bx_s|
+\]
+since $r_0$ is geodesic for the Euclidean metric. Since we have
+presumed that ${\cal U}$ contains at least one constant slowness
+field, both bounds can be approximated arbitrarily well.
+Set
+\begin{eqnarray}
+\label{eqn:rdef}
+r_{\rm max} &=& \sup \{|\bx_r-\bx_s|: \bx_s \in W_s, \bx_r \in
+                W_r\},\nonumber\\
+r_{\rm min} &=& \inf \{|\bx_r-\bx_s|: \bx_s \in W_s, \bx_r \in W_r\}.
+\end{eqnarray}
+Putting these simple results together, it follows that
+\begin{eqnarray}
+\label{eqn:tauglob}
+m_{\rm max}r_{\rm max} & = & \sup \{\tau[m](\bx_s,\bx_r): \bx_s \in W_s, \bx_r \in 
+  W_r, m \in {\cal U}\} \nonumber\\
+m_{\rm min}r_{\rm min} |& = & \inf \{\tau[m](\bx_s,\bx_r): \bx_s \in W_s, \bx_r \in 
+  W_r, m \in {\cal U}\}
+\end{eqnarray}
+As these quantities will recur throughout the arguments to come,
+define
+\begin{eqnarray}
+\label{eqn:tauextr}
+\tau_{\rm max}& = & m_{\rm max}r_{\rm max} \nonumber\\
+\tau_{\rm min}& = & m_{\rm min}r_{\rm min}
+\end{eqnarray}
+
+We now add the only hypothesis on ${\cal U}$ pertaining to the
+behaviour of slowness fields outside of the common normal
+neighborhood:
+
+The maximum measurement time $t^{\rm max}$ satisfies the {\em
+  no-return hypothesis}:
+\begin{itemize}
+\item
+\begin{equation}
+\label{eqn:tmaxbd}
+t^{\rm max} >  \tau_{\rm max}-\tau_{\rm min}
+\end{equation}
+\item for any $m \in {\cal U}$ no ray with initial $X=\bx_s \in W_s$ passes over $\bx_r \in W_r$
+at any time in the interval $(\tau[m](\bx_s,\bx_r), t^{\rm max}+\tau_{\rm max})$.
+\end{itemize}
+Note that the second condition means that $t^{\rm max}$ as specified 
+here will may be used in the statement of Theorems \ref{thm:gosimple}
+and \ref{thm:smdep}. In fact, the larger limit $t^{\rm max} +\tau_{\rm max})$ may be so used. The extra margin will be needed to
+make some later estimates uniform over large sets of
+slowness fields.
+
+Since rays passing over $W_r$ a second time necessarily leave ${\cal
+  N}$, this hypothesis actually concerns the global behaviour of the
+slowness field. It is satisfied for any constant slowness in ${\cal
+  U}$, and is clearly open. Therefore beginning with an open set of
+slownesses in $M^k$, $k \ge 2$, satisfying the simple ray geometry
+hypothesis and containing a constant slowness, there must be a subset
+satisfying also the no-return hypothesis.
+
+One might naturally ask how a slowness field may be
+extended outside the image domain ${\cal N}$ of the exponential map to
+satisfy the no-return hypothesis with the largest possible $t^{\rm
+  max}$, however we shall not address this question here. 
+
+Choose $\Delta > 0$ and define
+\begin{equation}
+\label{eqn:fwddomdef}
+D_{\Delta} = \{f \in L^2(\bR): {\rm supp}\,f \subset (-\tau_{\rm min} +
+\Delta, t^{\rm max} -\Delta - \tau_{\rm max})\}
+\end{equation}
+
+\begin{theorem}
+\label{thm:fwdinj}
+Suppose that ${\cal U} \subset M$, $t^{\rm max}$ satisfy the simple 
+ray geometry and no-return hypotheses, $\Delta >0$, and $w=1$ on 
+$[\Delta, t^{\rm max}-\Delta]$. Then for $m \in {\cal U}$,
+$S[m]:D_{\Delta} \rightarrow L^2(\Omega)$ is coercive, and 
+\[
+f \in D_{\Delta} \,\Rightarrow \, S[m]f (z_r,t;z_s) =
+A(z_r,z_s)f(t-T(z_r,z_s)) 
+\]
+\begin{equation}
+\label{eqn:gosimplemod} 
++ w(z_r,t;z_s)\int_{T(z_r,z_s)}^{\infty}
+\,ds\,B(z_r,s;z_s)f(t-s). 
+\end{equation}
+\end{theorem}
+\begin{proof}
+Inequalities \ref{eqn:tauglob} and \ref{eqn:tmaxbd} imply that if
+$t \in (-\tau_{\rm min} +
+\Delta, t^{\rm max} -\Delta - \tau_{\rm max})$,  then $t+\tau[m](\bx_s,\bx_r) \in (\Delta ,t^{\rm
+  max}-\Delta)$. Thus if $f \in D_{\Delta}$, then $w=1$ on ${\rm
+  supp}\,f(\cdot-\tau[m](\bx_s,\bx_r))$, establishing
+\ref{eqn:gosimplemod}. The injectivity of $S[m]$ follows from Picard
+iteration, applied to \ref{eqn:gosimplemod}.
+\end{proof}
+
+\begin{definition} (Source-receiver extension)
+Suppose that ${\cal U} \subset M$, $t^{\rm max}$ satisfy the simple
+ray geometry and no-return hypotheses. Define $\bar{w}_0$ to be the
+characteristic function of $\{t<t^{\rm max}\}$ in $\Omega$.  
+
+Define the
+{\em source-receiver} extended source domain
+\[
+\oD_0 = \{\of \in L^2(\Omega): {\rm supp}\,f \subset 
+Z_r\times Z_s 
+\]
+\begin{equation}
+\label{eqn:extdomdef}
+\times (-\tau_{\rm max}, t^{\rm max} - \tau_{\rm  min})\}
+\end{equation}
+and extended modeling operator 
+\be\label{eqn:extdom}
+\oS[m]: \oD_{0} \rightarrow L^2(\Omega) 
+\ee
+by
+\be\label{eqn:extmap}
+\oS[m]\of (z_r,t;z_s) = \bar{w}_0(z_r,t;z_s)\bar{p}(\bx_r,t;\bx_s).
+\ee
+\end{definition}
+in which $\bar{p}$ is the solution of the wave equation
+\ref{eqn:pressure} with $f(t) = \of(z_r,t;z_s)$.  That is, $\oS$ acts
+by computing each data trace $\bar{p}(\bx_r,t;\bx_s)$ as if it were
+generated by an indepedent source function $\of(z_r,\cdot;z_s)$ for
+each source and receiver location.
+
+Note that the time interval in the definition of $\oD_0$ strictly
+contains that in the definition of $D_{\Delta}$.
+Define the extension map $E: D_{\Delta} \rightarrow \oD_0$ by 
+$(Ef)(z_t,t;z_s) = f(t)$, with $f$ on the RHS being regarded as
+a constant function of $z_sz_r$. Then $\oS$ is an
+extension of $S$, in the sense that
+\be\label{eqn:extprop}
+\oS[m](Ef) = S[m]f,\,f \in D_{\Delta}.
+\ee
+
+At first blush, it would appear that computing $\oS$ would be a very
+expensive proposition, even after discretization in $z_s$ and $z_r$,
+as each trace would have to be simulated independently. However this
+is not the case, as \be\label{eqn:extgreen} \oS[m]\of(z_r,t;z_s) =
+\bar{w}_0(z_r,t;z_s(G[m](\bx_r,\cdot;\bx_s) *_t \of(,z_r,\cdot;z_s))(t), \ee
+with $G[m]$ being the Green's function of the problem
+(\ref{eqn:pressure}), defined above. $G[m]$ can be approximated
+numerically, one numerical simulation for each value of $z_s$. Once
+this is done, the evaluation of $\oS[m]\of$ is a relatively
+inexpensive convolution for each trace.
+
+The main advantage of the extended model is that any data can be fit -
+for any slowness model (within the class specified in the last
+section)! More precisely, define 
+\begin{equation}
+\label{eqn:extrange}
+\oF_0 = \{d \in L^2(\Omega): d=0 \mbox{ if } t<0 \mbox{ or } t>t^{\rm 
+  max} \}. 
+\end{equation}
+\begin{theorem}
+\label{thm:extsur}
+Suppose that ${\cal U} \subset M$, $t^{\rm max}$ satisfy the simple 
+ray geometry and no-return hypotheses
+Then for $m \in {\cal U}$,
+\begin{equation}
+\label{eqn:extsur}
+\oF_0 \subset \oS[m]\oD_0.
+\end{equation}
+Define $\oS_0[m]: L^2(\Omega) \rightarrow L^2(\Omega)$ and its inverse by
+\begin{eqnarray}
+\label{eqn:approxrinv}
+\oS_0[m]\of(z_r,t;z_s) & = &
+A[m](z_r,z_s)\of(z_r,t-T[m](z_r,z_s);z_s),\nonumber\\
+\oS_0^{-1}[m]d(z_r,t;z_s) &=&
+A[m]^{-1}(z_r,z_s)d(z_r,t+T[m](z_r,z_s);z_s),
+\end{eqnarray}
+and $\bar{R}_0[m]: L^2_{\rm comp}(\Omega) \rightarrow L^2_{\rm comp}$
+by
+\[
+\bar{R}_0[m]d(z_r,t;z_s) 
+\]
+\begin{equation}
+\label{eqn:approxres}
+= \frac{\bar{w}_0(z_r,t+T[m](z_r,z_s);z_s)}{A(z_r,z_s)}
+\int_0^t\,ds\,B[m](z_r,t+T[m](z_r,z_s)-s;z_s)d(z_r,s;z_s)
+\end{equation}
+Then 
+\begin{equation}
+\label{eqn:rinvdef}
+\oS^R[m] = \oS_0^{-1}
+\sum_{k=0}^{\infty}(-\bar{R}_0[m])^k \bar{w}_0
+\end{equation}
+converges in norm to a bounded operator $\oS^R[m]: \oF_0
+\rightarrow \oD_0$, and $\oS^R[m]$ is a right inverse
+for $\oS[m]$ on $\oF_0$, that is, for $d \in \oF_0$,
+\begin{equation}
+\label{eqn:invreln}
+\oS[m]\oS[m]^Rd = d.
+\end{equation}
+\end{theorem}
+
+\begin{proof} 
+Observe that  the definition \ref{eqn:extmap} can be re-written using
+the Green's function components $A, T,$ and $B$ and the cutoff function
+$\bar{w}_0$ in the form
+\[
+\oS[m]\of(z_r,t;z_s) = \bar{w}_0(t) \left(
+A[m](z_r,z_s)\of(z_r.t-T[m](z_r,z_s);z_s) \right.
+\]
+\begin{equation}
+\label{eqn:extmapexp0}
+\left.+ \int_{T[m](z_r,z_s)}^{\infty}\,ds\,B[m](z_r,s;z_s)\of(z_r,t-s;z_s)\right)
+\end{equation}
+According to the no-return hypothesis, $B[m]$ is well-defined and
+smooth for $t \le t^{\rm max} + \tau_{\rm max}$. For $\of \in
+\oD_0$, the upper limit of integration may be replaced by $t + \tau_{\rm max}$. Since only
+$t\le t^{\rm max}$ is significant on the right-hand side of
+\ref{eqn:extmapexp0}, the integrand in the last summand is
+well-defined, and the integral defines an
+operator $\bar{B}[m]: \oD_0  \rightarrow L^2(\Omega)$,
+\begin{equation}
+\label{eqn:barb}
+\bar{B}[m]\of(z_r,t;z_s) = 
+\int_{T[m](z_r,z_s)}^{t^{\rm max}+\tau_{\rm max}}\,ds\,B[m](z_r,s;z_s)\of(z_r,t-s;z_s)
+\end{equation}
+Then equation \ref{eqn:extmapexp0} can be abbreviated as
+\begin{equation}
+\label{eqn:extmapexpabbrev}
+\oS[m] = \bar{w}_0 (\oS_0[m] + \bar{B}[m]).
+\end{equation}
+From the definitions of $\oS_0,\bar{R}_0$,
+\[
+\bar{w}_0\bar{B}[m] = \bar{R}_0[m]\oS_0[m]
+\]
+whence
+\begin{equation}
+\label{eqn:extmapexp}
+\oS[m]\of = \bar{w}_0(I + \bar{R}_0[m]) \oS_0[m]\of.
+\end{equation}
+
+
+Note that $\bar{R}_0$ preserves supports of the form $t_0 \le t \le
+t^{\rm max}$, in particular maps $\oF_0$ into itself.
+Straightforward estimates using a weighted $L^2$ norm with decreasing
+exponential weight in $t$ shows that as an operator on $\oF_0$, $I + \bar{R}_0[m]$ is invertible,
+and its inverse is given by the Neumann series appearing in the
+definition \ref{eqn:rinvdef} of $\oS^R[m]$.
+
+For $d \in \oF_0$, then, $\bar{w}_0 d = d $, and
+$\sum_{k=0}^{\infty}(-\bar{R}_0[m])^kd  \in \oF_0$. The definition of
+$\oD_0$ is concocted to guarantee that if $d \in \oF_0$, then
+$\oS[m]^{-1}d \in \oD_0$ for any $m \in {\cal U}$. Thus equation
+\ref{eqn:rinvdef} defines a map from $\oF_0$ to $\oD_0$. While in
+general $\oS_0[m]\oD_0$ is not a subset of $\oF_0$,
+$\oS_0[m]\oS_0[m]^{-1} = I $ so membership in $\oF_0$ is preserved:
+\[
+\oS_0[m]\oS_0[m]^{-1}\sum_{k=0}^{\infty}(-\bar{R}_0[m])^kd  \in \oF_0.
+\]
+Tacking on the other factors in the expansion \ref{eqn:extmapexp} of
+$\oS[m]$,  the conclusion \ref{eqn:invreln} follows, which in turn
+implies the inclusion \ref{eqn:extsur}.
+\end{proof}
+
+\section{Extended Full Waveform Inversion}
+Theorem \ref{thm:extsur} shows that data fitting with $\oS$, rather
+than $S$, cannot suffer from the difficulty identified in Theorem
+\ref{thm:FWIconv}, that is, failure to fit the data until the slowness
+field predicts the right kinematics within a wavelength or so: in
+fact, data can be fit via $\oS$ with essentiallly any slowness, however
+kinematically inaccurate.. However
+this pleasant property does not in itself yield a solution of the
+inverse problem, because it is achieved at the price of adding a large
+number of parameters to the models space. This enlargement of the
+model space has two negative consequecnes:
+\begin{itemize}
+\item[1. ] The extended modeling map $\oS$ is not
+injective - it is not possible to define the domain and range so that
+this map is bijective for an open set ${\cal U}$ of slowness
+models. 
+\item[2. ] More fundamentally, since data
+can be fit with any slowness model at all, data fitting no longer
+constrains the slowness model.
+\end{itemize}
+Item 2 is a
+consequence of the unphysical nature of the extended source, with each
+data trace modeled by an independent source trace. The large number of
+parameters added in extending the model must somehow be controlled, and 
+forced to assume trivial values in order to recover  a slowness $m$
+and physical source $f$ that together explain the data.
+
+Compensation for the null space of $\oS[m]$ is straightforward via
+Tihonov regularization. That is, choose a regularization parameter
+$\alpha >0$ and define the inverted extended source $\ofa[m,d], m \in
+M, d \in L^2(\Omega)$, by
+\begin{equation}
+\label{eqn:regextinv}
+\ofa[m,d] = \mbox{ argmin}_{\of}\,\frac{1}{2}(\|\oS[m]\of - d\|^2 + \alpha^2\|\of\|^2).
+\end{equation}
+If ${\cal U}$ and $t^{\rm max}$ are chosen as in the preceding
+discussion, that is, to satisfy the simple ray geometry and no-return
+hypotheses, and $m \in {\cal U}, d \in \oF_0$, then
+as $\alpha \rightarrow 0$, $\ofa[m,d] \rightarrow \oS[m]^Rd$.
+
+A hint about how the second issue might be addressed comes from
+further examination of the synthetic example defined earlier. Recall
+that $m_*$ is the target slowness 
+(corresponding to the velocity depicted in Figure \ref{fig:velbig})
+used to generate the data $d=S[m_*]f$ (Figure \ref{fig:shot6kmbig}).
+Figures \ref{fig:shot6kmbig_bigdecon} and \ref{fig:shot6kmbig_decon} display
+$\ofa[m,d]$ for $d=S[m_*]f$ and $m=m_*$ and $m=m_0 = 0.5 s/km$
+respectively. In both cases, the regularization parameter $\alpha$ is
+set = $10^{-3}$. The non-extended or
+physical source $f$ is localized near $t=0$. The inverted extended
+source for correct slowness (Figure \ref{fig:shot6kmbig_bigdecon})
+yields a result very close to the extension $Ef$, and has the same
+quality (energy focused at $t=0$, independent of $z_r$). Inversion with the incorrect slowness
+shifts the extended source into $t \ne 0$. Also, the level surfaces of
+$\ofa[m_0,d]$ (Figure \ref{fig:shot6kmbig_decon}) are not
+constant in $z_r$, but vary significantly. If this were not true, then
+any $z_r=const.$ trace could be taken as the source function $f$, and
+the inverse problem would be solved. 
+
+These observations suggest two alternative methods for measuring the
+correctness of $m$ from the properties of $\ofa[m,d]$. First,
+concentration near $t=0$ may be measurred by multplying $\ofa[m,d]$ by $t$ and taking the $L^2$ norm of the result. If the velocity
+is correct, {\em and} the target source function actually is supported
+near $t=0$, this norm will be small, as the support of $\ofa[m,d]$
+will be close to $t=0$ also (see Figure \ref{fig:shot6kmbig_bigdecon}). Second, the variance with respect to $z_r$ may
+be measured by taking the norm of the $z_r$ derivative, which will be
+zero (not just small) for an extended model in the range of the
+extension operator. That is, the range of the extension operator (the
+``physical'' extended models is the null space of the $z_r$ derivative.
+Either case may be captured by small values of the objective function
+\be\label{eqn:dsdef}
+J_{\rm DS}[m,d] = \frac{1}{2}\|A\ofa[m,d]\|_{L^2(\Omega)}^2,
+\ee
+in which
+\begin{itemize}
+\item $A\of(z_s,z_r,t) = t\of(z_s,z_r,t)$, or
+\item $A\of(z_s,z_r,t) = \nabla_{z_s,z_r}\of(z_s,z_r,t)$.
+\end{itemize}
+Operators $A$ which indirectly detect the kinematic correctness of a
+wave propagation model via qualities of auxiliary data generated with
+that model (in this case, the extended source estimate $\ofa[m,d]$)
+have come to be known as {\em annihilators}, since in many cases the
+auxiliary data corresponding to correct models is in (or near) the
+null space. Model estimation via minimizations of functions such as
+$J_{\rm DS}$ is sometimes called {\em differential semblance}
+optimization, after a name introduced in some of the early papers on
+this concept \cite[]{SymesCar:91,KerSy:94} to reflect the use of
+differential operators as annihilators. A differential annihilator
+(the second option above) was used in the first papers known to us on the
+source-receiver extension \cite[]{SongSymes:94b,Symes:94c}. A brief
+survey of the literature on this topic appeared above, in the
+Introduction.
+
+Both choices have drawbacks. The first choice (multiplication by $t$)
+defines a bounded operator on $D_0$, however without a null space;
+without some further compactness-inducing constraint on $\of$, a
+minimizer of $J_{\rm DS}$ may not exist. For computational purposes,
+this defect appears to be minor, as discretization effectively forces
+the search for $\ofa$ into a compact subspace of
+$L^2(\Omega)$. However this effect has not been analyzed; the applied
+literature uses it without mathematical justification (but with
+considerable success - see for example \cite{Warner:16}). The second
+choice has a complementary problem: the derivative with respect to
+$z_r,z_s$ is of course unbounded, rendering $J_{\rm DS} $ only densely
+defined. The obvious remedy is to use a subspace of $H^1(\Omega)$ as
+the domain of $\oS$ - see \cite{KerSy:94} for more discussion of this
+option, and implementation details. 
+
+We will accept the drawbacks of the first option above (multiplication
+by $t$) in the remainder of our discussion, simply because the
+implementation is simpler and is the approach taken in the
+computational examples accompanying this paper.
+
+\section{Gradient and Hessian}
+
+Throughout this section we will assume without further comment that
+${\cal U}$ and $t^{\rm max}$ are chosen to satisfy the simple ray
+geometry and no-return hypotheses, as explained earlier.
+
+Recall from Theorem \ref{thm:smdep}, and surrounding discussion,
+especially Remark \ref{rem:derivloss}, that $(m,f) \mapsto S[m]f$ is
+only differentiable in $m$ if $f$ has one square integrable derivative
+or better. The same is true fore $\oS$. The local
+behavioiur of $J_{\rm DS}$ follows from unpacking the directional derivative of
+$\oS$ at $m \in {\cal U}$ in a direction $\delta m \in
+C^{\infty}(\bR^3)$ into a leading term with explicit dependence on $\partial
+\of/ \partial t$, plus an $L^2$-continuous remainder.
+The leading term factors as $\oS[m]Q[m]\delta m$, in which $Q$ is a
+first order differential operator:
+\begin{equation}
+\label{eqn:qdef}
+Q[m]\delta m =\frac{1}{A[m](z_r,z_s)}\left(-(DT[m]\delta
+m) (z_r,z_s)\frac{\partial}{\partial t} + (D A[m]\delta m)(z_r,z_s)\right)
+\end{equation}
+A suitable domain for $Q[m]\delta m$ is
+\begin{equation}
+\label{eqn:d1def}
+\oD_1 = H^1_0(Z_r \times Z_s \times [-\tau_{\rm max},t^{\rm
+  max}-\tau_{\rm min}])
+\end{equation}
+Note that $Q[m]\delta m$ is {\em essentially skew-symmetric}, that is
+\begin{equation}
+\label{eqn:qess}
+(Q[m]\delta m) + (Q[m]\delta m)^T =2 DA[m]\delta m.
+\end{equation}
+The right-hand side of equation \ref{eqn:qess} is a differential
+operator of order zero, in particular bounded on $L^2(\Omega)$,
+whereas $Q$ is first order.
+\begin{theorem}
+\label{thm:q}
+There exists continuous map $P: {\cal U} \times C^{\infty}(\bR^3)
+\rightarrow {\cal L}(\oD_0,\oD_0)$, linear in its second argument, 
+so that for $\of \in \oD_1$,
+\begin{equation}
+\label{eqn:paramderiv}
+D(\oS[m]\of)\delta m = \oS[m]((Q[m]\delta m) + (P[m]\delta
+m))\of
+\end{equation}
+$P$ is a Volterra convolution operator of the first kind. In
+particular, the operators $P$ and $Q$ commute.
+\end{theorem}
+\begin{proof}
+Suppressing $z_r,z_s$ for the moment, recall the definition of $\oS_0[m]$
+\[
+(\oS_0[m]\of)(t) = A[m]\of(t-T[m]).
+\]
+Also, from the defintion \ref{eqn:barb}, 
+\[
+(\bar{B}[m]\of)(t) = 
+\int_{T[m]}^{\infty}\,ds\,B[m](s)\of(t-s) 
+\]
+\[
+=\int_{-\infty}^{t-T[m]}\,ds\,B[m](s)(t-s)\of(s)
+\]
+\begin{equation}
+\label{eqn:barbalt}
+= (\oS_0[m]\tilde{B}[m])\of(t),
+\end{equation}
+where
+\begin{equation}
+\label{eqn:tildeb}
+(\tilde{B}[m])\of(t) = \int_{-\infty}^{t}\,ds\,B[m](t+T[m]-s)\of(s) 
+\end{equation}
+In order to view $\tilde{B}[m]$ as a Volterra integral operator on $D_0$ with
+smooth kernel, it is necessary to extend $B[m]$ smoothly to $t >
+t^{\rm max} + \tau_{\rm max}$. The extended values do not play
+any role in the result of the computation \ref{eqn:barbalt} for $t >
+t^{\rm max}$. 
+
+These manipulations combine to yield a re-write of the expression
+\ref{eqn:extmapexpabbrev} for $\oS[m]$:
+\begin{equation}
+\label{eqn:extmapexpabbrevalt}
+\oS[m] = \bar{w}_0 \oS_0[m](I + \tilde{B}[m]).
+\end{equation}
+Its directional derivative at $m \in {\cal U}$ in the direction
+$\delta m \in C^{\infty}(\bR^3)$ is
+\[
+D(\oS[m]\of)\delta m = \bar{w}_0( (D(\oS_0[m])\delta m) (I +
+\tilde{B}[m])\of+\oS_0[m]D(\tilde{B}[m]\of)\delta m)
+\]
+Note that 
+\[
+(D(\oS_0[m]\of)\delta m)(t) = (DA[m]\delta m)\of(t-T[m]) -A[m](DT[m]\delta
+m)\frac{\partial \of}{\partial t}(t-T[m])
+\]
+\[
+=\oS_0[m]\left(-\frac{(DT[m]\delta m)}{A[m]}
+  \frac{\partial \of}{\partial t} + (D\log A[m]\delta m)\of\right)(t)
+\]
+so 
+\[
+\bar{w}_0(D(\oS_0[m]\of)\delta m) =  \bar{w}_0\oS_0[m]Q[m]\delta m
+\]
+whence
+\[
+D(\oS[m]\of)\delta m = \bar{w}_0\oS_0[m] (Q[m]\delta m)(I+\tilde{B}[m])\of 
+\]
+\[
++ \bar{w}_0\oS_0[m]D(\tilde{B}[m]\of)\delta m 
+\]
+Since $\tilde{B}$ is a convolution operator in $t$, it commutes with
+multiplication by functions of $z_s,z_r$, and with $\partial/\partial
+t$, so this is actually equation \ref{eqn:paramderiv}, provided that
+$P$ is defined as 
+\begin{equation}
+\label{eqn:pdef}
+P[m]\delta m = (I + \tilde{B}[m])^{-1}D\tilde{B}[m] \delta m
+\end{equation}
+Since both factors on the right-hand side of equation \ref{eqn:pdef}
+are Volterra convolution operators (of second and first types
+respectively), so their product is a Volterra convolution operator of
+the first kind, and $P$ commutes with $Q$ as claimed.
+\end{proof}
+
+In the remainder of this section we will use the equivalence between $D(\oS[m]\of)\delta
+m$, the directional derivative of the vector-valued function $m
+\mapsto \oS[m]\of$,  and $(D\oS[m]\delta m)\of$, the directional
+derivative of the operator-valued function $m \mapsto \oS[m]$,
+evaluated at the vector $\of$, as is valid if $\of \in \oD_1$.
+
+Just as existence of a derivative with respect to $m$ of $\oS[m]\of$
+requires that $\of$ have a square-integrable time derivative, so
+existence of a derivative with respecto $m$ of $\oS[m]^Td$ requires
+that $d$ have a time derivative. Accordingly, define
+\[
+\oF_1 = \oF_0 \cap H^1(\Omega)
+\]
+and metrize $\oF_1$ with the Sobolev 1-norm.
+
+\begin{theorem}
+\label{thm:qcomm}
+For $d \in \oF_1$, $m \in {\cal U}$,
+\[
+DJ_{\rm DS}[m,d]\delta m =\alpha^2 \langle ((P[m]\delta m)^T +(P[m]\delta
+m))\ofa[m,d],\oga[m,d]\rangle 
+\]
+\begin{equation}
+\label{eqn:qderiv}
+-\langle (P[m]\delta
+m)\ofa[m,d],A^TA\ofa[m,d]\rangle + \langle [Q[m]\delta m,A^TA]\ofa[m,d],\ofa[m,d]\rangle.
+\end{equation}
+For $m \in {\cal U}$, $\delta m \in C^{\infty}(\bR^3)$, the linear
+functional on $\oF_1$ defined by $d \mapsto DJ_{\rm DS}[m,d]\delta m$
+extends by continuity to $\oF_0$.
+\end{theorem}
+\begin{proof}
+The normal equation equivalent to \ref{eqn:regextinv} are:
+\begin{eqnarray}
+\label{eqn:normal}
+N_{\alpha}[m]\of &=& \oS[m]^Td\nonumber\\
+N_{\alpha}[m] & = & \oS[m]^T\oS[m] + \alpha^2 I
+\end{eqnarray}
+So
+\begin{equation}
+\label{eqn:ofanorm}
+\ofa[m,d] = N_{\alpha}[m]^{-1}\oS[m]^Td
+\end{equation}
+and 
+\[
+J_{\rm DS}[m,d] = \frac{1}{2}\|A N_{\alpha}[m]^{-1}\oS[m]^Td\|^2
+\]
+For $d \in \oF_1$,
+\[
+DJ_{\rm DS}[m,d] \delta m = \langle A (DN_{\alpha}[m]^{-1}\delta m)
+\oS[m]^Td + AN_{\alpha}[m]^{-1}D(\oS[m]^Td)\delta m,A\ofa[m,d]\rangle
+\]
+\[
+=\langle - N_{\alpha}[m]^{-1}(DN_{\alpha}[m]\delta m)\ofa[m,d]
+  +N_{\alpha}[m]^{-1}D(\oS[m]^Td)\delta m,A^TA\ofa[m,d]\rangle
+\]
+Introduce $\oga[m,d]$, defined by
+\begin{equation}
+\label{eqn:gdef}
+\oga[m,d] = N_{\alpha}[m]^{-1}A^TA\ofa[m,d].
+\end{equation}
+Then
+\[
+DJ_{\rm DS}[m,d] \delta m = \langle - (DN_{\alpha}[m]\delta m)\ofa[m,d] +
+  D(S[m]^Td)\delta m, \oga[m,d]\rangle
+\]
+\begin{equation}
+\label{eqn:pregrad1}
+= \langle (DS[m]^T\delta m)(d-S[m]\ofa[m,d]) - S[m]^T (DS[m]\delta m)\ofa[m,d],\oga[m,d]\rangle
+\end{equation}
+From Theorem \ref{thm:q}, this is
+\[
+=\langle (Q[m]\delta m + P[m]\delta m)^TS[m]^T(d-S[m]
+\ofa[m,d]) - S[m]^TS[m]
+(Q[m]\delta m + P[m]\delta m)\ofa[m,d],\oga[m,d]\rangle
+\]
+which because of the normal equation \ref{eqn:normal} is
+\[
+= \langle (Q[m]\delta m + P[m]\delta m)^T\alpha^2\ofa[m,d],\oga[m,d]\rangle 
+-\langle (Q[m]\delta m + P[m]\delta m)\ofa[m,d], (N_{\alpha} -
+\alpha^2I)\oga[m,d]\rangle
+\]
+\[
+= \alpha^2 \langle (Q[m]\delta m + P[m]\delta
+m)^T\ofa[m,d],\oga[m,d]\rangle 
++ \alpha^2 \langle (Q[m]\delta m + P[m]\delta
+m)\ofa[m,d],\oga[m,d]\rangle
+\]
+\[
+-\langle (Q[m]\delta m + P[m]\delta
+m)\ofa[m,d],A^TA\ofa[m,d]\rangle
+\]
+\[
+=\alpha^2 \langle ((P[m]\delta m)^T +(P[m]\delta
+m))\ofa[m,d],\oga[m,d]\rangle 
+\]
+\[
+-\langle (Q[m]\delta m + P[m]\delta
+m)\ofa[m,d],A^TA\ofa[m,d]\rangle
+\]
+by virtue of the defintion \ref{eqn:gdef}. Finally, the essential skew-symmetry of
+$Q[m]\delta m$ (equation \ref{eqn:qess}) implies that
+\[
+-\langle (Q[m]\delta m)\ofa[m,d],A^TA\ofa[m,d]\rangle
+\]
+\[
+=-\langle [A^TA,Q[m]\delta m]\ofa[m,d],\ofa[m,d]\rangle- \langle A^TA
+\ofa[m,d],(Q[m]\delta m)^T\ofa[m,d]\rangle
+\]
+\[
+=-\langle [A^TA,Q[m]\delta m]\ofa[m,d],\ofa[m,d]\rangle +\langle
+(Q[m]\delta m - 2DA[m]\delta m)\ofa[m,d],A^TA\ofa[m,d]\rangle
+\]
+whence
+\begin{equation}
+\label{eqn:qcomm}
+-\langle (Q[m]\delta m)\ofa[m,d],A^TA\ofa[m,d]\rangle =
+\langle\left(\frac{1}{2} [Q[m]\delta m,A^TA] + A^TA DA[m]\delta m\right)\ofa[m,d],\ofa[m,d]\rangle,
+\end{equation}
+and equation \ref{eqn:qderiv} is established.
+
+Recall that $Q[m]\delta m$ is a $t$-independent multiple of
+$\partial/\partial t$, and $A = $ multiplication by $t$. Therefore
+\begin{equation}
+\label{eqn:qcommdt}
+[Q[m]\delta m,A^TA] = 2t\frac{DT[m]\delta m}{A[m]}
+\end{equation}
+defines a bounded multiplier on $\oD_0$. Since all of the other operators
+appearing in equation \ref{eqn:qderiv} are bounded on $\oD_0$, and
+$\ofa[m,d]$ and $\oga[m,d]$ are continuous in $d \in \oF_0$, 
+continuous extension of $DJ_{\rm DS}[m,d]\delta m$ to $d \in \oF_0$ follows.
+\end{proof}
+
+To understand how the term involving the commutator $[Q,A^TA]$ may
+dominate the derivative of $J_{\rm DS}$, we introduce a measure of
+oscillation in time:
+
+\begin{definition} For $u \in L^2(\Omega)$, $a < b$,
+\begin{equation}
+\label{eqn:lamdef}
+\lambda_{[a,b]}(u) =
+\left(\frac{\int_{Z_r}\,dz_r\,\int_{Z_s}\,dz_s\,\int_a^b\,dt,\,\left(\int_a^t\,ds\,u(z_r,s;z_s)\right)^2}{\int_{Z_r}\,dz_r\,\int_{Z_s}\,dz_s\,\int_a^b\,dt\,u^2}\right)^{\frac{1}{2}}.
+\end{equation}
+\end{definition}
+Essentially, $\lambda$ is the ratio of the partial Sobolev $W^{-1,2}$ norm to
+the $L^2$ norm, and measures oscillation in $t$. If $u(t) = \sin \pi \omega
+t$, then $\lambda_{[a,b]}(u) = \frac{C}{ \omega} + O(\omega^{-2})$, so
+$\lambda$ is more or less wavelength, hence the notation. Its
+importance for the analysis of the gradient lies in a simple lemma,
+the proof of which we leave to the reader:
+
+\begin{lem}
+\label{lem:lamlem}
+Suppose that $k \in C^1(\Omega)$, $a < b$, and define for $u \in L^2(\Omega)$
+\[
+Ku(z_r,z_s,t) = \int_a^t\,ds\,k(z_r,t-s;z_s) u(z_r,s;z_s).
+\]
+Then 
+\[
+\|Ku\|_{L^2(Z_r\times Z_s \times [a,b])} \le
+(2+(b-a)^2)^{\frac{1}{2}}\|k\|_{C^1(\Omega)}\lambda_{[a,b]}(u)\|u\|.
+\]
+Also, if ${\rm supp} \,u \subset [a,b]$ and $\int_a^bu = 0$, then $a' \le a < b \le b'$
+implies that
+\[
+\lambda_{[a',b']}(u) = \lambda_{[a,b]}(u)
+\]
+and
+\[
+\|K^Tu\|_{L^2(Z_r\times Z_s \times [a,b])} \le
+(2+(b-a)^2)^{\frac{1}{2}}\|k\|_{C^1(\Omega)}\lambda_{[a,b]}(u)\|u\|.
+\]
+\end{lem}
+
+\begin{theorem}
+\label{thm:qerr}
+Under the hypotheses of Theorem \ref{thm:qcomm}, for $d \in \oF_0$ for
+which
+\[
+\int_0^{t^{\rm max}}\,d(z_r,t;z_s) = 0, z_r \in Z_r, z_s \in Z_s,
+\]
+there is $C >0$
+depending on ${\cal U}$ and $t^{\rm max}$ so that
+\[
+|DJ_{\rm DS}[m,d]\delta m - \langle [Q[m]\delta
+m,A^TA]\ofa[m,d],\ofa[m,d]\rangle| 
+\]
+\[
+\le C \alpha^{-2}\lambda_{[0,t^{\rm max}]}(d)(1+\alpha^{-2}\lambda_{[0,t^{\rm max}]}(d))\|d\|^2
+\]
+\end{theorem}
+\begin{proof}
+Every operator appearing in the following expressions depends on $m
+\in {\cal U}$, and $\ofa$ and $\oga$ depend on $d$ as well. Since these
+dependencies are universal, we suppress them from the notation.
+
+Using the expansion \ref{eqn:extmapexpabbrevalt}, rewrite the normal
+equation \ref{eqn:normal} as
+\[
+(\alpha^2 I + (I+\tilde{B})^TS_0^t \bar{w}_0^2 S_0 (I+\tilde{B})) \ofa
+= (I+\tilde{B})^TS_0^T \bar{w}_0d
+\]
+\[
+=S_0^T d +\tilde{B}^TS_0^T d
+\] 
+from the definition of $\oF_0$. The left-hand side is
+\[
+= (\alpha^2 + S_0^T\bar{w}_0^2S_0) \ofa  + K \ofa,
+\]
+where
+\[
+K = \tilde{B}^T S_0^T\bar{w}_0^2S_0 + S_0^T\bar{w}_0^2S_0\tilde{B}
++ \tilde{B}^T S_0^T\bar{w}_0^2S_0\tilde{B}.
+\]
+Decompose $\ofa = \ofa^0 + \ofa^1$, where
+\[
+\ofa^0 = (\alpha^2 + A^2)^{-1}S_0^T d.
+\]
+Tracking supports, you see that
+\[
+S_0^T\bar{w}_0^2S_0 \ofa^0 = \S_0^TS_0\ofa^0 = A^2 \ofa^0,
+\]
+so 
+\[
+(\alpha^2 + S_0^T\bar{w}_0^2S_0) \ofa^0 =S_0^T d.
+\]
+Therefore, 
+\[
+N_{\alpha}\ofa^1 = \tilde{B}^TS_0^T \bar{w}_0d - K\ofa^0
+\]
+Since $\ofa^0$ is a multiple of a translate of $d$, from Lemma \ref{lem:lamlem} 
+\[
+\lambda_{[-\tau_{\rm max},t^{\rm max}-\tau_{\rm min}]}(\ofa^0) =
+  \lambda_{[0,t^{\rm max}]}(d).
+\]
+Every summand in $K$ has a factor of $\tilde{B}$ or $\tilde{B}^T$ (or
+both). Lemma \ref{lem:lamlem} implies that
+\[
+\|N_{\alpha}\ofa^1\| \le C \lambda_{[0,t^{\rm max}]}\|d\|
+\] 
+for suitable $C$ depending on $A, B$ hence on ${\cal U}$, $t^{\rm
+  max}$. Since $N_{\alpha}-\alpha^2I \ge 0$ and $\|\ofa^0\|\le C\|d\|$,
+obtain
+\begin{eqnarray}
+\label{eqn:f1barbd}
+\|\ofa^1\| & \le & C \alpha^{-2}\lambda_{[0,t^{\rm max}]}(d))\|d\|\\
+\label{eqn:fbarbd}
+\|\ofa\| & \le & C(1 + \alpha^{-2}\lambda_{[0,t^{\rm max}]}(d))\|d\|
+\end{eqnarray}
+hence
+\[
+\alpha^2\|\oga\| \le C(1 + \alpha^{-2}\lambda_{[0,t^{\rm max}]})\|d\|.
+\]
+Finally, estimate $P \ofa = P \ofa^0  + P \ofa^1$ by applying Lemma
+\ref{lem:lamlem} again to the first summand on the right, and using
+the already-established bound for $\|\ofa^1\|$ to bound the second
+term. Similar reasoning applied to $P^T \ofa$ and appeal to Theorem
+\ref{thm:qcomm} establishes the result.
+\end{proof}
+
+
+
+\section{Transmission Caustics}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\newpage
+
+\inputdir{project}
+%\plot{csqlens10}{width=\textwidth}{Lens: diameter = 0.5 km, thickness = 1.0 km, background velocity = 2 km/s, velocity at center = 1.4142  km/s.}
+%\plot{shot6kmlens10conv}{width=\textwidth}{Shot gather - source at x=5100 m, z=10 m. Receivers between 4 km and 6km at depth = 3.0 km.}
+%\plot{awicurve}{width=\textwidth}{RMS amplitudes of inversions for
+%trace-dependent source (matched source), scaled by t (second moment
+%objective). Convex combinations of homogeneous (2 km/s) and lens models.}
+\plot{velbig_dec_exp}{width=\textwidth}{Example: $v$ = 2 km/s for $z \le
+  0.5 km$, $=2.0 + (z-0.5)*0.5$ km/s for $z>0.5$ km. Source location
+  $x=5100$, $z=10$ m and receiver locations $x=3000 - 6000$ m,
+$z=3000$ m indicated.}
+\plot{shot6kmhom}{width=\textwidth}{Shot gather for geometry indicated
+  in Figure \ref{fig:velbig_dec_exp}, generated with homogeneous velocity:
+  $v_0=2$ km/s}
+\plot{shot6kmbig}{width=\textwidth}{Shot gather for geometry and
+  $v$ as in Figure \ref{fig:velbig_dec_exp}.}
+\plot{shot6kmbig_decon}{width=\textwidth}{Inverse image of data in 
+  Figure (\ref{shot6kmbig}) under extended modeling operator at $v_0$
+  = 2 km/s}
+\plot{shot6kmbig_bigdecon}{width=\textwidth}{Inverse image of data in 
+  Figure \ref{shot6kmbig} under extended modeling operator at target
+  $v$ (Figure \ref{fig:velbig_dec_exp}).}
+\plot{fwigrad6kmbighom}{width=\textwidth}{FWI gradient for shot gather
+defined in Figure \ref{fig:velbig_dec_exp}, at $v=v_0$ = 2 km/s. Scaled by
+10$^6$ for plotting. Note very
+small values, and sign is positive, indicating that FWI objective {\em
+increases} in the direction of the target velocity.}
+\plot{fwiscan}{width=\textwidth}{Plot of values of the FWI objective
+  along the line segment between $v_0$ and $v$, for the shot gather
+  described in Figure \ref{fig:velbig_dec_exp}. For abscissa $h$, value
+  plotted is FWI objective at $h v_0 + (1-h) v$. Note that objective
+  does in fact initially increase from its value at $v_0$, consistent
+  with the positive average value of the gradient as shown in Figure \ref{fig:fwigrad6kmbighom}. }
+\plot{ivagrad6kmbighom}{width=\textwidth}{Source-receiver Extended FWI
+  gradient, same geometry, data, and velocity model as in Figure
+  \ref{fig:fwigrad6kmbighom}. Note that overall sign is negative, indicating
+  correct conclusion that $v_0$ is slow.}
+\plot{fwistack}{width=\textwidth}{FWI gradient at $v=v_0$ for line of shots 
+  extending from 2100 m to 8000 m. Scaled by
+10$^6$ for plotting. Receiver locations are windowed so 
+  that the range of offsets is the same for all shots. In effect, the 
+  gradient is a stack of translates of the gradient in Figure
+  \ref{fig:fwigrad6kmbighom}.}
+\plot{ivastack}{width=\textwidth}{Source-receiver Extended FWI gradient at $v=v_0$ for line of shots 
+  extending from 2100 m to 8000 m. Receiver locations are windowed so 
+  that the range of offsets is the same for all shots. In effect, the 
+  gradient is a stack of translates of the gradient in Figure
+  \ref{fig:ivagrad6kmbighom}.}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

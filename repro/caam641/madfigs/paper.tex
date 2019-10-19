@@ -1,0 +1,129 @@
+\title{Resources: Reading and Software}
+\maketitle 
+\label{ch:madfigs}
+
+\section{Introduction}
+This book rests on a foundation of science and software provided by many talented researchers. The following paragraphs list some important background reading, and discusses the book's software environment and its use.
+
+\section{Reading}
+Lots of good background reading exists for the topics of this course, some with links to codes and computational exercises, and I will refer participants to them whenever appropriate. Probably the closest in ``Courant and Hilbert'' spirit is Laurent Demanet's 18.325 class notes \cite[]{Demanet:325notes}. These were written for a graduate course in mathematics at MIT, and it shows: topics such as NMO do not appear, but the foundations of imaging theory and the adjoint state method, amongst other things, receive an elegant and complete treatment. The now-classic book by Norm Bleistein, Jack Cohen, and John Stockwell \cite[]{BleisteinCohenStockwell:01} gives a very thorough treatment of high-frequency asymptotics and ``Kirchhoff'' imaging.  Jerry Schuster's book on seismic imaging basics \cite[]{Schuster:10} is an excellent overview of fundamental geophysical and data processing concepts, with Matlab exercises. Gary Margrave's book \cite[]{Margrave:book} gives a comprehensive account of seismic data processing, with links to the extensive CREWES Matlab codes. 
+
+Full waveform inversion (FWI) is a new enough (as a topic of widespread interest) that comprehensive references to complement the classic 1987 Tarantola book (republished by SIAM as \cite[]{Tarantola:05}) are only recently beginning to appear. See for example \cite{Fichtner:10}. FWI is well-known to be only locallly convergent (a phenomenon that this course will illustrate, and to some extent explain). In some sense you have to ``know the answer before you ask the question''.  Amongst many approaches that have been suggested for globalizing FWI convergence, I will dwell on extended inversion, an idea borrowed from velocity analysis. The literature on extended inversion has become fairly large. The reveiw paper \cite{geoprosp:2008} includes an extensive bibliography up to about 2007. Course reading for this segment will include this review paper and several papers appearing in the last 12 months. 
+
+Excellent general texts on geophysical prospecting, for example those by \cite{Yil:01} and \cite{DobSav:88}, set the topics discussed here in a wider context. 
+
+For the fundamental properties of wave equations and their solutions, the main reference is \cite{BlazekStolkSymes:13}, an open access paper available through the journal's web site, {\tt http://iopscience.iop.org/journal/0266-5611}. For finite difference methods, the classic is \cite{RichtMort}, which (so far as I know) remains the only mathematically complete account of convergence in book form, half a century after its publication. I will provides notes on a special case using energy estimates, that suffices for for the FD methods used in this course (and most of those used in computational seismology). Excellent books on other aspects of finite difference methods include \cite{Cohen:01} and \cite{Leveque:07}. For the section on asymptotic inversion, I will refer to my old notes \cite[]{SymesNotes}, and to the papers \cite[]{HouSymes:15}, \cite[]{HouSymes:17}, along with many papers cited there. The mathematics of extended inversion exists only in fragmentary form. I will present an account in the final part of these notes.
+
+\section{Software} 
+A project like this book would simply be impossible without a high quality open source foundation. In particular, I make extensive use of Seismic Unix (SU) and Madagascar, and of the TRIP package develped by my group. These three packages are the results of multi-decade efforts by dozens of talented people, to whom I am deeply grateful. Both SU and Madagascar are community projects, with many contributors. Both have chief contributor/maintainers: for SU, John Stockwell, and for Madagascar, Sergey Fomel (who is responsible for the concept, design, and a great deal of the code).
+
+I presume that the active reader will work in a Un*x-like operating environment, either a flavor of Linux or Mac OSX. The packages on which the book's examples depend will need to be built from C/C++ source code, so you will need C/C++ compilers. Several parts of the code take advantage of relatively recent language innovations: you compilers will need to support key features of the C99 and C++11 standards. Gnu ({\tt gcc, g++}) version 4.4 and later, and Intel ({\tt icc, icpc}) version 13 and later, are adequate and widely available. You will also need Python (version 2.7 or later) and SConstruct (any recent version). Recent Linux distributions generally include installed Python, and so do at least the latest Mac OSX releases. Otherwise you will need to install Python from the {\tt www.python.org}. SConstruct will be installed automatically as the first step in installing Madagascar, if you haven't already installed it, and is needed for installation of TRIP. Seismic Unix (SU) uses Gnu make as its build system. All of the environments I have mentioned come with a suitable version of Gnu make installed.
+
+Given the prerequisites outlined in the preceding paragraph, you should be able to download and install SU, Madagascar, and TRIP from their web sites:
+\begin{verbatim}
+reproducibility.org
+
+cwp.mines.edu/cwpcodes
+
+www.trip.caam.rice.edu/software
+\end{verbatim}
+In each source tree you will find installation instructions at the top level. Madagascar and SU have well-established release procedures and should install with minimal headaches. TRIP is newer, and has received less systematic testing; the release from the web site has installed correctly on Linux and Mac OSX under recent versions of Gnu and Intel suites. TRIP defines several modes of parallel execution via MPI. To enable these, it will be necessary to supply also a compatibly installed MPI.
+
+That much will get you through building intermediate data from raw data and the figure files (in Madagascar {\tt .vpl} format) from intermediate data. Inclusion in finished papers, or in this book, requires \LaTeX. The Tutorial on the Madagascar web site explains how to obtain and install \LaTeX, if you haven't already, and how to make it available to the Madagascar framework.
+
+\section{Seismic Unix}
+Installation of SU is straightforward - just remember to comment out {\tt XDRFLAG} in Makefile.config, otherwise you will have to set XDR flags in TRIP software as well and various other complications will ensue. The world is little endian now, and XDR solves a problem that went away.
+
+There is lots of tutorial material about SU on the web, beginning with
+\begin{verbatim}
+http://www.cwp.mines.edu/sututor/sututor.html
+\end{verbatim}
+
+\section{Madagascar}
+Madagascar is both a processing system, with hundreds of core and user-contributed utilities, and a framework for relatively straightforward publication of reproducible research. While the processing system is very useful (and I use it a lot in the examples to follow), the reproducible research framework is unique: to my knowledge, no other available framework is as well-adapted to merging large-scale computation with text describing its significance. However, the system documentation tends to leave the novice user in the dark about a number of important issues. Most current documentation consists of oversimplified or incomplete examples, with little guidance about incorporating high-performance computing environments. This section gives some additional information on the steps necessary to produce a paper via Madagascar, {\em beyond the information provided on the Madagascar web site}. I strongly recommend that you
+\begin{itemize}
+\item read {\tt http://reproducibility.org/wiki/Tutorial} and try some of the examples
+\item read {\tt http://reproducibility.org/wiki/Reproducible\_}{\tt computational\_experiments\_using\_SCons}
+\end{itemize}
+I will only add a few remarks about aspects glossed over or not treated in the Madagascar web site tutorial materials. To illustrate these points, I'll use the Chapter 2 project directory {\tt caam641/basic/project}. The  {\tt SConstruct} file found there implements simple processing workflow.
+ 
+There are five major steps, starting with raw data and ending with a finished book chapter. 
+
+\subsection{Import Raw Data: {\tt Fetch}} 
+{\tt Fetch} is well-described in the ``Reproducibility with Scons'' page on the Madagascar site. Its syntax is
+\begin{verbatim}
+Fetch(file, dir, server=URL)
+\end{verbatim}
+Here {\tt file} is the name of the file to be fetched from the directory {\tt dir}. The key point is that {\tt dir} must be a subdirectory of {\tt htdocs/data}, where {\tt htdocs} is the usual doc directory under the root accessed by the URL. For example, in {\tt caam641/basic/project/SConstruct} you will find the URL {\tt http://www.trip.caam.rice.edu}. The sysadmin at our site has aliased the root directory (under {\tt /}) accessed by this URL as {\tt /www.trip}. So the file accessed is {\tt /www.trip/htdocs/data/dir/file}.
+
+With this understood, you can now set up your own {\tt Fetch} data sources.
+
+One common plaint heard from Madagascar users is ``where did my data go?''. The answer is usually ``to the {\tt DATAPATH}''. Madagascar puts binary data in a directory signified by the {\tt DATAPATH} environment variable, and the output of {\tt Fetch} is assumed to be a binary data file. The default value of {\tt DATAPATH} is {\tt /var/tmp}, and that's what you'll get unless you set it yourself. Madagascar expects all working data process directories to be {\tt project} subdirectories of a paper directory (say, {\tt paper}, and each of those to be a subdirectory of a book directory (either a real book, like this one, in which case the papers are actually chapters, or an anthology or multi-author report, in which case the papers are stand-alone documents. In any case, the canonical directory tree {\tt book/paper/project} is how Madagascar organizes practically everything. For {\tt Fetch} executed in {\tt book/paper/project}, Madagascar creates a subdirectory of {\tt DATAPATH} named {\tt book/paper/project} and places the actual file retrieved by {\tt Fetch} there. A link is placed in the working directory, that is, {\tt book/paper/project}. 
+
+\subsection{Generate Intermediate Data: {\tt Flow}}
+{\tt Flow} is well-explained in the Madagascar documentation. The only point I wish to add is that it's entirely possible to use commands other than those provided by Madagascar in implementing {\tt Flow}, and it's even possible to override the filter design of {\tt Flow}. For example, in {\tt basic/project/SConstruct}  I use the SU command {\tt segyread} to convert the SEGY data file (with standard SEGY structure and IBM binary word order) to an SU file (stripped of ebcidic and reel header, trace data converted to native four-byte floats). {\tt segyread} is not a filter: it expects the input file to be specified as the vallue of {\tt tape=}. {\tt segyread} does dump its output to {\tt stdout}, but I wanted to clean up the binary and real headers after returning from {\tt segyread}, so the command I chose to embed in the flow is not even half a filter. To signify that data is {\em not} read from {\tt stdin}, add {\tt, stdin=0} after the command string. To signify that data is {\tt not} written to {\tt stdout}, add {\tt, stdout=-1}. In the {\tt segyread} example, I use both. You will see lots of similar constructions in the examples to come.
+
+The command in a flow is a Python string, with any literal parts enclosed in single quotes. If you have defined non-Madagascar commands as string variables, as I recommend, these must be outside the quoted string literals: for example,
+\begin{verbatim}
+.. segyread + ' tape=${SOURCE}...'
+\end{verbatim}
+Here {\tt segyread} has been assigned the value {\tt<path to CWP bin dir>/segyread} at the top of the SConstruct file: in the above fragment, it is a Python string variable, concatenated (Python addition of strings) with a literal that defines its arguments. Notice that the source file (second argument of {\tt Flow}) is referenced as {\tt \$\{SOURCE\}}, a convention that makes it easy to generate a number of similar commands with minimal typing. See the Tutorial for more on this. 
+
+\subsection{Generate Figures: {\tt Result}}
+Chapter 2 \LaTeX source resides in the subdirectory {\tt basic} of the {\tt caam641} book directory.
+As for every other such chapter or paper organized according to the Madagascar framework, each figure to be included in the paper (or chapter) is recorded as a {\tt .vpl} file in the {\tt project/Fig} subdirectory, by evaluation of the {\tt Result} function. 
+
+{\tt Result} takes three arguments: the name of a target figure file, the name of a source data file, and a command for producing the former from the latter. 
+A typical example from {\tt basic/project/SConstruct}: 
+\begin{verbatim}
+Result('parastack','parastack.su','suread endian=0  read=data | put label1=Time label2=Trace unit1=s | grey clip=1.e+7 xinch=10 yinch=5')
+\end{verbatim}
+Note that the graphics file is in Madagascar graphics format ({\tt .vpl}), created in {\tt project/Fig}, but the source data file is SU (SEGY) format. Even though the rest of the workflow is implemented using SU commands, the graphics commands in our examples use Madagascar utilities only, in order to conform to the reproducible research design. {\tt sfsuread} converts the SEGY traces in {\tt parastack.su} into RSF format, {\tt sfput} adds header words for labels and units, and {\tt sfgrey} converts the RSF data to graphics format. As usual, the prefix {\tt sf} that is part of the name of every Madagascar command may be left off within the command argument for {\tt Result} or {\tt Flow}. Also, the figure file suffix {\tt .vpl} is understood, and the name of the target is simply the filename root. If the input data file ({\tt parastack.su} in this case) were an {\tt .rsf} file, then the figure file root name and the data file root name can be presumed to be the same, and the souce data file name (second argument of {\tt Result}) may be left out.
+
+For example, if we were to convert {\tt parastack.su} to RSF format first, in a separate {\tt Flow}, then the prduction of this figure could read
+\begin{verbatim}
+Flow('parastack','parastack.su','suread endian=0  read=data | 'put label1=Time label2=Trace unit1=s')
+Result('parastack', 'grey clip=1.e+7 xinch=10 yinch=5')
+\end{verbatim}
+The final result ({\tt basic/project/Fig/parastack.vpl}) is exactly the same, but now there is an extra intermediate file, {\tt parastack.rsf} in {\tt basic/project} (and its corresponding data file, {\tt parastack.rsf@}, residing in the data path). Note that the suffice {\tt .rsf} is also presumed in any file not containing a period {\tt .} in its name, and may also be left off, as {\tt .vpl} was left off in the specification of the {\tt Result} target..
+
+SU commands (and other non-Madagascar commands, such as compiled-in-place IWAVE) must be defined, most reliably by full pathnames. See the {\tt SConstruct} file in {\tt basic/project} for a good way to do this.
+
+Otherwise, only the standard RSF project framework is required ({\tt from rsf.proj import *} at the top of the {\tt SConstruct}) for this part of the process.
+
+You can do this at home: in your copy of {\tt caam641/basic/project}, run {\tt scons -c} to clean everything up, then run {\tt scons} to regenerate everything.
+
+\subsection{Archive the Figures}
+Madagascar defines a sort of figure repository - actually, just a directory with a specific subdirectory tree structure in which copies of figure files are stored for future use. You control the location of this directory with the environment variable {\tt RSFFIGS}.  This is a local (platform-specific) definition - for example, on one of my laptops, {\tt .bashrc} contains the line
+\begin{verbatim}
+export RSFFIGS=/Users/symes/Documents/tripbooks/figs
+\end{verbatim}
+and you would do something similar if you use {\tt tcsh}.
+
+The figures get into the RSFFIGS figure ``repository'' by the {\tt scons lock} command, run in the {\tt project} subdirectory. 
+
+For example, if you have successfully run {\tt scons} in {\tt basic/project}, then execute {\tt scons lock} to ``lock'' the figure files, i.e. copy them to the RSFFIGS directory. 
+
+After you do this, inspect {\tt RSFFIGS}: you will see a {\tt caam641} subdirectory, i.e. one with the same name as the parent directory of {\tt basic} - this would be created, if it did not exist before. In {\tt \$RSFFIGS/caam641}, you will see a {\tt basic} subdir, and within that a {\tt project} subdir, containing copies of all the figure files from {\tt caam641/basic/project/Fig}. This is Fomel's device for keeping the figures for each project in a unique place: create a subdirectory path in {\tt RSFFIGS} mimicing the directory path under the ``book'' ({\tt scratch}, in this case) and put the figures there. The construction follows the standard {\tt book/paper/project} structure of Madagascar reproducible research.
+
+\subsection{Build the Paper}
+You can now build the paper in the {\tt caam641/basic}, by typing {\tt scons}. You will see the {\tt .vpl} files from the {\tt RSFFIGS} subdir converted to {\tt .pdf} and incorporated in the paper {\tt .pdf} file. The rigid choice of directory structure and environment variables makes all this work: you have to follow {\tt book/paper/project}!
+
+If you visit all of the {\tt caam641/chapter/project} directories and execute {\tt scons lock} successfully in each, then you can execute {\tt scons} in {\tt caam641} and reproduce the book that you are now reading!
+ 
+Once again, only the standard RSF reproducible research framework is needed to make all of this work.
+
+A bit reflection may suggest that actually the procedure outlined here and on the Madagascar web site really only makes sense when all of the work takes place in a single address space. At the moment, Madagascar does not provide adequate tools for incorporating the results of remote computations, for example at supercomputer centers. Later in the book, I'll outline a workaround.
+
+\section{TRIP}
+TRIP contains two subpackages:
+\begin{itemize}
+\item Rice Vector Library: a middleware package for connecting complex simulations to linear algebra and optimization algorithms, along with a number of linear algebra and optimization algorithms implemented in terms of this middleware;
+\item IWAVE, a framework for regular grid finite difference simulation, supplied with RVL interfaces, with several acoustic and elastic simulators implements in terms of the framework. Includes commands invoking the simulators, and their associated maps (Born approximation, adjoint, etc.).
+\end{itemize}
+TRIP's user interface slavishly imitates Madagascar and SU (and SEPLib, their immediate ancestor), insofar as possible: commands self-doc, and parameters are passed by keyword=value pairs. The chief difference is that TRIP commands are not filters (reading from stdin, writing to stdout). That unavoidable, as they represent interactions amongst data stored in many files: there are usually multiple inputs, and often multiple outputs. Note that SU commands are also not all structured as filters, for the same reasons, and one uses the same devices to include TRIP commands in Madagascar {\tt Flow}s. The first chapter to include examples of this is Chapter 3, Born Approximation, and there are many examples in following chapters.
+
+In the current release, commands read/write trace data from/to SU files, and regularly gridded spatial data from/to RSF file pairs.
+
+\bibliographystyle{seg}  % style file is seg.bst 
+\bibliography{../../bib/masterref}

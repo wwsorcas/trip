@@ -1,0 +1,263 @@
+\title{Notes on Convergence of FD Methods}
+\maketitle
+ 
+\section{Energy Estimates}
+Abstract setup: 
+\begin{itemize} 
+\item Hilbert space $H=H_1 \oplus H_2$ (``continuum fields'')
+\item Family of Hilbert spaces $G(h) =U(h) \oplus V(h), h>0$ (``grids'')
+\item bounded self-adjoint positive definite operators 
+\[
+A(h): U(h) \rightarrow U(h), B(h): V(h) \rightarrow V(h)
+\]
+upper and lower bounds uniform in $h$ (``coefficients''):
+\[
+A_*\|u\|^2 \le \langle Au,u \rangle \le A^*\|u\|^2, \, B_*\|v\|^2 \le
+\langle B v, v\rangle \le B^*\|v\|.
+\]
+\item bounded operators $D(h,r), D_1(h):U(h) \rightarrow V(h)$,
+\[
+\|D_1(h)\| \le D^* \mbox{ for all }h>0, D(h,r) = rD_1(h)
+\]
+(``stress divergence'').
+\item Bounded operator $S(h):H \rightarrow G(h)$ (``sampling'')
+\end{itemize}
+
+Staggered grid dynamics: $(u^n(h),v^{n+1/2}(h)) \in G(h)$ satisfy 
+\begin{eqnarray}
+\label{eqn:sg}
+A(u^{n+1} - u^n) & = & -D^T v^{n+1/2} \nonumber\\
+B(v^{n+1/2}-v^{n-1/2}) & = & D u^n
+\end{eqnarray}
+
+Energy form:
+\[
+E = \frac{1}{2}(\langle Au,u\rangle + \langle Bv,v\rangle + \langle D^Tv,u\rangle ) 
+\]
+\[
+= \frac{1}{2} \left(
+\begin{array}{c}
+u\\
+v 
+\end{array}
+\right)^T
+\left(
+\begin{array}{cc}
+A & \frac{1}{2}D^T\\
+\frac{1}{2}D & B
+\end{array}
+\right)
+\left(
+\begin{array}{c}
+u\\
+v 
+\end{array}
+\right)
+\]
+
+\noindent Claim: for a solution $\{u^n,v^{n-1/2}$ of the system \ref{eqn:sg},
+\[
+E^n = E(u^n,v^{n-1/2})
+\]
+is independent of $n$.
+
+Proof: 
+\[
+E^{n+1} - E^n =\langle A(u^{n+1}-u^n), (u^{n+1}+u^n)\rangle 
++ \langle B(v^{n+1/2}-v^{n-1/2}), (v^{n+1/2}+v^{n-1/2})\rangle +
+\]
+\[
+\langle D^Tv^{n+1/2},u^{n+1}\rangle ) - \langle D^Tv^{n-1/2},u^n\rangle )
+\]
+\[
+= \langle -D^Tv^{n+1/2},(u^{n+1}+u^n) \rangle 
++ \langle Du^n. (v^{n+1/2}+v^{n-1/2}) \rangle
++\langle D^Tv^{n+1/2},u^{n+1}\rangle ) - \langle D^Tv^{n-1/2},u^n\rangle )
+\]
+\[ 
+=0.
+\]
+Q.E.D.
+
+\noindent Claim: for sufficiently small $r$, there exist $0 < C_* \le C^*$ such that 
+\begin{equation}
+\label{eqn:pd}
+C_*\|u,v\|^2 \le E(u,v) \le C^*\|u,v\|^2
+\end{equation}
+
+Proof: upper bound is clear, from $h$-uniform bounds on $A$, $B$,
+$D$. 
+\[
+E(u,v) \ge A_*\|u\|^2 + B_*\|v\|^2 - rD^*\|u\|\|v\|
+\]
+which is a positive definite form in $\|u\|,\|v\|$ when $rD^* <
+\sqrt{A^*B^*}$.
+Q.E.D.
+
+\section{$L^2$ Convergence of Smooth Solutions}
+Inhomogeneous system:
+
+\begin{eqnarray}
+\label{eqn:in}
+A(u^{n+1} - u^n) & = & -D^T v^{n+1/2} + hf^{n+1/2}\nonumber \\
+B(v^{n+1/2}-v^{n-1/2}) & = & D u^n + h g^n
+\end{eqnarray}
+
+\noindent Claim: for $r$ sufficiently small that $E$ is positive definite, there
+exists $K \ge 0$, $\lambda > 1$ so that so that
+\[
+E^n = E(u^n,v^{n-1/2}) \le \lambda^nE(u^0,v^{-1/2}) + Kh\sum_{m=0}^{n-1}\lambda^{n-m+1}(\|f^{m-1/2}\|^2 + \|g^m\|^2)
+\]
+Proof: The same arithmetic as used in the homogeneous case leads to
+\[
+E^{n+1}-E^n = h\langle f^{n+1/2}, u^{n+1}+u^n\rangle + h\langle g^n,
+v^{n+1/2}+v^{n-1/2}\rangle
+\]
+\[
+\le \frac{h}{2\alpha^2} (\|f^{n+1/2}\|^2 + \|g^n\|^2) +
+\frac{\alpha^2h}{C_*}(E^{n+1}+E^n)
+\]
+for any $\alpha \in (0,1)$. Choose $\alpha$ so that $\alpha^2 h < C_*$
+(that is, can make fixed choice of $\alpha$ for $h$ small enough), and
+set 
+\[
+\lambda = \left(1+\frac{\alpha^2h}{C_*}\right) \left(1-\frac{\alpha^2h}{C_*}\right)^{-1}
+\]
+and 
+\[
+K = \frac{\frac{1}{2\alpha^2}}{ \left(1+\frac{\alpha^2h}{C_*}\right) }
+\]
+Then
+\[
+\lambda^{-1}E^{n+1} - E^n = Kh (\|f^{n+1/2}\|^2 + \|g^n\|^2)  
+\] 
+so 
+\[
+\lambda^{-(n+1)}E^{n+1} - \lambda^{-n}E^n = \lambda^{-n}Kh (\|f^{n+1/2}\|^2 + \|g^n\|^2) 
+\]
+whence
+\[
+\lambda^{-n}E^n = E^0 +
+Kh\sum_{m=0}^{n-1}\lambda^{-m+1}(\|f^{m-1/2}\|^2 + \|g^m\|^2)
+\]
+Q.E.D.
+
+Suppose that $(U^n,V^{n-1/2}) \in H$. Set
+\begin{eqnarray}
+\label{eqn:tr}
+f^{n+1/2}(h)& =& h^{-1}(A(h)(S(h)U^{n+1} - S(h)U^n) + D(h,r)^T S(h)V^{n+1/2}))\\
+g^{n}(h)& =& h^{-1}(B(h)(S(h)V^{n+1/2}-S(h)V^{n-1/2}) - D(h,r) S(h)U^n)
+\end{eqnarray}
+
+Suppose $(u^n,v^{n-1/2})$ solves \ref{eqn:sg} with 
+\[
+(u^0, v^{-1/2})=S(h)(U^0,V^{-1/2})
+\]
+
+\noindent Claim: Define $K, \lambda$ as above, then
+\[
+E((u^n,v^{n-1/2})-S(h)(U^n,V^{n-1/2})) \le
+Kh\sum_{m=0}^{n-1}\lambda^{n-m+1}(\|f^{m-1/2}\|^2 + \|g^m\|^2)
+\]
+Proof: follows immediately from previous claim.
+
+\noindent Corollary: Suppose $T>0$ given independent of $h$. If
+$\|f^{m-1/2}\|^2 + \|g^m\|^2 \le L^2 h^{2p}$ for $0\le m \le N$, $Nh=T$, then 
+\begin{equation}
+\label{eqn:ee}
+E((u^n,v^{n-1/2})-S(h)(U^n,V^{n-1/2})) \le M^2L^2h^{2p}
+\end{equation}
+Proof: from the preceding estimate,
+\[
+E((u^n,v^{n-1/2})-S(h)(U^n,V^{n-1/2})) \le KL^2
+h^{2p+1}\frac{\lambda^N-1}{\lambda-1}
+\]
+Note that if $h$ is sufficiently small, then $\lambda < 1 +
+2\frac{\alpha^2h}{C_*}$ so $\lambda^N \le
+exp(2\frac{\alpha^2}{C_*}T)$, where $T=Nh$. If $h$ is perhaps smaller
+yet, then $\lambda > 1+\frac{\alpha^2h}{2C_*}$. Putting this all
+together, there is $M^2$ depending on $T$ and all of the other constants
+in the setup, so that if $nh <T$ so that \ref{eqn:ee} holds.
+Q. E. D.
+
+We apply these results to 3D acoustics and elasticity. In either case,
+$H_1 = L^2(\bR^3,\bR^N)$,  $H_2 = L^2(\bR^3,\bR^3)$. Members of $H_1$
+are stresses ($N=6$) or pressures ($N=1$), members of $H_2$ are velocities.
+
+$U(h) = $ square integrable $\bR^N$-valued functions on rectangular
+grid of mesh $h$, $V(h) = $ square integrable $\bR^3$-valued functions
+on half-cell shifted grids ($V_i$ shifted along $i$th axis) (discrete velocities) 
+
+$A$ = smooth symmetric $N \times N$ matrix-valued function on $\bR^3$,
+uniformly bounded with univormly bounded inverse
+
+$B$ = smooth symmetric $3 \times 3$ matrix-valued function on $\bR^3$,
+uniformly bounded with univormly bounded inverse
+ 
+View $(U,V)$ as $\bR^{N+3}$ valued, then 
+\[
+S(h)(U,V)_{i,j,k} = \left(
+\begin{array}{c}
+U(ih,jh,kh)\\
+V_1((i+1/2)h,jh,kh)\\
+V_2((ih,(j+1/2)h,kh)\\
+V_3((ih,jh,(k+1/2)h)
+\end{array}\right)
+\]
+
+Corresponding discretizations of $A$ and $B$: in the acoustic case, $A$ is scalar,
+$(A(h) u)_{i,j,k} = \frac{1}{\kappa(ih,jh,kh)}u_{i,j,k}$. For
+elasticity, it is a more complex evaluation of the Hooke tensor at
+various grid points, which I will not give explicitly. In all cases,
+$B(h)$ is a diagonal sampling of the density: 
+\begin{eqnarray*}
+(B(h)_{i,j,k})_{1,1} & = & \rho((i+1/2)h,jh,kh),\\
+(B(h)_{i,j,k})_{2,2} & = & \rho(ih,(j+1/2)h,kh),\\
+(B(h)_{i,j,k})_{3,3} & = & \rho(ih,jh,(k+1/2)h),\\
+(B(h)_{i,j,k})_{l,m} & = & 0,\,l \ne m
+\end{eqnarray*}
+
+$D$ is a finite difference approximation to the strain (or gradient,
+for acoustics) of order $2p$. For example, for $p=1$, one possibility is 
+\[
+D u =
+\{(u_{i+1,j,k}-u_{i,j,k},u_{i,j+1,k}-u_{i,j,k},u_{i,j,k+1}-u_{i,j,k}\}
+\]
+This discrete gradient operator is a second-order approximation to the
+partial derivatives of $u$ at half-cell positions along each
+coordinate axis, corresponding to velocity sample points as described
+above.
+
+$D^T$ is discrete divergence, $r = \Delta t/h$.
+
+Standard truncation error calculation: if $(U(t), V(t))$ is smooth solution of
+acoustic (pressure-velocity) system with smooth right-had sides $F(t),G(t)$, 
+\begin{eqnarray}
+\label{vdawe.fd}
+\frac{1}{\kappa}\frac{\partial U}{\partial t} + \nabla \cdot V & = &
+                                                                     F,\\
+\rho \frac{\partial V}{\partial t} + \nabla U & = & G
+\end{eqnarray}
+each time slice of compact
+support, $(U^n(h),V^{n-1/2}(h)) = S(h)(U(n\Delta t),V((n-1/2)\Delta t))$, then
+\begin{eqnarray}
+\label{eqn:tr2}
+f^{n+1/2}(h)& =& h^{-1}(A(h)(U^{n+1}(h) - S(h)U^n(h)) + D(h,r)^T
+                 V^{n+1/2}(h))) = O(h^{2p})\\
+g^{n}(h)& =& h^{-1}(B(h)(V^{n+1/2}(h)-V^{n-1/2}(h)) - D(h,r)
+             U^n(h)) = O(h^{2p}+\Delta t^2)
+\end{eqnarray}
+pointwise, uniformly in $i,j,k$. Since the support is uniformly bounded if
+$0\le n\Delta t = nh/r \le T$, the $O$ statements apply  to the $L^2$
+norms as well.
+
+Let $u$ denote the solution of \ref{eqn:sg} with
+$(u^0,v^{-1/2})=S(h)(U^0,V^{-1/2})$. Then $(u,v)-S(h)(U,V)$ solves
+\ref{eqn:in} with $f,g$ as just given.  Therefore the error estimate
+\ref{eqn:ee} implies that 
+\[
+\|(u,v)-S(h)(U,V)\| = O(h^{2p} + \Delta t^2),
+\]
+that is, $(2,2p)$-th order convergence in the $L^2$ sense.
+
+\section{Weak Convergence of Singular Solutions}

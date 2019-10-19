@@ -1,0 +1,411 @@
+from rsf.proj import *
+import os
+
+####################### EDIT TO CHOOSE BETWEEN ########################
+################ MADAGASCAR AND STANDALONE INSTALLS ###################
+#asg = 'asg'
+#stdmdl='standardmodel'
+################################# OR ##################################
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sumax           = os.path.join(CWPROOT,'bin/sumax')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+sudiff          = os.path.join(CWPROOT,'bin/sudiff')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+suresamp        = os.path.join(CWPROOT,'bin/suresamp')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/sim.x')
+acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/sim.x')
+poisson         = os.path.join(MYAPPS,'trip/iwave/asg/main/ex2D.x')
+asg_ex3D        = os.path.join(MYAPPS,'trip/iwave/asg/main/ex3D.x')
+stdmdl          = os.path.join(MYAPPS,'trip/iwave/grid/main/standardmodel.x')
+#######################################################################
+
+BULK = [4.0,6.0,8.0]
+BUOY = [1.0,0.66667,0.5]
+
+for i in range(0,3):
+    Flow('bmh' + str(i), None, 
+        '''
+        makevel n1=401 n2=801 
+        d1=10.0 d2=10.0 v000=%g | 
+        sfput dim=2 gdim=2 id1=0 id2=1
+        label1=Depth label2=Distance
+        unit1=m unit2=m
+        label=Bulk_modulus unit=GPa''' % BULK[i],
+        stdin=0) 
+for i in range(0,3):
+    Flow('byh'+str(i), None, 
+        '''
+        makevel n1=401 n2=801 
+        d1=10.0 d2=10.0 v000=%g | 
+        sfput dim=2 gdim=2 id1=0 id2=1
+        label1=Depth label2=Distance
+        unit1=m unit2=m
+        label=Buoyancy unit=cm^3/g
+        ''' % BUOY[i],
+        stdin=0)
+
+Flow('fbmh', None, 
+     '''
+     makevel n1=801 n2=1601 
+     d1=5.0 d2=5.0 v000=%g | 
+     sfput dim=2 gdim=2 id1=0 id2=1
+     label1=Depth label2=Distance
+O     unit1=m unit2=m
+     label=Bulk_modulus unit=GPa''' % BULK[0],
+     stdin=0) 
+
+Flow('fbyh', None, 
+     '''
+     makevel n1=801 n2=1601 
+     d1=5.0 d2=5.0 v000=%g | 
+     sfput dim=2 gdim=2 id1=0 id2=1
+     label1=Depth label2=Distance
+     unit1=m unit2=m
+     label=Buoyancy unit=cm^3/g
+     ''' % BUOY[0],
+     stdin=0)
+
+Flow('pthdr1.su', None,
+     sunull + ' nt=1001 ntr=201 dt=0.004 | ' + 
+     sushw + ' key=gx a=2000 b=20 j=201 | ' + 
+     sushw + ' key=gelev a=-1000',
+     stdin=0)
+
+### single trace source dt=0.004
+Flow('srctrc004.su', None, suspike +
+     ' nt=1001 ntr=1 offset=0 ix1=1 nspk=1 it1=250 dt=0.004 | ' +
+     sugain + ' scale=250.0 | ' +
+     sufilter + ' f=2,5,15,25 | ' +
+     sushw + ' key=gelev a=-3000 | ' +
+     sushw + ' key=gx a=3000', stdin=0)
+
+### single trace source dt=0.002
+Flow('srctrc002.su', None, suspike +
+     ' nt=2001 ntr=1 offset=0 ix1=1 nspk=1 it1=500 dt=0.002 | ' +
+     sugain + ' scale=500.0 | ' +	   
+     sufilter + ' f=2,5,15,25 | ' +
+     sushw + ' key=gelev a=-3000 | ' +
+     sushw + ' key=gx a=3000', stdin=0)
+
+### single trace source dt=0.001
+Flow('srctrc001.su', None, suspike +
+     ' nt=4001 ntr=1 offset=0 ix1=1 nspk=1 it1=1000 dt=0.001 | ' +
+     sufilter + ' f=2,5,15,25 | ' +
+     sugain + ' scale=1000.0 | ' +
+     sushw + ' key=gelev a=-3000 | ' +
+     sushw + ' key=gx a=3000', stdin=0)
+
+### single trace source dt=0.0005
+Flow('srctrc0005.su', None, suspike +
+     ' nt=8001 ntr=1 offset=0 ix1=1 nspk=1 it1=2000 dt=0.0005 | ' +
+     sufilter + ' f=2,5,15,25 | ' +
+     sugain + ' scale=2000.0 | ' +     
+     sushw + ' key=gelev a=-3000 | ' +
+     sushw + ' key=gx a=3000', stdin=0)
+
+### single trace source dt=0.00025
+Flow('srctrc00025.su', None, suspike +
+     ' nt=16001 ntr=1 offset=0 ix1=1 nspk=1 it1=4000 dt=0.00025 | ' +
+     sufilter + ' f=2,5,15,25 | ' +
+     sugain + ' scale=4000.0 | ' +     
+     sushw + ' key=gelev a=-3000 | ' +
+     sushw + ' key=gx a=3000', stdin=0)
+     
+Flow('extrc004.su','srctrc004.su',
+     poisson + '''
+     bulk=%g buoy=%g distance=2828.4 
+     source=${SOURCES[0]} pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=-1)
+Flow('extrc002.su','srctrc002.su',
+     poisson + '''
+     bulk=%g buoy=%g distance=2828.4 
+     source=${SOURCES[0]} pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=-1)
+Flow('extrc001.su','srctrc001.su',
+     poisson + '''
+     bulk=%g buoy=%g distance=2828.4 
+     source=${SOURCES[0]} pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=-1)
+Flow('extrc0005.su','srctrc0005.su',
+     poisson + '''
+     bulk=%g buoy=%g distance=2828.4 
+     source=${SOURCES[0]} pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=-1)
+Flow('extrc00025.su','srctrc00025.su',
+     poisson + '''
+     bulk=%g buoy=%g distance=2828.4 
+     source=${SOURCES[0]} pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=-1)
+
+for i in range(0,3):
+    Flow(['ptp'+str(i)+'.su', 'ptvz'+str(i)+'.su'],
+         ['bmh'+str(i), 'byh'+str(i), 'srctrc002.su', 'pthdr1.su'],
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]} && ' +
+	 '/bin/cp ${SOURCES[3]} ${TARGETS[1]} && ' +
+	 'export OMP_NUM_THREADS=2 && ' + 
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]} 
+         deriv=0 adjoint=0 order=4 cfl=0.5 cmin=1.0 cmax=3.0 num_threads=1
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 printact=1
+         ''', stdin=0, stdout=-1)
+
+Flow('dsrctrc004.su','srctrc004.su',sufrac + ' power=1 | ' + sugain + ' scale=0.001')
+Flow('dsrctrc002.su','srctrc002.su',sufrac + ' power=1 | ' + sugain + ' scale=0.001')
+
+Flow('cdptp0.su',['bmh0', 'pthdr1.su', 'dsrctrc004.su'],
+     '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && ' +
+     'export OMP_NUM_THREADS=1 && ' +    
+     acd + 
+     '''
+     csq=${SOURCES[0]} source=${SOURCES[2]} data=${TARGETS[0]} 
+     deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1 num_threads=2
+     ''', stdin=0, stdout=-1)
+
+Flow('cdptp02.su',['bmh0', 'pthdr1.su', 'dsrctrc002.su'],
+     '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && ' +
+     acd + 
+     '''
+     csq=${SOURCES[0]} source=${SOURCES[2]} data=${TARGETS[0]} 
+     deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+     ''', stdin=0, stdout=0)
+
+Flow(['fptp.su', 'fptvz.su'],
+     ['fbmh', 'fbyh', 'srctrc004.su', 'pthdr1.su'],
+     '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+     '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+     asg + 
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]} 
+     deriv=0 adjoint=0 order=4 cfl=0.5 cmin=1.0 cmax=3.0 
+     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+     ''', stdin=0, stdout=0)
+
+Flow('cdfptp.su',['fbmh', 'pthdr1.su', 'dsrctrc004.su'],
+     '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && ' +
+     acd + 
+     '''
+     csq=${SOURCES[0]} source=${SOURCES[2]} data=${TARGETS[0]} 
+     deriv=0 adjoint=0 order=4 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+     ''', stdin=0, stdout=0)
+
+for i in range(0,3):
+    Flow('ptr'+str(i)+'.su', 'ptp'+str(i)+'.su',
+         suwind + ' key=tracl min=151 max=151 tmin=2 tmax=3')
+    Flow('ptr'+str(i),'ptr'+str(i)+'.su',
+         'suread read=data endian=0')
+
+Flow('fptr.su', 'fptp.su',
+     suwind + ' key=tracl min=151 max=151 tmin=2 tmax=3')
+
+Flow('cdptr0.su', 'cdptp0.su',
+     suwind + ' key=tracl min=151 max=151 tmin=2 tmax=3')
+
+Flow('cdfptr.su', 'cdfptp.su',
+     suwind + ' key=tracl min=151 max=151 tmin=2 tmax=3')
+     
+Flow('fptr','fptr.su',
+     'suread read=data endian=0')
+
+Flow('extrc0005_r.su', 'extrc0005.su',
+     suresamp + ' nt=1001 dt=0.004 | ' +
+     suwind + ' tmin=2 tmax=3')
+
+Flow('extrc0005_r','extrc0005_r.su',
+     'suread read=data endian=0')
+
+Flow('extrc00025_r.su', 'extrc00025.su',
+     suresamp + ' nt=1001 dt=0.004 | ' +
+     suwind + ' tmin=2 tmax=3')
+
+Flow('extrc00025_r','extrc00025_r.su',
+     'suread read=data endian=0')
+
+for i in range(0,3):
+    Result('comp'+str(i),['ptr'+str(i), 'extrc00025_r'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} |
+           graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+           ''')
+
+Result('fcomp',['fptr', 'extrc00025_r'],
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+       ''')
+
+
+#######################################################################
+######################### 3D CASE #####################################
+#######################################################################
+
+for i in range(0,3):
+    Flow('bm'+str(i)+'_3D', None, 
+        '''
+        makevel 
+        n1=101 d1=10.0
+        n2=101 d2=10.0
+        n3=11  d3=10.0  
+        v000=%g | 
+        sfput dim=3 gdim=3 
+        id1=0 label1=Depth  unit1=m 
+        id2=1 label2=x-axis unit2=m
+        id3=2 label3=y-axis unit3=m
+        label=Bulk_modulus unit=GPa
+        ''' % BULK[i],
+        stdin=0)
+ 
+for i in range(0,3):
+    Flow('by'+str(i)+'_3D', None, 
+        '''
+        makevel 
+        n1=101 d1=10.0
+        n2=101 d2=10.0
+        n3=11  d3=10.0 
+        v000=%g | 
+        sfput dim=3 gdim=3 
+        id1=0 label1=Depth  unit1=m 
+        id2=1 label2=x-axis unit2=m
+        id3=2 label3=y-axis unit3=m
+        label=Buoyancy unit=cm^3/g
+        ''' % BUOY[i],
+        stdin=0)
+
+Flow('hdr_3D.su', None,
+     sunull + ' nt=201 ntr=51 dt=0.004 | ' + 
+     sushw + ' key=gx a=0 b=20 j=51 | ' + 
+     sushw + ' key=gy a=40 | ' +
+     sushw + ' key=gelev a=-500 | '+
+     sushw + ' key=sx a=500 | '+
+     sushw + ' key=sy a=50  | '+
+     sushw + ' key=selev a=-500 ',
+     stdin=0)
+
+### single trace source dt=0.004
+Flow('src_3D.su', None, suspike +
+     ' nt=201 ntr=1 offset=0 ix1=1 nspk=1 it1=100 dt=0.004 | ' +
+     sugain + ' scale=250.0 | ' +
+     sufilter + ' f=2,5,15,25 | ' +
+     sushw + ' key=gelev a=-500 | ' +
+     sushw + ' key=gx a=500 | ' +
+     sushw + ' key=gy a=50', stdin=0)
+
+for i in range(0,3):
+    Flow(['data_p'+str(i)+'_3D.su', 'data_vz'+str(i)+'_3D.su'],
+         ['bm'+str(i)+'_3D', 'by'+str(i)+'_3D', 'src_3D.su', 'hdr_3D.su'],
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]} && ' +
+	 '/bin/cp ${SOURCES[3]} ${TARGETS[1]} && ' +
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]} 
+         deriv=0 adjoint=0 order=4 cfl=0.5 
+         cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 
+         nl1=250 nr1=250 nl2=250 nr2=250 nl3=250 nr3=250 pmlampl=1.0
+         ''', stdin=0, stdout=0)
+
+Flow(['dirdata_p0_3D.su'],
+     ['bm0_3D', 'by0_3D', 'src_3D.su', 'hdr_3D.su'],
+     '/bin/cp ${SOURCES[3]} ${TARGETS[0]} && ' +
+     asg + 
+     '''
+     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+     source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+     deriv=0 adjoint=0 order=4 cfl=0.5 
+     cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 
+     nl1=0 nr1=0 nl2=0 nr2=0 nl3=0 nr3=0 pmlampl=1.0
+     ''', stdin=0, stdout=0)
+
+Flow('ddtsrc_3D.su','src_3D.su', sufrac + ' power=1 | ' + sugain + ' scale=0.001')
+Flow(['cddata0_3D.su'],
+     ['bm0_3D','ddtsrc_3D.su', 'hdr_3D.su'],
+      '/bin/cp ${SOURCES[2]} ${TARGETS[0]} && ' +
+     acd + 
+     '''
+     csq=${SOURCES[0]} source=${SOURCES[1]} data=${TARGETS[0]} 
+     deriv=0 adjoint=0 order=2 cfl=0.5 
+     cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 
+     ''', stdin=0, stdout=0)
+
+Flow('dataEx_3D.su',
+     ['src_3D.su','hdr_3D.su'],
+     '/bin/cp ${SOURCES[1]} ./${TARGETS[0]} && '+
+     asg_ex3D +
+     '''
+     bulk=%g buoy=%g 
+     source=${SOURCES[0]} 
+     pressure=${TARGETS[0]}
+     ''' % (BULK[0],BUOY[0]) ,
+     stdin=0, stdout=0 )
+
+
+# far trace of exact solution and difference
+Flow('trcEx_far.su','dataEx_3D.su',
+     suwind + ' key=tracl min=2 max=2')
+Flow('trcEx_far','trcEx_far.su',
+     'suread read=data endian=0')
+
+Flow('trcEx_mid.su','dataEx_3D.su',
+     suwind + ' key=tracl min=12 max=12')
+Flow('trcEx_mid','trcEx_mid.su',
+     'suread read=data endian=0')
+
+Flow('dirtrc0_far.su','dirdata_p0_3D.su',
+     suwind +' key=tracl min=2 max=2')
+Flow('cdtrc0_far.su','cddata0_3D.su',
+     suwind +' key=tracl min=2 max=2')
+	 
+for i in range(0,3):
+    Flow('trc'+str(i)+'_far.su','data_p'+str(i)+'_3D.su',
+         suwind +' key=tracl min=2 max=2')
+    Flow('trc'+str(i)+'_far','trc'+str(i)+'_far.su',
+         'suread read=data endian=0')
+
+    Result('comp'+str(i)+'_far',
+           ['trcEx_far','trc'+str(i)+'_far'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} |
+           graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+           ''')
+
+    Flow('trc'+str(i)+'_mid.su','data_p'+str(i)+'_3D.su',
+         suwind +' key=tracl min=12 max=12')
+    Flow('trc'+str(i)+'_mid','trc'+str(i)+'_mid.su',
+         'suread read=data endian=0')
+
+    Result('comp'+str(i)+'_mid',
+           ['trcEx_mid','trc'+str(i)+'_mid'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} |
+           graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+           ''')
+
+
+
+End()

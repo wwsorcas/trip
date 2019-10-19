@@ -1,0 +1,17 @@
+from rsf.tex import *
+
+End(
+options='short,notimes',
+include=r'''
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\newcommand{\bw}{{\bf w}}
+\newcommand{\bX}{{\bf X}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bP}{{\bf P}}
+''',
+use='hyperref,natbib,graphicx,subfig,color,listings,amsmath,amssymb,amsbsy,amsthm,amscd',
+color='ALL'
+)
+

@@ -1,0 +1,360 @@
+\documentclass[xcolor=dvipsnames,20pt,aspectratio=169]{beamer}
+\usecolortheme[named=violet]{structure} 
+
+%\usetheme{umbc2} 
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+%\usepackage[pdftex]{graphicx}
+\usepackage{color}
+\usepackage{amssymb,amsmath}
+\usepackage[english]{babel}
+\usepackage{subfig}
+ \usepackage{multimedia}
+\usefonttheme{structurebold}
+\mode<presentation>
+
+
+%\useinnertheme{umbcboxes}
+%
+%\setbeamercolor{umbcboxes}{bg=violet!15,fg=black}  
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}
+\input{math-macros}
+\setlength{\parskip}{2ex}   % place a blank line between paragraphs
+\def\Logo{\@ifnextchar(\beamer@Logo\logo}
+\def\beamer@Logo(#1,#2){\logo}
+
+
+
+% Images
+% Macros
+\newcommand{\coeffone}{\ensuremath{\alpha}}
+\newcommand{\Linf}[1]{\ensuremath{L_\infty\left(#1\right)}}
+\newcommand{\ooc}[1]{\ensuremath{\mathcal{O}\!\left(h^{#1}\right)}}
+\newcommand{\bm}{{\bf m}}
+\newcommand{\bff}{{\bf f}}
+\newcommand{\bA}{{\bf A}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bcF}{{\bar{\cal F}}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cK}{{\cal K}}
+\newcommand{\bcM}{{\bar{\cal M}}}
+\newcommand{\cM}{{\cal M}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\dom}{\delta \bar{m}}
+\newcommand{\Ne}{N_{\lambda}}
+\def\pr{{\cal P}_h}
+\def\pir{{\cal \pi}_{H,h}}
+\def\ds{\displaystyle}
+\def\l{\left(}
+\def\r{\right)}
+\def\lv{\left\Vert}
+\def\rv{\right\Vert}
+\def\d{\delta}
+\def\D{\Delta}
+\def\Dx{D_x^0}
+\def\Dt{D_t^0}
+\def\sumj{\sum_{j=0}^{N-1}}
+\def\sums{\sum_{s=0}^{N-1}}
+\def\summ{\sum_{m=0}^{M-1}}
+\def\sumjs{\sum_{s,j=0}^{N-1}}
+\def\sumji{\sum_{j,i=0}^{N-1}}
+\def\j{j+\frac{1}{2}}
+\def\i{i+\frac{1}{2}}
+\def\s{s+\frac{1}{2}}
+\def\im{i-\frac{1}{2}}
+\def\oN{\frac{1}{N}}
+\def\ot{\frac{1}{2}}
+\def\c{c_{\i,\j}}
+\def\E{E_{h}^{k+\frac{1}{2}}}
+\newcommand{\tder}[1]{\frac{\partial {#1}}{\partial t}}
+\newcommand{\xder}[1]{\frac{\partial {#1}}{\partial x}}
+\newcommand{\yder}[1]{\frac{\partial {#1}}{\partial y}}
+\newcommand{\zder}[1]{\frac{\partial {#1}}{\partial z}}
+\def\pr{{\cal P}_h}
+\def\pir{{\cal \pi}_{H,h}}
+\def\v{{\bf v}}
+\def\x{{\bf x}}
+\def\ki{\mbox{\boldmath $\sigma$}}
+\def\fai{\mbox{\boldmath $\phi$}}
+\def\et{\mbox{\boldmath $\eta$}}
+\def\ksi{\mbox{\boldmath $\xi$}}
+\def\sig{\mbox{\boldmath $\sigma$}}
+\newcommand{\ud}{\,\mathrm{d}}
+\newcommand\mbf[1]{\mathbf{#1}}
+
+\newcommand\f[2]{\dfrac{#1}{#2}}
+\newcommand\lf[2]{\frac{#1}{#2}}
+
+
+\pgfdeclareimage[height=0.7cm]{university-logo}{rice_logo_2color.jpg}
+\logo{\pgfuseimage{university-logo}}
+
+\AtBeginSection[]{
+ \begin{frame}<beamer>
+    \frametitle{Agenda}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+%\beamerdefaultoverlayspecification{<+->}
+
+% --------------------------------------------------------------------------------------------------
+% --------------------------------------------------------------------------------------------------
+\title[]{Controlling the Error in IVA Gradient Approximation}
+\author[]{William Symes}
+\date{TRIP Seminar, 01/16}
+
+\begin{document}
+\frame{
+\small{\titlepage}
+}
+
+\begin{frame}
+$\oF[m] = $ extended modeling op w. outer model $m$
+
+$A = $ annihilator ($\Psi$DO: Stolk \& S. 03)
+
+$\om = \om[m,d] =$ least squares estimate of inner (extended) model
+
+{\color{blue} Invertible $\oF[m]$}: $\om[m,d]=\oF[m]^{-1}d$
+\end{frame}
+
+\begin{frame}
+Expl: source-receiver extension ($\sim$ AWI)
+
+$m$= slowness in region $\Omega$, $\om = \{\bar{f}(\bx_r,\bx_s,t)\}$ = residual sources. ``True'' source $f$. $G[m] = $ Green's function for $m$ $\approx a[m]\delta(t-\tau[m])$
+ 
+\[
+(\oF[m]\om)(\bx_r,\bx_s,t) 
+\]
+\[
+= (G[m](\bx_r,\bx_s,\cdot) *_t \bar{f}(\bx_r,\bx_s,\cdot) *_t f(\cdot))(t)
+\]
+\end{frame}
+
+\begin{frame}
+``physical'' models: $\bar{f}(\bx_s,\bx_r,t) = \delta(t)$
+
+Annihilator: multiply by $t$
+
+Single arrival case (near-constant $m$) - each $G[m](\bx_r,\bx_s,\cdot)*_t$ invertible, so $\oF[m]$ ``sort of'' invertible {(\em really needs regularization!)}
+\end{frame}
+
+\begin{frame}
+\[
+DJ[m]\Delta m = 
+\]
+\[
+-\langle \oF[m]^{-1}(D\oF[m]\Delta m)\om[m,d],A^TA\om[m,d]\rangle 
+\]
+must calculate
+\begin{itemize}
+\item[1. ] $\om[m,d]=\oF[m]^{-1}d$
+\item[2. ] $(D\oF[m]\Delta m)\om$
+\item[3. ] $\oF[m]^{-1} (D\oF[m]\Delta m)\om$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Source-receiver example:
+
+1. Compute $\om = \{\bar{f}\}$ by decon of G, f 
+
+maybe iteration, has some error, get $\om_a[m,d]$, 
+$\|\om[m,d]-\om_a[m,d]\|_{L^2}$ ``small''
+
+\end{frame}
+
+\begin{frame}
+
+2. $\oF[m]\om \approx \{a[m](\bar{f}*f)(t-\tau[m])\}$ so
+\[
+(D\oF[m]\Delta m)\om \approx 
+\]
+\[
+\{-a[m](D\tau[m]\Delta m) \frac{\partial}{\partial t}(\bar{f}*f)(t-\tau[m])\}
+\]
+$\Rightarrow$ error in 2. not controlled by $\|\om-\om_a\|$?
+\end{frame}
+
+\begin{frame}
+Fact 1: if $\|\om-\om_a\|_{L^2}$ is small, then 
+\[
+-\langle \oF[m]^{-1}(D\oF[m]\Delta m)\om_a[m,d],A^TA\om_a[m,d]\rangle
+\]
+is close to
+\[
+-\langle \oF[m]^{-1}(D\oF[m]\Delta m)\om[m,d],A^TA\om[m,d]\rangle
+\]
+\end{frame}
+
+\begin{frame}
+Reason: 
+\[
+D\oF[m] \Delta m= F[m](Q[m]\Delta m)
+\]
+$Q$ = $\Psi$DO, order 1, essentially skew-symm.: $Q+Q^T = R \in OPS^0$
+
+Expl: for s-r extn, $Q[m]\Delta m = -D\tau[m]\frac{\partial}{\partial t}$
+\end{frame}
+
+\begin{frame}
+\[
+-\langle \oF[m]^{-1}(D\oF[m]\Delta m)\om,A^TA\om\rangle
+\]
+\[
+=-\langle (Q[m]\Delta m)\om,A^TA\om\rangle 
+\]
+\[
+= -\langle \om,Q^TA^TA\om\rangle = -\langle A^TA\om, Q^T \om \rangle 
+\]
+\[
+- \langle\om, [Q^T,A^TA]\om\rangle
+\]
+$[Q^T,A^TA] \in OPS^0$ so $L^2$-bounded
+\end{frame}
+
+\begin{frame}
+Upshot:
+\[
+-\langle Q\om, A^TA\om\rangle = \langle (-Q + R)\om,A^TA\om\rangle
+\]
+\[
+-\langle \om,[Q^T,A^TA]\om\rangle
+\]
+so $DJ[m]\Delta m = $
+\[
+-\langle F[m]^{-1}(DF[m]\Delta m)\om, A^TA\om \rangle =
+\]
+\[
+-\frac{1}{2}\langle (A^TAR + [Q^T,A^A])\om,\om\rangle
+\]
+\end{frame}
+
+\begin{frame}
+= bounded quadratic form, continuous in $\om$
+
+So $\nabla J[m] =$
+\[
+-DF[m]^T(F[m]^{-T}A^TA\om,\om)
+\]
+\[
+=-DF[m]^T(F[m]^{-T}A^TA\om_a,\om_a) + O(\|\om-\om_a\|)
+\]
+\end{frame}
+
+\begin{frame}
+Now 3. causes trouble: can only approximate $F[m]^{-1}(DF[m]\Delta m)\om_a$
+
+Otherwise put,
+\[
+\langle F[m]^{-1}(DF[m]\Delta m)\om_a,A^TA\om_a \rangle = 
+\]
+\[
+\langle \Delta m, DF^{T}(\om_a,F^{-T}A^TA\om_a)\rangle
+\]
+and can only approximate $F[m]^{-T}A^TA\om_a$ in $L^2$ 
+\end{frame}
+
+\begin{frame}
+Suppose $F[m]^{\dagger}$ is {\em parametrix} for $F[m]$:
+\[
+I-F[m]F[m]^{\dagger},\, I-F[m]^{\dagger}F[m] \in OPS^{-1}
+\]
+let $d_a \approx F[m]^{-T}A^TA\om_a$ in $L^2$, set
+\[
+-g_a = DF^T((I-FF^{\dagger})^Td_a + (F^{\dagger})^TA^TA\om_a, \om_a) 
+\]
+\end{frame}
+
+\begin{frame}
+Where the \%\$*(\#\&(\%*\& do you get a parametrix?
+\begin{itemize}
+\item source-receiver extension: convolve with $1/a \delta(t+\tau)$
+\item shot record extension: ask Yin
+\item subsurface offset extension: ask Jie
+\end{itemize}
+\end{frame}
+ 
+\begin{frame}
+\[
+-g_a = DF^T((I-FF^{\dagger})^Td_a + (F^{\dagger})^TA^TA\om_a, \om_a) 
+\]
+\[
+= DF^T((I-FF^{\dagger})^T(d_a-F^{-T}A^TA\om_a),\om_a)
+\]
+\[
++ DF^T((I-FF^{\dagger})^TF^{-T}A^TA\om_a + (F^{\dagger})^TA^TA\om_a ,\om_a)
+\]
+\end{frame}
+\begin{frame}
+2nd term = 
+\[
+DF^T(F^{-T}A^TA\om_a,\om_a) \approx -\nabla J
+\]
+1st term = continuous in $d_a-F^{-T}A^TA\om_a$ and $\om_a$ because 
+$I-FF^{\dagger} \in OPS^{-1}$
+\end{frame}
+
+\begin{frame}
+Upshot: 
+\[
+g_a = -DF^T((I-FF^{\dagger})^Td_a + (F^{\dagger})^TA^TA\om_a, \om_a)
+\]
+$\approx \nabla J$, error = $O($ error in $d_a, \om_a)$
+\end{frame}
+
+\end{document}
+\[
+\oF[m]\bar{z} \simeq (I-\oF[m]\oF[m]^{\dagger})(D\oF[m]\Delta m)\dom
+\]
+order of $I-\oF[m]\oF[m]^{\dagger}$ = -1 (smoother errors!) so error controlled
+}
+\only<5>{
+\[
+DJ[m]\Delta m \simeq \langle \oF[m]^{\dagger}(D\oF[m]\Delta 
+m)\dom - \bar{z},A^TA\dom\rangle 
+\]
+and all errors = O(RMS error in $\dom$)
+
+Complication: $\oF[m]$ usually not invertible, must regularize
+}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}\frametitle{Fast ELSM}
+\begin{itemize}
+\item extended Born modeling - data fit regardless of velo. error
+\item asymptotic approx. inverse - no ray tracing, same expense as ERTM, adjoint in weighted norms
+\item $O(10\times)$ acceleration of LSM, ELSM via WCG, error control
+  for EFWI graident
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Prospects}
+\begin{itemize}
+\item 3D - WCG for LSM, but sampling? 
+\item 3D extended anything - must bring down cost
+\item density..., anisotropic (visco)elasticity?
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Viking Graben}
+Asymptotic inverse - parabolic Radon demultiple
+\begin{center}
+\vspace{-1.0cm}
+\includegraphics[height=6cm]{extimag}
+\end{center}
+\end{frame}
+\end{document}
+
+

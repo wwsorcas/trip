@@ -1,0 +1,108 @@
+from rsf.tex import *
+
+Paper('old',
+	lclass='georeport',
+	options='notimes',
+	use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,amsthm,amscd',
+	include=r'''
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\sB}{{\cal B}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\br}{\bar{m}}
+\newcommand{\bv}{\bar{v}}
+\newcommand{\bq}{\bar{q}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\bZ}{{\bf Z}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\by}{{\bf y}}
+\newcommand{\bh}{{\bf h}}
+\newcommand{\bp}{{\bf p}}
+\newcommand{\op}{\bar{p}}
+\newcommand{\bc}{\bar{c}}
+\newcommand{\de}{d_{\lambda}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\Je}{\tilde{J}_{\lambda}}
+\newcommand{\Ne}{N_{\lambda}}
+\newcommand{\bre}{\bar{m}_{\lambda}}
+\newcommand{\bqe}{\bar{q}_{\lambda}}
+\newcommand{\brea}{\bar{m}_{\lambda,a}}
+\newcommand{\bqea}{\bar{q}_{\lambda,a}}
+\newcommand{\bnea}{\bar{e}_{\lambda,a}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\mm}{\,-\hspace{-0.1cm}-}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{rem}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{exmp}{Example}
+\newtheorem{definition}{Definition}
+''',
+	color='ALL'
+	)
+
+End(
+lclass='georeport',
+options='notimes',
+use='hyperref,natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,amsthm,amscd',
+include=r'''
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\sB}{{\cal B}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\br}{\bar{m}}
+\newcommand{\bv}{\bar{v}}
+\newcommand{\bq}{\bar{q}}
+\newcommand{\dbr}{\delta \bar{m}}
+\newcommand{\dbq}{\delta \bar{q}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\dR}{R^{\dagger}}
+\newcommand{\bZ}{{\bf Z}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\by}{{\bf y}}
+\newcommand{\bh}{{\bf h}}
+\newcommand{\bp}{{\bf p}}
+\newcommand{\op}{\bar{p}}
+\newcommand{\bc}{\bar{c}}
+\newcommand{\de}{d_{\lambda}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\Je}{\tilde{J}_{\lambda}}
+\newcommand{\Ne}{N_{\lambda}}
+\newcommand{\Be}{B_{\epsilon}}
+\newcommand{\bre}{\bar{m}_{\lambda}}
+\newcommand{\bqe}{\bar{q}_{\lambda}}
+\newcommand{\brea}{\bar{m}_{\lambda,a}}
+\newcommand{\bqea}{\bar{q}_{\lambda,a}}
+\newcommand{\breone}{\bar{m}_{\lambda,1}}
+\newcommand{\bqeone}{\bar{q}_{\lambda,1}}
+\newcommand{\bnea}{\bar{e}_{\lambda,a}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\mm}{\,-\hspace{-0.1cm}-}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{rem}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{exmp}{Example}
+\newtheorem{definition}{Definition}
+''',
+color='ALL'
+)
+

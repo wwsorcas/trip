@@ -1,0 +1,40 @@
+\title{Introduction}
+
+\section{Goals}
+This book will explore some of the core concepts and methods of industrial seismic imaging and inversion from a mathematical point of view. The content arose from my efforts (and those of many others) to explain {\em precisely} how many clever and effective processing algorithms originate in the physics of waves. Evidently, either such explanation is possible, or our understanding of seismic waves is lacking in some important respect. To some extent this project has been successful: wave theory - linear elastodynamics -  actually does explain {\em precisely} why some important seismic imaging and inversion methods work. Seismic processing is a huge field, and the account given here is not comprehensive by any means. However, in the pages to follow you will find a few complete accounts, starting in basic linear elastodynamics and arriving at some practical and important imaging and inversion algorithms.  
+
+These notes owe a great deal, in structure, content, and spirit, to Jon Claerbout. In preparing the text, I re-read the introduction to Jon's book {\em Image Estimation by Example}. In Jon's terms, you might say that this course is about ``the theory of the similarity between theory and practice'' (an emphasis that would clearly not appeal to Jon!). In particular, it is about both theory and practice, with practice represented by computational examples illustrating the theory, using open source software packages and public domain data, both synthetic and field. These examples take the form of {\em reproducible computational research}, another pioneering concept of Claerbout's. The reader can rebuild the results from raw data and code by executing a few simple commands. Most importantly, the reader can also modify the examples to explore beyond the content of the text.
+
+\section{Syllabus}
+This book's current incarnation is a set of notes for a course, CAAM 641, Spring 2017 edition. The structure of this course it a bit unusual, and requires some explanation. It will divide into three segments, each consisting of several in-person lectures and work sessions, followed by an internet-based project period. Each segment consists of two parts, one oriented towards data processing, the other concerned with mathematical foundations. The two parts actually support each other but develop to some extent independently, with the final story emerging over the course. These notes mostly support the processing part. The mathematical part will read through some recent (and not-so-recent) papers, or notes in those cases where satisfactory references are not available. 
+
+THe three segments are:
+
+\begin{itemize}
+\item {\bf Basic Imaging} (Chapters 2 - 6) - starting with an imaging exercise, using 2D marine survey data: RMS velocity estimation, NMO correction of CMP gathers, stack, and post-stack time and depth migration. The object of this part of the course is to identify the origin in wave theory of each process used in this exercise. Two approximations to solution of the wave equation are central to this story: linearization, aka single scattering, aka the Born approximation, and geometric optics, aka high frequency asymptotics, aka ray theory. Applied to ``locally layered'' modeling, these lead to the convolutional model, basic time processing of seismic reflection surveys (deconvolution, statics, NMO, stack), and NMO based velocity analysis. Applied to models with mild lateral variation, it leads to poststack imaging. NMO based velocity analysis provides a starting point for prestack imaging (the topic of the second part of the course) and migration velocity analysis, and serves as an interesting and accessible test bed for inversion algorithms.  
+
+The mathematical focus of this segment is the basic theory of the wave equation, following the lead of J.-L. Lions. We will work through existence of finite energy solutions, regularity as a function of the right hand side and of the coefficients, and the examples of acoustics and elasticity.
+
+At the end we will have an understanding at various levels of the Born approximation (when it is justified!), and of its collaboration with high frequency asymptotics to produce (some) post-stack imaging algorithms.
+
+\item {\bf Linear Inversion:} prestack depth imaging via diffraction sums (Kirchhoff migration), Generalized Radon Transform inversion for acoustics and elasticity, Reverse Time Migration, Least Squares Migration (iterative and true amplitude migration). This time we start with the theory, as the computational examples will use Reverse Time and True Amplitude migration, but the justification for these is essentially the theory of the Generalized Radon Transform. We end by applying these techniques to the 2D marine survey of segment 1.
+
+The mathematical part of this segment has two goals: first, a rapid survey of the convergence theory of finite difference methods, used throughout the course (and seismology) to generate examples and process data; second, filling in some of the mathematical holes in high-frequency asymptotics as developed in the other part of the course, in particular extension of the asymptotic description beyond caustics. 
+
+This section will complete the analysis of asymptotics and its role in post-stack imaging, and extend that understanding to pre-stacck imaging. 
+
+\item {\bf Nonlinear Inversion:} Theory of reflection and transmission tomography, relation to migration velocity analysis in extended time and image domains. Inversion beyond single scattering - full waveform inversion.  Application to the marine survey of segment 1. 
+
+Mathematical topics: extended modeling and inversion, source and medium extensions, analysis of convergence for inversion via iterative solution of inner problems. 
+\end{itemize}
+
+Examples presented in course materials use Seismic Unix, Madagascar, and TRIP software packages to realize the concepts introduced in class. The course notes take the form of a directory tree of Madagascar papers, each one with any examples and resulting figures produced from Python scripts in a project subdirectory. The participants can rebuild every one of these papers from scratch, and the scripts can (and should!) serve as departure points for additional projects.
+
+I suggest questions at the end of each chapter that can serve as nuclei of projects, and welcome suggestions for others.
+
+\section{Schedule}
+The class schedule divides into three periods, each with two weeks of class meetings and three weeks of internet-based project work. Classes will meet on Tuesdays and Thursdays from 1600 to 1830 in Duncan Hall room 3076 on the Rice campus. A tentative schedule for class meetings is: January 10, 12, 17, and 19; February 14, 16, 21, and 23; and March 21, 23, 28, and 30. I will communicate with participants during the intervening project periods by email and, when appropriate, by skype.
+
+\section{Expectations}
+In view of the advanced graduate nature of this course, no general performance metrics are appropriate: each participant will determine their level of involvement and expectations for the course.
+

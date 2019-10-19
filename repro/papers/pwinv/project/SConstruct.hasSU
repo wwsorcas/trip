@@ -1,0 +1,315 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+suplane         = os.path.join(CWPROOT,'bin/suplane')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sutaper         = os.path.join(CWPROOT,'bin/sutaper')
+suvcat          = os.path.join(CWPROOT,'bin/suvcat')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+RSFSRC          = os.getenv('MYAPPS')
+acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/sim.x')
+acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/cg.x')
+acdfwi          = os.path.join(RSFSRC,'trip/iwave/acd/main/fwi.x')
+planewave       = os.path.join(RSFSRC,'trip/iwave/trace/main/planewave.x')
+
+fetches = {
+#    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+# new diml consts
+N1 = 141
+N10= 126
+N1E= 281
+O1E= -3360
+D  = 24
+N2 = 501
+NX = 251
+OX = 3000 
+F2 = 383
+NPW= 31
+DP = 0.2
+NT = 501
+NTP= 101
+DT = 0.004
+SCALCO = 1000
+
+# make velocity model described in text
+Flow('ocean',None,'makevel n1=' + str(N1) + ' d1=' + str(D) + ' n2=' + str(N2) + ' d2=' + str(D) + ' o1=0 o2=0 v000=1.5 | put data_type=vel data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m/ms esize=4',stdin=0) 
+Flow('deepocean',None,'makevel n1=' + str(N1E) + ' d1=' + str(D) + ' n2=' + str(N2) + ' d2=' + str(D) + ' o1=' + str(O1E) + ' o2=0 v000=1.5 | put data_type=vel data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m/ms esize=4',stdin=0) 
+
+Flow('vel24base','velocity.HH','dd form=native | window j1=6 j2=6')
+Flow('vext','vel24base','window f2=' + str(F2) + ' n2=1 | spray axis=2 d=' + str(D) + ' n=117')
+Flow('extv',['vel24base', 'vext'], 'cat axis=2 d=' + str(D) + ' ${SOURCES[1]}')
+Flow('vel24',['ocean','extv'],'window n1=15 f1=0 | cat axis=1 d=' + str(D) + ' ${SOURCES[1]}') 
+Flow('deepvel24',['deepocean','extv'],'window n1=155 f1=0| cat axis=1 d=' + str(D) + ' ${SOURCES[1]}') 
+Flow('vel24sm2','vel24','smooth rect1=5 rect2=5 repeat=2')
+Flow('vel24big','vel24','smooth rect1=10 rect2=10 repeat=10')
+
+# corresponding c-squared models
+Flow('csq24','vel24','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('deepcsq24','deepvel24','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('csq24sm2','vel24sm2','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('csq24big','vel24big','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('csq24noah','ocean','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('deepcsq24noah','deepocean','add mode=p ${SOURCES[0]} |put data_type=csq')
+Flow('csq24big80pct',['csq24big.rsf', 'csq24noah.rsf'], 
+     'add < ${SOURCES[0]} ${SOURCES[1]} scale=0.8,0.2 > ${TARGETS[0]}')
+
+Flow('deepwindow',None,'makevel n1=' + str(N10) + ' d1=' + str(D) + ' n2=' + str(N2) + ' d2=' + str(D) + ' o1=' + str((N1-N10+1)*D) + ' o2=0 v000=0.0 | put data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m^2/ms^2 esize=4',stdin=0) 
+
+Flow('deepwindowshift',None,'makevel n1=' + str(N10-1) + ' d1=' + str(D) + ' n2=' + str(N2) + ' d2=' + str(D) + ' o1=' + str((N1-N10+1)*D) + ' o2=0 v000=1.0 | put data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m^2/ms^2 esize=4',stdin=0) 
+
+Flow('deepcsq24window','deepcsq24','window min1=' + str((N1-N10+1)*D)) 
+
+# extended models
+Flow('csq24big_ext','csq24big', 
+     'spray < ${SOURCES[0]} axis=3 n=11 d=1.0 o=0| ' +
+     'put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
+     '> ${TARGETS[0]}')
+Flow('csq24big80pct_ext','csq24big80pct', 
+     'spray < ${SOURCES[0]} axis=3 n=11 d=1.0 o=0| ' +
+     'put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
+     '> ${TARGETS[0]}')
+
+# reflectivity
+Flow('dcsq24', ['csq24', 'csq24sm2'],'add mode=a scale=1,-1 < csq24.rsf csq24sm2.rsf |window min1=180| sfpad beg1=8') 
+
+# source pulse
+Flow('wavelet_base.su', None, suspike + ' nt=201 ntr=1 offset=0 ix1=1 nspk=1 it1=100 dt=0.004 | ' + sufilter + ' f=1,3.5,10,12.5 | ' + sushw + ' key=delrt a=-400 ', stdin=0)
+
+# source pulse - lf
+Flow('gauss10Hz.su', None, suwaveform + ' type=gauss fpeak=10 ', stdin=0)
+Flow('gauss5Hz.su', None, suwaveform + ' type=gauss fpeak=5 ', stdin=0)
+Flow('gauss2Hz.su', None, suwaveform + ' type=gauss fpeak=2 ', stdin=0)
+Flow('heavi_base.su', 'gauss10Hz.su', suwaveform + ' type=unit ns=1001 | ' + suconv + ' sufile=gauss10Hz.su ', stdin=0)
+    
+Flow('frac.su', None, suspike + ' nt=401 ntr=1 offset=0 ix1=1 nspk=1 it1=1 dt=0.004 |  ' + sufrac + ' power=-0.5 phasefac=0.0 verbose=1 | ' + sufilter + ' f=0,0,10,12.5 | ' + sushw + ' key=delrt a=0 ', stdin=0)
+
+
+# output data and input source traces
+# normal incidence
+Flow(['hdr1p.su','wav1p.su'],['wavelet_base.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=12 zr=12' +
+    ' np=1 dp=0.2 op=0 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+# output data and input source traces
+# normal incidence
+Flow(['deephdr.su','heavi.su'],['heavi_base.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=0 zr=0' +
+    ' np=1 dp=0.2 op=0 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+Flow(['deephdrbis.su','gauss10Hzpw.su'],['gauss10Hz.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=0 zr=0' +
+    ' np=1 dp=0.2 op=0 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+Flow(['deephdrterce.su','gauss5Hzpw.su'],['gauss5Hz.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=0 zr=0' +
+    ' np=1 dp=0.2 op=0 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+Flow(['deephdrquad.su','gauss2Hzpw.su'],['gauss2Hz.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=0 zr=0' +
+    ' np=1 dp=0.2 op=0 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+# 11 plane wave components p=-0.1 -> 0.1
+Flow(['hdr11p.su','wav11p.su'],['wavelet_base.su'],
+    planewave + ' CWPROOT=' + CWPROOT + 
+    ' src=${SOURCES[0]} pwhdr=${TARGETS[0]} pwsrc=${TARGETS[1]}' +
+    ' nt=' + str(NT) + ' ot=0 nx=' + str(NX) + ' dx=' + str(D) + ' ox=' + str(OX) + ' zs=12 zr=12' +
+    ' np=11 dp=0.02 op=-0.1 nxs=' + str(N2) + ' oxs=0 dxs=' + str(D),
+    stdin=0, stdout=-1)
+
+# trace-src output file single normal incidence plane wavae
+Flow('shot1p.su','wav1p.su csq24 hdr1p.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('deepshot1p.su','wav1p.su deepcsq24 hdr1p.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('deepshot1ph.su','heavi.su deepcsq24 deephdr.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('deepshot1pg.su','gauss10Hzpw.su deepcsq24 deephdr.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('deepshot1pg2.su','gauss5Hzpw.su deepcsq24 deephdr.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('deepshot1pg3.su','gauss2Hzpw.su deepcsq24 deephdr.su',
+     '''
+     /bin/cp ${SOURCES[2]} $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+########################### inversions ####################################
+
+Flow(['heaviolstr3itn', 'heavifinal3itn'],['deepshot1ph.su', 'heavi.su', 'deepcsq24noah', 'deepwindow'],
+     'add < ${SOURCES[3]} > ${TARGETS[0]} scale=0.0 && ' +  
+     acdfwi + ' ' +
+     '''
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq_min=1.0 csq_max=36.0
+     source=${SOURCES[1]}
+     csq=${SOURCES[2]} csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]}
+     data=${SOURCES[0]}
+     data_res=res.su outfile=olstr.txt
+     mute_slope=0.0 mute_zotime=0 mute_width=0 mute_type=0
+     OptMethod=trcg MaxSteps=4 MaxSubSteps=10 InitStepBound=10000.0''',
+     stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow('heavifinal3itnsm','heavifinal3itn','smooth rect1=10 rect2=50')
+
+Flow(['gauss2Hz5it', 'gauss2Hzfinal5it'],['deepshot1pg3.su', 'gauss2Hzpw.su', 'heavifinal3itnsm', 'ocean'],
+     'add < ${SOURCES[3]} > ${TARGETS[0]} scale=0.0 && ' +  
+     acdfwi + ' ' +
+     '''
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq_min=1.0 csq_max=36.0
+     source=${SOURCES[1]}
+     csq=${SOURCES[2]} csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]}
+     data=${SOURCES[0]}
+     data_res=res.su outfile=olstr.txt
+     mute_slope=0.0 mute_zotime=0 mute_width=0 mute_type=0
+     OptMethod=trcg MaxSteps=5 MaxSubSteps=10 InitStepBound=10000.0''',
+     stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow(['gauss2Hz5Hz5it', 'gauss2Hz5Hzfinal5it'],['deepshot1pg2.su', 'gauss5Hzpw.su', 'gauss2Hzfinal5it', 'ocean'],
+     'add < ${SOURCES[3]} > ${TARGETS[0]} scale=0.0 && ' +  
+     acdfwi + ' ' +
+     '''
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq_min=1.0 csq_max=36.0
+     source=${SOURCES[1]}
+     csq=${SOURCES[2]} csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]}
+     data=${SOURCES[0]}
+     data_res=res.su outfile=olstr.txt
+     mute_slope=0.0 mute_zotime=0 mute_width=0 mute_type=0
+     OptMethod=trcg MaxSteps=5 MaxSubSteps=10 InitStepBound=10000.0''',
+     stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow(['gauss2Hz5Hz10Hz5it', 'gauss2Hz5Hz10Hzfinal5it'],['deepshot1pg.su', 'gauss10Hzpw.su', 'gauss2Hz5Hzfinal5it', 'ocean'],
+     'add < ${SOURCES[3]} > ${TARGETS[0]} scale=0.0 && ' +  
+     acdfwi + ' ' +
+     '''
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq_min=1.0 csq_max=36.0
+     source=${SOURCES[1]}
+     csq=${SOURCES[2]} csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]}
+     data=${SOURCES[0]}
+     data_res=res.su outfile=olstr.txt
+     mute_slope=0.0 mute_zotime=0 mute_width=0 mute_type=0
+     OptMethod=trcg MaxSteps=5 MaxSubSteps=10 InitStepBound=10000.0''',
+     stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+Flow(['band5it', 'bandfinal5it'],['deepshot1p.su', 'wav1p.su', 'gauss2Hz5Hz10Hzfinal5it', 'deepwindow'],
+     'add < ${SOURCES[3]} > ${TARGETS[0]} scale=0.0 && ' +
+     acdfwi + ' ' +
+     '''
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20
+     csq_min=1.0 csq_max=36.0
+     source=${SOURCES[1]}
+     csq=${SOURCES[2]} csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]}
+     data=${SOURCES[0]}
+     data_res=res.su outfile=olstr.txt
+     mute_slope=0.0 mute_zotime=0 mute_width=0 mute_type=0
+     OptMethod=trcg MaxSteps=5 MaxSubSteps=10 InitStepBound=10000.0 ''',
+     stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+###########################################################
+
+Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa unit="GPa" |sfgraph')
+
+Result('csq24', 'csq24', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey mean=n scalebar=y barreverse=y')
+
+Result('csq24big', 'csq24big', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=j allpos=y clip=24 scalebar=y barreverse=y')
+
+Result('deepshot1ph','deepshot1ph.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+Result('deepshot1pg','deepshot1pg.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+Result('deepshot1pg2','deepshot1pg2.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+Result('deepshot1pg3','deepshot1pg3.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+
+Flow('deepshot1pwind.su','deepshot1p.su',suwind + ' tmin=0.4')
+Flow('bandres.su','band5it', suwind + ' tmin=0.4 < ${SOURCES[0]}.work/res.su',stdin=0)
+
+Result('deepshot1p','deepshot1pwind.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y clip=0.01')
+
+Result('bandres','bandres.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.024 o2=0 unit1=s unit2=km label="Pressure" unit="GPa" | grey scalebar=y barreverse=y clip=0.001')
+
+Result('deepcsq24', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+Result('heavifinal3itn', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+Result('gauss2Hzfinal5it', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+Result('gauss2Hz5Hzfinal5it', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+Result('gauss2Hz5Hz10Hzfinal5it', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+Result('bandfinal5it', 'window min1=0 max1=2000 min2=2000 max2=10000 |  put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey clip=24 color=j allpos=y scalebar=y barreverse=n')
+
+End()

@@ -1,0 +1,338 @@
+from rsf.proj import *
+from trip.proj import getnum
+import os
+
+####################### EDIT TO CHOOSE BETWEEN ########################
+################ MADAGASCAR AND STANDALONE INSTALLS ###################
+#asg = 'asg'
+#stdmdl='standardmodel'
+################################# OR ##################################
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sumax           = os.path.join(CWPROOT,'bin/sumax')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+suresamp        = os.path.join(CWPROOT,'bin/suresamp')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+sushift         = os.path.join(CWPROOT,'bin/sushift')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/sim.x')
+asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/sse.x')
+asgfwi          = os.path.join(MYAPPS,'trip/iwave/asg/main/fwi.x')
+deriv           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDeriv.x')
+tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
+#######################################################################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+BULK = 4.0
+BULK1= BULK
+BULK2= 1.5625*BULK
+BULK3= BULK
+BUOY = 1.0
+DX   = [20,10,5]
+DT   = [0.008,0.004,0.002]
+NX   = [401,801,1601]
+NTR  = [201,401,801]
+FTR  = [75,150,300]
+FGR  = 2000
+FGS  = [1500,2500,3000,3250]
+FSTR = [100,200,400]
+NZ   = [201,401,801]
+F1   = [1,2,4]
+F2   = [2.5,5,10]
+F3   = [7.5,15,30]
+F4   = [12.5,25,50]
+CLIP = [0.08,0.24,0.8]
+SCLIP= [20.0,80.0,320.0]
+DF   = 0.248
+RZ   = -1000
+SZ   = -3000
+SZL  = -100
+SX   = 3500
+TMIN = 0.8
+TMAX = 1.8
+
+# taper parameters - taper in gx only
+TP = 'gx:2000,2500,5500,6000'
+TPL= 'gx:1500,2000,5000,5500'
+
+#for i in range(0,3):
+for i in [0]:
+
+# scale for DtoN map
+    FSCALE = 2.0*DX[i]*BULK
+
+# compute header files for receiver (pthdr) and source (srchdr) lines, at gelev
+# = -1000 and -3000 resp.
+
+    Flow('pthdr' + str(i) + '.su', None,
+         sunull + ' nt=2501 ntr=' + str(NTR[i]) + ' dt=0.002 | ' + 
+         sushw + ' key=gx a=' + str(FGR) + ' b=' +
+	 str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
+         sushw + ' key=gelev,selev,sx a=' + str(RZ) + ',' +
+	 str(SZ) + ',' + str(SX) + ' | ' +
+	 suchw + ' key1=offset key2=gx key3=sx c=-1',
+         stdin=0)
+
+# used only in scan
+    Flow('srchdr' + str(i) + '.su', None,
+         sunull + ' nt=2501 ntr=' + str(NX[i]) + ' dt=0.002 | ' + 
+         sushw + ' key=gx a=0 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' + 
+         sushw + ' key=gelev,selev,sx a=-3000,-3000,3500 | ' +
+	 suchw + ' key1=offset key2=gx key3=sx c=-1',	 
+         stdin=0)
+
+# create source header files for shorter extents - 
+
+### src file point source at x=3500 = left end of line + 1500 m,
+### scale by 500 for time delta (dt=0.002) and
+### dx for dx integration
+
+    for j in range(4):
+
+        Flow('ptsrc' + str(j) + str(i)+'.su', None, suspike +
+    	     ' nt=1001 ntr=' + str(1+(NTR[i]-1)/(2**j)) +
+	     ' offset=0 ix1=' + str(1+(NTR[i]-1)//(2**(j+1))) + ' nspk=1 it1=500 dt=0.002 | ' +
+             sufilter + ' f=' +
+	     str(F1[i]) + ',' + str(F2[i]) + ',' +
+	     str(F3[i]) + ',' + str(F4[i]) + ' | ' +
+             sugain + ' scale=' + str(500.0*DX[i]) + ' | ' + 
+             sushw + ' key=delrt,gelev,selev,sx a=0,' +
+	     str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+             sushw + ' key=gx a=' + str(FGS[j]) +
+	     ' b=' + str(DX[i]) + ' j=' + str(1+(NTR[i]-1)/(2**j)) + ' | ' +
+	     suchw + ' key1=offset key2=gx key3=sx c=-1',	 
+	     stdin=0)
+
+        Flow('pulse' + str(j) + str(i) + '.su', 'ptsrc' + str(j) + str(i) + '.su',
+             suwind + ' key=tracl min=' +
+	     str(1+(NTR[i]-1)//(2**(j+1))) + ' ' +
+	     'max=' + str(1+(NTR[i]-1)//(2**(j+1))))
+
+### create s/r line for reflection data
+
+    Flow('layersrc' + str(i)+'.su', None, suspike +
+         ' nt=2501 ntr=' + str(NTR[i]) +
+	 ' offset=0 ix1=' + str(1+(NTR[i]-1)/2) + ' nspk=1 it1=500 dt=0.002 | ' +
+	 sufilter + ' f=' +
+	 str(F1[i]) + ',' + str(F2[i]) + ',' +
+	 str(F3[i]) + ',' + str(F4[i]) + ' | ' +
+         sugain + ' scale=' + str(500.0*DX[i]) + ' | ' + 
+         sushw + ' key=delrt,gelev,selev,sx a=0,' +
+	 str(SZL) + ',' + str(SZL) + ',' + str(SX) + ' | ' +
+         sushw + ' key=gx a=' + str(FGS[0]) +
+	 ' b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
+	 suchw + ' key1=offset key2=gx key3=sx c=-1',	 
+	 stdin=0)
+	 
+### create bulk modulus and buoyancy files
+
+    NXL=NX[i]
+    NZL=NZ[i]
+    NZL1=NZ[i]/3
+    NZL2=NZ[i]/2
+    NZL3=NZ[i]-NZL1-NZL2
+    DXL=DX[i]
+    DTL=DT[i]
+
+    Flow('bmh'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('byh'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BUOY) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('bml'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + 
+	 ' x1lens=2000 x2lens=4000 dlens=700 tlens=1500 vlens=-2.4| ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('bmw'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + 
+	 ' x1lens=2000 x2lens=4000 dlens=700 tlens=1500 vlens=-0.4| ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('bmt'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + 
+	 ' x1lens=2000 x2lens=4000 dlens=6000 tlens=1500 vlens=-2.4| ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('layer1' + str(i), None, 
+         'makevel n1=' + str(NZL1) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK1) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('layer2' + str(i), None, 
+         'makevel n1=' + str(NZL2) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK2) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('layer3' + str(i), None, 
+         'makevel n1=' + str(NZL3+1) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK3) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('layers' + str(i),['layer1' + str(i), 'layer2' + str(i), 'layer3' + str(i)],
+         'cat axis=1 d=' + str(DXL) + ' o=0.0 ${SOURCES[1]} ${SOURCES[2]}') 
+
+    Flow('layerdata' + str(i) + '.su',
+         'layers' + str(i) + ' byh' + str(i) + ' layersrc' + str(i) + '.su ' +
+	     'layersrc' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+             ''' + ' taperpars='+TPL, stdin=0, stdout=-1)
+
+    Flow('layerhom' + str(i) + '.su',
+         'bmh' + str(i) + ' byh' + str(i) + ' layersrc' + str(i) + '.su ' +
+	     'layersrc' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+             ''' + ' taperpars='+TPL, stdin=0, stdout=-1)
+
+    Flow('layerrefl' + str(i) + '.su',
+        ['layerdata' + str(i) + '.su',
+         'layerhom' + str(i) + '.su'],
+         suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+	 stdin=0)
+	     
+### medium loop:
+### hh = homog data inverted in homog medium
+### lh = lens data inverted in homog medium
+### ll = lens data inverted in lens medium
+
+    for med in ['h', 'w', 'l', 't']:
+
+        exp = med + str(i)
+    
+### simulate data - read both p, vz traces
+
+        Flow('ptp' + exp + '.su ptvz' + exp + '.su',
+    	     'bm' + exp  + ' byh' + str(i) + ' ptsrc0' + str(i) + '.su ' +
+	     'pthdr' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
+             ''' + ' taperpars='+TP, stdin=0, stdout=-1) 
+
+### scale vz for DtoN
+        Flow('ptvzg'+exp+'.su','ptvz'+exp+'.su',
+             sugain + ' scale=-' + str(FSCALE))
+
+### trial 2018.11.15: output free surface traces
+
+### truncate domain at RZ-DX one gridpoint above datum
+        Flow('bmtc' + exp[0] + str(i), 'bm' + exp[0] + str(i),
+             'window min1='+str(RZ-DX[i]))
+        Flow('bytch' + str(i), 'byh' + str(i),
+             'window min1='+str(RZ-DX[i]))
+
+### model with free surface
+        Flow('ptpfs' + exp + '.su',
+    	     'bmtc' + exp[0] + str(i) + ' bytch' + str(i) + ' ptsrc0' + str(i) + '.su ' +
+	     'pthdr' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=0 dump_ldc=0 dump_term=0 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### integrate
+        Flow('ptpfsint'+exp+'.su','ptpfs'+exp+'.su',
+	     '/bin/cp ${SOURCE} ${TARGET} && ' +
+	     deriv + ' in=${TARGET} order=-1',
+	     stdin=0, stdout=-1)
+	Flow('ptvzfs'+exp+'.su', 'ptpfsint'+exp+'.su',
+	     sugain + ' scale=' + str(-1.0/(2.0*DX[i])))
+	     
+### scale for vz
+        Flow('ptvzfsg'+exp+'.su','ptvzfs'+exp+'.su',
+             sugain + ' scale=' + str(FSCALE))
+
+End()

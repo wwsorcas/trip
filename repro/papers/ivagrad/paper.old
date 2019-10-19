@@ -1,0 +1,178 @@
+\title{Computing the IVA Gradient}
+
+\author{
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Symes}
+
+\righthead{IVA Gradient}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+A really short abstract.
+\end{abstract}
+
+\section{Introduction} 
+
+Various versions of these computations can be found in my talk in the
+TRIP 2014 review, expanded abstracts in EAGE 14 (with Liu and Li)
+(though I now think that this approximation is probably not accurate),
+IPTA 14 paper (in 2014 TRIP report), expanded abstract in EAGE 15 (in
+2015 TRIP report, see eqn 8, ignore $Q$ thing), my draft IVA paper in
+the 2016 TRIP report, expanded abstract (with Huang) in SEG 16 on
+source-receiver extension with full implementation, and Lameloise and
+Chauris, GP 15 (also later papers from that group).
+
+\section{Theory}
+
+$d$ = data (Born, perturbation)
+
+\noindent $m_l$ = macromodel or long wavelength
+model 
+
+\noindent $\odm$ = extended reflectivity or model perturbation, function
+of $h$
+
+\noindent $\oF$ = extended modeling operator, independent modeling of data bins
+for common offset case
+
+\noindent $A$ = annihilator, $\partial_h$ for common offset case
+
+\noindent  LSM with optional regularization:
+\begin{equation}
+\label{eqn:regextinv}
+\ofa[m_l,d] = \mbox{ argmin}_{\odm}\,\frac{1}{2}(\|\oS[m_l]\odm - d\|^2 + \alpha^2\|\of\|^2).
+\end{equation}
+
+Normal equation equivalent to \ref{eqn:regextinv}:
+\begin{eqnarray}
+\label{eqn:normal}
+N_{\alpha}[m_l]\of &=& \oS[m_l]^Td\nonumber\\
+N_{\alpha}[m_l] & = & \oS[m_l]^T\oS[m_l] + \alpha^2 I
+\end{eqnarray}
+So
+\begin{equation}
+\label{eqn:ofanorm}
+\ofa[m_l,d] = N_{\alpha}[m_l]^{-1}\oS[m_l]^Td
+\end{equation}
+
+\noindent  IVA objective function:
+\begin{equation}
+\label{eqn:ivadef}
+J_{\rm IVA}[m_l,d] = \frac{1}{2}\|A\ofa[m_l,d]\|^2 = \frac{1}{2}\|A N_{\alpha}[m_l]^{-1}\oS[m_l]^Td\|^2
+\end{equation}
+
+\noindent  MVA objective function:
+\begin{equation}
+\label{eqn:mvadef}
+J_{\rm MVA}[m_l,d] = \frac{1}{2}\|A\oF[m_l]^Td\|^2 
+\end{equation}
+
+Directional derivative of $J_{\rm IVA}$:
+\[
+DJ_{\rm IVA}[m_l,d] \delta m_l = \langle A (DN_{\alpha}[m_l]^{-1}\delta m_l)
+\oS[m_l]^Td + AN_{\alpha}[m_l]^{-1}D(\oS[m_l]^Td)\delta m_l,A\ofa[m_l,d]\rangle
+\]
+\[
+=\langle - N_{\alpha}[m_l]^{-1}(DN_{\alpha}[m_l]\delta m_l)\ofa[m_l,d]
+  +N_{\alpha}[_lm]^{-1}D(\oS[m_l]^Td)\delta m,A^TA\ofa[m_l,d]\rangle
+\]
+
+Introduce $\oga[m_l,d]$, defined by
+\begin{equation}
+\label{eqn:gdef}
+\oga[m_l,d] = N_{\alpha}[m_l]^{-1}A^TA\ofa[m_l,d].
+\end{equation}
+(Note: this is another LSM!!!)
+
+Expand $DN_{\alpha}=(D\oS^T)\oS + \oS^T (D\oS)$ and rearrange terms to get
+\[
+DJ_{\rm IVA}[m_l,d] \delta m_l = \langle - (DN_{\alpha}[m_l]\delta m_l)\ofa[m_l,d] +
+  D(\oS[m_l]^Td)\delta m_l, \oga[m_l,d]\rangle
+\]
+\begin{equation}
+\label{eqn:pregrad1}
+= \langle (D\oS[m_l]^T\delta m_l)(d-\oS[m_l]\ofa[m_l,d]) - \oS[m_l]^T (D\oS[m_l]\delta m_l)\ofa[m_l,d],\oga[m_l,d]\rangle
+\end{equation}
+
+Suppose that zero residual is attained, that is,
+$d=\oF[m_l]\ofa[m_l,d]$ (strictly speaking only possible for
+$\alpha=0$, otherwise there is an error that should be
+estimated). Then the first term vanishes, and we are left with
+\[
+DJ_{\rm IVA}[m_l,d] \delta m_l = \langle - \oS[m_l]^T (D\oS[m_l]\delta
+m_l)\ofa[m_l,d],\oga[m_l,d]\rangle
+\]
+\[
+= -\langle (D\oS[m_l]\delta m_l)\ofa[m_l,d],\oS[m_l]\oga[m_l,d]\rangle
+\]
+Define the tomographic operator $D\oS[m_j]^*$ to be the adjoint of $\delta m_j
+\mapsto (D\oS[m_l] \delta m_l)\odm $, that is, if $\odm $ is an extended
+model perturbation (image, reflectivity,....) and $d$ is a data-type
+object, then
+\[
+\langle  (D\oS[m_l] \delta m_l)\odm,d\rangle = \langle \delta m_l,
+D\oS[m_l]^*(\odm,d)\rangle_M
+\]
+The $M$ inner product may contain terms involving derivatives of
+$m_l$, in which case $D\oS[m_l]^*$ includes a smoothing operator.
+
+So
+\begin{equation}
+\label{eqn:grad}
+\nabla J_{\rm IIVA}[m_l,d] = -D\oS[m_l]^*(\ofa[m_l,d], \oS[m_l]\oga[m_l,d])
+\end{equation}
+\[
+= -D\oS[m_l]^*(\ofa[m_l,d],
+\oS[m_l]N_{\alpha}[m_l]^{-1}A^TA\ofa[m_l,d])
+\]
+
+
+More drastic approximation: suppose only one step of CG applied in
+computing $\oga$ according to \ref{eqn:gdef} - that is,
+up to constant multiple approximate $N_{\alpha}^{-1} \simeq I$. Then
+\[
+\nabla J_{\rm IIVA}[m_l,d] \simeq -D\oS[m_l]^*(\ofa[m_l,d],
+\oS[m_l]A^TA\ofa[m_l,d])
+\]
+Even more drastic approximation: if you go whole-hog and replace the first occurence of
+$N_{\alpha}^{-1}$ also, you get 
+\[
+\nabla J_{\rm IIVA}[m_l,d] \approx -D\oS[m_l]^*(\oS[m_l]^Td,
+\oS[m_l]A^TA\oS^T[m_l]d)
+\]
+Compare MVA gradient:
+\[
+\nabla J_{\rm MVA}[m_l,d] = D\oS[m_l]^*(d,A^TA\oF[m_l]^Td)
+\]
+
+\section{Discussion}
+Note that equation \ref{eqn:grad} presumes that the data has been fit
+perfectly, $\oS[m_l]\ofa[m_l,d]=d$, and is therefore an
+approximation. If you do not presume that the data is perfectly fit,
+there is yet another term to include, from the first term in
+equation \ref{eqn:pregrad1}. 
+
+Note also that even with this extra term (which you are welcome to
+work out), the entire mess rests on the assumption that the normal
+equation \ref{eqn:normal} is actually solved, which it is not if you
+use an iterative method like CG - there is always a nonzero normal
+residual, and the error created by ignoring it in computing the
+gradient is not necessarily small when the normal residual is
+small. Yin explored this topic in the last chapter of her thesis - she
+was using VPM, and the same problem occurs there. I have worked out a
+solution in the IVA paper (TRIP 2016), depending on having a usable
+asymptotic solution (``true ampitude migration''), not available for
+extensions defined in terms of surface acquisition
+coordinates. Chauris' student Cocher also tackles this problem in his
+very recent thesis (not published yet). Jie's IVA paper uses a version
+of \ref{eqn:grad}, with asymptotic inverse in place of an iterative
+solution of the normal equations - this seems to be the only way to
+get at a reasonable velocity update with a reasonable number of
+modeling-migration pairs.
+

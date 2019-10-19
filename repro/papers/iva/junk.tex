@@ -1,0 +1,284 @@
+\section{Quantifying Microlocal Asymptotics}
+
+\[
+\Lambda(\xi) \le 2 \Lambda(\eta) \Lambda(\xi + \eta)
+\]
+pf: if $||\xi|-|\eta|| \le \frac{1}{2}|\xi|$, then $|\eta| \ge \frac{1}{2}|\xi|$ so
+\[
+\Lambda(\eta)^2 \Lambda(\xi + \eta)^2 = (1+|\eta|^2)(1+ ...) \ge \frac{1}{4}(1+|\xi|^2)
+\]
+Otherwise, if $||\xi|-|\eta|| \ge \frac{1}{2}|\xi|$, then reverse triangle inequality implies 
+$|\xi + \eta| \ge \frac{1}{2}|\xi|$ so same story.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The theory to be developed here applies for example to acoustic
+scattering, governed by the acoustic wave equation in $R^3$,
+\bea
+\label{awe}
+\frac{\partial p}{\partial t} & = & -\kappa \nabla \cdot \bv + f\\
+\frac{\partial \bv}{\partial t} & = & - \beta \nabla p.
+\eea
+The components of this system are the excess pressure $p$, particle
+velocity $\bv$, bulk modulus $\kappa$, buoyancy (reciprocal density)
+$\beta$, and source term $f$. The material parameters $\kappa$ and
+$\beta$ are functions on $\bR^3$ and must be positive in the region of
+interest. The fields $f$, $p$ and $\bv$ are functions on space-time $\bR^3
+\times \bR$ and of source position, which ranges over a set $Y_s \subset
+\bR^3$. 
+
+\cite{BlazekStolkSymes:13} show that this system has solutions
+depending ``nicely'' on the coefficients $\kappa$ and
+$\beta$. Specifically, suppose that $\Omega$ is a cube, 
+\begin{itemize}
+\item $V = H^1_{0}(\Omega) \times (H^1(\Omega))^3$,
+\item $H = L^2(\Omega) \times (L^2(\Omega))^3$
+\item $S^k = \{ f\in C^k(Y_s \times \bR, H): f(\bx_s,t)=0, \bx_s \in
+  Y_s, t < 0\}$
+\item $(\log \kappa, \log \beta) \in L^{\infty}(\Omega) \equiv M_0$.
+\end{itemize}
+Then  there is a unique solution $(p,\bv) \in C^k(Y_s \times \bR, H)$ of a suitable weak version of
+\eqref{awe}. Also, if $k \ge n \ge 0$, then $\cal{U}: M_0 \ C^{k-n}(Y_s \times
+\bR, H)$ is $n$ times G\^ateaux differentiable. We denote the
+directional derivative operator by $D^n\cal{U}$. For example,
+\[
+D\cal{U}(\kappa,\beta) (\delta \kappa, \delta \beta) = (\delta p,
+\delta \bv)
+\]
+for the (weak) solution $(\delta p, \delta \bv)$ of 
+\bea
+\label{dawe}
+\frac{\partial \delta p}{\partial t} & = & -\kappa \nabla \cdot \delta
+\bv - \delta \kappa \nabla \cdot \bv \\
+\frac{\partial \delta \bv}{\partial t} & = & - \beta \nabla \delta p - \delta
+\beta \nabla p.
+\eea
+
+\cite{BlazekStolkSymes:13} also show that weak solutions of
+\eqref{awe} propagate with finite speed given as usual by $c =
+\sqrt{\kappa \beta}$. Therefore if $T > 0$ is fixed and $\Omega$ is chosen sufficiently
+large relative to 
+\[
+\cup \{\mbox{supp } f(\bx_s,t): \bx_s \in Y_s, t \in [0,T]\}
+\]
+then $(p,\bv)(t) = 0$ near $\partial \Omega$ for $0\le t \le T$. In
+effect, the solution of \eqref{awe} propagates in $\bR^3$ for $ t \le
+T$.
+
+If more regularity is assumed of $\kappa, \beta$, then additional
+constraints follow for the solution. Assume from now on that $Y_s
+\subset \Omega \cap \{\bx:x_3=0 \}$
+
+In order to avoid spurious difficulties with behaviour at infinity,
+abbreviate $H^s = H^s(T^3)$ with $T^3$ = a torus of large enough size
+that   
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Stuff}
+
+\noindent {\bf Theorem 2:} Suppose that  $\de \in H^1_0(Y)$ for all $\lambda \in (0,\lambda_0]$. Then $\bre[m] \in H^1_0(X)$, and there exist $C,\lambda_0>0$ as in Theorem 1 so that for all $m \in U$, $\lambda \in (0,\lambda_0]$,
+\[
+\|\bre[m]\|_1 \le C \|\de\|_1.
+\]
+\noindent{\bf Proof:}
+As $\Ne[m] \in OPS^0$ is elliptic, it has a (global, not microlocal) parametrix $\Ne[m]^{\dagger} \in OPS^0$, so that $\Ne[m]^{\dagger}\Ne[m]-I \in OPS^{-\infty}$. Accordingly,
+\[
+\bre[m] = \Ne[m]^{\dagger}\Ne[m]\bre[m] + (I-\Ne[m]^{\dagger}\Ne[m])\bre[m]
+\]
+\[
+= \Ne[m]^{\dagger}\oF[m]^*\de + (I-\Ne[m]^{\dagger}\Ne[m])\bre[m].
+\]
+so standard $L^2$ estimates imply the first part of the conclusion. As for the second part,
+\[
+\Ne[m]\Lambda\bre[m] = [\Ne[m],\Lambda]\bre[m]+\Lambda\oF[m]^*\de
+\]
+Write $\Lambda \bre[m]=u+w$, where
+\[
+\Ne[m]u = [\Ne[m],\Lambda]\bre[m]
+\]
+and
+\[
+\Ne[m]w=\Lambda \oF[m]^*\de.
+\]
+From Lemma 2 with $s=1, k=1$, the hypotheses of Corollary A6 are satisfied for the second of these equations, so
+\[
+\|w\|_0 \le C_0 \|\Lambda \oF[m]^*\de\|_{0}.
+\]
+The basic bound on $\Ne[m]^{-1}$ implies that
+\[
+\|u\|_0 \le C_1 \lambda^{-1}\|[\Ne[m],\Lambda]\bre[m]\|_0
+\]
+\[
+\le C_2 \lambda^{-1}\|\bre[m]\|_0,
+\]
+since $[\Ne[m],\Lambda] \in OPS^{0}$.  From Theorem 1, this is
+\[
+\le C_3 \lambda^{-1}\|\oF[m]^*\de\|_{0}.
+\]
+Invoking Lemma 2 once again and adding the bounds on $u$ and $w$, the result follows.
+
+Q. E. D.
+
+\noindent{\bf Theorem 3:} Denote by $\Ne[m]^{\dagger}$ the microlocal parametrix for $\Ne[m]$ described in Lemma A2. Then there exist $L_1, K_1 \ge 0$ so that
+for $0 \le \lambda \le \lambda_0$, $m \in U$, $s=0,1$, 
+\be
+\label{theorem3:res1}
+\|(I-\Pi[m])\Ne[m]^{\dagger}\oF[m]^*\de\|_s \le L_1\|\Ne[m]^{\dagger}\oF[m]^*\de\|_{s-1}
+\ee
+and
+\be
+\label{theorem3:res2}
+\|\Ne[m]^{\dagger}\oF[m]^*\de\|_{s-1} \le K_1 \lambda \|\Ne[m]^{\dagger}\oF[m]^*\de\|_{s}.
+\ee
+
+\noindent{\bf Proof:} Lemma 2 shows that $\{q_{\lambda}=\oF[m]^*\de: \lambda \in (0,\lambda_0]\}$ satisfies inequalities of the form (\ref{microlocal_1}) and (\ref{hfc_1}) with $s=0,1$ and $k=0,1$. 
+The inequalities (\ref{theorem3:res1}) and (\ref{theorem3:res2}) are precisely the conclusion Lemma A5.
+
+Q. E. D.
+
+\noindent{\bf Theorem 4:} In Assumptions 2 and 3, require that $k_0 \ge 2$. Then there exist $L_2,K_2 \ge 0$ so that
+for $0 \le \lambda \le \lambda_0$, $m \in U$, $s=0,1$, 
+\be
+\label{theorem4:res1}
+\|(\Pi[m]-I)\bre[m]\|_s \le L_2\|\bre[m]\|_{s-1}
+\ee
+\be
+\label{theorem4:res2}
+\|\bre[m]\|_{s-1}\le K_2\lambda \|\bre[m]\|_s
+\ee
+\noindent{\bf Proof:} For conciseness, write $p=\Ne[m]^{\dagger}\oF[m]^*\de$.
+\[
+\|(\Pi[m]-I)\bre[m]\|_s \le \|(\Pi[m]-I)p\|_s + \|(\Pi[m]-I)(\bre[m]-p)\|_s  
+\]
+\[
+\le L_1\|p\|_{s-1} + C\|\bre[m]-p\|_s
+\]
+Take first the case $s=0$. Note that
+\[
+\Ne[m] (\bre[m]-p) = (I-\Ne[m]\Ne[m]^{\dagger})\oF[m]^*\de
+\]
+\[
+=(I-\Ne[m]\Ne[m]^{\dagger})\Pi[m]\oF[m]^*\de + (I-\Ne[m]\Ne[m]^{\dagger})(I-\Pi[m])\oF[m]^*\de.
+\]
+According to Lemma A2,  $(I-\Ne[m]\Ne[m]^{\dagger})\Pi[m] \in OPS^{-k}$ for any $k \ge 0$, whereas from Lemma 2 with $s=0, k=2$, $\|(I-\Pi[m])\oF[m]^*\de\|_0 \le L_1\|\oF[m]^*\de\|_{-2}$. Since $I-\Ne[m]\Ne[m]^{\dagger}$ is bounded on $L^2(X)$, uniformly in $\lambda$, the RHS is bounded in $L^2(X)$ by a multiple of $\|\oF[m]^*\de\|_{-2}$. Since $\Ne[m] \ge \lambda I$, 
+\[
+\|\bre[m]-p\|_0 \le C_2\lambda^{-1}\|\oF[m]^*\de\|_{-2}
+\]
+From Assumption 2 with $s=-1, k=1$ it follows that this is
+\be
+\label{theorem4:eqn1}
+\le C_3 \|\oF[m]^*\de\|_{-1} \le C_3\|\Ne[m]\|_{-1,-1}\|\bre[m]\|_{-1}.
+\ee
+For future use, note that alternatively 
+\be
+\label{theorem4:eqn2}
+\|\bre[m]-p\|_0 \le C_2\lambda \|\oF[m]^*\de\|_{0} \le C_3\lambda \|\Ne[m]\|_{0,0}\|\bre[m]\|_{0}.
+\ee
+Similarly,
+\[
+\|p\|_{-1} \le \|\bre[m]-p\|_{-1} + \|\bre[m]\|_{-1}
+\]
+\[
+\le \|\bre[m]-p\|_0 +  \|\bre[m]\|_{-1}
+\]
+\[
+\le C_4 \|\bre[m]\|_{-1}
+\]
+via another use of (\ref{theorem4:eqn1}). So
+\[
+\|(\Pi[m]-I)\bre[m]\|_0 \le \|(\Pi[m]-I)p\|_0 + \|(\Pi[m]-I)(\bre[m]-p)\|_0  
+\]
+\[
+\le C_5 \|p\|_{-1} + C_4\|\bre[m]\|_{-1} \le C_6\|\bre[m]\|_{-1}.
+\]
+which establishes (\ref{theorem4:res1}) for $s=0$.
+
+From Theorem 3, 
+\[
+\|\bre[m]\|_{-1} \le \|p\|_{-1} + \|\bre[m]-p\|_{-1} \le \lambda K_1\|p\|_0 + \|\bre[m]-p\|_{0}.
+\]
+\[
+\le \lambda K_1\|\bre[m]\|_0 + (\lambda K_1+1) \|\bre[m]-p\|_0;
+\]
+estimate the second term from (\ref{theorem4:eqn2}) to obtain
+\[
+\le \lambda ((2+\lambda_{\rm max})C_3\lambda \|\Ne[m]\|_{0,0})\|\bre[m]\|_0,
+\]
+which estimates the constant in (\ref{theorem4:res2}) for $s=0$.
+
+For $s=1$, follow the bootstrap pattern introduced in the proof of Theorem 2. Note that $\Lambda^{-1}\Ne[m]\Lambda$ is self-adjoint, bounded, and $\ge \lambda$ on $H^1(X)$, and
+\[
+\Lambda^{-1}\Ne[m]\Lambda(\bre[m]-p) = \Lambda^{-1}[\Ne[m],\Lambda](\bre[m]-p) + (I-\Ne[m]\Ne[m]^{\dagger})\oF[m]^*\de.
+\]
+As in the proof of Theorem 2, write $\bre[m]-p = u + w$, where
+\[
+\Lambda^{-1}\Ne[m]\Lambda u = \Lambda^{-1}[\Ne[m],\Lambda](\bre[m]-p)
+\]
+and
+\[
+\Lambda^{-1}\Ne[m]\Lambda w = (I-\Ne[m]\Ne[m]^{\dagger})\oF[m]^*\de.
+\]
+Since $\Lambda^{-1}\Ne[m]\Lambda w \ge \lambda I$,
+\[
+\|u\|_1 \le \lambda^{-1}\|\Lambda^{-1}[\Ne[m],\Lambda](\bre[m]-p)\|_1
+\]
+\be
+\label{theorem4:eqn3}
+\le \lambda^{-1}C_5 \|\bre[m]-p\|_0 \le \lambda^{-1}C_6\|\bre[m]\|_{-1} \le C_7\|\bre[m]\|_0, 
+\ee
+from (\ref{theorem4:eqn1}) and the case $s=0$. 
+To bound $w$, write $w=w_1 + w_2$, where
+\[
+\Lambda^{-1}\Ne[m]\Lambda w_1 = (I-\Ne[m]\Ne[m]^{\dagger})\Pi[m]\oF[m]^*\de,
+\]
+\[
+\Lambda^{-1}\Ne[m]\Lambda w_2 = (I-\Ne[m]\Ne[m]^{\dagger})(I-\Pi[m])\oF[m]^*\de.
+\]
+According to Lemma A2,  $(I-\Ne[m]\Ne[m]^{\dagger})\Pi[m] \in OPS^{-k}$ for any $k\ge 0$, whereas from Lemma 2 $\|(I-\Pi[m])\oF[m]^*\de\|_1 \le L_1\|\oF[m]^*\de\|_0$. Since $I-\Ne[m]\Ne[m]^{\dagger}$ is bounded on $H^1_0(X)$, uniformly in $\lambda$, conclude that
+\[
+\|w_1\|_1 \le \lambda^{-1}\|(I-\Ne[m]\Ne[m]^{\dagger})\Pi[m]\oF[m]^*\de\|_1
+\]
+\[
+\le C_8 \lambda^{-1}\|\oF[m]^*\de\|_{-1}\le C_8 K_1\|\oF[m]^*\de\|_{0}
+\]
+\be
+\label{theorem4:eqn4}
+\le C_7 K_1\|\Ne[m]\|_{0,0}\|\bre[m]\|_0.
+\ee
+\be
+\label{theorem4:eqn5}
+\|w_2\|_1 \le C_8\|\oF[m]^*\de\|_0 \le C_8\|\Ne[m]\|{0,0}\|\bre[m]\|_{0}.
+\ee
+Adding up (\ref{theorem4:eqn3}), (\ref{theorem4:eqn4}), and (\ref{theorem4:eqn5}), 
+conclude that
+\be
+\label{theorem4:eqn6}
+\|\bre[m]-p\|_1 \le C_9 \|\bre[m]\|_0.
+\ee
+\[
+\|p\|_{0} \le \|\bre[m]-p\|_{0} + \|\bre[m]\|_{0}
+\]
+which from (\ref{theorem4:eqn2}) is 
+\[
+\le C_{10}\|\bre[m]\|_{0}
+\]
+So
+\[
+\|(\Pi[m]-I)\bre[m]\|_1 \le \|(\Pi[m]-I)p\|_1 + \|(\Pi[m]-I)(\bre[m]-p)\|_1  
+\]
+\[
+\le C_11 \|p\|_{0} + C_12\|\bre[m]\|_{0} \le C_13\|\bre[m]\|_{0}.
+\]<
+Finally, From Theorem 3, 
+\[
+\|\bre[m]\|_0 \le \|p\|_0 + \|\bre[m]-p\|_0 \le \lambda K_1\|p\|_1 + \|\bre[m]-p\|_{0}.
+\]
+\[
+\le \lambda (C_5 |\Ne[m]\|_{0,0} + K_1\|\|\Ne[m]^{\dagger}\|_{1,1}\|\Ne[m]\|_{1,1})\|\bre[m]\|_1
+\]
+which provides the claimed inequality of form  (\ref{theorem4:res2}) for $s=1$.
+
+Q. E. D.

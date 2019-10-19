@@ -1,0 +1,191 @@
+\title{Convergent DSO Gradient Computation}
+
+\author{
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Symes}
+
+\righthead{DSO Gradient}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+A really short abstract.
+\end{abstract}
+
+\section{Introduction} 
+
+\section{VPM for extended FWI}
+
+$M$ = model space (macro models)
+
+$\oM$ = extended model space (perturbations)
+
+$D$ = data space
+
+$\oF: M \rightarrow {\cal L}(\oM, D)$ = extended Born modeling operator
+
+$A: \oM \rightarrow \oM$ = annihilator
+
+Inner products: 
+\begin{itemize}
+\item $\langle \dom_1,\dom_2\rangle_m = \dom_1^T W_m{\color{blue}[m]}\dom_2$ in $\oM$
+\item $\langle d_1,d_2 \rangle_d = d_1^T W_d d_2$ in $D$, 
+\item $\langle m_1,m_2\rangle_b = m_1^TW_b m_2 $ in $M$
+\end{itemize}
+
+$\odF$ = adjoint of $\oF$ (wrt inner products in $\oM$, $D$) = $W_m^{-1}\oF^TW_d$, etc.
+
+Variable Projection objective
+\[
+\Ja[m,\dd] = \mbox{min}_{\dom} \frac{1}{2}(\|\oF[m]\dom -\dd\|_d^2 + \alpha^2\|A\dom\|_m^2)
+\]
+\[
+= \frac{1}{2}(\|\oF[m]\dom[m] -\dd\|_d^2 + \alpha^2\|A\dom[m]\|^2)
+\]
+$\dom[m]$ = solution of normal equation  
+\[
+\Na[m] \dom[m] = \odF[m] \dd,\,\,\Na[m] = \odF[m]\oF[m] + \alpha^2 A^{\dagger}A
+\]
+
+Variable Projection Method:
+\[
+D\Ja[m,\dd]\delta m = \langle D\oF[m](\delta m,\dom[m]), \oF[m]\dom[m]-\dd\rangle_d
+\]
+\[
+= \langle \delta m, D\oF[m]^*(\dom[m],\oF[m]\dom[m]-\dd) \rangle_b
+\]
+for any $\delta m \in M$ $\Rightarrow$
+\[
+\nabla_m \Ja[m,\dd] = D\oF[m]^*(\dom[m],\oF[m]\dom[m]-\dd)
+\]
+
+\section{Problem}
+Normal equation must be solved by iterative method:
+\[
+\dom_a \rightarrow \dom[m],\, a \rightarrow \infty
+\]
+meaning $\|\dom_a-\dom[m]\|_m \rightarrow 0$.
+
+However $D\oF[m]$ is not $\oM$-continuous:
+\[
+\dom_a \rightarrow \dom[m] \mbox{ does not imply } DF[m](\delta m,\dom_a) \rightarrow DF[m](\delta m, \dom[m])
+\]
+
+
+Example: extended acoustic Born modeling, $m=$ velocity, $\dom(\bx,\bh)$ = extended velocity perturbation, $\phi = T(\bx_r,\bx+\bh)-T(\bx_s,\bx-\bh)$
+\[
+\oF[m]\dom(\bx_r,t;\bx_s)  \approx \partial_t^2 \int d\bx d\bh A \delta(t-\phi) \dom
+\]
+\[
+D\oF[m](\delta m,\dom) (\bx_r,t;\bx_s) \approx \partial_t^2 \int d\bx d\bh A
+\partial_t \delta(t-\phi)(-D\phi \delta m)\dom
+\]
+\[
+ \approx \partial_t^2 \int d\bx d\bh A\partial_z\delta(t-\phi)\frac{D\phi \delta m}{\partial_z \phi} \dom
+ \approx \partial_t^2 \int d\bx d\bh A\delta(t-\phi)\frac{D\phi \delta m}{\partial_z \phi}{\color{blue} \partial_z} \dom
+ \]
+ \[
+\dom_a \rightarrow \dom[m] \mbox{ does not imply } \partial_z \dom_a \rightarrow \partial_z \dom[m]
+\]
+
+\section{Solution: $\oF$ is unitary modulo smoothing}
+
+Assumption: $\oF$ {\em asymptotically unitary} wrt $\oM, D$ norms: $\odF\oF = I + S$, 
+
+$S$ is (at least) 1-smoothing: $\dom_a \rightarrow \dom_0$ $\Rightarrow$ $P S \dom_a \rightarrow  P S\dom_0$, any $P \in OPS^1$
+
+Examples: source-receiver extension (non-caustic case), full aperture scattering, but no other relevant examples for exploration
+
+BUT easiest to understand concept in this case
+
+VPM derivative:
+\[
+D\Ja[m,\dd]\delta m = \langle D\oF[m](\delta m,\dom[m]), \oF[m]\dom[m]-\dd\rangle_d
+\]
+\[
+= \langle D\oF[m](\delta m,\dom[m]),\oF[m]\dom[m]\rangle_d -\langle D\oF[m](\delta m,\dom[m]),\dd\rangle_d
+\]
+\[
+= {\bf 1} + {\bf 2}
+\]
+\[
+{\bf 1} = \frac{1}{2}D\|\oF[m]\dom[m_1]\|^2(\delta m)_{m_1=m} = \frac{1}{2}\langle \dom[m], D(\odF[m]\oF[m])(\delta m, \dom[m])\rangle_m
+\]
+$\odF\oF$ is $\Psi$DO order 0 $\Rightarrow$ smoothly dependent on $m$ $\Rightarrow$ if $\dom_a \rightarrow \dom[m]$ then
+\[
+\langle D\oF[m](\delta m,\dom_a),\oF[m]\dom_a\rangle_d \rightarrow \langle D\oF[m](\delta m,\dom[m]),\oF[m]\dom[m]\rangle_d 
+\]
+
+Normal equation:
+\[
+\Na[m] \dom[m] = \odF[m] \dd, \,\,\Na = \odF[m]\oF[m] +\alpha^2  A^{\dagger}A = I + \alpha^2 A^{\dagger}A + S[m]
+\]
+
+\[
+\Rightarrow \dom[m] = (I + \alpha^2 A^{\dagger}A)^{-1}(\odF[m]\dd -S[m]\dom[m]) 
+\]
+
+\[
+{\bf 2} = -\langle D\oF[m](\delta m,(I + \alpha^2 A^{\dagger}A)^{-1}(\odF[m]\dd)),\dd\rangle_d 
+\]
+
+\[
++ \langle D\oF[m](\delta m, (I+\alpha^2 A^{\dagger}A)^{-1}S[m]\dom[m]),\dd\rangle_d
+\]
+
+$(I+\alpha^2 A^{\dagger}A)^{-1}S[m]$ also 1-smoothing 
+
+\[
+L_a (\delta m,\dom_a) = \langle D\oF[m](\delta m,\dom_a),\oF[m]\dom_a\rangle_d 
+\]
+\[
++ \langle D\oF[m](\delta m, (I+\alpha^2 A^{\dagger}A)^{-1}S[m]\dom_a),\dd\rangle_d
+\]
+\[
+-\langle D\oF[m](\delta m,(I + \alpha^2 A^{\dagger}A)^{-1}(\odF[m]\dd)),\dd\rangle_d 
+\]
+
+Convergent derivative approximation:
+
+$\dom_a \rightarrow \dom[m]$ $\Rightarrow$ $L_a(\delta m, \dom_a) \rightarrow D\Ja[m,\dd]\delta m$
+
+Gradient:
+\[
+L_a(\delta m, \dom_a) = \langle \delta m, G_a(\dom_a) \rangle,
+\]
+
+\[
+G_a(\dom_a) = D\oF[m]^*(\dom_a,\oF[m]\dom_a) 
+\]
+\[
+- D\oF[m]^*((I+\alpha^2 A^{\dagger}A)^{-1}(\odF[m]\dd -S[m]\dom_a),\dd) 
+\]
+
+$G_a$ $\oM-$continuous $\Rightarrow$ 
+
+$\dom_a \rightarrow \dom[m]$ $\Rightarrow$ $G_a(\dom_a) \rightarrow \nabla_m \Ja[m,\dd]$
+
+Computationally convenient rewrite:
+\[
+S = \Na - (I+\alpha^2 A^{\dagger}A) \Rightarrow \odF\dd-S\dom_a = g_a + (I+\alpha^2 A^{\dagger}A)\dom_a
+\]
+
+\[
+g_a = \odF \dd - \Na\dom_a = \mbox{ normal residual }
+\]
+
+\[
+G_a(\dom_a) = D\oF[m]^*(\dom_a,\oF[m]\dom_a) 
+\]
+\[
+- D\oF[m]^*((I+\alpha^2 A^{\dagger}A)^{-1}g_a +\dom_a,\dd) 
+\]
+
+\[
+= D\oF[m]^*(\dom_a,\oF[m]\dom_a-\dd) - D\oF[m]^*((I+\alpha^2 A^{\dagger}A)^{-1}g_a,\dd)
+\]

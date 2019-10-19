@@ -1,0 +1,196 @@
+from rsf.proj import *
+from trip.proj import getnum
+import os
+
+################################# DEFNS ##################################
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sumax           = os.path.join(CWPROOT,'bin/sumax')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+suresamp        = os.path.join(CWPROOT,'bin/suresamp')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+sushift         = os.path.join(CWPROOT,'bin/sushift')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/sim.x')
+asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/sse.x')
+asgfwi          = os.path.join(MYAPPS,'trip/iwave/asg/main/fwi.x')
+deriv           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDeriv.x')
+tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
+#######################################################################
+
+TMIN = 1.8
+TMAX = 2.8
+
+##################################### plots from data ##########################
+
+BASIC='../data'
+
+# build list of data to import
+SRCLIST=[]
+#for i in range(3):
+for i in range(1):
+    SRCLIST.append('bmh'+str(i)+'.rsf')
+    SRCLIST.append('byh'+str(i)+'.rsf')
+    SRCLIST.append('bmw'+str(i)+'.rsf')
+    SRCLIST.append('bml'+str(i)+'.rsf')
+    SRCLIST.append('bmt'+str(i)+'.rsf')    
+    SRCLIST.append('ptph'+str(i)+'.su')
+    SRCLIST.append('ptpw'+str(i)+'.su')
+    SRCLIST.append('ptpl'+str(i)+'.su')
+    SRCLIST.append('ptpt'+str(i)+'.su')
+    SRCLIST.append('pulse0'+str(i)+'.su')        
+    for j in range(4):
+    	SRCLIST.append('ptsrc'+str(j)+str(i)+'.su')
+
+if not os.path.exists(BASIC):
+    print 'cannot find data source directory ' + BASIC
+    Exit(1)
+else:
+    for i in SRCLIST:
+        SRC = os.path.join(BASIC,i)
+        if not os.path.exists(SRC):
+            print 'you must build the target ' + SRC
+            print 'before building this project' 
+            Exit(1)
+        Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+
+Flow('pulse00','pulse00.su','suread read=data endian=0 ')
+Result('pulse00', 'wiggle clip=500.0 poly=y transp=y xinch=4 yinch=8 wanttitle=n label2=""')
+
+dx=20
+ox=2000
+
+for i in ['h', 'w', 'l', 't']: 
+    Result('bm' + i + '0',
+           'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+	   'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+	   'xinch=10 yinch=5')
+    Flow('ptpwind' + i + '0.su', 'ptp' + i + '0.su',
+         suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+    Flow('ptpwind' + i + '0','ptpwind' + i + '0.su',
+         'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox)) 
+    Result('ptpwind' + i + '0','grey color=j scalebar=y label2=Position unit2=m ' +
+           'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+
+############################# IVA inversions ################################
+
+Flow('cgwh_est_source_plh0.su', '../sse1/cgwh_est_source_plh0.su',
+     '/bin/cat') 	 
+Flow('cgwhestsourceplh0', 'cgwh_est_source_plh0.su',
+     'suread read=data endian=0 | put d2=20 o2=1500')
+
+Flow('cgwh_res_data_plh0.su', '../sse1/cgwh_res_data_plh0.su',
+     '/bin/cat') 	 
+Flow('cgwhresdataplh0', 'cgwh_res_data_plh0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
+
+Result('cgwhestsourceplh0','grey color=j scalebar=y label2=Position unit2=m ' +
+       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=20.0 minval=-20.0 maxval=20.0')
+Result('cgwhresdataplh0','grey color=j scalebar=y label2=Position unit2=m ' +
+       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+srcd2=[]
+srco2=[]
+srcwidth=[]
+sb=[]
+d2num=[]
+
+for i in range(7):
+    srcd2.append(str(20))
+    srco2.append(str(1500))
+    srcwidth.append(str(10))
+    sb.append('y')
+    
+for i in range(7,11):
+    srcd2.append(str(20))
+    srco2.append(str(2500))
+    srcwidth.append(str(5))
+    sb.append('y')
+
+for i in range(11,30):
+    srcd2.append(str(20))
+    srco2.append(str(3250))
+    srcwidth.append(str(1.25))
+    sb.append('n')
+    
+for i in range(1,31):
+    Result('cgw' + str(i) + 'bulkupdlh0','../sse1/cgw' + str(i) + '_bulkupdlh0.rsf',
+       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+       'xinch=10 yinch=5 clip=1.5')
+
+    Flow('cgw' + str(i-1) + '_est_source_plh0.su','../sse1/cgw' + str(i-1) + '_est_source_plh0.su',
+         '/bin/cat')
+    Flow('cgw' + str(i-1) + '_res_data_plh0.su','../sse1/cgw' + str(i-1) + '_res_data_plh0.su',
+    	 suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
+    Flow('cgw' + str(i-1) + 'estsourceplh0','cgw' + str(i-1) + '_est_source_plh0.su',
+         'suread read=data endian=0 | put d2=' + srcd2[i-1] + ' o2=' + srco2[i-1])
+
+    Flow('cgw' + str(i-1) + 'resdataplh0','cgw' + str(i-1) + '_res_data_plh0.su',
+         'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))	
+    Result('cgw' + str(i-1) + 'estsourceplh0', 'grey color=j scalebar=' + sb[i-1] + ' label2=Position unit2=m ' +
+         'barlabel=GPa wanttitle=n xinch=' + srcwidth[i-1] + ' yinch=5 clip=20.0 minval=-20.0 maxval=20.0')
+    Result('cgw' + str(i-1) + 'resdataplh0', 'grey color=j scalebar=y label2=Position unit2=m ' +
+         'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+Result('bmh0s','../data/bmh0.rsf',
+       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+       'xinch=10 yinch=5 clip=1.5')
+
+Result('fwitrsse1bulkmodinvlh0','../sse1/fwitr_sse1_bulkmod_invlh0.rsf',
+       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+       'xinch=10 yinch=5 clip=1.5')
+
+Flow('fwitr_sse1_data_p_reslh0.su','../sse1/fwitr_sse1_data_p_reslh0.su',
+     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
+Flow('fwitrsse1datapreslh0', 'fwitr_sse1_data_p_reslh0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
+Result('fwitrsse1datapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
+       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+Result('fwitrsse30bulkmodinvlh0','../sse1/fwitr_sse30_bulkmod_invlh0.rsf',
+       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+       'xinch=10 yinch=5 clip=1.5')
+
+Flow('fwitr_sse30_data_p_reslh0.su','../sse1/fwitr_sse30_data_p_reslh0.su',
+     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
+Flow('fwitrsse30datapreslh0', 'fwitr_sse30_data_p_reslh0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
+Result('fwitrsse30datapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
+       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+Result('fwitrbulkmodinvlh0','../sse1/fwitr_bulkmod_invlh0.rsf',
+       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
+       'xinch=10 yinch=5 clip=1.5')
+
+#Flow('fwitr_data_p_reslh0.su','../sse1/fwitr_data_p_reslh0.su',
+#     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
+Flow('fwitrdatapreslh0', 'fwitr_data_p_reslh0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
+Result('fwitrdatapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
+       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+
+End()

@@ -1,0 +1,1205 @@
+\title{Gradients of Reduced Objective Functions for Separable Wave
+  Inverse Problems}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+\lefthead{Symes}
+\righthead{Accurate Reduced Gradients}
+\maketitle
+\parskip 12pt
+\begin{abstract}
+The derivative of the forward (modeling) map for wave inverse problems
+is unbounded in the natural metric of the model and data spaces. This
+unboundedness complicates the accurate computation of the reduced
+gradient in separable wave inverse problems: iterative estimation of
+the linear variables may not lead to convergent computation of the
+gradient. If the linear part of the modeling operator possesses a computable
+inverse up to a smoothing error, however, and if the data is
+high-frequency in a precise sense, then the gradient may be decomposed
+into a computable non-iterative part and a convergent remainder. 
+The resulting form of the
+gradient error control is well-suited to integration with inexact trust-region
+optimization methods.
+
+\end{abstract}
+
+\section{Introduction}
+Separable (partly linear) modeling operators for wave inverse problems
+arise either via Born approximation
+\cite[]{KerSy:94,ChaurisNoble:01,MuldertenKroode:01,
+  ShenSymes:08,WeibullArntsen:13,BiondiAlmomin:14} or by including
+source (right-hand side) parameters as model degrees of freedom
+\cite[]{SongSymes:94b,Plessix:00,PrattSymes:02,LuoSava:11,Warner:14,LeeuwenHerrmannWRI:13}.
+Extended model spaces add yet more degrees of freedom to the linear
+parameters of a separable modeling operator, to permit data fit for a
+large set of nonlinear parameter (``velocity model'') values. The
+non-extended (``physical'') subspace is the kernel of an
+``annihilator''. Minimizing the norm of the annihilator output over
+all data-fitting models picks out an approximation to the solution of
+the physical least squares inverse problem. A natural approach to this
+minimization is via elimination of the linear variables to create a
+reduced function of the nonlinear variables
+\cite[]{KerSy:94,vanLeeuwenMulder:09,LiRickettAbubakar:13}. If the
+nonlinear parameters include velocities, indices of refraction, or
+equivalent, then the modeling operator is differentiable with loss of
+regularity: a convergent sequence of approximate solutions of the
+data-fit problem does not (necessarily) lead to a convergent sequence
+of derivative values. Consequently, the computable approximate
+solutions of the data-fit problem do not lead to convergent gradient
+approximations for the reduced objective, which may reduce the
+effectiveness of iterative optimization strategies
+\cite[]{HuangSymes:SEG15}.
+
+In the paragraphs to follow, I show that the gradient computation may
+be modified to become convergent if three conditions are satisfied:
+\begin{itemize}
+\item the linear part of the forward modeling operator possesses a
+  computable parametrix (inverse modulo compacts, or ``asymptotic
+  inverse'') in the form of its adjoint with respect to suitable
+  weighted norms, and
+\item the inverse problem is embedded in a family of problems indexed
+  by a data frequency parameter.
+\item the (inevitable) Tihonov regularization parameter is coupled to
+  data frequency.
+\end{itemize}
+Then the reduced gradient 
+computation may be modified to become convergent as well. 
+
+Reliance on parametrices might seem surprising. However, parametrices
+for linearized inverse wave problems have a long history, mostly as a
+subtopic of computational geometric optics
+\cite[]{CohBlei:77,Beyl:85,BeylBurr:90,VirJinMadLam:92,ArayaSymes:96,Operto:00}. Recently
+several authors have described direct (``wave equation'') parametrix
+constructions without any ray-geometric computations
+\cite[]{ZhangBleistein:05,ZhangSunGray:07,XuZhangTang:11,tenKroode:12,HouSymes:15}. For
+inversion of source parameters, even the usual ``exact'' inversion
+by Fourier division is actually a parametrix, due to the inevitable
+presence of time cut-off.
+
+The existence of the parametrix permits the decomposition of the
+gradient into two summands: the first does not involve the solution of
+the inner (linear) problem at all, while the second does but is
+manifestly continuous in the linear variables. Hence approximation of
+the linear part of the solution by a convergent iteration results
+in a convergent gradient approximation.
+
+While convergence is assured by the three conditions above, properly
+interpreted, control over the actual error in the gradient is
+indirect, depending on quantities that are difficult or impossible ot
+estimate accurately. However I also show that gradient error control
+of the type established here is compatible with so-called inexact
+trust-region optimization algorithms \cite[]{HeinkenVicente:01b}, with
+(in principle) assured convergence to a stationary point. That is,
+control over gradient error must be linked to convergence metrics of
+the optimization algorithm.
+
+Some uses of model extension for inverse wave problems have been
+criticized for so-called ``gradient artifacts'', that is, computed
+gradients that appear to give rise to slow convergence or undesired
+model features \cite[]{FeiWilliamson:10,VyasTang:10}. However it now
+appears that nothing was wrong with the gradients - instead, the
+reduced objective functions of separable least squares problems were
+defined with insufficiently precise solution of the linear (inner)
+inverse problem \cite[]{KerSy:94,LiuSymesLi:14,ChaurisGP:14}. The present paper
+could be viewed as an elaboration upon the latter work.
+
+\section{Operators}
+This is a Hilbert space story. 
+In fact, the natural objects in this study are {\em Hilbert space scales}, that
+is sequences of Hilbert spaces $H = \{ H^s, s \in \bZ\}$, decreasing in
+the sense that
+$H^{s+1} \subset H^s, s \in \bZ$. Define the sets
+\[
+H^{\infty} = \cap_{s \in \bZ} H^s, \,H^{-\infty} = \cup_{s \in
+  \bZ}H^s.
+\]
+The inner 
+product in $H^s$ will be denoted $\langle \cdot, \cdot \rangle_s$, and
+the corresponding norm is
+$\| \cdot \|_s$. Usually several scales will be involved in most of
+our assertions; the scale to which the inner product or norm belongs
+should be clear from context.
+
+An {\em operator} $L$  {\em of order $k \in \bZ$} from
+a scale $H_1$ to a scale $H_2$ is linear function from $H_1^{-\infty}$ to
+$H_2^{-\infty}$ for which $L|_{H_1^s} \in \sB(H_1^s,H_2^{s-k})$ for
+all $ s \in
+\bZ$. Denote by $Op^k(H_1,H_2)$ a set of operators of order $k$,
+satisfying the additional order properties: for $L_i \in
+Op^{k_i}_1(H_1,H_2), i=1,2$,
+\begin{equation}
+\label{eqn:comm}
+L_1 L_2 \in Op^{k_1+k_2}(H_1,H_2),\,[L_1,L_2] \in
+Op^{k_1+k_2-1}(H_1,H_2).
+\end{equation}
+$Inv^k(H_1,H_2) \subset Op^k(H_1,H_2)$ is the subset of invertible
+operators of order $k$.
+
+The motivating example of this structure are scales of $L^2$ Sobolev
+spaces, and scalar (pseudo-)\-differential operators on them.
+
+The domain of a separable extended model consists of two
+components. The first is a (background) model Hilbert space $M_b$ and
+an open set of admissible models
+$U \subset M_b$. In all examples, $M_b$ is a space of (possibly)
+vector-valued) smooth ($C^{\infty}$, ``low frequency'') functions on a suitable physical
+domain representing the physical parameters of a wave dynamics model, and members of $U$ obey additional constraints (such as
+bounds) required to make the dynamical laws they parametrize
+well-posed. 
+
+The other component of the model domain is a Hilbert space scale of extended
+models $\oM =\{\oM_k, k\in \bZ\}$. 
+A distinguished subscale $M = \{M_k, k\in \bZ\}, M_k \subset \oM_k$,
+represents the non-extended or physical models. 
+The  {\em annihilator} $A \in Op^0(\oM,N)$ has $M$ as its kernel:
+\begin{equation}
+\label{eqn:ann}
+\om \in \oM,\,\,A\om=0 \Leftrightarrow \om \in M.
+\end{equation}.
+The {\em extension map} $E \in Op^0(M,\oM)$ is injective.
+
+The model range or data space is another Hilbert scale $D$.
+
+The extended modeling operator, or forward map, is a continuous function
+\[
+\oF: U \rightarrow Op^0(\oM,D)
+\]
+It is {\em smooth with loss of regularity}: 
+\begin{equation}
+\label{eqn:nonsmooth1} 
+m_b \mapsto \oF[m_b]|_{\oM^k} \in C^p(U,\sB(\oM^k,D^{k-p})),
+\end{equation}
+but
+\begin{equation}
+\label{eqn:nonsmooth2} 
+m_b \mapsto \oF[m_b]|_{\oM^k} \notin C^p(U,\sB(\oM^k,D^{k-p+1})),
+\end{equation}
+and in particular
+\begin{equation}
+\label{eqn:nonsmooth3} 
+m_b \mapsto \oF[m_b]|_{\oM^0} \notin C^p(U,\sB(\oM^0,D^0)). 
+\end{equation}
+However, the normal operator is smooth 
+\begin{equation}
+\label{eqn:smoothnormal}
+F^TF \in C^{\infty}(U,Op^0(\oM,\oM),
+\end{equation}
+as follows from the
+{\em factorization lemma}:
+\begin{equation}
+\label{eqn:factor}
+D\oF[m_b] \delta m_b = F[m_b](Q_1[m_b]\delta m_b)
+\end{equation}
+in which $Q_1 \in C^{\infty}(U\times M_b,Op^1(\oM,\oM))$ is {\em essentially
+  skew-symmetric}:
+\begin{equation}
+\label{eqn:skew}
+Q_1 + Q_1^T = Q_0 \in C^{\infty}(U\times M_b,Op^0(\oM,\oM)).
+\end{equation}
+Finally, assume that $\oF$ has the {\em Egorov property}: if $L_1 \in
+C^{\infty}(U,Op^k(\oM,\oM))$, then there exists $L_2 \in
+C^{\infty}(U,Op^k(D,D))$ so that for every $m_b \in U$,
+\begin{equation}
+\label{eqn:egorov}
+\oF[m_b] L_1[m_b] = L_2[m_b] \oF[m_b].
+\end{equation}
+and vis-versa.
+
+\noindent {\bf Remark:} In the examples, $\oF[m_b]$ is a Fourier
+Integral Operator whose canonical relation is a local canonical graph,
+and whose symbol and canonical relation depends smoothly on $m_b$.
+Both the regularity with loss of a derivative
+\cite[]{BlazekStolkSymes:13} and normal regularity of $\oF^T\oF$
+follow from these facts: in this case, $\oF^T\oF$ is a
+pseudodifferential operator. For examples of the factorization lemma,
+see \cite{tenKroode:IPTA14,Symes:IPTA14}. The Egorov
+property follows from the usual Egorov's theorem (see for example \cite{Tay:81}).
+
+The physical modeling operator is a similar map
+\[
+F:U \rightarrow Op^0(M,D)
+\]
+with the same smoothness with loss of regularity. 
+
+The extended and physical modeling operators are related through the
+extension map: for each $m_b \in U$,
+\[
+F[m_b] = \oF[m_b] \circ E.
+\]
+
+\section{Objective}
+In the notation just introduced, the separable inverse problem of this
+paper may be crudely stated as:
+\begin{equation}
+\label{eqn:basicip}
+\mbox{Given }d\in D^0,\mbox{ find }m\in M_b,m_l \in M^0 \mbox{ so 
+  that }\\
+F[m]m_l \approx d 
+\end{equation}
+In view of the extension structure, this problem is equivalent to
+\begin{equation}
+\label{eqn:ip}
+\mbox{Given }d\in D^0,\mbox{ find }m\in M_b,\om \in \oM^0 \mbox{ so 
+  that }\\
+\oF[m]\om \approx d, \,\,A\om \approx 0
+\end{equation}
+For consistent data (that is, for which ``$\approx$'' can be replaced
+with ``$=$'' in either of the above statements, a solution is also a
+global minimizer of both
+\begin{equation}
+\label{eqn:residuals}
+\|\oF[m]\om - d\|^2 \mbox{ and } \|A\om\|^2
+\end{equation}
+The fundamental difficulty of this type of problem lies in the
+mapping properties of $m \mapsto F[m] \mbox{ or } \oF[m]$: because of
+these maps are differentiable only with loss of regularity (statements
+\ref{eqn:nonsmooth1}, \ref{eqn:nonsmooth2}, and \ref{eqn:nonsmooth3}),
+the first of the two functions in display \ref{eqn:residuals} (the
+``data residual'') is not smooth as a map $M_b \times \oM \rightarrow
+\bR$. This lack of smoothness is the ultimate reason that solution of the basic
+``full waveform inversion'' problem \ref{eqn:basicip} is still a topic
+of active research, rather than a routine tool in exploration and
+academic seismology, more than thirty years after it was introduced.
+
+Two objectives such as \ref{eqn:residuals} can be combined in various
+ways to produce constrained and unconstrained optimization
+problems. Both are quadratic in $\om$, so minimization of either in
+this variable seems a tractable problem. Minimizing the second
+(``semblance'') function so that the data residual becomes a function
+of $m$ only (a so called reduced objective) does not improve matters:
+the resulting unconstrained optimization is equivalent to
+\ref{eqn:basicip} and has a non-smooth objective.
+
+Remarkably, eliminating $\om$ by minimizing the data residual,  yields a smooth reduced semblance
+objective: this conclusion will be justified below.
+Generally it cannot
+be assumed that $\oF$ is coercive, even if it is
+injective. Therefore some form of regularization must be added to the
+data residual to guarantee existence of a stable minimizer. It is also
+turns out to be essential to
+permit more freedom in the metric structure of
+domain and range spaces also.
+
+Introduce a data weighting operator $W_d\in C^{\infty}(U,Inv^0(D,D))$.
+When restricted to $D^0$, $W_d$ is self-adjoint and positive definite,
+hence induces a norm on the order $0$ data space:
+\begin{equation}
+\label{eqn:wdata}
+\langle d_1,d_2 \rangle_d = \langle d_1, W_d d_2\rangle_0 \mbox{ for }
+d_1,d_2 \in D^0 
+\end{equation}
+Similarly, introduce a model weight operator
+$W_m\in C^{\infty}(U, Inv^0(\oM,\oM))$ on the model space, self-adjoint and positive definite when restricted to
+$\oM^0$, with corresponding norm and inner product
+\begin{equation}
+\label{eqn:wmodel}
+\langle \om_1,\om_2 \rangle_m = \langle \om_1, W_d \om_2\rangle_0 \mbox{ for }
+\om_1,\om_2 \in \oM^0 
+\end{equation}
+Reformulate data residual minimization for the linear 
+variables $\om$ as
+\begin{equation}
+\label{eqn:wredn}
+\mbox{min}_{\om}\|\oF[m]\om-d\|^2_d + \lambda^2\|R\om\|_m^2 
+\end{equation}
+in which $R$ is a bounded and coercive regularization operator, whose
+range is some other Hilbert space. The normal equation is
+\begin{equation}
+\label{eqn:normal}
+N_{\lambda}[m]\om = \odF[m]d,\,\,N_{\lambda}[m]
+=\odF[m]\oF[m]+\lambda^2 \dR R,
+\end{equation}
+in which $\odF=W_m^{-1}\oF[m]^TW_d[m]$ is the adjoint of $\oF$ with
+respect to the weighted norms and $\oF^T$ is the adjoint with respect
+to the scale 0-norms. Similarly $\dR$ is the adjoint of $R$ with respect to
+the weighted model-space norm.
+
+Denote by $\bre \in C^{\infty}(U \times D,\oM^0)$ the solution of
+\ref{eqn:normal}, and define the reduced objective function 
+\begin{equation}
+\label{eqn:aredn}
+J_{\lambda}[m,d]= \frac{1}{2}\|A\bre[m,d]\|_0^2
+\end{equation}
+If $J_{\lambda}[m,d]$ attains its obvious lower bound, then $\bre[m,d] \in \oM^0$ and
+$(m,\bre[m,d])$ solves the extended inverse problem \ref{eqn:ip}. 
+
+\section{Gradient}
+
+{\bf Calculation}
+ $W = W_m$, $W_d=I$
+\[
+\langle u,v\rangle_m = \langle u, W[m]^{-1} v \rangle_0
+\]
+\[
+W[m]S[m]^T S[m] = I + R[m], \, R \in Op^{-1}
+\]
+also 
+\[ 
+SWS^T \approx I
+\]
+\[
+S[m]^{\dagger} = W[m]S[m]^T
+\]
+\[
+J[m] = \frac{1}{2}\|AS[m]^{\dagger}d\|_m^2 =
+\frac{1}{2}\|AW[m]S[m]^Td\|_m^2
+\]
+\[
+= \frac{1}{2}\langle AW[m]S[m]^Td, W[m]^{-1}AW[m]S^T[m]d\langle_0
+\]
+\[
+DJ[m] = \langle A D(W[m]S[m]^T)d, W[m]^{-1}AW[m]S^T[m]d \rangle_0
+- \frac{1}{2}\langle AW[m]S[m]^Td,
+W[m]^{-1}DW[m]W[m]^{-1}AW[m]S[m]^Td\rangle_0
+\]
+\[
+=\langle A (DWW^{-1})(WS^T)d, W^{-1}AWS^Td
+\rangle_0
++\langle A WDS^Td, W^{-1}AWS^Td \rangle_0
+\]
+\[
+- \frac{1}{2}\langle AWS^Td,W^{-1}DWW^{-1}AWS^Td\rangle_0
+\]
+Definition of $Q$:
+\[
+Q \approx WS^TDS, DS = SQ, DS^T = Q^TS^T
+\]
+so 
+\[
+DJ[m] =
+\langle A (DWW^{-1})(WS^T)d, W^{-1}AWS^Td
+\rangle_0
++\langle A WQ^TS^Td, W^{-1}AWS^Td \rangle_0
+\]
+\[
+- \frac{1}{2}\langle AW[m]S[m]^Td,
+W[m]^{-1}DW[m]W[m]^{-1}AW[m]S[m]^Td\rangle_0 
+\]
+\[
+=
+\langle A (DWW^{-1})(WS^T)d, W^{-1}AWS^Td
+\rangle_0
++\langle A WQ^TW^{-1}WS^Td, W^{-1}AWS^Td \rangle_0
+\]
+\[
+- \frac{1}{2}\langle AWS[m]^Td,
+W[m]^{-1}DW[m]W[m]^{-1}AW[m]S[m]^Td\rangle_0 
+\]
+Symmetry of $Q$:
+\[
+Q + WQ^TW^{-1} = WS^TDS + W(DS^TSW)W^{-1} = W(S^TDS + DS^TS)
+\]
+\[
+= WD(S^TS) = D(WS^TS) - DW W^{-1}WS^TS \approx -DW W^{-1}
+\]
+\[
+QW + WQ^T \approx -DW
+\]
+So
+\[
+\langle A WQ^TW^{-1}WS^Td, W^{-1}AWS^Td \rangle_0 =
+\langle A WQ^TS^Td, W^{-1}AWS^Td \rangle_0
+\]
+\[
+=-\langle A QWS^Td, W^{-1}AWS^Td \rangle_0 -\langle ADWW^{-1}(WS^Td),
+W^{-1}AWS^Td\rangle_0 
+\]
+\[ 
+=-\langle W^{-1}AWA QWS^Td, W^{-1}(WS^Td) \rangle_0 -\langle ADWW^{-1}(WS^Td),W^{-1}AWS^Td\rangle_0
+\]
+On the other hand,
+\[
+\langle A WQ^TW^{-1}WS^Td, W^{-1}AWS^Td \rangle_0 =
+\langle Q^TS^Td, WA^TW^{-1}AWS^Td \rangle_0
+\]
+\[
+=\langle WS^Td, W^{-1}Q WA^TW^{-1}AWS^Td \rangle_0
+\]
+Adding left and right hand sides of last two equations and dividing by
+2, get
+\[
+\langle A WQ^TW^{-1}WS^Td, W^{-1}AWS^Td \rangle_0 
+\]
+\[
+= \frac{1}{2}\left[\langle WS^Td, W^{-1}[Q,WA^TW^{-1}A]WS^Td\rangle_0
+ - \langle ADWW^{-1}(WS^Td),W^{-1}AWS^Td\rangle_0\right]
+\]
+Combine with previous calc to get
+\[
+DJ =
+\langle A (DWW^{-1})(WS^Td), W^{-1}AWS^Td \rangle_0
++\frac{1}{2}\left[\langle WS^Td, W^{-1}[Q,WA^TW^{-1}A]WS^Td\rangle_0
+ - \langle A(DWW^{-1})(WS^Td),W^{-1}AWS^Td\rangle_0\right]
+\]
+\[
+- \frac{1}{2}\langle W^{-1} AWS^Td,(DWW^{-1})A(WS^Td)\rangle_0 
+\]
+\[
+=\frac{1}{2}\langle WS^Td, W^{-1}[Q,WA^TW^{-1}A]WS^Td\rangle_0
+- \frac{1}{2}\langle W^{-1} AWS^Td,[(DWW^{-1}),A](WS^Td)\rangle_0 
+\]
+Since $[(DWW^{-1}),A] \in Op^{-1}$, the last term is negligible, and
+we get
+\[
+DJ \approx \frac{1}{2}\langle WS^Td,
+  W^{-1}[Q,WA^TW^{-1}A]WS^Td\rangle_0
+\]
+\[
+= \frac{1}{2}\langle S^{\dagger}d, [Q,A^{\dagger}A]S^{\dagger}
+d\rangle_m
+\]
+
+Minimization of $J_{\lambda}$ 
+by any variant of Newton's method requires computation of the gradient  
+of $J_{\lambda}$. Formally,
+\[
+DJ_{\lambda}[m,d]\delta m = \langle D\bre[m,d]\delta m,A^TA\bre[m,d]\rangle_0
+\]
+\[
+= \langle -\Ne[m]^{-1}(D\Ne[m]\delta m) \bre[m,d]
++ \Ne[m]^{-1}(D\odF[m]\delta m)d ,A^TA\bre[m,d]\rangle_0
+\]
+Inserting $W_mW_m^{-1}$, referring to the definition of $\langle
+\cdot,\cdot \rangle_m$, and noting that $W_m^{-1}A^T = A^{\dagger}$
+and that $\Ne$ is self-adjoint in the model norm, obtain
+\begin{equation}
+\label{eqn:deriv}
+= \langle -(D\Ne[m]\delta m)\bre[m,d] +(D\odF[m]\delta m)d, \bqe[m,d] \rangle_m
+\end{equation}
+where $\bqe[m,d]$ is the solution of
+\begin{equation}
+\label{eqn:q}
+\Ne[m] \bqe[m,d] = A^{\dagger}A\bre[m].
+\end{equation}
+
+The first term in right-hand side of equation \ref{eqn:deriv}  defines
+a continuous function of $\bre[m,d]$. 
+Since $\Ne = W_m^{-1}\oF^TW_d\oF + \lambda^2 \dR R$, the rule \ref{eqn:egorov} implies
+the existence of $P \in C^{\infty}(U,Inv^0(\oM,\oM))$ so that $\Ne =
+W_m^{-1}\oF^T\oF P + \lambda^2 \dR R$. This shows in turn that $\Ne \in
+C^{\infty}(U,Op^0(\oM,\oM))$, thanks to the assumptions on $W_d, W_m$,
+\ref{eqn:egorov} once again, and the \ref{eqn:smoothnormal}. In
+particular,
+$D\Ne[m]\delta m \in Op^0(\oM,\oM)$, so the bilinear form 
+\begin{equation}
+\label{eqn:norcont}
+\bq, \br \mapsto \langle (D\Ne[m]\delta m)\br,\bq \rangle_m
+\end{equation}
+is continuous in $\oM^0 \times \oM^0$. Also,
+\[
+\langle (D\Ne[m]\delta m)\br,\bq\rangle_m=
+\langle (D(\odF[m])\delta m)\oF[m]\br,\bq \rangle_m
+\]
+\[
++\langle(\odF[m] (D\oF[m]\delta m)\br,\bq \rangle _m
+= -\langle W_m[m]^{-1}(DW_m[m]\delta m)\odF[m]\oF[m]\br,\bq\rangle_m
+\]
+\[
++ \langle \odF[m] W_d[m]^{-1}DW_d[m]\oF[m]\br,\bq\rangle_m
++ \langle (D\oF[m]\delta m)^{\dagger}\oF[m]\br,\bq \rangle_m
+\]
+\[
++ \langle \odF[m](D\oF[m]\delta m)\br,\bq \rangle_m
+\]
+\[
+= -\langle (DW_m[m]\delta m)\odF[m]\oF[m]\br,\bq\rangle_0
++ \langle (DW_d[m]\delta m)\oF[m]\br,\oF[m]q \rangle_0
+\]
+\begin{equation}
+\label{eqn:firstterm}
++ \langle \oF[m]\br,(D\oF[m]\delta m) \bq \rangle_d
++ \langle (D\oF[m]\delta m)\br,\oF[m]\bq \rangle_d
+\end{equation}
+
+Concerning the second term in \ref{eqn:deriv}, note that
+\[
+(D\odF[m]\delta m) = D[(W_m[m])^{-1}\oF[m]^TW_d[m]d](\delta m)
+\]
+\begin{equation}
+\label{eqn:1}
+=-W_m[m]^{-1}(DW_m[m]\delta m)\odF[m]d + \odF[m]W_d[m]^{-1}DW_d[m]d 
++ (D\oF[m]\delta m)^{\dagger}d
+\end{equation}
+The first two terms in equation \ref{eqn:1} involve only bounded
+operators on $\oM^0$. The contribution to the second
+term in the right hand side of equation \ref{eqn:deriv} is
+\[
+\langle (D\odF[m]\delta m)d,\bq\rangle_m =
+\]
+\[
+- \langle W_m[m]^{-1}(DW_m[m]\delta m)\odF[m]d, \bq\rangle_m + 
+\langle \odF[m]W_d[m]^{-1}DW_d[m]d,\bq\rangle_m
+\]
+\[
++ \langle (D\oF[m]\delta m)^{\dagger}d,\bq\rangle_m
+\]
+\[
+= -\langle (DW_m[m]\delta m)\delta m)\odF[m]d,\bq\rangle_0 +
++ \langle (DW_d[m]\delta m)d,\oF[m]\bq\rangle_0
+\]
+\begin{equation}
+\label{eqn:secondterm} 
++ \langle d, (D\oF[m]\delta m)\bq \rangle_d
+\end{equation}
+Now the difficulty is plain to see: if $\bq=\bqe[m,d]$ in the last
+term on the right hand side of equation \ref{eqn:secondterm} is replaced with an
+approximation in the sense of the $0$ norm, as would be the result of
+an iterative process for solving \ref{eqn:q} (or equation
+\ref{eqn:normal}), no bound on the resulting error in the inner
+product above, hence in the resulting approximation to $DJ_{\lambda}[m,d]\delta
+m$ or the gradient of $J_{\lambda}$, can be asserted, since $D\oF[m]\delta m$ is not continuous in the sense of $\oM^0$.
+
+Ignoring for the moment the apparent instability, combine equations
+\ref{eqn:firstterm} and \ref{eqn:secondterm} to obtain an expression for the
+derivative of $J_{\lambda}[m,d]$:
+\[
+DJ_{\lambda}[m,d]\delta m = \langle (DW_m[m]\delta m)
+\odF[m](\oF[m]\bre[m,d]-d),\bqe[m,d]\rangle_0 
+\]
+\[
++ \langle (DW_d[m]\delta
+m)(\oF[m]\bre[m,d]-d),\oF[m]\bqe[m,d]\rangle_0
+\]
+\begin{equation}
+\label{deriv1}
+- \langle F[m]\bre[m,d]-d,(D\oF[m]\delta m)\bqe[m,d]\rangle_d
+- \langle (D\oF[m]\delta m)\bre[m,d],F[m]\bqe[m,d]\rangle_d
+\end{equation}
+There follows an expression for the gradient, using the partial
+duals $D\oF[m]^*$, a continuous quadratic form $: D^0 \times \oM^1
+\rightarrow M_b$ defined by
+\[
+\langle \delta m, D\oF[m]^*(d,\br)\rangle_{M_b} = \langle d,
+(D\oF[m]\delta m)\br\rangle_d = \langle (D\oF[m]\delta
+m)^{\dagger}d,\br\rangle_m
+\]
+\begin{equation}
+\label{eqn:dual}
+= \langle W_d[m]^{-1}d,(D\oF[m]\delta m)\br\rangle_0
+\end{equation}
+and $DW_m[m]^t$, a continuous bilinear map $\oM^0 \times \oM^0
+\rightarrow M_b$ defined by 
+\[
+\langle \delta m, DW_m[m]^t(\br,\bq) \rangle_{M_b} = 
+\langle (DW_m[m]\delta m)\br,\bq\rangle_0
+\]
+$DW_d[m]^t$ is defined similarly.
+Then the $m$-gradient of $J_{\lambda}$ is given by
+\[
+\nabla_m J_{\lambda}[m,d] = DW_m[m]^t(\odF[m](\oF[m]\bre[m,d]-d),\bqe[m,d])
+\]
+\[
++ DW_d[m]^t(\oF[m]\bre[m,d]-d),\oF[m]\bqe[m,d]
+\]
+\[
+- D\oF[m]^*(\oF[m]\bre[m,d],\bqe[m,d]) -
+D\oF[m]^*(\bre[m,d],\oF[m]\bqe[m,d])
+\]
+\begin{equation}
+\label{eqn:gradient}
++D\oF[m]^*(d,\bqe[m,d])
+\end{equation}
+Every part of this expression is manifestly {\em stable}, that is,  substitutions of
+approximations $\brea,\bqea$ in their computation will entail 
+$O(\|\bre - \brea\|_0, \|\bqe-\bqea\|_0)$ error, {\em except} for the
+last term
+
+\section{Stablility}
+In this section, I will show that the last term in \ref{eqn:gradient} can 
+expressed as the value at $\br=\bre[m,d]$ and $\bq=\bqe[m,d]$ of 
+of continuous function of $d, \br,\bq$, thus giving a stable
+computation of the gradient in the sense explained at the end of the
+last section.
+
+The construction depends on the availability of a {\em parametrix} or
+approximate inverse modulo lower order error, of a particular
+form. The utility of the construction depends on the computability of
+the parametrix, that is, on its being a straightforward modification of the
+transpose. \cite[]{HouSymes:15} demonstrated the existence of such special
+parametrices for a particular separable inverse problem (extended
+linearized constant density acoustic inversion with horizontal
+subsurface offset extension) and parametrices with similar properties
+exist for other extended modeling operators as well.
+
+In fact, most parametrices of the type I've mentioned are only
+microlocal, and moreover can only be computed approximately. These
+limitations will be addressed in coming sections.
+
+Assume that the data and model weight operators $W_d, W_m$ can be
+chosen so that $\oF$ is approximately unitary with respect to the
+norms $\|\cdot\|_d, \|\cdot\|_m$:
+satisfies 
+\begin{equation}
+\label{eqn:parametrix}
+\odF\oF - I \equiv S \in C^{\infty}( U, Op^{-1}(\oM,\oM)). 
+\end{equation}
+Thus $\Ne = S +
+I +\lambda^2\dR R)$. Thus equations \ref{eqn:normal}, \ref{eqn:q} are equivalent to 
+\begin{eqnarray}
+\label{eqn:magic}
+\bre &=& (I+\lambda^2\dR R)^{-1}(\odF d - S\bre)\\
+\bqe &=&(I+\lambda^2\dR R)^{-1}(A^{\dagger}A\bre - S\bqe)\\
+   & = &(I+\lambda^2\dR R)^{-1}(A^{\dagger}A (I+\lambda^2 \dR R)^{-1}(\odF d -
+             S \bre)-(I+\lambda^2\dR R)^{-1}S\bqe
+\end{eqnarray}
+Replacing $\bqe$ in \ref{eqn:gradient} with the right hand side in the last equality of
+\ref{eqn:magic}, obtain
+\[
+D\oF[m]^*(d,\bqe[m,d])=
+D\oF[m]^*(d,(I+\lambda^2\dR R)^{-1}A^{\dagger}A (I+\lambda^2 \dR R)^{-1}\odF[m]d 
+\]
+\[
+- (I+\lambda^2\dR R)^{-1}A^{\dagger}A (I+\lambda^2 \dR R)^{-1}
+S[m]\bre[m,d] 
+\]
+\begin{equation}
+\label{eqn:protogradient}
+- (I+\lambda^2\dR R)^{-1}S[m]\bqe[m,d]).
+\end{equation}
+The operators appearing in the last two terms of
+\ref{eqn:protogradient} are of
+order $-1$, mapping $\oM^0$ continuously to $\oM^1$. So the continuity
+property of $D\oF[m]^*$ noted above implies that the last two terms
+above are stable, that is, substitution of approximations $\brea$ and
+$\bqea$ for $\bre$ and $\bqe$ in the right-hand side of equation
+\ref{eqn:protogradient} will result in an
+$O(\|\brea-\bre\|_0,\|\bqea-\bqe\|_0)$ error.
+
+It remains to be seen that the first term on the right hand side of
+equation \ref{eqn:protogradient} is stable: {\em a priori}, it only
+makes sense for $d\in D^1$ (hence $\bre \in \oM^1$). A continuous
+extension to $d \in D^0$ follows however from the factorization
+property \ref{eqn:factor}. For convenience, define 
+\[
+B = (1+\lambda^2\dR R)^{-1}A^{\dagger}A (1+\lambda^2 \dR R)^{-1}.
+\]
+Then the first term on the right-hand side of \ref{eqn:protogradient} is
+\[
+\langle \delta m, D\oF[m]^*(d,B\odF[m]d) \rangle_{M_b}
+\]
+\[
+= \langle d, (D\oF[m]\delta m)B\odF[m]d \rangle_d 
+\]
+\[
+= \langle d, \oF[m](Q_1[m]\delta m)B\odF[m]d\rangle_d
+\]
+\begin{equation}
+\label{eqn:2}
+=\langle \odF[m]d, (Q_1[m]\delta m)B\odF[m]d\rangle_m 
+\end{equation}
+The essentially-skew property of $Q$ (equation \ref{eqn:skew}) holds
+also for the weighted inner product $\langle \cdot, \cdot \rangle_m$,
+since the weight operator $W_m$ is invertible and of order 0:
+specifically,
+\begin{equation}
+\label{eqn:skew-m}
+(Q_1[m]\delta m)^{\dagger} = -(Q_1[m]\delta m) + (Q_{0,m}[m]\delta m),
+\end{equation}
+with $Q_{0,m} = Q_0 + W_m^{-1}[Q_1,W_m] \in C^{\infty}(U, Op^0(\oM,\oM))$.
+ So the
+right-hand side of equation \ref{eqn:2} is
+\[
+=\langle \odF[m]d, ([B,(Q_1[m]\delta m)] + B(Q_1[m]\delta m))
+\odF[m]d\rangle_m 
+\]
+\begin{equation}
+\label{eqn:3}
++\langle \odF[m]d, ([B,(Q_1[m]\delta m)] + ((Q_{0,m}[m]- Q_1[m])\delta m)B)\odF[m]d\rangle_m.
+\end{equation}
+Add the right hand sides of equations \ref{eqn:2} and \ref{eqn:3} and
+divide by 2 to obtain
+\[
+\langle \delta m, D\oF[m]^*(d,B\odF[m]d) \rangle_{M_b}
+\]
+\begin{equation}
+\label{eqn:4}
+=\frac{1}{2}\langle \odF[m]d,([B,(Q_1[m]\delta m)] +
+(Q_{0,m}[m]\delta m))\odF[m]d\rangle_m.
+\end{equation}
+The right-hand side of equation \ref{eqn:4} is a quadratic form in
+$\odF[m]d$, defined by a self-adjoint operator (the sum of the various
+commutators and products in the above expression) of order
+zero. Therefore 
+\[
+D\oF[m]^*(d,B\odF[m]d)
+\]
+is a $\|\cdot\|_0$-continuous $M_b$-valued quadratic form in $d$,
+hence extends continuously to $d \in D^0$, whence $\nabla_m J_{\lambda}[m,d]$ is
+$\|\cdot\|_0$-continuous in $d$.
+
+For Hilbert spaces $H_1, H_2$, denote by ${\cal Q}(H_1,H_2)$ the
+Banach space of continuous $H_2$-valued quadratic forms on $H_1$.
+Then the result of the foregoing calculations is summarized in
+
+\begin{thm} Define $G_{\lambda} \in C^{\infty}(U, {\cal
+  Q}(D^0 \times \oM^0 \times \oM^0, M_b)$ by
+\begin{equation}
+\label{eqn:grad_approx}
+\begin{split}
+G_{\lambda}[m](d,\br,\bq) = 
+& D\oF[m]^*(d,(1+\lambda^2\dR R)^{-1}A^{\dagger}A (1+\lambda^2 \dR R)^{-1}\odF[m]d \\
+& - (1+\lambda^2\dR R)^{-1}A^{\dagger}A (1+\lambda^2 \dR R)^{-1} S[m]\br\\
+& - (1+\lambda^2\dR R)^{-1}S[m]\bq]) \\
+& + DW_m[m]^t(\odF[m](\oF[m]\br-d),\bq)\\
+&+ DW_d[m]^t(\oF[m]\br-d,\oF[m]\bq)\\
+&- D\oF[m]^*(\oF[m]\br,\bq) \\
+& -D\oF[m]^*(\br,\oF[m]\bq)
+\end{split}
+\end{equation}
+Then
+\begin{equation}
+\label{eqn:thm1}
+\nabla_m J_{\lambda}[m,d] = G_{\lambda}[m](d,\bre[m,d],\bqe[m,d]),
+\end{equation}
+in which $\bre[m,d]$ and $\bqe[m,d]$ are solutions of equations \ref{eqn:normal} and
+\ref{eqn:q} respectively.
+\end{thm}
+
+\begin{proof} The content of the definition \ref{eqn:grad_approx} of
+  $G_{\lambda}$ is that it is a continuous quadratic-form-valued
+  function. This fact has been established for each of the summands:
+  for the first term by equation \ref{eqn:4}, for the second and third
+  by equation \ref{eqn:protogradient} and following discussion, the
+  fourth and fifth by equation \ref{eqn:1}, and the last two by
+  equations \ref{eqn:norcont} and \ref{eqn:firstterm} and surrounding
+  discussion. These calculations also established equation
+  \ref{eqn:thm1}.
+\end{proof}
+
+\begin{rem} For computational purposes, it is more convenient to work
+directly with the defining Hilbert space structure of the background, domain and
+range spaces, rather than with the background, model and data norms, and to
+formulate the background model space norm also as a weighted norm. For example,
+\[
+\langle \delta m, D\oF[m]^*(d,A^{\dagger}A\odF[m]d) \rangle_{M_b}
+\]
+\[
+= \langle d, (D\oF[m]\delta m)A^{\dagger}A\odF[m]d \rangle_d 
+\]
+\[
+= \langle W_d d, (D\oF[m]\delta m)W_m^{-1}A^TA\odF[m]d \rangle_0.
+\]
+So
+\begin{equation}
+\label{eqn:thm1b}
+\nabla_m J_{\lambda}[m,d] = W_b^{-1}D\oF[m]^t(W_d[m]d,W_m[m]^{-1}A^TA\odF[m]d) +
+K[m](\bre,\bqe),
+\end{equation}
+where $W_b$ is the background model space weight operator defining the
+norm $\|\cdot\|_{M_b}$, and $D\oF[m]^t$ is the transpose with respect
+to the 0-norms (usually, $L^2$, or in the discrete case Euclidean
+length) rather than the $M_b$ and $\|\cdot\|_d$ norms:
+\begin{equation}
+\label{eqn:dual0}
+\langle \delta m, D\oF[m]^t(d,\br)\rangle_0 = \langle d,
+(D\oF[m]\delta m)\br\rangle_0.
+\end{equation}
+Assuming that $\oF$ is implemented by a time-stepping finite
+difference or finite element method, this notion of transpose can be
+computed by a variant of the adjoint state method. For the case that
+$\oF$ is a linearization (that is, Born approximation), so
+that $D\oF$ is actually a second derivative, this
+application of the adjoint state method was introduced by
+\cite{SymSant:88}, and employed by \cite{KerSy:94} in computations
+similar to those presented here.
+\end{rem}
+
+\section{Controllability}
+The stability result of the last two sections is not in itself
+sufficient foundation for a convergent optimization
+algorithm, for two reasons: 
+\begin{enumerate}
+\item The solution errors $\brea-\bre$ and $\bqea-\bqe$ are not
+directly observable, since neither $\bre$ nor $\bqe$ are known in
+practice;
+\item typical iterative solution algorithms for
+equations \ref{eqn:normal} and \ref{eqn:q} do not necessarily reduce
+their solution errors.
+\end{enumerate}
+Observable quantities actually reduced by iterative algorithms include the
+data residual $\|\oF[m]\brea - d\|_d$, the residual for each of the
+equations \ref{eqn:normal} and \ref{eqn:q}, and the norms of the
+approximate solutions $\brea$ and $\bqea$.
+
+It might be objected that the solution errors and residuals for
+equations \ref{eqn:normal} and \ref{eqn:q} are related, the former
+being at most $\lambda^{-2}$ times the latter ($\lambda^2$ being a
+lower bound for the normal operator $\Ne$). Of course such bounds are
+not uniform in $\lambda$, hence are not useful in formulation of an
+effective algorithm.
+
+As will be explained in the next section, the necessary form for the
+gradient error estimate is
+\begin{equation}
+\label{eqn:graderr}
+\|g - \nabla J_{\lambda}[m,d]\|_{M_b} \le K \epsilon
+\end{equation}
+in which $K \ge 0$ and $\epsilon$ is a parameter of the estimation process
+that produces $\brea,\bqea$, in effect that $\brea,\bqea$
+are functions of $m \in U, d\in D^0, e >0$. Only minimal assumptions
+will be made about the estimation process - as will be seen below,
+only requirements on the residuals produced in equations
+\ref{eqn:normal} and \ref{eqn:q}. 
+
+However, such estimates appear to
+require explicit use of scale separation, abstracted in part by introducing a
+{\em family} $d=\{\de: \lambda > 0\} \subset D^0$ of data, and
+corresponding separable least squares problems. The {\em high
+  frequency cone condition}
+\begin{equation}
+\label{eqn:hfc}
+\|\de\|_k \le C_k\lambda^2 \|\de\|_{k+1},\, k \ge k_0
+\end{equation}
+gives a quantitative expression of scale separation. The lower index
+bound $k_0$ is presumed to be at most $-1$.
+
+\begin{rem} For the Sobolev scale, this condition identifies the
+  regularization parameter $\lambda^2$ with wavelength.
+\end{rem}
+
+From
+here on, $\bre[m,d]$ and $\bqe[m,d]$ denote the solutions of the
+parametrized systems
+\begin{equation}
+\label{eqn:normalbis}
+N_{\lambda}[m]\bre[m,d] = \odF[m]\de  
+\end{equation} 
+and
+\begin{equation}
+\label{eqn:qbis}
+N_{\lambda}[m]\bqe[m,d] = A^{\dagger}A\bre[m,d]. 
+\end{equation}
+
+Linking the size of the residuals
+\begin{eqnarray}
+\label{eqn:mres}
+e_{m,\lambda}[m,d] & = & \Ne[m]\brea[m,d]-\odF[m]\de,\\
+\label{eqn:qres}
+e_{q,\lambda}[m,d] & = & \Ne[m]\bqea[m,d]-A^{\dagger}A\brea[m,d,e] 
+\end{eqnarray}
+to the solution errors $\brea-\bre$ and $\bqea-\bqe$ requires some
+assumption about the approximate solutions $\brea$ and $\bqea$. Note
+that any Krylov method for solution of the systems
+$\ref{eqn:normalbis}$ and $\ref{eqn:qbis}$, preconditioned by $(I+\lambda^2\dR
+R)^{-1}$, yields first iterates
+\begin{eqnarray}
+\label{eqn:krylov1}
+\breone[m,d]& =& (I+\lambda^2\dR R)^{-1}\odF[m]\de\\
+\bqeone[m,d]&=&(I+\lambda^2 \dR R)^{-1}A^{\dagger}A\breone[m,d]
+\end{eqnarray}
+for which the residuals are
+\begin{eqnarray}
+\label{eqn:mres1}
+e_{m,\lambda,1} & = & S[m](I+\lambda^2\dR R)^{-1}\odF[m]\de,\\
+e_{q,\lambda,1} & = & S[m](I+\lambda^2\dR R)^{-1}A^{\dagger}A\breone[m,d],
+\end{eqnarray}
+
+\begin{thm} Suppose that for $\epsilon > 0$, $\brea[m,d,\epsilon]$ and
+  $\bqea[m,d,\epsilon]$ are approximate solutions of \ref{eqn:normalbis} and
+  \ref{eqn:qbis} for which the residuals $e_{m,\lambda,\epsilon}$ and
+  $e_{q,\lambda,\epsilon}$ satisfy
+\begin{eqnarray}
+\label{eqn:mresn}
+\|e_{m,\lambda,\epsilon}\|_m & \le & \epsilon \|e_{m,\lambda,1}\|_m\\
+\|e_{q,\lambda,\epsilon}\|_m & \le & \epsilon \|e_{q,\lambda,1}\|_m 
+\end{eqnarray}
+Then there exists $K>0$ and $\lambda_0 \ge 0$ so that for $\lambda \le
+\lambda_0$,
+\begin{eqnarray}
+\label{eqn:postbd1}
+\|\brea[m,d,\epsilon] -\bre[m,d]\|_m & \le & K \epsilon\|\de\|_d\\
+\label{eqn:postbd2}
+\|\bqea[m,d,\epsilon] -\bqe[m,d]\|_m & \le & K \epsilon \|\de\|_d
+\end{eqnarray}
+uniformly in $m \in U$, for fixed choice of $\{C_k\}$ in
+\ref{eqn:hfc}.
+\end{thm}
+
+\begin{proof}  Since 
+\[
+\Ne[m] (\brea[m,d,\epsilon] -\bre[m,d]) = e_{m,\lambda,\epsilon},
+\]
+\[
+\|\brea[m,d,\epsilon] -\bre[m,d]\|_0 \le \frac{K}{\lambda^2}\| e_{m,\lambda,\epsilon}\|_0
+\le \frac{K\epsilon}{\lambda^2}\| e_{m,\lambda,1}\|_0
+\]
+\[
+\le \frac{K\epsilon}{\lambda^2}\|\de\|_{-1} \le K \epsilon \|\de\|_d
+\]
+The next-to-the last inequality follows from the definition of
+$e_{m,\lambda,1}$ and the uniform $Op^{-1}$ bound on $S[m]$, the last
+from \ref{eqn:hfc} for $k=-1$. Thus \ref{eqn:postbd1} is established. Since $e_{q,\lambda,1}$
+takes the same form, a similar estimate holds for it.
+\end{proof}
+\begin{cor}
+Under the assumptions of Theorem 2, there exists $K \ge 0$ for which
+\begin{eqnarray}
+\label{eqn:graderr1}
+\left|\frac{1}{2}\|A\brea[m,d,\epsilon]\|^2 - J_{\lambda}[m,d]\right |
+  \le K \epsilon\\
+\|G_{\lambda}[m](d,\brea[m,d,\epsilon],\bqea[m,d,\epsilon]) - \nabla J_{\lambda}[m,d]\|_{M_b} \le K \epsilon
+\end{eqnarray}
+ for $m \in U$ and sufficiently small $\lambda$.
+\end{cor}
+
+\begin{proof}
+Follows from continuity of $G_{\lambda}$ as described in Theorem 1,
+and bounds on the solution errors established in Theorem 2. 
+\end{proof}
+
+\section{Optimization}
+
+In view of the error inherent in the 
+calculations explained in the previous sections, standard variants of
+Newton's method for local minimization cannot be guaranteed to
+converge to a local minimizer of $J_{\lambda}$. Minimization of the
+reduced objective requires use of iterations that converge in the
+presence of inexact gradient and objective function evaluations. Such
+an algorithm would necessarily need to couple error and step size control. 
+
+Since error-contaminated function and gradient computations are hardly
+rare, it is unsurprising that this topic has a fairly large
+literature
+\cite[]{Dembo:82,Carter:91,Deuflhard:91,Carter:93,EisenstatWalker:94}. All
+of these works and many more recent ones share a major drawback: they
+mandate {\em absolute} control of function and/or gradient error,
+implying in particular that the computed gradient be a descent
+direction. While of course this condition must eventually hold, it is
+nearly impossible to check in practice: many sources of error are like
+those considered in the preceding sections, in that they give no
+direct measure of gradient or function error, but only allow indirect
+control.
+
+One exception to this pattern is the work of \cite{HeinkenVicente:01b,DPKouri_MHeinkenschloss_DRidzal_BGvanBloemenWaanders_2013a,DPKouri_MHeinkenschloss_DRidzal_BGvanBloemenWaanders_2014a}
+on error control in the context of {\em trust region} methods for
+sequential qudratic programming, an approach to constrained
+optimization. Trust region globalization is a general concept that
+applies also to unconstrained formulations
+\cite[]{ConnGouldToint:00,NocedalWright}. The condition that
+\cite{HeinkenVicente:01b} place on gradient error takes the form:
+error $\le K \epsilon$, where $\epsilon$ is a control parameter but
+$K$ is unknown or at least poorly controlled. Thus nothing can be said
+{\em a priori} about the size of the gradient error, or even whether
+the computed gradient is a descent direction, except in an asymptotic
+sense. Reference to Corollary 1 shows that the theory developed above
+provides exactly this sort of condition.
+
+The trust region approach to minimization of a $C^2$ function $f$
+defined on a Hilbert space $H$ bases its $k$th step on a quadratic model
+approximating $f$ near $x_k$.
+\[
+m_k(s) = f_k + \langle s,g_k \rangle + \frac{1}{2}\langle s,H_k s
+\rangle.
+\]
+Here $f_k$ is the computed value and $g_k$ the computed gradient at
+$x_k$. $H_k$ is an approximation, possibly quite crude, to the Hessian
+of $f$ at $x_k$. The basic trust region algorithm seeks the step $s=x_{k+1}-x_k$
+as the optimum of the constrained problem
+\begin{equation}
+\label{eqn:trustregion}
+\mbox{minimize }m_k(s) \mbox{ subject to } \|s\| \le \Delta_k,
+\end{equation}
+The {\em trust radius} $\Delta_k$ is also subject to update as the iteration
+proceeds, so as to satisfy a {\em sufficient decrease} criterion
+leading to assured global convergence to a local minimizer, under
+various conditions (smoothness, Hessian definiteness, etc.) some of
+which will be mentioned below.
+
+I will describe a simple variant of the trust radius step, depending
+on two computed quantities: actual reduction,
+\[
+actred = f(x_k) - f(x_k +s)
+\]
+and predicted reduction, 
+\[
+predred = m_k(0) - m_k(s) = -(\langle s,g_k \rangle +
+\frac{1}{2}\langle s, H_k s \rangle)
+\],
+and on four magic numbers, $0 < \eta_1 <\eta_2 < 1$ and 
+$0 < \gamma_1 <1 < \gamma_2 $. 
+
+Choose a {\em search direction} $p$ by
+minimizing the model as an unconstrained problem: that is,
+\[
+p = -H_k^{-1}g_k.
+\]
+Note that $H_k$ is only an approximation to the Hessian of $f$, and
+that in a rather loose sense: it may be computed by building up a
+Krylov or quasi-Newton approximation to the Hessian or its
+Gauss-Newton simplification, for example. Thus $p$ may be only a crude
+approximation to a Newton or Gauss-Newton step: this algorithm
+description encompasses so-called truncated Newton-Krylov methods, for
+example, and the step selection may interact with the computation of
+$H_k$.
+
+Next enter the step update loop:
+\begin{enumerate}
+\item set $s=\Delta_k p$
+\item compute $actred, predred$.
+\begin{enumerate}
+
+\item if $actred \le \eta_1 predred$, $\Delta_k \leftarrow \gamma_1 
+  \Delta_k$, go to 1.
+\item if $actred \ge \eta_2 predred$, $\Delta_k \leftarrow \min(1,\gamma_2 
+  \Delta_k)$, 
+\end{enumerate}
+\item $x_{k+1}=x_k + s$, $\Delta_{k+1} = \Delta_k$, exit.
+\end{enumerate}
+
+To see how this algorithm accommodates function and gradient error,
+first presume that there is none: that is, $f_k=f(x_k), g_k = \nabla
+f(x_k)$, and $H_k \ge \beta > 0$ for all $k$.  The theory presumes that the
+function $f$ is twice continuously differentiable, bounded below, and
+has uniform bounds on the gradient and condition number of the Hessian
+over the sub-level sets of the objective. It is easy to see that the
+condition for a successful step implies that
+\begin{equation}
+\label{eqn:trstep}
+f_k - f_{k+1} \ge C \|g_k\|\Delta_k
+\end{equation}
+references, these assumptions imply a natural floor
+under the trust radius $\Delta_k$. The trust radius decreases only when the actual
+function 
+reduction is not at least the lower proportion $\eta_1$ of the
+predicted reduction. However as the trust radius, hence the step, gets
+smaller, the actual reduction and the predicted reduction become
+close, since the model becomes close to the function to first
+order. Once the trust radius is small enough, the conditions for
+further decrease are never met, and the trust radius never decreases
+beyond a fixed positive thresshold. Since the function values are
+decreasing from step to step and bounded below, they must
+converge. Therefore the actual reduction converges to zero, hence the
+gradient must converge to zero thanks to inequality
+\ref{eqn:trstep}. Note that this reasoning does not establish that
+$\{x_k\}$ converges - that requires a bit more reasoning. However, if
+the sequence of iterates does converge, it must converge to a
+stationary point.
+
+In fact the expected behaviour of this algorithm is that it eventually
+settles down at $\Delta_k = 1$, takes the full step, and converges at
+whatever rate the underlying approximation to Newton's method yields.
+
+Convergence with inexact function and gradient evaluations follows
+from an extension of the same reasoning. Assume for the moment that
+the function values are exact. Then the primary condition to be imposed on the
+gradient, according to \cite{HeinkenVicente:01b}, is of the form
+\begin{equation}
+\label{eqn:hv}
+\|g_k - \nabla f(x_k)\| \le \xi \min(\|g_k\|,\Delta_k).
+\end{equation}
+in which it is merely required that the constant $\xi \ge 0$ be
+uniform over the sublevel set of $f$ in which the iterates lie. Then
+once again reduction of $\Delta_k$ during a step eventually stops
+short of a uniform positive lower bound, since the inequality
+\ref{eqn:hv} forces $g_k$, hence the step $s$, towards the steepest
+descent step. For short enough steepest descent steps the
+actual reduction exceeds $\eta_1$ times the predicted reduction, which
+leads both to the step being taken and in the computed gradient $g_k$
+being reduced in length.
+
+I embed this mechanism in an algorithm for minimization of
+$J_{\lambda}$ following the pattern of \cite{HeinkenVicente:01b},
+section 5. Add $\xi >0$ to the list of magic numbers required by the
+trust region algorithm; in theory at least $\xi=1$ is adequate. 
+
+Define $(f,g,H) = JET(m,\epsilon)$ via the algorithm
+
+  \begin{enumerate}
+    \item compute initial approximate solutions $\br_1,\bq_1$
+      \begin{eqnarray}
+      \label{eqn:krylov1alg}
+      \br_1& =& (I+\lambda^2\dR R)^{-1}\odF[m]\de\\
+      \bq_1&=&(I+\lambda^2 \dR R)^{-1}A^{\dagger}A\br_1
+      \end{eqnarray}
+       with residuals $e_{m,1}, e_{q,1}$;
+    \item compute approximate solutions $\br,\bq$ of the system
+      \ref{eqn:normalbis},\ref{eqn:qbis} satisfying with residuals
+      $e=(e_{m}, e_{q})$ satisfying
+      \begin{eqnarray}
+      \label{eqn:mresnalg}
+      \|e_{m}\|_m & \le & \epsilon \|e_{m,1}\|_m\\
+      \|e_{q}\|_m & \le & \epsilon \|e_{q,1}\|_m 
+      \end{eqnarray}
+    \item compute approximate function value, gradient
+      \begin{eqnarray}
+      \label{eqn:fgalg}
+      f& =& \frac{1}{2}\|A\br\|^2 \\
+      g& = & G_{\lambda}[m](d,\br,\bq)
+      \end{eqnarray}
+      and approximate Hessian $H$
+  \end{enumerate}
+
+Formulation of inexact Trust Region algorithm:
+
+\begin{enumerate}
+  \item $(f_k,g_k,H_k) =JET(m_k,\epsilon_k)$
+  \item while $\epsilon_k > \xi \min(\|g_k\|_m,\Delta_k)$ 
+  \begin{enumerate}
+    \item $\epsilon_k \leftarrow \xi \min(\|g_k\|_m,\Delta_k)$
+    \item $(f_k,g_k,H_k) =JET(m_k,\epsilon_k)$
+  \end{enumerate}
+  \item $s = -\Delta_k H_k^{-1}g_k, m_{k+1}=m_k+s, \epsilon_{k+1} = \epsilon_k,
+    (f_{k+1},g_{k+1},H_{k+1}) = JET(m_{k+1},\epsilon_{k+1})$
+    \begin{eqnarray}
+    \label{eqn:actpred}
+    actred &=&f_k-f_{k+1}\\
+    predred &=& \left(1-\frac{\Delta_k}{2}\right)
+                \Delta_k\langle g_k,H_k^{-1}g_k\rangle_m
+    \end{eqnarray}
+  \item if $actred \le \eta_1 predred$, $\Delta_k \leftarrow \gamma_1 
+      \Delta_k$, go to 3.
+  \item if $actred \ge \eta_2 predred$, $\Delta_k \leftarrow \min(1,\gamma_2 
+      \Delta_k)$, 
+  \item next k
+\end{enumerate}
+
+\begin{cor} The sequence $\{m_k\}$ produced by the
+  inexact Trust Region algorithm just described converges to a
+  stationary point of $J_{\lambda}$.
+\end{cor}
+
+\section{Microlocalization}
+
+With a few exceptions, no examples of forward maps $\oF$ defined by
+separable inverse wave problems have actual parametrices, that is,
+operators $\odF$ satisfying the definition
+\ref{eqn:parametrix}. Instead, they have {\em microlocal}
+parametrices. Abstractly, the microlocal property is captured in an
+approximate projector $\Pi \in Op^0(\oM,\oM)$, self-adjoint with
+respect to $\|\cdot\|_m$ and close to idempotent in
+the sense that 
+\begin{equation}
+\label{eqn:approxidem}
+\|\Pi - \Pi^2\|_m \le \frac{1}{4},\,\,0 \le \Pi \le 1.
+\end{equation}
+A microlocal parametrix $\odF$ satisfies
+\begin{equation}
+\label{eqn:micropar}
+\odF[m]\oF[m] - \Pi = S[m] \in Op^{-1}(\oM,\oM).
+\end{equation}
+In this section, the approximate projector $\Pi$ is locally constant,
+that is, the relation \ref{eqn:micropar} holds in a neighborhood of
+$m_0 \in M$.
+
+Augment the linear least squares problem \ref{eqn:wredn} by adding
+$\langle \om, (I-\Pi)\om\rangle_m$ to objective. The corresponding
+effect on the normal operator is:
+\[
+\Ne[m] = \odF[m]\oF[m] + (I-\Pi) + \lambda^2 \dR R = I + S[m] +
+\lambda^2\dR R.
+\]
+Define as before $\bre[m,d]$ to be the solution of $\Ne[m]
+\bre[m,d] = \odF[m]d$, and the reduced objective $J_{\lambda}$ by
+equation \ref{eqn:aredn}. 
+
+Computation of $J_{\lambda}$ and $\nabla J_{\lambda}$ goes exactly as
+before, and Theorems 1 and 2 and Corollary 1 hold verbatim. The only
+change comes in the relation between the minimizer of $J_{\lambda}$
+and the solution of the inverse problem $m,\om$: the data misfit is
+small only if one assumes that $d$ can be fit with $\om$ nearly
+annihilated by $I-\Pi$. That is an {\em a priori} assumption about the
+solution, which in examples entails a similar assumption about data. 
+% explore meaning in an example
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+

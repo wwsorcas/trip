@@ -1,0 +1,184 @@
+\title{Planewave Modeling and Migration with IWAVE}
+\author{William. W. Symes}
+
+\address{The Rice Inversion Project,
+Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}
+
+\lefthead{Symes}
+
+\righthead{Planewaves with IWAVE}
+
+
+\maketitle
+\parskip 12pt
+
+
+\begin{abstract}
+Since IWAVE accepts any forcing term, or source, modeling plane waves simply involves creating a plane wave source. This paper describes the {\tt planewave} utility: it creates both plane wave source files and prototype output (header) files for plane wave data. The examples show both how to perform ordinary plane wave modeling and migration, and also how to create an extended plane wave image volume for use in velocity analysis and AVO.
+\end{abstract}
+
+\inputdir{project}
+
+\section{Introduction}
+This paper describes the IWAVE implementation of plane wave modeling and migration. The examples use constant density acoustic modeling, but the same principles apply to plane wave modeling based on any wave physics implemented in IWAVE.
+
+IWAVE is a framework for solving time-dependent partial differential equations by Finite Element or Finite Difference methods. The current implementation focuses exclusively on uniform grid FD methods. A simple example of the target problem class is constant density acoustics, governed by the acoustic wave equation
+\mybe
+\label{awe}
+\left(\frac{\partial^2 u}{\partial t^2} - c^{2}\nabla u\right)(s;t,\bx) = f(s;t\bx).
+\myee
+together with appropriate initial and boundary conditions, defining a family of fields depending on a source parameter $s$. Plane wave modeling results from the choice
+\mybea
+\label{pw3}
+s & = & (p_x,p_y),\\
+f(s;t,z,x,y) & = &\delta(z-z_s)w(t-p_x x - p_y y)
+\myeea
+or, for 2D,
+\mybea
+\label{pw2}
+s & = & (p_x),\\
+f(s;t,z,x) & = & \delta(z-z_s)w(t-p_x x)
+\myeea
+The 2D plane wave source (\ref{pw2}), for example, produces a planar wave at a source point $(z_s,x)$ propagating at an angle of $\theta = \arcsin c(z_s,x)p_x$ to the vertical. Plane waves propagate only in the region in which $|cp_x|<1$. Thus a plane wave will transit the entire region only if $|c_{\rm max}p_x| <1$. This criterion places an intrinsic limit on the image region for migration.
+ 
+The basic acoustic constant density driver {\tt acd} computes approximate solutions to (\ref{awe}) for arbitrary right-hand side families $f(s;t,\bx)$, so plane wave simulation requires another utility to produce appropriate right hand side families. As the notation in (\ref{awe}) suggests, the field also depends on the parameter $s$, so storage of the simulation output requires a data structure including parametrization by $s$. The utility {\tt planewave} does both tasks, producing a compatible pair of SEGY files for input to {\tt acd} (and, with appropriate modification, to other IWAVE modeling tools).
+
+Any solution of the acoustic or elastic wave equations in a homogeneous material model may be decomposed into propagating plane waves: this observation is fundamental to a basic understanding of these equations \cite[]{CourHil:62,Ach:73}. Plane wave modeling has a long history in seismology: classic references include \cite{AkiRich:80}, \cite{DieSt:81}, \cite{sto81}, \cite{TreiGutWag:82}, and \cite{CarriKuoStof:84}. Plane waves are a persistent waveform for wave propagation in stratified or layered media, and accordingly there is a large literature on analysis and inversion for layered models based on this observation. More recently, Dong Sun used plane wave modeling in his pathbreaking investigation of nonlinear image domain inversion \cite[]{Sun:09a,SunSymes:SEG12}. For imaging (or inversion), plane wave sources have the advantage over point sources of illuminating a substantial part of the model, rather than a relatively narrow beam: as the examples to be presented in this paper will show, plane wave images consist largely of image, with relatively small volume occupied by edge diffraction, unlike point source images. The chief disadvantage of plane wave sources is the necessary extension of the simulation time axis: some parts of the plane wave are activated earlier than others (see (\ref{pw2})!), whereas time-stepping methods must initiate when any of their dynamic fields become nonzero. Possibilities for ameliorating this added simulation expense exist, for instance broken and time-shifted plane waves or spatial sinusoid modulation \cite[]{Soubaras:07}.
+
+The {\tt SConstruct} file in the {\tt project} subdirectory contains
+complete annotated scripts for producing the examples shown here. The
+reader should consult this script, along with the self-docs for {\tt
+acd} and {\tt planewave} and the basic IWAVE white
+paper \cite[]{trip14:struct} to fill in the usage details not
+mentioned here. The examples build in a few minutes on any modern
+workstation or laptop via {\tt scons} in {\tt project} - the reader
+will need to do this, for example, to view the movie files {\tt
+movie1p.rsf} and {\tt movie1pm01.rsf}. The examples require that the
+Madagascar revision number at least 13459.
+
+\section{Planewave}
+Since IWAVE permits source input at any point in the spatial modeling domain, there is no need to restrict the source points composing a plane wave emitter to simulation grid points. The {\tt planewave} utility assumes uniformly spaced source and receiver points, arranged in horizontal arrays. This is OK for synthetic experiments. On the TO-DO list for {\tt planewave'} is addition of a facility to take arbitrary source and receiver locations from SEGY data files. 
+
+The salient characteristic of each plane wave is slope, or slowness (the vectors $(p_x)$ and $(p_x,p_y)$ in (\ref{pw2}), (\ref{pw3})). Since planewave sources are synthetic in any case, there seems little harm in limiting the sampling in slowness to uniform in some sense. Current implementation samples uniformly in slowness. Analysis of layered medium kinmatics suggests that uniform sampling of slowness-squared may be more useful - on the TO-DO list.
+
+Due to a bug in the SU utility {\tt suplane}, to which {\tt planewave} delegates plane wave construction, all  plane waves must pivot around the midpoint of the array - that is, the time=0 point in each plane wave will occur at the source array midpoint.
+
+Upshot: {\tt planewave} requires parameters to determine several axes:
+
+\begin{itemize}
+\item receiver time axis - just {\tt nt} and {\tt ot}, as {\tt dt} is taken from the source pulse header
+\item receiver horizontal axis ({\tt nx}, {\tt ox}, {\tt dx})
+\item receiver depth ({\tt zr})
+\item source horizontal axis ({\tt nxs}, {\tt oxs}, {\tt dxs})
+\item source depth ({\tt zs})
+\item slowness axis ({\tt np}, {\tt op}, {\tt dp})
+\end{itemize}
+
+Because the {\tt Flow} does not automatically inherit the ambient environment, it is also necessary to pass the path to the SU root directory, {\tt CWPROOT}, via a parameter of the same name.
+
+The source time axis is computed - the user does not specify it. The computation uses the extreme slownesses and the extreme $x$ coordinates of the source array, to compute an interval containing the support of every trace in the entire impulse (spike) plane wave for every slowness. Then {\tt suconv} adds this to the time axis of the pulse to create a time axis containing the support of every trace in every plane wave. As described in \cite[]{trip14:struct}, IWAVE creates a simulation time axis containing the convex hull of the source time axis and the output data time axis.
+
+\section{Examples}
+This section presents several examples of plane wave modeling and migration. I'll describe the key parameter selections; the reader can consult the annotated {\tt SConstruct} file in the project directory for precise details.
+I use the acoustic constant density driver {\tt acd} in all of the examples below - for usage direction, see the self-doc, or for more extensive discussion \cite[]{trip14:struct}. 
+
+The examples in this section use a subsampled version of the Marmousi model, Figure \ref{fig:csq24}, with the water depth increased to 400 m and a horizontal extension on the left side of the model. The extended geometry has 444 points in the x direction, and extends from $x=0$ m (the left side) to $x=10632$ m (the right side). The depth range is $[0,3000]$ m, so to accommodate the deeper water layer some of the original model is dropped off the bottom. The spatial sample rate is 24 m in each direction. Horizontal locations are measured from the left edge, from 0 to 10632 m. 
+
+\plot{csq24}{width=\textwidth}{Marmousi model, sampled at 24 m in z and x, layered extension on right to 10632 m.}
+
+The choice of modeling algorithm, the venerable (2,4) scheme, requires at least 5 gridpoints per wavelength for reasonable accuracy over a few seconds' propagation time, so the maximum frequency adequately modeled in the water layer is 12.5 Hz. The source wavelet for these simulations is a $[1,3.5,10,12.5]$ Hz trapezoidal bandpass filter (Figure \ref{fig:wavelet}). Free surface boundary conditions are imposed on all boundaries. The recording time interval is 2 s, short enough that few boundary reflections will be observed, and those only for the larger slownesses.
+
+\plot{wavelet}{width=\textwidth}{Source pulse: [1.0, 3.5, 10, 12.5] Hz trapezoidal bandpass filter.}
+
+Source points are placed at all 444 horizontal grid locations (multiples of $dx=24$ m) at a depth of 12 m. [IWAVE evaluates fields at non-grid points by multilinear interpolation, and inserts sources by multilinear adjoint interpolation.]  
+
+The receiver array occupies 241 contiguous horizontal locations spaced at 24 m and beginning at 3000 m, at a depth of 12 m.
+
+\subsection{Single plane wave at normal incidence}
+The parameter choice for this example is {\tt op=0, np=1, dp=} whatever. 
+
+A movie of the wavefield shows the plane wave starting near the surface (the ghost occurs at a short enough time lag that the effect is visible only as a change of wavelet shape). The sea floor creates a sizeable reflection, of which the first seafloor multiple is within the time range of the simulation - it is however of such low amplitude that it is very difficult to distinguish from other, primary reflections. Figure \ref{fig:movie1p} 
+shows the final frame. View the entire movie as follows: 
+\begin{verbatim}
+scons movie.rsf
+sfgrey clip=2 < movie.rsf|xtpen
+\end{verbatim}
+\plot{movie1p}{width=\textwidth}{Pressure field simulation at t = 2 s, normal incidence plane wave source.}
+
+Trace data for this example appears as Figure \ref{fig:shot1p}.
+
+\plot{shot1p}{width=\textwidth}{Plane wave gather, normal incidence.}
+
+Born (linearized) simulation requires definition of a background model and a reflectivity (perturbational model). Figure \ref{fig:csq24big} shows a smoothed version of the Marmousi model, which serves as a macromodel for this example. The difference of the base model and a smoothing on a shorter length scale gives a suitable, scale-separated reflectivity model (Figure \ref{fig:dcsq24}).
+
+\plot{csq24big}{width=\textwidth}{Smoothed Marmousi c-squared model: moving average on 240 m window, iterated 10 times.}
+\plot{dcsq24}{width=\textwidth}{Reflectivity: difference of base model (Figure \ref{fig:csq24}) and moving average on 120 m window, iterated twice. Plot window chosen to match image zone for migration.}
+
+Trace data for this example appears as Figure \ref{fig:born1p}.
+
+\plot{born1p}{width=\textwidth}{Born plane wave gather, normal incidence.}
+
+Migration of Born data amounts to application of the adjoint linearized modeling operator, a kinematic inverse in the high frequency limit provided that the background model is transparent, as it is in this well-scale-separated example. Compare the migrated image, Figure \ref{fig:mig1p}, to the reflectivity model, Figure \ref{fig:dcsq24}.
+
+\plot{mig1p}{width=\textwidth}{Migration of normal incidence Born data using correct background model.}
+
+The FWI gradient is equivalent to a (reverse time) migration of the simulation residual data, that is, the difference of the modeled and observed data. To illustrate this construction, take for the ``observed'' data the Marmousi normal incidence gather (Figure \ref{fig:shot1p}), and for the current FWI iterate a homogeneous model with $c = 1.5$ m/ms at all locations. The difference is plotted in Figure \ref{fig:diff}, and the migration = FWI gradient in Figure \ref{fig:migshot1p}. 
+
+\plot{diff}{width=\textwidth}{Difference of modeled data (Figure \ref{fig:shot1p}) and data from a homogeneous model, which contains only the incident wave. Like Born data (Figure \ref{fig:born1p}), the incident wave is missing (because the difference cancels it); unlike Born data, the difference contains all nonlinear effects (eg. multiple reflections) present in the modeled data.}
+
+\plot{migshot1p}{width=\textwidth}{Migration of the difference data of Figure \ref{fig:diff}, in homogenous background model (c=1.5 m/ms). Note kinematic distortion compared to migration of Born data in consistent background (Figure \ref{fig:mig1p}).}
+
+\subsection{Multiple plane waves, oblique incidence}
+
+As explained  in \cite[]{trip14:struct}, IWAVE implicitly loops over axes labeled {\tt dim}+1 and greater, in which {\tt dim} is the dimension of the simulation domain ( = 2, in the examples presented here). By rigid convention, axes 0,...{\tt dim}-1 are the spatial grid axes, {\tt dim} is the time axis, and all axes with labes {\tt dim} + 1 and greater represent additional axes over which the simulation should loop.
+
+For SEGY, the shot axis is implicitly axis {\tt dim} +1. A change in either {\tt sx} or {\tt sy} increments this axis. Therefore to simulate a line of plane wave ``shots'', the user merely need construct trace headers containing the requred number of traces for each slowness, and encode the slowness in {\tt sx}. Similarly, the plane wave source should contain one gather for each slowness, with precisely the same slownesses and number of slownesses as the occur in the trace headers.
+
+The {\tt planewave} utility does this job for the user, creating a matching set of plane wave headers and source gathers suitable for IWAVE input. The example plane wave source displayed in Figure \ref{fig:wav11p} shows the plane wave source gathers for 11 evenly spaced slownesses between $p=-0.1$ and $0.1$, corresponding to propagation angles of approximately $-6$ to $6$ degrees. Figure \ref{fig:movie1pm01} shows the computed pressure field at 0.5 s for p=-0.1. It is plotted at approximately 1:1 aspect ratio; clearly the propagation angle in the water later is indeed about $6^{\circ}$.  Figure \ref{fig:shot11p} shows the 11 plane wave gathers created by the source array depicted in Figure \ref{fig:wav11p}, with the same receiver array as in Figure \ref{fig:shot1p}.
+
+\plot{wav11p}{width=\textwidth}{Multiple slowness source gathers: $p\in [-0.1,0.1]$, $\Delta p = 0.02$ ms/m.}
+
+\plot{movie1pm01}{width=\textwidth}{Pressure field response to plane wave source at $p=-0.1$ ms/m, $t = 500$ ms.}
+
+\plot{shot11p}{width=\textwidth}{Simulation for 11 plane wave sources in Figure \ref{fig:wav11p}.}
+
+Born modeling and migration work the same way. Figure \ref{fig:born1p} shows the result of linearized modeling with the background of Figure \ref{fig:csq24big} and reflectivitly of Figure \ref{fig:dcsq24}, with the source gathers of Figure \ref{fig:wav11p}. Figure \ref{fig:mig11p} show the result of migrating these 11 gathers. This image is a bit crisper than the normal incidence migration of Figure \ref{fig:mig1p}, with migration swings suppressed somewhat by stacking and some of the more steeply dipping features towards the bottom better imaged.
+
+\plot{born11p}{width=\textwidth}{Linearized simulation for 11 plane wave sources, same model parameters as Figure \ref{fig:born1p}.}
+
+\plot{mig11p}{width=\textwidth}{Migration of data in Figure \ref{fig:born11p}.}
+
+\subsection{Shot-record extended modeling}
+
+Stacking of individual shot images is responsible for artifact suppression in line images. To understand how this happens, exposure of the shot images is useful. The full volume of shot images is also underlies one approach to migration velocity analysis. IWAVE can output this full volume.
+
+In fact, IWAVE interprets the shot record volume as the output of the adjoint linearized map of an {\em extended} model, in which each shot uses an independent copy of the coefficient fields ($c^2$, for the constant density acoustics system). The extended modeling concept underlies much recent work on ``image domain'' inversion. For an extensive discussion of this idea, see \cite[]{geoprosp:2008}.
+
+IWAVE requires the definition of an extended model space, with one ``panel'' or {\tt dim}-dimensional model for each shot (in this form of extended modeling - there are others!). Thus as a first step, one must create data files exhibiting the extended structure. The {\tt SConstruct} file accomplishes this task via use of {\tt sfspray} - see the rule for creating {\tt csq24big\_ext}. Note that an important part of this construction is the addition of nonstandard keywords {\tt dim}, {\tt gdim}, and {\tt idx}, {\tt x} = 0, 1, and 3. The functioning of these keywords is explained in  \cite[]{trip14:struct}. In brief, {\tt x} = 0, 1 signify the two spatial dimensions, and 3 = {\tt dim} + 1 tells IWAVE to treat the third axis in {\tt csq24big\_ext} as the same as the shot axis implied by the structure of the SU files in the simulation (see discussion above). 
+
+Use these extended files as input under the keywords for the background model fields (active, input fields - see the discussion of the {\tt fields} struct in \cite[]{trip14:struct}). For constant density acoustic IWAVE, there is only one such field, with keyword {\tt csq}. All related fields, eg. the model perturbation inputs for the first derivative (keyword {\tt csq\_d1} in constant density acoustic IWAVE) or the adjoint first derivative (RTM) outputs (keyword {\tt csq\_b1}), must have the same structure including the same additional keywords. The {\tt SConstruct} uses {\tt sfadd} to copy the c-squared file onto the migration output file to initialize it, including all of its header info.
+
+Models such as the shot-record extension are {\em extended} because the modeling operator or forward map is an extension of the ordinary one. That means that the data output by ordinary modeling is the same as the data output by a ``physical'' extended model, one in the range of the extension map. In the case of the shot record extension, the extension map simply duplicates (or ``sprays'', hence the use of {\tt sfspray}) an ordinary model field as many times as required, and identifies the axis introduced in this way. The adjoint of this spray operation is the stack, which explains the relation between extended migration (adjoint linearized modeling) and ordinary migration: output of the latter is the stack of the output of the former. 
+
+An example appears as Figure \ref{fig:mig11pext}. Panel (shot record migration) 5, or p=-0.02, is displayed in the large front section; this image is comparable to Figure \ref{fig:mig1p}. The right panel is an example of a {\em common image gather}: the horizontal axis is shot index, and the flatness (or lack of same) indicates the kinematic correctness of the background model - that is, the 11 trace. Since this example is an inverse crime, of course the image gather is as flat as possible. Note that it is not perfectly flat or uniform in amplitude, as it would be if the image volume were replaced by the physical extended model (result of spray) which would have generated the data - migration is only the adjoint of linearized modeling, not its inverse. 
+
+\plot{mig11pext}{width=\textwidth}{Shot-record extended migration of data in Figure \ref{fig:born11p} with correct background model, i.e. that used to generate the data.}
+
+Replacing the correct c-squared model (Figure \ref{fig:csq24big}) by a convex combination with 20\% homogeneous water c-squared produces a comparable image volume, shown in Figure \ref{fig:mig11p80pctext}. Comparison with Figure \ref{fig:mig11pext} reveals two obvious differences: the image (front, large rectangle) is misplaced (too shallow), and the image gather is not quite flat. Correct location of the image is not known {\em a priori}, but it is known that the images for the various values of $p$ should all be the same, at least in the location of events. So that latter provides a means of judging the correctness of the background model. This flatness criterion, and related criteria for other extended models. are the basis of velocity analysis, or as it has come to be known recently, image domain inversion.
+
+\plot{mig11p80pctext}{width=\textwidth}{Shot-record extended migration of data in Figure \ref{fig:born11p} with 80\% correct background model, 20\% water c-squared. Note non-zero slope of bottom events in image gather (right-hand panel).}
+
+\section{Conclusion}
+
+IWAVE is built to solve equation \ref{awe} and similar systems, so the particular choice of right-hand side implicit in plane wave modeling must be the result of an external (to an IWAVE modeling driver) utility. The {\tt planewave} utility generates a matching pair of SEGY trace files: (i) a trace header file, serves as a prototype for the output data of a simulation or the input data of a migration, and (ii) ah source gather file, also SEGY traces, encoding the plane wave source (or sources, for a multiple plane wave simulation). Coupled with IWAVE driver code (such as {\tt acd}), the {\tt planewave} utility creates a basic tool for plane wave simulation and migration.
+
+\section{Acknowledgements}
+The IWAVE
+project owes a great deal to several open source seismic software
+packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully
+acknowledge. This work was supported in part by the sponsors of The Rice Inversion Project.
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

@@ -1,0 +1,128 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+MYAPPS          = os.getenv('MYAPPS')
+acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/acd.x')
+towed_array     = os.path.join(MYAPPS,'trip/iwave/trace/main/towed_array.x')
+
+# files from basic: bp05103040.su, paracdpf.su, paravintz.rsf
+# zero phase bandpass filter a la Jie
+PULS = 'bp05103040.su'
+DATA = 'paracdpf.su'	
+VELO = 'paravintz.rsf'
+VBIN = 'paravintz.bin'
+IMAGE= 'parapspif.rsf'
+BASIC='../../basic/project' 
+
+if not os.path.exists(BASIC):
+   print 'you must install basic on the same level as'
+   print 'the parent directory (velo) to build this project'
+   Exit(1)
+else:
+   for i in [PULS, DATA, VELO, VBIN, IMAGE]:
+       SRC = os.path.join(BASIC,i)
+       if not os.path.exists(SRC):
+           print 'you must build the target ' + SRC
+	   print 'before building this project'	
+	   Exit(1)
+       Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+	  
+#       if os.path.exists(SRC):	
+#       	  Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+#       else:
+#          Flow(i,None,
+#	       'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
+#	       myscons + ' ' + i + '; cd ' + 
+#	       thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+
+# extract filtered cdp 1200
+Flow('cdp1200.su', 'paracdpf.su', suwind + ' key=cdp min=1200 max=1200 tmax=3 | ' + sufilter + ' f=2,5,20,25')
+
+# convert to shot gather by changing sx and gx
+Flow('shot1200.su','cdp1200.su',suchw + ' key1=sx key2=sx key3=gx b=0.5 c=0.5| ' + suchw + ' key1=gx key2=sx key3=offset b=1 c=1')
+
+# change units to m/ms = km/s in interval velocity 
+Flow('paravintzmms', ['paravintz.rsf','paravintz.bin'], 'add scale=0.001')
+
+# square to form bulk mod
+Flow('paracsq','paravintzmms','add mode=p ${SOURCES[0]} |put data_type=csq')
+
+# zero phase 2-5-20-25 bandpass filter 
+Flow('bp02052025.su', None, suspike + ' nt=101 ntr=1 dt=0.004 offset=0 nspk=1 ix1=1 it1=51 | ' + sushw + ' key=delrt a=-200 | ' + sufilter + ' f=2,5,20,25')
+
+# form 2-5-20-25 Hz source with correct receiver data = source position
+Flow('src1200.su',['shot1200.su', 'bp02052025.su'],towed_array + ' data=${SOURCES[0]} src=${SOURCES[1]} towed=$TARGET',stdin=0,stdout=-1)
+
+# migration #1
+Flow('mig1200',['paracsq', 'shot1200.su', 'src1200.su'],
+     '''
+     add < ${SOURCES[0]} > ${TARGETS[0]} scale=0.0 && 
+     ''' + acd + 
+     '''
+      deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[2]} data=${SOURCES[1]}
+     csq_b1=${TARGETS[0]} nsnaps=20 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+# agc, mute, window
+Flow('shot1200ma.su','shot1200.su',sugain + '<$SOURCE agc=1 | ' + sumute + ' key=offset xmute=-3200,0 tmute=3.0,0.2 ntaper=100 | ' + suwind + ' key=offset min=-3200 max=0')
+
+# migration #2
+Flow('mig1200ma',['paracsq', 'shot1200ma.su', 'src1200.su'],
+     '''
+     add < ${SOURCES[0]} > ${TARGETS[0]} scale=0.0 && 
+     ''' + acd + 
+     '''
+      deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
+     csq=${SOURCES[0]} source=${SOURCES[2]} data=${SOURCES[1]}
+     csq_b1=${TARGETS[0]} nsnaps=20 sampord=1 
+     ''',stdin=0,stdout=-1,workdir='${TARGETS[0]}.work')
+
+
+Result('paracsq','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
+
+# cdp1200
+Result('cdp1200','cdp1200.su','suread endian=0  read=data | put label1=Time label2=offset o2=-3237 d2=25 unit1=s unit2=m | grey xinch=8 yinch=8')
+
+# perturbation = pspi image (from agc'd stack)
+Result('mig1200','put label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 color=j')
+
+End()

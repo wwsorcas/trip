@@ -1,0 +1,11 @@
+Must have defined environment variables: IWAVE, RVL, RSFROOT, CWPROOT
+
+The source code given here runs and compiles all of the tests and figures 
+required to compile the latex paper; use the following command:
+
+  cd project/scons; cd .. ; scons 
+
+The given paper here presents a framework for representing and implementing
+mutipole sources for seismic modeling and inversion.
+
+Tests involve running executables from the mps IWave subpackage.

@@ -1,0 +1,28 @@
+from rsf.tex import *
+
+End(
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,float,wasysym,setspace,bm',
+include=r'''
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\dm}{\delta m}
+\newcommand{\dom}{\delta \bar{m}}
+\newcommand{\doma}{\delta \bar{m}_{\alpha}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bh}{{\bf h}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bcF}{{\bar{\cal F}}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\oS}{\bar{S}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\Ja}{J_{\alpha}}
+\newcommand{\Na}{N_{\alpha}}
+\newcommand{\dd}{\delta d}
+\newcommand{\ddl}{\delta d_{\alpha}}
+''')
+

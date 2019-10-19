@@ -1,0 +1,95 @@
+\title{Volume/Surface Source Equivalence}
+\author{William W. Symes}
+
+\begin{abstract}
+abstract goes here
+\end{abstract}
+
+\section{Transmission Problem}
+
+Model problem: $u: \bR^{d+1} \rightarrow \bR$
+\bea
+\label{awe}
+\frac{\partial^2 u}{\partial t^2} - m \nabla^2 u &=& f(t)
+\delta(\bx-\bx_s)\\
+u&=&0, t<0
+\eea
+
+$\Omega \subset \bR^d$, $\bx_s \in \partial \Omega$,
+\[
+\partial \Omega = \Gamma_R \cup \Gamma_D
+\]
+Forward map: $F(m)f = Pu$, $P$ = trace operator on receiver
+surface $\Gamma_R \times [0,T]$ 
+
+Volume source extension:
+\[
+\mbox{supp }\bar{f} \subset \bar\Omega \times [0,\infty)
+\]
+\bea
+\label{extawe}
+\frac{\partial^2 \bar{u}}{\partial t^2} - m \nabla^2 \bar{u} & = &
+\bar{f}(\bx_s,\bx,t)\\
+\bar{u}&=&0, t<0
+\eea
+Extended forward map: $\bar{F}(m)\bar{f} = P\bar{u}$, $P$ = trace operator on receiver
+surface $\Gamma_R \times [0,T]$ 
+
+
+Write $\bar{u} = u_0 + u_1,$, with $u_0 = 0$ in $(\bR^d \setminus
+\bar{\Omega})\times \bR$, 
+\bea
+\label{awe0}
+\frac{\partial^2 u_0}{\partial t^2} - m \nabla^2 u_0 &=& \bar{f}
+\mbox{ in }\Omega
+\times \bR,\\
+u_0 & = & 0 \mbox{ on } \partial \Omega\\
+u_0 & = & 0, t < 0
+\eea
+and 
+\bea
+\label{awe1}
+\frac{\partial^2 u_1}{\partial t^2} - m \nabla^2 u_1 &=& 0 \mbox{ in }\Omega
+\times \bR,\\
+u_1 & = & \bar{u} \mbox{ on } \partial \Omega\\
+u_1 & = & 0, t < 0
+\eea
+Note that $\bar{u}=u_1$ in $(\bR^d \setminus
+\bar{\Omega})\times \bR$ . Standard uniqueness for WE $\Rightarrow \bar{u}=u_0+u_1 $ in $\bR^d \times \bR$.
+
+SInce $u_0$ satisfies homogeneous Dirichlet condition on all of
+$\partial \Omega$, $\bar{F}(m)\bar{f} = Pu_1. $
+
+From the definition of  that in a sufficiently small neighborhood of any point of
+$\partial \Omega \times \bR$, 
+\bea
+\label{awe2}
+ \frac{\partial^2 u_1}{\partial t^2} - m \nabla^2 u_1 &=&[\partial_n
+ u_1] \delta_{\partial \Omega \times \bR}
+\eea
+in which $[\cdot]$ is the trace of the jump on $\partial \Omega$ and
+$\delta_{\partial \Omega \times \bR}$ is the delta distribution on the
+space-time boundary. In view
+of (\ref{awe1}) and $\bar{u}=u_1$ outside of $\Omega \times \bR$, in
+fact $u_1$ solves (\ref{awe2}) globally, and $u_1=0$ for $t<0$, which
+determines $u_1$ uniquely in terms of $G[m,\bar{f}] = [\partial_n
+u_1]|_{\partial \Omega \times \bR}$.
+
+For $g \in H^{-1/2}(\partial \Omega \times \bR), g=0$ for $t<0$,
+define the boundary trace extension $\tilde{F}(m)g = Pw$ for the
+solution $w$ of 
+\bea
+\label{awe3}
+ \frac{\partial^2 w}{\partial t^2} - m \nabla^2 w &=& g
+ \delta_{\partial \Omega \times \bR},\\
+w&=&0,t<0
+\eea
+
+The foregoing shows that
+\[
+\tilde{F}[m]G[m,\bar{f}] = \bar{F}[m]\bar{f}.
+\]
+That is, the boundary trace extension is equivalent to the volume
+source extension, in the sense that the two have the same
+range. Since $\bx_s \in \partial \Omega$, a suitable annihilator for
+the boundary trace extended IP is still $A =$ multiply by $|\bx-\bx_s|$.

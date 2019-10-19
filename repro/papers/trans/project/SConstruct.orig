@@ -1,0 +1,381 @@
+from rsf.proj import *
+import os
+
+####################### EDIT TO CHOOSE BETWEEN ########################
+################ MADAGASCAR AND STANDALONE INSTALLS ###################
+#asg = 'asg'
+#stdmdl='standardmodel'
+################################# OR ##################################
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sumax           = os.path.join(CWPROOT,'bin/sumax')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+suresamp        = os.path.join(CWPROOT,'bin/suresamp')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+sushift         = os.path.join(CWPROOT,'bin/sushift')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/asg.x')
+asg1            = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/asg1.x')
+asgsrcinv       = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/asgsrcinv.x')
+poisson         = os.path.join(MYAPPS,'trip2.1/iwave/asg/main/poisson.x')
+stdmdl          = os.path.join(MYAPPS,'trip2.1/iwave/grid/main/standardmodel.x')
+#######################################################################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+BULK = 4.0
+BUOY = 1.0
+DX   = [20,10,5]
+DT   = [0.008,0.004,0.002]
+NX   = [401,801,1601]
+NTR  = [201,401,801]
+FTR  = [75,150,300]
+NZ   = [201,401,801]
+F1   = [1,2,4]
+F2   = [2.5,5,10]
+F3   = [7.5,15,30]
+F4   = [12.5,25,50]
+CLIP = [0.08,0.24,0.8]
+SCLIP= [20.0,80.0,320.0]
+DF   = 0.248
+RZ   = 1000
+SZ   = 3000
+TMIN = 0.8
+TMAX = 1.8
+
+for i in range(0,3):
+
+    FSCALE = 2.0*DX[i]*BULK
+
+    Flow('pthdr' + str(i) + '.su', None,
+         sunull + ' nt=2001 ntr=' + str(NTR[i]) + ' dt=0.002 | ' + 
+         sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' + 
+         sushw + ' key=gelev a=-1000',
+         stdin=0)
+
+    Flow('srchdr' + str(i) + '.su', None,
+         sunull + ' nt=2001 ntr=' + str(NX[i]) + ' dt=0.002 | ' + 
+         sushw + ' key=gx a=0 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' + 
+         sushw + ' key=gelev a=-3000',
+         stdin=0)
+
+### src file point source at x=3500 = left end of line + 1500 m,
+### scale by 500 for time delta (dt=0.002) and
+### dx for dx integration
+
+    Flow('ptsrc'+str(i)+'.su', None, suspike +
+         ' nt=1001 ntr=' + str(NTR[i]) + ' offset=0 ix1=' + str(FTR[i]) + ' nspk=1 it1=500 dt=0.002 | ' +
+         sufilter + ' f=' +
+	 str(F1[i]) + ',' + str(F2[i]) + ',' +
+	 str(F3[i]) + ',' + str(F4[i]) + ' | ' +
+         sugain + ' scale=' + str(500.0*DX[i]) + ' | ' + 
+         sushw + ' key=delrt,gelev a=-1000,-3000 | ' +
+         sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]),
+	 stdin=0)
+
+### create bulk modulus and buoyancy files
+
+    NXL=NX[i]
+    NZL=NZ[i]
+    DXL=DX[i]
+    DTL=DT[i]
+
+    Flow('bmh'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('byh'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BUOY) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('bml'+str(i), None, 
+         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
+         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BULK) + 
+	 ' x1lens=2000 x2lens=4000 dlens=700 tlens=1500 vlens=-2.4| ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+# adjoint test - p to p - this succeeds
+    Flow('adjtestp' + str(i) + '.txt',
+         'bmh' + str(i) + ' byh' + str(i) +
+	 ' ptp' + str(i) + '.su ptsrc' + str(i) + '.su',
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[3]} data_p=${SOURCES[2]} 
+         deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 adjtest=1
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+         ''', stdin=0)
+
+# adjoint test - p to vz - this fails
+    Flow('adjtestvz' + str(i) + '.txt',
+         'bmh' + str(i) + ' byh' + str(i) +
+	 ' pthdr' + str(i) + '.su ptsrc' + str(i) + '.su',
+         sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' + 
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[3]} data_v0=${SOURCES[2]} 
+         deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 adjtest=1
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+         ''', stdin=0)
+
+### medium loop:
+### hh = homog data inverted in homog medium
+### lh = lens data inverted in homog medium
+### ll = lens data inverted in lens medium
+
+    for med in ['hh', 'lh', 'll']:
+
+        exp = med + str(i)
+    
+### simulate data
+        Flow('ptp' + exp + '.su ptvz' + exp + '.su',
+    	     'bm' + exp[0] + str(i) + ' byh' + str(i) + ' ptsrc' + str(i) + '.su ' +
+	     'pthdr' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1
+             ''', stdin=0, stdout=0) 
+
+        Flow('ptvzg'+exp+'.su','ptvz'+exp+'.su',
+             sugain + ' scale=-' + str(FSCALE))
+
+        Flow('srcvz' + exp + '.su',
+    	     'bm' + exp[1] + str(i) + ' byh' + str(i) + ' ptsrc' + str(i) + '.su ' +
+	     'ptvzg' + exp + '.su',
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[0]} data_p=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1
+             ''', stdin=0, stdout=0) 
+
+        Flow('srcvzg'+exp+'.su','srcvz'+exp+'.su',
+             sugain + ' scale=' + str(FSCALE))
+
+        Flow('reptp' + exp + '.su',
+             'bm' + exp[1] + str(i) + ' byh' + str(i) + ' srcvzg' + exp +
+	     '.su pthdr' + str(i) + '.su',
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]} && ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             ''', stdin=0, stdout=0)
+
+        Flow('ptpwind' + exp + '.su','ptp' + exp + '.su',
+             suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+        Flow('ptpwind' + exp,'ptpwind' + exp + '.su',
+             'suread read=data endian=0') 
+        Flow('ptvzwind' + exp + '.su','ptvz' + exp + '.su',
+             suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+        Flow('ptvzwind' + exp,'ptvzwind' + exp + '.su',
+             'suread read=data endian=0') 
+
+        Flow('reptpwind' + exp + '.su','reptp' + exp + '.su',
+             suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+        Flow('reptpwind' + exp,'reptpwind' + exp + '.su',
+             'suread read=data endian=0') 
+        Flow('reptpdiff' + exp,['ptpwind' + exp,'reptpwind' + exp],
+             'add ${SOURCES[1]} mode=1 scale=1,-1') 
+        Flow('reptpdiffftr' + exp,'reptpdiff' + exp,
+             'window n2=1 f2=' + str(FTR[i])) 
+        Flow('ptptrcftr' + exp + '.su','ptpwind' + exp + '.su',
+             suwind + ' key=tracl min=' + str(FTR[i]) + ' max=' + str(FTR[i])) 
+        Flow('reptptrcftr' + exp + '.su','reptpwind' + exp + '.su',
+             suwind + ' key=tracl min=' + str(FTR[i]) + ' max=' + str(FTR[i])) 
+        Flow('ptptrcftr' + exp,'ptptrcftr' + exp + '.su',
+             'suread read=data endian=0') 
+        Flow('reptptrcftr' + exp,'reptptrcftr' + exp + '.su',
+             'suread read=data endian=0')
+
+# recovered scaled source -> rsf
+        Flow('srcvzg' + exp, 'srcvzg' + exp + '.su',
+             'suread read=data endian=0')
+# extract trace
+        Flow('srcvzgftr' + exp + '.su', 'srcvzg' + exp + '.su',
+             suwind + ' key=tracl min=' + str(FTR[i]) +
+	     ' max=' + str(FTR[i]))
+        Flow('srcvzgftr' + exp, 'srcvzgftr' + exp + '.su',
+             'suread read=data endian=0')
+
+# non-windowed residual 
+        Flow('resreptp' + exp + '.su',
+    	     'reptp' + exp + '.su ptp' + exp + '.su',
+	     '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' +
+	     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+	     stdin=0)
+# extract full trace
+        Flow('resreptpftr' + exp + '.su',
+             'resreptp' + exp + '.su',
+	     suwind + ' key=tracl min=' + str(FTR[i]) +
+	     ' max=' + str(FTR[i]))
+# spectrum
+        Flow('specresreptpftr' + exp + '.su',
+             'resreptpftr' + exp + '.su',
+             sufft + ' | ' + suamp + ' mode=amp | ' + suwind + ' tmax=50.0')
+# convert to rsf
+        Flow('specresreptpftr' + exp, 'specresreptpftr' + exp + '.su',
+             'suread read=data endian=0| put d1=' + str(DF))
+
+        Result('ptpwind' + exp,'grey clip='+str(CLIP[i])+' color=j scalebar=y')
+        Result('ptvzwind' + exp,'grey clip='+str(CLIP[i])+'  color=j scalebar=y')
+        Result('reptpwind' + exp,'grey clip='+str(CLIP[i])+'  color=j scalebar=y')
+        Result('reptpdiff' + exp,'grey clip='+str(CLIP[i])+'  color=j scalebar=y')
+        Result('srcvzg' + exp,'grey color=j clip='+str(SCLIP[i])+' scalebar=y')
+	
+        Result('trcftr' + exp,['ptptrcftr' + exp, 'reptptrcftr' + exp],
+               '''
+               cat axis=2 ${SOURCES[1:2]} |
+               graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+               ''')
+        Result('reptptrcftr' + exp,
+               'graph wantitle=n')
+        Result('specresreptpftr' + exp,
+               'graph wantitle=n')
+        Result('srcvzgftr' + exp,
+               'graph wantitle=n')
+
+### iterative src inversion - 5, 10, 20 its
+        for niter in [5,10,20]:
+    
+            Flow('srcpinv' + str(niter) + 'its' + exp + '.su',
+                 'bmh' + str(i) + ' byh' + str(i) +
+	         ' ptp' + exp + '.su ptsrc' + str(i) + '.su',
+                 sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' + 
+                 asgsrcinv + 
+                 '''
+                 bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+                 source_p=${TARGETS[0]} data_p=${SOURCES[2]} 
+                 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+                 dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+                 ''' + ' outfile=${TARGETS[0]}.txt MaxIter=' + str(niter),
+	         stdin=0, stdout=-1)
+
+# resimulation from iteratively inverted source
+            Flow('resrcpinv' + str(niter) + 'its' + exp + '.su',
+    	         'bmh' + str(i) + ' byh' + str(i) + ' srcpinv' + str(niter) +
+		 'its' + exp + '.su pthdr' + str(i) + '.su',
+                 '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+                 asg + 
+                 '''
+                 bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+                 source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+                 deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+                 dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+                 ''', stdin=0, stdout=0) 
+
+# residual from iteratively inverted source
+            Flow('resresrcpinv' + str(niter) + 'its' + exp + '.su',
+    	         'resrcpinv' + str(niter) + 'its' + exp +
+		 '.su ptp' + exp + '.su',
+	         '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' +
+	         suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+	         stdin=0)
+
+# extract full trace
+            Flow('resresrcpinvftr' + str(niter) + 'its' + exp + '.su',
+                 'resresrcpinv' + str(niter) + 'its' + exp + '.su',
+	         suwind + ' key=tracl min=' + str(FTR[i]) +
+	         ' max=' + str(FTR[i]))
+# spectrum
+            Flow('specresresrcpinvftr' + str(niter) + 'its' + exp + '.su',
+                 'resresrcpinvftr' + str(niter) + 'its' + exp + '.su',
+                 sufft + ' | ' + suamp + ' mode=amp  | ' + suwind + ' tmax=50.0')
+
+            Flow('resrcpinvwind' + str(niter) + 'its' + exp + '.su',
+	         'resrcpinv' + str(niter) + 'its' + exp + '.su',
+                 suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+            Flow('resrcpinvwind' + str(niter) + 'its' + exp,
+	         'resrcpinvwind' + str(niter) + 'its' + exp + '.su',
+                 'suread read=data endian=0')
+            Flow('resresrcpinvwind' + str(niter) + 'its' + exp + '.su',
+	         'resresrcpinv' + str(niter) + 'its' + exp + '.su',
+                 suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
+            Flow('resresrcpinvwind' + str(niter) + 'its' + exp,
+	         'resresrcpinvwind' + str(niter) + 'its' + exp + '.su',
+                 'suread read=data endian=0')
+            Flow('specresresrcpinvftr' + str(niter) + 'its' + exp,
+	         'specresresrcpinvftr' + str(niter) + 'its' + exp + '.su',
+                 'suread read=data endian=0 | put d1=' + str(DF))
+            Result('resrcpinvwind' + str(niter) + 'its' + exp,
+	           'grey clip='+str(CLIP[i])+'  color=j scalebar=y')
+            Result('resresrcpinvwind' + str(niter) + 'its' + exp,
+	           'grey clip='+str(0.01*CLIP[i])+'  color=j scalebar=y')
+            Result('srcpinv' + str(niter) + 'its' + exp,
+	           'grey color=j clip='+str(SCLIP[i])+' scalebar=y')
+            Result('specresresrcpinvftr' + str(niter) + 'its' + exp,
+                   'graph wantitle=n')
+
+### scan from homog to lens
+    Flow('ptvzglltap' + exp + '.su','ptvzgll' + exp + '.su',
+         sutxtaper + ' tr1=50 taper=3')
+
+    for k in range(0,11):
+
+        Flow('bmhl' + str(k) + '_' + str(i),['bmh'+str(i), 'bml' + str(i)],
+             'add mode=a scale=' + str(0.1*k) + ',' + str(1.0-0.1*k) +
+	     ' ${SOURCES[1]}')
+
+        Flow('srcvzhl' + str(k) + '_' + str(i) + '.su',
+    	     'bmhl' + str(k) + '_' + str(i) + ' byh' + str(i) +
+	     ' srchdr' + str(i) + '.su ptvzglltap' + str(i) + '.su',
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]} && ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[0]} data_p=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1
+             ''', stdin=0, stdout=0)
+	
+
+End()

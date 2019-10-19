@@ -1,0 +1,785 @@
+\title{Surface Source Extension, Reflection Case}
+\author{William. W. Symes \thanks{The Rice Inversion Project,
+Department of Computational and Applied Mathematics, Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+
+\lefthead{Symes}
+
+\righthead{Reflection SSE}
+
+\maketitle
+\begin{abstract}
+FWI via surface source extension (SSE) applies equally well to reflection or transmission data. In the transmission case, it is asymptotically equivalent to a form of travel time tomography, fitting event slowness rather than arrival time. Use of this method for reflection data simply involves permitting reflectors in the velocity and other subsurface mechanical parameters. It is possible to analyze a simple layered medium special case in the plane wave domain. The analysis suggests that in fact reflection SSE cannot constructively update velocity in absence of correctly positioned reflectors, so more closely resembles so-called Reflection FWI than transmission SSE in its velocity updating capabilities. This theoretical result is supported by numerical experiments with 2D reflection data.
+\end{abstract}
+
+\section{Introduction}
+FWI based on source extension has been around since the early 1990's,
+and some versions are provably robust - converge from substantially
+incorrect initial velocity models. However the theoretical robustness
+results all pertain to purely transmission configurations, such as
+crosswell or diving wave geometry. It has been an open question
+whether source extended FWI remains robust if all kinematic
+information in the data is in the form of reflection
+moveout. Some numerical evidence for such robustness has appeared, but
+in each case it is not obvious that post-critical events did not play
+a role in the inversion.
+
+The goal of this paper is to produce a proof that in one precisely
+defined case and in a precisely defined sense, one particular variant
+of source-extended FWI is {\em not} robust for inversion of reflection
+data. This counterexample negates any general claim of robustness for
+such methods of reflection inversion, of course.
+
+Surface source extension, defined below, is the method investigated
+here. The objective of the reasoning laid out in the following sections is
+to explicitly calculate the gradient of a particular surface source
+extended FWI objective. A context that permits such explicit
+calculation is plane-wave propagation in a layered medium. An explicit
+computation of the gradient at a homogeneous background medium with
+data containing a single reflector shows that the gradient has
+vanishing low-frequency components as the central data frequency goes
+to infinity: in fact, the mean square in any fixed frequency band goes
+to zero. Therefore a step in the negative gradient direction cannot
+affect traveltimes significantly and therefore this technique cannot
+produce a productive velocity update in this case.
+
+It is important to note the contrast with other extension methods. The
+surface source extended FWI objective in the closest analogue for
+transmission, namely the estimation of a homogeneous velocity from one
+or more transmission traces, has been shown to be locally convex
+independent of data frequency content. Also, the subsurface offset
+extended FWI objective for surface reflection data has been shown to
+have similar properties.
+
+In the following sections, I will first give a more precise statement
+of the main result. Then I will review plane-wave modeling, and construct
+an asymptotic approximation to single-reflector plane wave data. In
+the final section I will present the surface source extended FWI
+objective and compute its gradient at a homogeneous background with
+single reflector data. The main result will follow immediately from
+this calculation.
+
+I include several appendices, on 1D wave propagation and plane wave
+reflection modeling, as this material is difficult to find in
+sufficiently precise form.
+
+Whenever convenient, I abbreviate ``surface source extended FWI'' as SSE-FWI.
+
+\section{Main Result}
+
+We adopt the usual pressure-velocity acoustics system as the
+underlying physics of waves, see beginning of next section. The
+surface source extension allows the source to extend over the surface,
+in the form $w(x,t)\delta(z)$ for a nominal source position of
+$(0,0)$. After Radon transform, this source takes the form
+$\tw(\xi,t)\delta(z)$, where $\xi$ is the plane wave slowness. 
+
+The underlying hypothesis is that the data comes from a point
+source. Extension methods encode such information in an annihilator,
+an operator that vanishes for models that satisfy the hypothesis. For
+SSE-FWI, a natural annilator is a variant on the operator introduced
+for this purpose by \cite{HuangSymes:Geo18a,HuangSymes:Geo18b} for two
+similar source extension methods, namely multiplication by offset,
+also reminiscent of a now-standard annihilator for subsurface offset
+introduced by \cite{stolk2001c}. In the plane wave domain,
+multiplication by offset becomes 
+\[
+\tA = D_{\xi}I_t,
+\]
+that is, differentiation in $\xi$ and integration in $t$, in either
+order.
+
+The forward map $\tS$ for plane-wave transformed inverse problem maps
+extended plane wave source wavelets $\tw(\xi,t)$ to plane wave data
+traces (sampling of the plane-wave field at $z=0$, assuming this to be the
+depth of sources and receivers, as I do here). I will regard this operator as a
+function of the bulk modulus $\kappa(z)$, by assuming the density
+$\rho$ to be fixed and homogeneous. 
+
+$\tS[\kappa]$ is 
+actually invertible, at least for $\kappa$ close to homogeneous. This conclusion follows for instance
+from explicit expressions in two special cases: for homogeneous models
+$\kappa=\kappa_0$, 
+\[
+\tS[\kappa_0]\tw(\xi,t) = a_0(\xi)\tw(\xi,t),
+\]
+and for a smooth model $\kappa_1$ with an embedded reflector at $z=z_1$,
+\[
+\tS[\kappa_1](\xi,t) = a_0(\xi)\wl(t) +
+R(\xi)\wl\left(t-2\tau(\xi,z_1)\right) + O(\lambda)
+\]
+Here the source is non-extended: $\tw(\xi,t)=\wl(t)$, and 
+\[
+\wl(t)=\frac{1}{\sqrt{\lambda}}w_1\left(\frac{t}{\lambda}\right)
+\]
+is a family of wavelets depending on central wavelength $\lambda$. The
+vertical travel time $\tau(\xi,z_1)$ is given by
+\[
+\tau(\xi,z_1) = \int_0^{z_1}\sqrt{\frac{1}{c^2}-\xi^2},\,\,c=\sqrt{\kappa/rho}.
+\]
+
+Since $\tS$ is invertible, it is possible to use the
+simplified objective presented by
+\cite{Symes:EAGE15}:
+\begin{equation}
+\label{eqn:dsobj}
+J_0[\kappa]=\frac{1}{2}\|\tA \tS[\kappa]^{-1}\td\|^2
+\end{equation}
+A derivation of this limit case from the standard penalty formulation
+of extended FWI 
+appears in the last section. Inversion based on this type of objective
+has been called ``inversion velocity analysis'' in the subsurface
+offset context \cite[]{Herve2017},\cite[]{HouSymes:Geo18}, and is also the
+basis of Adaptive Waveform Inversion
+\cite{Warner:14,Warner:16}.
+
+The main result pertains to the gradient at homogeneous
+$\kappa=\kappa_0$ for data resulting from a single flat reflector
+embedded in a smooth background:
+\[
+\tdl = \tS[\kappa_1]\wl
+\]
+I calculate the gradient of $J_0$ in this configuration.
+The result is given in equation \ref{eqn:jgrad} in the last
+section. Converted to spatial frequency via the Fourier transform, it
+becomes
+\begin{equation}
+\label{eqn:jgradft-intro}
+\widehat{\nabla J[\kappa_0]}(k) = -\frac{c_0}{16}\int\, d\xi\,a_1(\xi) 
+\frac{1}{ik}\hat{u}_{\lambda}(\xi,k)D_{\xi}^2\overline{\hat{u}_{\lambda}(\xi,k)}
+\end{equation}
+where
+\[
+\hat{u}_{\lambda}(\xi,k) = \left(1 +
+  \frac{R(\xi)}{a_0(\xi)}e^{4ik\tau(\xi,z_1)/\tc(\xi)}\right)\hat{\wl}\left(\frac{2k}{\tc(\xi)}\right) 
+\]
+and 
+\[
+\tc(\xi) = \left(\frac{1}{c_0}^2-\xi^2\right)^{-1/2}
+\]
+is the vertical plane wave velocity for homogenous wave velocity
+$c_0 = \sqrt{\kappa_0/rho}$.
+
+As is reasonable, even mandatory, for simulation of seismic data,
+assume that the ``mother wavelet'' $w_1$ has at least two vanishing
+moments. Then for any $k_{\rm max} >0$, $\xi_{\rm max} > 0$,
+\[
+\max \{\left|\hat{w}_{\lambda}\left(2k/\tc{\xi}\right)\right|:
+|k|\le k_{\rm max}, |\xi|\le \xi_{\rm max} \} \rightarrow 0\mbox{ as }
+\lambda \rightarrow 0.
+\]
+It follows immediately from equation \ref{eqn:jgradft-intro} that the
+same is true of the gradient:
+\begin{equation}
+\label{eqn:bigdeal}
+\max \{\left|\widehat{\nabla J[\kappa_0]}(k)\right|:
+|k|\le k_{\rm max}, |\xi|\le \xi_{\rm max} \} \rightarrow 0\mbox{ as }
+\lambda \rightarrow 0.
+\end{equation}
+
+Therefore the rate at which traveltime changes for any plane wave
+component in the specified range, as the bulk modulus is changed along
+the direction of the negative gradient, is vanishingly small as
+$\lambda \rightarrow 0$. 
+
+Otherwise put, for high-frequency reflection data, this method cannot
+update the velocity away from a homogenous initial guess in a way that
+is kinematically constructive.
+
+It may even be possible to show that the update may be destructive, by
+more careful examination of the gradient approximation. However, who
+cares, really: it is established that SSE-FWI has similar behaviour to
+FWI for at least one simple instance of reflection data.
+
+\section{Plane Wave Modeling}
+Start with 2D acoustics in velocity-pressure form: $p$ is excess
+pressure, $\bv=(v_x,v_z)$ is particle velocity about equilibrium, $f$
+is a (possibly) extended source model, all linked by the acoustic wave system
+\begin{eqnarray}
+\label{eqn:awe}
+\frac{\partial p}{\partial t} + \kappa \nabla \cdot {\bf v} &=&
+                                                                f(\bx,t;\bx_s) \nonumber\\
+\rho \frac{\partial {\bf v}}{\partial t} + \nabla p = 0 \nonumber\\
+p,{\bf v}&=&0, t \ll 0
+\end{eqnarray}
+
+As in other work on this topic, I will assume $\rho$ to be fixed, and
+for sake of simplicity constant, and focus the discussion on
+$\kappa$. Thus the modeled pressure traces at receiver locations
+depend on $\kappa$ and the source function $f$. For simplicity again, assume that
+receivers are located at every point of the hyperplane $z=z_r$. Then
+the modeling operator is defined as
+\begin{equation}
+\label{eqn:fwd}
+S[\kappa]f = p|_{z=z_r}
+\end{equation}
+
+Assume that sources all lie on the surface $z=z_s$, so that surface
+extended sources take the form $f(\bx,t;\bx_s) =
+w(x,t)\delta(z-z_s)$. By abuse of notation, regard $S[\kappa]$ as
+acting on $w$.
+
+Assume that $f$ is square-integrable, $\kappa = \kappa(z)$,
+$\rho=\rho(z)$ (layered medium). Then the modeled shots differ from
+each other by a horizontal translation, so that there is in effect
+only one shot, for which I take the location to be
+$\bx_s=(0,0,z_s)$ and suppress $\bx_s$ from the notation.
+
+To make things even simpler, set $z_s=z_r=0$. Permitting arbitrary
+values just makes the arithmetic more complicated, without affecting
+the essential results.
+
+ If $\log \kappa$ and $\log \rho$ are globally
+bounded, there is $\xi_{\rm max} > 0$ so that for $\|\xi\|<\xi_{\rm
+  max}$, the integrals defining slant stack fields
+$\tilde{p},\tilde{\bv}$, namely
+\begin{eqnarray}
+\label{eqn:slant}
+\tp(\xi,z,t)& = &\int dx p(x,z,t+\xi x),\nonumber\\
+\tv(\xi,z,t)&=&\int dx \bv(x,z,t+\xi x),\nonumber\\
+\tf(\xi,z,t)&=&\int dx f(x,z,t+\xi x),
+\end{eqnarray}
+are absolutely convergent, and $\tp, \tv$ satisfy 
+\begin{eqnarray}
+\label{eqn:awepw}
+(1-c^2\xi^2)\frac{\partial \tp}{\partial t} + \kappa\frac{\partial
+  \tv}{\partial z} &=& \tf \nonumber\\
+\rho \frac{\partial \tv}{\partial t} + \frac{\partial \tp}{\partial
+  z}&=&0\nonumber\\
+\tp,\tv&=&0, t \ll 0.
+\end{eqnarray}
+Here $c=\sqrt{\kappa/\rho}$ is the sound velocity. I use $\xi$ instead
+of the more usual $p$ for plane wave slowness since $p$ already has
+been assigned to mean pressure. Note that if
+$f(\bx,t;\bx_s)=w(t)\delta(\bx)$, then
+$\tf(\xi,z,t)=w(t)\delta(z)$. Likewise for a surface extended source,
+$f(\bx,t;\bx_s) = w(x,t)\delta(z)$, $\tf(\xi,z,t) = \tw(\xi,t)\delta(z)$.
+
+From now on assume a surface extended source, so in plane wave domain
+$\tf(\xi,z,t) = \tw(\xi,t)\delta(z)$. The plane wave domain modeling
+operator samples $\tp$ on $z=z_r=0$:
+\begin{equation}
+\label{eqn:modpw}
+\tS[\kappa]\tw = \tp|_{z=0}
+\end{equation}
+
+For homogeneous $\kappa=\kappa_0, \rho=\rho_0, c=c_0$, a computation
+recapitulated in the Appendix C, relying on computations for the 1D
+acoustics system detailed in Appendices A and B, yields
+\begin{equation}
+\label{eqn:modhom}
+\tS[\kappa_0]\tw(\xi,t) = \frac{1}{2(1-c_0^2\xi^2)}\tw(\xi,t).
+\end{equation}
+That is, at a homogeneous model, the plane wave modeling operator is
+simply scaling by a $\xi$-dependent factor.
+
+The derivative of the plane wave modeling operator $\tS$ with respect
+to $\kappa$ is the $z=0$ trace of the pressure perturbation field
+$\delta \tp$, a solution component of the perturbational plane wave
+system
+\begin{eqnarray}
+\label{eqn:dawepw}
+(1-c^2\xi^2)\frac{\partial \delta \tp}{\partial t} -
+  \delta \kappa \frac{\xi^2}{\rho}\frac{\partial \tp}{\partial t}
+  \nonumber\\
++\kappa\frac{\partial
+  \delta \tv}{\partial z} + \delta \kappa\frac{\partial
+  \tv}{\partial z} &=& 0 \nonumber\\
+\rho \frac{\partial \delta \tv}{\partial t} + \frac{\partial \delta \tp}{\partial
+  z}&=&0\nonumber\\
+\delta \tp,\delta \tv&=&0, t \ll 0.
+\end{eqnarray}
+The derivative of the modeling operator $\tS$ is simply the trace at
+$z=0$ of the plane wave pressure field $\tp$:
+\begin{equation}
+\label{eqn:dmodpw}
+D(\tS[\kappa]\tw)\delta \kappa = \delta \tp|_{z=0}
+\end{equation}
+For homogeneous background model $\kappa=\kappa_0$, the appendices
+explain how to develop an explicit expression for this operator: one
+obtains
+\begin{equation}
+\label{eqn:dmodhom}
+D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+\frac{c_0}{16\kappa_0 (1-c_0^2\xi^2)^{5/2}}\int \,ds\,\tw(\xi,t-s)(\delta \kappa)'  \left(\frac{c_0
+      s}{2\sqrt{1-c_0^2\xi^2}}\right)
+\end{equation}
+To compute the gradient of the SSE objective function, the transpose
+of this operator (as a linear map on $\delta \kappa$) is required:
+that is
+\begin{equation}
+\label{eqn:dmodhomadj}
+D(\tS[\kappa]\tw)_{\kappa=\kappa_0}^T\td(z) =
+- 
+\frac{1}{8} \int \,d\xi\,\frac{1}{\kappa_0 (1-c_0^2\xi^2)^2}\frac{\partial}{\partial z} \int \,dt\,
+  w\left(\xi,t-\frac{2z\sqrt{1-c_0^2\xi^2}}{c_0}\right)d(t).
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Simple Reflection Data}
+
+Inclusion of reflections simply means permitting $\kappa$ to be
+non-smooth. The simplest example is the layer-over-half-space. The
+data to be described in this section belongs to a model having the
+same properties at the measurement surface $z=0$ as the homogeneous
+reference model: that is, $\kappa(0)=\kappa_0$. So to introduce a
+reflector with different moveout than that implied by the reference
+model, it is necessary to allow $\kappa$ to be non-constant between
+the surface an the reflector depth, say $z_1 > 0$. 
+
+Suppose that $\kappa_1$ is smooth in the intervals $[0,z_1)$ and
+$(z_1,\infty)$, but undergoes a nonzero jump at $z=z_1$, 
+\[
+[\kappa_1]_{z=z_1} \ne 0.
+\]
+The proper notion of solution for wave equations such as equation
+\ref{eqn:awe} or \ref{eqn:awepw} with discontinuous coefficients such
+as $\kappa_1$ is that of {\em weak solution}, see
+\cite{BlazekStolkSymes:13}. For the point source case, $\tw(\xi,t) =
+w(t)$, with smooth $w$, a weak solution can be constructed that is
+smooth in $z \ne z_1$: this construction is the familiar combination
+of reflected and transmitted waves. Since causal weak solutions are
+unique, this is {\em the} solution. The smooth fields on either side
+of the reflector at $z=z_1$ can approximated via geometric optics,
+leading to an asymptotic
+approximation to the solution. To express the asymptotic nature of
+this approximation, consider a family of source wavelets, rather than
+a single wavelet
+\[
+\wl = \frac{1}{\sqrt{\lambda}}w_1\left(\frac{t}{\lambda}\right)
+\]
+where $w_1\in C_0^{\infty}(\bR)$ has zero mean. Then [REFERENCE - WHERE?]
+
+The pressure field at the receiver 
+location $z_r=0$ takes the familiar form  
+\begin{equation}
+\label{eqn:modlohs}
+\tS[\kappa_1]\wl(\xi,t) = \frac{1}{2c_0\sqrt{1-c_0^2\xi^2}}\wl(t) +
+R(\xi)\wl\left(t-2\tau(\xi,z_1)\right) + O(\lambda)
+\end{equation}
+where $\tau$ is the vertical plane wave travel time:
+\begin{equation}
+\label{eqn:pwtt}
+\tau(\xi,z) = \int_0^{z} \sqrt{\frac{1}{c(z)^2}-\xi^2}.
+\end{equation}
+The reflection coefficient $R$ depends on $\xi$ and on
+the values of $\kappa_1$ and $\rho$ near $z=z_1$: the precise form is not
+important for the argument to follow.
+
+The remainder in \ref{eqn:modlohs} is $O(\lambda)$ in the sense of
+$L^2$
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{SSE Objective and Gradient: vanishing low frequencies}
+In this section I will formulate the SSE objective, and calculate its
+gradient at homogeneous background for single reflector data as
+described in the last section. I will show that this gradient has
+low-frequency content as the data wavelength $\lambda$, introduced in
+the last section and in the introduction, tends to zero. 
+
+FWI via SSE requires specification of an {\em annihilator}, the null
+space of which consists of non-extended models, as explained in the
+introduction.  Construct a suitable plane-wave domain annihilator
+$\tA$ for
+SSE by intertwining the Radon transform $R$ with the space-domain
+annihilator $A = $ multiplication by offset. In order to do this
+properly, it is necessary to introduce a cutoff in offset: not a
+hardship, since infinite offsets are unavailable. Denote by $\chi$ a
+offset mute. Define
+\[
+Rw(\chi,t) = \int \,dx\,\chi(x) w(x,t+\xi x)
+\]
+\[
+Aw(x,t)=x w(x,t)
+\]
+\[
+\tilde{A} Rw (\xi,t) = R Aw (\xi,t)
+\]
+\[
+=\int dx x \chi(x) w(x,t+\xi x) = \int dx \chi(x)\frac{\partial}{\partial \xi}
+I_tw(x,t+\xi x)
+\]
+\[
+= D_{\xi} I_t R  w \equiv \tilde{A} Rw (\xi,t) 
+\]
+
+Since $\tS[\kappa]$ is continuous in $\kappa$
+\cite[]{BlazekStolkSymes:13}, and $\tS[\kappa_0]$ is a multiple of the
+identity, $\tS[\kappa]$ is invertible in sup-norm neighborhood of
+$\kappa$. Introduce the the scaled reduced penalty function objective
+\[
+\kappa \mapsto \min_{\tw}(\frac{1}{\alpha^2}\|\tS[\kappa]\tw-\td\|^2 + \|\tA
+\tw\|^2)
+\]
+\[
+=\frac{1}{\alpha^2}\|\tS[\kappa]\tw_{\alpha}[\kappa]-\td\|^2 + \|\tA
+\tw_{\alpha}[\kappa]\|^2
+\]
+where $\tw_{\alpha}[\kappa]$ solves the normal equation:
+\[
+\tS[\kappa]^T\tS[\kappa]\tw  + \alpha^2\tA^T\tA\tw = \tS[\kappa]^T\td.
+\]
+Since $\tS[\kappa]$ is invertible, $\tw_{\alpha}[\kappa]$ is uniformly
+bounded as $\alpha \rightarrow 0$. Let $\tw_0[\kappa] =
+\tS[\kappa]^{-1}\td$. Then
+\[
+\tS[\kappa]^T\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])+\alpha^2\tA^T\tA\tw_{\alpha}[\kappa]
+= 0,
+\]
+so $\tw_{\alpha}[\kappa] \rightarrow \tw_0[\kappa]$ as $\alpha
+\rightarrow 0$. Consequently the scaled objective above becomes
+\[
+\frac{1}{\alpha^2}\|\tS[\kappa]\tw_{\alpha}[\kappa]-\td\|^2 + \|\tA 
+\tw_{\alpha}[\kappa]\|^2
+=\frac{1}{\alpha^2}\|\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])\|^2 + \|\tA 
+\tw_{\alpha}[\kappa]\|^2
+\]
+\[
+=\frac{1}{\alpha^2}\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
+\tS[\kappa]^T\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])\rangle+ \|\tA 
+\tw_{\alpha}[\kappa]\|^2
+\]
+\[
+=\frac{1}{\alpha^2}\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
+-\alpha^2\tA^T\tA \tw_{\alpha}[\kappa] \rangle + \|\tA\tw_{\alpha}[\kappa]\|^2
+=\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
+-\tA^T\tA \tw_{\alpha}[\kappa] \rangle + \|\tA\tw_{\alpha}[\kappa]\|^2
+\]
+\begin{equation}
+\label{eqn:j0def}
+\rightarrow \|\tA\tw_0[\kappa]\|^2 \equiv 2 J_0[\kappa,\td].
+\end{equation}
+This $\alpha \rightarrow 0$ limit is the simplified objective used by
+\cite{Symes:EAGE15} and mentioned in the introduction.
+
+
+%\[
+%DJ[\kappa_0]\delta \kappa = -\langle D(\tS[\kappa_0]\tw)\delta \kappa,
+%\tA^T\tA S[\kappa_0]^{-1}\td \rangle , \,\tw=\tS[\kappa_0]^{-1}\td
+%\]
+Now assume that $\td$ is data computed from a simple reflector as
+described in the previous section, depending on the wavelength
+parameter $\lambda$:
+\[
+\td_{\lambda}(\xi,t) = a_0(\xi)\wl(t) +
+R(\xi)\wl\left(t-2\tau(\xi,z_1)\right) + O(\lambda)
+\]
+Then
+\begin{equation}
+\label{eqn:wtildedef}
+\tS[\kappa_0]^{-1}\td_{\lambda}(\xi,t) = \wl(t) +
+\frac{R(\xi)}{a_0(\xi)}\wl\left(t-2\tau(\xi,z_1)\right) + O(\lambda)
+\equiv \tw(\xi,t) + O(\lambda)
+\end{equation}
+Write 
+\[
+a_1(\xi)=\frac{1}{\kappa_0 (1-c_0^2\xi^2)^2}, \tc_0(\xi) =
+\frac{c_0}{\sqrt{1-c_0^2\xi^2}}
+\]
+%Then
+%\[
+%DJ[\kappa_0]\delta \kappa =
+%\left\langle \frac{c_0}{16\kappa_0 (1-c_0^2\xi^2)^{5/2}}\int
+%\,ds\,\tw(\xi,t-s)(\delta \kappa)'
+%\left(\frac{c_0s}{2\sqrt{1-c_0^2\xi^2}}\right), D_{\xi}^2I_t^2
+%\tw(\xi,t) \right\rangle
+%\]
+%Per the derivation of simple reflection, presume that (1) $w_1(t) = 0$
+%for $t>1$, and $w_1$ (hence $\wl$) has two vanishing moments, and (2) $\delta \kappa = 0 $ in an interval of positive
+%length about $z=0$, and (3) $\lambda$ is small enough that $\wl(t)=0$
+%if $\delta(\kappa)(t\tc/2) \ne 0$ for all $\xi$ for which $\chi(\xi)
+%\ne 0$ (I.e. the range of the $\xi$ integral).
+
+%Then the convolution of $\delta \kappa(t\tc/2)$ and $\wl$ vanishes for
+%small $t$, hence the product with $\wl(t)$
+
+%and 
+
+From the definition \ref{eqn:j0def} of $J_0$ and a simple calculation,
+\[
+\nabla J[\kappa_0,\td] = (D\tS[\kappa_0]\tw)^T(\tS[\kappa_0]^T)^{-1}\tA^T\tA
+\tS[\kappa_0]^{-1}\td,  \,\tw=\tS[\kappa_0]^{-1}\td
+\]
+Since $D_{\xi}$ and $I_t$ are both skew-symmetric and commute, $\tA$
+is symmetric. $\tS$ is $\xi-$ dependent scaling. For simplicity
+abbreviated the relation \ref{eqn:modhom} as
+\[
+\tS[\kappa_0]\tw(\xi,t) = a_0(\xi)\tw(\xi,t)
+\]
+Then
+\[
+\nabla J[\kappa_0](z) =
+- 
+\frac{1}{8} \int \,d\xi\,a_1(\xi)\frac{\partial}{\partial z} \int \,dt\, 
+  \tw\left(\xi,t-\frac{2z}{\tc_0}\right)\left(D_{\xi}^2I_t^2 \tw(\xi,t)\right)
+\]
+
+\begin{equation}
+\label{eqn:jgrad}
+=-\frac{c_0}{16} \int \,d\xi\,a_1(\xi)\frac{\partial}{\partial z} \int \,dz'\, 
+  \tw\left(\xi,\frac{2(z'-z)}{\tc_0}\right)\left(D_{\xi}^2I_z^2
+    \tw\left(\xi,\frac{2z'}{\tc_0}\right)\right)
+\end{equation} 
+Set $u(\xi,z) = \tw(\xi,2z/\tc)$. Denote by $\hat{f}$ the Fourier
+transform of $f$.  
+\begin{equation}
+\label{eqn:jgradft}
+\widehat{\nabla J[\kappa_0]}(k) = -\frac{c_0}{16}\int\, d\xi\,a_1(\xi) 
+\frac{1}{ik}\hat{u}(\xi,k)D_{\xi}^2\overline{\hat{u}(\xi,k)}
+\end{equation}
+From the definition \ref{eqn:wtildedef} of $\tw$,
+\[
+\hat{\tw}(\xi,\omega) = \left(1 + \frac{R(\xi)}{a_0(\xi)}e^{2i\omega\tau(\xi,z_1)}\right)\hat{\wl}(\omega)
+\]
+whence
+\[
+\hat{u}(\xi,k) = \left(1 +
+  \frac{R(\xi)}{a_0(\xi)}e^{4ik\tau(\xi,z_1)/\tc(\xi)}\right)\hat{\wl}\left(\frac{2k}{\tc(\xi)}\right) 
+\]
+Together with the expression \ref{eqn:jgradft} for the Fourier
+transform of the gradient, this observation establishes the assertion
+stated in the introduction.
+
+\append{1D Wave Motion}
+Begin with the 1D acoustics point source system. 
+\begin{eqnarray}
+\label{eqn:awe1d}
+\frac{\partial p}{\partial t} +\kappa\frac{\partial 
+  v}{\partial z} &=& w(t)\delta(z-z_s) \nonumber\\
+\rho \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
+  z}&=&0\nonumber\\
+ p,v&=&0, t \ll 0. 
+\end{eqnarray}
+Since the right hand side is singular, so is the solution, so it must
+be a solution in the weak sense; since it is causal, it is uniquely
+determined by the system above. It follows from the weak solution
+conditions that the pressure is continuous at $p=0$, whence $v$ must
+have a discontinuity. 
+
+Now assume that $\kappa, \rho$ are constant. 
+In $z \ne 0$, the right hand side 
+vanishes, so the solution must be locally a combination of plane
+waves; causality implies that
+\[
+p(z,t)=a\left(t \mp \frac{z}{c}\right), \, v(z,t)=\pm b\left(t \mp
+  \frac{z}{c}\right)
+\]
+From the second dynamical equation (Newton's law) it follows that $b =
+a/(\rho c)$. The singularity on the LHS of the first dynamical
+equation (constitutive law) is
+\[
+\kappa [v]_{z=0}\delta(z) =
+2\frac{\kappa}{c}b\delta(z) = 2a\delta(z).
+\] 
+This must in turn equal the RHS of the constitutive law, whence
+$a=w/2$. Thus
+\begin{eqnarray}
+\label{eqn:sol1d}
+p(z,t) &=& \frac{1}{2}w\left(t \mp \frac{z}{c}\right) \nonumber \\
+v(z,t) &=& \pm\frac{1}{2\rho c}w\left(t \mp \frac{z}{c}\right)
+           \nonumber \\
+\pm z &>& 0.
+\end{eqnarray}
+
+\append{1D Born Approximation}
+
+The perturbational system for \ref{eqn:awe1d} is:
+\begin{eqnarray}
+\label{eqn:dawe1d}
+\frac{\partial \delta p}{\partial t} +\kappa\frac{\partial
+  \delta v}{\partial z} + \delta \kappa\frac{\partial
+  v}{\partial z} &=& 0 \nonumber\\
+\rho \frac{\partial \delta v}{\partial t} + \frac{\partial \delta p}{\partial
+  z}&=&0\nonumber\\
+\delta p,\delta v&=&0, t \ll 0.
+\end{eqnarray}
+
+If $\kappa, \rho $ are constant, it is possible to develop explicit
+expressions for the solution of this system. Assuming that $\delta
+\rho=0$ and $\delta \kappa$ is nonzero only in $z>0$, the reflected
+(perturbational) wavefield should be upcoming (i.e. a function of
+$z+ct$, away from the wavefront), as the wave scatters
+only once, at the wavefront implicit in the expressions
+\ref{eqn:sol1d}. On the other hand, the field must vanish before the
+first arrival. 
+
+The key is to understand the perturbational impulse response. That is,
+set $w(t)=H(t)$, and adopt adopt the anzatz
+\begin{eqnarray}
+\label{eqn:ansatz1d}
+\delta p(z,t) &=& a_0\left(t + \frac{z}{c}\right) \delta\left(t -
+  \frac{z}{c}\right) + a_1\left(t + \frac{z}{c}\right) H\left(t -
+  \frac{z}{c}\right),\nonumber\\
+\delta v(z,t) &=& b_0\left(t + \frac{z}{c}\right) \delta\left(t -
+  \frac{z}{c}\right) + b_1\left(t + \frac{z}{c}\right) H\left(t -
+  \frac{z}{c}\right),
+\end{eqnarray}
+Assume that $w$ is smooth and
+of compact support, with zero mean. Then all derivatives of $w$ are
+necessarily linearly independent, as any dependence would amount to a
+differential equation with constant coefficients, the solution of
+which would be entire analytic hence not of compact support.
+
+In the following calculations, the arguments of the coefficients
+$a_0,a_1,b_0,$ and $b_1$ are $\left(t + \frac{z}{c}\right)$ in all
+cases, and are suppressed for the sake of brevity, until the final result.
+
+Inserting the ansatz \ref{eqn:ansatz1d} in the second equation in \ref{eqn:dawe1d}, obtain
+\[
+0=\rho \frac{\partial \delta v}{\partial t} + \frac{\partial \delta p}{\partial
+  z} = 
+\]
+\[
+\left(\rho b_0 - \frac{a_0}{c}\right) \delta'\left(t -
+  \frac{z}{c}\right)
+\]
+\[
++\left(\rho b_0' + \frac{a_0'}{c}+\rho b_1 - \frac{a_1}{c} \right)\left(t + \frac{z}{c}\right) \delta\left(t -
+  \frac{z}{c}\right)
+\]
+\[
+ + \left(\rho b_1' + \frac{a_1'}{c}\right) \left(t + \frac{z}{c}\right) H\left(t -
+  \frac{z}{c}\right)
+\]
+Since $\delta', \delta$ and $H$ are linearly independent, this equation is
+equivalent to the system
+\begin{eqnarray}
+\label{eqn:asnbs}
+\rho b_0 - \frac{a_0}{c} &=& 0\nonumber\\
+\rho b_0' + \frac{a_0'}{c}+\rho b_1 - \frac{a_1}{c} &=&0 \nonumber\\
+\rho b_1' + \frac{a_1'}{c} &=&0.
+\end{eqnarray}
+The first and third equations imply that 
+\begin{eqnarray}
+\label{eqn:handy}
+\rho c b_0&=&a_0,\nonumber\\
+\rho c b_1&=&-a_1,
+\end{eqnarray}
+ so the second equation becomes
+\begin{equation}
+\label{eqn:as}
+a_0' = a_1
+\end{equation}
+Now insert the asatz \ref{eqn:ansatz1d} into the first of the
+dynamical equations \ref{eqn:dawe1d}. Note that \ref{eqn:sol1d}
+implies
+\[
+\delta \kappa \frac{\partial v}{\partial z} = - \frac{\delta
+  \kappa}{2\kappa}\delta\left(t - \frac{z}{c}\right)
+\]
+so that
+\[
+0 = \left(\frac{\partial \delta p}{\partial t} +\kappa\frac{\partial
+  \delta v}{\partial z} + \delta \kappa\frac{\partial
+  v}{\partial z}\right)(z,t)=
+\]
+\[
+\left(a_0 - b_0\frac{\kappa}{c}\right)\delta'\left(t - \frac{z}{c}\right) +
+\]
+\[
+\left(a_0' + b_0'\frac{\kappa}{c} + a_1-b_1\frac{\kappa}{c}\right)\delta\left(t -
+  \frac{z}{c}\right)+
+\]
+\[
+\left(a_1' + b_1'\frac{\kappa}{c}\right) H\left(t - \frac{z}{c}\right)
+\]
+\[
+- \frac{\delta \kappa}{2\kappa}\delta\left(t - \frac{z}{c}\right)
+\]
+The first and last equations from \ref{eqn:handy} imply that the first
+and third terms in the sum above vanish, and that the second and fourth
+amount to
+\[
+=\left(2 (a_0'+a_1) -\frac{\delta \kappa}{2\kappa}\right) \delta\left(t -
+  \frac{z}{c}\right)
+\]
+Taking the identity \ref{eqn:as} into account and re-inserting the
+argument of $a_1$, the upshot is
+\[
+4a_1\left(t + \frac{z}{c}\right) \delta\left(t -
+  \frac{z}{c}\right) = \frac{\delta \kappa(z)}{2\kappa} \delta\left(t
+  -  \frac{z}{c}\right)
+\]
+In view of the delta function factor, $z=ct$ in the arguments of $a_1$
+and $\delta \kappa $, so the above equation is equivalent to
+\begin{equation}
+\label{eqn:asol}
+a_1(t)=\frac{\delta \kappa\left(\frac{ct}{2}\right)}{8\kappa}
+\end{equation}
+It remains to determine the integration constant for $a_0$. In view of
+the condition, mentioned above, that $\delta \kappa$ vanish in $z \le
+0$, it follows from \ref{eqn:dawe1d} that $\delta p(0,0)=0$, so
+$a_0(0)=0$. Consequently the ansatz \ref{eqn:ansatz1d} is validated,
+and 
+\begin{equation}
+\label{eqn:imp1d}
+D(S[\kappa]H)\delta \kappa (t) = \delta p(0,t)=  \frac{\delta 
+  \kappa\left(\frac{ct}{2}\right)}{8\kappa} 
+\end{equation}
+whence for arbitrary causal wavelet $w$,
+\begin{equation}
+\label{eqn:fwd1d}
+D(S[\kappa]w)\delta \kappa (t) = \int_0^t\,ds\,w'(t-s)\frac{\delta 
+  \kappa\left(\frac{cs}{2}\right)}{8\kappa} 
+\end{equation}
+
+\append{Plane Wave Modeling of Reflection Traces}
+Re-write the plane wave system \ref{eqn:awepw} as
+\begin{eqnarray}
+\label{eqn:awepw1}
+\frac{\partial \tp}{\partial t} + \tk\frac{\partial
+  \tv}{\partial z} &=& (1-c^2\xi^2)^{-1}\tf \nonumber\\
+\rho \frac{\partial \tv}{\partial t} + \frac{\partial \tp}{\partial
+  z}&=&0\nonumber\\
+\tp,\tv&=&0, t \ll 0,
+\end{eqnarray}
+in which $\tk(\xi,z)=(1-c(z)^2\xi^2)^{-1}\kappa(z)$ is a scaled version of
+bulk modulus. Similarly define the vertical plane wave velocity as
+\[
+\tc(\xi,z)=\frac{c(z)}{1-c(z)^2\xi^2} =
+\left(\frac{1}{c(z)^2}-\xi^2\right)^{-1/2}.
+\]
+If $\tf(\xi,z,t)=\tw(\xi,t)\delta(z)$ is a surface
+extended source, plane wave version, this is equivalent to replacing
+$\tw(\xi,t)$ by $(1-c(0)^2\xi^2)^{-1}\tw(\xi,t)$.
+
+Since the system \ref{eqn:awepw1} has the form of the 1D system
+\ref{eqn:awe1d} for each $\xi $, both $\tS[\kappa_0] $ and
+$D\tS[\kappa_0]$ can be computed from the corresponding 1D
+results. From \ref{eqn:sol1d},
+\[
+\tS[\kappa_0]\tw(\xi,t)=\frac{1}{2}(1-c_0^2\xi^2)^{-1}\tw(\xi,t)
+\]
+which is equation \ref{eqn:modhom}.
+
+From \ref{eqn:fwd1d},
+\[
+D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa = \int_0^t\,ds\,(1-c_0^2\xi^2)\tw'(\xi,t-s)\frac{\delta 
+  \tk \left(\frac{\tc s}{2}\right)}{8\tk} 
+\]
+Note that 
+\[
+\delta \tk = \delta \left(\frac{\kappa}{1-\kappa \xi^2/\rho}\right) = 
+\]
+\[
+\delta \kappa (1-c^2\xi^2)^{-2}
+\]
+Consequently 
+\[
+D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+\int_0^t\,ds\,\tw'(\xi,t-s)\frac{\delta \kappa  \left(\frac{\tc 
+      s}{2}\right)}{8\kappa_0 (1-c_0^2\xi^2)^2} 
+\]
+\[
+= \frac{c_0}{2}\int_0^t\,ds\,\tw(\xi,t-s)\frac{(\delta \kappa)'  \left(\frac{\tc 
+      s}{2}\right)}{8\kappa_0 (1-c_0^2\xi^2)^{5/2}} 
+\]
+which is equation \ref{eqn:dmodhom}.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

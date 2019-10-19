@@ -1,0 +1,134 @@
+from rsf.proj import *
+from trip.proj import getnum
+import os
+
+####################### EDIT TO CHOOSE BETWEEN ########################
+################ MADAGASCAR AND STANDALONE INSTALLS ###################
+#asg = 'asg'
+#stdmdl='standardmodel'
+################################# OR ##################################
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suconv          = os.path.join(CWPROOT,'bin/suconv')
+sucddecon       = os.path.join(CWPROOT,'bin/sucddecon')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sumax           = os.path.join(CWPROOT,'bin/sumax')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+suresamp        = os.path.join(CWPROOT,'bin/suresamp')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+sushift         = os.path.join(CWPROOT,'bin/sushift')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/asg.x')
+#asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/asgtest.x')
+asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/asgiva.x')
+asgfwi          = os.path.join(MYAPPS,'trip/iwave/asg/main/asgfwi.x')
+deriv           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDeriv.x')
+tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
+#######################################################################
+
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
+
+BASIC='../data'
+
+# build list of data to import
+SRCLIST=[]
+#for i in range(3):
+for i in range(1):
+    SRCLIST.append('bmh'+str(i)+'.rsf')
+    SRCLIST.append('byh'+str(i)+'.rsf')
+    SRCLIST.append('bmw'+str(i)+'.rsf')
+    SRCLIST.append('bml'+str(i)+'.rsf')
+    SRCLIST.append('bml'+str(i)+'.rsf')    
+    SRCLIST.append('ptph'+str(i)+'.su')
+    SRCLIST.append('ptpw'+str(i)+'.su')
+    SRCLIST.append('ptpl'+str(i)+'.su')
+    SRCLIST.append('ptpt'+str(i)+'.su')    
+    for j in range(4):
+    	SRCLIST.append('ptsrc'+str(j)+str(i)+'.su')
+
+print SRCLIST
+
+if not os.path.exists(BASIC):
+    print 'cannot find data source directory ' + BASIC
+    Exit(1)
+else:
+    for i in SRCLIST:
+        SRC = os.path.join(BASIC,i)
+        if not os.path.exists(SRC):
+            print 'you must build the target ' + SRC
+            print 'before building this project' 
+            Exit(1)
+        Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+          
+
+### medium loop:
+### hh = homog data inverted in homog medium
+### lh = lens data inverted in homog medium
+### ll = lens data inverted in lens medium
+
+# 100 iterations seems to be enough
+it=10
+
+# taper parameters - taper in gx only
+TP = 'gx:2000,2500,5500,6000'
+
+#def doit(w,exp, j, winit, wupdate): 
+
+def readit(fname):
+    f=open(fname,'r')
+    winit=f.read()
+    f.close()
+    return float(winit)
+
+#for i in range(3):
+for i in [0]:
+
+
+#    for med in ['hh', 'wh', 'lh', 'll']:
+    for med in ['th']:
+        exp = med + str(i)
+
+	Flow('cgw0_weight'+exp+'.txt', None, 'echo 0.0')
+	Flow('cgw0_bulkupd'+exp, 'bm'+exp[1]+exp[2],'cp')
+
+#	f = open('cgw-1' + exp + '.rpt','w')
+#	f.write('this is a dummy\n')
+#	f.write('updated alpha = 0.0\n')
+#        f.close()
+
+# start with full range of source traces
+        j=0
+
+	w=0
+	winit=0.0
+	wupdate=10
+	bulkupdates=10
+	
+#	w=1
+#	winit=1.49213638e-05
+#	wupdate=1
+
+
+	for w in range(bulkupdates):
+	    Flow('cgw' + str(w+1) + '_weight'+exp+'.txt',
+	    	 'cgw' + str(w) + '_weight'+exp+'.txt',
+		 '/bin/cp ${SOURCES[0]} ${TARGETS[0]}',
+		 stdin=0, stdout=-1)
+		 

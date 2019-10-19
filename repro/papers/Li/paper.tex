@@ -1,0 +1,48 @@
+\title{Report on ``Subsurface seismic imaging based on inversion velocity analysis in both image and data domains'', by Yubing Li, submitted as Th\`{e}se de Doctorat}
+
+\author{
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University,
+Houston, TX, 77005, USA,
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Symes}
+
+\righthead{Li Thesis}
+
+\maketitle
+
+\begin{abstract}
+This thesis presents several versions of surfacec oriented IVA and comparisons with similar MVA algorithms. It develops a full account of the algorithms and presents a number of 2D examples.
+\end{abstract}
+
+\section{Report}
+Li's thesis gives a thorough account of a surface-oriented approach to Inversion Velocity Analysis (IVA), based on the shot-record extension of constant density acoustic modeling. This Differential Semblance approach to velocity model building goes back to early work of the author of this report in the 1980's, or even further: the essential idea is the basis for NMO-based velocity analysis, a technique so ubiquitous that many geophysics students no longer even learn it.
+
+IVA has several major variants. The one discussed in this thesis relies on asymptotic least-squares inversion of the extended Born modeling operator. Other implementations of shot-record DSO using wave equation solvers (mostly from my group \cite[]{KerSy:94,HuangSymes:SEG15,YinHuang:16} but also consult Ali Almomin's Stanford thesis and recent work by Robert Soubaras) have used iterative inversion to solve the ``inner'' problem. Li does a very good job of explaining how this asymptotic inversion is used, and of justifying its use (as opposed to Reverse Time Migration) to construct Common Image Gathers which drive the velocity update scheme. He also argues correctly that shot-record extended DSO based on asymptotic inversion is much less computationally expensive than the similar algorithm based on subsurface offset extension \cite[]{HouSymes:SEG16a,Herve2017}, costing no more per iteration than standard FWI, hence feasible in the near future for 3D field scale application.
+
+The thesis appears to contain two draft papers. The first, already submitted to {\em Geophysics}, explains the common-shot IVA algorithm, with details of optimization and gradient calculation relegated to appendices, then presents several examples. The second compares the ``image domain'' algorithm of Chapter 3 to the Differential Waveform Inversion algorithm of \cite{ChaurisPlessix:EAGE13}, to an inversion-driven variant of DWI which the author calls ``data domain IVA''. 
+
+ I have specific comments on two points that I think may be worth Mr. Li's attention:
+
+\subsection{Multipathing}
+
+The second example presented in Chapter 3 uses a low-velocity anomaly to create data containing caustics and multiple arrivals. This example is included because a number of past studies indicated that even at the correct velocity, such data may give rise to non-flat CIGs. Li concludes that ``the impact of the triplication is not that severe for the common-shot IVA approach'' (p. 85, similar statements are found in Chapter 5).
+
+I find this conclusion questionable. To begin with, one consequence of multiple arrivals is that shot record extended Born modeling operator is either literallly not invertible, or has relatively tiny singular values - effectively, it is not invertible. So it is not clear what is meant by ``inversion''.  This conclusion is implicit in some of the cited references \cite[]{NolanSymes:96,StolkSymes:04}: kinematically, a reflection horizon in a shot record can correspond to two (or more) reflecting horizons in the subsurface - that is the origin of the non-flat CIGs. The dynamics (amplitudes) are easily filled out to make each reflecting horizon fit the shot record data separately. So one has constructed a null space for the extended modeling operator, or alternatively two completely different extended reflectivities that reproduce the same data. One of these is ``physical'', i.e. has flat CIGs, whereas the other does not. However both are isolated - that is, without changing the velocity, there are no reflectivities near these two that fit the data. Possibly the two models are connected through an intermediate suite of velocities, along which the DSO objective changes monotonically - but I don't see any particular reason to believe that. In any case, the change in velocity would at least for part of the trajectory introduce non-flat CIGs for the ``correct'' reflectivity branch. 
+
+The examples shown in this chapter do not address this question - as noted in the discussion of the 2nd and 3rd examples, the inverted velocity does not create the caustics of the ``true'' model, so in some sense is not close enough to it to engage this problem. Because a couple of examples do not exhibit a plausible pathology is no reason to think that it does not exist - one must remember the absolutely reliable Murphy's Law, that is: anything that can go wrong, will go wrong.
+
+Therefore I think that the discussion in this thesis of the the influence of triplication on the global convergence properties of surface-oriented IVA is incomplete. To be fair, this matter has not really been discussed thoroughly by anyone - there are a couple of examples in the literature of failure to converge in zones with complex ray geometry (one is in Almomin's thesis, another in Huang's thesis \cite[]{HuangSymes:SEG15,YinHuang:16}), but failure to converge can occur for several reasons, eg. not enough iterations. It remains an open question. The examples given here are provocative, and should stimulate more work.
+
+The great advantage of surface-oriented IVA and related DSO-like algorithms is that their computation cost per iteration is comparable to that of FWI, especially with a ``direct'' inversion used either as the one-step inner loop or as a preconditioner.  The community should try out these algorithms, but be aware of the potential pitfall.
+
+\subsection{Single-shot Inversion}
+Formulas like (3.9) first appeared (to the best of my knowledge) in t'Root's thesis 
+\cite[]{RootStolkHoop:SEG09,RootStolkHoop:12}. Apparently the CGG group rediscovered this result independently - hardly surprising, happens all the time in this business - but t'Root has priority and should be cited.
+
+\subsection{Conclusion}
+Overall, the conclusions of this work are clearly explained and well-supported, and the examples are well-chosen. This is a thorough exploration of a class of algorithms that have potential for gaining widespread use. In my opinion, this thesis amply justifies the awarding of a PhD in computational geophysics to Mr. Yubing Li.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

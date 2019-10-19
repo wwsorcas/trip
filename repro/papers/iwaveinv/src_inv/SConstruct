@@ -1,0 +1,558 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getnum
+from trip.prog import run
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+# local parallel parameters
+lenv = {'stampede2' : { 'nodes'    : 2,
+                        'ppn'      : 45,
+                        'wall'     : '01:00:00'
+                      },
+         'davinci' :  { 'nodes'    : 2,
+                       	'ppn'      : 16,
+                        'wall'     : '08:00:00'
+                      },
+         'macbook' :  { 'ppn'      : 1},
+	 'getafix' :  { 'ppn'      : 10},
+	 'obelix'  :  { 'ppn'      : 12},
+	 }
+
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+IWAVE           = os.getenv('IWAVE')
+RSFROOT         = os.getenv('RSFROOT')
+
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+
+towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
+acd             = os.path.join(IWAVE,'acd/main/acd.x')
+acdfwi          = os.path.join(IWAVE,'acd/main/acdfwi.x')
+acd_scal        = os.path.join(IWAVE,'mps/main/acd_scal.x')
+acd_scal_conv   = os.path.join(IWAVE,'mps/main/acd_scal_conv.x')
+acd_scal_inv    = os.path.join(IWAVE,'mps/main/acd_scal_inv.x')
+acd_scal_inv_towed = os.path.join(IWAVE,'mps/main/acd_scal_inv_towed.x')
+W_res           = os.path.join(IWAVE,'mps/main/W_res.x')
+my_waveform     = os.path.join(IWAVE,'mps/main/my_waveform.x')
+towed_mps       = os.path.join(IWAVE,'mps/main/towed_mps.x')
+acd_scal_Jinv_towed = os.path.join(IWAVE,'mps/main/acd_scal_Jinv_towed.x')
+
+vpconvert  = RSFROOT + '/bin/vpconvert'
+parseCG = 'python parseCG.py'
+path = '../project/'
+
+
+# build useful wavelets
+Flow( 'wlt_ricker.su',None,
+      my_waveform +' CWPROOT='+ CWPROOT +' output=${TARGETS[0]} '+\
+      'nt=101 dt=0.004 fpeak=5 type=2 cit=51 ',
+      stdin=0, stdout=0 )
+
+Flow( 'wlt_delta.su',None,
+      suspike +' nt=201 dt=0.004 ntr=1 it1=101 ix1=1 | '+\
+      sufilter +' f=100,110 amps=1.,1. | '+\
+      sugain +' scale=250 | '+\
+      sushw +' key=delrt a=-400 ',
+      stdin=0)
+
+Flow( 'wlt_null.su',None,
+      sunull +' nt=101 dt=0.004 ntr=1 ')
+
+Flow( 'ricker_line100m.su',
+      ['wlt_ricker.su',path+'line100m.su'],
+      towed_array +' data=${SOURCES[1]} src=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0, stdout=0)      
+
+Flow( 'delta_line100m.su', 
+      ['wlt_delta.su',path+'line100m.su'],
+      towed_array +' data=${SOURCES[1]} src=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0, stdout=0)
+
+      
+# windowed source, delta, and data
+Flow( 'wind_ricker_line100m.su','ricker_line100m.su',
+      suwind +' key=tracl min=0 max=1 | '+
+      sushw +' key=delrt a=-225')
+Flow( 'wind_delta_line100m.su','delta_line100m.su',
+      suwind +' key=tracl min=0 max=1')
+Flow( 'wind_wavelet_line100m.su',path+'wavelet_line100m.su',
+      suwind +' key=tracl min=0 max=1')
+Flow( 'wind_unborn.su',path+'unborn.su',
+      suwind +' key=sx min=3000 max=3100 | '+
+      sushw +' key=delrt a=0')
+
+# windowed model
+Flow('wind_csq24.rsf',path+'csq24.rsf',
+     'window min1=0 max1=2500 min2=0 max2=6000')
+
+Flow('wind_csq24big.rsf',path+'csq24big.rsf',
+     'window min1=0 max1=2500 min2=0 max2=6000')
+
+Flow('wind_csq24sm.rsf',path+'csq24sm.rsf',
+     'window min1=0 max1=2500 min2=0 max2=6000')
+
+
+# source-receiver geo
+selev = -12
+sx_o  = 3000
+sx_d  = 100
+sx_e  = 4000
+sx_n  = int((sx_e-sx_o)/sx_d)+1
+
+gelev = -8
+gx_o  = 400
+gx_d  = 25
+gx_e  = 2800
+gx_n  = int((gx_e-gx_o)/gx_d)+1
+
+# header 
+hdr_T = 1.5
+hdr_ot= 0.0
+hdr_dt= 0.004
+hdr_nt= int((hdr_T-hdr_ot)/hdr_dt)+1
+Flow( 'hdr.su',None,
+      sunull + ' nt='+ str(hdr_nt) +' ntr='+ str(gx_n*sx_n) +' dt='+str(hdr_dt) +' | '+\
+      sushw + ' key=selev a='+ str(selev) +' | '+\
+      sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_d) +' j='+ str(gx_n) +' | '+\
+      sushw + ' key=gelev a='+ str(gelev) +' | '+\
+      sushw + ' key=gx a='+ str(gx_o) +' b='+ str(gx_d) +' j='+ str(gx_n) +' c='+ str(sx_d) +' | '+\
+      sushw + ' key=tracl a=1 b=1 ',
+      stdin=0)
+
+# building MPS files
+Flow( 'wlt_null_long.su',None,
+      sunull +' nt='+str(hdr_nt)+' dt='+str(hdr_dt)+' ntr=1 ')
+
+Flow('mps_base_long.su','wlt_null_long.su',
+     sushw +' key=delrt a=-225 ')
+
+Flow('mps_towed_long.su',['mps_base_long.su','hdr.su'],
+      towed_mps+' data=${SOURCES[1]} source=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0,stdout=0)
+
+# building MPS files
+Flow('mps_base.su','wlt_ricker.su',
+     sushw +' key=delrt a=-225 ')
+
+Flow('mps_towed.su',['mps_base.su','hdr.su'],
+      towed_mps+' data=${SOURCES[1]} source=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0,stdout=0)
+
+Flow( 'delta_towed.su',['wlt_delta.su','hdr.su'],
+      towed_mps+' data=${SOURCES[1]} source=${SOURCES[0]} towed=${TARGETS[0]}',
+      stdin=0,stdout=0)      
+
+# header for Green's functions
+hdr_T = 2.0
+hdr_ot= 0.0
+hdr_dt= 0.004
+hdr_nt= int((hdr_T-hdr_ot)/hdr_dt)+1
+Flow( 'hdr_g.su',None,
+      sunull + ' nt='+ str(hdr_nt) +' ntr='+ str(gx_n*sx_n) +' dt='+str(hdr_dt) +' | '+\
+      sushw + ' key=selev a='+ str(selev) +' | '+\
+      sushw + ' key=sx a='+ str(sx_o) +' c='+ str(sx_d) +' j='+ str(gx_n) +' | '+\
+      sushw + ' key=gelev a='+ str(gelev) +' | '+\
+      sushw + ' key=gx a='+ str(gx_o) +' b='+ str(gx_d) +' j='+ str(gx_n) +' c='+ str(sx_d) +' | '+\
+      sushw + ' key=tracl a=1 b=1 ',
+      stdin=0)
+
+
+# parallel parameters
+NODES=2
+PPN=16
+PTASK=12
+#PTASK=32
+
+# pre-cooked exes
+exe_serial  = {}
+exe_getafix = {'platf':'mpi', 'ppn':str(PTASK)}
+exe_stampede_4hr = {'platf':'stampede','nodes':str(NODES),'ppn':str(PPN),'wall':'04:00:00'}
+exe_stampede_10min = {'platf':'stampede','nodes':str(NODES),'ppn':str(PPN),'wall':'00:10:00'}
+exe_stampede_30min = {'platf':'stampede','nodes':str(NODES),'ppn':str(PPN),'wall':'00:30:00'}
+
+# choose
+this_exe = exe_serial
+
+# job definition dictionary
+jobs = []
+
+
+#############################################################################################
+# job for making data
+
+jobs = jobs +\
+       [
+        { 'job': 'unborn_data',
+          'pre': '/bin/cp ${SOURCES[2]} ${TARGETS[0]} && '+
+                 '/bin/cp ${SOURCES[1]} ${TARGETS[1]} ',
+          'src': ['wind_csq24.rsf','mps_towed.su','hdr.su'],
+          'tgt': ['data.su','data_mps_towed.su','RHS_0_data_mps_towed.su'],
+          'cmd': acd_scal +
+                 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+                 ' dump_term=1 partask=' + str(PTASK) +
+		 ' csq=${SOURCES[0]} ' +
+                 ' source=empty ' +
+		 ' data=${TARGETS[0]} ' +
+                 ' MPS_file=${TARGETS[1]} ' +
+                 ' MPS_ord_0=0 MPS_ord_1=0 appx_ord=4',
+          'exe': this_exe
+          },
+       ]
+
+
+#############################################################################################
+# pure source inversion w/o PC
+
+#jobs = jobs +\
+#       [
+#        { 'job': 'unborn_srcinv',
+#          'pre': '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+
+#                 '/bin/cp ${SOURCES[2]} ${TARGETS[1]} && '+
+#                 '/bin/cp ${SOURCES[3]} ${TARGETS[2]} ',
+#          'src': ['wind_csq24.rsf','mps_base_long.su','mps_towed_long.su','delta_towed.su','data.su','hdr_g.su'],
+#          'tgt': ['mps_inv.su','mpsinv_mps_towed.su','mpsinv_delta_towed.su','CG.txt',
+#                  'RHS_0_mpsinv_mps_towed.su','RHS_0_mpsinv_delta_towed.su'],
+#          'cmd': acd_scal_inv_towed +
+#		 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+#                 ' dump_term=1 partask=' + str(PTASK) +
+#		 ' csq=${SOURCES[0]}' + 
+#                 ' source=empty' +
+#		 ' data=${SOURCES[4]}' +
+#                 ' data_g=${SOURCES[5]}'+
+#                 ' MPS_file=${TARGETS[0]}'+
+#                 ' MPS_towed=${TARGETS[1]}'+
+#                 ' MPS_delta=${TARGETS[2]}'+
+#                 ' MPS_ord_0=0.0 MPS_ord_1=0.0'+
+#                 ' order_0=0 order_d=0'+
+#                 ' appx_ord=4 MaxIter=150'+
+#                 ' outfile=${TARGETS[3]} && '+
+#                 W_res +
+#                 ' appx_ord=4'+
+#                 ' MPS_file=${SOURCES[1]}'+
+#                 ' grid=${SOURCES[0]}'+
+#                 ' MPS_ord_0=0 MPS_ord_1=0'+
+#                 ' order_0=0.5 order_d=1.0'+
+#                 ' MPS_type=Scal c_max=6.0'+
+#                 ' MPS_true=${SOURCES[1]}'+
+#                 ' MPS_est=${TARGETS[0]}'+
+#                 ' outfile=${TARGETS[3]}',
+#          'exe': this_exe
+#	},
+#     ]
+
+
+#############################################################################################
+# pure source inversion w/ PC
+
+#jobs = jobs +\
+#       [
+#        { 'job': 'unborn_srcinv_pc',
+#          'pre': '/bin/cp ${SOURCES[1]} ${TARGETS[0]} && '+
+#                 '/bin/cp ${SOURCES[2]} ${TARGETS[1]} && '+
+#                 '/bin/cp ${SOURCES[3]} ${TARGETS[2]} ',
+#          'src': ['wind_csq24.rsf','mps_base_long.su','mps_towed_long.su','delta_towed.su','data.su','hdr_g.su'],
+#          'tgt': ['mps_inv_pc.su','mpsinvpc_mps_towed.su','mpsinvpc_delta_towed.su','CG_pc.txt',
+#                  'RHS_0_mpsinvpc_mps_towed.su','RHS_0_mpsinvpc_delta_towed.su'],
+#          'cmd': acd_scal_inv_towed +
+#		 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+#                 ' dump_term=1 partask=' + str(PTASK) +
+#		 ' csq=${SOURCES[0]}' +
+#                 ' source=empty ' +
+#		 ' data=${SOURCES[4]}'+ 
+#                 ' data_g=${SOURCES[5]}'+
+#                 ' MPS_file=${TARGETS[0]}'+
+#                 ' MPS_towed=${TARGETS[1]}'
+#                 ' MPS_delta=${TARGETS[2]}'+
+#                 ' MPS_ord_0=0.0 MPS_ord_1=0.0'+
+#                 ' order_0=0.5 order_d=1'+
+#                 ' appx_ord=4 MaxIter=150'+
+#                 ' outfile=${TARGETS[3]} && '+
+#                 W_res +
+#                 ' appx_ord=4'+
+#                 ' MPS_file=${SOURCES[1]}'+
+#                 ' grid=${SOURCES[0]}'+
+#                 ' MPS_ord_0=0 MPS_ord_1=0'+
+#                 ' order_0=0.5 order_d=1.0'+
+#                 ' MPS_type=Scal c_max=6.0'+
+#                 ' MPS_true=${SOURCES[1]}'+
+#                 ' MPS_est=${TARGETS[0]}'+
+#                 ' outfile=${TARGETS[3]}',
+#          'exe': this_exe
+#	},
+#      ]
+
+
+#############################################################################################
+# pure model inversion
+
+#jobs = jobs +\
+#       [
+#	{ 'job': 'fwi3it',
+#          'pre': 'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +
+#	         'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[1]} && ' +
+#	         '/bin/cp ${SOURCES[0]} ${TARGETS[2]}',
+#	  'src': ['data.su', 'mps_towed.su', 'wind_csq24big.rsf'],
+#          'tgt': ['fwi3it_est', 'fwi3it_inv', 'fwi3it_res.su'],
+#          'cmd': acdfwi + ' ' + 
+#		 'order=2 cfl=0.5 ' +
+#		 'cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
+#		 'csq_min=1.0 csq_max=36.0 ' +
+#		 'csq=${SOURCES[2]} ' +
+#		 'csq_est=${TARGETS[0]} csq_inv=${TARGETS[1]} ' +
+#		 'source=${SOURCES[1]} data=${SOURCES[0]} data_res=${TARGETS[2]} ' +
+#		 'MaxSteps=3 OptMethod=trcg InitStepBound=10000 ' +
+#		 'outfile=fwi3it.out partask='+ str(PTASK),
+#          'exe': this_exe
+#        },
+#       ]
+
+
+
+#############################################################################################
+# running acdred.x
+
+jobs = jobs +\
+       [
+        { 'job': 'unborn_red3it',
+          'pre': 'sfcp < ${SOURCES[0]}> ${TARGETS[0]} && '+
+                 '/bin/cp ${SOURCES[4]} ${TARGETS[1]} && '+
+                 '/bin/cp ${SOURCES[1]} ${TARGETS[2]} ',
+          'src': ['wind_csq24sm.rsf','mps_base.su','mps_towed.su','delta_towed.su','data.su','hdr_g.su'],
+          'tgt': ['red3it_csq_inv','red3it_data_res.su','red3it_mps_inv.su','red3it_outfile.txt'],
+          'cmd': acd_scal_Jinv_towed +
+		 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+                 ' dump_term=1 partask=' + str(PTASK) +
+		 ' csq=${SOURCES[0]}' +
+                 ' csq_inv=${TARGETS[0]}'
+                 ' source=empty ' +
+		 ' data=${SOURCES[4]}'+ 
+                 ' data_g=${SOURCES[5]}'+
+                 ' datares=${TARGETS[1]}'
+                 ' MPS_file=${TARGETS[2]}'+
+                 ' MPS_file_inv=${TARGETS[2]}'+
+                 ' MPS_towed=${SOURCES[2]}'
+                 ' MPS_delta=${SOURCES[3]}'+
+                 ' MPS_ord_0=0.0 MPS_ord_1=0.0'+
+                 ' order_0=0.0 order_d=0.0'
+                 ' appx_ord=4'+
+                 ' MaxSteps=3'+
+		 ' MaxSubSteps=10' +
+                 ' InitStepBound=500.0' + 
+                 ' nsnaps=20'+
+                 ' outfile=${TARGETS[3]}',
+          'exe': this_exe
+	},
+        { 'job': 'unborn_red5it',
+          'pre': 'sfcp < ${SOURCES[0]}> ${TARGETS[0]} && '+
+                 '/bin/cp ${SOURCES[4]} ${TARGETS[1]} && '+
+                 '/bin/cp ${SOURCES[1]} ${TARGETS[2]} ',
+          'src': ['wind_csq24sm.rsf','mps_base.su','mps_towed.su','delta_towed.su','data.su','hdr_g.su'],
+          'tgt': ['red5it_csq_inv','red5it_data_res.su','red5it_mps_inv.su','red5it_outfile.txt'],
+          'cmd': acd_scal_Jinv_towed +
+		 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+                 ' dump_term=1 partask=' + str(PTASK) +
+		 ' csq=${SOURCES[0]}' +
+                 ' csq_inv=${TARGETS[0]}'
+                 ' source=empty ' +
+		 ' data=${SOURCES[4]}'+ 
+                 ' data_g=${SOURCES[5]}'+
+                 ' datares=${TARGETS[1]}'
+                 ' MPS_file=${TARGETS[2]}'+
+                 ' MPS_file_inv=${TARGETS[2]}'+
+                 ' MPS_towed=${SOURCES[2]}'
+                 ' MPS_delta=${SOURCES[3]}'+
+                 ' MPS_ord_0=0.0 MPS_ord_1=0.0'+
+                 ' order_0=0.0 order_d=0.0'
+                 ' appx_ord=4'+
+                 ' MaxSteps=5'+
+		 ' MaxSubSteps=10' +
+                 ' InitStepBound=500.0' + 
+                 ' nsnaps=20'+
+                 ' outfile=${TARGETS[3]}',
+          'exe': this_exe
+	},
+        { 'job': 'unborn_red10it',
+          'pre': 'sfcp < ${SOURCES[0]}> ${TARGETS[0]} && '+
+                 '/bin/cp ${SOURCES[4]} ${TARGETS[1]} && '+
+                 '/bin/cp ${SOURCES[1]} ${TARGETS[2]} ',
+          'src': ['wind_csq24sm.rsf','mps_base.su','mps_towed.su','delta_towed.su','data.su','hdr_g.su'],
+          'tgt': ['red10it_csq_inv','red10it_data_res.su','red10it_mps_inv.su','red10it_outfile.txt'],
+          'cmd': acd_scal_Jinv_towed +
+		 ' deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+                 ' dump_term=1 partask=' + str(PTASK) +
+		 ' csq=${SOURCES[0]}' +
+                 ' csq_inv=${TARGETS[0]}'
+                 ' source=empty ' +
+		 ' data=${SOURCES[4]}'+ 
+                 ' data_g=${SOURCES[5]}'+
+                 ' datares=${TARGETS[1]}'
+                 ' MPS_file=${TARGETS[2]}'+
+                 ' MPS_file_inv=${TARGETS[2]}'+
+                 ' MPS_towed=${SOURCES[2]}'
+                 ' MPS_delta=${SOURCES[3]}'+
+                 ' MPS_ord_0=0.0 MPS_ord_1=0.0'+
+                 ' order_0=0.0 order_d=0.0'
+                 ' appx_ord=4'+
+                 ' MaxSteps=10'+
+		 ' MaxSubSteps=10' +
+                 ' InitStepBound=500.0' + 
+                 ' nsnaps=20'+
+                 ' outfile=${TARGETS[3]}',
+          'exe': this_exe
+	},
+      ]
+
+
+run(jobs,lenv)
+
+
+
+# figures
+#Flow('CG.rsf','CG.txt',
+#     parseCG+' infile=${SOURCES[0]} outfile=tmp Niter=150 && '+\
+#     ' echo in=tmp n1=150 n2=2 data_format=ascii_float | '+\
+#     ' sfdd form=native >${TARGETS[0]} && '+\
+#     ' /bin/rm tmp',
+#     stdin=0,stdout=0)
+
+#Flow('CG_pc.rsf','CG_pc.txt',
+#     parseCG+' infile=${SOURCES[0]} outfile=tmp Niter=150 && '+\
+#     ' echo in=tmp n1=150 n2=2 data_format=ascii_float | '+\
+#     ' sfdd form=native >${TARGETS[0]} && '+\
+#     ' /bin/rm tmp',
+#     stdin=0,stdout=0)
+
+#Flow('mps_inv','mps_inv.su','suread read=data endian=0')
+#Flow('mps_inv_pc','mps_inv_pc.su','suread read=data endian=0')
+#Result('comp-src',
+#       ['mps','mps_inv','mps_inv_pc'],
+#       ' cat axis=2 ${SOURCES[1:3]} | '+\
+#       ' put label2=Amplitude label1=Time unit1=s | '+\
+#       ' graph wanttitle=n dash=0,5,1 plotcol=6,5,7 plotfat=3')
+
+#Result('CG-plots',['CG.rsf','CG_pc.rsf'],
+#       ' cat axis=2 ${SOURCES[1:2]} | '+\
+#       ' math output="log(input)/log(10)" | '+\
+#       ' graph label1="CG Iterate" label2="Log of L2-Norm" dash=1,1,0,0 plotcol=5,6,5,6 plotfat=3 wanttitle=n grid1=y grid2=y gridfat=0.5 griddash=2')
+
+#Flow('Fig/comp-src.pdf',
+#     'Fig/comp-src.vpl',
+#     vpconvert+' ${SOURCES[0]} format=pdf',
+#     stdin=0,stdout=0)
+
+#Flow('Fig/CG-plots.pdf',
+#     'Fig/CG-plots.vpl',
+#     vpconvert+' ${SOURCES[0]} format=pdf',
+#     stdin=0,stdout=0)
+
+
+Result('csq24','wind_csq24',
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+#Flow('Fig/csq24.pdf',
+#     'Fig/csq24.vpl',
+#     vpconvert+' ${SOURCES[0]} format=pdf',
+#     stdin=0,stdout=0)
+
+Result('wind-csq24','wind_csq24',
+       ' window max1=1500 min2=2000 max2=5000 | '+\
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+
+Result('wind-csq24sm','wind_csq24sm',
+       ' window max1=1500 min2=2000 max2=5000 | '+\
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+
+Flow('data','data.su','suread read=data endian=0')
+Result('data','data',
+       'put label1="Time" unit1=s label2="Receiver" | '+\
+       'grey wanttitle=n scalebar=y barlabel="Pressure" barunit=GPa screenratio=0.5')
+
+Flow('mps','mps_base.su','suread read=data endian=0')
+
+
+#red3it
+Result('red3it-csq-inv','red3it_csq_inv',
+       ' window max1=1500 min2=2000 max2=5000 | '+\
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+
+Flow('red3it_mps_inv','red3it_mps_inv.su','suread read=data endian=0')
+Result('red3it-src',
+       ['mps','red3it_mps_inv'],
+       ' cat axis=2 ${SOURCES[1:2]} | '+\
+       ' put label2=Amplitude label1=Time unit1=s | '+\
+       ' graph wanttitle=n dash=0,5 plotcol=6,5 plotfat=3')
+
+#red5it
+Result('red5it-csq-inv','red5it_csq_inv',
+       ' window max1=1500 min2=2000 max2=5000 | '+\
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+
+Flow('red5it_mps_inv','red5it_mps_inv.su','suread read=data endian=0')
+Result('red5it-src',
+       ['mps','red5it_mps_inv'],
+       ' cat axis=2 ${SOURCES[1:2]} | '+\
+       ' put label2=Amplitude label1=Time unit1=s | '+\
+       ' graph wanttitle=n dash=0,5 plotcol=6,5 plotfat=3')
+
+
+#red10it
+Result('red10it-csq-inv','red10it_csq_inv',
+       ' window max1=1500 min2=2000 max2=5000 | '+\
+       ' math output="sqrt(input)" | '+\
+       ' grey color=j bias=3 minval=1.5 maxval=4.5 scalebar=y barreverse=y wanttitle=n barlabel="Velocity" barunit="km/s"')
+
+Flow('red10it_mps_inv','red10it_mps_inv.su','suread read=data endian=0')
+Result('red10it-src',
+       ['mps','red10it_mps_inv'],
+       ' cat axis=2 ${SOURCES[1:2]} | '+\
+       ' put label2=Amplitude label1=Time unit1=s | '+\
+       ' graph wanttitle=n dash=0,5 plotcol=6,5 plotfat=3')
+
+
+
+Flow('trace-csq24','wind_csq24',
+     ' window max1=1500 min2=3500 max2=3500 | '+\
+     ' math output="sqrt(input)"')
+
+Flow('trace-red5it-csq-inv','red5it_csq_inv',
+     ' window max1=1500 min2=3500 max2=3500 | '+\
+     ' math output="sqrt(input)"')
+
+Flow('trace-csq24sm','wind_csq24sm',
+     ' window max1=1500 min2=3500 max2=3500 | '+\
+     ' math output="sqrt(input)"')
+
+
+Result('trace-compare',['trace-csq24','trace-csq24sm','trace-red5it-csq-inv'],
+       ' cat axis=2 ${SOURCES[1:3]} | '+\
+       ' put label2=Velocity unit2=km/s | '+\
+       ' graph wanttitle=n dash=0,2,4 plotcol=6,5,4 plotfat=3')
+
+
+
+End()

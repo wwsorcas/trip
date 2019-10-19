@@ -1,0 +1,40 @@
+from rsf.tex import *
+
+End(
+options='manuscript,revised',
+
+lclass='geophysics',
+
+use='amsmath,setspace,wasysym,graphicx,float,subfig,algorithm,algpseudocode,color,amssymb,mdframed,framed,listings,courier,xcolor',
+
+include=r'''
+\def\red#1{\textcolor{red}{#1}}
+\newcommand{\code}[1]{\begin{singlespace}\begin{flushleft}\begin{framed}\texttt{#1}\end{framed}\end{flushleft}\end{singlespace}}
+\newcommand{\mat}[2] [rrrrrrrrrrrrr]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\newcommand{\vet}[2] [c]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\def\Eq#1{Equation~(\ref{eq:#1})}
+\def\eq#1{Eq.~\hspace{-4pt}(\ref{eq:#1})}
+\newcommand{\eval}[2]{\biggr|_{#1}^{#2}}
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\om}{\bar{m}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\ocF}{\bar{\mathcal{F}}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\everymath{\displaystyle}
+\newtheorem{theorem}{Theorem}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+''',
+color='ALL'
+)
+
+
+
+
+

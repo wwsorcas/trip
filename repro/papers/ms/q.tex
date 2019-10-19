@@ -1,0 +1,81 @@
+\title{Computing Q}
+\author{William W. Symes}
+
+\begin{abstract}
+abstract goes here
+\end{abstract}
+
+Basic physics: acoustics
+\be
+\label{awe}
+\frac{\partial^2 u}{\partial t^2} - m \nabla^2 u = S
+\ee
+
+Forward map: $F(m) = Pu$, $P$ = trace operator on receiver surface $\Sigma$ (sampling).
+
+Source extension: $\oF(m,\oS) = Pu$ with $S$ in (\ref{awe}) replaced by $\oS$.
+
+
+Derivative: $D\oF(m)\delta m = P \delta u$ where
+\be
+\label{dawe}
+\frac{\partial^2 \delta u}{\partial t^2} - m \nabla^2 \delta u = \delta m \nabla^2 u
+\ee
+
+Duhamel's principle:
+\[
+\delta u(x,z,t) = \int_0^t ds v(x,z,t,s)
+\]
+where
+ \begin{eqnarray}
+\label{vawe}
+\frac{\partial^2 v}{\partial t^2} - m \nabla^2 v &=& 0,\,\,t \ge s; \nonumber\\
+v(x,z,s,s)&=&0; \nonumber\\
+\frac{\partial v}{\partial t}(x,z,s,s)&=& (\delta m \nabla^2 u)(x,z,s). 
+\ee
+
+\noindent {\bf Assumption 1:} 
+\be
+\label{supp}
+\mbox{supp }\delta m \cap \mbox{supp }\oS = \emptyset
+\ee
+
+Then can rewrite 3rd condition in (\ref{vawe}) as 
+\be
+\label{vawe3}
+\frac{\partial v}{\partial t}(x,z,s,s)&=& \left(\frac{\delta m}{m} \frac{\partial^2 u}{\partial t^2}\right)(x,z,s) 
+\ee
+
+Set 
+\[
+w(x,z,t,s) = \frac{1}{2}\left( \frac{\partial u}{\partial t}(x,z,t) - \frac{\partial u}{\partial t}(x,z,2s-t)\right)
+\]
+
+Then in complement of $\mbox{supp }\oS$, $w$ solves (\ref{vawe}), provided $\delta m/m \equiv 1$.
+
+\noindent {\bf Assumption 2:} $u$ is supported near $t \mapsto (X(t),Z(t))$, and there exists exactly one $t_r$ so that $(X(t_r),Z(t_r)) \in \Sigma$.
+
+\noindent {\bf Assumption 3:} for each $t$, the support of $u$ is small enough that $\delta m$ may be approximated by a constant on $\mbox{supp }u(\cdot,\cdot,t)$.
+
+Claim: 
+\[
+v(x,z,t,s) \approx  \frac{\delta m}{m}(X(s),Z(s)) w(x,z,t,s)
+\]
+so for $t near t_r$,
+\[
+\delta u(x,z,t) = \frac{1}{2}\frac{\partial u}{\partial t}(x,z,t)\int_0^t ds  \frac{\delta m}{m}(X(s),Z(s)) 
+\]
+\be
+\label{a1}
++ \frac{1}{2} \int_0^t ds  \frac{\delta m}{m}(X(s),Z(s))\frac{\partial u}{\partial t}(x,z,2s-t)
+\ee
+The second term integrates $u$ {\em backwards} along the trajectory $t \mapsto (X(t),Z(t))$, so if the trajectory intersects $\Sigma$ at $t=t_r$, this involves only times $<< t_r$, hence does not contribute to the trace. Upshot:
+under assumptions 1 - 3,
+\be
+\label{a2}
+\oF(m,\oS) \approx \frac{1}{2}\frac{\partial }{\partial t}\oF(m,\oS)(x,z,t)\int_0^t ds  \frac{\delta m}{m}(X(s),Z(s)) 
+\ee
+
+Application: transmission configuration, construct $\oS$ as integral over localized oscillatory data generating solutions remaining close to rays. Read off symbol of Q.
+
+Note that this will be correct even when caustics are present, by Huyghens construction.

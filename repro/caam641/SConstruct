@@ -1,0 +1,99 @@
+from rsf.book import *
+from rsf.tex import Paper
+
+chapters=Split('madfigs basic born ray conv stack')
+       
+Book(chapters,author='William W. Symes',copyr='Rice University',group='The Rice Inversion Project',title='CAAM 641 NOTES: SPRING 2017',fig=('basic/project','parapspi.pdf','width=\\textwidth'))
+
+Paper('intro')
+
+End(options='book',
+use='hyperref,amsmath,amssymb,amsfonts,amsbsy,amscd,amsthm,rotating,framed,listings,setspace,wasysym,graphicx,graphics,float,subfig,wrapfig,multirow,algorithm,algpseudocode,color,geometry,tikz,adjustbox,caption,pgfplots,xcolor,fancyhdr,kpfonts,xspace,bm',
+    include=r'''
+\newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\om}{\bar{m}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\ocF}{\bar{\mathcal{F}}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\dR}{R^{\dagger}}
+\newcommand{\bZ}{{\bf Z}}
+\newcommand{\dom}{\delta \bar{m}}
+\newcommand{\de}{d_{\lambda}}
+\newcommand{\Je}{\tilde{J}_{\lambda}}
+\newcommand{\Ne}{N_{\lambda}}
+\newcommand{\Be}{B_{\epsilon}}
+\newcommand{\bre}{\bar{m}_{\lambda}}
+\newcommand{\bqe}{\bar{q}_{\lambda}}
+\newcommand{\brea}{\bar{m}_{\lambda,a}}
+\newcommand{\bqea}{\bar{q}_{\lambda,a}}
+\newcommand{\breone}{\bar{m}_{\lambda,1}}
+\newcommand{\bqeone}{\bar{q}_{\lambda,1}}
+\newcommand{\bnea}{\bar{e}_{\lambda,a}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\bk}{{\bf k}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bh}{{\bf h}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bX}{{\bf X}}
+\newcommand{\bP}{{\bf P}}
+\newcommand{\by}{{\bf y}}
+\newcommand{\bp}{{\bf p}}
+\newcommand{\br}{\bar{m}}
+\newcommand{\bv}{\bar{v}}
+\newcommand{\bw}{\bar{w}}
+\newcommand{\bq}{\bar{q}}
+\newcommand{\dbr}{\delta \bar{m}}
+\newcommand{\dbq}{\delta \bar{q}}
+\newcommand{\jds}{J_{\rm DS}}
+\newcommand{\tds}{\tilde{J}_{\rm DS}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\sB}{{\cal B}}
+\newcommand{\mybe}{\begin{equation}}
+\newcommand{\myee}{\end{equation}}
+\newcommand{\mybea}{\begin{eqnarray}}
+\newcommand{\myeea}{\end{eqnarray}}
+\newcommand{\be}{\begin{eqnarray}}
+\newcommand{\ee}{\end{eqnarray}}
+\newcommand{\ben}{\begin{eqnarray*}}
+\newcommand{\een}{\end{eqnarray*}}
+\newcommand{\bee}{\begin{equation}}
+\newcommand{\eee}{\end{equation}}
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\pa}{\partial}
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{rem}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{exmp}{Example}
+\newtheorem{definition}{Definition}
+\newtheorem{prop}{Proposition}
+\newcommand{\dxz}{\nabla_{x,z}}
+\newcommand{\dhz}{\nabla_{h,z}}
+\everymath{\displaystyle}
+\def\mathbi#1{\textbf{\em{#1}}}
+\def\Eq#1{Eq.~\hspace{-4pt}(\ref{eq:#1})}
+\def\Fig#1{Fig.~\hspace{-4pt}(\ref{fig:#1})}
+\def\Tab#1{Tab.~\hspace{-4pt}(\ref{tab:#1})}
+\def\Prop#1{Proposition~\ref{prop:#1}}
+\newcommand{\mat}[2] [rrrrrrrrrrrrr]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\newcommand{\vet}[2] [c]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\usepackage[bottom]{footmisc}
+\usetikzlibrary{matrix}
+\usetikzlibrary{calc, shapes, backgrounds}
+\usetikzlibrary[pgfplots.groupplots]
+\usetikzlibrary{matrix}
+\usetikzlibrary{shapes,snakes}
+\newcommand{\half}{\frac{1}{2}}
+\newtheorem{mydef}{Definition}
+''',
+color='ALL'
+)
+

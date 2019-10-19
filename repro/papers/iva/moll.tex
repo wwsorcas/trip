@@ -1,0 +1,118 @@
+
+The asymptotic property of $\de$ and dependent quantities will be
+expressed in terms of a {\em mollifier family} $\Be$, whose
+properties abstract those of Friedrichs mollifiers (\cite{Tay:81},
+II.7):
+\begin{enumerate}
+\item $\{\Be:\epsilon>0\} \subset Op^{-\infty}(\oM,\oM)$ 
+\item $\{\Be:\epsilon>0\} \subset Op^0(\oM,\oM)$ is bounded 
+\item $\Be \rightarrow I$ strongly
+\end{enumerate}
+
+The essential properties of mollifier families are captured in the
+following lemma, which abstracts \cite{Tay:81},
+Chapter II section 7 and 
+problem II.6.7.
+
+\begin{lem}\label{lem:moll} Suppose that $\{\Be\}$ is a mollifier family,
+and $P \in Op^{-1}(\oM,\oM)$. Then
+\begin{enumerate}
+\item $P\Be, \Be P \in Op^{-\infty}(\oM,\oM)$ for all
+  $\epsilon > 0$
+\item $\|P\Be - P\|_{{\cal L}(\oM^0,\oM^0)}, \|\Be P-P\|_{{\cal L}(\oM^0,\oM^0)} \rightarrow 0$ as
+$\epsilon \rightarrow 0$  
+\item $\|[P,\Be]\|_{{\cal L}(\oM^0,\oM^0)} \rightarrow 0$ as
+  $\epsilon \rightarrow 0$.
+\end{enumerate}
+\end{lem}
+\begin{proof}
+Item 1. is clear. To prove item 2, note that for a sequence $\{\epsilon_j >0\}$ with
+$\epsilon_j \rightarrow 0$, $T_j \equiv PB_{\epsilon_j}-P \rightarrow
+0$ strongly in ${\cal L}(\oM^0,\oM^0)$. Since $\{\Be:\epsilon > 0\}$
+is bounded in ${\cal L}(\oM^{-1},\oM^{-1})$ and $P \in {\cal
+  L}(\oM^{-1},\oM^{0})$, $\{T_j\}$ is bounded in ${\cal
+  L}(\oM^{-1},\oM^{0})$, whence $\{T_j\Lambda\}$ is bounded in ${\cal
+L}(\oM^0,\oM^0)$. $\oM^1 \subset \oM^0$ is dense: for any
+$x \in \oM^0$ and $\delta > 0$, choose $x_{\delta} \in \oM^1$ so that
+$\|x-x_{\delta}\|_0 < \delta$. Then $\|(T_j\Lambda)x\|_0 \le \|T_j
+(\Lambda x_{\delta})\| + C\delta$ with $C \ge 0$ independent of
+$j$. Since $T_j \rightarrow 0$ strongly, for $j$ sufficiently large, 
+$\|T_j(\Lambda x_{\delta})\| < \delta$. Since $\delta > 0$ is
+arbitrary, conclude that $T_j \Lambda \rightarrow 0$ strongly. Since
+$\Lambda^{-1}$ is compact on $\oM^0$ and composition of a strongly
+convergent sequence of operators with a compact map produces a uniformly convergent
+sequence, conclude that $\|P\Be - P\|_{{\cal L}(\oM^0,\oM^0)}
+\rightarrow 0$. A similar argument shows that  $\|\Be P - P\|_{{\cal L}(\oM^0,\oM^0)}
+\rightarrow 0$. Item 3 follows immediately from item 2.
+\end{proof}
+
+\begin{thm} \label{thm:innerbd} Suppose that $\brea,\bqea$ are families of maps $U \times
+  D \times (0,e_{\rm max}] \mapsto \oM^0$ satisfying
+\begin{eqnarray}
+\label{eqn:priorbd1}
+\|e_{m,\lambda}\|_m & \le & e\\
+\label{eqn:priorbd2}
+\|e_{q,\lambda}\|_m &\le& e 
+\end{eqnarray}
+where
+\begin{eqnarray}
+\label{eqn:mres}
+e_{m,\lambda} & = & \Ne[m]\brea[m,d,e]-\odF[m]\de,\\
+\label{eqn:qres}
+e_{q,\lambda} & = & \Ne[m]\bqea[m,d,e]-A^TA\brea[m,d,e] 
+\end{eqnarray}
+Then there exist $K_1,K_2 > 0$ and an increasing function $\epsilon: \bR^+
+\rightarrow (0,e_{\rm max}]$ for which $\lim_{\lambda \rightarrow 0}
+\epsilon(\lambda)=0$ and
+\begin{eqnarray}
+\label{eqn:postbd1}
+\|\brea[m,d,e] -\bre[m,d]\|_m & \le & K_1e + \frac{K_2}{\lambda^2}
+                                      \|B_{\epsilon(\lambda)}e_{m,\lambda}\|_m\\
+\label{eqn:postbd2}
+\|\bqea[m,d,e] -\bqe[m,d]\|_m & \le & K_1e + \frac{K_2}{\lambda^2}
+\|B_{\epsilon(\lambda)}e_{m,\lambda}\|_m + \frac{K_2}{\lambda^2} \|B_{\epsilon(\lambda)}e_{q,\lambda}\|_m.
+\end{eqnarray}
+\end{thm}
+
+\begin{proof} For convenience, set
+\[
+\dbr = \brea[m,d,e] -\bre[m,d].
+\]
+Then
+\[
+\Ne[m] \dbr = e_{m,\lambda}
+\]
+from which follows the basic estimate ($m$ and $0$ norms equivalent):
+\[
+\|\dbr\|_0 \le \frac{C}{\lambda^2}\| e_{m,\lambda}\|_0.
+\]
+(Here and in the following arguments, $C$ stands for a scalar
+independent of $\lambda$, which may change from expression to
+expression.)
+
+First estimate $\Be \dbr$:
+\[
+\Ne[m] \Be \dbr = \Be e_{m,\lambda} + [S[m],\Be]\dbr
+\]
+From Lemma \ref{lem:moll}, $\|[S[m],\Be]\|_{{\cal L}(\oM^0,\oM^0)} \rightarrow
+  0$. Choose $\epsilon(\lambda)$ so that $\|[S[m],\Be]\|_{{\cal
+      L}(\oM^0,\oM^0)} \le \lambda^2/2$. Then above implies that
+\[
+\|B_{\epsilon(\lambda)} \dbr\| \le \frac{C}{\lambda^2}
+\|B_{\epsilon(\lambda)} e_{m,\lambda}\|
+\]
+Also
+\[
+(I-\Be)\dbr + (I-\Be)S[m](I-\Be)\dbr + (I-\Be)S[m]\Be\dbr =
+(I-\Be)e_{m,\lambda}
+\]
+Also from Lemma \ref{lem:moll}, $\|(I-\Be)S\|_{{\cal L}(\oM^0,\oM^0)} \rightarrow
+  0$. Choose $\epsilon(\lambda)$ if necessary smaller so that $\|(I-\Be)S\|_{{\cal
+      L}(\oM^0,\oM^0)} \le \min(\lambda^2,1/2)$. Then
+\[
+\|(I-B_{\epsilon(\lambda)})\dbr\|_0 \le
+C\|B_{\epsilon(\lambda)} \dbr\|_0 + 2e
+\]
+from which inequality \ref{eqn:postbd1} follows directly.
+
+\end{proof}

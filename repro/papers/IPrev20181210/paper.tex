@@ -1,0 +1,56 @@
+\title{Review of  "Relaxation algorithms for matrix completion, with applications to seismic travel-time data interpolation", by Baraldi et al.}
+\date{}
+\author{}
+
+\righthead{}
+
+\maketitle
+\parskip 12pt
+ 
+
+This paper presents a new algorithm for data completion (rather than interpolation, which I shall argue is inappropriately used in the title) via matrix completion. Rank minimization to fill in missing matrix entries is a well-established technique. The algorithm pressented is novel, so far as I know, and the application is interesting and important. Missing data infill is in a sense the original inverse problem, so the paper is well-suited to Inverse Problems and should find plenty of interested readers.
+
+That said, there are several defects in the presentation that render the paper quite difficult to read. Probably the main defect is that the two major methodological sections are not well-connected. A related issue is that several details, critically important to any attempt at reproducing the authors' results, are omitted or insufficiently described. I will give a quick overview of the paper's main sections, identifying as I go the matters that seem to me to need further attention.
+
+Section 2 gives an overview of matrix completion, introducing a few ideas particular to the intended application. After introducing nuclear norm regularization, the authors assert that a smoothness constraint is also appropriate for seismic travel-time data, leading to a ``Morozov'' regularization with an objecctive that linearly combines the nuclear norm and the L2 norm of the Laplacian. Then the nuclear norm, uncomputable for large problems, is replaced with a computable bound via matrix factorization, with low-rank factors. Nothing is said at this point about how this rank ($k$ in their notation) is selected, though that choice appears likely to be a critical factor in the performance of the algorithm to follow. One finds out only at the beginning of Section 5 that $k$ has been set $=40$, without guidance given for how this choice is made. 
+
+Section 3 introduces a slack variable $W$ and relaxes the formulation further (equation (9)), introducing yet another penalty weight $\eta$. A block coordinate descent algorithm is introduced to minimize this objective. The critical step 6 is solved via a root-finding algorithm, indeed a variant of the familiar root-finding approach to solving the secular equation occuring in the trust region subproblem. This step involves a SPD matrix solve, implemented via Cholesky decomposition
+
+So far, so good. However the very next sentence brings up the first major disconnect (p. 6, just before section 3.1): ``This system only changes when $\eta$ is updated.''. This is a critical point - the expense of step 6 appears to be the major cost of Algorithm 1, in which $\eta$ is merely a parameter. The listing includes no rule for updating $\eta$, despite the critical role played by this parameter. Eventually, in the discussion around the first set of experiments in Section 5,  p. 11, a rule for updating $\eta$ is mentioned, without justification or complete description (what is the ``pre-interpolated matrix''? why every 30 iterations, rather than every 10 or 10$^{30}$?).
+
+Section 3 concludes by pointing out that both FISTA and LBFGS can be used to solve variants of the minimization formulated there. Algorithm 1 will be benchmarked against these standard methods. FISTA gets an algorithm listing, whereas LBFGS does not (approriately!).
+
+Section 4 abruptly changes gear, to discussing the particulars of the iMUSH project. Some of this discussion is simply out of place - it really belongs in the introductory Section 1, particularly the paragraph beginning ``Our goal here is to...''. The reader should not have to wade through eight pages to find the goal of the paper.
+
+A quite disturbing statement follows: ``Approximations or projections of this raw data onto the grid have yielded poor results for all of the aforementioned algorithms.'' I understand this statement to mean that the algorithms described in section 3 have been attempted with field data, involving necessarily some sort of interpolation from gridded (synthetic) receiver locations to actual field coordinates, and the results found wanting. This is surprising, for two reasons. First, it calls into question the interest of the entire enterprise: if low rank and smoothness cannot be used to estimate gridded times that interpolate onto field stations with something like the believed accuracy of the field picks, then why bother? Second, it appears to contradict the statement about smoothness at the beginning of subsection 2.3: if the time fields are indeed smooth as functions of receiver coordinates, then accurate interpolation should be possible.
+
+I really don't think the authors should leave this tension unresolved. The full-blown problem with field data need not be tackled, but the interest of the synthetic problem constructed here is minimal without a roadmap to dealing with the qualities of the actual data.
+
+Finally, the word ``interpolation'' in the title should really be replaced, perhaps by ``completion'', since the problem solved does not include the interpolation to arbitrary sensor locations.
+
+There follows a description of the time residuals from a 1D model - these residuals form the actual data to be in-filled - and the ``matricization'' (unfolding of the 3D survey receiver grid into a matrix) of this data. The description is rendered unnecessarily confusing by the consistent use of source coordinate pairs $(S_{x_i},S_{y_i}): i=1,...,n_s$, which actually play no role whatsoever in the formulation of the algorithm - the sources could as well have been teleseismic, in the form of approximate plane waves. In any case their geometry is irrelevant, but it takes a bit of reading to see this. A revised description would be welcome - just get rid of the S's and keep the R's and keep the indices.
+
+What does play a role is the matricization of the sources, and the receiver set for each source - natural if, as in this synthetic setup, they each form a rectangular grid. The first matricization is what might be called organization into receiver gathers, in another branch of seismology; the second simply blows up each source indes {\em pair} into a $20 \times 20$ submatrix. Both of these have a natural description if you parametrize the time picks as 4-tensors $T_{ijkl}$, where $i,j$ are the receiver indices and $k,l$ are the source indices.
+
+Another puzzling assertiion appears at the end of p. 10: ``The ideal situation is for the subsampled data to have high rank ...''. Why? In what sense is this ideal? The following assertion, ``Then it is feasible...'' is no help: That the full (i.e. completed) data should be ``low rank'' is the core hypothesis of this approach to travel-time data in-fill, as was revealed in the introduction. Why it should be important that the subsampled data havae full rank is not obvious at all, at least to this reviewer, and no reason is given.
+
+Even more puzzling is the organization of sources by energy, mentioned (but not explained) on p. 11. The data here is travel-time picks, not seismic traces. What can possibly be means by source energy in this connection? The concept disappears without a trace after the first half of p. 11, but it should either be left out or explained.
+
+An overall critique of Sections 2-4 is that they are notationally incoherent, and this incoherence is responsible for the much of the difficulty this reader experienced. The matrix $X$ is described verbally in its two formulations, on p. 10 - but why not state the relation explicitly, namely
+\[
+X_{20i+j,20k+l} = T_{ijkl}
+\]
+in the parametrization I have suggested for formulation 1,
+\[
+X_{i+20k,j+20l}= T_{ijkl}
+\]
+for formulation 2. Such an explicit mathematical relation must be part of an actual implemention - why leave it out, and thereby leave the reader uncertain?
+
+Again, the only thing we find out about the subsampling operator ${\cal A}$ is that it outputs a (randomly selected?) 15\% of the time picks. A bit more precision would be appreciated, and re-use of the notation from section 2 would be helpful in connecting the discussion there with the applicaiton.
+
+Section 5 presents the results of several numerical experiments, testing the ability of Algorithm 1 to recover gridded data from a sub-sampling, the relative importance of smoothness and low rank constraints, and the relative performance of Algorithm 1, Algorithm 2 (FISTA), and LBFGS. The presentation seems clear and readable to me.
+
+The only comment I have on the results section is on the relative importance of the low rank constraint. Its use is central to the entire approach, but it is not obvious to me that mere Tihonov regularization with the Laplacian constraint would not reconsitute the missing data equally well - the results presented seem to support that notion.
+
+In summary, I find the methodology of the paper to be interesting, novel, and likely useful to a substantial number of IP readers. However the presentation could use quite a bit of modification, to ease the reader's burden and to completly specify the algorithm which is the main content of the paper.
+

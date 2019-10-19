@@ -1,0 +1,46 @@
+from rsf.tex import *
+
+Paper('response',
+      lclass='georeport',
+      options='notimes',
+      use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,float,wasysym,setspace,bm',
+      include=r'''
+      \newcommand{\be}{\begin{eqnarray}}
+      \newcommand{\ee}{\end{eqnarray}}
+      \newcommand{\oF}{\bar{F}}
+      \newcommand{\oS}{\bar{S}}
+      '''
+      )
+
+End(
+options='manuscript,revised',
+
+lclass='geophysics',
+
+use='amsmath,setspace,wasysym,graphicx,float,subfig,algorithm,algpseudocode,color,amssymb,mdframed,framed,listings,courier,xcolor,amsthm,soul',
+
+include=r'''
+\def\red#1{\textcolor{red}{#1}}
+\newcommand{\code}[1]{\begin{singlespace}\begin{flushleft}\begin{framed}\texttt{#1}\end{framed}\end{flushleft}\end{singlespace}}
+\newcommand{\mat}[2] [rrrrrrrrrrrrr]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\newcommand{\vet}[2] [c]{ \left[ \begin{array}{#1} #2\\ \end{array}\right] }
+\def\Eq#1{Equation~(\ref{eq:#1})}
+\def\eq#1{Eq.~\hspace{-4pt}(\ref{eq:#1})}
+\newcommand{\eval}[2]{\biggr|_{#1}^{#2}}
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\everymath{\displaystyle}
+\newtheorem{theorem}{Theorem}
+
+''',
+color='ALL'
+)
+
+
+
+
+

@@ -1,0 +1,619 @@
+\title{Waveform Inversion via Blended Source Extension}
+\author{William. W. Symes \thanks{The Rice Inversion Project,
+Department of Computational and Applied Mathematics, Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+
+\lefthead{Symes}
+
+\righthead{Blended Source Approximate Inverse}
+
+\maketitle
+\begin{abstract}
+Define the blended source extension, introduce annihilator, waveform inversion based on it
+and variable projection.
+Explain how approximate inverse via energy decay  provides a
+substitute for the $\Psi$DO property of the normal operator for smooth
+medium transmission problems.
+\end{abstract}
+\section{Introduction}
+\section{Acoustics - sketch}
+Acoustic system with pressure source:
+\begin{eqnarray}
+\label{eqn:awe}
+\gamma \frac{\partial p}{\partial t} & = & - \nabla \cdot \bv +
+F, \nonumber \\
+\rho \frac{\partial \bv}{\partial t} & = & - \nabla p + {\bf G},\nonumber \\
+p & =& p_0 \mbox{ for } t= t_0\nonumber\\ 
+\bv & = & \bv_0 \mbox{ for } t= t_0 
+\end{eqnarray}
+
+$\Omega$  is a smoothly bounded open set in $\bR^d$. Denote by
+$T^{\rm int}_{\Omega}$ and $T^{\rm ext}_{\Omega}$ the traces on $\partial
+\Omega$ from interior and exterior of $\Omega$, and use the same notation
+for functions of time. These maps are a priori defined with domains
+$C^{\infty}_0(\Omega \times \bR)$ and $C^{\infty}_0((\bR^d\setminus
+\Omega) \times \bR)$ and ranges $C^{\infty}_0(\partial \Omega \times \bR)$.
+
+For the moment, assume that $p_0=0, \bv_0=0$. This restriction will be
+removed later. The initial system can then be re-stated as
+\begin{eqnarray}
+\label{eqn:ichom}
+\gamma \frac{\partial p}{\partial t} & = & - \nabla \cdot \bv +
+F, \nonumber \\
+\rho \frac{\partial \bv}{\partial t} & = & - \nabla p + {\bf G},\nonumber \\
+p & = & 0, t < 0\\
+\bv & = & 0, t < 0 
+\end{eqnarray}
+
+The system \ref{eqn:ichom} takes the form described in
+\cite{BlazekStolkSymes:13}, with $P(\nabla) (p,\bv) = (-\nabla p,
+-\nabla \cdot \bv)$ (use $P(\nabla)$ here rather than $p(\nabla)$ as
+in \cite{BlazekStolkSymes:13} to avoid conflict with the notation for
+the pressure field. As shown in Appendix A of
+\cite{BlazekStolkSymes:13}, $P(\nabla)$ is densely defined and skew adjoint  on $L^2(\Omega)^{d+1}$ with domain
+$H^1_0(\Omega) \times H^1_{\rm div}(\Omega)$. Therefore
+Theorem 1 of  \cite{BlazekStolkSymes:13} applies to the system
+\ref{eqn:ichom}: if $(F, {\bf G}) \in H^1_{\rm loc}(\bR,(L^2(\Omega))^{d+1})$
+and $= 0$ for $t<0$, then there exists a unique strong solution
+$(p,\bv) \in C^1(\bR,(L^2(\Omega))^{d+1}) \cap C^0(\bR,  H^1_0(\Omega) 
+\times H^1_{\rm div}(\Omega))$.
+
+The same reasoning applies to the exterior domain $\bR \times (\bR^d
+\setminus \Omega)$, to yield a unique strong solution with similar conditions.
+
+The trace operators $\Ti$ and $\Te$ extend to domains $C^k(\bR,
+H^1(\Omega))$ and $C^k(\bR,H^1_{\rm loc}(\bR,\bR^d \setminus
+\Omega))$
+and range $C^k(\bR,L^2(\partial \Omega))$, $k \ge 0$, per the standard trace
+theorem for Sobolev spaces. Define the interior (exterior) Dirichlet
+problem for $d \in C^0(\bR,L^2(\partial \Omega))$ by
+ 
+\begin{thm}
+  Suppose that
+  $d \in H^1([0,T], H^1(\partial \Omega)) \cap H^2([0,T],L^2(\partial
+  \Omega))$. Then there exist unique 
+$(\ip,\ibv) \in C^1(\bR,(L^2(\Omega))^{d+1}) \cap C^0(\bR,  H^1(\Omega) 
+\times H^1_{\rm div}(\Omega))$.
+for which
+\begin{eqnarray}
+\label{eqn:iawebv}
+\gamma \frac{\partial \ip}{\partial t} & = & - \nabla \cdot \ibv, \nonumber \\
+\rho \frac{\partial \ibv}{\partial t} & = & - \nabla \ip,\nonumber \\
+\Ti \ip & = & d \\
+\ip & = & 0, t < 0\\
+\ibv & = & 0, t < 0.
+\end{eqnarray}
+Also, there extst unique 
+$(\ep,\ebv) \in C^1(\bR,(L^2(\bR^d \setminus \Omega))^{d+1}) \cap C^0(\bR,  H^1(\bR^d \setminus \Omega) 
+\times H^1_{\rm div}(\bR^d \setminus \Omega))$.
+for which
+\begin{eqnarray}
+\label{eqn:eawebv}
+\gamma \frac{\partial \ep}{\partial t} & = & - \nabla \cdot \ebv, \nonumber \\
+\rho \frac{\partial \ebv}{\partial t} & = & - \nabla \ep,\nonumber \\
+\Te \ep & = & d \\
+\ep & = & 0, t < 0\\
+\ebv & = & 0, t < 0.
+\end{eqnarray}
+\end{thm}
+\begin{proof}
+Since $\Omega$ is precompact, it is possible to construct a collar
+neigborhood of $\partial \Omega$ in which a finite number of local
+coordinate systems may be defined, covering $\partial \Omega$. Using
+these coordinate systems, it is possible to construct an extension of 
+$d \in H^2_{\rm loc}(\bR,L^2_0(\bR^d)) \cap
+H^1_{\rm loc}(\bR,H^1_0(\bR^d))$. For this extension,
+\[
+\gamma\frac{\partial d}{\partial t} \in H^1_{\rm
+  loc}(\bR,L^2_0(\bR^d)), \,
+\nabla d \in H^1_{\rm
+  loc}(\bR,L^2_0(\bR^d))^d
+\]
+Define $\ip_1, \ibv_1$ to be the strong solutions of the system
+\ref{eqn:ichom} in $\bR \times \Omega$, respectively $\bR \times \bR^d
+\setminus \Omega$, with 
+\[
+F = -\gamma\frac{\partial d}{\partial t}, {\bf G} = -\nabla d.
+\]
+Then $\ip = \ip_1 + d, \ibv = \ibv_1$ is the unique strong solution of
+system \ref{eqn:iawebv}, $\ep = \ep_1 + d, \ebv = \ebv_1$ the unique
+strong solution of system \ref{eqn:eawebv}.
+\end{proof}
+
+Note that
+\begin{equation}
+\label{eqn:trace}
+T^{\rm  int}\ip = T^{\rm ext}\ep = d.
+\end{equation}
+ 
+Denote by $\bn$ the outward unit normal on $\partial \Omega$. note
+that $\bn \cdot \Ti$ extends continuously to  $C^0(\bR,H_{\rm
+  div}(\Omega))$. Similarly,
+$\bn \cdot \Te$ extends continuously to $C^0(\bR, H_{\rm div}(\bR^d \setminus \Omega))$.
+Therefore Theorem 2 implies that if $d \in H^1([0,T], H^1(\partial \Omega)) \cap H^2([0,T],L^2(\partial
+  \Omega))$
+\begin{equation}
+\label{eqn:dton}
+D[\kappa,\rho]d =[v_n] = \Te \ebv - \Ti \ibv)
+\end{equation}
+is well defined.
+
+\begin{thm}
+Suppose that $d \in H^1([0,T], H^1(\partial \Omega)) \cap H^2([0,T],L^2(\partial
+  \Omega))$, and denote by $(\ip,\ibv)$ and $(\ep,\ebv)$ solutions of
+  \ref{eqn:iawebv} and \ref{eqn:eawebv} respectively. Define 
+\begin{equation}
+\label{eqn:both}
+(p,\bv)= \left\{
+\begin{array}{c}
+(\ip,\ibv) \mbox{ in } \Omega \times [0,T]\\
+(\ep,\ebv) \mbox{ in } (\bR^d \setminus \Omega) \times [0,T] 
+\end{array}
+\right.
+\end{equation}
+Then $(p,\bv)$ is a weak solution of 
+\begin{eqnarray}
+\label{eqn:awe1}
+\gamma \frac{\partial p}{\partial t} & = & - \nabla \cdot \bv +
+D[\kappa,\rho]d \delta_{\partial \Omega}, \nonumber \\
+\rho \frac{\partial \bv}{\partial t} & = & - \nabla p,\nonumber \\
+p & =& 0 \mbox{ for } t= 0\nonumber\\ 
+\bv & = & 0 \mbox{ for } t= 0
+\end{eqnarray}
+\end{thm}
+
+\begin{proof}: (sketch) choose smooth test functions $\phi, {\bf \psi}$ vanishing for $t=T$. Then
+\[
+\int_{\Omega \times [0,T]}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv
+\]
+\[
+= - \int_{\Omega \times [0,T]}\left (\gamma \frac{\partial p}{\partial t} +
+\nabla \cdot \bv\right) \phi + \left(\rho\frac{\partial \bv}{\partial t}
+  + \nabla p\right) \cdot {\bf \psi}
+\]
+\begin{equation}
+\label{eqn:rhs1}
++ \int_{\partial \Omega \times [0,T]} \bn \cdot {\bf \psi} \ip + \bn
+  \cdot \ibv \phi
+\end{equation}
+Similarly,
+\[
+\int_{(\bR^d\setminus \Omega) \times [0,T]}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv
+\]
+\[
+= - \int_{(\bR^d \setminus\Omega) \times [0,T]}\left (\gamma \frac{\partial p}{\partial t} +
+\nabla \cdot \bv\right) \phi + \left(\rho\frac{\partial \bv}{\partial t}
+  + \nabla p\right) \cdot {\bf \psi}
+\]
+\begin{equation}
+\label{eqn:rhs2}
+- \int_{\partial \Omega \times [0,T]} \bn \cdot {\bf \psi} \ep + \bn
+  \cdot \ebv \phi
+\end{equation}
+Adding equations \ref{eqn:rhs1} and \ref{eqn:rhs2} and taking into
+account that $\ip$ and $\ep$ coincide (by construction) on $\partial
+\Omega \times [0,T]$, obtain
+\[
+\int_{(\bR^d \times [0,T]}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv
+\]
+\[
+= \int_{\partial \Omega \times [0,T]} (\bn \cdot \ibv -  \bn
+  \cdot \ebv) \phi
+\]
+$\phi$ and ${\bf \psi}$ being arbitrary, other than vanishing at $t=T$,
+\end{proof}
+
+Conversely,
+\begin{thm}: Suppose $f \in  H^2([0,T],L^2(\partial \Omega)) \cap
+  H^1([0,T],H^1(\partial \Omega))$, and $(p,\bv)$ is a weak solution of
+\begin{eqnarray}
+\label{eqn:awe2}
+\gamma \frac{\partial p}{\partial t} & = & - \nabla \cdot \bv +
+f \delta_{\partial \Omega}, \nonumber \\
+\rho \frac{\partial \bv}{\partial t} & = & - \nabla p,\nonumber \\
+p & =& 0 \mbox{ for } t= 0\nonumber\\ 
+\bv & = & 0 \mbox{ for } t= 0
+\end{eqnarray}
+Then $T^{\rm ext}_{\Omega} p = T^{\rm int}_{\Omega}p$.
+% and $f =
+%D[\kappa,\rho]T^{\rm int}_{\Omega}p$.
+\end{thm}
+
+\begin{proof}: (sketch) Choosing test functions $\phi,\psi$ as before, the
+system \ref{eqn:awe2} means that
+\[
+\int_{(\bR^d \times [0,T]}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv
+\]
+\[
+= \int_{\partial \Omega \times [0,T]} \phi f
+\]
+Extend $\bn$ to a collar neighborhood of $\partial \Omega$ and choose
+smooth $\chi$ supported in that neighborhood and $=1$ on $\partial
+\Omega$. Also extend $f$ so that it remains in the same class. Set
+\[
+\bw = \chi f \bn \left({\bf 1}_{\Omega} - \frac{1}{2}\right)
+\]
+\[
+\int (\nabla \cdot \bw)  \phi = \int_{\Omega \times [0,T]}(...) + \int_{(\bR^d
+  \setminus \Omega) \times [0,T]}(...) 
+\]
+\[
+= \int_{\partial \Omega \times [0,T]} \bn \cdot (\chi f \bn) \phi
+\]
+\[
+= \int_{\partial \Omega \times [0,T]} f  \phi
+\]
+That is,
+\[
+ \nabla \cdot \bw = f \delta_{\partial \Omega \times [0,T]}
+\]
+Then $(p,\bv-\bw))$ is a weak solution of 
+\begin{eqnarray}
+\label{eqn:awe12}
+\gamma \frac{\partial p}{\partial t} & = & - \nabla \cdot \bv \nonumber \\
+\rho \frac{\partial (\bv-\bw)}{\partial t} & = & -\rho \frac{\partial\bw}{\partial t} - \nabla p,\nonumber \\
+p & =& 0 \mbox{ for } t= 0\nonumber\\ 
+\bv & = & 0 \mbox{ for } t= 0
+\end{eqnarray}
+The RHS of the second equation in the system \ref{eqn:awe12} is of class $H^1([0,T],L^2(\bR^d))$ so Theorem 1 in
+\cite{BlazekStolkSymes:13} implies that $(p, \bv-\bw)$ is a strong
+solution of system \ref{eqn:awe12}, in particular that $p \in C^0([0,T],H^1(\bR^d))$,
+whence the assertion about continuity at the boundary follows from the
+trace theorem.
+
+The remaining statement now follows from the previous theorem.
+\end{proof}
+
+\section{Ins and Outs}
+Assume that $\kappa, \rho$ are of class $C^{\infty}$ in a neighborhood
+of $\partial \Omega$. 
+
+Denote by $P(\bx,\omega,\bk)$ symbol of the acoustic system,
+\[
+P(\bx,\Omega,\bk) = 
+i\left(
+\begin{array}{cc}
+\gamma(\bx)i\omega & \bk^T\\
+\bk &  \rho(\bx)\omega I_{3\times3}
+\end{array}
+\right)
+\]
+Determinant is zero iff $\omega=0$ or $\omega^2 = c^2|\bk|^2$.
+At a point $\bx$ on $\partial \Omega$, write $\bk = \bk^{\perp} +
+k_n\bn$. The characteristic eqn has two solutions for $k_n$, namely
+\[
+k_n = \pm \sqrt{\frac{\omega^2}{c^2}-|\bk^{\perp}|^2}
+\]
+and correspondingly, the normal component of $\bv$ satisfies
+\[
+\rho v_n = \bn \cdot \bv = \int \bn \cdot \nabla p
+\]
+or in the Fourier domain 
+\[
+c \rho v_n = \frac{k_n}{\omega} p = \pm
+\sqrt{1-\frac{c^2|\bk^{\perp}|^2}{\omega^2}}p
+\]
+Define $V$ to be the $\Psi$DO on $\partial \Omega \times \bR$ with symbol
+\[
+V(\bx,\bk^{\perp})=\frac{1}{c\rho}\sqrt{1-\frac{c^2|\bk^{\perp}|^2}{\omega^2}}
+\]
+Then if $(p,\bv)$ is incoming/outgoing, $T^{\rm int}v_n = \pm VT^{\rm int}p$ 
+The incoming/outgoing subspace corresponds to $\pm$.
+Note that if $(p, \bv^{\perp} + v_n\bn)$ is incoming, then $(p,
+\bv^{\perp} - v_n\bn)$ is outgoing, and vis-versa. 
+
+Projections onto Incoming/outgoing data: $P_{\pm}$. Data is outgoing,
+source incoming. So to extract data from overlapping signal with 
+source, apply $P_-$. Then solution backwards in time has source field 
+as its incoming component. 
+
+Decomposition of $(p,v_n)$: 
+\[
+(p,v_n) = (p_+, Vp_+) + (p_-,-Vp_-) = (p_++p_-, V(p_+-p_-)) \Rightarrow
+\]
+\[
+(p,V^{-1}v_n) = (p_++p_-,p_+-p_-)
+\]
+\[
+p_+ = \frac{1}{2}(p + V^{-1}v_n), p_-=\frac{1}{2}(p-V^{-1}v_n)
+\]
+\[
+P_{\pm}(p,v_n) = \left( \frac{1}{2}(p \pm V^{-1}v_n),  \frac{1}{2}(Vp \pm
+  v_n)\right)
+\]
+
+Ray theory assumption about exterior: all rays leaving $\partial
+\Omega$ keep going, never to return. Then the outer solution
+$(\ep,\ebv)$ defined in Theorem 1 is purely outgoing, i.e. 
+\[
+P_-T^{\rm ext}(\ep,\ebv) = T^{\rm ext}(\ep,\ebv), \,P_+T^{\rm ext}(\ep,\ebv) = 0
+\]
+hence
+\[
+v_n^{\rm ext} = -Vp 
+\]
+and
+\begin{equation}
+\label{eqn:did}
+D[\kappa,\rho]p = v_n^{\rm int}-v_n^{\rm ext} = v_n^{\rm int}+Vp =
+2 P_+(p,v^{\rm int}_n)_2
+\end{equation}
+that is, $D[\kappa,\rho]p$ is the normal v-component of the incoming projection of the
+solution of system \ref{eqn:awe2}.
+[Since $\ip=\ep$ on boundary, and initial conditions are same, follows
+that the tangential components of $\ibv, \ebv$ are the same.]
+
+Equation \ref{eqn:did} relates $D[\kappa,\rho]$ to the $\Psi$DO
+$V$. Note however that in general it is not a $\Psi$DO itself, unless
+$v_n=Vp$, that is, unless the entire field $(p,\bv)$ is incoming at
+the boundary. This occurs under certain circumstances, but in general
+both components must be computed, and the relation between $p$ and
+$D[\kappa,\rho]p$ is global.
+
+1D example. 
+ 
+\section{Linear Inverse Problem}
+%Problem: Given uniformly positive, bounded, and measureable $\kappa,\rho$ and
+%$d \in H^2([0,T],L^2(\partial \Omega)) \cap  H^1([0,T],H^1(\partial
+%\Omega))$, find $f \in H^2([0,T],L^2(\partial \Omega)) \cap
+% H^1([0,T],H^1(\partial \Omega))$ so that the solution $(p,\bv)$ of 
+%the system \ref{eqn:awe2} satisfies $d = T^{\rm int} p$.
+
+Suppose that $(p,\bv)$ is the solution of \ref{eqn:awe2} as described
+in Theorem 2, and define 
+\[
+S[\kappa,\rho] f = T^{\rm int}p^{\rm int}.
+\]
+By standard uniqueness thm, if you record final data at
+$t=T$, say $p_T(\bx)=p(\bx,T), \bv_T(\bx)=\bv(\bx,T)$ for $\bx \in
+\Omega$, and $d = T^{\rm int}p$, then $(p,\bv)=(p_r,\bv_r)$, the
+solution of the time-reversed problem
+\begin{eqnarray}
+\label{eqn:awer}
+\gamma \frac{\partial p_r}{\partial t} & = & - \nabla \cdot \bv_r \nonumber \\
+\rho \frac{\partial \bv_r}{\partial t} & = & - \nabla p_r \nonumber \\
+p_r & =& p_T \mbox{ for } t= T\nonumber\\ 
+\bv_r & = & \bv_T \mbox{ for } t= T \\
+p_r & = & d \mbox{ on } \partial \Omega \times [0,T]
+\end{eqnarray}
+In general, suppose $d$ is given on $\partial \Omega \times [0,T]$,
+and define
+\[
+S[\kappa,\rho]^{\dagger}d = v_{r,n} + Vp_r.
+\]
+If specifically $d = S[\kappa,\rho]f$, then the last section together
+with Theorem 2 implies that
+\begin{equation}
+\label{eqn:idealinv}
+S[\kappa,\rho]^{\dagger}S[\kappa,\rho] = I
+\end{equation}
+
+Implicitly, $S[\kappa,\rho]^{\dagger}$ depends on the final data
+$(p_T,\bv_T)$. Suppose that local energy decays: 
+
+\noindent {\bf Local Decay Assumption:} There exist $C, \alpha > 0$ so
+that the solution of system \ref{eqn:awe} with $F = {\bf G} = 0$
+satisfies
+\[
+E(T) \le Ce^{-\alpha T} E(0),
+\]
+where $E$ is the acoustic strain energy:in $\Omega$:
+\[
+E(t) = \frac{1}{2}\int_{\Omega} dx \left(\rho |\bv(\bx,t)|^2 +
+  \frac{1}{\kappa} p(\bx,t)^2\right).
+\]
+In that case, for any $\epsilon > 0$ there is $T>0$ so that $E(T) <
+\epsilon \sup_{0 \le t \le T}E(t)$. Define $(p_a,\bv_a)$ to be the
+solution of
+\begin{eqnarray}
+\label{eqn:awer}
+\gamma \frac{\partial p_a}{\partial t} & = & - \nabla \cdot \bv_a \nonumber \\
+\rho \frac{\partial \bv_a}{\partial t} & = & - \nabla p_a \nonumber \\
+p_a & =& 0 \mbox{ for } t= T\nonumber\\ 
+\bv_a & = & 0 \mbox{ for } t= T \\
+p_a & = & d \mbox{ on } \partial \Omega \times [0,T]
+\end{eqnarray}
+$(p_a-p_r,\bv_a-\bv_r)$ satisfies a similar system with zero Dirichlet
+data. Since the energy in the final data is small, it follows that the
+predicted Neumann data is small. NOTE this requires a collar
+neighborhood with smooth coefficients and microlocal restrictions on
+the sources, so that restriction to the boundary acts like order zero op.
+
+(then relation with adjoint: $S^{\dagger} = S^TW$)
+
+
+Slightly less trivially, suppose that the boundary $\partial \Omega
+\times [0,T]$ is divided into two subdomains, $\Gamma$ and its
+complement $\Gamma'$, and $d$ is given only on $\Gamma$.
+
+\section{Gradient}
+\[
+J[\kappa] = \frac{1}{2}\|AS[\kappa]^{\dagger}d\|^2=\frac{1}{2}\|AS[\kappa]^TWd\|^2
+\]
+Note that if $\kappa$ is not varied near wells then W is independent
+of constant.
+\[
+DJ[\kappa]\delta \kappa= = \langle(DS[\kappa]\delta \kappa)^T Wd, A^TA 
+S[\kappa]^TWd\rangle
+\]
+\begin{equation}
+\label{eqn:deriv}
+=\langle( Wd, DS[\kappa]\delta \kappa) A^TA S[\kappa]^TWd\rangle
+\end{equation}
+\begin{equation}
+\label{eqn:grad}
+=\langle DS[\kappa]^*(Wd,A^TAS[\kappa]^TWd\rangle_{\rm model}
+\end{equation}
+Here $DS[\kappa]^*(Wd,A^TAS[\kappa]^TWd)$ is the reverse time
+migration of $Wd$ with source field $A^TA S[\kappa]^TWd$. The model
+inner produce may incorporate a weight (usually should, eg. power of
+the Laplacian, in which case its inverse postmultiplies the Gradient.
+
+\section{Hessian}
+Differentiating equation \ref{eqn:deriv} again,
+\[
+D^2J[\kappa](\delta \kappa_1,\delta \kappa_2)
+= \langle( Wd, D^2S[\kappa](\delta \kappa_1,\delta \kappa_2) A^TA
+S[\kappa]^TWd\rangle
+\]
+\[
++ \langle( Wd, DS[\kappa](\delta \kappa_1) A^TA DS[\kappa](\delta 
+\kappa_2)^TWd\rangle. 
+\]
+Now suppose that $d = S[\kappa]f$ with physical $f$, that is
+$Af=0$. Thus $AS[\kappa]^TWd \approx 0$ and the Hessian is
+\begin{equation}
+\label{eqn:hess1}
++ \langle A(DS[\kappa](\delta \kappa_1))^T Wd, A (DS[\kappa](\delta 
+\kappa_2))^TWd\rangle. 
+\end{equation}
+
+ Also suppose that the factorization lemma holds:
+\begin{equation}
+\label{eqn:fact}
+DS[\kappa]\delta \kappa \approx S[\kappa]Q[\kappa,\delta \kappa]
+\end{equation}
+with $Q$ an essentiall skew-adjoint $\Psi$DO of order 1.
+
+Remark. It may not be necessary to assume this much: setting 
+$Q = S^{\dagger}DS$ may do. That even works when geometric optics is
+not valid. Need to better understand structure.
+
+Then as noted elsewhere
+\begin{equation}
+\label{eqn:hess2}
+D^2J[\kappa](\delta \kappa_1,\delta \kappa_2) 
+\approx \langle [A,Q[\kappa,\delta \kappa_1]]S[\kappa]^TWd,
+[A,Q[\kappa,\delta \kappa_2]]S[\kappa]^TWd\rangle
+\end{equation}
+
+\section{Asymptotics}
+Assume 3D, single arrival. Then with source surface = $\{z=z_s\}$ and
+similarly for receivers,
+\[
+S[\kappa]f(\bx_r,t) = \int dx_sdy_s a(\bx_r,\bx_s)
+f(t-T(\bx_s,\bx_r),\bx_s)
+\]
+\[
+(DS[\kappa]\delta \kappa)f(\bx_r,t) = -\int dx_sdy_s f'(t-T(\bx_s,\bx_r),\bx_s)
+(DT[\kappa]\delta \kappa)(\bx_s,\bx_r)
+\]
+\[
+S[\kappa]^T(DS[\kappa]\delta \kappa)f(\bx_s,t) = -\int dx_r dy_r \int
+dx'_s dy'_s a(\bx_r,\bx_s) a(\bx_r,\bx'_s) f'(t+T(\bx_s,\bx_r) -
+T(\bx_r,\bx'_s)) (DT[\kappa]\delta \kappa)(\bx_s',\bx_r)
+\]
+\[
+=\int dx_r dy_r dx'_s dy'_s d\omega  a(\bx_r,\bx_s) a(\bx_r,\bx'_s) \hat{f}(\omega)e^{i\omega(t +T(\bx_s,\bx_r) -T(\bx_r,\bx'_s))}
+\]
+Inner ($\bx_r$) integral, stationary phase (for 3D, so integral is
+over $x_r,y_r$:
+\[
+\approx
+\sum
+\frac{2\pi}{\omega}|\det\left(\nabla_{\bx_r}\nabla_{\bx_r}(T(\bx_s,\bx_r)-T(\bx_r,\bx_s'))\right)|^{-\frac{1}{2}}
+  e^{i\omega(t +T(\bx_s,\bx_r) -T(\bx_r,\bx'_s))} e^{i\pi\sigma/4}(DT[\kappa]\delta \kappa)(\bx_s',\bx_r)
+\]
+$\sigma$ is the signature of the Hessian - take it to be zero. The sum is over $\bx_r$ satisfying the stationary phase condition
+\[
+\nabla_{\bx_r} T(\bx_s,\bx_r) = \nabla_{\bx_r}T(\bx'_s,\bx_r)
+\]
+which may be interpreted as stating that the ray from $\bx_s$ to
+$\bx_r$ arrives at $\bx_r$ with the same tangential slowness vector as the ray
+from $\bx_s'$ to $\bx_r$. Assuming that all such rays cross the
+surface transversally, and using the eikonal equation to determine the
+$z$ component, conclude that the slowness vectors are the same. Thus
+these must be the same rays, hence $\bx_s$ and $\bx'_s$ must lie on
+the same ray. Assuming that rays cross the source surface only once,
+this implies that $\bx_s=\bx_s'$. 
+\section{General Case}
+Begin with an abstract hyperbolic system of the sort decribed by
+\cite{BlazekStolkSymes:13}, equation (1):
+\begin{equation}
+\label{symmhyp}
+a \frac{\partial u}{\partial t} + p(\nabla) u  = f\mbox{ in } \bR^d \times \bR; \, u = u_0 \mbox{ for } t = 0,
+\end{equation}
+without the lower-order terms considered in that paper. Here $a$ is a
+bounded measurable positive definite symmetric matrix-valued time-independent function, and $p(\nabla)$ is
+a skew-symmetric first order PDO. 
+
+Assume that 
+$f$ is supported in an open domain $\Omega \in \bR^d$, and that $a$ is 
+smooth in a neighborhood of  $\bR^d \setminus \Omega$. 
+
+The key assumption on $a$ is that it has the {\em local energy decay
+  property}: there exist $C, \alpha >0$ so that for any $f \in
+L^2_{\rm comp}(\Omega \times (-\infty,0)), u_0 \in L^2_{\rm comp}(\Omega)$,
+\begin{equation}
+\label{eqn:decay}
+\|u(t)\|_{L^2(\Omega)} \le Ce^{-\alpha t} (\|u_0\|_{L^2(\Omega)} +
+\|f\|_{L^2(\Omega \times \bR)}).
+\end{equation}
+
+D-to-N map: suppose $\Gamma \subset \bR^d$ is a smooth submanifold of
+dimension $d-1$, and define the trace map $S[m]$ as in the discussion
+around Theorem 2 in \cite{BlazekStolkSymes:13}. Let $V$ be the
+subspace as defined there, and assume that $S[m]$ extends to $V$.
+
+
+
+
+\section{Adjoint}
+\begin{equation}
+\label{eqn:dfwd1d}
+\frac{p^{n+1}-p^n}{\kappa\Delta t} = D^T \bv^{n+1/2} + \frac{f^n}{\kappa} \delta_{z_s},\,\frac{\bv^{n+1/2}-\bv^{n-1/2}}{\beta \Delta t} = - Dp^n,\, p^0=0, \bv^{1/2}=\bf{0}
+\end{equation}
+\begin{equation}
+\label{eqn:dadj1d}
+\frac{q^{n+1}-q^n}{\kappa \Delta t} = D^T \bw^{n+1/2} + \frac{g^{n+1}}{\kappa} \delta_{z_r},\,\frac{\bw^{n+1/2}-\bw^{n-1/2}}{\beta \Delta t} = - Dq^n, q^N=0, \bw^{N-1/2}=\bf{0}
+\end{equation}
+\[
+\sum^N_{n=1} \frac{\Delta t}{\kappa} p^n g^n|_{z=z_r} = \sum_{\bx,n} dV \frac{\Delta t}{\kappa} p^n g^n \delta_{z_r}
+\]
+\[
+= \sum_{\bx,n} dV \Delta t p^n\left(\frac{q^{n}-q^{n-1}}{\kappa\Delta t} -D^T \bw^{n-1/2}\right)
+\]
+\[
+= \sum_{\bx,n} dV \Delta t \left(\frac{p^{n}-p^{n+1}}{\kappa\Delta t}\right)q^n - D p^n \cdot \bw^{n-1/2}
+\]
+\[
+= \sum_{\bx,n} dV \Delta t \left(-D^T\bv^{n+1/2} - \frac{f^n}{\kappa}\delta_{z_s}\right)q^n + \frac{\bv^{n+1/2}-\bv^{n-1/2}}{\beta \Delta t}\bw^{n-1/2}
+\]
+\[
+=-\sum_{\bx,n} dV \frac{\Delta t}{\kappa} f^nq^n \delta_{z_s} 
+-\bv^{n+1/2} \cdot \left(D q^n - \frac{\bw^{n-1/2}-\bw^{n+1/2}}{\beta \Delta t} \right) 
+\]
+\[
+=-\sum_{\bx,n} dV \frac{\Delta t}{\kappa} f^nq^n \delta_{z_s} 
+-\bv^{n+1/2}\cdot  \left(D q^n + \frac{\bw^{n+1/2}-\bw^{n-1/2}}{\beta \Delta t} \right) 
+\]
+\begin{equation}
+\label{eqn:adjreln}
+=-\sum^{N-1}_{n=0} \frac{\Delta t}{\kappa} f^nq^n|_{z=z_s}
+\end{equation}
+\begin{equation}
+\label{eqn:opdef}
+S[\kappa,\beta]f = p|_{z=z_r}, \,S[\kappa,\beta]^*g = -q|_{z=z_s}
+\end{equation}
+\begin{equation}
+\label{eqn:ipdef}
+\langle u, v \rangle_{\kappa,z_0} = \sum_{\bx',n} \frac{dV' \Delta t}{\kappa(\bx',z_0)} u(\bx',z_0,n\Delta t) v(\bx',z_0,n\Delta t)
+\end{equation}
+\begin{equation}
+\langle S[\kappa,\beta]f, g \rangle_{\kappa,z_s} = \langle f, S[\kappa,\beta]^*g \rangle_{\kappa,z_r}
+\end{equation}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
