@@ -7,7 +7,7 @@ numerical linear algebra
 
 iwave - framework for timestepping simulators, with RVL hooks
 
-repro - reproducible documents, in form of Madagascar books. Depends
+repro - reproducible documents, in form of Madagascar books and papers. Depends
 on TRIP, Seismic Unix, and Madagascar reproducible documents package,
 which in turn requires a standard installation of TeX. See Madagascar
 documentation for more on this. To build each book, run scons in
@@ -20,7 +20,7 @@ directory.
 
 admin - useful auxiliary scripts, including SConstruct templates and
 configuration files for various common combinations of software and
-platform.
+platform. Also trip module, used in paper/project SConstructs.
 
 2. Installation - code
 
