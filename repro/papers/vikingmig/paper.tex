@@ -1,0 +1,72 @@
+\title{Prestack Imaging: Viking Graben}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\maketitle 
+\parskip 12pt 
+\begin{abstract}
+Uses the output of NMO-based processing as the starting point for prestack imaging of the Viking Graben data using the IWAVE package.
+\end{abstract}
+
+\inputdir{project}
+
+\section{Introduction}
+This paper describes how to use IWAVE to apply prestack RTM to the Viking Graben data. The data and a simple time processing workflow are described in the companion article \cite[]{trip15:vikingbasic}. A copy of the source for this article is included in this book, and should be built first, as this project uses the intermediate data for that project: from the paper directory housing the LaTeX source for this paper ({\tt vikingmig}), execute 
+\begin{itemize}
+\item {\tt cd ../vikingbasis/project}
+\item {\tt scons}
+\end{itemize}
+
+This project uses IWAVE's {\tt acd} command to produce 
+\begin{itemize}
+\item postmigration stacked image,
+\item image volume with shot axis (shot record extension), and 
+\item image volume with subsurface offset (space shift) axis (subsurface offset extension).
+\end{itemize}
+The method is described in the \cite[]{SymesIWEXT:15}.
+
+\section{Prestack RTM with IWAVE}
+IWAVE modeling, migration, and inversion commands requires as input:
+\begin{itemize}
+\item data, in SU native format (XDR is still allowed, but because of SU's design must be compiled in, and I don't recommend it)
+\item model, as specific physical fields and in specific units. For constant density acoustics, the primary physical field is velocity-squared, and the unit is m/ms (squared). 
+\item source, in the form of the right-hand side of the wave equation. 
+\end{itemize}
+The self-doc for IWAVE's constant density acoustics ({\tt acd}) modeling and migration command includes these points and also reviews the other required and optional parameters.
+
+The data requires no special preparation, other than what has already been done for the post-stack processing. The downfiltered (5-10-30-40 Hz bandpass) data is used, in order to keep numerical dispersion under control: 30 Hz at 1500 m/s (the lowest modeled velocity) is equivalent to 50 m spatial wavelength, or 5 grid cells at 10 m sampling. Thus the spectral roll-off is at 5 gridpoints/wavelength, at least vertically. In order to keep this demonstration example small, and avoid having to extend the velocity grid to eliminate boundary reflections, {\tt acd} currently having no usable absorbing boundary conditions, I chose to migrate only the middle 200 shots ({\tt fldr} = 401-601).
+
+The velocity-squared requires several preparatory steps. The starting point is the interval velocity depth function prepared from NMO velocity analysis, as described earlier (Figure \ref{fig:paravintz}). The SU commands produce a flat binary file, sampling this velocity field at 10 m in depth (that was a somewhat arbitrary choice) starting at and at every CDP, that is, every 12.5 m starting at the first CDP location, 1617.5 m from the horizontal coordinate origin as determined from the headers {\tt sx} and {\tt gx} for cdp 1. While the SU self-docs do not specify the unit of velocity (a frequent failing of self-docs), from the values one can infer m/s. Use the 2D grid parameters to build an RSF header file pointing to the flat binary data produced by SU. Use {\tt sfadd} to scale the velocity $10^{-3}$ thus changing units to m/ms, and {\tt sfadd} again to create a velocity-squared file for input to IWAVE. 
+
+The source data starts with creation of a SU file containing the 5-10-30-40 Hz bandpass filter, converted via the IWAVE {\tt towed\_array} command to a file containing right-hand sides for each of the selected shots.
+
+The IWAVE command itself is embedded in a python dictionary set up to drive parallel execution on various platforms, as described in \cite{SymesIWPAR:15}. 
+
+\noindent {\bf Remark:} Former versions of IWAVE incorporated several of these preparatory steps - conversion between various choices of physical parameters, unit conversions, conversion of a source wavelet to a RHS. The latest version (trip2.1) has these things unbundled: I have learned that the resulting flexibility is worth having. It makes sense to create programs (like {\tt towed\_array} and scripts to carry out conventional preparation steps conveniently, and more of these are needed. The sole exception, I believe, is unit conversion. IWAVE needs to be modified to deal with units automatically and consistently - it's fine, indeed on some level unavoidable, to rigidly choose units internally, however that choice should be transparent to the user. It's really obnoxious to have to remember to convert velocities to m/ms. The C {\tt units} package can serve as a portable basis for automatic conversion during reads and writes - definitely on the TO-DO list!
+
+The result of RTM of shots 401 - 601 is displayed in Figure \ref{fig:mig401-601}. Obviously the migration aperture is limited by the shot window. To make comparison easier, I windowed the depth range to [0,3000] m, and the inline range to [14000, 18000] m. The windowed image is plotted in Figure \ref{fig:mig401-601wind}, alongside the same window of the filtered PSPI image. The locations and characters of the events are very similar, as one would expect. I have AGC'd the RTM result - it is merely a migration, not an inversion, and the amplitudes are in themselves meaningless and highly unequal, with deeper events being quite faint. In lieu of inversion, AGC makes the structural information content manifest.
+
+\section{Prestack Velocity QC: shot record extended migration}
+
+The IWAVE driver {\tt acde} does modeling and migration for shot record and horizontal subsurface offset extensions. Figure \ref{fig:mig401-601extsrwind1} shows the faces of the shot record extended image cube for the data described in the previous section. The right hand panel is the shot record image gather at $x=15750$.
+
+The appearance of this image volume is typical for the shot record extension. The aperture of the individual shot images is quite small, and especially at shallow depths the image is dominated by non-specular energy. In order for the plot energy not to be dominated by this ``noise'' (from the specular reflection point of view), I plot only depths greater than 800 m. The gather is mostly flat, indicating that the velocity is reasonably consistent with the data, though there are hints of possible improvement available, and some mildly sloping events. 
+
+[Another question: we know from the NMO exercise that the {\tt paracdp} data contains visible amounts of residual multiple energy. What is the shot record image gather signature of a multiple, assuming that the migration velocity is consistent with primaries?]
+
+To see more clearly the degree to which this migration has flattened the shot record gathers, I have clipped out and AGC'd signal windows around the four gathers starting at $x=15000$ m, at 500 m intervals. These appear as Figures \ref{fig:cig401-601extsr150}-\ref{fig:cig401-601extsr165} .
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
+\plot{paravintz}{width=0.9\textwidth}{Interval velocity as function of depth, derived from NMO velocity analysis. Probably not to be taken seriously below 3 km - for initial MVA estimate should extend by contant from 3 km and smooth.}
+
+\plot{mig401-601}{width=0.9\textwidth}{RTM image from shots 401-601, using interval velocity displayed in Figure \ref{fig:paravintz}. Compare to poststack migrations displayed in \cite[]{trip15:vikingbasic}. Note limited migration aperture due to limited shot range.}
+
+\plot{mig401-601extsrwind1}{width=0.9\textwidth}{RTM shot record extended output from shots 401-601, using interval velocity displayed in Figure \ref{fig:paravintz}. Right panel is common image gather for $x=15750$ m.}
+
+%\multiplot{4}{cig401-601extsr150,cig401-601extsr155,cig401-601extsr160,cig401-601extsr165}{width=0.24\textwidth}{Shot-record CIGs at $x=$ 15000, 15500, 16000 and 16500 m. With AGC.}
+
+\plot{mig401-601extso}{width=0.9\textwidth}{RTM subsurface offset extended output from shots 401-601, using interval velocity displayed in Figure \ref{fig:paravintz}. Right panel is common image gather for $x=16500$ m.}
+
+

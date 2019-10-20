@@ -1,0 +1,9 @@
+import os
+
+if os.path.exists(os.getenv('CWPROOT')):
+   SConscript(dirs='.',name='SConstruct.hasSU')
+else:
+   print 'This project requires that Seismic Unix be installed'
+   Exit(1)
+   
+   

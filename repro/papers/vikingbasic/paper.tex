@@ -1,0 +1,108 @@
+\title{Basic Imaging: Viking Graben}
+\date{}
+\author{William W. Symes, The Rice Inversion Project}
+
+\maketitle 
+\parskip 12pt 
+\begin{abstract}
+Presents very simple processing sequence resulting in post-stack and prestack migrated images of Viking Graben data.
+\end{abstract}
+
+\inputdir{project}
+
+\section{Introduction}
+The purpose of this paper is to explain how to use simple scripts and public-domain software to create images of the subsurface from reasonably tame 2D seismic reflection data. By ``reasonably tame'', I mean having few amplitude anomalies and mostly primary reflection energy. These conditions pretty much imply high quality shallow water marine data from regions with low structural relief and well-defined dip trends, shot along dip lines, with successful multiple removal applied.
+
+The Viking Graben (or Mobil AVO) data placed in the public domain by Mobil Research in 1994 appears to be reasonably tame, in the sense just described.``Viking Graben'' refers to a 25 km long marine line from the North Sea Norwegian sector. The data released by Mobil included both raw field tape ({\tt tape1093}) and parabolic Radon demultiple ({\tt paracdp}) version of the data, along with two logs of $v_p$, $v_s$, and $\rho$, and a far-field wavelet recording. Data are in SEGY format (IBM 4-byte floats, plus text and binary reel headers).
+
+Robert Keys and Douglas Foster were the organizers of the SEG post-convention workshop at which the initial results of various groups' efforts to invert this data were presented. Besides the workshop report volume \cite[]{FosterKeys:98}, Keys and Foster have recently published a web page on this data:
+\begin{verbatim}
+s3.amazonaws.com/open.source.geoscience/open_data/
+Mobil_Avo_Viking_Graben_Line_12/mobil_avo.html
+\end{verbatim}
+
+This paper discusses so-called standard processing of the Viking Graben data, based on hyperbolic normal moveout (NMO). The connection between inversion and standard processing is covered in detail in my MSRI lecture notes from 2013, available on the TRIP web page, downloadable materials, short course and summer school materials, especially part 2.4. I also show how to transform the by-products of standard processing into suitable input for prestack imaging via RTM.
+
+My workflow is recorded in the {\tt project/SConstruct} file. The reader should refer to this file for the detailed form of the commands used. The following sections outline the rationale for the choice of commands and their sequence. To reproduce my results, the reader will need to install SU, Madagascar, and trip2.1 packages. SU should be version 44 or later. The prestack part of the workflow requires parallel installation of trip2.1, and at least 10 threads of execution, preferably more, to finish in reasonable time. 
+
+\section{Preliminary Steps}
+Extract the data using {\tt Fetch}, from the TRIP data repository. The result is {\tt paracdp.segy}, a SEGY-format file. The SU command {\tt segyread} converts this file to SU format (no reel headers, little-endian 4-byte floats, same number of traces). Besides parabolic radon demultiple, this data was delivered with a rather strict mute applied, with no signal before 1 s. No further mute is applied in the processing sequence described here. 
+
+Evidently there are some bad traces in some of the low-number CDPs, with floating point garbage in some of the samples. On average, random binary digits form numbers many orders of magnitude larger than the $O(10^8)$ samples encountered in ``good'' CDPs. So an adequate strategy is to use {\tt sugain} to reject samples in the 99\%ile, and this command is included in the conversion to SU format.
+
+\section{Extract Analysis CDPs}
+I chose 4 CDPs (Figure \ref{fig:cdp200}, Figure \ref{fig:cdp700}, Figure \ref{fig:cdp1300}, Figure \ref{fig:cdp2000}) roughly evenly spaced, including the end zones, separated by about 8 km. This is a preliminary guess as to the necessary lateral resolution for velocity analysis. It turned out to be reasonable. 
+
+Also, I truncated the traces at 3 s, as the logged zone indicated that only reflection arriving before that time would likely image the exploration targets. This is of course an ex post facto decision, but in fact it becomes clear quickly that most of the energy after perhaps 4 s must be other than primary reflection, either multiples or sideswipe.
+
+\section{Velocity Analysis}
+Create velan panels, one for each CDP: Figure \ref{fig:velan200}, Figure \ref{fig:velan700}, Figure \ref{fig:velan1300}, and Figure \ref{fig:velan2000}. Note that in each case there is a trend of strong bullets or streaks at lower velocities than some nearby higher velocity peaks. The higher velocity peaks are weaker, but pick them anyway. The stronger lower velocity features represent multiple reflections - the suppression of multiple energy notwithstanding. (If you carry out this exercise vvwith the field tapes, you will see nothing but water and near-water velocity features).
+
+To QC your picks, plot the NMO correction of the corresponding CDPs as Figure \ref{fig:nmo200}, Figure \ref{fig:nmo700}, Figure \ref{fig:nmo1300}, and Figure \ref{fig:nmo2000}.
+
+These CDPs are pretty easy to pick from the velocity spectra; however it is instructive to see what might go wrong. For CDP 2000, suppose you were to pick velocities of 1800 m/s at t=1.2, 1.6. and 1.8  s, and 2200 m/s at t=2.1 s - each of these coordinates with a feature on the velocity panel - instead of 1950, 2050, and 2250 m/s at 1.25, 1.6, and 2.25 s, as was done to create Figure \ref{fig:nmo2000}. Then you would generate Figure \ref{fig:nmo2000lo} instead. 
+
+\section{Stack and Post-Stack Migration}
+
+As explained in the short course lectures, the velocity-denominated quantity determined by flattening NMO-corrected CDP gathers is the so-called RMS velocity, or $v_{\rm rms}$, the root mean square of a local wave velocity expressed as a function of vertical travel time $t_0$:
+\begin{equation}
+\label{eqn:vrms}
+v_{\rm rms}^2(t_0)= \frac{2}{t_0}\int_0^{t_0} d\tau \tilde{v}^2(\tau).
+\end{equation}
+Vertical traveltime is related to depth by 
+\begin{equation}
+\label{eqn:zt}
+z=\int_0^{t_0}d\tau\tilde{v}(\tau)
+\end{equation}
+in which $\tilde{v}$ is the local (or {\em interval} wave velocity as a function of $t_0$. Velocity as a function of depth is then given by composing $\tilde{v}$ with the inverse of the tranformation (\ref{eqn:zt}). 
+
+This construction can be carried out for every midpoint. If the subsurface structure is sufficiently laterally homogeneous, then to good approximation the actual wave velocity is well-approximated by the interval velocity in the ``well'' below each midpoint. The interval velocity as function of $t_0$ or $z$ can then be used to perform migration of zero-offset data, to good approximation. Also, to good approximation zero-offset data is similar to the stack of NMO-corrected CDPs.
+
+This process requires a velocity at every CDP. So far we have only determined four such RMS velocity profiles. However the command {\tt sunmo} will interpolate between 
+midpoints, and extrapolate towards the ends of the line as necessary, and even output the interpolated $v_{\rm rms}$ as a function of $t_0$ and midpoint (keyword {\tt voutfile}). This output is critical, as it can be converted later into other forms of velocity suitable for time and depth migration. Of course, the command also produces a stacked section (Figure \ref{fig:parastack}). 
+
+Because the deeper events are much less energetically imaged than the shallow, automatic gain control (amplitude equalization) produces a much more informative Figure \ref{fig:parastackagc}. This AGC'd stack will be input to all poststack processes.
+
+You will note the precence of many {\em diffraction tails} especially below 2 s. These may be partially collapsed either by poststack time migration using Gazdag's algorithm (Figure \ref{fig:paragazmig}) or, more effectively, by poststack depth migration using one of several methods. Gazdag poststack time migration assumes layered velocity structure, hence uses only the first column of the interval velocity as function of tim. Nonetheless Figure \ref{fig:paragazmig} shows considerably less interference from diffraction tails; the graben structures that give this prospect its name are now clearly in evidence. Poststack depth migration (that is, what one would naturally mean - an approximation to the adjoint linearized zero-offset modeling operator) does even better - Figure \ref{fig:parapspi} displays the output of Phase-Shift-Plus-Interpolation poststack depth migration, using the velocity $v(z,x)$ depicted in Figure \ref{fig:paravintz} (obtained via use of the SU utility {\tt velconv}, see {\tt project/SConstruct} for details). The image gives reasonable depths for the various horizons. Also, this velocity model is the beginning of the next, prestack phase of Viking Graben processing.
+
+With an eye to the prestack processing to be discussed in another paper, I include analogous results for downfiltered data. Jie Hou suggested a 5-10-30-40 Hz bandpass filter. The resulting AGC'd stack (Figure \ref{fig:parastackagcf}) shows the expected decrease in resolution over the original data, which has significant energy over 50 Hz. 
+
+[A question: the process, as you will see from the SConstruct, consists in filtering the data then applying NMO. Since the stack is a collection of time traces, you might think that you could get the same result by applying NMO first, then filtering. Is this true?]
+
+The PSPI post-stack depth migration (Figure \ref{fig:parapspif}) reveals the same structure as does the stack, with the same decreased resolution over Figure \ref{fig:parapspi}, but with diffraction tails suppressed and stretched to depth.
+
+\section{Conclusion}
+Use of simplified physics (NMO, stack, poststack migration) based on layered modeling produces plausible subsurface structure images from the Viking Graben data. Public domain software - in this exercise, mostly SU - provides enough functionality to carry out this imaging task, provided that some basic pre-processing is performed (multiple suppression, mute). Mobil provided a suitably preprocessed version of the data in 1994.
+
+The sequence of processing steps takes us far enough from the basic physics of wave propagation to raise questions about whether the images produced here are actually images of anything real. In a subsequent paper, we turn to prestack processing based on the acoustic wave equation - only a step further, but meaningful nonetheless. To telegraph part of the punch: prestack processing supports the validity of the images obtained in this paper by poststack processes. It seems that in the case of this ``tame'' data, classic seismic data processing does not steer you wrong.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
+\multiplot{2}{cdp200,cdp700}{width=0.45\textwidth}{Left: CDP 200; Right: CDP 700}
+\multiplot{2}{cdp1300,cdp2000}{width=0.45\textwidth}{Left: CDP 1300; Right: CDP 2000}
+
+\multiplot{2}{velan200,velan700}{width=0.45\textwidth}{Left: Velocity spectrum for CDP 200; Right: Velocity spectrum for CDP 700}
+\multiplot{2}{velan1300,velan2000}{width=0.45\textwidth}{Left: Velocity spectrum for CDP 1300; Right: Velocity spectrum for CDP 2000}
+
+\multiplot{2}{nmo200,nmo700}{width=0.45\textwidth}{Left: NMO corrected CDP 200; Right: NMO corrected CDP 700}
+\multiplot{2}{nmo1300,nmo2000}{width=0.45\textwidth}{Left: NMO corrected CDP 1300; Right: NMO corrected CDP 2000}
+
+\plot{nmo2000lo}{width=0.45\textwidth}{NMO corrected CDP 2000 with tnmo=0.0,1.2,1.5,1.8,2.1,2.6,2.75 vnmo=1500,1800,1800,1800,2200,2400,2700}
+
+\plot{parastack}{width=0.9\textwidth}{Stack with linearly interpolated, constant extrapolated $v_{\rm rms}$}
+
+\plot{parastackagc}{width=0.9\textwidth}{Automatic Gain Control (AGC) applied to data of Figure \ref{fig:parastack}. Note pronouced diffraction hyperbolae in the deeper part of the secion.}
+
+\plot{paragazmig}{width=0.9\textwidth}{Gazdag's phase-shift time migration applied to the stack (Figure \ref{fig:parastack}), followed by AGC. Diffraction artifacts are largely collapsed to the diffracting points that caused them, and the graben structures that give this prospect its name begin to be clearly visible. This migration assumes horzontal layering, which is not correct on the scale of 25 km.}
+
+\plot{parapspi}{width=0.9\textwidth}{Gazdag's phase-shift-plus-interpolation post-stack depth migration applied to the stack (Figure \ref{fig:parastack}), followed by AGC. Accounts for lateral velocity variation - uses interval velocity as function of midpoint and depth - more accurately than does the time migration of Figure \ref{fig:paragazmig}. The geology is even more clearly delineated, and depths should approximate those to be obtained by more sophisticated imaging.}
+
+\plot{parastackagcf}{width=0.9\textwidth}{NMO stack of (5,10,30,40) Hz bandpass filtered data, after AGC. Compare to Figure \ref{fig:parastack}.}
+
+\plot{parapspif}{width=0.9\textwidth}{PSPI post stack migrated image from stack in Figure \ref{fig:parastackagcf}.}
+
+\plot{paravintz}{width=0.9\textwidth}{Interval velocity as function of depth, derived from NMO velocity analysis. Probably not to be taken seriously below 3 km - for initial MVA estimate should extend by contant from 3 km and smooth.}
+
+
+

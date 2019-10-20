@@ -1,0 +1,162 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+import os
+
+# local parallel parameters
+lenv = {'stampede2' : { 'nodes'    : 4,
+                        'ppn'      : 60,
+                        'wall'     : '08:00:00'
+                      },
+         'davinci' :  { 'nodes'    : 2,
+                       	'ppn'      : 16,
+                        'wall'     : '08:00:00'
+                      },
+         'macbook' :  { 'ppn'      : 2},
+	 'getafix' :  { 'ppn'      : 10},
+	 }
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+sudipfilt       = os.path.join(CWPROOT,'bin/sudipfilt')
+MYAPPS          = os.getenv('MYAPPS')
+GCCTRIP         = os.path.join(MYAPPS,'gcctrip')
+dgrid           = os.path.join(GCCTRIP,'iwave/grid/main/GridDeriv.x')
+dsegy           = os.path.join(GCCTRIP,'iwave/trace/main/SEGYDeriv.x')
+decon           = os.path.join(GCCTRIP,'iwave/trace/main/SEGYCGDecon.x')
+lmute           = os.path.join(GCCTRIP,'iwave/trace/main/linmute.x')
+towed           = os.path.join(GCCTRIP,'iwave/trace/main/towed_array.x')
+
+# bulk mod
+Flow('bulk',None,'dd form=native < Orig/paracsq.HH | window min2=8000 max2=17000',stdin=0)
+Flow('deepbulk','bulk','window n1=1 f1=0 | spray axis=1 n=10 d=10 o=-100| cat axis=1 d=10 o=-100 ${SOURCES[0]}')
+Flow('dbulk','bulk','add scale=0.0')
+Flow('deepdbulk','dbulk','add scale=0.0')
+
+# unit buoyancy
+Flow('buoy','bulk','add scale=0.0| add add=1.0')
+Flow('deepbuoy','buoy','window n1=1 f1=0 | spray axis=1 n=10 d=10 o=-100| cat axis=1 d=10 o=-100 ${SOURCES[0]}')
+
+NH = 10
+DX = 12.5
+OH = -DX*NH
+
+# physical extension - pad by zeros
+Flow('extbulk','bulk',
+     'add scale=' + str(1.0/DX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extbuoy','buoy',
+     'add scale=' + str(1.0/DX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+# mute params
+MZO = 0.0
+MSL = 1.1
+MWD = 100
+
+# data
+Flow('shots269-508.su',None,susort + ' fldr gx < ../../vikingbasic/project/paracdp.su | ' + suwind + ' key=fldr min=269 max=508')
+
+# filter, integrate, mute
+Flow('shots269-508f.su',None,
+     sufilter + ' f=5,10,35,40 < shots269-508.su')
+Flow('shots269-508fi.su','shots269-508f.su','/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + dsegy +
+     ' in=${TARGETS[0]} order=-1',stdin=0,stdout=-1)
+Flow('shots269-508ft.su','shots269-508fi.su',
+     '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + 
+     lmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=' + str(MSL) + 
+     ' mute_zotime=' + str(MZO) + ' mute_width=' + str(MWD),
+     stdin=0,stdout=-1)
+Flow('src269-508.su',['shots269-508.su'],'towed_array data=${SOURCES[0]} src=./Orig/bp05103040.su towed=$TARGET',stdin=0,stdout=-1)
+
+# dip filter
+Flow('paracdpdip.su',None,sudipfilt + ' dx=50 slopes=-0.1,-0.0000,0.0001,1.0 amps=1.0,1.0,0.0,0.0  < ../../vikingbasic/project/paranmo.su | ' + sunmo + ' invert=1 cdp=200,700,1300,2000 tnmo=0.0,1.25,1.8,2.7,3.0 vnmo=1500,1900,2050,2600,2700 tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 vnmo=1500,1750,1900,2050,2200,2450,2700 tnmo=0.0,1.0,1.25,1.7,2.1,2.4,2.75 vnmo=1500,1800,1900,2000,2200,2400,2600 tnmo=0.0,1.25,1.6,2.25,2.6,2.8 vnmo=1500,1950,2050,2200,2400,2500',stdin=0)
+Flow('shots269-508dip.su','paracdpdip.su',susort + ' fldr gx | ' + suwind + ' key=fldr min=269 max=508')
+
+Result('bulk','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
+
+# filter, integrate, mute
+Flow('shots269-508dipf.su',None,
+     sufilter + ' f=5,10,35,40 < shots269-508dip.su')
+Flow('shots269-508dipfi.su','shots269-508dipf.su','/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + dsegy +
+     ' in=${TARGETS[0]} order=-1',stdin=0,stdout=-1)
+Flow('shots269-508dipft.su','shots269-508dipfi.su',
+     '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + 
+     lmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=' + str(MSL) + 
+     ' mute_zotime=' + str(MZO) + ' mute_width=' + str(MWD),
+     stdin=0,stdout=-1)
+Flow('zdshots269-508dipft.su','shots269-508dipft.su', sushw + ' key=gelev,selev a=0.0,0.0')
+
+# plot prestack migrations from e1
+for x in ['bulkinvp0it0dip','bulkinvp1it0dip','bulkinvp1it10dip','bulkinvp1it10diptop3']:
+    Flow('e1-'+ x + 'import.rsf', None, 'dd < ../e1-269-508/Orig/' + x + '.HH form=native')
+    Result('e1-' + x, 'e1-' + x + 'import.rsf','window min2=10000 max2=15000 | put label1=Depth label2=Midpoint unit1=m unit2=m | grey xinch=10 yinch=5 wanttitle=n scalebar=y')
+
+for x in ['bulkinvp0it0dip']:
+    Flow('e1-' + x + 'agc','e1-' + x + 'import','agc')
+    Result('e1-' + x + 'agc','window min2=10000 max2=15000 | put label1=Depth label2=Midpoint unit1=m unit2=m | grey xinch=10 yinch=5 wanttitle=n scalebar=y')
+
+for x in ['e1-bulkinvp0it0dipagc','e1-bulkinvp1it0dipimport','e1-bulkinvp1it10dipimport']:
+    Flow(x + 'tr351', x, 'window n2=1 f2=351')
+    Flow(x + 'tr351spec', x + 'tr351','fft1 | add abs=y | real')
+
+# dip filter, no decon
+for fldr in ['300','350','400','450','500']:
+    Flow('shot' + fldr + '.su','shots269-508ft.su',suwind + ' key=fldr min=' + fldr + ' max=' + fldr)
+    Flow('shot' + fldr,'shot' + fldr + '.su','suread read=data endian=0')
+    Flow('shot' + fldr + 'wind','shot' + fldr,'window min1=1 max1=2.5 min2=60 max2=105')
+    Flow('shot' + fldr + 'dip.su','shots269-508dipft.su',suwind + ' key=fldr min=' + fldr + ' max=' + fldr)
+    Flow('shot' + fldr + 'dip','shot' + fldr + 'dip.su','suread read=data endian=0')
+    Flow('shot' + fldr + 'dipwind','shot' + fldr + 'dip','window min1=1 max1=2.5 min2=60 max2=105')
+    Flow('e1-reborn' + fldr + 'dip.su',None, suwind + ' < ../e1-269-508/Orig/rebornp1it10dip.su key=fldr min=' + fldr + ' max=' + fldr, stdin=0)
+    Flow('e1-reborn' + fldr + 'dip','e1-reborn' + fldr + 'dip.su','suread read=data endian=0')
+    Flow('e1-reborn' + fldr + 'dipwind','e1-reborn' + fldr + 'dip','window min1=1 max1=2.5 min2=60 max2=105')
+    Result('shot' + fldr + 'wind','grey clip=5e+7 wanttitle=n')    
+    Result('shot' + fldr + 'dipwind','grey clip=5e+7 wanttitle=n')
+    Result('e1-reborn' + fldr + 'dipwind','grey clip=5.0e+7 wanttitle=n')
+    Plot('shot' + fldr + 'dipww','shot' + fldr + 'dipwind','wiggle transp=y yreverse=y plotcol=5 wanttitle=n')
+    Plot('e1-reborn' + fldr + 'dipww','e1-reborn' + fldr + 'dipwind','wiggle transp=y yreverse=y plotcol=6 wanttitle=n')
+    Result('e1-comp' + fldr + 'dipww','shot' + fldr + 'dipww.vpl e1-reborn' + fldr + 'dipww.vpl','Overlay')
+    Result('e1-gcomp' + fldr + 'dipww','Fig/shot' + fldr + 'dipwind.vpl e1-reborn' + fldr + 'dipww.vpl','Overlay')
+    Flow('e1-diff' + fldr + 'dipwind',['shot' + fldr + 'dipwind','e1-reborn' + fldr + 'dipwind'],'add scale=1,-1 ${SOURCES[1]}')
+    Result('e1-diff' + fldr + 'dipwind','grey clip=5.0e+7 wanttitle=n')
+
+End()

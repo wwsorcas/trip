@@ -1,0 +1,9 @@
+from rsf.tex import *
+
+End(
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,subfig,color,listings,amsmath,amssymb,amsbsy,amsthm,amscd',
+color='ALL'
+)
+
