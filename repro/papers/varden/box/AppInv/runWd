@@ -1,0 +1,48 @@
+#!/bin/bash
+myWd=$HOME/trip/iwave/ang/main/Wd_2017.x
+
+### SET BY USER ########
+ns=76
+nr=301
+nt=751
+dt=4.0
+ds_x=40.0
+dr_x=10.0
+ds_z=10.0
+dr_z=10.0
+f1=0.0025
+f2=0.0050
+f3=0.0350
+f4=0.0400
+DATA=../born.su
+fileIN=myborn.rsf
+fileOUT=mybornWd.rsf
+WdDATA=../bornWd.su
+########################
+dsdr_z=$(echo "scale=6;1.0/(4*$ds_z*$dr_z)" | bc)
+dsdr_x=$(echo "scale=6;$ds_x*$dr_x" | bc)
+
+#Check if input file exists
+if [ ! -f "$DATA" ]
+then
+	echo "The file $DATA does not exist!!"
+	exit
+fi
+
+
+echo "*** INPUT: born data ***"
+#I/O pre-processing
+< $DATA sfsuread endian=0 datapath=./ > $fileIN
+< $fileIN sfadd scale=1.0 datapath=./ > $fileOUT
+#Data-side AppInv weight
+echo
+echo progress report from Wd.x:
+echo --------------------------
+$myWd $ns $nr $nt $dt $f1 $f2 $f3 $f4 $fileIN@ $fileOUT@
+echo
+< $fileOUT sfsuwrite endian=0 tfile=tfile | sugain scale=$dsdr_x | sugain scale=$dsdr_z | sushw key=gelev,selev a=0,0 > $WdDATA
+echo "*** OUTPUT: Wd(born data) ***"
+
+#Remove tmp files
+sfrm $fileIN $fileOUT
+

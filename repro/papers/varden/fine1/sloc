@@ -1,0 +1,342 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+MYAPPS          = os.getenv('MYAPPS')
+asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/asg.x')
+lin             = os.path.join(MYAPPS,'trip/iwave/asg/main/asgcgne.x')
+appinv          = os.path.join(MYAPPS,'trip/iwave/asg/main/appinv.x')
+borninv         = os.path.join(MYAPPS,'trip/iwave/asg/main/appinv1.x')
+acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/acd.x')
+myvalgrind      = os.path.join(MYAPPS,'valgrind/bin/valgrind')
+
+fetches = {
+    'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+######################## LOCAL DEFINITIONS ##################################
+
+# local parallel parameters
+lenv = {'stampede2' : { 'nodes'    : 3,
+                        'ppn'      : 60,
+                        'wall'     : '08:00:00'
+                      },
+         'davinci' :  { 'nodes'    : 2,
+                       	'ppn'      : 16,
+                        'wall'     : '08:00:00'
+                      },
+         'macbook' :  { 'ppn'      : 1},
+	 'getafix' :  { 'ppn'      : 10},
+	 }
+
+# select from all shots or 2 central shots
+ALLSHOTS=1
+#ALLSHOTS=0
+
+# frequency dictionaries
+params = { 'grid_15_24_8' : { 'maxfreq': 0.015, 'trap':'2.5,5,12.5,15', 'jzx':6, 'dt':8, 'jxs':24, 'jxr':12},
+           'grid_30_12_4' : { 'maxfreq': 0.030, 'trap':'2.5,5.25.0,30', 'jzx':3, 'dt':4, 'jxs':12, 'jxr':6 }
+	 }
+	 
+# original model parameters
+NZORIG=751
+NXORIG=2301
+DXORIG=4
+WDEPTH=480
+TMAX=4000
+OTSRC=-500.0
+OXS=60*DXORIG
+V000=1.5
+NH=0
+
+# bulk modulus at source
+BULK = 2.25
+
+#for par in params.keys():
+for par in ['grid_30_12_4']:
+
+    MAXFREQ = params[par]['maxfreq']
+    DZX = params[par]['jzx']*DXORIG
+
+    DT = params[par]['dt']
+    NT=1+TMAX/DT
+    NTSRC=1+(1000/DT)    
+    DXS = params[par]['jxs']*DXORIG
+    NXS=int((NXORIG-141)/params[par]['jxs'])
+
+    # receiver array
+    OXR=DZX
+    DXR=params[par]['jxr']*DXORIG
+    NXR=int((NXORIG-1-2*(OXR/DXORIG))/params[par]['jxr'])
+#    print 'NXORIG=' + str(NXORIG)
+#    print 'OXR/DXORIG=' + str(OXR/DXORIG)
+#    print 'NXR=' + str(NXR)
+    # number of traces
+    NTRACES=NXS*NXR
+
+    # select data root	
+    FROOT = 'free'+str(DXS)+'m'
+    AROOT =  'absb'+str(DXS)+'m'
+    FROOT2 = 'free2shot'+str(DXS)+'m'
+    AROOT2 =  'absb2shot'+str(DXS)+'m'
+    if ALLSHOTS==1:
+       FPROTO = FROOT
+       APROTO = AROOT
+    else:
+       FPROTO = FROOT2
+       APROTO = AROOT2
+    # derived names
+    FPDATA = FPROTO + '.su'
+    APDATA = APROTO + '.su'
+    FVDSRC = 'wavelet_' + FPROTO + '.su'
+    AVDSRC = 'wavelet_' + APROTO + '.su'
+    CDSRC = 'wavelet_' + FPROTO + '_ddt.su'
+
+    print 'FPROTO=' + FPROTO
+    # model parameters
+    JZX=params[par]['jzx']
+    NZ=1+int((NZORIG-1)/JZX)
+    # 10 grid cells to separate sources from PML layer
+    NZCAT=10 + int(WDEPTH/DZX)
+    
+    NZDEEP=NZ + NZCAT
+    OZDEEP=-10*DZX
+
+    print 'NZ=' + str(NZ)
+    print 'NZCAT=' + str(NZCAT)
+    print 'NZDEEP=' + str(NZDEEP)
+
+    NX=1+int((NXORIG-1)/JZX)
+
+    OH=-NH*DZX
+
+    ######## abbreviations for commands used in flows - put these first, if
+
+    # dirac - includes division by dt
+    # 2017.12.03 - oddly, since now recognize that the wavelet should be integrated, the
+    # weight disappears, and we have just the running sum. Basically a Heaviside.
+    Flow('spike.su', None, suspike + ' nt=' + str(NTSRC+1) + ' ntr=1 offset=0 ix1=1 nspk=1 it1=' +
+         str(NTSRC/2) + ' dt=' + str(0.001*DT) + ' | ' + sugain + ' scale=' + str(BULK/DT) + ' | ' +
+	 sushw + ' key=delrt a=' + str(OTSRC))
+    Flow('heavi.su', 'spike.su', suop + ' op=sum | ' + sugain + ' scale=' + str(DT))
+    Flow('respike.su','heavi.su', suop + ' op=diff | ' + sugain + ' scale=' + str(1.0/(NTSRC*DT)))
+    Flow('bandpass.su', 'spike.su', sufilter + ' f=' + params[par]['trap'])
+    Flow('intbandpass.su', 'bandpass.su', suop + ' op=sum | ' + sugain + ' scale=' + str(DT))
+    Flow('rebandpass.su', 'intbandpass.su', suop + ' op=diff | ' + sugain + ' scale=' +
+         str(1.0/(NTSRC*DT)))
+    JSTR = str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR)
+    ASTR = str(OXS) + ',' + str(OXR) + ',0,0,0,1,1,1'
+    BSTR = '0,' + str(DXR) + ',0,0,0,1,1,1'
+    CSTR = str(DXS) + ',0,0,0,1,' + str(NXR) + ',0,' + str(NXR)
+    ELEV = sushw + ' key=selev,gelev a=' + str(-DZX) + ',' + str(-DZX) + ' | '
+    KEYS = sushw + ' key=sx,gx,sy,gy,fldr,tracr,tracf,tracl '
+    DTS  = 0.001*DT
+#    print 'JSTR=' + JSTR
+#    print 'ASTR=' + ASTR
+#    print 'BSTR=' + BSTR
+#    print 'CSTR=' + CSTR
+#    print 'ELEV=' + ELEV
+#    print 'KEYS=' + KEYS
+#    print 'DTS=' + str(DTS)
+#    print 'ntr=' + str(NTRACES) + ' | ' + ELEV + KEYS + ' a=' + ASTR + ' b=' + BSTR + ' c=' + CSTR + ' j=' + JSTR
+    Flow(FROOT + '.su', None, sunull + ' nt=' + str(NT) + ' dt=' + str(DTS) + ' ntr=' + str(NTRACES) + ' | ' +  ELEV + KEYS + ' a=' + ASTR + ' b=' + BSTR + ' c=' + CSTR + ' j=' + JSTR + ' | ' + suchw + ' key1=offset key2=gx key3=sx b=1 c=-1')
+    Flow(AROOT + '.su', None, sunull + ' nt=' + str(NT) + ' dt=' + str(0.001*DT) +
+         ' ntr=' + str(NTRACES) + ' | ' + sushw + ' key=selev,gelev a=0,0 | ' + sushw +
+	 ' key=sx,gx,sy,gy,fldr,tracr,tracf,tracl a=' + str(OXS) + ',' + str(OXR) +
+	 ',0,0,0,1,1,1 b=0,' + str(DXR) + ',0,0,0,1,1,1 c=' + str(DXS) + ',0,0,0,1,'+
+	  str(NXR) + ',0,' + str(NXR) + ' j=' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) +
+	  ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) + ',' + str(NXR) +
+	  ',' + str(NXR) + ' | ' + suchw +	 ' key1=offset key2=gx key3=sx b=1 c=-1')
+    Flow(FROOT2+'.su',FROOT+'.su',suwind + ' key=fldr min=' + str(int(NXS/2)) + ' max=' + str(int(NXS/2) + 1))
+    Flow(AROOT2+'.su',AROOT+'.su',suwind + ' key=fldr min=' + str(int(NXS/2)) + ' max=' + str(int(NXS/2) + 1))
+
+    # add source coordinates from hdrfile to source AND receiver 
+    # coordinates from wavelet to create "dressed" wavelet for array
+    # source option in iwave. 
+
+    # use naming convention: time series stored in bandpass, 
+    # headers for experiment foo stored in hdrfoo.su, wavelet in
+    # waveletfoo.su
+
+    for foo in [FROOT2,AROOT2,FROOT, AROOT]:
+    	Flow('wavelet_' + foo + '.su', ['intbandpass.su', foo + '.su'],
+             '''
+             towed_array 
+             data=${SOURCES[1]} 
+             src=${SOURCES[0]} 
+             towed=${TARGETS[0]}
+             ''',
+             stdin=0, stdout=0)
+    	Flow('wavelet_'+foo+'_ddt.su', 'wavelet_' + foo + '.su',
+	     suop + ' op=diff | ' + sugain + ' scale=' + str(1.0/(NTSRC*DT)) )
+
+    # prep model calculations - add deeper ocean, smoothing, etc.
+    Flow('deepocean',None,'makevel n1=' + str(NZDEEP) + ' d1=' + str(DZX) + ' n2=' + str(NX) +
+    	 ' d2=' + str(DZX) + ' o1=' + str(OZDEEP) + ' o2=0 v000=' + str(V000) +
+     	 ' | put data_format=native_float label1=Depth unit1=m label2=Position unit2=m ' +
+     	 ' unit=m/ms esize=4',stdin=0) 
+    Flow('velbase','velocity.HH','dd form=native | window j1=' + str(JZX) + ' j2=' + str(JZX))
+    Flow('deepvel',['deepocean','velbase'],'window n1=' + str(NZCAT) +  ' f1=0 | cat axis=1 o=' +
+          str(OZDEEP) + ' d=' + str(DZX) + ' ${SOURCES[1]}') 
+    Flow('deepvelsm2','deepvel','smooth rect1=3 rect2=3 repeat=2')
+    Flow('deepvelbig','deepvel','smooth rect1=6 rect2=6 repeat=4')
+    Flow('vel','deepvel','window min1=0')
+    Flow('velsm2','deepvelsm2','window min1=0')
+    Flow('velbig','deepvelbig','window min1=0')
+
+    # 2D coefficient arrays
+    Flow('deepbulk','deepvel','add mode=p ${SOURCES[0]} | put unit=GPa')
+    Flow('deepbulksm2','deepvelsm2','add mode=p ${SOURCES[0]} | put unit=GPa')
+    Flow('deepbulkbig','deepvelbig','add mode=p ${SOURCES[0]} | put unit=GPa')
+    Flow('deepbulknoah','deepocean','add mode=p ${SOURCES[0]} | put unit=GPa')
+    Flow('deepdbulk', ['deepbulk', 'deepbulksm2'],'add mode=a scale=1,-1 ' +
+         '< ${SOURCES[0]} ${SOURCES[1]} | put unit=GPa')
+    Flow('bulk','deepbulk','window min1=0')
+    Flow('bulkbig','deepbulkbig','window min1=0')
+    Flow('bulknoah','deepbulknoah','window min1=0')
+    Flow('dbulk','deepdbulk','window min1=0')
+
+    # 2D perturbed background velo
+    for pct in [95,90,85,80]:
+        Flow('bulkbigp'+str(pct),['bulkbig','bulknoah'],
+	    'add mode=a ${SOURCES[1]} scale=' + str(pct/100.0) + ',' + str(1.0-(pct/100.0)))
+
+    # 2D unit buoyancy
+    Flow('deepbuoy','deepbulk','add scale=0.0 | add add=1.0 | put unit=gpcc')
+    Flow('deepdbuoy','deepdbulk','add scale=0.0 | put unit=gpcc')
+    Flow('buoy','deepbuoy','window min1=0')
+    Flow('dbuoy','deepdbuoy','window min1=0')
+
+    # perturbation
+    Flow('pertbulk',['bulkbig','dbulk'],'add ${SOURCES[1]} scale=1,0.0001| put unit=GPa')
+
+    # physical extension - pad by zeros
+    Flow('extbulk','bulk',
+         'add scale=' + str(1.0/DZX) + ' |' +
+     	 'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     	 ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+    Flow('extdeepbulk','deepbulk',
+    	 'add scale=' + str(1.0/DZX) + ' |' +
+     	 'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+      	 '| put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+	 
+    Flow('extbulkbig','bulkbig',
+         'add scale=' + str(1.0/DZX) + ' |' +
+         'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+         ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+	 
+    Flow('extdeepbulkbig','deepbulkbig',
+         'add scale=' + str(1.0/DZX) + ' |' +
+         'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+         ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+	 
+    Flow('extdbulk','dbulk',
+         'add scale=' + str(1.0/DZX) + ' |' +
+         'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+         ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+	 
+    Flow('extdeepdbulk','deepdbulk',
+         'add scale=' + str(1.0/DZX) + ' |' +
+         'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+         ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+	 
+    # add source coordinates from hdrfile to source AND receiver 
+    # coordinates from wavelet to create "dressed" wavelet for array
+    # source option in iwave. 
+
+    # time integrations for a# job definition dictionary
+
+    # valgrind option
+    #VG = myvalgrind + ' --leak-check=yes '
+    VG=''
+
+    PTASK = getThreads(lenv)
+
+    basecmd = ' deriv=0 order=4 adjtest=0 cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 nsnaps=20 maxfreq=' + str(MAXFREQ) + ' freebulkmod=${SOURCES[4]} freebuoyancy=${SOURCES[5]} freebulkmodpert=${SOURCES[6]} absbbulkmod=${SOURCES[7]} absbbuoyancy=${SOURCES[8]} absbbulkmodpert=${SOURCES[9]} freesource_p=${SOURCES[2]} absbsource_p=${SOURCES[3]} freedata_p=${SOURCES[0]} absbdata_p=${SOURCES[1]} pmlwidth=250 pmlampl=1.0 dump_term=0 dump_lda=0 dump_ldc=0 printact=0 num_threads=1 partask=' + str(PTASK) + ' '
+
+    Flow('hdr90.su',FPDATA,suwind + ' key=fldr min=90 max=90')    
+    Flow('src90.su',FVDSRC,suwind + ' key=fldr min=90 max=90')    
+    jobs = [
+	{ 'job': 'locbornr90',
+          'pre': sugain + ' <${SOURCES[2]} scale=0.0 >$TARGET',
+          'src': ['buoy', 'dbuoy','hdr90.su','src90.su'],
+          'tgt': ['locbornr90.su'],
+          'cmd': VG + asg + ' ' + 
+		 'deriv=1 adjoint=0 order=6 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=../bulkbigimport.rsf buoyancy=${SOURCES[0]} ' +
+		 'bulkmod_d1=../dbulkimport.rsf buoyancy_d1=${SOURCES[1]} ' +
+		 'source_p=${SOURCES[3]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'mute_slope=0.75 mute_width=200 mute_zotime=0.25 ' + 
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	{ 'job': 'locrebornr90',
+          'pre': sugain + ' <${SOURCES[2]} scale=0.0 >$TARGET',
+          'src': ['buoy', 'dbuoy','hdr90.su','src90.su'],
+          'tgt': ['locrebornr90.su'],
+          'cmd': VG + asg + ' ' + 
+		 'deriv=1 adjoint=0 order=6 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=../bulkbigimport.rsf buoyancy=${SOURCES[0]} ' +
+		 'bulkmod_d1=../corrbulkinvp1it20.rsf buoyancy_d1=${SOURCES[1]} ' +
+		 'source_p=${SOURCES[3]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'mute_slope=0.75 mute_width=200 mute_zotime=0.25 ' + 
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	]
+
+run(jobs,lenv)
+
+End()

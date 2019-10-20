@@ -1,0 +1,37 @@
+\section{Plots for DL Lecture}
+
+\plot{fine1unbornr90}{width=\textwidth}{Simulation of shot 90
+  (nonlinear)}
+\plot{fine1bgunbornr90}{width=\textwidth}{Simulation of shot 90 in
+  background model (nonlinear)}
+\plot{fine1diffr90}{width=\textwidth}{Difference between target,
+  background simulations of shot 90 (nonlinear)}
+\plot{fine1linerrr90}{width=\textwidth}{Linearization error}
+
+
+
+Regularization by DSO annihilator: minimization of 
+\begin{equation}
+\label{eqn:regobj}
+J_{\alpha}[\bar{\kappa}] =\frac{1}{2}( \|\doF \delta \bar{\kappa}
+-\delta d\|_d^2 +\alpha^2
+\|A\delta \bar{\kappa}\|^2_m)
+\end{equation}
+
+\begin{equation}
+\label{eqn:regnormal}
+W_m^{-1}(\doF^T W_d \doF + \alpha^2 A^TA)\delta \bar{\kappa} =
+W_m^{-1}\doF^T W_d \delta d
+\end{equation}
+
+Define the augmented modeling operator
+\begin{equation}
+\label{eqn:columnop}
+L = \left(\begin{array}{c}
+\doF\\
+A
+\end{array}
+\right) 
+\end{equation}
+View the range of this operator as the cartesian product of data
+space and model space, with 

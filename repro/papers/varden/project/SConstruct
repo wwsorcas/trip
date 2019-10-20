@@ -1,0 +1,330 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
+sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
+sfadd           = os.path.join(RSFROOT,'bin/sfadd')
+sfget           = os.path.join(RSFROOT,'bin/sfget')
+sfspray         = os.path.join(RSFROOT,'bin/sfspray')
+
+########### archive - unarchive ##############
+
+SRCDIRS = ['coarse1','fine1']
+PLOTSHOTS = { 'coarse1': '45', 'fine1' : '90' }
+SCALESHOTS = { 'coarse1': '2.e-4', 'fine1': '5.e-5' }
+REFSHOTS = { 'coarse1': 'born', 'fine1': 'born' }
+RSFD3 = { 'coarse1': '24', 'fine1': '12' }
+SCALEINV = { 'coarse1': '8', 'fine1': '4' }
+SCALEIT0 = { 'coarse1': '1', 'fine1': '0.35' }
+ITINV = { 'coarse1': '10', 'fine1': '20' }
+RSFZOINV   = {'coarse1': ['p1it0','p1it10','p0it20'],
+	      'fine1': ['p1it0','p1it20','p0it20']}
+RSFPLOTS   = ['bulk',
+	      'bulkbig',
+	      'mbulk']
+
+SHOTPLOTS  = {'coarse1': ['born','absborn','rebornp1it0','rebornp1it10','rebornp0it20'],
+              'fine1': ['born','absborn','rebornp1it0','rebornp1it20','rebornp0it20']}
+
+for src in SRCDIRS:
+    Flow(src+'dbulk',None,'dd form=native < ../' + src + '/Orig/dbulk.HH',stdin=0)    
+    Result(src+'dbulk','grey clip=' + SCALEINV[src] + ' color=a scalebar=y wanttitle=n minval=-' + SCALEINV[src] + ' maxval=' + SCALEINV[src])
+    for i in [0,1,2]:
+    	Flow(src+'bulkinv'+RSFZOINV[src][i],None,'dd form=native < ../' + src + '/Orig/' + 'bulkinv'+RSFZOINV[src][i] + '.HH',stdin=0)
+	if i==0:
+            CLIP = 'clip=' + SCALEIT0[src] + ' minval=-' + SCALEIT0[src] + ' maxval=' + SCALEIT0[src]
+        else:
+            CLIP = 'clip=' + SCALEINV[src] + ' minval=-' + SCALEINV[src] + ' maxval=' + SCALEINV[src]
+        Result(src+'bulkinv'+RSFZOINV[src][i],
+	       'add scale=' + RSFD3[src] + ' | grey color=a scalebar=y wanttitle=n ' + CLIP)
+    for rsf in RSFPLOTS:
+    	Flow(src+rsf,None,'dd form=native < ../' + src + '/Orig/' + rsf + '.HH',stdin=0)    
+        Result(src+rsf,'grey color=a scalebar=y wanttitle=n')
+
+    shot = PLOTSHOTS[src]
+
+    for plotshot in SHOTPLOTS[src]:
+    	Flow(src + plotshot + '.su',None,
+	    '/bin/cp ../' + src + '/Orig/' + plotshot + '.su ./' +
+	    src + plotshot + '.su',stdin=0,stdout=-1)
+    	Flow(src + plotshot + 'r' + shot +'.su', src + plotshot + '.su',
+             suwind + ' key=fldr min=' + shot + ' max=' + shot)
+	Result(src + plotshot + 'r' + shot, src + plotshot + 'r' + shot +'.su',
+	       'suread endian=0 read=data |grey clip=' + SCALESHOTS[src] + ' scalebar=y wanttitle=n')
+
+    for i in [2,3,4]:
+        Flow(src + 'resid' + SHOTPLOTS[src][i] + 'r' + shot + '.su',
+	     [src + SHOTPLOTS[src][i] + 'r' + shot + '.su', src + SHOTPLOTS[src][0] + 'r' + shot + '.su'],
+	     suop2 + ' ${SOURCES[1]} ${SOURCES[0]} op=diff')
+	Result(src + 'resid' + SHOTPLOTS[src][i] + 'r' + shot,
+	       src + 'resid' + SHOTPLOTS[src][i] + 'r' + shot + '.su',
+	       'suread endian=0 read=data |grey clip=' + SCALESHOTS[src] + ' scalebar=y wanttitle=n')
+	       
+Result('coarse1bornr45bis','coarse1bornr45.su',
+	'suread endian=0 read=data |grey clip=' + SCALESHOTS['coarse1'] + ' scalebar=y wanttitle=n')
+Result('fine1bornr90bis','fine1bornr90.su',
+	'suread endian=0 read=data |grey clip=' + SCALESHOTS['fine1'] + ' scalebar=y wanttitle=n')
+#Result('fine1rebornp0it20r90',None,
+#	'suread < ../fine1/Orig/rebornp0it20r90.su endian=0 read=data |grey clip=' + SCALESHOTS['fine1']# + ' scalebar=y wanttitle=n')
+
+Flow('coarse1unbornr45.su',None,'/bin/cp ../coarse1/unbornr45.su ${TARGET}',stdin=0,stdout=-1)
+Flow('coarse1unbornr45','coarse1unbornr45.su','suread endian=0 read=data | put f2=0 d2=48 unit1=s unit2=m ')
+Result('coarse1unbornr45',
+       'grey clip=' + SCALESHOTS['coarse1'] + ' label2=ReceiverX label1=Time scalebar=y minval=-0.0005 maxval=0.0005 wanttitle=n')
+
+Flow('coarse1bornr45c.su',None,'/bin/cp ../coarse1/bornr45.su ${TARGET}',stdin=0,stdout=-1)
+Flow('coarse1bornr45c','coarse1bornr45c.su','suread endian=0 read=data | put f2=0 d2=48 unit1=s unit2=m ')
+Result('coarse1bornr45c',
+       'grey clip=' + SCALESHOTS['coarse1'] + ' label2=ReceiverX label1=Time scalebar=y minval=-0.0005 maxval=0.0005 wanttitle=n')
+
+Flow('pscoarse1dbulkr191','coarse1dbulk',
+     'window n2=1 f2=191| fft1 | add abs=y | real')
+Flow('pscoarse1bulkinvp1it10r191','coarse1bulkinvp1it10',
+     'window n2=1 f2=191| fft1 | add abs=y | add scale=24 | real')
+Flow('pscoarse1r191',['pscoarse1dbulkr191','pscoarse1bulkinvp1it10r191'],
+     'cat axis=2 d=1 o=0 ${SOURCES[1]}')
+Result('pscoarse1r191','graph plotcol=1,2 plotfat=4 wanttitle=n')
+
+Flow('psfine1dbulkr191','fine1dbulk',
+     'window n2=1 f2=191| fft1 | add abs=y | real')
+Flow('psfine1bulkinvp1it20r191','fine1bulkinvp1it20',
+     'window n2=1 f2=191| fft1 | add abs=y | add scale=12 | real')
+Flow('psfine1r191',['psfine1dbulkr191','psfine1bulkinvp1it20r191'],
+     'cat axis=2 d=1 o=0 ${SOURCES[1]}')
+Result('psfine1r191','window max1=0.02 | graph plotcol=1,2 plotfat=4 wanttitle=n')
+
+Result('fine1unbornr90',None,
+	'suread < ../fine1/Orig/unbornr90.su endian=0 read=data |grey clip=' + SCALESHOTS['fine1'] + ' scalebar=y wanttitle=n')
+Result('fine1bgunbornr90',None,
+	'suread < ../fine1/Orig/bgunbornr90.su endian=0 read=data |grey clip=' + SCALESHOTS['fine1'] + ' scalebar=y wanttitle=n')
+Flow('fine1diffr90.su',None,suop2 + ' ../fine1/Orig/unbornr90.su ../fine1/Orig/bgunbornr90.su op=diff')
+Result('fine1diffr90','fine1diffr90.su',
+       'suread endian=0 read=data |grey clip=' + SCALESHOTS['fine1'] + ' scalebar=y wanttitle=n')	
+Flow('fine1linerrr90.su',['fine1diffr90.su','fine1bornr90.su'],suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+Result('fine1linerrr90','fine1linerrr90.su',
+       'suread endian=0 read=data |grey clip=' + SCALESHOTS['fine1'] + ' scalebar=y wanttitle=n')
+
+##################################
+# box
+##################################
+
+Flow('boxfreeinvp1it0import',None,'dd form=native < ../box/Orig/freeinvp1it0.HH')
+Result('boxfreeinvp1it0import','byte clip=0.004 | grey3 frame1=100 frame2=200 frame3=20 point1=0.8 point2=0.8')
+
+Flow('boxfreeinvp1it0stack','boxfreeinvp1it0import','stack axis=3 norm=n | add scale=10 ')
+Result('boxfreeinvp1it0stack','window min2=500 max2=3500 | grey clip=0.4 scalebar=y')
+Flow('boxdbulk',None,'dd form=native < ../box/Orig/dbulk.HH',stdin=0)
+Result('boxdbulk','window min2=500 max2=3500 | grey clip=0.4 scalebar=y')
+Flow('boxfreeinvp1it0stack150','boxfreeinvp1it0stack','window n2=1 f2=150')
+Flow('boxdbulk150','boxdbulk','window n2=1 f2=150')
+Flow('boxcomp150',['boxfreeinvp1it0stack150','boxdbulk150'],
+     'cat axis=2 o=0 d=1 ${SOURCES[1]}')
+Result('boxcomp150','window min1=500 max1=2500|graph plotfat=6 plotcol=5,6 wanttitle=n')
+
+Flow('boxborn37.su',None,suwind + ' key=fldr min=37 max=37 < ../box/Orig/born.su', stdin=0)
+Flow('boxfreerebornp1it0shot37.su',None,suwind + ' key=fldr min=37 max=37 < ../box/Orig/freerebornp1it0.su', stdin=0)
+Flow('boxfreerebornp1it0diff37.su',['boxborn37.su','boxfreerebornp1it0shot37.su'],suop2 + ' ${SOURCES[1]} ${SOURCES[0]} op=diff')
+Flow('boxborn37','boxborn37.su',
+     'suread endian=0  read=data')
+Flow('boxfreerebornp1it0shot37','boxfreerebornp1it0shot37.su',
+     'suread endian=0  read=data')
+Flow('boxfreerebornp1it0diff37', 'boxfreerebornp1it0diff37.su',
+     'suread endian=0  read=data')
+Result('boxborn37','window min1=0.5 max1=2 | grey clip=3.0e-05 wanttitle=n')
+Result('boxfreerebornp1it0shot37','window min1=0.5 max1=2 | grey clip=3.0e-05 wanttitle=n')
+Result('boxfreerebornp1it0diff37','window min1=0.5 max1=2 | grey clip=3.0e-05 wanttitle=n')
+
+##############################
+# fine10
+##############################
+
+Flow('fine10bulkinvp1it20',None,'dd form=native <../fine10/Orig/bulkinvp1it20.HH',stdin=0)
+Result('fine10bulkinvp1it20','byte clip=0.02|grey3 frame1=100 frame2=480 frame3=10 point1=0.8 point2=0.7 d3num=100 n3tic=3 wanttitle=n')
+
+Flow('fine10bulkinvp1it0',None,'dd form=native <../fine10/Orig/bulkinvp1it0.HH',stdin=0)
+Result('fine10bulkinvp1it0','byte clip=0.02|grey3 frame1=100 frame2=480 frame3=10 point1=0.8 point2=0.7 wanttitle=n')
+
+Flow('fine10bulkinvp1it0stack','fine10bulkinvp1it0','stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it0stack','grey color=a clip=4.0 scalebar=y wanttitle=n minval=-4 maxval=4')
+
+Flow('fine10bulkinvp1it0stack0','fine10bulkinvp1it0','window min3=0 max3=0 | stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it0stack0','grey color=a clip=1.0 scalebar=y wanttitle=n minval=-1 maxval=1')
+
+Flow('fine10bulkinvp1it20stack','fine10bulkinvp1it20','stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it20stack','grey color=a clip=4.0 scalebar=y wanttitle=n minval=-4 maxval=4')
+
+Flow('fine10bulkinvp1it20g3240','fine10bulkinvp1it20','transp plane=23 | window min3=3240 max3=3240')
+Result('fine10bulkinvp1it20g3240','grey clip=0.02 scalebar=y wanttitle=n')
+Result('fine10bulkinvp1it20g3240rat','fine10bulkinvp1it20g3240','window min1=1750 max1=2250 | grey clip=0.02 scalebar=n wanttitle=n screenratio=2.0')
+
+Flow('fine10bulkinvp1it20g6000','fine10bulkinvp1it20','transp plane=23 | window min3=6000 max3=6000')
+Result('fine10bulkinvp1it20g6000','grey clip=0.02 scalebar=y wanttitle=n')
+Result('fine10bulkinvp1it20g6000rat','fine10bulkinvp1it20g6000','window min1=2000 max1=3200 | pad beg2=38 end2=38 | grey clip=0.02 scalebar=n wanttitle=n screenratio=1.0')
+
+Flow('fine10bulkinvp1it0g3240','fine10bulkinvp1it0','transp plane=23 | window min3=3240 max3=3240')
+Result('fine10bulkinvp1it0g3240','grey clip=0.02 scalebar=y wanttitle=n')
+
+Flow('fine10bulkinvp1it0g6000','fine10bulkinvp1it0','transp plane=23 | window min3=6000 max3=6000')
+Result('fine10bulkinvp1it0g6000','grey clip=0.01 scalebar=y wanttitle=n')
+Result('fine10bulkinvp1it0g6000rat','fine10bulkinvp1it0g6000','window min1=2000 max1=3200 | pad beg2=38 end2=38 | grey clip=0.01 scalebar=n wanttitle=n screenratio=1.0')
+
+Flow('fine10bulkinvp1it20stack50','fine10bulkinvp1it20','window min3=-50 max3=50 | stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it20stack50','grey color=a clip=4.0 scalebar=y wanttitle=n minval=-4 maxval=4')
+
+Flow('fine10bulkinvp1it20stack25','fine10bulkinvp1it20','window min3=-25 max3=25 | stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it20stack25','grey color=a clip=4.0 scalebar=y wanttitle=n minval=-4 maxval=4')
+
+Flow('fine10bulkinvp1it20stack0','fine10bulkinvp1it20','window min3=0 max3=0 | stack axis=3 norm=n|add scale=12')
+Result('fine10bulkinvp1it20stack0','grey color=a clip=4.0 scalebar=y wanttitle=n minval=-4 maxval=4')
+
+##############################
+# marm1
+##############################
+
+Result('marm1bulkbig','../marm1/bulkbig.rsf','grey color=a scalebar=y wanttitle=n')
+Result('marm1dbulk','../marm1/dbulk.rsf','grey color=a scalebar=y wanttitle=n clip=4.0 minval=-4.0 maxval=4.0')
+
+Flow('marm1r6000.su', '../marm1/Orig/born.su',
+     suwind + ' key=fldr min=6000 max=6000')
+Result('marm1r6000','marm1r6000.su','suread endian=0 read=data | grey clip=5.e-5 wanttitle=n')
+
+Flow('marm1invp1it10',None,'dd form=native <../marm1/Orig/freeinvp1it10.HH| add scale=20',stdin=0)
+Result('marm1invp1it10','grey color=a clip=4.0 scalebar=y minval=-4.0 maxval=4.0 wanttitle=n')
+
+Flow('marm1rebornp1it10r6000.su', '../marm1/Orig/freerebornp1it10.su',
+     suwind + ' key=fldr min=6000 max=6000')
+Result('marm1rebornp1it10r6000','freerebornp1it10r6000.su','suread endian=0 read=data | grey clip=5.e-5 wanttitle=n')
+
+Flow('marm1residp1it10r6000.su',['marm1rebornp1it10r6000.su','marm1r6000.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]}', stdin=0)
+Result('marm1residp1it10r6000','marm1residp1it10r6000.su','suread endian=0 read=data | grey clip=5.e-5 wanttitle=n')
+
+##############################
+# marm10
+##############################
+
+
+Flow('marm10freeinvp1it10',None,'dd form=native <../marm10/Orig/freeinvp1it10.HH',stdin=0)
+Result('marm10freeinvp1it10','byte clip=0.02|grey3 frame1=100 frame2=270 frame3=10 point1=0.8 point2=0.7 wanttitle=n')
+
+Flow('marm10freeinvp1it10stack','marm10freeinvp1it10','stack axis=3 norm=n|add scale=20')
+Result('marm10freeinvp1it10stack','grey color=a scalebar=y minval=-4 maxval=4 clip=4 wanttitle=n')
+
+Flow('marm10freeinvp1it10g6000','marm10freeinvp1it10','transp plane=23 | window min3=6000 max3=6000')
+Result('marm10freeinvp1it10g6000','grey clip=0.01 scalebar=y wanttitle=n')
+Result('marm10freeinvp1it10g6000rat','marm10freeinvp1it10g6000','window min1=2000 max1=3200 | pad beg2=20 end2=20 | grey clip=0.01 scalebar=n wanttitle=n screenratio=1.0')
+
+Flow('vg1invp0it0',None,'dd form=native < ../../vikingmig/e1-269-508/Orig/bulkmig.HH',stdin=0)
+Flow('vg1invp1it0',None,'dd form=native < ../../vikingmig/e1-269-508/Orig/bulkinvp1it0.HH',stdin=0)
+Result('vg1invp0it0','window min2=10000 max2=15000 max1=3000|put label1=Depth label2=Midpoint unit1=m unit2=m | grey xinch=10 yinch=5 wanttitle=n')
+Result('vg1invp0it0agc','vg1inv1p0it0','window min2=10000 max2=15000 max1=3000| put label1=Depth label2=Midpoint unit1=m unit2=m | agc | grey xinch=10 yinch=5 wanttitle=n')
+Result('vg1invp1it0','window min2=10000 max2=15000 max1=3000|put label1=Depth label2=Midpoint unit1=m unit2=m | grey xinch=10 yinch=5 wanttitle=n')
+
+####################### iteration plots
+
+for exp in ['coarse1', 'coarse10', 'fine1', 'fine10']:
+    for rpt in ['invp0it20', 'invp1it10', 'invp1it20', 'invp1it20nt']:
+        Flow(exp + rpt + '.txt','../' + exp + '/Orig/' + rpt + '.cgne.rpt',
+             '/bin/cat ${SOURCE} | grep -v "\--" | grep -v "===" ' +
+	     ' | grep -v "Iter" | grep -v "init" | grep -v "res" ' +
+	     ' | grep -v "grad" | grep -v "*" | grep \'[^[:space:]]\' ',
+	     stdin=0)
+	Flow(exp + rpt + 'a.rsf', exp + rpt + '.txt',
+	     '''
+	     echo "n2=\c" > ${TARGET};
+	     wc -l ${SOURCE} | sed s/${SOURCE}// | sed \'s/ //g\' >> ${TARGET};
+	     echo "d2=1" >> ${TARGET};
+	     echo "o2=0" >> ${TARGET};
+	     echo "n1=3" >> ${TARGET};
+	     echo "d1=1" >> ${TARGET};
+	     echo "o1=0" >> ${TARGET};
+ 	     echo "esize=4" >> ${TARGET};
+	     echo "data_format=\"ascii_float\"" >> ${TARGET};
+	     echo "in=./\c" >> ${TARGET};
+	     ''' +
+	     'echo ${SOURCE} >> ${TARGET};',
+	     stdin=0, stdout=-1)
+        Flow(exp + rpt + 'res.rsf',
+             exp + rpt + 'a.rsf',	
+	     '''
+	     dd type=float form=native |
+	     transp plane=12 |
+	     window n2=1 f2=1
+	     ''')
+	Flow(exp + rpt + 'relres.rsf',
+             exp + rpt + 'res.rsf',
+	     sfwindow + ' n1=1 f1=0 > jnk.rsf; ' +
+	     sfadd + ' < jnk.rsf scale=0.0 | ' +
+	     sfadd + ' add=1.0 > one.rsf; ' + 
+	     sfadd + ' mode=d < one.rsf jnk.rsf | ' + 
+	     sfspray + ' n=`' + sfget + ' n1 parform=n < ${SOURCE}` axis=1 > stuff.rsf;' +
+	     sfadd + ' mode=p < ${SOURCE} stuff.rsf'
+	     )
+
+        Flow(exp + rpt + 'grd.rsf',
+             exp + rpt + 'a.rsf',	
+	     '''
+	     dd type=float form=native |
+	     transp plane=12 |
+	     window n2=1 f2=2
+	     ''')	     
+	     
+################ convergence curves
+
+Result('fine1invp0it20res','graph min2=0 plotfat=6 plotcol=5 wanttitle=n label1=Iteration label2=MS Error')
+Result('fine1invp0it20relres','graph min2=0 plotfat=6 plotcol=5 wanttitle=n label1=Iteration label2=\'Rel Error\'')
+
+Flow('fine1comp', ['fine1invp0it20relres', 'fine1invp1it20relres'],
+     'cat axis=2 d=1 o=0 ${SOURCES[1]}')
+Result('fine1comp','graph min2=0 plotfat=6,6 plotcol=5,6 wanttitle=n label1=Iteration label2=\'Rel Error\'')
+
+Flow('fine1compnt', ['fine1invp0it20relres', 'fine1invp1it20ntrelres'],
+     'cat axis=2 d=1 o=0 ${SOURCES[1]}')
+Result('fine1compnt','graph min2=0 max2=10 plotfat=6,6 plotcol=5,6 wanttitle=n label1=Iteration label2=\'Rel Error\'')
+
+	     
+End()

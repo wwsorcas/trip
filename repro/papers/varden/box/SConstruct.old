@@ -1,0 +1,547 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+
+#FPROTO = 'free40m'
+#APROTO = 'absb40m'
+FPROTO = '2shot'
+APROTO = '2surf'
+
+# local parallel parameters
+lenv = {'stampede2' : { 'nodes'    : 2,
+                        'ppn'      : 38,
+                        'wall'     : '00:30:00'
+                      },
+         'davinci' :  { 'nodes'    : 2,
+                       	'ppn'      : 16,
+                        'wall'     : '00:30:00'
+                      },
+         'macbook' :  { 'ppn'      : 2,
+	                'FPROTO'   : '2shot',
+			'APROTO'   : '2surf'},
+	 'getafix' :  { 'ppn'      : 10},
+	 }
+
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+MYAPPS          = os.getenv('MYAPPS')
+TRIP            = os.path.join(MYAPPS,'trip')
+GCCTRIP         = os.path.join(MYAPPS,'trip')
+asg             = os.path.join(TRIP,'iwave/asg/main/asg.x')
+lin             = os.path.join(TRIP,'iwave/asg/main/asgcgne.x')
+appinv          = os.path.join(TRIP,'iwave/asg/main/appinv.x')
+borninv         = os.path.join(TRIP,'iwave/asg/main/appinv1.x')
+acd             = os.path.join(TRIP,'iwave/acd/main/acd.x')
+myvalgrind      = os.path.join(MYAPPS,'valgrind/bin/valgrind')
+dgrid           = os.path.join(GCCTRIP,'iwave/grid/main/GridDeriv.x')
+dsegy           = os.path.join(GCCTRIP,'iwave/trace/main/SEGYDeriv.x')
+decon           = os.path.join(GCCTRIP,'iwave/trace/main/SEGYCGDecon.x')
+BULK = 6.250
+BUOY = 1.000
+
+Flow('deepbulk', None, 
+     '''
+     makevel n1=311 n2=401 
+     d1=10.0 d2=10.0 o1=-100 v000=%g 
+     sfput dim=2 gdim=2 id1=0 id2=1
+     label1=Depth label2=Distance
+     unit1=m unit2=m
+     label=Bulk_modulus unit=GPa''' % BULK,
+     stdin=0)
+     
+Flow('deepbuoy', None, 
+     '''
+     makevel n1=311 n2=401 
+     d1=10.0 d2=10.0 o1=-100 v000=%g | 
+     sfput dim=2 gdim=2 id1=0 id2=1
+     label1=Depth label2=Distance
+     unit1=m unit2=m
+     label=Buoyancy unit=cm^3/g
+     ''' % BUOY,
+     stdin=0)
+
+# layers
+BULKLAYER=[0.0,100.0,200.0,300.0]
+THICLAYER=[110,50,50,101]
+for i in range(0,4):
+    Flow('deeplay'+str(i),None,
+        'makevel n1=' + str(THICLAYER[i]) + ' n2=401 ' +
+        'd1=10.0 d2=10.0 v000=' + str(BULKLAYER[i]) + ' | ' +
+        'sfput dim=2 gdim=2 id1=0 id2=1 ' +
+        'label1=Depth label2=Distance ' +
+        'unit1=m unit2=m label=BulkModulus unit=GPa',
+        stdin=0)
+
+Flow('deepdbulk0',['deeplay0','deeplay1','deeplay2','deeplay3'],'cat axis=1 d=10 ${SOURCES[1]} ' +
+     '${SOURCES[2]} ${SOURCES[3]} | put o1=-100')
+Flow('deepdbulk1','deepdbulk0',dgrid + ' axis=0 adjoint=0 in=${SOURCES[0]} out=${TARGETS[0]}',
+     stdin=0,stdout=-1)
+Flow('deepdbulk2','deepdbulk1',dgrid + ' axis=0 adjoint=0 in=${SOURCES[0]} out=${TARGETS[0]}',
+     stdin=0,stdout=-1)
+
+# Jie's code for generating model perturbation, with my modifications
+# n2 = 301 -> 401
+# n1 = 301 -> 311
+# o1 = 0 -> -100
+# makes deep version of model
+# Generate reflectivity model
+
+par = dict( n1=311, o1=-100, d1=10,
+            n2=401, o2=0, d2=10,
+            ref1=1000, ref2=1500 ,ref3=2000 )
+
+Flow('spike',None,'spike n1=%(n1)d o1=%(o1)d d1=%(d1)d label1="Depth" unit1="m"\
+ out=stdout' %par)
+
+f=2
+
+Flow('dgauss1','spike',
+    '''math output="(x1-%d)" |
+      math output="input*exp(-%g*input*input)" |
+      scale axis=1| scale axis=1 rscale=1000 out=stdout
+      ''' %(par['ref1'],1/(f*par['n1'])))
+
+Flow('dgauss2','spike',
+    '''math output="(x1-%d)" |
+      math output="input*exp(-%g*input*input)" |
+      scale axis=1| scale axis=1 rscale=1000 out=stdout
+      ''' %(par['ref2'],1/(f*par['n1'])))
+
+Flow('dgauss3','spike',
+    '''math output="(x1-%d)" |
+      math output="input*exp(-%g*input*input)" |
+      scale axis=1| scale axis=1 rscale=1000 out=stdout
+      ''' %(par['ref3'],1/(f*par['n1'])))
+
+Flow('deltav1','dgauss1','''spray axis=2 n=%(n2)d o=%(o2)d  d=%(d2)d | put labe\
+l2="Distance" unit2="m" o3=0 d3=%(d1)d out=stdout''' %par)
+
+Flow('deltav2','dgauss2','''spray axis=2 n=%(n2)d o=%(o2)d  d=%(d2)d | put labe\
+l2="Distance" unit2="m" o3=0 d3=%(d1)d out=stdout''' %par)
+
+Flow('deltav3','dgauss3','''spray axis=2 n=%(n2)d o=%(o2)d  d=%(d2)d | put labe\
+l2="Distance" unit2="m" o3=0 d3=%(d1)d out=stdout''' %par)
+
+#Flow('bvel',None,
+#     '''
+#     math n1=%(n1)d n2=%(n2)d
+#     output="2500" |
+#     put o1=%(o1)d d1=%(d1)d o2=%(o2)d d2=%(d2)d
+#     label1=Depth unit1=m label2=Distance unit2=m out=stdout
+#     ''' %par)
+
+# regard as bulk mod pert - why not
+#Flow('deltav','deltav1 deltav2 deltav3','math output=input+a+b a=${SOURCES[1]} \
+#b=${SOURCES[2]} out=stdout')
+Flow('deepdbulk','deltav1 deltav2 deltav3',
+     'math output=input+a+b a=${SOURCES[1]} b=${SOURCES[2]} out=stdout  | add scale=0.0004')
+
+# no need for relative version
+#Flow('ref','deltav bvel','math output="input/a" a=${SOURCES[1]}  out=stdout')
+
+#Flow('deepdbulk','deepdbulk2','smooth rect1=2 rect2=2 repeat=4| add scale=-3.7')
+
+Flow('deepdbuoy', None, 
+     '''
+     makevel n1=311 n2=401 
+     d1=10.0 d2=10.0 o1=-100 v000=0.0 | 
+     sfput dim=2 gdim=2 id1=0 id2=1
+     label1=Depth label2=Distance
+     unit1=m unit2=m
+     label=Buoyancy unit=cm^3/g
+     ''',
+     stdin=0)
+
+Flow('bulk','deepbulk','window n1=301 f1=10')
+Flow('buoy','deepbuoy','window n1=301 f1=10')
+Flow('dbulk','deepdbulk','window n1=301 f1=10')
+Flow('dbuoy','deepdbuoy','window n1=301 f1=10')
+
+# physical extension - pad by zeros
+NH=20
+DZX=10
+OH=-NH*DZX
+Flow('extbulk','bulk',
+     'add scale=' + str(1.0/DZX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+Flow('extdeepbulk','deepbulk',
+     'add scale=' + str(1.0/DZX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+Flow('extdbulk','dbulk',
+     'add scale=' + str(1.0/DZX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+Flow('extdeepdbulk','deepdbulk',
+     'add scale=' + str(1.0/DZX) + ' |' +
+     'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+     ' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+     
+# dirac - includes division by dt
+Flow('spike.su', None, suspike + ' nt=1001 ntr=1 offset=0 ix1=1 nspk=1 it1=501 dt=0.001 | ' +  sugain + ' scale=' + str(BULK) + ' | ' + sushw + ' key=delrt a=-500')
+Flow('suspike','spike.su','suread endian=0 read=data')
+Flow('bandpass.su', 'spike.su', sufilter + ' f=2.5,5,35,40' )
+Flow('subbandpass.su', 'spike.su', sufilter + ' f=5,10,30,35' )
+Flow('intbandpass.su','bandpass.su',suop + ' op=sum')
+Flow('intsubbandpass.su','subbandpass.su',suop + ' op=sum')
+Flow('trapintbandpass.su','bandpass.su','/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + dsegy + ' in=${TARGETS[0]} order=-1',stdin=0,stdout=-1)
+
+
+Flow('absb40m.su', None, sunull + ' nt=751 ntr=22876 | ' + sushw + ' key=selev,gelev a=0,0     | ' + sushw + ' key=sx,gx,sy,gy,fldr,tracr,tracf,tracl a=500,500,0,0,1,1,1,1 b=0,10,0,0,0,1,1,1 c=40,0,0,0,1,301,0,301 j=301,301,301,301,301,301,301,301 | ' + suchw + ' key1=offset key2=gx key3=sx b=1 c=-1')
+Flow('free40m.su', None, sunull + ' nt=751 ntr=22876 | ' + sushw + ' key=selev,gelev a=-10,-10     | ' + sushw + ' key=sx,gx,sy,gy,fldr,tracr,tracf,tracl a=500,500,0,0,1,1,1,1 b=0,10,0,0,0,1,1,1 c=40,0,0,0,1,301,0,301 j=301,301,301,301,301,301,301,301 | ' + suchw + ' key1=offset key2=gx key3=sx b=1 c=-1')
+
+Flow('2surf.su','absb40m.su',suwind + ' key=fldr min=37 max=38')
+Flow('2shot.su','free40m.su',suwind + ' key=fldr min=37 max=38')
+
+for foo in ['absb40m','free40m','2surf','2shot']:
+    Flow('wavelet_' + foo + '.su', ['trapintbandpass.su', foo + '.su'],
+         '''
+         towed_array 
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+    Flow('subwavelet_' + foo + '.su', ['trapintbandpass.su', foo + '.su'],
+         '''
+         towed_array 
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+
+# derived nas
+FPDATA = FPROTO + '.su'
+FVDSRC = 'wavelet_' + FPROTO + '.su'
+SFVDSRC = 'subwavelet_' + FPROTO + '.su'
+APDATA = APROTO + '.su'
+AVDSRC = 'wavelet_' + APROTO + '.su'
+SAVDSRC = 'subwavelet_' + APROTO + '.su'
+
+PTASK = getThreads(lenv)
+
+jobs=   [
+	{ 'job': 'born',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [FPDATA, FVDSRC, 'bulk', 'buoy', 'dbulk', 'dbuoy'],
+          'tgt': ['born.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	{ 'job': 'reborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [FPDATA, FVDSRC, 'bulk', 'buoy', 'freemig1stack', 'dbuoy'],
+          'tgt': ['reborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	{ 'job': 'extreborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [FPDATA, FVDSRC, 'extbulk', 'buoy', 'freemig1import', 'dbuoy'],
+          'tgt': ['extreborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},	
+	{ 'job': 'extmig',
+          'pre': 'add < ${SOURCES[2]} scale=0.0 > ${TARGETS[0]} && add < ${SOURCES[3]} scale=0.0 > ${TARGETS[1]} ',
+          'src': ['born.su', 'wavelet_free40m.su', 'extbulk', 'buoy'],
+          'tgt': ['mbulk', 'mbuoy'],
+          'cmd': asg + ' ' +
+		 'deriv=1 adjoint=1 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 ' +
+                 'dmax=3.0 sampord=1 nsnaps=20 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_b1=${TARGETS[0]} buoyancy_b1=${TARGETS[1]} ' +
+		 'source_p=${SOURCES[1]} data_p=${SOURCES[0]} ' +
+                 'partask=' + str(getThreads(lenv)) + ' ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +		 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0 '
+	},	
+	{ 'job': 'sborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [FPDATA, SFVDSRC, 'bulk', 'buoy', 'dbulk', 'dbuoy'],
+          'tgt': ['sborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},	
+	{ 'job': 'absborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [APDATA, AVDSRC, 'deepbulk', 'deepbuoy', 'deepdbulk', 'deepdbuoy'],
+          'tgt': ['absborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	{ 'job': 'sabsborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': [APDATA, SAVDSRC, 'deepbulk', 'deepbuoy', 'deepdbulk', 'deepdbuoy'],
+          'tgt': ['sabsborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},	
+       ]
+
+basecmd = ' deriv=0 order=4 adjtest=0 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0 sampord=1 maxfreq=0.04 nsnaps=20 freebulkmod=${SOURCES[4]} freebuoyancy=${SOURCES[5]} freebulkmodpert=${SOURCES[6]} absbbulkmod=${SOURCES[7]} absbbuoyancy=${SOURCES[8]} absbbulkmodpert=${SOURCES[9]} freesource_p=${SOURCES[2]} absbsource_p=${SOURCES[3]} freedata_p=${SOURCES[0]} absbdata_p=${SOURCES[1]} pmlwidth=250 pmlampl=1.0 dump_term=0 dump_lda=0 dump_ldc=0 printact=0 num_threads=1 partask=' + str(PTASK) + ' '
+
+prefix = ['born','mig']
+suffix = ['.su','.rsf']
+cpcmd  = {'free': ['/bin/cp ${SOURCES[0]} ','add scale=0 < ${SOURCES[6]} > '],
+          'absb': ['/bin/cp ${SOURCES[1]} ','add scale=0 < ${SOURCES[9]} > ']}
+borndata = [['born.su','born.su'],['born.su','freeborn1.su']]	  
+choice = {'free': '1', 'absb': '0'}
+output = ['data_p', 'bulkmodpert']
+fake = ['','fake']
+
+for fa in ['free', 'absb']:
+    for adjoint in [0, 1]:
+        for appinvidx in [0, 1]:
+	    for ft in [0, 1]:
+	    	for ab in [0, 1]:
+		    jobs = jobs + [
+	            	  { 'job': fa+prefix[adjoint]+str(appinvidx),
+                       	  'pre': cpcmd[fa][adjoint] + ' ${TARGETS[0]}', 
+                       	  'src': ['born.su','absborn.su', FVDSRC, AVDSRC,
+	                  	 'bulk', 'buoy', 'extdbulk',
+	  	      	  	 'deepbulk','deepbuoy','extdeepdbulk'],
+                          'tgt': [fa+prefix[adjoint]+str(appinvidx) + 'ft' + str(ft) + 'ab' + str(ab) + suffix[adjoint]],
+	          	  'cmd': appinv + basecmd + 
+                                'freesurface=' + choice[fa] + ' ' +
+		     	        'adjoint=' + str(adjoint) + ' ' +
+				'appinv=' + str(appinvidx) + ' ' +
+		     	        'precond=' + str(appinvidx) + ' ' +
+				'ResidualTol=0.01 GradientTol=0.01 MaxIter=0 ' + 
+				'outfile=' + fa + 'cgne.rpt ' + 
+				'ft=' + str(ft) + ' ab=' + str(ab) + ' ' +
+		     	        fa + output[adjoint] + '=${TARGETS[0]} '
+	                },
+			]
+
+
+for fa in ['free', 'absb']:
+    for precond in [0, 1]:
+        for itmax in range(0,21):
+	    jobs = jobs + [			
+	            	  { 'job': fa+'invp'+str(precond) + 'it' + str(itmax),
+                       	  'pre': cpcmd[fa][1] + ' ${TARGETS[0]}', 
+                       	  'src': ['born.su','absborn.su', FVDSRC, AVDSRC,
+	                  	 'bulk', 'buoy', 'extdbulk',
+	  	      	  	 'deepbulk','deepbuoy','extdeepdbulk'],
+                          'tgt': [fa+'invp'+str(precond) + 'it' + str(itmax) + suffix[1]],
+	          	  'cmd': borninv + basecmd + 
+                                'freesurface=' + choice[fa] + ' ' +
+		     	        'precond=' + str(precond) + ' ' +
+				'ResidualTol=0.01 GradientTol=0.01 MaxIter=' + str(itmax) + ' ' + 
+				'outfile=' + fa + 'cgne.rpt ' +		 
+		     	        fa + 'bulkmodpert' '=${TARGETS[0]} '
+	                },
+                ]
+
+#IMPORT = ''
+IMPORT = 'import'
+
+for fa in ['free', 'absb']:
+    for precond in [0, 1]:
+        for itmax in range(0,21):
+	    jobs = jobs + [
+                { 'job': fa+'reborn',
+                  'pre': cpcmd[fa][0] + ' ${TARGETS[0]}',
+                  'src': ['born.su','absborn.su', SFVDSRC, SAVDSRC,
+	                  'bulk', 'buoy', 'extdbulk',
+	  	      	  'deepbulk','deepbuoy','extdeepdbulk',
+			  fa + 'invp' + str(precond) + 'it' + str(itmax)+'import'],
+                  'tgt': [fa+'invp' + str(precond) + 'it' + str(itmax) + 'reborn.su'],
+	          'cmd': appinv + basecmd +
+                         'freesurface=' + choice[fa] + ' ' +
+		     	 'adjoint=0 appinv=0 ' + 
+		     	 fa + 'data_p.su' + '=${TARGETS[0]} ' +
+			 fa + 'bulkmodpert=${SOURCES[10]}'
+	        },
+                ]
+
+# by-hand version of absbmig
+
+# scale by 1/4*zs*zr and prepare traces for free surface migration
+Flow('extstage1.su','absborn.su',sushw + ' key=selev,gelev a=-10,-10 | ' + sugain + ' scale=0.0025')
+
+# scale by s/r cell volume
+Flow('extstage2.su','extstage1.su', sugain + ' scale=400')
+
+# three time integrations 
+Flow('int1absborn.su','extstage2.su',suop + ' op=sum | ' + sugain + ' scale=4')
+Flow('int2absborn.su','int1absborn.su',suop + ' op=sum | ' + sugain + ' scale=4')
+Flow('extstage3.su','int2absborn.su',suop + ' op=sum | ' + sugain + ' scale=4') 
+
+# free surface migration
+jobs = jobs + [
+	{ 'job': 'extmig',
+          'pre': 'add < ${SOURCES[2]} scale=0.0 > ${TARGETS[0]} && add < ${SOURCES[3]} scale=0.0 > ${TARGETS[1]} ',
+          'src': ['extstage3.su', FVDSRC, 'extbulk', 'buoy'],
+          'tgt': ['extstage4', 'mbuoystage4'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=1 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 ' +
+		 'dmax=3.0 sampord=1 nsnaps=20 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_b1=${TARGETS[0]} buoyancy_b1=${TARGETS[1]} ' +
+		 'source_p=${SOURCES[1]} data_p=${SOURCES[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0 ' +
+		 'partask=' + str(PTASK),
+	},
+	]
+
+# z-derivative of migration output
+Flow('extstage5','extstage4',dgrid  + ' axis=0 adjoint=0 in=${SOURCES[0]} out=${TARGETS[0]}', stdin=0, stdout=-1)
+
+# final scaling by 32 rho^2 v^6
+Flow('hand','extstage5','add scale=' + str(32.0*BUOY*BULK*BULK*BULK))
+
+######### iterative born inversion
+for fa in ['free', 'absb']:
+    jobs = jobs + [
+                  { 'job': fa+'extborninv',
+                    'pre': cpcmd[fa][1] + ' ${TARGETS[0]}',
+                    'src': ['born.su','absborn.su', FVDSRC, AVDSRC,
+	            'bulk', 'buoy', 'extdbulk',
+	  	    'deepbulk','deepbuoy','extdeepdbulk'],
+                    'tgt': [fa+'extbulkmodinv.rsf'],
+	            'cmd': borninv +
+		    '''
+		    deriv=0 order=4 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0
+		    sampord=1 nsnaps=20 appinv=0
+		    freebulkmod=${SOURCES[4]} freebuoyancy=${SOURCES[5]}
+		    freebulkmodpert=${SOURCES[6]} absbbulkmod=${SOURCES[7]}
+		    absbbuoyancy=${SOURCES[8]} absbbulkmodpert=${SOURCES[9]}
+		    freesource_p=${SOURCES[2]} absbsource_p=${SOURCES[3]}
+		    freedata_p=${SOURCES[0]} absbdata_p=${SOURCES[1]}
+		    ResidualTol=0.01 GradientTol=0.01 MaxIter=2
+		    outfile=''' + fa + 'cgne.rpt ' +
+		    'pmlwidth=250 pmlampl=1.0 dump_term=0 dump_lda=0 dump_ldc=0 ' + 
+		    'printact=0 num_threads=1 partask=' + str(PTASK) + ' ' +
+                    'freesurface=' + choice[fa] + ' ' +
+                    fa+'bulkmodinv=${TARGETS[0]}'
+	        },             
+                ]
+
+
+#for i in range(len(jobs)):
+#    cmd = getCommand(jobs[i], lenv)
+#    if cmd == None:
+#        print 'Note: jobs['+str(i)+' not defined]'
+#    else:
+#        print 'cmd = ' + cmd + '\n'
+#        print 'src = ' + ' '.join(jobs[i]['src']) + '\n'
+#        print 'tgt = ' + ' '.join(jobs[i]['tgt']) + '\n'
+	
+run(jobs,lenv)
+
+Result('dbulk','window min2=500 max2=3500 | grey clip=0.4 scalebar=y')
+Flow('freemig1stack','freemig1import','stack axis=3 norm=n|add scale=10| put d3=1 o3=0 gdim=2 id3=-1')
+Result('freemig1stack','window min2=500 max2=3500 | grey clip=0.4 scalebar=y')
+Flow('stack150','freemig1stack','window n2=1 f2=150')
+
+Flow('freemig1bar','freemig1import','bar minval=-0.002 maxval=0.002')
+Result('freemig1',['freemig1import','freemig1bar'],'window < ${SOURCES[0]} min2=500 max2=3500| byte clip=.007 |grey3 frame1=20 frame2=200 frame3=20 point1=0.8 point2=0.7 scalebar=y bar=${SOURCES[1]} bareverse=y > ${TARGETS[0]}', stdin=0, stdout=-1)
+Flow('absbmig0bar','absbmig0plot','bar minval=-0.5 maxval=0.5')
+Flow('absbmig0plot','absbmig0import','add scale=1.e+8')
+Result('absbmig0',['absbmig0plot','absbmig0bar'],'window < ${SOURCES[0]} min2=500 max2=3500| byte clip=5 |grey3 frame1=20 frame2=200 frame3=20 point1=0.8 point2=0.7 scalebar=y bar=${SOURCES[1]} bareverse=y > ${TARGETS[0]}', stdin=0, stdout=-1)
+
+Flow('dbulk150','dbulk','window n2=1 f2=150')
+Flow('free150','freemig1stack','window n2=1 f2=150')
+Flow('diff150',['dbulk150','free150'],'add scale=-1,1 ${SOURCES[1]}');
+Flow('trace150',['dbulk150','free150','diff150'],'cat axis=2 d=1 o=0 < ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]}')
+Result('trace150',' graph color=y plotcol=3,2,4 plotfat=2 xinch=10 yinch=3')
+
+Result('born','born.su','suread endian=0  read=data |grey clip=3.0e-05 scalebar=y')
+Result('reborn','reborn.su','suread endian=0  read=data |grey clip=3.0e-05 scalebar=y')
+Result('extreborn','extreborn.su','suread endian=0  read=data |grey clip=3.0e-05 scalebar=y')
+End()

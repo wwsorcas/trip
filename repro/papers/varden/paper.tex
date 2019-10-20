@@ -1,0 +1,1632 @@
+\title{Asymptotic Inversion of the Variable Density Acoustic
+  Model\\Part 2: Implementation and Examples}
+
+\author{
+Raanan Dafni\thanks{Department of Computational and Applied Mathematics, Rice University, 
+Houston, TX, 77005, USA, 
+{\tt symes@rice.edu}},
+William Symes\thanks{Department of Computational and Applied Mathematics, Rice University, 
+Houston, TX, 77005, USA, 
+{\tt symes@rice.edu}}
+}
+
+\lefthead{Dafni Symes}
+
+\righthead{Asymptotic Acoustic Inversion}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+Techniques developed for asymptotic wave equation based linearized inversion of
+subsurface offset extended constant density acoustics also apply to variable density
+acoustics. The data may be matched by proper choice of an extended
+relative bulk modulus perturbation, with zero density
+perturbation. This bulk modulus perturbation may be treated as an
+offset-dependent reflectivity volume, and AVA-like techniques applied
+to extract asymptotically correct estimates of velocity and density
+perturbations, assuming that the background velocity is kinematically
+consistent with the data. 
+
+The first part of this paper presents a 
+theoretical analysis of the linearized inversion, leading to the
+asymptotic wave equation algorithm. This second part
+describes implementation details, explains how the asymptotic inverse
+may be used to accelerate iterative inversion algorithms (``least
+squares migration''), and  presents numerical examples of both
+asymptotic and iterative inversion.
+\end{abstract}
+\setlength{\parindent}{0cm}
+
+\section{Preliminaries}
+
+Position vectors are $\bx = (x,z)$; $x$ is the horizontal position
+vector, 1D or 2D for 2D or 3D modeling respectively.
+
+The techniques explained here apply to acoustic data, or data that can
+be satisfactorily treated as acoustic, recorded in a water layer at
+the top of the half-space $z>0$. It's conceivable that similar
+techniques may be developed in the future for other wave physics and
+other acquisition geometries, but so far as I know such extensions
+have not yet been worked out.
+
+The pair $\kappa,\beta$ of bulk modulus and buoyancy (reciprocal
+density) respectively is a convenient parametrization of the acoustic
+model for present purposes. The acoustic fields $p,\bv$ solve the
+acoustic wave equations
+\begin{eqnarray}
+\label{eqn:awe}
+\frac{\partial p}{\partial t}& =& -\kappa (\nabla \cdot \bv +
+w(t)\delta(\bx-\bx_s)),\nonumber \\
+\frac{\partial \bv}{\partial t} & = & -\beta \nabla p. 
+\end{eqnarray}  
+The perturbational acoustic fields $\delta p, \delta \bv$ due to
+perturbations $\delta \kappa, \delta \beta$ solve the
+related equations 
+\begin{eqnarray}
+\label{eqn:pawe}
+\frac{\partial \delta p}{\partial t}& =& -\kappa \nabla \cdot \delta \bv -
+\delta \kappa (\nabla \cdot \bv + w(t)\delta(\bx-\bx_S),\nonumber \\
+\frac{\partial \delta \bv}{\partial t} & = & -\beta \nabla \delta p - \delta
+                                      \beta \nabla p. 
+\end{eqnarray}  
+in which $p,\bv$ are solutions of equation \ref{eqn:awe}.
+The source characteristics (wavelet $w(t)$, locations $\bx_s$) are
+assumed known. 
+
+$\dF$ denotes the acoustic Born modeling operator in the half-space $z>0$
+adjoined to an infinite homogeneous half-space in $z<0$, that is, an
+infinitely deep ocean. An implementable approximation of this
+configuration uses an
+absorbing boundary condition (PML) at the $z=0$ surface of a
+rectangular domain, and also use absorbing boundary conditions at the
+other boundary surfaces of the rectangle. Assume that the recorded
+data are simply the samples of pressure at receiver
+locations, {\em for both sources and receivers located on the
+  bounndary $z=0$}. Explicitly,
+\[
+\dF[\kappa,\beta][\delta \kappa,\delta \beta](x_r,t;x_s) = \{\delta p((x_r,0),t;(x_s,0))\}
+\]
+with $x_r, x_s$ ranging over survey source-receiver horizontal
+locations. 
+
+$\dF_0$ denotes the free surface (pressure-release) Born modeling operator in
+the same half-space. The free surface acoustic field $p_0,\bv_0$ solves
+the acoustic system \ref{eqn:awe} with the additional
+Dirichlet boundary condition $p_0=0$ on $z=0$. The perturbational
+field $\delta p_0,\delta \bv_0$ is defined similarly. Sources and receivers
+must be positioned at positive depths $z_r>0$, $z_s>0$ (else the
+output is boring) 
+and the same horizontal locations as the hypothetical
+absorbing-surface survey. 
+
+Define ``shallow tow depth'' to mean that for the data
+spectrum of interest, the finite difference approximation 
+\begin{equation}
+\label{eqn:dipole}
+\left(\frac{\partial}{\partial z_r}\frac{\partial}{\partial
+  z_s}\delta p\right)((x_r,0),t; (x_s,0)) \approx
+\frac{1}{4z_rz_s}\delta p_0((x_r,z_r),t;(x_s,z_s))
+\end{equation}
+is acceptably accurate.  
+Assuming that $\delta \kappa, \delta \rho$ are non-zero only in $z>0$,
+the absorbing surface perturbational field $\delta p,\delta \bv$ is
+upcoming at $z=0$, that is, its high frequency energy is carried along
+rays for which $z$ decreases as $t$ increases. Consequently, the depth
+derivatives in equation \ref{eqn:dipole} can be computed
+asymptotically to any order in frequency from the surface data $\dF$
+alone, since asymptotically the fields satisfy one-way wave
+equations. Let the operators on the surface data corresponding to the
+partial derivatives in $z_s$, $z_r$ be denoted $D_{z_s}$ and $D_{z_r}$
+respectively. \cite{HouSymes:15} show that $-D_{z_s}D_{z_r}$ is a
+positive semi-definite operator of order 2. The definition of
+``shallow tow depth'' \ref{eqn:dipole}
+can be re-written
+\begin{equation}
+\label{eqn:opdipole}
+D_{z_s}D_{z_r}\dF[\kappa,\rho][\delta \kappa,\delta \beta](x_r,t;x_s) \approx 
+\frac{1}{4z_rz_s} Z \dF_0[\kappa,\beta][\delta \kappa,\delta \beta](x_r,t;x_s) 
+\end{equation}
+The operator $Z$ assigns traces with source and receiver depths $z_s,
+z_r$ to traces with source and receiver depths $=0$, with all other
+header and sample data the same.
+
+The subsurface offset flavor of extended modeling makes the mechanical
+parameters $\kappa,\beta$ into operators. In the Born case, only the
+perturbational parameters $\delta \kappa,\delta \beta$ are regarded as
+operators. In fact, it turns out that there is really no point in
+making $\delta \beta$ into an operator, as it plays no necessary role at
+all in subsequent developments so set
+\begin{equation}
+\label{eqn:zerodbeta}
+\delta \beta = 0
+\end{equation}
+and drop $\delta \beta$ from the argument list of the linearized operators.
+
+The extended bulk modulus
+perturbation (operator kernel) $\delta \bar{\kappa}$ has a convenient
+parametrization in terms of sunken midpoint $(m,z)$ and (horizontal)
+half-offset $h$. The extended perturbation fields
+$\delta \bar{p}, \delta \bar{\bv}$ are solutions of the extended
+version of the system \ref{eqn:pawe}:
+\begin{eqnarray}
+\label{eqn:pawe}
+\frac{\partial \delta \bar{p}}{\partial t}& =& -\kappa \nabla \cdot \delta \bar{\bv} -
+\int\,dh\,\delta \bar{\kappa}(x-h,z,h) \nabla \cdot \bv(x-2h,z,t),\nonumber \\
+\frac{\partial \delta \bar{\bv}}{\partial t} & = & -\beta \nabla \delta \bar{p} 
+\end{eqnarray}  
+Here is how to interpret the somewhat peculiar form of the
+$h$-integral: $x$ is the horizontal sunken receiver position, $m=x-h$ the
+sunken midpoint, and $x-2h$ the sunken source. 
+
+With this
+interpretation, the absorbing surface extended modeling operator defined by 
+\begin{equation}
+\label{eqn:extop}
+\doF[\kappa,\beta][\delta \bar{\kappa}] =
+\{\bar{p}((x_r,0),t;(x_s,0))\}
+\end{equation}
+is the adjoint of Claerbout's survey sinking migration operator,
+interpreted as a reverse-time construction. 
+
+The free surface extended modeling operator $\doF_0$ has a similar
+definition. The exended absorbing surface fields $\delta
+\bar{p},\delta \bar{\bv}$ are also upcoming at $z=0$, and ``shallow
+tow depth'' can also be taken to mean
+\begin{equation}
+\label{eqn:opdipole}
+D_{z_s}D_{z_r}\doF[\kappa,\rho][\delta \bar{\kappa}]\approx 
+\frac{1}{4z_rz_s} Z \doF_0[\kappa,\beta][\delta \bar{\kappa}]
+\end{equation}
+to acceptable accuracy.
+
+\section{Asymptotic Unitarity}
+The first part of this paper analyzes unitarity relations for a
+normalized version of $\doF$, acting on {\em extended reflectivities} $\bar{r}_{\kappa}$
+and $\bar{r}_{\rho}$ as 
+\begin{eqnarray}
+\label{eqn:relfs}
+\bar{r}_{\kappa}(\bx,\bh)& = & \frac{\delta \bar{\kappa}(\bx,\bh)}{\sqrt{\kappa(\bx+\bh)\kappa(\bx-\bh)}} \nonumber \\
+\bar{r}_{\rho}(\bx,\bh)& = & \frac{\delta \bar{\rho}(\bx,\bh)}{\sqrt{\rho(\bx+\bh)\rho(\bx-\bh)}}
+\end{eqnarray}
+The relative linearized forward operator $\bar{F}[\kappa,\rho]$ is
+\begin{equation}
+\label{eqn:nondim}
+\bar{F}[\kappa,\rho][\bar{r}_{\kappa},\bar{r}_{\rho}] =
+D\bar{{\cal F}}[\kappa,\rho][\delta 
+\bar{\kappa},\delta\bar{\rho}]
+\end{equation}
+where $\bar{r}_{\kappa},\bar{r}_{\rho}$ are related to $\delta 
+\bar{\kappa},\delta\bar{\rho}$ by equation \ref{eqn:relfs}. That is, 
+\begin{equation}
+\label{eqn:nondimbis}
+\bar{F}[\kappa,\rho][\frac{\delta \bar{\kappa}}{\sqrt{\kappa_+\kappa_-}}, \frac{\delta \bar{\rho}}{\sqrt{\rho_+\rho_-}}] =
+D\bar{{\cal F}}[\kappa,\rho][\delta 
+\bar{\kappa},\delta\bar{\rho}]
+\end{equation}
+using the notation $\kappa_{\pm}(\bx,\bh) = \kappa(\bx \pm \bh)$ and
+so on, introduced in part 1. 
+
+Recall from the last section that $\delta \bar{\rho} = 0$ in the
+sequel, and that $D\bar{\cal F}$ is regarded here as acting only on
+$\delta \bar{\kappa}$. Therefore the same is assumed for the
+normalized operator $\bar{F}$. Also, since $\kappa_{\pm}$ differs from
+$\kappa$ by a (multiplication) $\Psi$DO whose symbol is $=1$ at $h=0$,
+substituting $\kappa$ for $\kappa_{\pm}$ and $\rho$ for $\rho_{\pm}$
+commits an error of the type we will ignore in the approximations to
+follow, so we make this substitution without comment. Combining these
+two observations, we write
+\begin{equation}
+\label{eqn:nondimterce}
+\bar{F}[\kappa,\rho]\left[\frac{\delta \bar{\kappa}}{\kappa}\right] \approx  
+D\bar{\cal F}[\kappa,\rho]\delta \bar{\kappa} 
+\end{equation} 
+or more concisely 
+\begin{equation}
+\label{eqn:nondimquatro}
+\bar{F} \approx\doF \kappa
+\end{equation}
+in which $\kappa$ is shorthand for the operator of multiplication by $\kappa$.
+
+We will use only the second of the unitarity results for $\bar{F}$,
+Theorem 2, from the first part of the paper. We repeat this result for
+convenience. First, define asymptotic approximations of the Hilbert transforms of the $z$ and $t$
+derivatives:
+\begin{eqnarray}
+\label{eqn:kzkt1} 
+K_zu(x,z,h) &=& \int dk_z e^{i(k_xx+k_z z+k_hh)}
+                (1-\phi(k_z))|k_z|\hat{u}(k_x,k_z,k_h)\\
+\label{eqn:kzkt3} 
+K_tu(x_r,t;x_s) &=& \int d\omega e^{i(k_{x_r} x_r+k_{x_s} x_s+\omega
+                    t)}
+                    (1-\phi(\omega))|\omega|\hat{u}(k_{x_r},\omega;k_{x_s}) \\
+\end{eqnarray}
+in which $\phi \in C^{\infty}_0(\bR)$ is $=1$ in a neigborhood of
+$0$. 
+Define the model and data space weight operators by
+\begin{eqnarray}
+\label{eqn:defbarWm}
+\bar{W}_m^{-1} &=& 32 v^2 K_z \\
+\label{eqn:defbarWd}
+\bar{W}_d & = & K_t I_t^2 I_t
+D_{z_s}I_t
+D_{z_r}I_t^2
+\end{eqnarray}
+Then
+\begin{equation}
+\label{eqn:defdd}
+\bar{F}^{\ddagger} = \bar{W}_m^{-1}(\bar{F}^T\bar{W}_d)_{\kappa}.
+\end{equation}
+satisfies
+\begin{equation}
+\label{eqn:rk6sigmaterce}
+\bar{F}[\kappa,\rho]^{\ddagger}\bar{F}[\kappa,\rho][\bar{r}_{\kappa}]
+\approx  
+\frac{1}{8 \pi^3}\int dk_x dk_z dk_h e^{i(xk_{x}+zk_{z}+hk_{h})}B P
+ (\hat{\bar{r}}_{\kappa}) .
+\end{equation}
+
+Even though no ray-based computations are required to evaluate $\bar{F}^{\ddagger}$,
+the derivation of its properties is
+ray-theoretic, and depends on the assumptions
+that the background fields $\kappa, \beta$ are smooth (slowly varying
+on wavelenghth scale) and satisfy the ``DSR hypothesis'': that all
+rays from source or receiver to scattering point maintain a nonzero
+vertical velocity throughout their extent. A consequence of the DSR
+hypothesis is that the energetically significant part of the source
+wavefield should be downgoing, and the receiver wavefield should be
+upcoming, at least near the sources and receivers.
+
+The DSR assumption can be
+stated: turning rays carry negligible energy. This hypothesis is
+sometime true, sometimes not, and constitutes a real limitation on the
+approximate inverse construction.
+
+As discussed in part 1, for physical $\bar{r}_{\kappa} =
+r_{\kappa}\delta(h)$, the operators $B$ and $P$ act as the identity, 
+whence equation \ref{eqn:rk6sigmaterce} exhibits approximate unitarity 
+of $\doF$ with respect to the weighted norms 
+\begin{equation}
+\label{eqn:wnorms}
+\langle m_1,m_2\rangle_m = \langle m_1,W_m m_2 \rangle,\,\, 
+\langle d_1,d_2\rangle_d = \langle d_1,W_d d_2 \rangle. 
+\end{equation}
+
+A unitarity result for $\doF$ follows immediately from that for
+$\bar{F}$. Indeed, from \ref{eqn:nondimquatro} and
+\ref{eqn:rk6sigmaterce} obtain
+\[
+PB \approx \bar{F}^{\ddagger} \bar{F} = \bar{W}_m^{-1} \bar{F}^T
+\bar{W}_d  \bar{F} 
+\]
+\[
+\approx \bar{W}_m^{-1} \kappa \doF^T \bar{W}_d \doF \kappa
+\]
+\begin{equation}
+\label{eqn:rk6sigmaquatro}
+\approx W_m^{-1}\doF^T \bar{W}_d \doF 
+\end{equation}
+in which
+\begin{eqnarray}
+\label{eqn:wmdefk}
+W_m^{-1} = \kappa^2 \bar{W_m} &=& 32 \kappa^2 v^2 K_z = 32 \kappa^3 \beta
+                             K_z
+\end{eqnarray}
+
+A rearrangement of $\bar{W}_d$ implicitly expresses the Green's
+function perturbation, and corresponds to the implementation discussed
+below. From the first sections of part 1, the pressure perturbation
+corresponding to a reference field with a space-time delta source on
+the RHS of the pressure equation is actually the time derivative of
+the Green's function perturbation. Its trace is $\doF \delta \bar{\kappa}$, so
+$I_t \doF$ is the trace of the Green's function perturbation. This
+trace is already implicit in the data space weight operator:
+\[
+\doF^T \bar{W}_d \doF = \doF^T K_t I_t^2 I_t 
+D_{z_s}I_t
+D_{z_r}I_t^2 \doF
+\]
+\[
+= -(I_t \doF)^T K_t I_t^2 
+D_{z_s}
+D_{z_r}I_t^2 (I_t \doF)
+\]
+\begin{equation}
+\label{eqn:wdrearr}
+=-(I_t \doF)^T K_t^{-3} 
+D_{z_s}
+D_{z_r} (I_t \doF)
+\end{equation}
+since $I_t^2 \approx -K_t^{-2}$. Define 
+\begin{equation}
+\label{eqn:wdredef}
+W_d = -K_t^{-3}D_{z_s}D_{z_r}
+\end{equation}
+Then the approximation \ref{eqn:rk6sigmaquatro} is equivalent to the
+unitarity relation for $I_t\doF$:
+\begin{equation}
+\label{eqn:rk6sigmaquinze}
+PB \approx W_m^{-1} (I_t\doF)^T W_d (I_t \doF), 
+\end{equation}
+so that 
+\begin{equation}
+\label{eqn:dddef}
+\iddoF = W_m^{-1} (I_t\doF)^T W_d
+\end{equation}
+is both the adjoint of $(I_t \doF)$ with respect to the weighted norms
+defined by $W_m$ and $W_d$, and its approximate inverse for
+near-physical extended $\delta \bar{\kappa}$.
+[Note that we are re-purposing the symbols $W_m^{-1}$ and $W_d$ used 
+in the statement of Theorem 1, part 1.]
+
+Computation of $I_t \doF$ and its transpose simply requires use of the
+$\delta(\bx-\bx_s)H(t)$, or a bandlimited approximation, in the RHS of
+the reference pressure equation, that is, a bandpass filtered version of $w=H$ in \ref{eqn:awe}.
+
+\section{Asymptotic Unitarity for Free Surface modeling}
+An approximate inversion of
+the free-surface modeling operator $\doF_0$ can be constructed on the
+same principles. Begin with the dipole relation \ref{eqn:opdipole},
+which we abbreviate as 
+\begin{equation}
+\label{eqn:opdipolebis}
+D_{z_s}D_{z_r}\doF \approx \frac{1}{4z_rz_s} Z \doF_0
+\end{equation}
+The ``ghosting'' operator $D_{z_s}D_{z_r}$ (without time integrations)
+is microlocally negative
+definite symmetric as a consequence of the DSR hypothesis
+\cite[]{HouSymes:15}, and in particular microlocally
+invertible. Abusing notation a bit, write
+\begin{equation}
+\label{eqn:opdipoleterce}
+\doF = (4z_rz_s D_{z_s}D_{z_r})^{-1} Z \doF_0
+\end{equation}
+and substitute \ref{eqn:opdipoleterce} in \ref{eqn:rk6sigmaquinze} to
+obtain
+\[
+PB \approx W_m^{-1} (ZI_t\doF_0)^T (4z_rz_s D_{z_s}D_{z_r})^{-1} W_d
+(4z_rz_s D_{z_s}D_{z_r})^{-1} (ZI_t \doF_0) 
+\]
+\begin{equation}
+\label{eqn:rk6sigmads}
+= W_m^{-1} (ZI_t\doF_0)^T (4z_rz_s)^{-2} K_t^{-3} D_{z_s}D_{z_r})^{-1} (ZI_t \doF_0).
+\end{equation}
+The relation \ref{eqn:rk6sigmads} may be re-written
+\begin{equation}
+\label{eqn:rk6sigmadsbis}
+PB = W_m^{-1} (I_t\doF_0)^T W_d^0 (I_t\doF_0) 
+\end{equation}
+with 
+\begin{equation}
+\label{eqn:wddeffs}
+W_d^0 = (4z_sz_r)^{-2} Z^T K_t^{-3} (D_{z_s}D_{z_r})^{-1} Z
+\end{equation}
+thus exhibiting the weighted adjoint
+\begin{equation}
+\label{eqn:appinvfs}
+\iddoFf= W_m^{-1} (I_t \doF_0)^T W_d^0
+\end{equation}
+as an approximate inverse for near-physical arguments.
+
+Construction of $\iddoFf$ according to \ref{eqn:appinvfs} appears to
+require application of the ``de-ghosting'' operator
+$(D_{z_s}D_{z_r})^{-1}$, per the definition \ref{eqn:wddeffs} of
+$W_d^0$. As we will point out below, the shallow tow-depth hypothesis
+proides an approximation to $\iddoFf$ that does not require
+de-ghosting amplitude and phase adjustment.
+
+\section{Preconditioned Conjugate Gradient Iteration}
+The availability of an approximate inverse for $I_t \doF$ (and $I_t
+\doF_0$) suggests that the least squares migration problem should be
+reformulated as
+\begin{equation}
+\label{eqn:elsm}
+\mbox{min}_{\delta \bar{\kappa}} \|I_t\doF[\kappa,\beta][\delta 
+\bar{\kappa}] -I_t\delta d\|^2_d. 
+\end{equation}
+In this section, we will discuss the Conjugate Gradient (CG) algorithm
+for generic problems of this form. Because the algorithms have general
+applicability, and for brevity, we will use the notation $A$ for a
+linear operator such as $I_t \doF$, $W_m$ and $W_d$ for positive
+definite symmetric weight operators defining weighted inner products
+in the domain and range of $A$ respectively, $b$ for a data vector in
+the range ($I_t \delta d$ in our application), and $x$ for a model
+vector in the domain ($=\delta \bar{\kappa}$ here). 
+The CG algorithm is defined in terms of the weigted inner products
+domain space $\langle x_1, x_2 \rangle_m = x_1^TW_m x_2$ and similarly
+in the range. Denote by $A^{\dagger}$ the adjoint of $A$ with respect to the
+weighted inner products.
+Near-unitarity of $A$, that is, $A^{\dagger}A \approx I$, implies
+rapid convergence of the CG iteration. 
+\begin{algorithm}[H]
+\caption{Conjugate Gradient Algorithm}
+\begin{algorithmic}[1]
+  \State Choose $x_0$ somehow
+  \State $g_0 \gets A^{\dagger}(b-Ax_0)$
+  \State $p_0 \gets g_0$ 
+  \State $w_0 \gets A^{\dagger}A p_0$
+  \State $k \gets 0$
+  \Repeat
+  \State $\alpha_k \gets \frac{\langle g_k,g_k \rangle_m}{\langle p_k,w_k\rangle_m}$
+  \State $x_{k+1} \gets x_k + \alpha_k p_k$
+\State $g_{k+1} \gets g_k - \alpha_kw_k$
+  \State $\beta_{k+1} \gets \frac{\langle g_{k+1},g_{k+1}\rangle_m}{\langle g_k,g_k\rangle_m}$
+  \State $p_{k+1}\gets g_{k+1}+\beta_{k+1}p_k$
+  \State $w_{k+1} \gets A^{\dagger}Ap_{k+1}$
+  \State $k \gets k+1$
+  \Until{Error is sufficiently small, or max iteration count exceeded} 
+\end{algorithmic}
+\end{algorithm}
+Several things to note:
+\begin{itemize}
+\item Each step requires on application of the normal operator $A^{\dagger}A$. Except for the first step, only the action of the normal  operator is required.
+\item The initial step requires an application of $A^{\dagger}$ to the
+  data. A common choice is $x_0 = 0$.
+\item In the form presented here, the algorithm requires explicitly only the model space inner product (of course, the data space inner
+  product is implicit in the definition \ref{eqn:wadj} of
+  $A^{\dagger}$). 
+\end{itemize}
+
+The algorithm described above is equivalent to the well-known
+Preconditioned Conjugate Gradient algorithm \cite[]{gvl}. Define
+$A^*$ to be the adjoint of $\doF$ with respect to the (unaltered)
+$L^2$ norm in model space and the weighted norm defined above in data
+space. That is,
+\begin{eqnarray}
+A^* &=& A^T W_d \nonumber\\
+A^{\dagger} &=& W_m^{-1}\doF^*
+\label{eqn:dwadj}
+\end{eqnarray}
+ Also, using the notation of the
+algorithm above, set 
+\begin{eqnarray}
+r_k &=& A^*(b - Ax_k) = W_m g_k\nonumber \\
+q_k &=& W_m w_k
+\label{eqn:pcgvars}
+\end{eqnarray}
+Then for example
+\[
+\langle g_k, g_k\rangle_m = \langle g_k, W_m g_k \rangle = \langle
+g_k,r_k \rangle
+\]
+and so on, so the Conjugate Gradient Algorithm is equivalent to
+\begin{algorithm}[H]
+\caption{Preconditioned Conjugate Gradient Algorithm}
+\begin{algorithmic}[1]
+\State Choose $x_0$ somehow
+  \State $r_0 \gets A^*(b-Ax_0)$
+  \State $p_0 \gets W_m^{-1}r_0$
+  \State $g_0 \gets p_0$
+  \State $q_0 \gets A^*Ap_0$
+  \State $k \gets 0$
+  \Repeat
+  \State $\alpha_k \gets \frac{\langle g_k,r_k \rangle}{\langle p_k,q_k\rangle}$
+  \State $x_{k+1} \gets x_k + \alpha_k p_k$
+  \State $r_{k+1} \gets r_k - \alpha_kq_k$
+  \State $g_{k+1} \gets W_m^{-1}r_{k+1}$
+  \State $\beta_{k+1} \gets \frac{\langle g_{k+1},r_{k+1}\rangle_m}{\langle g_k,r_k\rangle_m}$
+  \State $p_{k+1}\gets g_{k+1}+\beta_{k+1}p_k$
+  \State $q_{k+1} \gets A^*Ap_{k+1}$
+  \State $k \gets k+1$
+  \Until{Error is sufficiently small, or max iteration count exceeded} 
+\end{algorithmic}
+\end{algorithm}
+Note that the Preconditioned Conjugate Gradient algorithm involves
+only one application of {\em model-unweighted} normal operator
+$A^*A$ and one applicatino of the model weight operator $W_m^{-1}$
+per step, and only the unweighted (Euclidean) inner product in the
+model space - that is, (weighted) the model space inner product has
+disappeared as well. This algorithm is considerably simpler to
+implement than the Conjugate Gradient Algorithm in weighted spaces, so
+we will use it in all experiments reported below.
+ 
+\section{Practical Computation of Adjoint and Normal Operators}
+For absorbing boundary (deghosted) data, 
+\[
+\iddoF = -32 \kappa^3 \beta K_z (I_t\doF)^T  K_t^{-3} D_{z_s}D_{z_r} = -32 \kappa^3 \beta K_z (D_{z_s}D_{z_r}I_t\doF)^T  K_t^{-3} 
+\]
+\begin{equation}
+\label{eqn:abadj}
+\approx -32 \kappa^3 \beta K_z \frac{1}{4z_sz_r}(I_t\doF_0)^T Z^T K_t^{-3}
+\end{equation}
+using the dipole relation \ref{eqn:opdipolebis} and the symmetry of
+the ``ghosting'' operator.
+
+As noted earlier, the $\Psi$DOs $K_z$ and $K_t$ can be computed via 1D
+Fourier transforms using tapered high- and low-pass cutoffs to
+regulate frequency content to avoid aliasing, and $(I_t\doF_0)^T $ is
+computed via the adjoint state method.  The normal operator is simply
+the composition of the operator expressed in \ref{eqn:abadj} with
+$I_t\doF_0$.
+
+The upshot: equation \ref{eqn:abadj} provides a computation of the
+approximate inverse of $I_t \doF$ that does not require explicit
+computation of the ``ghosting'' operator $D_{z_s}D_{z_r}$.
+
+Similarly, \ref{eqn:appinvfs} states that
+\[
+\iddoFf = -32 \kappa^3 \beta K_z (ZI_t \doF_0)^T K_t^{-3}
+(4z_sz_r)^{-2} (D_{z_s}D_{z_r})^{-1}Z
+\]
+ \begin{eqnarray}
+\label{eqn:fsadj}
+\approx -32 \kappa^3 \beta K_z \frac{1}{4z_sz_r}(I_t\doF)^T K_t^{-3} Z
+\end{eqnarray}
+which also provides a route to computation of $\iddoFf$ via the adjoint
+state method and simple filters, without requiring explicit
+computation of the ``de-ghosting'' operator $(D_{z_s}D_{z_r})^{-1}$,
+as expression \ref{eqn:appinvfs} appeared to require.
+
+Note that the expressions \ref{eqn:abadj} and \ref{eqn:fsadj} depend
+on the shallow tow depth assumption,  appropriate for marine towed
+streamer acquisition only, and then only for a limited range of
+frequencies (up to the first ghost notch).
+For some other configurations, similar constructions should be
+possible. For example, OBS node arrays record 4C data, including
+vertical velocity data. Vertical velocity is precisely $I_tD_{z_r}$
+applied to pressure data. With shallow tow depth sources as typically
+used in node surveys, the $I_tD_{z_s}$ factor can be handled by free
+surface modeling and the method of images as is done here. For
+streamers at deeper tow depth, or to go beyond the notch, some
+additional data is necessary. If source tow depth is shallow enough
+that the method of images is adequate to approximate $I_t D_{z_s}$,
+then the receiver side vertical velocity data could be supplied by
+Geostreamer$^{TM}$ for instance without regard to tow depth . These
+possibilities remain to be investigated.
+
+It is important to note that the adjoint computations are
+inexact, and that the weights as presented above are not quite SPD
+operators, so need modification if they are to precisely define inner
+products. Besides the microlocal ellipticity of the weights, the model
+weight $W_m^{-1}$ is clearly not symmetric, but can easily be 
+symmetrized:
+\[
+W_m^{-1} \leftarrow 32\kappa^{3/2}\beta^{1/2} K_z \beta^{1/2}\kappa^{3/2}
+\]
+
+In the special case of a constant-property layer (ideal ocean) near
+$z=0$, the data weights $W_d$ and $W_d^0$ are prima facie symmetric, as their
+factors are all convolutions hence commute. Thus the inner products
+are actually inner products, except for being semidefinite, and act as
+inner products for high-frequency microlocalized data.
+
+The adjoint formulae \ref{eqn:abadj} and \ref{eqn:fsadj} are only as
+good as the ``shallow tow depth'' assumption. That is, there is an
+error of size $O(k_z^2z_rz_s)^2$ between computed and actual adjoint,
+in which $k_z$ is the largest frequency carrying significant
+energy. Since the error likely contributes to a nonsymmetric error in
+the normal operator, CG iteration is likely to stall eventually,
+requiring restart. Note that direct assessment of the error in the
+adjoint is difficult, as the data side inner product is not easily
+computable. However the asymmetry of the computed normal operator can
+be assessed by random vector computations.
+
+A final note on implementation: the (microlocal) definite property of
+the ghosting operator is dependent on the DSR assumption, as explained
+by \cite{HouSymes:15}: the source wavefields must be downgoing,
+receiver wavefields upcoming, at least insofar as these carry
+significan energy in the computations explained above. If these
+requirements are violated, then the partial weighted adjoint $A^*A
+(A=I_t \doF)$ may acquire negative eigenvalues, causing the conjugate
+gradient iteration to diverge. 
+
+The downgoing/upcoming property
+could be enforced by dip filtering of source and receiver
+data. However for the simplified marine configuarions used in the
+experiments reported below, it was simpler to separate the scattering
+region from the source-receiver manifold by a horizontally homogeneous
+zone (water layer).  The separation is accomplished by a depth
+tapering operator, which tapers the extended bulk modulus perturbation
+$\delta \bar{\kappa}$ to zero near the surface. A simple ray analysis
+show that the source and receiver wavefields then must have the
+required properties, and consequently we observe convergence in the
+conjugate gradient iteration. We emphasize that without this
+precaution, horizontally propagating energy inevitably develops during
+the iteration and leads to divergence.
+
+%%%%%%%%%%%%%%%% numerics %%%%%%%%%%%%%%
+
+\inputdir{project}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+
+\section{Example 0: Three Reflectors, Homogeneous
+  Background}
+This example is adapted from the first example in
+\cite[]{HouSymes:15}, and reproduces it almost exactly.
+
+The background parameters are $\kappa$=2.5 GPa, $\rho$ = 1.0 g/cc. The
+density perturbation vanishes, the bulk modulus perturbation is
+plotted in \ref{fig:boxdbulk}.
+
+\plot{boxdbulk}{width=\textwidth}{Example 0: Bulk modulus perturbation for three
+  layer example. Max excursion = 0.4 GPa.}
+
+\plot{boxborn37}{width=\textwidth}{Example 0: Born simulated free surface traces,
+  center midpoing 37 of 76, 
+  (integrated) [2.5,5.0, 35, 40] Hz bandpass filter source.}
+
+\plot{boxfreeinvp1it0import}{width=\textwidth}{Example 0: Asymptotic extended inversion of
+  free surface data.}
+
+\plot{boxfreerebornp1it0shot37}{width=\textwidth}{Example 0: Resimulation of data
+  in Figure \ref{fig:boxborn37}.}
+
+\plot{boxfreerebornp1it0diff37}{width=\textwidth}{Example 0: Data residual for shot
+  depicted in Figure \ref{fig:boxborn37}.}
+
+\plot{boxfreeinvp1it0stack}{width=\textwidth}{Example 0: Asymptotic extended
+  inversion of free surface data, stacked over offset - best estimate
+  of bulk modulus perturbation.}
+
+\plot{boxcomp150}{width=\textwidth}{Example 0: comparison of central
+  depth trace, blue (target) vs. red (asymptotic inversion).}
+
+\newpage
+
+\section{Example 1: Marmousi LSM, Coarse Grid}
+
+
+The aim in this example and in examples 2 and 4 is to use the
+zero-offset restriction of the approximate inverse \ref{eqn:fsadj} to
+accelerate (ordinary, non-extended) least squares migration (LSM). The
+example is based on the Marmousi model \cite[]{BoLaVe:91} treated as a
+constant density acoustic medium, $\rho = 1$. The bulk modulus is shown
+in Figure \ref{fig:coarse1bulk}.
+
+\plot{coarse1bulk}{width=\textwidth}{Example 1: Bulk modulus derived from 
+  Marmousi model, with $rho = 1$ - that is, velocity 
+  squared. Subsampled by factor of 6 in both directions, so that $dx =
+  dz = 24$ m.} 
+
+The scale division used in this experiment is displayed in Figures
+\ref{fig:coarse1bulkbig} and \ref{fig:coarse1dbulk}. The smoothed bulk
+modulus displayed in Figure \ref{fig:coarse1bulkbig} is the result of
+4 repetitions of 6 $\times $ 6 box averaging of the subsampled
+Marmousi model (Figure \ref{fig:coarse1bulk}) on the 24 m grid. The
+  bulk modulus perturbation (Figure \ref{fig:coarse1dbulk}) is simply
+  the difference.
+
+\plot{coarse1bulkbig}{width=\textwidth}{Example 1: Smooth background bulk modulus
+  resulting from 6 $\times$ 6 box averaging of the field in Figure
+  \ref{fig:coarse1bulk}, repeated 4 times.} 
+
+\plot{coarse1dbulk}{width=\textwidth}{Example 1: Difference between unsmoothed
+  and smoothed bulk moduli, used as bulk modulus perturbation to
+  generate Born data for this experiment series.}
+
+This model is used to simulate 90 shots spaced 96 m apart, with 190
+receivers in a fixed (shot-independent) array. Shot and receiver
+depths are 24 m. The acquisition geometry is summarized in the output
+of {\tt surange}:
+\begin{verbatim}
+17100 traces:
+tracl    1 17100 (1 - 17100)
+tracr    1 17100 (1 - 17100)
+fldr     0 89 (0 - 89)
+tracf    1 190 (1 - 190)
+offset   -8760 8856 (-216 - 312)
+gelev    -24
+selev    -24
+sx       240 8784 (240 - 8784)
+gx       24 9096 (24 - 9096)
+ns       501
+dt       8000
+
+Shot coordinate limits:
+        North(240,0) South(240,0) East(8784,0) West(240,0)
+
+Receiver coordinate limits:
+        North(24,0) South(24,0) East(9096,0) West(24,0)
+
+Midpoint coordinate limits:
+        North(132,0) South(132,0) East(8940,0) West(132,0)
+\end{verbatim}
+
+Sources and receivers are point and isotropic. The source wavelet is
+is a once-integrated bandpass filter with corner frequencies 2.5, 5,
+12.5, and 15 Hz. The pressure (source) field is a
+bandpass-filtered Green's function.  
+
+The source wavelet is scaled by the value of the bulk modulus near the
+source positions, that is, in the water column, to compensate for the
+lack of such scaling in the IWAVE acoustic staggered grid
+implementation: otherwise, the computed fields would not correspond to
+solutions of equation \ref{eqn:awe}.
+
+The surface $z=0$ is pressure-free, that is, the boundary condition is
+$p=0$ on this surface.
+
+We use a very conventional staggered-grid finite difference method of
+second order in time and 8th order in space to simulate all wavefields
+contributing the results reported here \cite[]{Vir:84,Vir:86}.
+
+Shot gather 45, at source position 4560 m, is displayed in Figure
+\ref{fig:coarse1bornr45}. 
+
+\plot{coarse1bornr45}{width=\textwidth}{Example 1: Shot gather 45, $x_s$ = 4560
+  m. }
+
+Migration (Reverse Time Migration = RTM) of this data with yields the
+image displayed in Figure \ref{fig:coarse1mbulk}. Our implementation
+of RTM has a couple of features worthy of note:
+\begin{itemize}
+\item it realizes the {\em adjoint} or {\em transpose} of Born
+  modeling. This choice differs from some more conventional choices of
+  RTM in filtering and scaling. We verify the adjointness relation
+  between RTM and Born modeling operators by the well-known {\em dot
+    product test} \cite[]{claer:PVI} which passes at a low multiple of
+  machine (single) precision.
+\item For reconstruction of the source wavefield, we use the optimal
+  checkpointing method
+  \cite[]{Griewank:92,Griewank:00,Griewank:book,Symes:06a-pub}, which
+  has the virtue of achieving the adjoint relation to machine
+  precision for virtually any time-domain simulation method, but the
+  drawback of somewhat more computational complexity than would be
+  required for some specialized techniques suited for special systems
+  such as our acoustic problem. Generally the cost of RTM via optimal
+  checkpointing is roughly 4 -5 times the cost of forward Born
+  modeling for problems with $O(10000)$ time steps, such as those
+  solved here.
+\end{itemize}
+
+Several aspects are immediately apparent from comparison with the of
+the RTM image \ref{fig:coarse1mbulk} with the target image, that is,
+the actual bulk modulus perturbation used to generate the data, see
+Figure \ref{fig:coarse1dbulk}:
+\begin{itemize}
+\item locations and orientation of events in the image
+  \ref{fig:coarse1mbulk} are correct, up to limits imposed by the bandlimited
+  nature of the image, which follows from the bandlimited nature of
+  the data.
+\item the overal amplitude is grossly incorrect, and the relation
+  between reflector strengths in various parts of the image is also
+  much different: in particular, the deeper part of the image is much
+  fainter than the shallow part. This feature follows from the uneven
+  illumination of the subsurface: both the fall-off of source
+  wavefield and receiver wavefield amplitude with distance from the
+  surface, and the focusing and defocusing of these wavefields as they
+  traverse the heterogeneous refractive velocity model, contribute to
+  this effect.
+\item some evidence of transmitted wavefield is present: the
+  low-frequency swings visible in the image are due to refracted
+  (diving) wave components in source and receiver field contributing
+  to image amplitude along the entire diving wave ray path, not just
+  at a reflector location. These signal components are actually quite
+  important, and are the principal contribution to FWI. However in
+  reflector imaging they are often regarded as noise.
+\end{itemize}
+
+\plot{coarse1mbulk}{width=\textwidth}{Example 1: Reverse time migration of Born
+  data. Notice the uneven illumination, and the faint but visible
+  low spatial frequency diving wave artifacts.}
+
+LSM is the name acquired in recent years by the data fitting problem:
+given data (regarded as) resulting from a Born or perturbational
+model, estimate the corresponding model perturbation by minimization
+the mean-square misfit between predicted and given Born data. This
+task defines a linear inverse problem, and an equally good (and older)
+synonym is ``linearized inversion''. It has long been recognized that
+reducing or minimizing data misfit tends to resolve the illumination
+and amplitude defects of migrated images, noted above
+\cite[]{BourJiaLai:89}.  Data misfit minimization is commonly
+implemented via conjugate gradient iteration or an equivalent
+\cite[]{Nemeth:99}. Each iteration requires one Born forward modeling
+operation and one (variant of) Reverse Time Migration.
+
+The 2017 SEG Annual International Meeting and Exposition featured
+several sessions on LSM, including elastic LSM for estimation of shear
+properties, acoustic LSM as is demonstrated here, viscoelastic LSM for
+correct estimation of amplitudes in the presence of attenuation and/or
+attentuation parameters, and a variety of case studies.
+
+We use Born data (one shot of which was just displayed) as target data
+in our LSM exercise. Twenty iterations of conjugate gradient iteration
+produces the estimate of the bulk modulus perturbation displayed in
+FIgure \ref{fig:coarse1bulkinvp0it20}.
+
+\plot{coarse1bulkinvp0it20}{width=\textwidth}{Example 1: Estimate of bulk modulus
+  perturbation resulting from least squres migration, 20 conjugate
+  gradient iterations. Plotted on same color scale as target bulk
+  modulus perturbation (Figure \ref{fig:coarse1dbulk}).}
+
+LSM has indeed balanced the amplitudes throughout the image: the
+relative amplitudes between various parts are much closer to those of
+the target image \ref{fig:coarse1dbulk}. The overall amplitude is also
+much closer to correct, so one to some extent regard the image point
+values as local and band-limited estimates of physical
+parameter (perturbation in bulk modulus). The ampltudes are generally
+low, partly because of the spatial averaging effect of bandlimitation,
+partly because further iterations would decrease data residual and
+recover model parameters more accurately.
+
+LSM achieves its aim by presuming that achieving data fit will result
+in a more accurate image of the subsurface. Figure
+\ref{fig:coarse1rebornp0it20r45} shows the predicted data for
+shot 45 based on the bulk modulus perturbation in Figure
+\ref{fig:coarse1bulkinvp0it20}. These traces indeed closely resemble
+the target data \ref{fig:coarse1bornr45}; the difference (residual
+shot record) appears as \ref{fig:coarse1residrebornp0it20r45}. The RMS
+fit level achieved is part of the information displayed in the
+following table:
+
+\begin{verbatim}
+========================== BEGIN CGNE =========================
+Iteration   |  Residual Norm |  Gradient Norm
+         1    2.50883907e-01   2.06906028e-04
+         2    2.11527959e-01   1.23586302e-04
+         3    1.93715423e-01   1.00169396e-04
+         4    1.79163083e-01   9.69018802e-05
+         5    1.64154008e-01   9.32183611e-05
+         6    1.47441313e-01   8.68227726e-05
+         7    1.32597432e-01   7.44872232e-05
+         8    1.20940886e-01   6.83080798e-05
+         9    1.11524783e-01   5.57000349e-05
+        10    1.03391834e-01   5.03123520e-05
+        11    9.70416740e-02   4.44237339e-05
+        12    9.14672911e-02   4.11237088e-05
+        13    8.63379091e-02   3.77963879e-05
+        14    8.15358013e-02   3.53451178e-05
+        15    7.70760477e-02   3.34034703e-05
+        16    7.26942420e-02   3.14817880e-05
+        17    6.85755685e-02   3.00511110e-05
+        18    6.44731000e-02   2.88680549e-05
+        19    6.06474578e-02   2.66172028e-05
+        20    5.71314394e-02   2.49373679e-05
+-----------------------------------------------
+        21    5.40441014e-02   2.32873826e-05
+=========================== END CGNE ==========================
+
+ ****************** CGNE summary *****************  
+initial residual norm      = 2.50883907e-01
+residual norm              = 5.40441014e-02
+residual redn              = 2.15414777e-01
+initial gradient norm      = 2.06906028e-04
+gradient norm              = 2.32873826e-05
+gradient redn              = 1.12550527e-01
+\end{verbatim}
+Evidently convergence is slow but sure. The left-hand column lists the
+data residual, which is (for mathematically consistent implementations
+of the conjugate gradient algorithm) guaranteed to decrease at each
+step. The right-hand column is the gradient length, or normal
+residual, whcih also converges to zero but not (necessarily)
+monotnically. 
+
+The reduction in data misfit achieved over 20 iterations is
+approximately 21.5\%.
+
+\plot{coarse1rebornp0it20r45}{width=\textwidth}{Example 1: Predicted data from 
+  model of Figure \ref{fig:coarse1bulkinvp0it20}.}
+
+\plot{coarse1residrebornp0it20r45}{width=\textwidth}{Example 1: Data residual from 
+  model of Figure \ref{fig:coarse1bulkinvp0it20}. RMS error is
+  approximately 21.5\%.}
+
+We can reach two tentative conclusions from this example:
+\begin{itemize}
+\item data fitting, that is, LSM, does indeed tend to extract image 
+  amplitudes so that they resemble those in the ``earth'', hence
+  incidentally correct uneven illumination;
+\item convergence can be slow, and the premium in computational cost
+  over RTM is a large factor (20X, in this example).
+\end{itemize}
+
+The cost of LSM is a major impediment to its use. To speed it up,
+either each iteration can be made less expensive, or the number of
+necessary iterations can be reduced. We use the approximate
+inverse constructed in the preceeding sections to accelerate the
+convergence of the LSM loop. Note that in this section we are dealing
+with a physical or non-extended model. The second form of the
+approximate inverse  
+involves a model weight operator that acts diagonally on the various
+offset sections of the extended model, and in particular on the
+zero-offset section, which is the result of conventional RTM such as
+the image displayed above. There is no reason to think particularly
+that the zero-offset section of the approximate inverse output is an
+approximate inverse of the zero-offset (physical) problem, however we
+observe that indeed the amplitudes are considerably
+improved over basic RTM, so we may attempt to use it as a
+preconditioner.
+
+We explain the link between the zero-offset weighted adjoint and a
+{\em bona fide} approximate inverse in the discussion of Example 3.
+
+The preconditioned conjugate gradient iteration described earlier is
+applied to estimate $\delta \kappa$. The algorithm approximates a
+minimizer of the least-squares objective
+\begin{equation}
+\label{eqn:elsmex1}
+\|I_t\dF \delta \kappa -I_t\delta d\|^2_d = \langle (I_t \doF \delta \kappa \delta(h) -
+I_d \delta d) W_d^0 (I_t \doF \delta \kappa \delta(h)- I_d \delta d)\rangle). 
+\end{equation}
+The expression on the RHS uses the extension relation $\dF \delta
+\kappa = \doF \delta \kappa \delta(h)$. The code implements $\dF$
+through this relation, with care to avoid inefficiency. The data
+weight operator $W_d^0$ is defined in \ref{eqn:wddeffs}. As pointed
+out above, the PCG algorithm does not require explicit computation of
+$W_d^0$, a good thing as it would be quite expensive. THe expression
+\ref{eqn:elsmex1} emphasizes that the data residual is minimized in
+the sense of the weighted norm, not in the sense of the unweighted
+($L^2$) norm. Since we do not compute the weighted norm explicitly,
+the implemented PCG algorithm displays records the $L^2$ norm, rather
+than the weighted norm, and the former is not guaranteed to decrease
+monotonically. 
+
+Application of the asymptotic inverse \ref{eqn:appinvfs}, in the
+convenient form \ref{eqn:fsadj} provided by the shallow tow depth hypothesis,  yields the image displayed in Figure
+\ref{fig:coarse1bulkinvp1it0}. This image has the same overall
+amplitude balance as the 20-iteration LSM image
+\ref{fig:coarse1bulkinvp0it20}, but results from a single migration
+pass, is less noisy, and has even more
+correct relative amplitudes. On the other hand the overall amplitude
+is roughly 4X too small, and the data residual is still large - around 80\% in
+fact. However if you scale the image by a factor of 4, the difference
+drops to less than 50\%, indicating that the approximate inverse
+zero section \ref{fig:coarse1bulkinvp1it0} may be a good search
+direction. We will explain why this is so in the discussion of Example 3.
+
+\plot{coarse1bulkinvp1it0}{width=\textwidth}{Example 1: Approximate inversion or
+  true amplitude image = zero offset section of subsurface offset
+  approximate inversion. Plotted on same color scale as target bulk
+  modulus perturbation in Figure \ref{fig:coarse1dbulk}.}
+
+Ten iterations of PCG produces the approximate inversion in Figure
+\ref{fig:coarse1bulkinvp1it10}. The amplitudes are roughly correct,
+allowing for the spatial averaging influence of band limitation, and the
+resolution improved somewhat over that displayed in Figure
+\ref{fig:coarse1bulkinvp1it0}. More than that, this is a good
+inversion: the RMS error is less than 10\%. The output of the RVL CGNE
+tool describes the convergence:
+
+\begin{verbatim}
+========================== BEGIN PCGNE =========================
+Iteration   |  Residual Norm |  Gradient Norm
+         1    2.50883907e-01   6.89441109e+00
+         2    1.18942171e-01   2.66392207e+00
+         3    7.03184232e-02   1.10846794e+00
+         4    5.15148342e-02   6.83876038e-01
+         5    4.13431711e-02   4.61543351e-01
+         6    3.50607708e-02   3.48029107e-01
+         7    3.10531463e-02   2.71396458e-01
+         8    2.83174179e-02   2.21747950e-01
+         9    2.63601393e-02   1.83933064e-01
+        10    2.49932427e-02   1.60866663e-01
+-----------------------------------------------
+        11    2.39612553e-02   1.46033272e-01
+=========================== END PCGNE ==========================
+
+ ****************** CGNE summary *****************  
+initial residual norm      = 2.50883907e-01
+residual norm              = 2.39612553e-02
+residual redn              = 9.55073461e-02
+initial gradient norm      = 6.89441109e+00
+gradient norm              = 1.46033272e-01
+gradient redn              = 2.11813990e-02
+\end{verbatim}
+
+The predicted data shot 45 is displayed in Figure
+\ref{fig:coarse1rebornp1it10r45}, plotted on the same scale as Figure
+\ref{fig:coarse1bornr45} - it is hard to see a difference between the
+two. The residual practically disappears (Figure \ref{fig:coarse1residrebornp1it10r45}).
+
+\plot{coarse1bulkinvp1it10}{width=\textwidth}{Example 1: Estimated bulk modulus
+  perturbation from ten precondiitioned CG iterations. Compare to
+  Figure \ref{fig:coarse1dbulk}.} 
+
+\plot{coarse1rebornp1it10r45}{width=\textwidth}{Example 1: Predicted shot record 45 from
+  inversion displayed in Figure \ref{fig:coarse1bulkinvp1it10} -
+  compare with Figure \ref{fig:coarse1bornr45}, which shows target
+  data plotted on same grey scale, or with next figure, which
+  replicates Figure \ref{fig:coarse1bornr45} for the reader's convenience.}
+
+\plot{coarse1bornr45bis}{width=\textwidth}{Example 1: Replication of Figure \ref{fig:coarse1bornr45} for
+convenient comparison with previous figure. Note that the only readily
+visible difference is the appearance of water column energy in the
+resimulated data (Figure \ref{fig:coarse1rebornp1it10r45}), absent in
+the target data (Figure \ref{fig:coarse1bornr45}).}
+ 
+\plot{coarse1residrebornp1it10r45}{width=\textwidth}{Example 1: Residual =
+  difference of data displayed in previous two figures, plotted on
+  same grey scale.} 
+
+These results suggest the following conclusions: 
+\begin{itemize}
+\item The zero-offset restriction of the asymptotic 
+  inversion operator \ref{eqn:appinvfs} (implemented via \ref{eqn:fsadj}) is an effective preconditioner for LSM: it gives a initial
+  search direction and continues to accelerate CG in later
+  iterations. Its deficient overall amplitude is implicitly corrected
+  by the CG step length calculation.
+Convergence is much faster with than without preconditioning: the
+preconditioned algorithm takes 4 iterations to reach (or better) the
+residual obtained by the unpreconditioned algorithm in 20 iterations.
+\item Good RMS convergence does not guarantee convergence of the
+  estimated bulk modulus (or other parameter) to the target model {\em
+    pointwise} -
+  only to within the resolution of the data bandwidth, which affects
+  estimated amplitudes via spatial averaging. 
+\end{itemize}
+
+\newpage
+\section{Example 2: Marmousi LSM, Fine Grid}
+
+\inputdir{project}
+
+This section replicates the results of the preceding section with
+higher frequency data and finer spatial grid. The Marmousi bulk
+modulus on this 12 m $\times$ 12 m grid is shown 
+in Figure \ref{fig:fine1bulk}.
+
+\plot{fine1bulk}{width=\textwidth}{Example 2: Bulk modulus derived from 
+  Marmousi model, with $rho = 1$ - that is, velocity 
+  squared. Subsampled by factor of 6 in both directions, so that $dx =
+  dz = 12$ m.} 
+
+The scale division used in this experiment is displayed in Figures
+\ref{fig:fine1bulkbig} and \ref{fig:fine1dbulk}. The smoothed bulk
+modulus displayed in Figure \ref{fig:fine1bulkbig} is the result of
+4 repetitions of 6 $\times $ 6 box moving average of the subsampled
+Marmousi model (Figure \ref{fig:fine1bulk}) on the 12 m grid. The
+  bulk modulus perturbation (Figure \ref{fig:fine1dbulk}) is the
+  difference between bulk moduli corresponding to the Marmousi model
+  and the result of 2 repititions of 3 $\times$ 3 box moving average.
+
+\plot{fine1bulkbig}{width=\textwidth}{Example 2: Smooth background bulk modulus
+  resulting from 6 $\times$ 6 box averaging of the velocity
+  corresponding to the field in Figure
+  \ref{fig:fine1bulk}, repeated 4 times.} 
+
+\plot{fine1dbulk}{width=\textwidth}{Example 2: Difference between base bulk modulus (Fig
+  \ref{fig:fine1bulk} and the bulk modulus obtained by a milder
+  smothing (3 $\times$ 3 moving average repeated twice) of the
+  Marmousi velocity field. Used as bulk modulus perturbation to
+  generate Born data for this experiment series.}
+
+This model is used to simulate 180 shots spaced 48 m apart, with 380
+receivers in a fixed (shot-independent) array. Shot and receiver
+depths are 12 m. The acquisition geometry is summarized in the output
+of {\tt surange}:
+\begin{verbatim}
+68760 traces:
+tracl    1 68760 (1 - 68760)
+tracr    1 68760 (1 - 68760)
+fldr     0 179 (0 - 179)
+tracf    1 382 (1 - 382)
+offset   -8820 8916 (-228 - 324)
+gelev    -12
+selev    -12
+sx       240 8832 (240 - 8832)
+gx       12 9156 (12 - 9156)
+ns       1001
+dt       4000
+
+Shot coordinate limits:
+        North(240,0) South(240,0) East(8832,0) West(240,0)
+
+Receiver coordinate limits:
+        North(12,0) South(12,0) East(9156,0) West(12,0)
+
+Midpoint coordinate limits:
+        North(126,0) South(126,0) East(8994,0) West(126,0)
+\end{verbatim}
+
+Sources and receivers are point and isotropic. The source wavelet is
+is a once-integrated bandpass filter with corner frequencies 2.5, 5,
+25, and 30 Hz. The pressure (source) field is a
+bandpass-filtered Green's function.  
+
+The surface $z=0$ is pressure-free, that is, the boundary condition is
+$p=0$ on this surface.
+
+Shot gather 90, at source position 4560 m, is displayed in Figure
+\ref{fig:fine1bornr90}. 
+
+\plot{fine1bornr90}{width=\textwidth}{Example 2: Shot gather 90, $x_s$ = 4560
+  m. }
+
+RTM once again produces an image with major reflectors correctly
+positioned, but with badly unbalanced amplitudes and low-frequency
+diving wave artifacts (``rabbit ears'' - in FWI applications not
+useful, but in fact completely useless here, as the velocity model is
+already precisely correct).
+
+\plot{fine1mbulk}{width=\textwidth}{Example 2: Reverse time migration of Born
+  data. Notice the uneven illumination, and the clearly visible
+  low spatial frequency diving wave artifacts.}
+
+The additional bandwidth appears to make this problem more difficult
+(more ill-conditioned) than the problem discussed in the last section.
+LSM via twenty iterations of conjugate gradient iteration
+produces the estimate of the bulk modulus perturbation displayed in
+FIgure \ref{fig:fine1bulkinvp0it20}.
+
+\plot{fine1bulkinvp0it20}{width=\textwidth}{Example 2: Estimate of bulk modulus
+  perturbation resulting from least squres migration, 20 conjugate
+  gradient iterations. Plotted on same color scale as target bulk
+  modulus perturbation (Figure \ref{fig:fine1dbulk}).}
+
+LSM has partly balanced the amplitudes throughout the image: the
+relative amplitudes between various parts are much closer to those of
+the target image \ref{fig:fine1dbulk}, but not as close as the
+analogous result from the narrow-band low frequency roblem, Figure
+\ref{fig:coarse1bulkinvp0it20}. Figure
+\ref{fig:fine1rebornp0it20r90} shows the predicted data for
+shot 90 based on the bulk modulus perturbation in Figure
+\ref{fig:fine1bulkinvp0it20}. These traces resemble
+the target data \ref{fig:fine1bornr90}, but not as closely as the
+analogous comparison of the lower-frequency data. The difference (residual
+shot record) appears as \ref{fig:fine1residrebornp0it20r90}. The RMS
+fit level achieved is part of the information displayed in the
+following table:
+
+\begin{verbatim}
+========================== BEGIN CGNE =========================
+Iteration   |  Residual Norm |  Gradient Norm
+         1    1.32567376e-01   9.79450924e-05
+         2    1.20665237e-01   1.74745495e-04
+         3    1.10067330e-01   1.08682645e-04
+         4    1.05383545e-01   7.54519788e-05
+         5    1.00764051e-01   6.28481284e-05
+         6    9.69513506e-02   6.03487533e-05
+         7    9.27119926e-02   4.58884570e-05
+         8    8.90481845e-02   4.39115865e-05
+         9    8.59621167e-02   4.09871645e-05
+        10    8.23227838e-02   4.35815928e-05
+        11    7.92605504e-02   4.27014675e-05
+        12    7.76133314e-02   5.97550788e-05
+        13    7.50623047e-02   4.16568146e-05
+        14    7.14619383e-02   3.48134454e-05
+        15    6.85999393e-02   3.68092878e-05
+        16    6.53088316e-02   3.76127427e-05
+        17    6.37752339e-02   3.79335834e-05
+        18    6.12660609e-02   3.35733057e-05
+        19    5.85174002e-02   2.77393119e-05
+        20    5.61746396e-02   2.67642426e-05
+-----------------------------------------------
+        21    5.39411120e-02   2.79296019e-05
+=========================== END CGNE ==========================
+
+ ****************** CGNE summary *****************  
+initial residual norm      = 1.32567376e-01
+residual norm              = 5.39411120e-02
+residual redn              = 4.06895816e-01
+initial gradient norm      = 9.79450924e-05
+gradient norm              = 2.79296019e-05
+gradient redn              = 2.85155714e-01
+
+\end{verbatim}
+Evidently convergence is somewhat slower than before: the final data
+misfit achieved after 20 iterations is approximately 40\%.
+
+\plot{fine1rebornp0it20r90}{width=\textwidth}{Example 2: Predicted data from 
+  model of Figure \ref{fig:fine1bulkinvp0it20}.}
+
+\plot{fine1residrebornp0it20r90}{width=\textwidth}{Example 2: Data residual from 
+  model of Figure \ref{fig:fine1bulkinvp0it20}. RMS error is
+  approximately 40.7\%.}
+
+\plot{fine1comp}{width=\textwidth}{Example 2: Relative mean square 
+  error vs. iteration for CG (red curve) and PCG (blue curve).}
+
+\plot{fine1compnt}{width=\textwidth}{Example 2: Relative mean square 
+  error vs. iteration for CG (red curve) and PCG (blue curve), without
+  depth tapering in water layer.}
+
+Application of the asymptotic inverse (zero offset section of
+\ref{eqn:appinvfs}) yields the image displayed in Figure
+\ref{fig:fine1bulkinvp1it0}. This image better relative amplitudes than the 20-iteration LSM image
+\ref{fig:fine1bulkinvp0it20}, and is less noisy, but the overall
+amplitude is quite small compared to the target bulk modulus
+perturbation (Figure \ref{fig:fine1dbulk}). As was true for the lower
+frequency example, the good relative amplitudes and reflector
+waveforms  indicates that the approximate inverse
+zero section \ref{fig:fine1bulkinvp1it0} may be a good search
+direction. 
+
+\plot{fine1bulkinvp1it0}{width=\textwidth}{Example 2: Approximate inversion or
+  true amplitude image = zero offset section of subsurface offset
+  approximate inversion. Plotted on same color scale as target bulk
+  modulus perturbation in Figure \ref{fig:fine1dbulk}.}
+
+Twenty iterations of preconditioned
+CG produces the approximate inversion in Figure
+\ref{fig:fine1bulkinvp1it20}. Comparison with Figure
+\ref{fig:fine1dbulk} suggests that the amplitudes and waveforms are
+roughly correct,
+allowing for the spatial averaging influence of band limitation, and the
+resolution improved somewhat over that displayed in Figure
+\ref{fig:fine1bulkinvp1it0}. More than that, this is a good
+inversion: the RMS error is less than 10\%. The output of the RVL CGNE
+tool describes the convergence:
+
+\begin{verbatim}
+========================== BEGIN PCGNE =========================
+Iteration   |  Residual Norm |  Gradient Norm
+         1    1.32567376e-01   2.19551253e+00
+         2    8.64119902e-02   8.03773761e-01
+         3    6.29559085e-02   4.04524982e-01
+         4    5.03380559e-02   2.41569892e-01
+         5    4.18944918e-02   1.65786415e-01
+         6    3.59481946e-02   1.23230457e-01
+         7    3.13160010e-02   9.72592682e-02
+         8    2.77100820e-02   7.86418393e-02
+         9    2.49173287e-02   6.50660247e-02
+        10    2.26768292e-02   5.65260053e-02
+        11    2.08535902e-02   4.91942577e-02
+        12    1.93884857e-02   4.33817171e-02
+        13    1.81311555e-02   3.99240106e-02
+        14    1.70452520e-02   3.66419256e-02
+        15    1.61075015e-02   3.42206433e-02
+        16    1.53041314e-02   3.18240337e-02
+        17    1.46190701e-02   3.01125068e-02
+        18    1.40266838e-02   2.82831118e-02
+        19    1.35276383e-02   2.65362691e-02
+        20    1.30786821e-02   2.57860348e-02
+-----------------------------------------------
+        21    1.26670329e-02   2.50269361e-02
+=========================== END PCGNE ==========================
+
+ ****************** CGNE summary *****************  
+initial residual norm      = 1.32567376e-01
+residual norm              = 1.26670329e-02
+residual redn              = 9.55516621e-02
+initial gradient norm      = 2.19551253e+00
+gradient norm              = 2.50269361e-02
+gradient redn              = 1.13991313e-02
+
+
+\end{verbatim}
+
+The predicted data shot 90 is displayed in Figure
+\ref{fig:fine1rebornp1it20r90}, plotted on the same scale as Figure
+\ref{fig:fine1bornr90} - it is hard to see a difference between the
+two. The residual practically disappears (Figure \ref{fig:fine1residrebornp1it20r90}).
+
+\plot{fine1bulkinvp1it20}{width=\textwidth}{Example 2: Estimated bulk modulus
+  perturbation from 20 precondiitioned CG iterations. Compare to
+  Figure \ref{fig:fine1dbulk}.} 
+
+\plot{fine1rebornp1it20r90}{width=\textwidth}{Example 2: Predicted shot record 90 from
+  inversion displayed in Figure \ref{fig:fine1bulkinvp1it20} -
+  compare with Figure \ref{fig:fine1bornr90}, which shows target
+  data plotted on same grey scale, or with next figure, which
+  replicates Figure \ref{fig:fine1bornr90} for the reader's convenience.}
+
+\plot{fine1bornr90bis}{width=\textwidth}{Example 2: Replication of Figure \ref{fig:fine1bornr90} for
+convenient comparison with previous figure. Note that the only readily
+visible difference is the appearance of water column energy in the
+resimulated data (Figure \ref{fig:fine1rebornp1it20r90}), absent in
+the target data (Figure \ref{fig:fine1bornr90}).}
+ 
+\plot{fine1residrebornp1it20r90}{width=\textwidth}{Example 2: Residual =
+  difference of data displayed in previous two figures, plotted on
+  same grey scale.} 
+
+These results support the same conclusions as in the preceding
+section. The approximate inverse provides an effective
+preconditioner, in fact the data residual of the preconditioned loop is
+smaller at 4 iterations than the data residual of the
+un-preconditioned loop after 20.
+
+\newpage
+\section{Example 3: Marmousi Extended LSM}
+The setting and parameters for this example are exactly as in the
+last,  except that the bulk modulus perturbation is extended in a
+subsurface offset interval of [-125 m, 125 m], or 10 grid points on
+either side of zero offset. The free surface data is precisely the
+same as in the previous example (shot 90 shown in Figure \ref{fig:fine1bornr90bis}).
+
+The asymptotic inverse operator $\iddoFf$ produces the $\delta
+\bar{\kappa}$ shown in Figure \ref{fig:fine10bulkinvp1it0}. Recall
+from Part 1, Theorem 3, that the a left inverse for the physical
+modeling operator may be extracted from $\delta \bar{\kappa} $ by
+stacking over subsurface offset. The stack in Figure
+\ref{fig:fine10bulkinvp1it0stack} is plotted on the same color scale
+as the bulk modulus (Figure \ref{fig:fine1dbulk}.
+
+\plot{fine10bulkinvp1it0}{width=\textwidth}{Example 3: Extended bulk
+  modulus estimate, application of asymptotic inverse operator to data
+  of Example 2.}
+
+\plot{fine10bulkinvp1it0stack}{width=\textwidth}{Example 3: Stack of extended
+  bulk modulus inversion - approximate left inverse of physical
+  forward modeling operator.}
+
+\plot{fine10bulkinvp1it0stack0}{width=\textwidth}{Example 3: Zero
+  offset section of the extended asymptotic inversion. Note that color
+scale differs by factor of 4 from that in Figure
+\ref{fig:fine10bulkinvp1it0stack}.}
+
+\plot{fine10bulkinvp1it0g6000}{width=\textwidth}{Example 3: Subsurface
+  offset gather at position $x_s=$ 6000 m indicated in Figure
+  \ref{fig:fine10bulkinvp1it0}, plotted on same grey scale. Note apparent concentration of energy
+within 50 m of $h=0$.}
+
+\plot{fine10bulkinvp1it0g6000rat}{width=\textwidth}{Example 3: Subsurface
+  offset gather at position $x_s=$ 6000 m, depth range 2000 m $<z<$
+  3200 m, plotted to 1:1 aspect ratio
+  and padded with zeroes to left and right to obtain square
+  region. Plotted on same grey scale as previous figure. Note that extend of energy spread is approximately one
+  apparent wavelength.}
+
+Note that the similarity of FIgures \ref{fig:fine10bulkinvp1it0stack}
+and \ref{fig:fine1bulkinvp1it0} - the two differ mostly by scale, with
+the latter being an order of magnitude smaller. In fact, the
+zero-offset asymptotic inverse shown in Figure \ref{fig:fine1bulkinvp1it0} is
+exactly the same as the zero offset section of the extended inversion
+(Figure \ref{fig:fine10bulkinvp1it0stack0}. An explanation for the deficient
+amplitude of the zero-offset asymptotic inversion is now evident: the
+stack has the proper amplitude, but it is clear from Figure
+\ref{fig:fine10bulkinvp1it0} that the energy in the image is spread
+over a number of offsets, exactly how many depending on depth.
+
+The extent of the spread depends on the ray geometry (and on the surface
+offset range, as will become evident by comparison with Example
+5). Figure \ref{fig:fine10bulkinvp1it0g6000} shows the subsurface
+offset image gather at $x=$ 6000 m: the image energy appears to
+concentrate within a few grid cells of $h=$0. To visualize the extent
+of this concentraation more clearly, Figure
+\ref{fig:fine10bulkinvp1it0g6000rat} displays the part of the same
+data between $z=$ 2000 and 3200 m, with enough zero padding on the
+sides that the plot has 1:1 aspect ratio. Evidently the energy in this
+gather is maximally focused, in view of Heisenberg's principle: the
+width of the corridor containing most of the energy is about a
+wavelength. It has been speculated that image gather energy would
+focus in a Fresnel zone, but that is clearly not correct, at least for
+a full aperture example such as this one.
+
+In any case the amplitude of each offset section near zero offset is
+more or less the same as any other as one sees from Figure
+\ref{fig:fine10bulkinvp1it0g6000}, so the stack multiplies the
+amplitude, and by the theory developed in part 1 produces the
+``proper'' amplitude. Therefore the amplitudes of the indivitual
+offset sections, in particular zero offset, must be a fraction of this
+``proper'' amplitude. In the middle part of the gather, the two grid
+cells on either side of zero offset contain the bulk of the energy, so
+the multiplier would be roughly 5 (in view of the maximal focusing,
+this is the same as the number of spatial grid points per wavelength
+at peak frequency, which indeed is roughly 5 in this example). The
+extent of the energy spread is not constant, and therefore the
+amplitude of the zero-offset inversion is not precisely a constant
+multiple of the target amplitude, but it varies slowly with depth. So
+the asymptotic zero-offset inverse acts as a slowly varying scaling of
+the target bulk modulus perturbation hence is usable as as
+preconditioner, even though it is not itself an accurate approximate
+inversion - as we have seen.
+
+On the other hand, we have shown that \ref{eqn:appinvfs} is an
+asymptotic inverse for the extended forward map $\iddoFf$, provided
+that most of the energy in the image volume is focused near $h=0$, as
+it appears to be in this example. Therefore PCG should converge
+rapidly, to a data-fitting extended model. Figure
+\ref{fig:fine10bulkinvp1it20} displays the result of 20 PCG
+iterations. As was the case for the zero-offset verson of this
+example, the data residual is roughly 7.5\%, and the stack (Figure
+\ref{fig:fine10bulkinvp1it20stack} closely approximates the target
+bulk modulus perturbation (Figure \ref{fig:fine1dbulk}), allowing for
+resolution limitation due to limited bandwidth. In fact, it differs
+little from the zero-offset PCG result \ref{fig:fine1bulkinvp1it20}
+and therefore also generates a data misfit via physical modeling of
+less than 10%.
+
+\plot{fine10bulkinvp1it20}{width=\textwidth}{Example 3: Extended bulk
+  modulus estimate, estimated from 20 PCG iteratoins from data
+  of Example 2.}
+
+\plot{fine10bulkinvp1it20stack}{width=\textwidth}{Example 3: Stack of extended
+  bulk modulus inversion from 20 PCG iterations - near-exact left inverse of physical
+  forward modeling operator.}
+
+Inversion, rather than asymptotic inversion, also refines the focusing
+of energy in the image volume. Figure
+\ref{fig:fine10bulkinvp1it20g6000} shows the gather at $x=$ 6000 m
+from the volume depicted in Figure \ref{fig:fine10bulkinvp1it20}. The
+additional focusing is even more evident in the 1:1 aspect ratio plot
+(Figure \ref{fig:fine10bulkinvp1it20g6000rat}), constructed in the same
+way as Figure \ref{fig:fine10bulkinvp1it20g6000rat}.
+
+\plot{fine10bulkinvp1it20g6000}{width=\textwidth}{Example 3: Subsurface
+  offset gather of 20 PCG iteration inversion at position $x_s=$ 6000 m indicated in Figure
+  \ref{fig:fine10bulkinvp1it20}, plotted on same grey scale. Note apparent concentration of energy
+within 50 m of $h=0$.}
+
+\plot{fine10bulkinvp1it20g6000rat}{width=\textwidth}{Example 3:
+  Subsurface offset gather of 20 PCG iteration inversion at position
+  $x_s=$ 6000 m, depth range 2000 m $<z<$ 3200 m, plotted to 1:1
+  aspect ratio and padded with zeroes to left and right to obtain
+  square region. Plotted on same grey scale as previous figure. Note
+  that extent of energy spread is very close to one apparent
+  wavelength.}
+
+
+\newpage
+\section{Example 4: Marmousi LSM, Towed Streamer Geometry}
+This example differs from the preceding three in that it uses towed
+streamer, rather than full aperture, acquisition geometry. The
+parameters are as
+specified by IFP in the original 1989 data distribution
+\cite[]{BoLaVe:91}, with only one change: the shot points are subsampled by a factor of 4, leaving 60
+shots with 100 m interval. The output of surange gives the details:
+\begin{verbatim}
+5760 traces:
+tracl    1 22752 (1 - 22752)
+tracr    658 23409 (658 - 23409)
+fldr     3000 8900 (3000 - 8900)
+tracf    1 96 (1 - 96)
+cdp      1 568 (1 - 568)
+cdpt     1 48 (1 - 1)
+trid     1
+duse     1
+offset   -2575 -200 (-2575 - -200)
+gelev    -8
+selev    -12
+sx       3000 8900 (3000 - 8900)
+gx       425 8700 (425 - 8700)
+ns       751
+dt       4000
+
+Shot coordinate limits:
+        North(3000,0) South(3000,0) East(8900,0) West(3000,0)
+Receiver coordinate limits:
+        North(425,0) South(425,0) East(8700,0) West(425,0)
+Midpoint coordinate limits:
+        North(1712.5,0) South(1712.5,0) East(8800,0) West(1712.5,0)
+\end{verbatim}
+
+The spatial grid is subsampled by a factor of 5 from IFP
+model, so that $dz = dx = $ 20 m. 
+The density in this example is once again set = 1.0 g/cc. The velocity
+is smoothed by by 4 passes of a 6-point rectangular average and
+squared to create the background velocity model 
+(Figure \ref{fig:marm1bulkbig}). The bulk modulus perturbation is
+computed by creating a slightly less smoothed bulk modulus (velocity
+smoothed by 2 passes of a 3 point rectangular average, squared) then
+subtracting that from the unsmoothed bulk modulus. The perturbation is
+displayed in Figure \ref{fig:marm1dbulk}.
+
+\plot{marm1bulkbig}{width=\textwidth}{Example 4: background bulk
+  modulus, 20 m grid.}
+
+\plot{marm1dbulk}{width=\textwidth}{Example 4: bulk modulus perturbation.}
+
+The source pulse ($w(t)$ in the
+system \ref{eqn:awe}) is a [2.5, 5.0, 15, 20] Hz bandpass filter. The
+time integral in $I_t \doF$ is accommodated by trapezoidal rule
+integration of this pulse. 
+
+Figure \ref{fig:marm1r6000} shows the synthetic at shot position 6000
+m.
+
+\plot{marm1r6000}{width=\textwidth}{Example 4: linearized shot gather at $x_s$ =
+  6000 m.}
+
+The behaviour of the asymptotic inverse for this non-extended
+(zero-offset) example is no different than in previous similar
+experiments: it gives a good relative amplitude map, but with small
+overall amplitude. It is not in itself a usable inverse, but functions
+as a quite successful preconditioner. Ten PCG iterations generate a quite accurate
+inversion displayed in Figure \ref{fig:marm1invp1it10}. 
+
+The iteration record illustrates the successful convergence
+acceleration - we do not show the record for unpreconditioned CG, but
+it is considerably slower, as in previous examples.
+
+\begin{verbatim}
+========================== BEGIN PCGNE =========================
+Iteration   |  Residual Norm |  Gradient Norm
+         1    4.29975577e-02   2.53198719e+00
+         2    2.50279326e-02   1.15877616e+00
+         3    1.54467793e-02   6.48228705e-01
+         4    1.08529218e-02   3.65152717e-01
+         5    8.42937827e-03   2.28351489e-01
+         6    6.79261191e-03   1.60824731e-01
+         7    5.62188262e-03   1.16707794e-01
+         8    4.78196330e-03   9.19547901e-02
+         9    4.19104146e-03   7.66246468e-02
+        10    3.71039868e-03   6.24982305e-02
+-----------------------------------------------
+        11    3.33797187e-03   5.21011576e-02
+=========================== END PCGNE ==========================
+
+ ****************** CGNE summary *****************  
+initial residual norm      = 4.29975577e-02
+residual norm              = 3.33797187e-03
+residual redn              = 7.76316598e-02
+initial gradient norm      = 2.53198719e+00
+gradient norm              = 5.21011576e-02
+gradient redn              = 2.05771811e-02
+
+\end{verbatim}
+
+The resimulation at shot location 6000
+m is plotted in Figure \ref{fig:marm1rebornp1it10r6000}, and the
+residual on the same grey scale in Figure \ref{fig:marm1residp1it10r6000}.
+
+\plot{marm1invp1it10}{width=\textwidth}{Example 4: inverted bulk
+  modulus perturbation, 10 PCG iterations.}
+\plot{marm1rebornp1it10r6000}{width=\textwidth}{Example 4: resimulation of shot gather at $x_s$ =
+  6000 m from inverted bulk modulus perturbation (Figure
+  \ref{fig:marm1invp1it10}).}
+\plot{marm1residp1it10r6000}{width=\textwidth}{Example 4: data
+  residual at $x_s$= 6000 m.} 
+
+Evidently the original rather short cable (at least, rather short by
+modern standards) produces data more than sufficient for an effective
+inversion, provided that the background model is kinematically
+consistent with the data.
+
+\newpage
+
+\section{Example 5: Marmousi Extended LSM, Towed Streamer Geometry}
+This example bears the same relation to Example 4 that Example 3 did
+to Example 2. All parameters are the same, except that the bulk
+modulus perturbation is extended, -200 m $< h < $ 200 m, so a total of
+21 grid points in $h$ (for computational efficiency, $\Delta h$ =
+$\Delta x$).
+
+For this example, we show only the result of PCG inversion with 10
+iterations. Figure \ref{fig:marm10freeinvp1it10} shows the extended
+inversion for $\delta \bar{\kappa}$, and Figure
+\ref{fig:marm10freeinvp1it10stack} the stack (optimal estimate of $\delta
+\kappa$). Comparison with Figure \ref{fig:marm1invp1it10} reveals that
+the dipping layers on the left of the model are truncated several
+hundred meters further to the right in Figure
+\ref{fig:marm10freeinvp1it10stack}. This truncation is due to the lack of
+energy in image gathers for $h<0$ in the left hand part of the model,
+which in turn results from the off-end cable geometry and the slope of
+the layer package. Thus image energy available at offset zero in Example
+4 is diluted by missing energy in $h<0$ in Example 5, in the left
+side of the model.
+
+\plot{marm10freeinvp1it10}{width=\textwidth}{Example 5: PCG extended inversion, 10
+  iterations, Marmousi with original streamer geometry, 20 m spatial
+  grid, 2.5-5-15-20 Hz bandpass source, free surface, subsurface
+  offset axis $-200 < h < 200$ m.}
+
+\plot{marm10freeinvp1it10stack}{width=\textwidth}{Example 5: Stack of data in
+  Figure \ref{fig:marm10freeinvp1it10}.}
+
+Figure
+\ref{fig:marm10freeinvp1it10g6000} shows the gather at $x=$ 6000 m
+from the volume depicted in Figure \ref{fig:marm10freeinvp1it10}. The
+ 1:1 aspect ratio plot
+(Figure \ref{fig:marm10freeinvp1it10g6000rat}), constructed in the same
+way as Figure \ref{fig:fine10bulkinvp1it0g6000rat}, indicates that
+once again the image energy is mostly confined to a corridor one
+wavelength wide, although the wavelength is longer in this example,
+corresponding to the lower source freequency band ([2.5,5,15,20] Hz,
+as opposed to [2.5,5,25,30] Hz for Example 3).
+
+\plot{marm10freeinvp1it10g6000}{width=\textwidth}{Example 5: Subsurface
+  offset gather of 10 PCG iteration inversion at position $x_s=$ 6000 m indicated in Figure
+  \ref{fig:marm10freeinvp1it10}, plotted on same grey scale. Note apparent concentration of energy
+within 100 m of $h=0$.}
+
+\plot{marm10freeinvp1it10g6000rat}{width=\textwidth}{Example 5: Subsurface
+  offset gather of 10 PCG iteration inversion at position $x_s=$ 6000 m, depth range 2000 m $<z<$
+  3200 m, plotted to 1:1 aspect ratio
+  and padded with zeroes to left and right to obtain square
+  region. Plotted on same grey scale as Figure \ref{fig:marm10freeinvp1it10g6000}. Note that extend of energy spread is very close to one
+  apparent wavelength.}
+
+%\newpage
+%\plot{vg1invp0it0agc}{width=\textwidth}{Example6: RTM image after AGC, 
+%Viking Graben data.}
+
+%\plot{vg1invp1it0}{width=\textwidth}{Example6: Asymptotic inverse, 
+%Viking Graben data.}
+
+\section{Plots for DL Lecture}
+
+\plot{coarse1unbornr45}{width=\textwidth}{Simulation of shot 45
+  (nonlinear)}
+\plot{coarse1bornr45c}{width=\textwidth}{Born simulation of shot 45}
+%\plot{fine1diffr90}{width=\textwidth}{Difference between target,
+%  background simulations of shot 90 (nonlinear)}
+%\plot{fine1linerrr90}{width=\textwidth}{Linearization error}
+
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

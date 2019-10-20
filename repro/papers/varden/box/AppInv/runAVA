@@ -1,0 +1,74 @@
+#!/bin/bash
+myADCIGslope=$HOME/trip/iwave/ang/main/ADCIGslope.x
+mySlope2Ang=$HOME/trip/iwave/ang/main/Slope2Ang.x
+myInversion=$HOME/trip/iwave/ang/main/Inversion.x
+
+### SET BY USER ######## 
+nh=41
+nx=401
+nz=301
+np=101
+ng=61 #91
+dh=10.0
+dx=10.0
+dz=10.0
+dp=0.02
+dg=1.0
+op=-1.0
+og=-30.0 #-45.0
+WmIMAGE=mbulkWm.rsf
+VEL=../vel.rsf
+BUOY=../buoy.rsf
+fileSLOPE=ADCIGslope.rsf
+fileANGLE=ADCIGang.rsf
+Invdbulk=dbulkInv.rsf
+Invddensv2=ddensv2Inv.rsf
+Invddens=ddensInv.rsf
+Invdbuoy=dbuoyInv.rsf
+########################
+
+#Check if input files exist
+if [ ! -f "$WmIMAGE" ]
+then
+	echo "The file $WmIMAGE does not exist!!"
+	exit
+elif [ ! -f "$VEL" ]
+then
+	echo "The file $VEL does not exist!!"
+	exit
+elif [ ! -f "$BUOY" ]
+then
+        echo "The file $BUOY does not exist!!"
+        exit
+fi
+
+
+echo "*** INPUT: Wm(Extended Image) ***"
+#I/O pre-processing
+< $WmIMAGE sftransp plane=23 | sfput n2=$np d2=$dp o2=$op datapath=./ > $fileSLOPE
+< $fileSLOPE sfput n2=$ng d2=$dg o2=$og datapath=./ > $fileANGLE
+< $VEL sfadd scale=1.0 datapath=./ > $Invdbulk
+< $VEL sfadd scale=1.0 datapath=./ > $Invddensv2
+#Angle-domain transformation, followed by AVA inversion
+echo
+echo progress report from ADCIGslope.x:
+echo ----------------------------------
+$myADCIGslope $nh $nx $nz $np $dh $dx $dz $dp $WmIMAGE@ $fileSLOPE@
+echo
+echo progress report from Slope2Ang.x:
+echo ---------------------------------
+$mySlope2Ang $np $nx $nz $ng $dp $dg $fileSLOPE@ $fileANGLE@
+echo
+echo progress report from Inversion.x:
+echo ---------------------------------
+$myInversion $ng $nx $nz $dg $og $fileANGLE@ $Invdbulk@ $Invddensv2@
+sfmath x=$Invddensv2 y=$VEL output='x/(y*y)' datapath=./ > $Invddens
+echo
+echo "*** OUTPUT: Model Perutrbation ***"
+
+#For re-born-modeling
+sfmath x=$Invddens y=$BUOY output='-1.0*y*y*x' datapath=./ > dbuoyInv.rsf
+
+#Remove tmp files
+sfrm $fileSLOPE $Invddensv2
+

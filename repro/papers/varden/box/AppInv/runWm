@@ -1,0 +1,60 @@
+#!/bin/bash
+myWm=$HOME/trip/iwave/ang/main/Wm_2017.x
+
+### SET BY USER ########
+nh=41
+nx=401
+nz=301
+dh=10.0
+dx=10.0
+dz=10.0
+f1=0.000
+f2=0.001
+f3=0.049
+f4=0.050
+IMAGE=../mbulk.rsf
+VEL=../vel.rsf
+BUOY=../buoy.rsf
+fileIN=mymig.rsf
+fileOUT=mymigWm.rsf
+IMAGEWm=mbulkWm.rsf
+fileVEL=vel.rsf
+fileDEN=den.rsf
+########################
+dhdx=$(echo "scale=6;$dh*$dx" | bc)
+
+#Check if input files exist
+if [ ! -f "$IMAGE" ]
+then
+	echo "The file $IMAGE does not exist!!"
+	exit
+elif [ ! -f "$VEL" ]
+then
+	echo "The file $VEL does not exist!!"
+	exit
+elif [ ! -f "$BUOY" ]
+then
+        echo "The file $BUOY does not exist!!"
+        exit
+fi
+
+
+echo "*** INPUT: Extended Image ***"
+#I/O pre-processing
+< $IMAGE sfadd scale=1.0 datapath=./ > $fileIN
+< $VEL   sfadd scale=1.0 datapath=./ > $fileVEL
+< $BUOY  sfmath output=1.0/input datapath=./ > $fileDEN
+< $fileIN sfadd scale=1.0 datapath=./ > $fileOUT
+< $fileOUT sfadd scale=1.0 datapath=./ > $IMAGEWm
+#Model-side AppInv weight
+echo
+echo progress report from Wm.x:
+echo --------------------------
+$myWm $nh $nx $nz $dh $dx $dz $f1 $f2 $f3 $f4 $fileIN@ $fileOUT@ $fileVEL@ $fileDEN@
+echo
+< $fileOUT sfadd scale=1 datapath=./ > $IMAGEWm
+echo "*** OUTPUT: Wm(Extended Image) ***"
+
+#Remove tmp files
+sfrm $fileIN $fileOUT $fileVEL $fileDEN
+

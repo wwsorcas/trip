@@ -1,0 +1,9 @@
+
+REPRODUCING JIE'S APPROXIMATE INVERSION (Hou&Symes 2015)
+-------------------------------------------------------------------
+
+1) Born Modeling by executing SConstruct_rd (set: JobType=1)
+2) Apply data-side weight: W_d = It^4 Dz_s Dz_r by running the script AppInv/runWd
+3) Subsurface offset extended RTM by executing SConstruct_rd (set: JobType=2)
+4) Apply model-side weight: W_m = 8*v^3 (Dx^2+Dz^2)^1/2 (Dh^2+Dz^2)^1/2 by running the script AppInv/runWm
+5) Apply constant density scaling (dk -> dv): 1 / (4*(DEN*VEL)^2) by running the script AppInv/runScale

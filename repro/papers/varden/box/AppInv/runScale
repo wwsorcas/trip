@@ -1,0 +1,20 @@
+#!/bin/bash
+
+### SET BY USER ########
+dk=mbulkWm.rsf
+dv=mvelWm.rsf
+VEL=2.5
+DEN=1.0
+########################
+fact=$(echo "scale=6;1.0/(4*($DEN*$VEL)^2)" | bc)
+
+#Check if input file exists
+if [ ! -f "$dk" ]
+then
+	echo "The file $dk does not exist!!"
+	exit
+fi
+
+echo "*** INPUT: Bulk Modulus appinv ***"
+< $dk sfadd scale=1.0 datapath=./ > $dv
+echo "*** OUTPUT: Velocity appinv ***"

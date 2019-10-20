@@ -1,0 +1,356 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+MYAPPS          = os.getenv('MYAPPS')
+TRIP            = os.path.join(MYAPPS,'trip')
+GCCTRIP         = os.path.join(MYAPPS,'gcctrip')
+asg             = os.path.join(TRIP,'iwave/asg/main/sim.x')
+acd             = os.path.join(TRIP,'iwave/acd/main/sim.x')
+borninv         = os.path.join(TRIP,'iwave/asg/main/pcg.x')
+reginv          = os.path.join(TRIP,'iwave/asg/main/dso.x')
+dsegy           = os.path.join(GCCTRIP,'iwave/trace/main/SEGYDeriv.x')
+towed           = os.path.join(GCCTRIP,'iwave/trace/main/towed_array.x')
+lmute           = os.path.join(GCCTRIP,'iwave/trace/main/linmute.x')
+myvalgrind      = os.path.join(MYAPPS,'valgrind/bin/valgrind')
+
+fetches = {
+    'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+######################## LOCAL DEFINITIONS ##################################
+
+# local parallel parameters
+lenv = {'stampede2' : { 'nodes'    : 1,
+                        'ppn'      : 60,
+                        'wall'     : '01:00:00'
+                      },
+         'davinci' :  { 'nodes'    : 2,
+                       	'ppn'      : 16,
+                        'wall'     : '08:00:00'
+                      },
+         'macbook' :  { 'ppn'      : 1},
+	 'getafix' :  { 'ppn'      : 10},
+	 }
+
+# select from all shots or 2 central shots
+ALLSHOTS=1
+
+MAXFREQ = 0.015
+
+##### MODEL
+
+# original model parameters
+NZORIG=751
+NXORIG=2301
+DXORIG=4
+WDEPTH=480
+TMAX=4000
+DT=4
+NTSRC=251
+OTSRC=-500.0
+V000=1.5
+NH=0
+
+# bulk modulus at source
+BULK = 2.25
+
+# model parameters
+JZX=5
+DZX=DXORIG*JZX
+NZ=1+int((NZORIG-1)/JZX)
+# 10 grid cells to separate sources from PML layer
+NZCAT=10 + int(WDEPTH/DZX)
+    
+NZDEEP=NZ + NZCAT
+OZDEEP=-10*DZX
+
+print 'NZ=' + str(NZ)
+print 'NZCAT=' + str(NZCAT)
+print 'NZDEEP=' + str(NZDEEP)
+
+NX=1+int((NXORIG-1)/JZX)
+
+OH=-NH*DZX
+
+# prep model calculations - add deeper ocean, smoothing, etc.
+Flow('deepocean',None,'makevel n1=' + str(NZDEEP) + ' d1=' + str(DZX) + ' n2=' + str(NX) +
+     ' d2=' + str(DZX) + ' o1=' + str(OZDEEP) + ' o2=0 v000=' + str(V000) +
+     ' | put data_format=native_float label1=Depth unit1=m label2=Position unit2=m ' +
+     ' unit=m/ms esize=4',stdin=0) 
+Flow('velbase','velocity.HH','dd form=native | window j1=' + str(JZX) + ' j2=' + str(JZX))
+Flow('deepvel',['deepocean','velbase'],'window n1=' + str(NZCAT) +  ' f1=0 | cat axis=1 o=' +
+      str(OZDEEP) + ' d=' + str(DZX) + ' ${SOURCES[1]}') 
+Flow('deepvelsm2','deepvel','smooth rect1=3 rect2=3 repeat=2')
+Flow('deepvelbig','deepvel','smooth rect1=6 rect2=6 repeat=4')
+Flow('vel','deepvel','window min1=0')
+Flow('velsm2','deepvelsm2','window min1=0')
+Flow('velbig','deepvelbig','window min1=0')
+
+# 2D coefficient arrays
+Flow('deepbulk','deepvel','add mode=p ${SOURCES[0]} | put unit=GPa')
+Flow('deepbulksm2','deepvelsm2','add mode=p ${SOURCES[0]} | put unit=GPa')
+Flow('deepbulkbig','deepvelbig','add mode=p ${SOURCES[0]} | put unit=GPa')
+Flow('deepbulknoah','deepocean','add mode=p ${SOURCES[0]} | put unit=GPa')
+Flow('deepdbulk', ['deepbulk', 'deepbulksm2'],'add mode=a scale=1,-1 ' +
+     '< ${SOURCES[0]} ${SOURCES[1]} | put unit=GPa')
+Flow('bulk','deepbulk','window min1=0')
+Flow('bulkbig','deepbulkbig','window min1=0')
+Flow('bulknoah','deepbulknoah','window min1=0')
+Flow('dbulk','deepdbulk','window min1=0')
+
+# 2D perturbed background velo
+for pct in [95,90,85,80]:
+    Flow('bulkbigp'+str(pct),['bulkbig','bulknoah'],
+         'add mode=a ${SOURCES[1]} scale=' + str(pct/100.0) + ',' + str(1.0-(pct/100.0)))
+
+# 2D unit buoyancy
+Flow('deepbuoy','deepbulk','add scale=0.0 | add add=1.0 | put unit=gpcc')
+Flow('deepdbuoy','deepdbulk','add scale=0.0 | put unit=gpcc')
+Flow('buoy','deepbuoy','window min1=0')
+Flow('dbuoy','deepdbuoy','window min1=0')
+####### abbreviations for commands used in flows - put these first, if
+
+# physical extension - pad by zeros
+Flow('extbulk','bulk',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extdeepbulk','deepbulk',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+'| put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extbulkbig','bulkbig',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extdeepbulkbig','deepbulkbig',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extdbulk','dbulk',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+Flow('extdeepdbulk','deepdbulk',
+'add scale=' + str(1.0/DZX) + ' |' +
+'pad beg3=' + str(NH) + ' end3=' + str(NH) + 
+' | put d3=' + str(DZX) + ' o3=' + str(OH) + ' dim=2 gdim=3 id1=0 id2=1 id3=101 label3=Offset')
+
+
+##### WAVELET
+
+# scaled spike
+Flow('spike.su', None, suspike + ' nt=' + str(NTSRC) + ' ntr=1 offset=0 ix1=1 nspk=1 it1=' + str(NTSRC/2) +  ' dt=' + str(0.001*DT) + ' | ' + sugain + ' scale=' + str(BULK/DT) + ' | ' + sushw + ' key=delrt a=' + str(OTSRC))
+
+# bandpass 
+Flow('bandpass.su', 'spike.su', sufilter + ' f=2.5,5,15,20')
+
+# integrate
+# integrate using trapezoidal rule 
+Flow('trapintbandpass.su','bandpass.su','/bin/cp ${SOURCES[0]} ${TARGETS[0]}; ' + dsegy + ' in=${TARGETS[0]} order=-1',stdin=0,stdout=-1)
+
+##### TRACE HEADERS
+
+Flow('freehdrs.su','line100m.su',suwind + ' tmax=3.0')
+Flow('absbhdrs.su','freehdrs.su',sushw + ' key=selev,gelev a=0.0,0.0')
+
+Flow('1shot.su','freehdrs.su',suwind + ' key=fldr min=6000 max=6000| ' + sushw + ' key=selev,gelev a=-20,-20')
+
+##### TOWED SOURCE
+
+for foo in ['absbhdrs','freehdrs','1shot']:
+    Flow('wavelet_' + foo + '.su', ['trapintbandpass.su', foo + '.su'],
+         towed + ' ' + 
+         '''
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+
+##### DATA
+
+PTASK = getThreads(lenv)
+
+jobs=   [
+        { 'job': 'unborn',
+          'pre': '/bin/cp ${SOURCES[0]} $TARGET',
+          'src': ['2shot.su', 'wavelet_2shot.su', 'deepbulk24', 'deepbuoy24'],
+          'tgt': ['unborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=0 adjoint=0 order=2 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 num_threads=1 ' +
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0 + '
+		 'partask=1',
+	},
+	{ 'job': 'csqunborn2shot',
+          'pre': '/bin/cp ${SOURCES[0]} $TARGET',
+          'src': ['2shot.su', 'wavelet_2shot_ddt.su', 'bulk24'],
+          'tgt': ['csqunborn.su'],
+          'cmd': acd + ' ' + 
+		 'deriv=0 adjoint=0 order=2 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'csq=${SOURCES[2]} ' +
+		 'source=${SOURCES[1]} data=${TARGETS[0]} ' +
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},	
+	{ 'job': 'born',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': ['freehdrs.su', 'wavelet_freehdrs.su', 'bulkbig', 'buoy', 'dbulk', 'dbuoy'],
+          'tgt': ['born.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+	{ 'job': 'absborn',
+          'pre': sugain + ' <${SOURCES[0]} scale=0.0 >$TARGET',
+          'src': ['absbhdrs.su', 'wavelet_absbhdrs.su', 'bulkbig', 'buoy', 'dbulk', 'dbuoy'],
+          'tgt': ['absborn.su'],
+          'cmd': asg + ' ' + 
+		 'deriv=1 adjoint=0 order=4 ' +
+		 'cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 ' +
+		 'bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} ' +
+		 'bulkmod_d1=${SOURCES[4]} buoyancy_d1=${SOURCES[5]} ' +
+		 'source_p=${SOURCES[1]} data_p=${TARGETS[0]} ' +
+		 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 ' +
+		 'partask=' + str(PTASK) + ' ' + 
+		 'dump_term=0 dump_lda=0 dump_ldc=0 printact=0',
+	},
+       ]
+
+##### INVERSION
+
+basecmd = ' deriv=0 order=4 adjtest=0 cfl=0.5 cmin=1.0 cmax=6.0 dmin=0.8 dmax=3.0 sampord=1 maxfreq=0.04 nsnaps=20 freebulkmod=${SOURCES[4]} freebuoyancy=${SOURCES[5]} freebulkmodpert=${SOURCES[6]} absbbulkmod=${SOURCES[7]} absbbuoyancy=${SOURCES[8]} absbbulkmodpert=${SOURCES[9]} freesource_p=${SOURCES[2]} absbsource_p=${SOURCES[3]} freedata_p=${SOURCES[0]} absbdata_p=${SOURCES[1]} pmlwidth=250 pmlampl=1.0 dump_term=0 dump_lda=0 dump_ldc=0 printact=0 num_threads=1 partask=' + str(PTASK) + ' '
+
+prefix = ['born','mig']
+suffix = ['.su','.rsf']
+cpcmd  = {'free': ['/bin/cp ${SOURCES[0]} ','add scale=0 < ${SOURCES[6]} > '],
+          'absb': ['/bin/cp ${SOURCES[1]} ','add scale=0 < ${SOURCES[9]} > ']}
+choice = {'free': '1', 'absb': '0'}
+output = ['data_p', 'bulkmodpert']
+
+for fa in ['free']:
+    for precond in [0, 1]:
+        for itmax in [0, 10]:
+	    jobs = jobs + [			
+	            	  { 'job': fa+'invp'+str(precond) + 'it' + str(itmax),
+                       	  'pre': cpcmd[fa][1] + ' ${TARGETS[0]}', 
+                       	  'src': ['born.su','absborn.su', 
+			         'wavelet_freehdrs.su','wavelet_absbhdrs.su',
+	                  	 'bulkbig', 'buoy', 'extdbulk',
+	  	      	  	 'deepbulkbig','deepbuoy','extdeepdbulk'],
+                          'tgt': [fa+'invp'+str(precond) + 'it' + str(itmax) + suffix[1]],
+	          	  'cmd': borninv + basecmd + 
+                                'freesurface=' + choice[fa] + ' ' +
+		     	        'precond=' + str(precond) + ' ' +
+				'ResidualTol=0.01 GradientTol=0.01 MaxIter=' + str(itmax) + ' ' + 
+				'outfile=cgne.rpt ' + 
+				'top=200 bottom=400 ' +
+		     	        fa + 'bulkmodpert=${TARGETS[0]} '
+	                },
+			{ 'job': fa + 'rebornp' + str(precond) + 'it' + str(itmax),
+                       	  'pre': cpcmd[fa][0] + ' ${TARGETS[0]}', 			
+                       	  'src': ['born.su','absborn.su', 
+			         'wavelet_freehdrs.su','wavelet_absbhdrs.su',
+	                  	 'bulkbig', 'buoy', 'extdbulk',
+	  	      	  	 'deepbulkbig','deepbuoy','extdeepdbulk',
+				 fa + 'invp' +str(precond) + 'it' + str(itmax) + suffix[1]],
+			  'tgt': [fa + 'rebornp' + str(precond) + 'it' + str(itmax) + suffix[0]],	
+	          	  'cmd': borninv + basecmd + 
+                                'freesurface=' + choice[fa] + ' ' +
+		     	        'adjoint=0 precond=0 ' + 
+				'ResidualTol=0.01 GradientTol=0.01 MaxIter=0 ' + 
+				'outfile=' + fa + 'cgne.rpt ' +		 
+		     	        fa + 'bulkmodpert=${SOURCES[10]} ' +
+				fa + 'data_p=${TARGETS[0]} '
+			}
+                ]
+
+alphalist = { '0':'0.0', '1':'4.0e-7', '2':'4.e-6', '3':'4.e-5'}
+xminus    = { '0':'0.01', '1':'3.25e-3', '2':'3.25e-3', '3':'3.25e-3'}
+for alpha in alphalist.keys():
+    jobs = jobs + [			
+      	  { 'job': 'regp1it10a' + alpha,
+            'pre': 'add scale=0 < ${SOURCES[6]} > ${TARGETS[0]}', 
+            'src': ['born.su','absborn.su', 
+	            'wavelet_freehdrs.su','wavelet_absbhdrs.su',
+	            'bulkbig', 'buoy', 'extdbulk',
+	  	    'deepbulkbig','deepbuoy','extdeepdbulk'],
+            'tgt': ['freeregp1it10a' + alpha + '.rsf'],
+	    'cmd': reginv + basecmd + 
+                    'freesurface=1 precond=1 ' +
+		    'ResidualTol=' + xminus[alpha] + ' ' + 
+                    'GradientTol=0.01 MaxIter=10 ' + 
+                    'outfile=cgne.rpt ' +		 
+		    'freebulkmodpert=${TARGETS[0]} ' +
+                    'freedata_p=${SOURCES[0]} ' +
+                    'top=200 bottom=400 ' +
+                    'alpha=' + alphalist[alpha]
+          }
+        ]
+
+run(jobs,lenv)
+
+End()
