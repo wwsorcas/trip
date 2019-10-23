@@ -1,0 +1,57 @@
+\append{RWI (=Wang-Yingst WRI) - a Linear Algebra Viewpoint}
+
+Define $S[c] = PL[c]^{-1}$ = operator mapping extended source to data traces.  
+
+The Wang-Yingst version of the WRI objective function may be written
+\[
+\|S[c]g-d\|^2 + \alpha \|g-f\|^2
+\]
+``Most'' extended sources result in zero data traces - those are non-radiating sources, the null space of $S[c]$.
+
+Rank Nullity Theorem: any $g$ may be written in a unique way as $g=S[c]^Th + n$, where $h$ is a collection of data traces, $S[c]^T$ is back propagation, and $n$ is in the null space of $S[c]$. Furthermore, the decomposition is orthogonal. Thus
+\[
+\|g-f\|^2 = \|S[c]^Th + n -f\|^2 = \|S[c]^Th - f_p\|^2 + \|n-f_n\|^2
+\]
+in which $f_p$ and $f_n$ are the orthoprojections on the orthocomplement of the null space, and the null space, of $S[c]$ respectively.
+
+There is no use keeping $f_n$ around, as it radiates nothing - in fact, I suspect it is possible to see that point sources such as represented in \ref{eqn:ptsrc} are perpindicular to the null space already. In any case, simply choose $n=f_n$ and eliminate the second term, without affecting the data fit (by definition!).
+
+Then WRI objective function can be re-written as
+\begin{equation}
+\label{eqn:wriobj}
+\|S[c]S[c]^Th-d\|^2 + \alpha \|S[c]^Th -f_p\|^2
+\end{equation}
+and the extended model has been reduced from a full-space time volume ($g$) to a data gather ($h$).
+
+{\bf Note added 2019.03.14:} Chao Wang's talk at GS 19 revealed that that they actually store the entire source ($g$ above). That is not so crazy, since the operator $S[c]S[c]^T$ poses the same complexity issue as time-domain RTM. 
+
+To see this, need an explicit description of $S[c]^T$. Regard $L[c]$ as the 2nd ord wave operator with velocity $c$: $L[c]=\frac{1}{c^2}\frac{\partial}{\partial t^2} - \nabla^2$. $L[c]^{-1}$ is ambiguous: define 
+\[
+L[c]^{-1_+}g = u, \mbox{ for } L[c]u=g \mbox{ and } u=0 \mbox{ for } t<0
+\]
+that is, $L[c]^{-1}_+$ is the causal inverse of $L[c]$. Solutions defined on time interval $[0,T]$. Let $R$ be time-reversal: $Ru(t)=u(T-t)$. Then the anticausal inverse $L[c]^{-1}_-$ of $L[c]$, solution $=0$ for $t>T$, can be written as $L[c]^{-1}_- = RL[c]^{-1}_+R$.
+
+Denote by $\langle \cdot,\cdot \rangle$ the $L^2$ inner product in space.. Suppose $u$ is a causal solution of $L[c]u=f$, $w$ an anti-causal solution of $L[c]w=g$. Then 
+\[
+\int_0^T \langle L[c]^{-1}_+f, g \rangle = int_0^T \langle u, g \rangle = \int_0^T \langle u, \left( \frac{1}{c^2}\frac{\partial}{\partial t^2} - \nabla^2\right)w\rangle
+\]
+\[
+= \int_0^T \langle \left( \frac{1}{c^2}\frac{\partial}{\partial t^2} - \nabla^2\right)u, w \rangle = \int_0^T \langle f, w \rangle = \int_0^T \langle f, L[c]^{-1}_-g \rangle
+\]
+since the causal resp. anti-causal solutions have zero Cauchy data at $t=0$ resp. $t=T$, and since the integration is over all of $\bR^3$ and I am assuming everything vanishing at $\infty$. Conclude that
+\[
+(L[c]^{-1}_+)^T = L[c]^{-1}_-
+\]
+so
+\[
+S[c]^T = (PL[c]^{-1}_+)^T = L[c]^{-1}_-P^T
+\]
+
+For convenience, ignore sampling and aperture, and define $P$ to be the restriction operator on $z=0$. Then $(P^T h)(x,y,z,t) = h(x,y,t)\delta(z)$.
+
+The troublesome operator in the definition \ref{eqn:wriobj} is 
+\[
+S[c]S[c]^T = PL[c]^{-1}_+L[c]^{-1}_-P^T
+\]
+The first solution operator involves evolution backwards in time, and provides the data for the second solution operator. This leadss to the same computational complexity problem as encountered in RTM. It could be handled by storing the output of $L[c]^{-1}_-$, as the IONGeo folks apparently do, or storing boundary data (for acoustics - as usual, this would not work if the approach is extended to a lossy model such as viscoacoustics), or using a checkpointing scheme.
+

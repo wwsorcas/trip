@@ -1,0 +1,154 @@
+
+
+\append{Transpose of Full Acoustic Modeling Operator}
+In this section I compute the adjoint operator form modeling with both pressure and velocity source inputs and pressure and velocity trace outputs. The forward modeling operator is defined by solving
+\begin{eqnarray}
+\label{eqn:fawedata}
+\frac{\partial p}{\partial t} & = & - \kappa( \nabla \cdot \bv +
+h_s \delta(z-z_s)), \nonumber \\
+\frac{\partial \bv}{\partial t} & = & - \beta ( \nabla p + l_s {\bf e}_z\delta(z-z_s)),\nonumber \\
+p & =& 0 \mbox{ for } t<0\nonumber\\ 
+\bv & = & 0 \mbox{ for } t<0 \nonumber\\
+\end{eqnarray}
+The new elements here are the point load time function $l_s(\bx,t;\bx_s)$, and the vertical unit vector ${\bf e}_z=(0,1)^T$ for 2D, $=(0,0,1)^T$ for 3D. The forward map ${\bf F}$ is defined as implicit in the discussion of the Intrinsically Preconditioned CG algorithm: let ${\bf h}_s=(h_s,l_s)^T$, then 
+\begin{equation}
+\label{eqn:ffwd}
+{\bf F}{\bf h}_s =\left\{ \left[
+\begin{array}{c}
+p(\bx,t;\bx_s)\\
+v_z(\bx,t;\bx_s)
+\end{array}
+\right]_{z=z_r}\right\}
+\end{equation}
+
+Let $\tilde{\bf h}_r=(\tilde{h}_r,\tilde{l}_r)^T$ be a function on $z=z_r$, 
+and 
+$\tilde{p},\tilde{\bv}$ solve the backwards-in-time boundary value problem:
+\begin{eqnarray}
+\label{eqn:faweadj}
+\frac{\partial \tilde{p}}{\partial t} & = & \kappa (-\nabla \cdot \tilde{\bv} + 
+ \tilde{h}_r \delta(z-z_r))\nonumber \\
+\frac{\partial \tilde{\bv}}{\partial t} & = & \beta (\nabla \tilde{p} + \tilde{l}_r{\bf e}_z\delta(z-z_r),\nonumber \\
+\tilde{p} & =& 0 \mbox{ for } t>T\nonumber\\ 
+\tilde{\bv} & = & 0 \mbox{ for } t>T 
+\end{eqnarray} 
+Then
+\[
+0 = 
+\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  
+\frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=T}
+-
+\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=0}
+\]
+\[
+= 
+\int_{0}^{T} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)
+\]
+\[
+= 
+\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p}{\partial t} \tilde {p} +  p \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} \right.
+\]
+\[
++
+\left. \frac{1}{\beta} \frac{\partial \bv}{\partial t} \cdot \tilde{\bv} + \frac{1}{\beta} \bv \cdot \frac{\partial \tilde{\bv}}{\partial t} \right)
+\]
+\[
+= 
+\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv + 
+ h_s \delta(z-z_s)\right) \tilde{p} + p \left(- \nabla \cdot \tilde{\bv} + 
+ \tilde{h}_r \delta(z-z_r)\right) \right.
+\]
+\[
++
+\left.  (- \nabla p + l_s{\bf e}_z\delta(z-z_s)) \cdot \tilde{\bv} + \bv \cdot (-\nabla \tilde{p} + \tilde{l}_r{\bf e}_z\delta(z-z_r)) \right)
+\]
+\[
+= 
+\int_{0}^{T}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv \tilde{p} + 
+ h_s\tilde{p}|_{z=z_s} - p\nabla \cdot \tilde{\bv} + 
+ \tilde{h}_r p|_{z=z_r}\right) \right.
+\]
+\[
++
+\left.  p (\nabla \cdot \tilde{\bv}) + l_s \tilde{v}_z|_{z=z_r}+ (\nabla \cdot \bv) \tilde{p}  + l_r  v_z|_{z=z_r}\right)
+\]
+after integration by parts in the last two terms. Most of what is left cancels, leaving 
+\[
+0 = \int\,dt\,dx\,dy\, (h_s \tilde{p})_{z=z_s} + (p  \tilde{h}_r)_{z=z_r} + (l_s\tilde{v}_z)_{z=z_s} + (v_z \tilde{l}_r)_{z=z_r},
+\]
+whence
+\begin{equation}
+\label{eqn:fadj}
+ {\bf F}^T {\bf h}_r = -\left[
+\begin{array}{c}
+\tilde{p}(\bx,t;\bx_s)\\
+\tilde{\bf v}(\bx,t;\bx_s)
+\end{array}
+\right]_{z=z_s}
+\end{equation}
+
+%\begin{cor}\label{thm:bvps}
+%Suppose that $d_s$ is a sufficiently regular function, = 0 for $t<0$, and denote by $p^{\pm},\bv^{\pm}$ the half-space solutions provided by Theorem \ref{thm:bvp}. Define the vector fields $p,\bv$ in $\bR^4$ by
+%\begin{eqnarray}
+%\label{eqn:putemtogether} 
+%p(x,z) &=& p^{\pm}(x,z) \mbox{ for } \pm(z-z_s) > 0\\
+%p(x,z_s)&=&d_s(x)\\
+%\bv(x,z) &=& \bv^{\pm}(x,z) \mbox{ for } \pm(z-z_s) > 0\\
+%\end{eqnarray}
+%Then $p,\bv$ is a weak solution of the system \ref{eqn:awedata} with $h=[v]_n$.
+%\end{cor}
+
+Proof of Theorem \ref{thm:bvp}:
+
+\begin{proof}
+Since $\omega \cap \mbox{ supp }d$ is compact, it is possible to construct an extension of 
+$d \in C^{\infty}_{0}(\bR^{d+1})$. Define $p_1^{\pm}, \bv_1^{\pm}$ to be strong solutions of the system
+\begin{eqnarray}
+\label{eqn:ichom}
+\frac{\partial p^{\pm}_1}{\partial t} & = & - \kappa \nabla \cdot \bv^{\pm}_1 + F\mbox{ in } \Omega^{\pm}, \nonumber \\
+\frac{\partial \bv^{\pm}_1}{\partial t} & = & - \beta \nabla p^{\pm}_1 + {\bf G}\mbox{ in } \Omega^{\pm},\nonumber \\
+p^{\pm}_1 & = & 0 \mbox{ on } \omega \times \bR,\\
+p^{\pm}_1 & = & 0, t \ll 0\\
+\bv^{\pm}_1 & = & 0, t \ll 0 
+\end{eqnarray}
+with 
+\[
+F = -\gamma\frac{\partial d}{\partial t}, {\bf G} = -\nabla d.
+\]
+Existence, uniqueness, and regularity of these solutions are assured by a minor extension of results of \cite{BlazekStolkSymes:13}.
+Set $p^{\pm} = p_1^{\pm} + d, \bv^{\pm} = \bv_1^{\pm}$; then $p^{\pm},\bv^{\pm}$ are the unique strong solutions of the boundary value problems \ref{eqn:awebdry}, and are smooth up to the boundary as indicated. 
+\end{proof}
+
+Proof of Corollary \ref{thm:bvps}:
+
+\begin{proof}: Choose smooth functions $\phi \in C^{\infty}_0(\bR^{d+1}), {\bf \psi} \in  (C^{\infty}_0(\bR^{d+1}))^d$. Then
+\[
+\int_{\Omega^{\pm} \times \bR}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p^{\pm} + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv^{\pm}
+\]
+\[
+= - \int_{\Omega \times \bR}\left (\gamma \frac{\partial p^{\pm}}{\partial t} +
+\nabla \cdot \bv^{\pm}\right) \phi + \left(\rho\frac{\partial \bv^{\pm}}{\partial t}
+  + \nabla p^{\pm}\right) \cdot {\bf \psi}
+\]
+\begin{equation}
+\label{eqn:rhs1}
+\pm \int_{\omega \times \bR} \bn \cdot {\bf \psi} p^{\pm} + \bn
+  \cdot \bv^{\pm} \phi
+\end{equation}
+Adding equations \ref{eqn:rhs1} for the two choices of sign and taking into
+account that $p^{\pm}$ coincide (by construction) on $\omega \times \bR$, obtain
+\[
+\int_{(\bR^d \times \bR}\left (\gamma \frac{\partial \phi}{\partial t} +
+\nabla \cdot {\bf \psi}\right)p + \left(\rho\frac{\partial {\bf
+    \psi}}{\partial t}
+  + \nabla \phi\right) \cdot \bv
+\]
+\[
+= \int_{\partial \Omega \times [0,T]} (\bn \cdot \bv^{+} -  \bn
+  \cdot \bv^{-}) \phi
+\]
+Since $\phi$ and ${\bf \psi}$ are arbitrary, other than being smooth of compact support, this observation finishes the proof.
+\end{proof}

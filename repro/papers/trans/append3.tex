@@ -1,0 +1,144 @@
+
+\append{Variable Projection}
+
+\[
+J[c]=\min_h\frac{1}{2}(\|S[c]h-d\|^2 + \alpha^2\|Ah\|^2)
+\]
+\[
+= \min_h \frac{1}{2}\|F[c]h-e\|^2
+\]
+\[
+F[c]=\left(
+\begin{array}{c}
+S[c]\\
+\alpha A
+\end{array}
+\right),\,\,
+e=\left(
+\begin{array}{c}
+d\\
+0
+\end{array}
+\right)
+\]
+
+\[
+J[c]=\frac{1}{2}\|(F[c]N[c]^{-1}F[c]^T-I)e\|^2,\,\,N[c]=F[c]^TF[c]
+\]
+\[
+DJ[c]\delta c = \langle (F[c]N[c]^{-1}F[c]^T-I)e, 
+(DF[c]\delta c)N[c]^{-1}F[c]^Te +
+F[c](-N[c]^{-1}(DN[c]\delta c)N[c]^{-1})F[c]^Te +
+F[c]N[c]^{-1}(DF[c]\delta c)^Te \rangle 
+\]
+
+\[
+= \langle (F[c]N[c]^{-1}F[c]^T-I)e, 
+(DF[c]\delta c)N[c]^{-1}F[c]^Te -
+F[c]N[c]^{-1}(DF[c]\delta c)^T F[c]N[c]^{-1})F[c]^Te -
+F[c]N[c]^{-1}F[c]^T (DF[c]\delta c]N[c]^{-1})F[c]^Te +
+F[c]N[c]^{-1}(DF[c]\delta c)^Te \rangle 
+\]
+\[
+= \langle (F[c]N[c]^{-1}F[c]^T-I)e, 
+(I-F[c]N[c]^{-1}F[c]^T) DF[c]\delta c)N[c]^{-1}F[c]^Te
+F[c]N[c]^{-1}(DF[c]\delta c)^T(I-F[c]N[c]^{-1}F[c]^T) \rangle
+\]
+\[
+=-\langle (I-F[c]N[c]^{-1}F[c]^T)^2e, DF[c]\delta c)N[c]^{-1}F[c]^Te\rangle
+-\langle e,(I-F[c]N[c]^{-1}F[c]^T)F[c]N[c]^{-1}(DF[c]\delta c)^T (I-F[c]N[c]^{-1}F[c]^T)e
+\]
+\[
+F[c]N[c]^{-1}F[c]^TF[c]N[c]^{-1}=F[c]N[c]^{-1}
+\]
+so 
+\[
+(I-F[c]N[c]^{-1}F[c]^T)F[c]N[c]^{-1} = 0
+\]
+and
+\[
+(I-F[c]N[c]^{-1}F[c]^T)^2 = (I-F[c]N[c]^{-1}F[c]^T)
+\]
+Whence
+\[
+DJ[c]\delta c =
+-\langle (I-F[c]N[c]^{-1}F[c]^T)e, (DF[c]\delta c)N[c]^{-1}F[c]^Te\rangle
+\]
+Define $h[c]=N[c]^{-1}F[c]^Te$ to be the solution of the inner problem as function of $c$. Then
+\[
+DJ[c]\delta c = \langle F[c]h[c]-e,(DF[c]\delta c)h[c] \rangle
+\]
+which is the usual VPM gradient formula.
+
+Gauss-Newton: define $G[c]=F[c]N[c]^{-1}F[c]^Te$. Need $DG[c], DG[c]^T$.
+\[
+DG[c]\delta c =( DF[c]\delta c)N[c]^{-1}F[c]^Te 
+\]
+\[
+- F[c]N[c]^{-1}(DF[c]\delta c)^TF[c]N[c]^{-1}F[c]^Te + F[c]N[c]^{-1} F[c]^T(DF[c]\delta c))N[c]^{-1}F[c]^Te 
+\]
+\[
++ F[c]N[c]^{-1}(DF[c]\delta c)^Te
+\]
+\[
+=(I-F[c]N[c]^{-1} F[c]^T)(DF[c]\delta c))N[c]^{-1}F[c]^Te + F[c]N[c]^{-1}(DF[c]\delta c)^T(I-F[c]N[c]^{-1} F[c]^T) e
+\]
+Reinterpretation: set
+\begin{eqnarray}
+h[c] &=&N[c]^{-1}F[c]^Te \nonumber\\
+r[c] &= &F[c]h[c]-e \nonumber\\
+E_1[c]\delta c & = & (DF[c]\delta c)h[c] \nonumber\\
+H_1[c]\delta c &=&N[c]^{-1}F[c]^T E_1[c]\delta c \nonumber\\
+R_1[c]\delta c &=& (F[c]H_1[c]-E_1[c])\delta c \nonumber\\
+H_2[c]\delta c &=&N[c]^{-1}(DF[c]\delta c)^Tr[c] \nonumber\\
+R_2[c]\delta c &=&F[c]H_2[c]\delta c
+\end{eqnarray}
+Then
+\[
+DG[c]\delta c = -(R_1[c]+R_2[c])\delta c
+\]
+\[
+= (I-F[c]N[c]^{-1}F[c]^T)DF[c]\delta c)h[c] -F[c]N[c]^{-1}(DF[c]\delta c)^Tr[c]
+\]
+Adjoints: write $(DF[c]\delta c)h = DF[c](\delta c,h)$, 
+\begin{eqnarray}
+\langle F[c]h,\phi \rangle &=& \langle h,F[c]^T\phi\rangle \nonumber\\
+\langle DF[c](\delta c,h),\phi \rangle &=& \langle \delta c, DF[c]^*(\phi,h) \rangle
+\end{eqnarray}
+\[
+\langle DF[c](\delta c,h),\phi \rangle = \langle \delta c,DF[c]^*(\phi,h)\rangle
+\]
+\[
+\langle E_1[c]\delta c,\phi \rangle = \langle DF[c](\delta c,h[c]),\phi \rangle
+\]
+\[
+= \langle \delta c, DF[c]^*(\phi,h[c]) \rangle
+\]
+so $E_1[c]^* = DF[c]^*(\cdot,h[c])$, and
+\[
+\langle F[c]H_1[c]\delta c, \phi \rangle = \langle F[c] N[c]^{-1}F[c]^TE_1[c]\delta c,\phi \rangle
+\]
+\[
+=\langle E_1[c]\delta c,F[c]N[c]^{-1}F[c]^T\phi\rangle
+\]
+\[
+=\langle \delta c, DF[c]^*(F[c]N[c]^{-1}F[c]^T\phi,h[c])\rangle
+\]
+\[
+\langle R_1[c]\delta c,\phi \rangle = \langle \delta c, DF[c]^*((F[c]N[c]^{-1}F[c]^T-I)\phi,h[c])
+\]
+That is,
+\[
+R_1[c]^*\phi = DF[c]^*((F[c]N[c]^{-1}F[c]^T-I)\phi,h[c])
+\]
+\[
+\langle R_2[c]\delta c,\phi \rangle = \langle F[c]N[c]^{-1}(DF[c]\delta c)^Tr[c],\phi \rangle
+\]
+\[
+\langle r[c],DF[c](\delta c,N[c]^{-1}F[c]^T\phi)\rangle = \langle \delta c, DF[c]^*(r[c], N[c]^{-1}F[c]^T\phi) \rangle
+\]
+That is,
+\[
+R_2[c]^*\phi = DF[c]^*(r[c], N[c]^{-1}F[c]^T\phi)
+\]
+

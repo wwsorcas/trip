@@ -1,0 +1,35 @@
+
+Another approach: write $w = L[c]^{-1}_-P^T h$. The object is to compute $u=L[c]^{-1}_+w$, that is, the solution of 
+\[
+(c^{-2}\partial_t^2 - \nabla^2)u(t) = w(t), 0\le t \le T; \,u(0) = \partial_t u(0) = 0
+\]
+Duhamel's principle would provide a solution in the form of integrals over time of solutions of homogeneous initial value problems:
+\[
+u(t) = \int_0^t d\tau v(t,\tau), \, (c^{-2}\partial_t^2 - \nabla^2)v(t,\tau) = 0, 0\le t \le T; \,v(t,\tau)_{t=\tau} = 0, \partial_t v(t,\tau)_{t=\tau} = w(\tau)
+\]
+Note that $w$ solves the homogenous wave equation except at $z=0$. That makes it tempting to use $w$ directly to define $v$. In fact, set 
+\[
+W(t) = -int_t^T ds w(s),\,v_0(t,\tau) = \frac{1}{2}(W(t) - W(2\tau-t)) 
+\]
+Then $v_0$ satisfies the Duhamel initial conditions. Note that because $w$ has zero Cauchy data at $t=T$,
+\[
+\partial_t W(t)= -\int_t^T ds \partial_t w(s),\,\partial_t^2 W(t)=-\int_t^T ds \partial^2_t w(s)
+\]
+so 
+\[
+(c^{-2}\partial_t^2 - \nabla^2)v_0(t,\tau) = -\int_t^T(c^{-2}\partial^2_t -\nabla^2)w + \int_{2\tau-t}^T(c^{-2}\partial^2_t -\nabla^2)
+\]
+For $t>\tau$, $t > 2\tau-t$, so 
+\[
+= -\int_{2\tau-t}^t(c^{-2}\partial^2_t -\nabla^2)w = -\int_{2\tau-t}^t P^Th
+\]
+and 
+\[ 
+v_0(t,\tau) = \int_{2\tau-t}^t w  
+\] 
+Consequently $v=v_0 + v_1$, in which $v_1$ is defined by 
+\[
+(c^{-2}\partial_t^2 - \nabla^2)v_1(t,\tau) = \int_{2\tau-t}^t P^Th, \,  v_1(t,\tau)_{t=\tau} = 0, \,  \partial_t v_1(t,\tau)_{t=\tau} = 0
+\]
+
+
