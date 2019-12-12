@@ -51,8 +51,12 @@ independent of data frequency content. Also, the subsurface offset
 extended FWI objective for surface reflection data has been shown to
 have similar properties.
 
-In the following sections, I will first give a more precise statement
-of the main result. Then I will review plane-wave modeling, and construct
+The first of the following sections sets out the framework of this
+study. It does {\em not} include mathematically complete definitions
+or fully qualified statements of results - these may be found in their
+entirety in later sections. Instead, it is intended to introduce the
+concepts that figure in the main results, which are stated succinctly
+in the third section. The  I will review plane-wave modeling, and construct
 an asymptotic approximation to single-reflector plane wave data. In
 the final section I will present the surface source extended FWI
 objective and compute its gradient at a homogeneous background with
@@ -65,13 +69,466 @@ sufficiently precise form.
 
 Whenever convenient, I abbreviate ``surface source extended FWI'' as SSE-FWI.
 
-\section{Main Result}
+\section{Preliminaries}
 
-We adopt the usual pressure-velocity acoustics system as the
-underlying physics of waves, see beginning of next section. The
-surface source extension allows the source to extend over the surface,
-in the form $w(x,t)\delta(z)$ for a nominal source position of
-$(0,0)$. After Radon transform, this source takes the form
+
+This paper will use linear acoustics in velocity-pressure form as its
+model for wave motion. In this model, the space-time fields $p$ is excess
+pressure, $\bv$ is particle velocity about equilibrium, $f$
+represents an energy source as a defect in the acoustic constitutive
+law. The bulk modulus $\kappa$ and density $\rho$ are positive functions of
+spatial position. The acoustic wave system couples these quantities:
+\begin{eqnarray}
+\label{eqn:awe}
+\frac{\partial p}{\partial t} + \kappa \nabla \cdot {\bf v} &=&
+                                                                f \nonumber\\
+\rho \frac{\partial {\bf v}}{\partial t} + \nabla p = 0 \nonumber\\
+p,{\bf v}&=&0, t \ll 0
+\end{eqnarray}
+In terms of the solution of the system \ref{eqn:awe}, the modeling
+operator is defined by
+\begin{equation}
+\label{eqn:fwd}
+S[\kappa]f = p|_{z=z_r}
+\end{equation}
+Two special types of right-hand side are important in the discussion
+to follow: isotropic point sources, of the form
+\begin{equation}
+  \label{eqn:ipr}
+  f(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s).  
+\end{equation}
+and surface sources, of the form
+\begin{equation}
+  \label{eqn:ss}
+  f(\bx,t;\bx_s) = u(x,y,t;x_s,y_s)\delta(z-z_s). 
+\end{equation}
+Point sources are a special case of surface sources. Introduce appropriately
+parametrized versions of the modeling operator for these two cases:
+\begin{eqnarray}
+ f(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s) & \Rightarrow & S[\kappa]f = S_p
+  [\kappa]w\\ \nonumber
+  \label{eqn:specsrc}
+f(\bx,t;\bx_s) = u(x,y,t;x_s,y_s)\delta(z-z_s) & \Rightarrow & S[\kappa]f =
+  S_s[\kappa]u
+\end{eqnarray}
+
+The standing assumption in this work is that observed data to be fit
+is to good approximation the result of a point source. That is, there
+are bulk modulus $\kappa_*(\bx)$ and source wavelet or pulse $w_*(t)$
+so that
+\begin{equation}
+  \label{eqn:datadef}
+  d = S_p[\kappa_*]w_*
+\end{equation}
+In equation \ref{eqn:datadef}, $d$ is a function of receiver position
+$\bx_r$, source position $\bx_s$, and time $t$.
+
+Full waveform inversion (FWI), as construed in this paper, means:
+\begin{equation}
+  \label{eqn:deffwi}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }w \mbox{ so that }d
+  \approx S_p[\kappa]w.
+\end{equation}
+In the following paragraphs, I will discuss four approaches to FWI:
+
+\subsection{``Straight'' FWI}
+
+The standard approach to FWI is to formulate the task \ref{eqn:deffwi}
+as a nonlinear least squares problem:
+\begin{equation}
+  \label{eqn:defols}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }w \mbox{ to
+    minimize }
+  \| d -  S_p[\kappa]w\|^2.
+\end{equation}
+Here the symbol $\|\cdot\|^2$ signifies {\em mean-square}, that is,
+sum the squares of every value of the field between the vertical bars.
+
+This concept was introduced in the 1980's
+(\cite{BamChavLai:79,Tara:84a,KolbColLai:86,Crasetal:90},
+and many other papers since then). Usually some form of regularization
+is applied, to compensate for poorly determined aspects of $\kappa$
+and/or $w$, as is explained in Tarantola's influential book
+\cite[]{Tarantola:05}. The approach was of only academic interest
+until roughly fifteen years ago, when 3D modeling and related computations
+first became feasible at industrial scale, and evidence began to emerge 
+that FWI offered potentially decisive improvements in imaging accuracy
+over other inversion (imaging) methods, especially for construction of
+large-scale earth model features
+\cite[]{Plessix:10,Vigh:10}. In the last ten years, FWI has become
+both a production service offered by the geophysical industry, and a
+leading topic of both industry-oriented and academic research. 
+
+As was understood very early in the evolution of FWI, the basic
+least-squares formulation \ref{eqn:defols} suffers from a major
+defect: the parameter spaces tend to be so large that only iterative
+optimization (that is, a variant
+of Newton's method) may feasibly be applied, due to computational cost
+- this remains true today and for the foreseeable future - but these
+method tend not to produce usable results unless the initial iterate
+is in some sense ``good'' (predicts travel times to within a
+half-wavelength) \cite[]{GauTarVir:86,Plessix:10}.``Good'' initial models are not always
+available. Accordingly, a number of alternative approaches have been
+proposed, many of them variations on the least squares theme, amongst
+which are the three approaches described below.
+
+\subsection{Source Extensions}
+
+Careful analysis of the defect mentioned in the last paragraph shows
+that the failure of iterative optimization applied to \ref{eqn:defols}
+to converge (or at least to converge usefully quickly) appears to
+arise from failure to fit the data: some parts of the oscillatory time
+series $d(\cdot,t)$ overlap oscillations in $S_p[\kappa]w$, while
+others do not. It seems reasonable to guess that this ``cycle skipping'' phenomenon 
+could be avoided if the data could be fit throughout the inversion
+process. That requirement in turn implies a modeling operator with
+more degrees of freedom, that is, a bigger domain, than the basic
+modeling operator $S_p$, which should produce the same results as
+$S_p$ when applied to pairs of bulk moduli and isotropic point sources \ref{eqn:ipr}.
+
+There is
+well-established mathematical terminology for this relationship:
+operator A is an {\em extension} of operator B if (i) the domain of $A$
+contains the domain of $B$, and whenever $v$ is in the domain of $B$,
+$Av = Bv$. Two extensions of $S_p$ already appear
+above: the isotropic point radiator \ref{eqn:ipr} is a special case of
+both the surface source \ref{eqn:ss}, which is in turn a special case
+of the generic right-hand side in the system \ref{eqn:awe}. So the
+domain of $S_s$ contains the domain of $S_p$, as does the domain of
+$S$. From the relations \ref{eqn:specsrc}, $S$ and $S_s$ produce the
+same result as $S_p$ when applied to sources in their common domain,
+so these operators are both extensions of $S_p$.
+
+Since these extensions of $S_p$ involve additional degrees of freedom
+for the energy source in the system \ref{eqn:awe}, they have come to
+be called {\em source extensions}. These are not the only source
+extensions - see \cite{HuangNammourSymesDollizal:SEG19} for an
+overview of source extensions and their properties. Extensions may
+also be constructed by adding degrees of freedom to the coefficients
+in the wave system (bulk modulus, in the present case), 
+rather than the right hand side - see \cite{geoprosp:2008} for a
+description of some of these {\em medium extensions}.
+
+The purpose of any extension is to add options for data fitting,
+thereby reducing the chances of cycle-skipping. As will be seen below,
+both extension $S$ and $S_s$ permit arbitrarily accurate fitting of
+essentially any data with essentially any bulk modulus field $\kappa$,
+with proper choice of $f$ or $w$ respectively. However, the standing
+assumption on the data $d$ is that it derives from a point source, per
+\ref{eqn:datadef}. So the added degrees of freedom represented by the
+extensions $S$ and $S_s$ must be suppressed somehow. As explained by
+\cite{geoprosp:2008}, a convenient mechanism for suppression of the
+extension degrees of freedom is a penalty term added to the objective
+of the extended
+version of the least squares problem \ref{eqn:defols}. Choice of penalty
+term, along with choice of extension, characterizes each of the extended
+inversion methods detailed in the next few paragraphs.
+
+\subsubsection{Wavefield Reconstruction Inversion}
+This concept was introduced by \cite{LeeuwenHerrmannWRI:13}, and further
+developed by \cite{LeeuwenHerrmann:16,WangYingst:SEG16} and other
+authors. It is based on the extension $S$ (equation \ref{eqn:fwd}), with full
+space-time volume source $f$, and presumes that the correct point
+source wavelet $w_*$ is known. 
+\begin{equation}
+  \label{eqn:defwri}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }f \mbox{ to
+    minimize }
+  \| d -  S[\kappa]f\|^2+\lambda^2\|f-w_*\delta(\cdot-\bx_s)\|^2.
+\end{equation}
+Evidently the difference $f-w_*\delta(\cdot-\bx_s)$ should be such
+that the scaled sum-of-squares makes sense - this is always the case
+for discretizations, but for the continuum limit entails an actual
+assumption.
+
+\cite{LeeuwenHerrmannWRI:13} posed this problem slightly
+differently, in terms of the second order wave equation for the
+pressure wavefield $p$. From this viewpoint, the 
+second terms becomes a scaled mean square of the residual in the
+wave equation. The formulation presented here is equivalent, and was
+introduced by \cite{WangYingst:SEG16}. \cite{LeeuwenHerrmann:16} used
+the variable projection method \cite[]{GolubPereyra:03}, eliminating the source $f$ in the
+inner step and updating the bulk modulus (or an equivalent quantity)
+in the outer step. In any penalty method, control of the penalty
+parameter has a large influence on the speed of
+convergence. \cite{Aghamiry:19} use an augmented Lagrangian algorithm
+to minimize the influence of the penalty weight choice.
+
+The Achilles' heel of Wavefield Reconstruction Inversion (WRI), in any of
+the formulations described so far, is the necessity of storing a full
+space time field, namely $f$ (or $p$). Especially for time-domain
+formulation and high frequency waves, this storage requirement can be
+formidable. In fact, ``most'' source fields $f$ are non-radiating,
+that is, $S[\kappa]f=0$. The orthocomplement of this subspace of
+non-radiating sources is the range of the adjoint operator
+$S[\kappa]^T$. Therefore the sources may be re-parametrized as images of
+$S[\kappa]^T$. Write $f = g + w_*\delta(\cdot-\bx_s)$: then the second term in
+the objective displayed in \ref{eqn:defwri} is simply $\|g\|^2$.
+Decompose $g = S[\kappa]^Te + n$, in
+which $e$ is the same type of object as $d$ and $S[\kappa]n=0$ (that
+is, $n$ is a non-radiating
+source), and note that the decomposition is orthogonal. Then the WRI problem \ref{eqn:defwri} may be reformulated as
+\begin{equation}
+  \label{eqn:defwrireform}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }e \mbox{ to
+    minimize }
+  \| d -  S[\kappa]w_*\delta(\cdot-\bx_s) - S[\kappa]S[\kappa]^Te\|^2+\lambda^2\|S[\kappa]^Te\|^2.
+\end{equation}
+Note that $n$ has disappeared: {\em a priori} it does not contribute to the first
+term, and $n \ne 0$ makes the second term larger. So minimization
+necessarily entails the choice $n=0$.
+
+This reformulation does {\em not} require storage of $d+1$-dimensional
+fields, as does the original WRI formulation \ref{eqn:defwri}. The
+field $e$ has taken the place of the space-time source $f$, and its
+size is precisely the same as that of the data field $d$. Therefore
+the extra memory cost over modeling is the same as another copy of
+data. A close examination reveals that in computing the composition
+$SS^T$ via time-stepping methods, the same simultaneity issue arises
+as in all applications of the adjoint state method. However good
+solutions are known \cite[]{Griewank:book}, and since precisely the
+same issue arises in time-domain FWI, the cost is the same. Therefore,
+it is this reformulation of WRI that will be analyzed below.
+
+\subsubsection{Space-Time Extension}
+\cite{HuangSymes:Geo18a} introduced a variant of WRI, also using the space-time extension, but not
+requiring knowledge of the target point source wavelet $w_*$: in fact,
+an estimate of this wavelet is a by-product of the algorithm. This
+approach relies on an {\em annihilator}, a linear operator whose null
+space is precisely the desired class of source models, in this case
+isotropic point radiators. Such an operator can be used to generate a
+quadratic form whose zero set is also the desired class, hence can be
+used as a penalty in a nonlinear least squares objective, designed to
+drive the source towards to the desired type. See \cite{geoprosp:2008}
+for a discussion of annihilators in extended inversion.
+
+The annihilator proposed by \cite{HuangSymes:Geo18a} is multiplication
+by $|\bx-\bx_s|$, that is,
+\begin{equation}
+  \label{eqn:defann}
+  Af(\bx,t;\bx_s) = |\bx-\bx_s|f(\bx,t;\bx_s).
+\end{equation}
+The space-time extension approach consists of solving the optimization
+problem:
+\begin{equation}
+  \label{eqn:defste}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }f \mbox{ to
+    minimize }
+  \| d -  S[\kappa]f\|^2+\lambda^2\|Af\|^2.
+\end{equation}
+This problem can be reformulated in the same way as the WRI problem. Write
+$f = w\delta(\cdot-\bx_s) + S[\kappa]^Te + n$, where $n$ is
+non-radiating as before: then the problem \ref{eqn:defste} is
+equivalent to
+\[
+   \mbox{Given } d, \mbox{ find }\kappa, w, e \mbox{ and }n \mbox{ to
+     minimize }
+ \]
+\begin{equation}
+  \label{eqn:defstereform}
+  \| d -  S[\kappa]w_*\delta(\cdot-\bx_s) - S[\kappa]S[\kappa]^Te\|^2+\lambda^2\|A(S[\kappa]^Te+n)\|^2.
+\end{equation}
+Note that the non-radiating component $n$ must remain in the second
+term of the objective, because there is no reason for $n$ to be
+$A^TA$-orthogonal to the range of $S[\kappa]^T$. Also, the isotropic
+point radiator component $w\delta(\cdot-\bx_s)$ must also remain as
+part of the unknowns - simply because it is unknown! It does not
+appear in the second term because $A$ annihilates it.
+
+\subsubsection{Surface Source Extension}
+Beside the reformulation of WRI described above, it is also possible
+to avoid the storage problem of WRI by limiting the support of the
+extended source $f$ to lower dimensional sets. Of several
+possibilities discussed in the literature, I will discuss the 
+  surface source extension approach introduced by
+\cite{HuangNammourSymesDollizal:SEG19}. The extension in question is
+defined in equation \ref{eqn:defss}, and denoted $S_s$. The same
+annihilator \ref{eqn:defann} is used in this approach, this time
+interpreted as acting in the plane $z=z_s$, that is,
+\[
+  Au(x,y,t;x_s,y_s) = \sqrt{(x-x_s)^2+(y-y_s)^2}u(x,y,t;x_s,y_s).
+\]
+The problem formulation is
+\begin{equation}
+  \label{eqn:defsse}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }u \mbox{ to
+    minimize }
+  \| d -  S_s[\kappa]u\|^2+\lambda^2\|Au\|^2.
+\end{equation}
+Evidently the extended source has as many parameters as the data, so
+the memory complexity of this problem is comparable to that of FWI or
+reformulated WRI. The computational complexity compares favorably to
+that of reformulated WRI.
+
+\subsection{Layered Media, Plane Waves}
+As explained in the introduction, this study explores the properties
+of the various FWI variants explained above for the special case of
+layered media: $\kappa = \kappa(z)$,
+$\rho=\rho(z)$. Then the modeled shots differ from
+each other by a horizontal translation, so that there is in effect
+only one shot, for which I take the location to be
+$\bx_s=(0,0,0)$ and suppress $\bx_s$ from the notation.
+
+If $\log \kappa$ and $\log \rho$ are globally bounded and $f$ has
+compact support (and some other properties that will be made precise
+later), there is $\xi_{\rm max} > 0$ so that for
+$\|\xi\|<\xi_{\rm max}$, the integrals defining slant stack fields
+$\tilde{p},\tilde{\bv}$, namely
+\begin{eqnarray}
+\label{eqn:slant}
+\tp(\xi,z,t)& = &\int dx\, dy\, p(x,y,z,t+\xi x),\nonumber\\
+\tv(\xi,z,t)&=&\int dx\, dy\, v_z(x,y,z,t+\xi x),\nonumber\\
+\tf(\xi,z,t)&=&\int dx\,dy\, f(x,y,z,t+\xi x),
+\end{eqnarray}
+are absolutely convergent, and $\tp, \tv$ satisfy the plane wave
+version of the acoustic system \ref{eqn:awe}:
+\begin{eqnarray}
+\label{eqn:awepw}
+(1-c^2\xi^2)\frac{\partial \tp}{\partial t} + \kappa\frac{\partial
+  \tv}{\partial z} &=& \tf \nonumber\\
+\rho \frac{\partial \tv}{\partial t} + \frac{\partial \tp}{\partial
+  z}&=&0\nonumber\\
+\tp,\tv&=&0, t \ll 0.
+\end{eqnarray}
+Here $c=\sqrt{\kappa/\rho}$ is the sound velocity. I use $\xi$ instead
+of the more usual $p$ for plane wave slowness since $p$ already has
+been assigned to mean pressure. Note that for a isotropic point
+source, respectively a surface source,
+\begin{eqnarray}
+  f(\bx,t;\bx_s)=w(t)\delta(\bx) & \Rightarrow &
+                                               \tf(\xi,z,t)=w(t)\delta(z)\\ \nonumber 
+  f(\bx,t;\bx_s) = u(x,y,t)\delta(z) & \Rightarrow &
+                                                     \tf(\xi,z,t) =
+                                                     \tu(\xi,t)\delta(z)\\
+  \nonumber
+  \tu(\xi,t) &=& \int dx\,dy\, u(x,y,t+\xi x)
+\end{eqnarray}
+The plane wave domain modeling
+operator for space-time extended sources samples $\tp$ on $z=z_r$:
+\begin{equation}
+\label{eqn:modpw}
+\tS[\kappa]\tf = \tp|_{z=z_r}
+\end{equation}
+Similarly, the plane wave domain versions of $S_p$ and $S_s$ are
+\begin{eqnarray}
+ \tf(\xi,z,t) = w(t)\delta(z) & \Rightarrow & \tS[\kappa]\tf = \tS_p
+  [\kappa]w\\ \nonumber
+  \label{eqn:specsrc}
+\tf(\xi,z,t) = \tu(\xi,t)\delta(z-z_s) & \Rightarrow & \tS[\kappa]\tf =
+  \tS_s[\kappa]\tu
+\end{eqnarray}
+
+
+For homogeneous $\kappa=\kappa_0, \rho=\rho_0, c=c_0$, a computation
+recapitulated in the Appendix C, relying on computations for the 1D
+acoustics system detailed in Appendices A and B, yields
+\begin{equation}
+\label{eqn:modhom}
+\tS_s[\kappa_0]\tu(\xi,t) = \frac{1}{2(1-c_0^2\xi^2)}\tu
+\left(\xi,t-z_r\sqrt{\frac{1}{c_0^2}-\xi^2}\right).
+\end{equation}
+That is, at a homogeneous model, the plane wave modeling operator is
+simply scaling by a $\xi$-dependent factor.
+
+
+\section{Main Results}
+
+The space dimension is not terribly important in the results to
+follow. Generally I will assume it to take the physical value $d=3$,
+though the numerical examples will use $d=2$ for reasons of
+computational cost. For spatial position, write $\bx = (x,y,z)$ (or $\bx = (x,z)$ for
+2D).
+
+\cite{BlazekStolkSymes:13} give conditions under which the system
+\ref{eqn:awe} has a strong solution, that is, in which all of the
+terms in equations above are interpretable as functions of space-time. Assume that
+
+\indent Assumption A: $\log \kappa, \log \rho$ are bounded and
+measureable. \\
+
+\indent Assumption B: $f$ is square-integrable, has a square-integrable time
+  derivative, and \\has compact support.\\
+
+Then Theorem 1 in \cite{BlazekStolkSymes:13} implies that there exists
+a unique causal (vanishing for $t \ll 0$) strong solution
+$(p,\bv)$ of the system \ref{eqn:awe}, that is, $p$ and $\bv$ are
+$C^1$ functions of time with square-integrable (in space) values,
+$\nabla p$ and $\nabla \cdot \bv$ are $C^0$ functions of time with
+square-integrable values,  and the equations \ref{eqn:awe} are
+satisfied pointwise a. e.
+
+The central object in this study is the relation between the
+coefficients $\kappa$ and $\rho$, on the one hand, and the fields $p$
+and $\bv$ on the other. The influence of the wave velocity $c$ is the
+most important, so from here on $\rho$ will be fixed and constant:
+$\rho(\bx) = \rho_0 \in \bR^+$. Thus view $p$ and $\bv$ as functions of
+$\kappa$ and $f$.
+
+In seismic and ultrasonic experiments, the acoustic
+fields are recorded at or near a hypersurface (the surface of the
+earth, or the skin, or...). Theorem 2 in \cite[]{BlazekStolkSymes:13}
+assures that the trace of $p$ on a cylindrical hypersurface $\Gamma
+\times [0,T]$ is well-defined, as is the trace of the normal component
+of $\bv$. These traces will serve as idealized data in the discussion
+to follow, ignoring issues of sampling and other details of actual
+measurement processes. 
+
+This discussion further idealizes acquisition by setting $\Gamma =
+\{\bx: z=z_r\}$. This is not a bad approximation for some field
+settings, and is convenient for the eventual use of the Radon
+transform.
+
+Active (artificial) sources (right-hand sides in the wave equations)
+are frequently localized in space, relative to other active length scales. The
+simplest such localized source is the {\em isotropic radiator},
+\begin{equation}
+  \label{eqn:ipr}
+  f(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s).  
+\end{equation} 
+in which $\bx_s$ is the location of the radiator. The radiator is a
+special case of the {\em surface source}, in which the support of the
+right-hand side in \ref{eqn:awe} is confined to a hypersurface. For
+present purposes, it suffices to consider sources localized on the
+hyperplane $z=z_s$:
+\begin{equation}
+  \label{eqn:ss}
+  f(\bx,t;\bx_s) = w(x,y,t)\delta(z-z_s). 
+\end{equation}
+Neither distribution defined by \ref{eqn:ipr}, \ref{eqn:ss} is 
+square-integrable, so the theory in \cite[]{BlazekStolkSymes:13} does
+not apply directly to the system \ref{eqn:awe} with $f$ defined by
+equation \ref{eqn:ipr}. However a simple trick produces a unique
+(necessarily weak) solution in both cases, provided an additional
+constraint is placed on $\kappa$:
+
+\indent Assumption C: There exists $\epsilon >0$ so that $\kappa =
+\kappa_0 \in \bR^+$ in $\{\bx: |z-z_s|<\epsilon\}$.
+
+\noindent That is, $\kappa$ is constant near the plane $z=z_s$. See
+Appendix \appSingular for a proof of this statement.
+
+Define the coefficient-to-data map (``forward map'', ``modeling
+operator'') $S$ by
+\begin{equation}
+\label{eqn:fwd}
+S[\kappa]f = p|_{z=z_r}
+\end{equation}
+The notation reminds the reader that $S$ is linear in $f$ but
+nonlinear in $\kappa$.
+
+Theorem 2 in \cite[]{BlazekStolkSymes:13} assures that $S[\kappa]$ is
+well-defined as a map from right-hand sides $f$ having
+square-integrable time derivatives to square-integrable traces. With
+more regularity in time, the map is also differentiable in its
+dependence on $\kappa$. In Appendix \ref{appSingular}, this result is
+extended to the singular sources \ref{eqn:ipr}, \ref{eqn:ss}.
+
+In fact, stronger results hold under Assumption C. The special cases
+considered below have stronger continuity properties.
+
+
+
+After Radon transform, this source takes the form
 $\tw(\xi,t)\delta(z)$, where $\xi$ is the plane wave slowness. 
 
 The underlying hypothesis is that the data comes from a point
@@ -192,32 +649,6 @@ cares, really: it is established that SSE-FWI has similar behaviour to
 FWI for at least one simple instance of reflection data.
 
 \section{Plane Wave Modeling}
-Start with 2D acoustics in velocity-pressure form: $p$ is excess
-pressure, $\bv=(v_x,v_z)$ is particle velocity about equilibrium, $f$
-is a (possibly) extended source model, all linked by the acoustic wave system
-\begin{eqnarray}
-\label{eqn:awe}
-\frac{\partial p}{\partial t} + \kappa \nabla \cdot {\bf v} &=&
-                                                                f(\bx,t;\bx_s) \nonumber\\
-\rho \frac{\partial {\bf v}}{\partial t} + \nabla p = 0 \nonumber\\
-p,{\bf v}&=&0, t \ll 0
-\end{eqnarray}
-
-As in other work on this topic, I will assume $\rho$ to be fixed, and
-for sake of simplicity constant, and focus the discussion on
-$\kappa$. Thus the modeled pressure traces at receiver locations
-depend on $\kappa$ and the source function $f$. For simplicity again, assume that
-receivers are located at every point of the hyperplane $z=z_r$. Then
-the modeling operator is defined as
-\begin{equation}
-\label{eqn:fwd}
-S[\kappa]f = p|_{z=z_r}
-\end{equation}
-
-Assume that sources all lie on the surface $z=z_s$, so that surface
-extended sources take the form $f(\bx,t;\bx_s) =
-w(x,t)\delta(z-z_s)$. By abuse of notation, regard $S[\kappa]$ as
-acting on $w$.
 
 Assume that $f$ is square-integrable, $\kappa = \kappa(z)$,
 $\rho=\rho(z)$ (layered medium). Then the modeled shots differ from
@@ -545,7 +976,109 @@ Together with the expression \ref{eqn:jgradft} for the Fourier
 transform of the gradient, this observation establishes the assertion
 stated in the introduction.
 
-\append{1D Wave Motion}
+\append{Singular RIght-hand Sides and Weak Solutions}
+Theorem 1 in \cite[]{BlazekStolkSymes:13} provides a strong solution of the system \ref{eqn:awe}: $p$, respectively $\bv$, is continuous
+in time with values in the Sobolev space $H^1(\bR^d)$, respectively
+$H^1_{\rm div}(\bR^d)$ and
+also continuously differentiable with values in $L^2(\bR^d)$,
+respectively $(L^2(\bR^d))^d$. Therefore all of the terms in
+\ref{eqn:awe} are square-integrable functions.
+
+Theorem 4 in \cite[]{BlazekStolkSymes:13} implies that for each $t$, $p(\cdot,t)$ and $\bv(\cdot,t)$
+have compact support, and that the support expands in $t$ at the rate
+bounded by the sup of the velocity $c=\sqrt{\kappa/\rho}$, as one
+would expect. Therefore, for any fixed max time $T$, it is possible to
+treat the problem for $0\le t \le T$ as a Dirichlet problem in a
+domain $\Omega$ of sufficiently large diameter. Without loss of
+generality, assume that $\mbox{supp }f \subset \Omega \times [0,T]$.
+
+The isotropic point radiator \ref{eqn:ipr} is not
+square-integrable, so the theory in \cite[]{BlazekStolkSymes:13} does
+not apply directly to the system
+\begin{eqnarray}
+\label{eqn:aweptsrc}
+\frac{\partial p}{\partial t} + \kappa \nabla \cdot {\bf v} &=&
+                                                                w(t)\delta(\bx-\bx_s) \nonumber\\
+\rho \frac{\partial {\bf v}}{\partial t} + \nabla p = 0 \nonumber\\
+p,{\bf v}&=&0, t \ll 0
+\end{eqnarray}
+However there is a simple trick that makes this
+theory applicable, provided one assumes that $\kappa$ is constant
+($=\kappa_0 \in \bR^+$) near
+$\bx=\bx_s$ (Assumption C). With this constraint, the problem
+\ref{eqn:aweptsrc} may be shown to have a unique causal weak solution.,
+
+Note that the existence of weak solutions for problems of this type
+has been 
+well-known for decades, with the additional assumption that the coefficients are
+smooth, see for example \cite{Lax:PDENotes}. Using the progressing
+wave expansion of the fundamental solution for smooth coefficient
+problems (for example, \cite{Friedlander:75}) in place of the analytic
+expression for the constant-coefficient point radiator solution given
+below, it is possible to obtain a similar result under the weaker
+\begin{itemize}
+\item[Assumption C']: $\kappa$ is smooth near $\bx_s$.
+\end{itemize}
+
+Denote by $(p_0,\bv_0)$ the (weak) solution of the
+system \ref{eqn:awe} with $\kappa$ replaced by $\kappa_0$. For $d=3$,
+\[
+ p_0(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-\frac{ |\bx-\bx_s|}{c_0}\right)
+\]
+in which $c_0=\sqrt{\kappa_0/\rho_0}$. There is a similar expression
+for $\bv_0$, and for other space dimensions $d$. Because $w$ is smooth, both $p$ and $\bv$ are smooth
+except at $\bx=\bx_s$. Pick $\phi \in C_0^{\infty}(\bR^d)$ so that
+$\phi = 1$ in a neighborhood of $\bx_s$ and $\kappa=\kappa_0$ on
+$\mbox{supp }\phi$. Then
+\begin{eqnarray}
+\label{eqn:awecut}
+\frac{\partial (\phi p_0)}{\partial t} + \kappa \nabla \cdot (\phi {\bf v}_0) &=&
+                           w(t)\delta(\bx-\bx_s) + f_0  \nonumber\\
+\rho \frac{\partial (\phi {\bf v}_0)}{\partial t} + \nabla (\phi p_0) = {\bf g}_0 \nonumber\\
+\end{eqnarray}
+in which $f_0$ and ${\bf g}_0$ are smooth of compact support. Denote by
+$(p_1,\bv_1)$ the strong solution of
+\begin{eqnarray}
+\label{eqn:awesupp}
+\frac{\partial p_1}{\partial t} + \kappa \nabla \cdot {\bf v}_1 &=&
+                                                                -f_0 \nonumber\\
+\rho \frac{\partial {\bf v}_1}{\partial t} + \nabla p_1 = -{\bf g}_0 \nonumber\\
+p_1,{\bf v}_1&=&0, t \ll 0
+\end{eqnarray}
+as provided by Theorem 1 of \cite{BlazekStolkSymes:13}. Then
+\begin{eqnarray*}
+  p & = & \phi p_0 + p_1\\
+  \bv & = & \phi \bv_0 + \bv_1
+\end{eqnarray*}
+defines the unique weak solution of the system \ref{eqn:aweptsrc}.
+
+\cite{SantosaSymes:00} use an analogous construction for the
+second-order wave equation to give $L^2$ bounds on the point radiator
+solution.
+
+As mentioned in the Preliminaries section, a similar argument
+establishes the existence of weak solutions for the surface source problem
+\begin{eqnarray}
+\label{eqn:awess}
+\frac{\partial p}{\partial t} + \kappa \nabla \cdot {\bf v} &=&
+                                                                w(x,y,t)\delta(z-z_s) \nonumber\\
+\rho \frac{\partial {\bf v}}{\partial t} + \nabla p = 0 \nonumber\\
+p,{\bf v}&=&0, t \ll 0
+\end{eqnarray}
+under Assumption D, that $\kappa=\kappa_0$ near $z=z_s$. An analytic
+solution for $\kappa \equiv \kappa_0$ follows from that for the point
+radiator problem, by superposition. Then a similar cutoff construction
+and appeal to Theorem 1 of \cite{BlazekStolkSymes:13} proveds a weak
+solution to \ref{eqn:awess}.
+
+This construction also works via recourse to the progressing wave
+expansion for the weaker
+\begin{itemize}
+\item[Assumption D']: $\epsilon > 0$ exists for which $\kappa$ is
+smooth in the collar neigborhood $\{\bx: |z-z_s|<\epsilon\}$.
+\end{itemize}
+  
+\append{1D Radiation Problem}
 Begin with the 1D acoustics point source system. 
 \begin{eqnarray}
 \label{eqn:awe1d}
@@ -562,28 +1095,28 @@ conditions that the pressure is continuous at $p=0$, whence $v$ must
 have a discontinuity. 
 
 Now assume that $\kappa, \rho$ are constant. 
-In $z \ne 0$, the right hand side 
+In $z \ne z_s$, the right hand side 
 vanishes, so the solution must be locally a combination of plane
 waves; causality implies that
 \[
-p(z,t)=a\left(t \mp \frac{z}{c}\right), \, v(z,t)=\pm b\left(t \mp
-  \frac{z}{c}\right)
+p(z,t)=a\left(t \mp \frac{z-z_s}{c}\right), \, v(z,t)=\pm b\left(t \mp
+  \frac{z_s}{c}\right)
 \]
 From the second dynamical equation (Newton's law) it follows that $b =
 a/(\rho c)$. The singularity on the LHS of the first dynamical
 equation (constitutive law) is
 \[
-\kappa [v]_{z=0}\delta(z) =
-2\frac{\kappa}{c}b\delta(z) = 2a\delta(z).
+\kappa [v]_{z=z_s}\delta(z-z_s) =
+2\frac{\kappa}{c}b\delta(z-z_s) = 2a\delta(z-z_s).
 \] 
 This must in turn equal the RHS of the constitutive law, whence
 $a=w/2$. Thus
 \begin{eqnarray}
 \label{eqn:sol1d}
-p(z,t) &=& \frac{1}{2}w\left(t \mp \frac{z}{c}\right) \nonumber \\
-v(z,t) &=& \pm\frac{1}{2\rho c}w\left(t \mp \frac{z}{c}\right)
+p(z,t) &=& \frac{1}{2}w\left(t \mp \frac{z-z_s}{c}\right) \nonumber \\
+v(z,t) &=& \pm\frac{1}{2\rho c}w\left(t \mp \frac{z-z_s}{c}\right)
            \nonumber \\
-\pm z &>& 0.
+\pm z-z_s &>& 0.
 \end{eqnarray}
 
 \append{1D Born Approximation}
@@ -600,122 +1133,76 @@ The perturbational system for \ref{eqn:awe1d} is:
 \end{eqnarray}
 
 If $\kappa, \rho $ are constant, it is possible to develop explicit
-expressions for the solution of this system. Assuming that $\delta
-\rho=0$ and $\delta \kappa$ is nonzero only in $z>0$, the reflected
-(perturbational) wavefield should be upcoming (i.e. a function of
-$z+ct$, away from the wavefront), as the wave scatters
-only once, at the wavefront implicit in the expressions
-\ref{eqn:sol1d}. On the other hand, the field must vanish before the
-first arrival. 
+expressions for the solution of this system. Only $\kappa$ will be
+subject to perturbation in any of the problems considered in this
+report, so assume that that $\delta\rho=0$.
 
 The key is to understand the perturbational impulse response. That is,
-set $w(t)=H(t)$, and adopt adopt the anzatz
-\begin{eqnarray}
-\label{eqn:ansatz1d}
-\delta p(z,t) &=& a_0\left(t + \frac{z}{c}\right) \delta\left(t -
-  \frac{z}{c}\right) + a_1\left(t + \frac{z}{c}\right) H\left(t -
-  \frac{z}{c}\right),\nonumber\\
-\delta v(z,t) &=& b_0\left(t + \frac{z}{c}\right) \delta\left(t -
-  \frac{z}{c}\right) + b_1\left(t + \frac{z}{c}\right) H\left(t -
-  \frac{z}{c}\right),
-\end{eqnarray}
-Assume that $w$ is smooth and
-of compact support, with zero mean. Then all derivatives of $w$ are
-necessarily linearly independent, as any dependence would amount to a
-differential equation with constant coefficients, the solution of
-which would be entire analytic hence not of compact support.
-
-In the following calculations, the arguments of the coefficients
-$a_0,a_1,b_0,$ and $b_1$ are $\left(t + \frac{z}{c}\right)$ in all
-cases, and are suppressed for the sake of brevity, until the final result.
-
-Inserting the ansatz \ref{eqn:ansatz1d} in the second equation in \ref{eqn:dawe1d}, obtain
-\[
-0=\rho \frac{\partial \delta v}{\partial t} + \frac{\partial \delta p}{\partial
-  z} = 
-\]
-\[
-\left(\rho b_0 - \frac{a_0}{c}\right) \delta'\left(t -
-  \frac{z}{c}\right)
-\]
-\[
-+\left(\rho b_0' + \frac{a_0'}{c}+\rho b_1 - \frac{a_1}{c} \right)\left(t + \frac{z}{c}\right) \delta\left(t -
-  \frac{z}{c}\right)
-\]
-\[
- + \left(\rho b_1' + \frac{a_1'}{c}\right) \left(t + \frac{z}{c}\right) H\left(t -
-  \frac{z}{c}\right)
-\]
-Since $\delta', \delta$ and $H$ are linearly independent, this equation is
-equivalent to the system
-\begin{eqnarray}
-\label{eqn:asnbs}
-\rho b_0 - \frac{a_0}{c} &=& 0\nonumber\\
-\rho b_0' + \frac{a_0'}{c}+\rho b_1 - \frac{a_1}{c} &=&0 \nonumber\\
-\rho b_1' + \frac{a_1'}{c} &=&0.
-\end{eqnarray}
-The first and third equations imply that 
-\begin{eqnarray}
-\label{eqn:handy}
-\rho c b_0&=&a_0,\nonumber\\
-\rho c b_1&=&-a_1,
-\end{eqnarray}
- so the second equation becomes
+set $w(t)=H(t)$. Then the identity \ref{eqn:sol1d} implies that the
+inhomogeneous term in the first equation of the system \ref{eqn:dawe1d}
+is 
 \begin{equation}
-\label{eqn:as}
-a_0' = a_1
+  \label{eqn:pertrhs}
+-\delta \kappa(z) \frac{\partial v}{\partial z}(z,t) = \frac{\delta
+  \kappa(z_s)}{\rho c}H(t)\delta(z-z_s) +
+\frac{\delta\kappa(z)}{2\kappa}\delta\left(t - \frac{|z-z_s|}{c}\right)
 \end{equation}
-Now insert the asatz \ref{eqn:ansatz1d} into the first of the
-dynamical equations \ref{eqn:dawe1d}. Note that \ref{eqn:sol1d}
-implies
+Correspondingly, the solution $(\delta p, \delta v)$ is the sum of
+three components:
+\begin{eqnarray}
+  \label{eqn:pertrhsterms}
+  \delta p & = & \delta p_s + \delta p_d \nonumber\\
+  \delta v & = & \delta v_s + \delta v_d 
+\end{eqnarray}
+The first component satisfies
+\begin{eqnarray}
+  \label{eqn:dawe1ds}
+  \frac{\partial \delta p_s}{\partial t} +\kappa\frac{\partial
+  \delta v_s}{\partial z}   &=&  \frac{\delta
+  \kappa(z_s)}{\rho c}H(t)\delta(z-z_s)\nonumber\\
+  \rho \frac{\partial \delta v_s}{\partial t} + \frac{\partial \delta p_s}{\partial
+  z}&=&0\nonumber\\
+  \delta p_s,\delta v_s&=&0, t < 0.
+\end{eqnarray}
+The initial conditions are free to be chosen, and the choice above is convenient.
+
+Note that \ref{eqn:dawe1ds} is precisely a system of the form
+\ref{eqn:awe1d}, so from the formulae \ref{eqn:sol1d} with $w(t)=\frac{\delta
+  \kappa(z_s)}{\rho c}H(t)$
+\begin{eqnarray}
+\label{eqn:dsol1ds}
+\delta p_s(z,t) &=& \frac{\delta
+  \kappa(z_s)}{2\rho c}H\left(t - \frac{|z-z_s|}{c}\right) \nonumber \\
+\delta v_s(z,t) &=& \pm\frac{\delta \kappa(z_s)}{2\rho^2 c^2}H\left(t - \frac{|z-z_s|}{c}\right)
+\end{eqnarray}
+
+Define $P_d(z,t;\zeta), V_d(z,t;\zeta)$ to be the solution of the system
+\begin{eqnarray}
+  \label{eqn:dawe1dd}
+  \frac{\partial P_d}{\partial t} +\kappa\frac{\partial
+  V_d}{\partial z}   &=&   \frac{\delta\kappa(\zeta)}{2\kappa}\delta(z-\zeta)\delta\left(t - \frac{|\zeta-z_s|}{c}\right)\nonumber\\
+  \rho \frac{\partial V_d}{\partial t} + \frac{\partial P_d}{\partial
+  z}&=&0\nonumber\\
+  P_d,V_d&=&0, t < 0.
+\end{eqnarray}
+Then
+\begin{eqnarray}
+  \label{eqn:intrep1}
+  \delta p_d(z,t) & = & \int d\zeta\, P_d(z,t;\zeta)\\
+  \delta v_d(z,t) & = & \int d\zeta\, V_d(z,t;\zeta)
+\end{eqnarray}
+
+The system \ref{eqn:dawe1dd} is precisely of the form
+\ref{eqn:awe1d} with $z_s$ replaced by $\zeta$ and
 \[
-\delta \kappa \frac{\partial v}{\partial z} = - \frac{\delta
-  \kappa}{2\kappa}\delta\left(t - \frac{z}{c}\right)
+  w(t)= \frac{\delta\kappa(\zeta)}{2\kappa}\delta\left(t - \frac{|\zeta-z_s|}{c}\right)
 \]
-so that
-\[
-0 = \left(\frac{\partial \delta p}{\partial t} +\kappa\frac{\partial
-  \delta v}{\partial z} + \delta \kappa\frac{\partial
-  v}{\partial z}\right)(z,t)=
-\]
-\[
-\left(a_0 - b_0\frac{\kappa}{c}\right)\delta'\left(t - \frac{z}{c}\right) +
-\]
-\[
-\left(a_0' + b_0'\frac{\kappa}{c} + a_1-b_1\frac{\kappa}{c}\right)\delta\left(t -
-  \frac{z}{c}\right)+
-\]
-\[
-\left(a_1' + b_1'\frac{\kappa}{c}\right) H\left(t - \frac{z}{c}\right)
-\]
-\[
-- \frac{\delta \kappa}{2\kappa}\delta\left(t - \frac{z}{c}\right)
-\]
-The first and last equations from \ref{eqn:handy} imply that the first
-and third terms in the sum above vanish, and that the second and fourth
-amount to
-\[
-=\left(2 (a_0'+a_1) -\frac{\delta \kappa}{2\kappa}\right) \delta\left(t -
-  \frac{z}{c}\right)
-\]
-Taking the identity \ref{eqn:as} into account and re-inserting the
-argument of $a_1$, the upshot is
-\[
-4a_1\left(t + \frac{z}{c}\right) \delta\left(t -
-  \frac{z}{c}\right) = \frac{\delta \kappa(z)}{2\kappa} \delta\left(t
-  -  \frac{z}{c}\right)
-\]
-In view of the delta function factor, $z=ct$ in the arguments of $a_1$
-and $\delta \kappa $, so the above equation is equivalent to
-\begin{equation}
-\label{eqn:asol}
-a_1(t)=\frac{\delta \kappa\left(\frac{ct}{2}\right)}{8\kappa}
-\end{equation}
-It remains to determine the integration constant for $a_0$. In view of
-the condition, mentioned above, that $\delta \kappa$ vanish in $z \le
-0$, it follows from \ref{eqn:dawe1d} that $\delta p(0,0)=0$, so
-$a_0(0)=0$. Consequently the ansatz \ref{eqn:ansatz1d} is validated,
-and 
+Thus from \ref{eqn:sol1d}
+\begin{eqnarray*}
+  P_d(z,t;\zeta) &=& \frac{\delta\kappa(\zeta)}{4\kappa} \delta\left(t - \frac{|z-\zeta|+|\zeta-z_s|}{c}\right) \nonumber \\
+  V_d(z,t;\zeta) &=& \pm\frac{\delta\kappa(\zeta)}{4\kappa \rho c} \delta\left(t - \frac{|z-\zeta|+|\zeta-z_s|}{c}\right) 
+\end{eqnarray*}
+
 \begin{equation}
 \label{eqn:imp1d}
 D(S[\kappa]H)\delta \kappa (t) = \delta p(0,t)=  \frac{\delta 
