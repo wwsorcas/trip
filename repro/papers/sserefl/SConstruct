@@ -17,12 +17,17 @@ include=r'''
 \newcommand{\tf}{\tilde{f}}
 \newcommand{\tc}{\tilde{c}}
 \newcommand{\tv}{\tilde{v}_z}
+\newcommand{\tu}{\tilde{u}}
 \newcommand{\tS}{\tilde{S}}
 \newcommand{\tk}{\tilde{\kappa}}
 \newcommand{\tA}{\tilde{A}}
 \newcommand{\wl}{w_{\lambda}}
 \newcommand{\bR}{\mathbf{R}}
 \newcommand{\cF}{{\cal F}}
+\newcommand{\appSingular}{A}
+\newcommand{\applay}{B}
+\newcommand{\applayBorn}{C}
+\newcommand{\appPlane}{D}
 \newtheorem{exmp}{Example}
 ''',
 color='ALL'
