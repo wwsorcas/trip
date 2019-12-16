@@ -105,9 +105,10 @@ and surface sources, of the form
 Point sources are a special case of surface sources. Introduce appropriately
 parametrized versions of the modeling operator for these two cases:
 \begin{eqnarray}
+  \label{eqn:defpt}
  f(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s) & \Rightarrow & S[\kappa]f = S_p
-  [\kappa]w\\ \nonumber
-  \label{eqn:specsrc}
+  [\kappa]w\\ 
+  \label{eqn:defss}
 f(\bx,t;\bx_s) = u(x,y,t;x_s,y_s)\delta(z-z_s) & \Rightarrow & S[\kappa]f =
   S_s[\kappa]u
 \end{eqnarray}
@@ -348,6 +349,11 @@ interpreted as acting in the plane $z=z_s$, that is,
 \[
   Au(x,y,t;x_s,y_s) = \sqrt{(x-x_s)^2+(y-y_s)^2}u(x,y,t;x_s,y_s).
 \]
+or
+\[
+  Au(x,t;x_s) = (x-x_s)u(x,t;x_s)
+\]
+for 2D. 
 The problem formulation is
 \begin{equation}
   \label{eqn:defsse}
@@ -367,7 +373,7 @@ layered media: $\kappa = \kappa(z)$,
 $\rho=\rho(z)$. Then the modeled shots differ from
 each other by a horizontal translation, so that there is in effect
 only one shot, for which I take the location to be
-$\bx_s=(0,0,0)$ and suppress $\bx_s$ from the notation.
+$\bx_s=(0,0,z_s)$.
 
 If $\log \kappa$ and $\log \rho$ are globally bounded and $f$ has
 compact support (and some other properties that will be made precise
@@ -411,26 +417,316 @@ operator for space-time extended sources samples $\tp$ on $z=z_r$:
 \end{equation}
 Similarly, the plane wave domain versions of $S_p$ and $S_s$ are
 \begin{eqnarray}
- \tf(\xi,z,t) = w(t)\delta(z) & \Rightarrow & \tS[\kappa]\tf = \tS_p
-  [\kappa]w\\ \nonumber
-  \label{eqn:specsrc}
+  \label{eqn:pwpt}
+ \tf(\xi,z,t) = w(t)\delta(z-z_s) & \Rightarrow & \tS[\kappa]\tf = \tS_p
+  [\kappa]w\\ 
+  \label{eqn:pwss}
 \tf(\xi,z,t) = \tu(\xi,t)\delta(z-z_s) & \Rightarrow & \tS[\kappa]\tf =
   \tS_s[\kappa]\tu
 \end{eqnarray}
 
-
 For homogeneous $\kappa=\kappa_0, \rho=\rho_0, c=c_0$, a computation
 recapitulated in the Appendix C, relying on computations for the 1D
 acoustics system detailed in Appendices A and B, yields
+\begin{eqnarray}
+  \label{eqn:ptmodhompw}
+  \tS_p[\kappa_0]w(\xi,t) & = &\frac{1}{2(1-c_0^2\xi^2)}w
+                                \left(t-\frac{|z_r-z_s|}{\tc_0(\xi)}\right)\\
+    \label{eqn:ssmodhompw}
+  \tS_s[\kappa_0]\tu(\xi,t) & = &\frac{1}{2(1-c_0^2\xi^2)}\tu 
+                                  \left(\xi,t-\frac{|z_r-z_s|}{\tc_0(\xi)}\right)\\
+    \label{eqn:stmodhompw}
+  \tS[\kappa_0]\tf(\xi,t) & = &  \frac{1}{2}(1-c_0^2\xi^2)^{-1}\int dz \tf\left(\xi,z,t -
+                                \frac{|z_r-z|}{\tc_0(\xi)}\right)                              
+\end{eqnarray}
+Here
 \begin{equation}
-\label{eqn:modhom}
-\tS_s[\kappa_0]\tu(\xi,t) = \frac{1}{2(1-c_0^2\xi^2)}\tu
-\left(\xi,t-z_r\sqrt{\frac{1}{c_0^2}-\xi^2}\right).
+  \label{eqn:vertvel}
+  \tc(\xi,z) = \frac{c(z)}{\sqrt{1-c(z)^2\xi^2}}
+    \end{equation}
+is the vertical plane wave velocity, and we write
+$\tc_0(\xi)=\tc(\xi,z)$ for any $z$, when $c=c_0$.
+
+\subsection{Extended FWI in Plane Wave Domain}
+Of the various extended FWI formulation explained above, three do not
+require the storage of full space-time fields:
+\begin{itemize}
+\item Least-squares FWI;
+\item Reformulated WRI; and
+\item Surface Source Extension.
+\end{itemize}
+The remainder of this paper is devoted to analysis of these three
+approaches.
+
+It is possible to transform the objectives posed in the space-time
+domain problem statements above, but this leads to technical
+complications that do not affect the conclusions. Therefore I pose
+analogous problems directly in the plane wave domain. The $L^2$ norms
+(integral root mean squares) below involve integration over a range of
+plane wave slownesses $\xi$, which for simplicity I assume symmetric,
+that is, $-\xi_{\rm max} \le \xi \le \xi_{\rm max}$, and over
+appropriate ranges of other variables which I do not state explicitly
+here (see the analysis sections later in the paper where all such
+choices are made explicitly). As before, the $L^2$-norm squared symbol
+$\|\cdot\|^2$ means the integral over all variables of the square of
+whatever is inside.
+
+\subsubsection{Least Squares FWI}
+
+\begin{equation}
+  \label{eqn:defolspw}
+  \mbox{Given } \td, \mbox{ find }\kappa \mbox{ and }w \mbox{ to
+    minimize }
+  \| \td -  \tS_p[\kappa]w\delta(\cdot-z_s)\|^2.
 \end{equation}
-That is, at a homogeneous model, the plane wave modeling operator is
-simply scaling by a $\xi$-dependent factor.
 
+\subsubsection{Reformulated WRI}
 
+\begin{equation}
+  \label{eqn:defwrireformpw}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }e \mbox{ to
+    minimize }
+  \| \td -  \tS[\kappa]w_*\delta(\cdot-z_s) - \tS[\kappa]\tS[\kappa]^Te\|^2+\lambda^2\|\tS[\kappa]^Te\|^2.
+\end{equation}
+                              
+The reformulated WRI objective involves 
+the product $\tS[\kappa]\tS[\kappa]^T$ in which $\tS[\kappa]^T$ is the
+formal or $L^2$ adjoint. For the homogeneous case,
+$\kappa=\kappa_0,\rho=\rho_0,c=c_0$,
+\begin{equation}
+  \label{eqn:stmodhompwtrans}
+  (\tS[\kappa]^T\te)(\xi,z,t)=\frac{1}{2}(1-c_0^2\xi^2)^{-1}\te\left(\xi,t +
+    \frac{|z_r-z|}{\tc_0(\xi)}\right).
+\end{equation}
+
+While I have endeavoured to limit mathematical technicalities in this background
+presentation, one such technicality intrudes at this point: the
+output of the transpose operator $\tS[\kappa]^T$ is nonzero and non-decaying arbitrarily
+far in space and in negative time. As will be obvious shortly, this
+fact prevents the composition $\tS[\kappa]\tS[\kappa]^T$ from being
+well-defined, without some further constraint being imposed on the
+domain of $\tS[\kappa]$. The simplest appears to be the assumption
+that all plane wave sources act over a limited depth range, $0 \le z
+\le z_{\rm max}$. Then the $z$ integrals appearing in the expressions
+for $S$ and $\tS$ have limits $[0,z_{\rm max}]$
+
+With this amendment, compute the composition:
+\[
+  \tS[\kappa]\tS[\kappa]^T\te(\xi,t) = \frac{1}{2}(1-c_0^2\xi^2)^{-1}
+\]
+\[
+  \times 
+  \int_0^{z_{\rm max}} dz\, \frac{1}{2}(1-c_0^2\xi^2)^{-1}\te\left(\xi,t' +
+    \frac{|z_r-z|}{\tc_0(\xi)}\right)_{t'=t-\frac{|z_r-z|}{\tc_0(\xi)}}
+\]
+\begin{equation}
+  \label{eqn:stmodhompwnorm}
+ = \frac{z_{\rm max}}{4}(1-c_0^2\xi^2)^{-2}\te(\xi,t)
+\end{equation}
+
+\subsubsection{Surface Source Extension}
+
+The surface source space-time formulation employs an
+annihilator $A$, defined in \ref{eqn:defste}. The corresponding
+operator in the plane wave domain is somewhat easier to compute for the 2D
+case: one obtains 
+\[
+\tA = D_{\xi}I_t,
+\]
+that is, differentiation in $\xi$ and integration in $t$, in either
+order. The 3D expression is somewhat more complicated. Since the
+examples below will be computed in 2D, the above definition suffices.
+
+The surface source extended FWI problem in the plane wave domain is then
+\begin{equation}
+  \label{eqn:defssepw}
+  \mbox{Given } \td, \mbox{ find }\kappa \mbox{ and }\tu \mbox{ to
+    minimize }
+  \| \td -  \tS_s[\kappa]\tu\|^2+\lambda^2\|\tA\tu\|^2.
+\end{equation}
+
+\subsection{Inversion Velocity Analysis: the zero penalty limit}
+Examination of the operators appearing in the extended inversion
+problems considered here (equations \ref{eqn:stmodhompwnorm} for
+reformulated WRI, \ref{eqn:ssmodhompw} for SSE) reveals that they
+are both invertible. This property permits a simplification of the
+penalty formulations \ref{eqn:defwrireformpw} and
+\ref{eqn:defssepw}. This simplification has been used several times in
+prior work on extended FWI
+\cite[]{Symes:EAGE15,Herve2017,HouSymes:Geo18}, and has come to be
+called Inversion Velocity Analysis (IVA) in the exploration seismology
+literature.
+
+The idea is well-known in numerical optimization, and can most easily
+be explained in the context of the SSE objective function, in
+plane-wave domain:
+\begin{equation}
+  \label{eqn:ssepen}
+  \kappa,\tu \mapsto \|\td-\tS_s[\kappa]\tu\|^2 + \lambda^2\|\tA\tu\|^2
+\end{equation}
+
+The transformation to IVA takes place in two steps. The first is
+trivial: simply divide the objective function by $\lambda^2$, to
+obtain
+\begin{equation}
+  \label{eqn:ssepeninv}
+  \kappa,\tu \mapsto \lambda^{-2}\|\td-\tS_s[\kappa]\tu\|^2 + \|\tA\tu\|^2
+\end{equation}
+Only the minimum values change: for any particular $\lambda \in
+\bR^+$, the sets of local and global minimizers are exactly the same.
+
+The second step in moving from this objective to the corresponding IVA
+objective is of value in itself: it consists of eliminating the linear
+variable $\tu$ by minimizing the function defined in \ref{eqn:ssepen}
+over $\tu$. The resulting minimum is a function of $\kappa$: {\em a
+  priori}, a local minimizer is the same as the $\kappa$ component of
+a local minimizer of the original objective. This reduction of the
+objective to a function of some of its variables is known as the {\em
+  Variable Projection Method} (VPM), especially if the eliminated variables
+appear linearly in the original problem, as they do here
+\cite[]{GolubPereyra:03}. For the plane wave surface source objective,
+the result of VPM reduction is
+\begin{equation}
+  \label{eqn:ssevpm}
+  \kappa \mapsto \lambda^{-2}\|\td-\tS_s[\kappa]\tu[\kappa]\|^2 + \|\tA\tu[\kappa]\|^2
+\end{equation}
+in which $\tu[\kappa]$ is the minimizer of the base objective
+\ref{eqn:ssepeninv} over $\tu$, with $\kappa$ held fixed:
+$\tu[\kappa]$ solves the {\em normal equation}
+\begin{equation}
+  \label{eqn:ssenorm}
+  (\lambda^{-2}\tS_s[\kappa]^T\tS_s[\kappa] +
+  \tA^T\tA)\tu[\kappa]=\lambda^{-2}\tS_s[\kappa]^T\td.
+\end{equation}
+
+The major import of VPM is that the gradient
+of the reduced objective, a key element in any calculus-based
+optimization algorithm, is relatively simple to compute: formally, it
+is simply the gradient of the original objective with the
+to-be-eliminated variables held fixed. See \cite{GolubPereyra:03} for
+an explanation, and
+\cite{vanLeeuwenMulder:09,Rickett:SEG12,LiRickettAbubakar:13} for
+applications to geophysical inversion.
+
+The final step is to observe that the VPM objective converges as
+$\lambda \rightarrow 0$. Examination of \ref{eqn:ssepeninv} suggests
+that for this to happen, the data must be fit perfectly, at least in
+the limit. This is likely to happen only if the linear modeling
+operator ($\tS_s[\kappa]$, in this case) is invertible - which it is,
+at least in the case of constant $\kappa=\kappa_0$,
+see equation \ref{eqn:ssmodhompw}.  In fact $\tS[\kappa]$ is a
+continuous function of $\kappa$, as is explained in Appendix \appSingular, so in fact data is fit exactly and by precisely one $\tu$ for
+all $\kappa$ sufficiently close to constant. It is not hard to see that the
+$\lambda = 0$ limit of the VPM objective obtained from 
+\ref{eqn:ssepeninv} is
+\begin{equation}
+  \label{eqn:ssiva}
+  \kappa \mapsto \|A \tS_s[\kappa]^{-1}\td\|^2
+\end{equation}
+That is, the IVA objective is the mean square of the annihilator ouput
+from the necessarily unique extended source field $\tu =
+\tS_s[\kappa]^{-1}\td$ that precisely fits the data.
+
+Appendix \appIVA  presents a proof that equation \ref{eqn:ssiva}
+actually describes the $\lambda \rightarrow 0$ limit. The version of
+surface source extended FWI whose properties are described in the next
+section is the minimization problem for this objective, to which I
+give a name:
+\begin{equation}
+  \label{eqn:defssiva}
+  J_{\rm SSE} = \frac{1}{2}\|A\tu[\kappa]\|^2, \,
+  \tu[\kappa]=\tS_s[\kappa]^{-1}\td
+\end{equation}
+
+The story for reformulated WRI is similar. From equation
+\ref{eqn:defwrireformpw}, the VPM objective after scaling by
+$\lambda^{-2}$ is 
+\begin{equation}
+  \label{eqn:wrivpm}
+  \kappa, \te \mapsto \lambda^{-2}\| \td -  \tS[\kappa]w_*\delta(\cdot-z_s) -
+  \tS[\kappa]\tS[\kappa]^T\te[\kappa]\|^2+\|\tS[\kappa]^T\te[\kappa]\|^2,
+\end{equation}
+in which $\te[\kappa]$ solves the normal equation
+\begin{equation}
+  \label{eqn:wrinorm}
+  (\lambda^{-2}(\tS[\kappa]\tS[\kappa]^T)^2 +
+  \tS[\kappa]\tS[\kappa]^T)\te[\kappa] =
+  \lambda^{-2}\tS[\kappa]\tS[\kappa]^T(\td -
+  \tS[\kappa]w_*\delta(\cdot-z_s) )
+\end{equation}
+If $\kappa$ is close to $\kappa_0$, then $\tS[\kappa]\tS[\kappa]^T$ is
+invertible, as follows from equation \ref{eqn:stmodhompwnorm} and the
+continuity of $\tS[\kappa]$ with respect to $\kappa$, mentioned
+above. Therefore the normal equation is equivalent to
+\begin{equation}
+  \label{eqn:wrinorm1}
+  (\lambda^{-2}\tS[\kappa]\tS[\kappa]^T +
+  I)\te[\kappa] =
+  \lambda^{-2}(\td -
+  \tS[\kappa]w_*\delta(\cdot-z_s) )
+\end{equation}
+The $\lambda \rightarrow 0$ limit of the resulting function of
+$\kappa$ is
+\[
+  J_{\rm WRI}[\kappa] = \frac{1}{2}\|\tS[\kappa]^T((\tS[\kappa]\tS[\kappa]^T)^{-1}(\td -
+  \tS[\kappa]w_*\delta(\cdot-z_s)))\|^2
+\]
+\begin{equation}
+  \label{eqn:wripwiva}
+  = \frac{1}{2}\langle \td -
+  \tS[\kappa]w_*\delta(\cdot-z_s), (\tS[\kappa]\tS[\kappa]^T)^{-1}( \td -
+  \tS[\kappa]w_*\delta(\cdot-z_s)) \rangle
+\end{equation}
+
+Finally, it is entirely possible to apply VPM to the least squares FWI
+objective \ref{eqn:defolspw}, as has been suggested as an algorithmic
+approach to determining source parameters as part of FWI
+\cite{Rickett:SEG12,LiRickettAbubakar:13}. However in this instance it
+is more relevant to pose the known-source version of least squares
+FWI, as most parallel to WRI (in any of its forms): recalling the
+identity \ref{eqn:pwpt}, 
+\[
+  J_{\rm FWI}[\kappa] = \frac{1}{2}\|\td-\tS_p[\kappa]w_*\|^2
+\]
+\begin{equation}
+  \label{eqn:olspwobj}
+  = \frac{1}{2}\langle \td -
+  \tS[\kappa]w_*\delta(\cdot-z_s), \td -
+  \tS[\kappa]w_*\delta(\cdot-z_s)\rangle.
+\end{equation}
+Comparing equations \ref{eqn:wripwiva} and \ref{eqn:olspwobj}, reach
+the surprising conclusion that
+\begin{quote}
+  The $\lambda \rightarrow 0$ limit of the WRI-VPM objective
+  \ref{eqn:wrivpm} is a weighted-norm variant of the FWI objective
+  \ref{eqn:olspwobj}.
+\end{quote}
+This conclusion is surprising because one would normally expect the
+opposite limit, that is $\lambda \rightarrow \infty$, of the WRI-VPM
+objective \ref{eqn:wrivpm} to be equivalent in some sense to the FWI
+objective \ref{eqn:olspwobj}, rather than the $\lambda \rightarrow 0$
+limit. Indeed, the limit $\lambda \rightarrow \infty$ can only make
+sense if $\tS[\kappa]\tS[\kappa]^T\te \rightarrow 0$: since
+$\tS[\kappa]\tS[\kappa]^T$ is invertible for $\kappa$ near $\kappa_0$,
+in that case $\te \rightarrow 0$ necessarily, so the objective
+\ref{eqn:wrivpm} presumably tends to \ref{eqn:olspwobj}. This conclusion
+is in fact correct, as follows from a variant of the argument
+presented in Appendix \appIVA.
+
+The import of the reasoning presented in Appendix \appIVA is that for
+$\lambda$ sufficiently small, the behaviour of the VPM objective in
+each of these cases is close to that of the $\lambda \rightarrow 0$
+limit. As is well-known, and will be recapitulated in the Main Results
+section, the least squares FWI objective does not generate
+constructive model updates. Since all of the VPM objectives explored
+here become close to the least squares FWI objective for large
+$\lambda$, it is the case of small $\lambda$ that holds any possible
+promise of generating substantially more constructive updates, and we
+will see below that indeed in some cases that promise is realized. The
+$\lambda \rightarrow 0$ limit provides a convenient window into
+small $\lambda$ behaviour, so the focus in the remainder of the paper
+will be on the limiting problems defined in \ref{eqn:olspwobj},
+\ref{eqn:wripwiva}, and \ref{eqn:defssiva}.
 \section{Main Results}
 
 The space dimension is not terribly important in the results to
@@ -650,7 +946,7 @@ FWI for at least one simple instance of reflection data.
 
 \section{Plane Wave Modeling}
 
-Assume that $f$ is square-integrable, $\kappa = \kappa(z)$,
+Assume that $\kappa = \kappa(z)$,
 $\rho=\rho(z)$ (layered medium). Then the modeled shots differ from
 each other by a horizontal translation, so that there is in effect
 only one shot, for which I take the location to be
@@ -661,7 +957,7 @@ values just makes the arithmetic more complicated, without affecting
 the essential results.
 
  If $\log \kappa$ and $\log \rho$ are globally
-bounded, there is $\xi_{\rm max} > 0$ so that for $\|\xi\|<\xi_{\rm
+bounded, and $f$ is square-integrable, there is $\xi_{\rm max} > 0$ so that for $\|\xi\|<\xi_{\rm
   max}$, the integrals defining slant stack fields
 $\tilde{p},\tilde{\bv}$, namely
 \begin{eqnarray}
@@ -688,10 +984,10 @@ $f(\bx,t;\bx_s) = w(x,t)\delta(z)$, $\tf(\xi,z,t) = \tw(\xi,t)\delta(z)$.
 
 From now on assume a surface extended source, so in plane wave domain
 $\tf(\xi,z,t) = \tw(\xi,t)\delta(z)$. The plane wave domain modeling
-operator samples $\tp$ on $z=z_r=0$:
+operator samples $\tp$ on $z=z_r$:
 \begin{equation}
 \label{eqn:modpw}
-\tS[\kappa]\tw = \tp|_{z=0}
+\tS[\kappa]\tw = \tp|_{z=z_r}
 \end{equation}
 
 For homogeneous $\kappa=\kappa_0, \rho=\rho_0, c=c_0$, a computation
@@ -842,57 +1138,7 @@ I_tw(x,t+\xi x)
 Since $\tS[\kappa]$ is continuous in $\kappa$
 \cite[]{BlazekStolkSymes:13}, and $\tS[\kappa_0]$ is a multiple of the
 identity, $\tS[\kappa]$ is invertible in sup-norm neighborhood of
-$\kappa$. Introduce the the scaled reduced penalty function objective
-\[
-\kappa \mapsto \min_{\tw}(\frac{1}{\alpha^2}\|\tS[\kappa]\tw-\td\|^2 + \|\tA
-\tw\|^2)
-\]
-\[
-=\frac{1}{\alpha^2}\|\tS[\kappa]\tw_{\alpha}[\kappa]-\td\|^2 + \|\tA
-\tw_{\alpha}[\kappa]\|^2
-\]
-where $\tw_{\alpha}[\kappa]$ solves the normal equation:
-\[
-\tS[\kappa]^T\tS[\kappa]\tw  + \alpha^2\tA^T\tA\tw = \tS[\kappa]^T\td.
-\]
-Since $\tS[\kappa]$ is invertible, $\tw_{\alpha}[\kappa]$ is uniformly
-bounded as $\alpha \rightarrow 0$. Let $\tw_0[\kappa] =
-\tS[\kappa]^{-1}\td$. Then
-\[
-\tS[\kappa]^T\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])+\alpha^2\tA^T\tA\tw_{\alpha}[\kappa]
-= 0,
-\]
-so $\tw_{\alpha}[\kappa] \rightarrow \tw_0[\kappa]$ as $\alpha
-\rightarrow 0$. Consequently the scaled objective above becomes
-\[
-\frac{1}{\alpha^2}\|\tS[\kappa]\tw_{\alpha}[\kappa]-\td\|^2 + \|\tA 
-\tw_{\alpha}[\kappa]\|^2
-=\frac{1}{\alpha^2}\|\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])\|^2 + \|\tA 
-\tw_{\alpha}[\kappa]\|^2
-\]
-\[
-=\frac{1}{\alpha^2}\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
-\tS[\kappa]^T\tS[\kappa](\tw_{\alpha}[\kappa]-\tw_0[\kappa])\rangle+ \|\tA 
-\tw_{\alpha}[\kappa]\|^2
-\]
-\[
-=\frac{1}{\alpha^2}\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
--\alpha^2\tA^T\tA \tw_{\alpha}[\kappa] \rangle + \|\tA\tw_{\alpha}[\kappa]\|^2
-=\langle (\tw_{\alpha}[\kappa]-\tw_0[\kappa]),
--\tA^T\tA \tw_{\alpha}[\kappa] \rangle + \|\tA\tw_{\alpha}[\kappa]\|^2
-\]
-\begin{equation}
-\label{eqn:j0def}
-\rightarrow \|\tA\tw_0[\kappa]\|^2 \equiv 2 J_0[\kappa,\td].
-\end{equation}
-This $\alpha \rightarrow 0$ limit is the simplified objective used by
-\cite{Symes:EAGE15} and mentioned in the introduction.
-
-
-%\[
-%DJ[\kappa_0]\delta \kappa = -\langle D(\tS[\kappa_0]\tw)\delta \kappa,
-%\tA^T\tA S[\kappa_0]^{-1}\td \rangle , \,\tw=\tS[\kappa_0]^{-1}\td
-%\]
+$\kappa$.
 Now assume that $\td$ is data computed from a simple reflector as
 described in the previous section, depending on the wavelength
 parameter $\lambda$:
@@ -1081,7 +1327,7 @@ smooth in the collar neigborhood $\{\bx: |z-z_s|<\epsilon\}$.
 \append{1D Radiation Problem}
 Begin with the 1D acoustics point source system. 
 \begin{eqnarray}
-\label{eqn:awe1d}
+\label{eqn:awe1dptsrc}
 \frac{\partial p}{\partial t} +\kappa\frac{\partial 
   v}{\partial z} &=& w(t)\delta(z-z_s) \nonumber\\
 \rho \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
@@ -1089,34 +1335,55 @@ Begin with the 1D acoustics point source system.
  p,v&=&0, t \ll 0. 
 \end{eqnarray}
 Since the right hand side is singular, so is the solution, so it must
-be a solution in the weak sense; since it is causal, it is uniquely
-determined by the system above. It follows from the weak solution
+be a solution in the weak sense. It follows from the weak solution
 conditions that the pressure is continuous at $p=0$, whence $v$ must
 have a discontinuity. 
 
-Now assume that $\kappa, \rho$ are constant. 
+Now assume that $\kappa=\kappa_0 \in \bR^+, \rho=\rho_0 \in \bR^+, c_0
+= \sqrt{\kappa_0/rho_0}$ are constant. 
 In $z \ne z_s$, the right hand side 
 vanishes, so the solution must be locally a combination of plane
 waves; causality implies that
 \[
-p(z,t)=a\left(t \mp \frac{z-z_s}{c}\right), \, v(z,t)=\pm b\left(t \mp
-  \frac{z_s}{c}\right)
+p(z,t)=a\left(t \mp \frac{z-z_s}{c_0}\right), \, v(z,t)=\pm b\left(t \mp
+  \frac{z_s}{c_0}\right)
 \]
 From the second dynamical equation (Newton's law) it follows that $b =
-a/(\rho c)$. The singularity on the LHS of the first dynamical
+a/(\rho_0 c_0)$. The singularity on the LHS of the first dynamical
 equation (constitutive law) is
 \[
 \kappa [v]_{z=z_s}\delta(z-z_s) =
-2\frac{\kappa}{c}b\delta(z-z_s) = 2a\delta(z-z_s).
+2\frac{\kappa}{c_0}b\delta(z-z_s) = 2a\delta(z-z_s).
 \] 
 This must in turn equal the RHS of the constitutive law, whence
 $a=w/2$. Thus
 \begin{eqnarray}
-\label{eqn:sol1d}
-p(z,t) &=& \frac{1}{2}w\left(t \mp \frac{z-z_s}{c}\right) \nonumber \\
-v(z,t) &=& \pm\frac{1}{2\rho c}w\left(t \mp \frac{z-z_s}{c}\right)
+\label{eqn:sol1dptsrc}
+p(z,t) &=& \frac{1}{2}w\left(t - \frac{|z-z_s|}{c_0}\right) \nonumber \\
+v(z,t) &=& \mbox{sgn}(z-z_s)\frac{1}{2\rho_0 c_0}w\left(t -\frac{|z-z_s|}{c_0}\right)
            \nonumber \\
-\pm z-z_s &>& 0.
+\end{eqnarray}
+This result (computation of the Green's function for the acoustic
+system) permits an explicit expression for the system with a
+space-time source:
+\begin{eqnarray}
+\label{eqn:awe1d}
+\frac{\partial p}{\partial t} +\kappa_0\frac{\partial 
+  v}{\partial z} &=& f(z,t) \nonumber\\
+\rho_0 \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
+  z}&=&0\nonumber\\
+ p,v&=&0, t \ll 0. 
+\end{eqnarray}
+Since
+\[
+  f(z,t) = \int dz_s\,f(z_s,t)\delta(z-z_s)
+\]
+obtain
+\begin{eqnarray}
+\label{eqn:sol1d}
+p(z,t) &=& \frac{1}{2}\int dz_s f\left(z_s,t - \frac{|z-z_s|}{c_0}\right) \nonumber \\
+v(z,t) &=& \frac{1}{2\rho_0 c_0} \int dz_s \mbox{sgn} (z-z_s) f\left(z_s,t - \frac{|z-z_s|}{c_0}\right)
+           \nonumber \\
 \end{eqnarray}
 
 \append{1D Born Approximation}
@@ -1215,22 +1482,41 @@ D(S[\kappa]w)\delta \kappa (t) = \int_0^t\,ds\,w'(t-s)\frac{\delta
   \kappa\left(\frac{cs}{2}\right)}{8\kappa} 
 \end{equation}
 
-\append{Plane Wave Modeling of Reflection Traces}
+\append{Plane Waves}
 Re-write the plane wave system \ref{eqn:awepw} as
 \begin{eqnarray}
 \label{eqn:awepw1}
 \frac{\partial \tp}{\partial t} + \tk\frac{\partial
-  \tv}{\partial z} &=& (1-c^2\xi^2)^{-1}\tf \nonumber\\
+  \tv}{\partial z} &=& (1-c_0^2\xi^2)^{-1}\tf \nonumber\\
 \rho \frac{\partial \tv}{\partial t} + \frac{\partial \tp}{\partial
   z}&=&0\nonumber\\
 \tp,\tv&=&0, t \ll 0,
 \end{eqnarray}
 in which $\tk(\xi,z)=(1-c(z)^2\xi^2)^{-1}\kappa(z)$ is a scaled version of
-bulk modulus. Similarly define the vertical plane wave velocity as
+bulk modulus. Define the vertical plane wave velocity as
 \[
 \tc(\xi,z)=\frac{c(z)}{1-c(z)^2\xi^2} =
 \left(\frac{1}{c(z)^2}-\xi^2\right)^{-1/2}.
 \]
+Comparing the plane wave system \ref{eqn:awepw1} with the 1D system
+\ref{eqn:awe1d}, and using the 1D solution \ref{eqn:sol1d}, obtain
+\begin{eqnarray}
+\label{eqn:solpw}
+\tp(\xi,z,t) &=& \frac{1}{2}(1-c_0^2\xi^2)^{-1}\int dz_s \tf\left(\xi,z_s,t - \frac{|z-z_s|}{\tc_0(\xi)}\right) \nonumber \\
+\tv(\xi,z,t) &=& \frac{1}{2\rho_0 c_0}(1-c_0^2\xi^2)^{-1} \int dz_s \mbox{sgn} (z-z_s)\tf\left(\xi,z_s,t - \frac{|z-z_s|}{\tc_0(\xi)}\right)
+           \nonumber \\
+\end{eqnarray}
+
+Accordingly, the plane-wave forward map is given by
+\[
+  \tS[\kappa_0]\tf(\xi,t) =\tp(\xi,z_r,t)
+\]
+\begin{equation}
+\label{eqn:fwdpw1}
+= \frac{1}{2}(1-c_0^2\xi^2)^{-1}\int dz_s \tf\left(\xi,z_s,t -
+  \frac{|z-z_s|}{\tc_0(\xi)}\right)
+\end{equation}
+
 If $\tf(\xi,z,t)=\tw(\xi,t)\delta(z)$ is a surface
 extended source, plane wave version, this is equivalent to replacing
 $\tw(\xi,t)$ by $(1-c(0)^2\xi^2)^{-1}\tw(\xi,t)$.
@@ -1267,6 +1553,57 @@ D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
       s}{2}\right)}{8\kappa_0 (1-c_0^2\xi^2)^{5/2}} 
 \]
 which is equation \ref{eqn:dmodhom}.
+
+\append{Zero-Weight Limit of Variable Projection}
+As in the Preliminaries section, this discussion focuses on the plane wave
+Surface Source objective, in the scaled variant \ref{eqn:ssepeninv},
+reproduced here for convenience:
+\begin{equation}
+  \label{eqn:ssepeninv1}
+  \kappa,\tu \mapsto \lambda^{-2}\|\td-\tS_s[\kappa]\tu\|^2 + \|\tA\tu\|^2
+\end{equation}
+Variable projection creates a function of $\kappa$ by minimizing this
+function over $\tu$, to obtain
+\[
+\kappa \mapsto \frac{1}{\lambda^2}\|\tS[\kappa]\tu_{\lambda}[\kappa]-\td\|^2 + \|\tA
+\tu_{\lambda}[\kappa]\|^2
+\]
+where $\tu_{\lambda}[\kappa]$ solves the normal equation:
+\[
+\tS[\kappa]^T\tS[\kappa]\tu  + \lambda^2\tA^T\tA\tu = \tS[\kappa]^T\td.
+\]
+Since $\tS[\kappa]$ is invertible, $\tu_{\lambda}[\kappa]$ is
+bounded uniformly in $\lambda$ as $\lambda \rightarrow 0$. Let $\tu_0[\kappa] =
+\tS[\kappa]^{-1}\td$. Then
+\[
+\tS[\kappa]^T\tS[\kappa](\tu_{\lambda}[\kappa]-\tu_0[\kappa])+\lambda^2\tA^T\tA\tu_{\lambda}[\kappa]
+= 0,
+\]
+so $\tu_{\lambda}[\kappa] \rightarrow \tu_0[\kappa]$ as $\lambda
+\rightarrow 0$. Consequently the scaled objective above becomes
+\[
+\frac{1}{\lambda^2}\|\tS[\kappa]\tu_{\lambda}[\kappa]-\td\|^2 + \|\tA 
+\tu_{\lambda}[\kappa]\|^2
+=\frac{1}{\lambda^2}\|\tS[\kappa](\tu_{\lambda}[\kappa]-\tu_0[\kappa])\|^2 + \|\tA 
+\tu_{\lambda}[\kappa]\|^2
+\]
+\[
+=\frac{1}{\lambda^2}\langle (\tu_{\lambda}[\kappa]-\tu_0[\kappa]),
+\tS[\kappa]^T\tS[\kappa](\tu_{\lambda}[\kappa]-\tu_0[\kappa])\rangle+ \|\tA 
+\tu_{\lambda}[\kappa]\|^2
+\]
+\[
+=\frac{1}{\lambda^2}\langle (\tu_{\lambda}[\kappa]-\tu_0[\kappa]),
+-\lambda^2\tA^T\tA \tu_{\lambda}[\kappa] \rangle + \|\tA\tu_{\lambda}[\kappa]\|^2
+=\langle (\tu_{\lambda}[\kappa]-\tu_0[\kappa]),
+-\tA^T\tA \tu_{\lambda}[\kappa] \rangle + \|\tA\tu_{\lambda}[\kappa]\|^2
+\]
+\begin{equation}
+\label{eqn:j0def}
+\rightarrow \|\tA\tu_0[\kappa]\|^2 \equiv 2 J_0[\kappa,\td].
+\end{equation}
+This $\lambda \rightarrow 0$ limit is the simplified objective used by
+\cite{Symes:EAGE15} and mentioned in the Preliminaries section.
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
