@@ -1376,14 +1376,13 @@ space-time source:
 \end{eqnarray}
 Since
 \[
-  f(z,t) = \int dz_s\,f(z_s,t)\delta(z-z_s)
+  f(z,t) = \int dz_1\,f(z_s,t)\delta(z-z_1)
 \]
 obtain
 \begin{eqnarray}
 \label{eqn:sol1d}
-p(z,t) &=& \frac{1}{2}\int dz_s f\left(z_s,t - \frac{|z-z_s|}{c_0}\right) \nonumber \\
-v(z,t) &=& \frac{1}{2\rho_0 c_0} \int dz_s \mbox{sgn} (z-z_s) f\left(z_s,t - \frac{|z-z_s|}{c_0}\right)
-           \nonumber \\
+p(z,t) &=& \frac{1}{2}\int dz_1 f\left(z_1,t - \frac{|z-z_1|}{c_0}\right) \\
+v(z,t) &=& \frac{1}{2\rho_0 c_0} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac{|z-z_1|}{c_0}\right)\\
 \end{eqnarray}
 
 \append{1D Born Approximation}
@@ -1404,82 +1403,38 @@ expressions for the solution of this system. Only $\kappa$ will be
 subject to perturbation in any of the problems considered in this
 report, so assume that that $\delta\rho=0$.
 
-The key is to understand the perturbational impulse response. That is,
-set $w(t)=H(t)$. Then the identity \ref{eqn:sol1d} implies that the
-inhomogeneous term in the first equation of the system \ref{eqn:dawe1d}
-is 
-\begin{equation}
-  \label{eqn:pertrhs}
--\delta \kappa(z) \frac{\partial v}{\partial z}(z,t) = \frac{\delta
-  \kappa(z_s)}{\rho c}H(t)\delta(z-z_s) +
-\frac{\delta\kappa(z)}{2\kappa}\delta\left(t - \frac{|z-z_s|}{c}\right)
-\end{equation}
-Correspondingly, the solution $(\delta p, \delta v)$ is the sum of
-three components:
-\begin{eqnarray}
-  \label{eqn:pertrhsterms}
-  \delta p & = & \delta p_s + \delta p_d \nonumber\\
-  \delta v & = & \delta v_s + \delta v_d 
-\end{eqnarray}
-The first component satisfies
-\begin{eqnarray}
-  \label{eqn:dawe1ds}
-  \frac{\partial \delta p_s}{\partial t} +\kappa\frac{\partial
-  \delta v_s}{\partial z}   &=&  \frac{\delta
-  \kappa(z_s)}{\rho c}H(t)\delta(z-z_s)\nonumber\\
-  \rho \frac{\partial \delta v_s}{\partial t} + \frac{\partial \delta p_s}{\partial
-  z}&=&0\nonumber\\
-  \delta p_s,\delta v_s&=&0, t < 0.
-\end{eqnarray}
-The initial conditions are free to be chosen, and the choice above is convenient.
-
-Note that \ref{eqn:dawe1ds} is precisely a system of the form
-\ref{eqn:awe1d}, so from the formulae \ref{eqn:sol1d} with $w(t)=\frac{\delta
-  \kappa(z_s)}{\rho c}H(t)$
-\begin{eqnarray}
-\label{eqn:dsol1ds}
-\delta p_s(z,t) &=& \frac{\delta
-  \kappa(z_s)}{2\rho c}H\left(t - \frac{|z-z_s|}{c}\right) \nonumber \\
-\delta v_s(z,t) &=& \pm\frac{\delta \kappa(z_s)}{2\rho^2 c^2}H\left(t - \frac{|z-z_s|}{c}\right)
-\end{eqnarray}
-
-Define $P_d(z,t;\zeta), V_d(z,t;\zeta)$ to be the solution of the system
-\begin{eqnarray}
-  \label{eqn:dawe1dd}
-  \frac{\partial P_d}{\partial t} +\kappa\frac{\partial
-  V_d}{\partial z}   &=&   \frac{\delta\kappa(\zeta)}{2\kappa}\delta(z-\zeta)\delta\left(t - \frac{|\zeta-z_s|}{c}\right)\nonumber\\
-  \rho \frac{\partial V_d}{\partial t} + \frac{\partial P_d}{\partial
-  z}&=&0\nonumber\\
-  P_d,V_d&=&0, t < 0.
-\end{eqnarray}
-Then
-\begin{eqnarray}
-  \label{eqn:intrep1}
-  \delta p_d(z,t) & = & \int d\zeta\, P_d(z,t;\zeta)\\
-  \delta v_d(z,t) & = & \int d\zeta\, V_d(z,t;\zeta)
-\end{eqnarray}
-
-The system \ref{eqn:dawe1dd} is precisely of the form
-\ref{eqn:awe1d} with $z_s$ replaced by $\zeta$ and
+From the second equation in the pair \ref{eqn:sol1d}
 \[
-  w(t)= \frac{\delta\kappa(\zeta)}{2\kappa}\delta\left(t - \frac{|\zeta-z_s|}{c}\right)
+  \frac{\partial v}{\partial z}(z,t) = \frac{1}{\rho_0 c_0} f(z,t) 
 \]
-Thus from \ref{eqn:sol1d}
-\begin{eqnarray*}
-  P_d(z,t;\zeta) &=& \frac{\delta\kappa(\zeta)}{4\kappa} \delta\left(t - \frac{|z-\zeta|+|\zeta-z_s|}{c}\right) \nonumber \\
-  V_d(z,t;\zeta) &=& \pm\frac{\delta\kappa(\zeta)}{4\kappa \rho c} \delta\left(t - \frac{|z-\zeta|+|\zeta-z_s|}{c}\right) 
-\end{eqnarray*}
-
 \begin{equation}
-\label{eqn:imp1d}
-D(S[\kappa]H)\delta \kappa (t) = \delta p(0,t)=  \frac{\delta 
-  \kappa\left(\frac{ct}{2}\right)}{8\kappa} 
+  \label{eqn:sol1ddvdz}
+ - \frac{1}{2\kappa_0} \int\, dz_2\, \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z-z_2|}{c_0}\right)
 \end{equation}
-whence for arbitrary causal wavelet $w$,
+Thus using the first equations in \ref{eqn:sol1d} and \ref{eqn:dawe1d}, 
+\[
+  \delta p(z,t) =- \frac{1}{2} \int \, dz_1 \, \delta
+  \kappa(z_1)\frac{\partial v}{\partial z}\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
+\]
+\[
+  =-\frac{1}{2\rho_0c_0} \int \,dz_1\, \delta
+  \kappa(z_1) f \left(z_1,t - \frac{|z-z_1|}{c_0}\right)
+  \]
 \begin{equation}
-\label{eqn:fwd1d}
-D(S[\kappa]w)\delta \kappa (t) = \int_0^t\,ds\,w'(t-s)\frac{\delta 
-  \kappa\left(\frac{cs}{2}\right)}{8\kappa} 
+  \label{eqn:sol1ddp}
+  + \frac{1}{4\kappa_0} \int\,dz_2 \, \int \,dz_1\,\delta 
+  \kappa(z_1) \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z_2-z_1|+|z_1-z|}{c_0}\right)
+\end{equation}
+
+An important special case is the 1D point source,
+$f(z,t)=w(t)\delta(z-z_s)$: then
+\[
+  \delta p(z,t) = -\frac{\delta \kappa(z_s)}{2\rho_0c_0}w\left(t - \frac{|z-z_s|}{c_0}\right)
+\]
+\begin{equation}
+  \label{eqn:sol1ddppw}
+  +\frac{1}{4\kappa_0} \int \,dz_1\,\delta 
+  \kappa(z_1) \frac{\partial w}{\partial t}\left(t - \frac{|z_s-z_1|+|z_1-z|}{c_0}\right)
 \end{equation}
 
 \append{Plane Waves}
@@ -1495,7 +1450,7 @@ Re-write the plane wave system \ref{eqn:awepw} as
 in which $\tk(\xi,z)=(1-c(z)^2\xi^2)^{-1}\kappa(z)$ is a scaled version of
 bulk modulus. Define the vertical plane wave velocity as
 \[
-\tc(\xi,z)=\frac{c(z)}{1-c(z)^2\xi^2} =
+\tc(\xi,z)=\frac{c(z)}{\sqrt{1-c(z)^2\xi^2}} =
 \left(\frac{1}{c(z)^2}-\xi^2\right)^{-1/2}.
 \]
 Comparing the plane wave system \ref{eqn:awepw1} with the 1D system
