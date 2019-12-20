@@ -12,7 +12,7 @@ include=r'''
 \newcommand{\bx}{\mathbf{x}}
 \newcommand{\tp}{\tilde{p}}
 \newcommand{\td}{\tilde{d}}
-\newcommand{\tdl}{\tilde{d}_{\lambda}}
+\newcommand{\te}{\tilde{e}}
 \newcommand{\tw}{\tilde{w}}
 \newcommand{\tf}{\tilde{f}}
 \newcommand{\tc}{\tilde{c}}
@@ -22,12 +22,15 @@ include=r'''
 \newcommand{\tk}{\tilde{\kappa}}
 \newcommand{\tA}{\tilde{A}}
 \newcommand{\wl}{w_{\lambda}}
+\newcommand{\tdl}{\tilde{d}_{\lambda}}
+\newcommand{\tul}{\tilde{u}_{\lambda}}
 \newcommand{\bR}{\mathbf{R}}
 \newcommand{\cF}{{\cal F}}
-\newcommand{\appSingular}{A}
-\newcommand{\applay}{B}
-\newcommand{\applayBorn}{C}
-\newcommand{\appPlane}{D}
+\newcommand{\appSingular}{A }
+\newcommand{\applay}{B }
+\newcommand{\applayBorn}{C }
+\newcommand{\appPlane}{D }
+\newcommand{\appIVA}{E }
 \newtheorem{exmp}{Example}
 ''',
 color='ALL'
