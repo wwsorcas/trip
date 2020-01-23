@@ -506,22 +506,22 @@ far in space and in negative time. As will be obvious shortly, this
 fact prevents the composition $\tS[\kappa]\tS[\kappa]^T$ from being
 well-defined, without some further constraint being imposed on the
 domain of $\tS[\kappa]$. The simplest appears to be the assumption
-that all plane wave sources act over a limited depth range, $0 \le z
+that all plane wave sources act over a limited depth range, $z_{\rm min} \le z
 \le z_{\rm max}$. Then the $z$ integrals appearing in the expressions
-for $S$ and $\tS$ have limits $[0,z_{\rm max}]$
+for $S$ and $\tS$ have limits $[z_{\rm min},z_{\rm max}]$
 
 With this amendment, compute the composition:
 \[
-  \tS[\kappa]\tS[\kappa]^T\te(\xi,t) = \frac{1}{2}(1-c_0^2\xi^2)^{-1}
+  \tS[\kappa_0]\tS[\kappa_0]^T\te(\xi,t) = \frac{1}{2}(1-c_0^2\xi^2)^{-1}
 \]
 \[
   \times 
-  \int_0^{z_{\rm max}} dz\, \frac{1}{2}(1-c_0^2\xi^2)^{-1}\te\left(\xi,t' +
+  \int_{z_{\rm min}}^{z_{\rm max}} dz\, \frac{1}{2}(1-c_0^2\xi^2)^{-1}\te\left(\xi,t' +
     \frac{|z_r-z|}{\tc_0(\xi)}\right)_{t'=t-\frac{|z_r-z|}{\tc_0(\xi)}}
 \]
 \begin{equation}
   \label{eqn:stmodhompwnorm}
- = \frac{z_{\rm max}}{4}(1-c_0^2\xi^2)^{-2}\te(\xi,t)
+ = \frac{z_{\rm max}-z_{\rm min}}{4}(1-c_0^2\xi^2)^{-2}\te(\xi,t) 
 \end{equation}
 
 \subsubsection{Surface Source Extension}
@@ -764,30 +764,46 @@ obeys Assumptions A - C, so that the system \ref{eqn:awepw} and its relatives ha
 well-defined solutions, thanks to the constructions presented in
 Appendix \appSingular. 
 
-\paragraph{Transmission:} $z_s < z_r$, $\kappa_*$ is smooth and $ = \kappa_0$ for
-$z$ near $z_s$, $\ge \kappa_0$ for all $z$, and $>\kappa_0$ for $z$
-near $z_r$, Geometric acoustics implies that the solution is given by
-the progressing wave expansion [REFERENCE] in terms of the vertical
-travel time $\tau(\xi,z_1,z_2)$ and geometric amplitude
-$a(\xi,z_1,z_2)$ between depths $z_1$ and $z_2$. The traveltime is given by
+\paragraph{Transmission:} $z_s < z_r$, $\kappa_*$ is smooth and and
+differs from $\kappa_0$ only between $z_s$ and $z_r$: that is, $\kappa = \kappa_0$ for
+$z < z_s+\epsilon$, $z>z_r-\epsilon$, suitable $\epsilon>0$. To ensure
+that the data computed from $\kappa_*$ is distinct from the reference
+data computed from $\kappa_0$, also assume that $\kappa \ge \kappa_0$,
+and that $\kappa > \kappa_0$ over some subinterval of $[z_s,z_r]$ of
+positive length.
+
+Geometric acoustics implies that the solution for $\kappa_*$ is
+asymptotic to the first term of the progressing wave expansion
+[REFERENCE], which depends on the vertical
+travel time $\tau_*(\xi,z_1,z_2)$ and geometric amplitude
+$a_*(\xi,z_1,z_2)$ between depths $z_1$ and $z_2$. The traveltime is given by
 \[
-\tau(\xi,z_1,z_2) = \int_{z_1}^{z_2}\,dz\, \frac{1}{\tc(\xi,z)}.
+\tau(\xi,z_1,z_2) = \int_{z_1}^{z_2}\,dz\, \frac{1}{\tc_*(\xi,z)}.
 \]
 I do not give an explicit expression for the amplitude, noting only
-that it is smooth in all three variables and positive. The geometric
+that it is smooth in all three variables and positive.
+
+The geometric
 acoustics approximation of the data is
 \begin{equation}
   \label{eqn:geosoltrans}
-  \tdl(\xi,t) = a(\xi,z_s,z_r)\wl(t-\tau(\xi,z_s,z_r)).
+  \tdl(\xi,t) = a(\xi,z_s,z_r)\wl(t-\tau(\xi,z_s,z_r)) + O(\lambda). 
 \end{equation}
-The explicit expression \ref{eqn:ptmodhompw} for $\kappa_0$ may be
-viewed as a special case of \ref{eqn:geosoltrans}, and gives reference
-data for that case:
+The explicit expression \ref{eqn:ptmodhompw} for $\kappa_0$ may be 
+viewed as a special case of \ref{eqn:geosoltrans}, and gives reference 
+data for that case: 
 \begin{equation}
   \label{eqn:analsoltrans}
-  \td_{0,\lambda}(\xi,t) =  \tS_p[\kappa_0]\wl(\xi,t)  = \frac{1}{2c_0(1-c_0^2\xi^2)^{1/2}}\wl
-                                \left(t-\frac{|z_r-z_s|}{\tc_0(\xi)}\right)
+  \td_{0,\lambda}(\xi,t) =  \tS_p[\kappa_0]\wl(\xi,t)  = \frac{1}{2c_0(1-c_0^2\xi^2)^{1/2}}\wl 
+                                \left(t-\frac{|z_r-z_s|}{\tc_0(\xi)}\right) 
 \end{equation}
+The vertical travel time for $\kappa=\kappa_0$ is
+\[
+  \tau_0(\xi,z_1,z_2) = \frac{z_2-z_1}{\tc_0(\xi)}.
+\]
+A consequence of the assumptions about the relation between $\kappa_*$
+and $\kappa_0$, stated above, is that $\tau_*(\xi,z_s,z_r) <
+\tau_0(\xi,z_s,z_r)$ for $|\xi|\le \xi_{\rm max}$.
 
 \paragraph{Reflection:}
 In the reflection configuration, $z_r=z_s$, $\kappa_*(z)=\kappa_0$ for
@@ -840,43 +856,397 @@ sse
 
 The gradient of the objective, given in equation \ref{eqn:olspwobj},
 is
-\[
-  \nabla J_{\rm FWI}[\kappa] = D\tS[\kappa]^T(\tS[\kappa]\tw_*-d)
-\]
-
+\begin{equation}
+  \label{eqn:fwigrad}
+  \nabla J_{\rm FWI}[\kappa] = D\tS_p[\kappa]^T(\tS_p[\kappa]\wl-\tdl)
+\end{equation}
+The first step in this computation is 
 For homogeneous background model $\kappa=\kappa_0$, Appendix \appPlane
 develops an explicit expression 
 \[
-D(\tS_p[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+D(\tS_p[\kappa_0]\wl)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
   -\frac{1}{2\kappa_0c_0(1-c_0^2\xi^2)^{1/2}} \delta 
-  \kappa(z_s) w\left(t - \frac{|z_r-z_s|}{\tc_0(\xi)}\right)
+  \kappa(z_s) \wl\left(t - \frac{|z_r-z_s|}{\tc_0(\xi)}\right)
 \]
 \begin{equation}
 \label{eqn:dmodhompwpt}
-    + \frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
-  \kappa(z) \frac{\partial w}{\partial
+    + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
+  \kappa(z) \frac{\partial \wl}{\partial
     t}\left(t - \frac{|z_s-z|+|z-z_r|}{\tc_0(\xi)}\right)
 \end{equation}
 The conditions imposed on the transmission configuration imply that
 $\delta \kappa(z) = 0$ for $z$ near $z_s$. This constraint implies that
 \begin{equation}
   \label{eqn:dmodhompwpt0}
-  D(\tS_p[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
-     \frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
-  \kappa(z)  \frac{\partial w}{\partial
-    t}\left(t - \frac{|z_s-z|+|z-z_r|}{\tc_0(\xi)}\right).
+  D(\tS_p[\kappa]\wl)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+     \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
+  \kappa(z)  \frac{\partial \wl}{\partial 
+    t}\left(t - \frac{|z_s-z|+|z-z_r|}{\tc_0(\xi)}\right). 
 \end{equation}
-Thus
+Furthermore, $\delta \kappa = 0$ for $z>z_r$ as well, which means that
+the integral may be restricted to the interval $z_s \le z \le
+z_r$. Thus in the range of integration, $|z_s-z| + |z_r-z|=z_r-z_s$
+whence equation \ref{eqn:dmodhompwpt0} may be rewritten as
 \begin{equation}
-\label{eqn:dmodhomadj}
-D(\tS[\kappa]\tw)_{\kappa=\kappa_0}^T\td(z) =
+  \label{eqn:dmodhompwpt1}
+  D(\tS_p[\kappa]\wl)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+     \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \frac{\partial \wl}{\partial 
+    t}\left(t - \frac{z_r-z_s}{\tc_0(\xi)}\right) \left(\int_{z_s}^{z_r} \,dz\,\delta 
+  \kappa(z) \right). 
+\end{equation}
+Note that the linearized transmission seismogram is only sensitive to
+the average of $\delta \kappa$ between $z_s$ and $z_r$, which is in
+turn proportional by a $\xi$-dependent factor to the perturbation in
+travel time between source and receiver. Accordingly, the adjoint of
+the linearized forward map outputs a $z$-independent bulk modulus perturbation:
+\begin{equation}
+\label{eqn:dmodhompwptadj}
+D(\tS[\kappa]\wl)_{\kappa=\kappa_0}^T\td(z) =
 \int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,\int\,dt\,
-\frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)}
+\frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)}
 \frac{\partial w}{\partial
-    t}\left(t - \frac{|z_s-z|+|z-z_r|}{\tc_0(\xi)}\right) \td(\xi,t).
+    t}\left(t - \frac{z_r-z_s}{\tc_0(\xi)}\right) \td(\xi,t).
+\end{equation}
+
+To compute the gradient \ref{eqn:fwigrad} at the homogeneous bulk
+modulus $\kappa_0$, recall that the target data is
+given by \ref{eqn:geosoltrans}, and the trial data for
+$\kappa=\kappa_0$ by \ref{eqn:analsoltrans}. Insert these into the
+right hand side of the identity \ref{eqn:fwigrad}:
+\[
+  \nabla J_{\rm FWI}[\kappa_0](z) =
+  D(\tS[\kappa]\wl)_{\kappa=\kappa_0}^T(a_0\wl(t-\tau_0)
+  -a\wl(t-\tau))(z) + O(\lambda)
+\]
+\[
+=  \int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,\int\,dt\,
+\frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)}
+\frac{\partial \wl}{\partial
+    t}(t - \tau_0(\xi,z_s,z_r))
+  \left(a_0(\xi,z_s,z_r)\wl(t-\tau_0(\xi,z_s,z_r) )\right.
+\]
+\[
+-
+\left.  a(\xi,z_s,z_r)\wl(t-\tau(\xi,z_s,z_r))\right) + O(\lambda)
+\]
+\[
+  = \int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,
+\frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)}\left[a_0(\xi,z_s,z_r) \int \,
+  dt \, \left(\frac{\partial \wl}{\partial t}\wl  \right)
+  (t-\tau_0(\xi,z_s,z_r))
+\right.
+\]
+\[
+  \left.
+- a(\xi,z_s,z_r) \int\,dt\,\frac{\partial \wl}{\partial t} 
+  (t-\tau_0(\xi,z_s,z_r)) \wl(t-\tau(\xi,z_s,z_r)\right] + O(\lambda)
+\]
+The first of the two $t$ integrals vanishes because the integrand is
+an exact derivative (of $\wl^2/2$) . The second vanishes when
+$\lambda$ is small enough that the support of $\wl$ is smaller than
+half of $\tau_0(\xi,z_s,z_r)-\tau(\xi,z_s,z_r)$ for $\xi$ in the
+interval of integration. Therefore we conclude that
+\[
+  \nabla J_{\rm FWI}[\kappa_0] = O(\lambda)
+\]
+as stated in the last section.
+
+\subsection{WRI, Transission Configuration}
+In this configuration, $z_{\rm min}=z_s < z_r=z_{\rm max}$ and
+\begin{equation}
+  \label{eqn:writransupp}
+  \mbox{supp }\tf \subset [-\xi_{\rm max},\xi_{\rm max}]\times
+  [z_s,z_r]\times \bR.
+\end{equation}
+Recall that (equation \ref{eqn:wripwiva1} with $w_*=\wl$)
+\begin{equation}
+  \label{eqn:wripwiva1}
+  J_{\rm WRI}[\kappa]   = \frac{1}{2}\langle \td -
+  \tS_p[\kappa]\wl, (\tS[\kappa]\tS[\kappa]^T)^{-1}( \td -
+  \tS[\kappa]\wl) \rangle  
+\end{equation} 
+Thus
+\[
+  D J_{\rm WRI}[\kappa]\delta \kappa|_{\kappa=\kappa_0}   =
+  DJ_1[\kappa]\delta \kappa|_{\kappa=\kappa_0} +
+  DJ_2[\kappa]\delta \kappa|_{\kappa=\kappa_0},
+\]
+in which
+\[
+  J_1[\kappa]   = \frac{1}{2}\langle \td -
+  \tS_p[\kappa]\wl, (\tS[\kappa_0]\tS[\kappa_0]^T)^{-1}( \td -
+  \tS_p[\kappa]\wl) \rangle 
+\]
+and
+\[
+ J_2[\kappa] =  \frac{1}{2}\langle \td -
+  \tS_p[\kappa_0]\wl, (\tS[\kappa]\tS[\kappa]^T)^{-1}( \td -
+  \tS_p[\kappa_0]\wl) \rangle
+\]
+Recall that 
+\[
+  \tS[\kappa_0]\tS[\kappa_0]^T\te(\xi,t) = \frac{z_{\rm max}-z_{\rm min}}{4}(1-c_0^2\xi^2)^{-2}\te(\xi,t).
+\]
+(equation \ref{eqn:stmodhompwnorm}). Thus $J_1$ is a statically
+eqweighted version of $J_{\rm FWI}$. The estimation of $D J_{\rm
+  FWI}[\kappa]\delta \kappa|_{\kappa=\kappa_0}$ follows exactly the
+same pattern as the 
+estimation of $D J_{\rm
+  FWI}[\kappa]\delta \kappa|_{\kappa=\kappa_0}$ in the last section,
+and yields
+\begin{equation}
+  \label{eqn:j1est}
+  \nabla J_1[\kappa_0] = O(\lambda).
+\end{equation}
+
+To estimate $\nabla J_2[\kappa_0]$, abbreviate
+\[
+  \te=\td -
+  \tS_p[\kappa_0]\wl 
+\]
+and note that
+\[
+  DJ_2[\kappa]\delta \kappa|_{\kappa=\kappa_0} = -
+  \frac{1}{2}\langle \te,
+  (\tS[\kappa_0]\tS[\kappa_0]^T)^{-1}\left((D\tS[\kappa]\delta
+  \kappa)_{\kappa=\kappa_0}\tS[\kappa_0]^T\right.
+\]
+\[
+  \left.+\tS[\kappa_0](D\tS[\kappa]\delta
+  \kappa)_{\kappa=\kappa_0}^T\right) (\tS[\kappa_0]\tS[\kappa_0]^T)^{-1} \te\rangle
+\]
+\begin{equation}
+  \label{eqn:dj2}
+ = -\langle \te,(\tS[\kappa_0]\tS[\kappa_0]^T)^{-1}
+  ((D\tS[\kappa]\delta
+  \kappa)_{\kappa=\kappa_0}\tS[\kappa_0]^T)
+  (\tS[\kappa_0]\tS[\kappa_0]^T)^{-1}\te\rangle
+\end{equation}
+Recall that $\mbox{supp }(\tf) \subset \{z_s \le z \le
+z_r\}$, that is, the domain of $\tS$ is actually
+$L^2([-\xi_{\rm max},\xi_{\rm max}] \times [z_s,z_r] \times
+\bR)$. Injection of this domain into $L^2(\bR^3)$ is equivalent to
+placing limits on the various integrals that appear in the definitions
+of $\tS$ and related operators. For the adjoint, the dual projection
+is part of the definition:
+\begin{equation}
+  (\tS[\kappa_0]^T\te)(\xi,z,t)=\frac{1}{2}(1-c_0^2\xi^2)^{-1}\te\left(\xi,t +
+    \frac{|z_r-z|}{\tc_0(\xi)}\right), \,|\xi|\le \xi_{rm max}, z_s
+  \le z \le z_r, \, =0 \mbox{ else}.
+\end{equation}
+(equation \ref{eqn:stmodhompwtrans}). From equation \ref{eqn:dmodhomst1app},
+\[
+  D(\tS[\kappa_0]\tf)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+  -\frac{1}{2\kappa_0c_0(1-c_0^2\xi^2)^{1/2}}\int \,dz_1\, \delta 
+  \kappa(z_1) \tf \left(\xi,z_1,t - \frac{|z_r-z_1|}{\tc_0(\xi)}\right)
+\]
+\[
+    + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
+  \kappa(z_1)  \frac{\partial \tf}{\partial
+    t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z_r|}{\tc_0(\xi)}\right)
+\]
+So
+\[
+ ( D\tS[\kappa]\delta \kappa) \tS^T[\kappa]\te(\xi,t) =
+  -\frac{1}{4\kappa_0c_0}(1-c_0^2\xi^2)^{-3/2} \te(\xi,t)
+  \int_{z_s}^{z_r}\,dz\,\delta \kappa (z)
+\]
+\begin{equation}
+  \label{eqn:dmodhompwst2}
+     + \frac{1}{8\kappa_0c_0^2(1-c_0^2\xi^2)^2} \int_{z_s}^{z_r}\,dz_2 \, \int_{z_s}^{z_r} \,dz_1\,\delta 
+  \kappa(z_1)  \frac{\partial \te}{\partial
+    t}\left(\xi,t - \frac{|z_2-z_1|+|z_1-z_r|-|z_r-z_2|}{\tc_0(\xi)}\right)
+\end{equation}
+The integral in the secont term splits naturally into the subdomains
+\begin{eqnarray*}
+ z_s \le z_2 \le z_1 \le z_r & \Rightarrow &
+                                            |z_2-z_1|+|z_1-z_r|-|z_r-z_2|
+                                            = z_1-z_2 + z_r-z_1 -
+                                           ( z_r-z_2) = 0\\
+z_s \le z_1 \le z_2\le z_r  & \Rightarrow
+                                          &|z_2-z_1|+|z_1-z_r|-|z_r-z_2|
+                                            = z_2-z_1 + z_r-z_1 -
+                                            (z_r-z_2) = 2(z_2-z_1)
+\end{eqnarray*}
+So
+\[
+  \int_{z_s}^{z_r} \,dz_2\, \frac{\partial \te}{\partial 
+    t}\left(\xi,t -
+    \frac{|z_2-z_1|+|z_1-z_r|-|z_r-z_2|}{\tc_0(\xi)}\right) 
+\]
+\[
+  = \int_{z_1}^{z_r} \,dz_2\, \frac{\partial
+    \te}{\partial t}\left(\xi,t-\frac{2(z_2-z_1)}{\tc_0(\xi)}\right)
+  + (z_1-z_s) \frac{\partial
+    \te}{\partial t}(\xi,t)
+\]
+\[
+=-\frac{\tc_0}{2}\int_{z_1}^{z_r} \,dz_2\, \frac{\partial}{\partial z_2}\te\left(\xi,t-\frac{2(z_2-z_1)}{\tc_0(\xi)}\right)
+  + (z_1-z_s) \frac{\partial
+    \te}{\partial t}(\xi,t)
+\]
+\[
+  = -\frac{\tc_0}{2}\left(\te\left(\xi,t-\frac{2(z_r-z_1)}{\tc_0(\xi)}\right)-\te(\xi,t)\right)
+    + (z_1-z_s) \frac{\partial
+    \te}{\partial t}(\xi,t)
+\]
+so 
+\[
+  ( D\tS[\kappa]\delta \kappa) \tS^T[\kappa]\te(\xi,t) =
+  \frac{1}{4\kappa_0c_0}\left(\frac{1}{4}(1-c_0^2\xi^2)^{-5/2}- (1-c_0^2\xi^2)^{-3/2}\right) \te(\xi,t)
+  \int_{z_s}^{z_r}\,dz\,\delta \kappa (z)
+\]
+\begin{equation}
+  \label{eqn:dmodhompwst3}
+     + \frac{1}{8\kappa_0c_0^2(1-c_0^2\xi^2)^2}
+     \int_{z_s}^{z_r}\,dz_1\,\delta\kappa(z_1) \left((z_1-z_s) \frac{\partial
+    \te}{\partial t}(\xi,t) -\frac{\tc_0}{2}\te\left(\xi,t-\frac{2(z_r-z_1)}{\tc_0(\xi)}\right)\right)
+\end{equation}
+Therefore 
+\[
+  DJ_2[\kappa]\delta \kappa|_{\kappa=\kappa_0} = \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \,W_0(\xi)
+  \int\,dt\, \te(\xi,t)^2\right)\int_{z_s}^{z_r}\,dz\,\delta \kappa
+\]
+\[
+     -\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,W_1(\xi)\int\,dt\, \int_{z_s}^{z_r}\,dz_1\,\delta\kappa(z_1) \left((z_1-z_s) \te(\xi,t)\frac{\partial 
+         \te}{\partial t}(\xi,t) \right.
+     \]
+\begin{equation}
+  \label{eqn:dj2e1}
+ \left.    -\frac{\tc_0}{2}\te(\xi,t)\te\left(\xi,t-\frac{2(z_r-z_1)}{\tc_0(\xi)}\right)\right)
+\end{equation}
+In the right-hand side of equation \ref{eqn:dj2e1}, $W_0$ and $W_1$
+are functions of $\xi$, parametrized by $\kappa_0$ and $\rho_0$. They
+have no depedence on the target model $\kappa_*,\rho_*$ used to
+generate the target data $d$.
+
+Note that the first summand under the integral sign in the second term
+integrates to zero in $t$, as it is an exact derivative of a smooth
+compactly supported function. Therefore combining equations
+\ref{eqn:j1est} and \ref{eqn:dj2e1} and the definition of the formal
+or $L^2$ gradient, obtain
+\[
+  \nabla J_{\rm WRI}[\kappa_0](z) = \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \,W_0(\xi)
+    \int\,dt\, \te(\xi,t)^2\right) {\bf 1}_{[z_s,z_r]}(z)
+\]
+\begin{equation}
+  \label{eqn:gradwri1}
+  +\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,W_2(\xi)\int\,dt\, 
+  \te(\xi,t)\te\left(\xi,t-\frac{2(z_r-z)}{\tc_0(\xi)}\right) + O(\lambda)
+\end{equation}
+in which $W_2 = (\tc_0/2)W_1$.
+
+The inner ($t$) integral in the second term on the RHS of
+\ref{eqn:gradwri1} is the autocorrelation of $\te$ at lag
+$2(z_r-z)/\tc_0(\xi)$. Introducing the Fourier transform $\hat{\te}$
+of $\te$ in $t$,
+\[
+  \nabla J_{\rm WRI}[\kappa_0](z) = \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \,W_0(\xi)
+    \int\,dt\, \te(\xi,t)^2\right) {\bf 1}_{[z_s,z_r]}(z)
+\]
+\begin{equation}
+  \label{eqn:gradwri2}
+  +\frac{1}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,W_2(\xi)\int\,d\omega\, 
+  |\hat{\te}(\xi,\omega)|^2e^{-i\omega\frac{2(z_r-z)}{\tc_0(\xi)}} + O(\lambda)
+\end{equation}
+Recall that
+\[
+  \te=\tdl -
+  \td_{0,\lambda}
+\]
+and
+\begin{equation}
+  \label{eqn:geosoltrans1}
+  \tdl(\xi,t) = a(\xi,z_s,z_r)\wl(t-\tau(\xi,z_s,z_r)) + O(\lambda). 
+\end{equation}
+The explicit expression \ref{eqn:ptmodhompw} for $\kappa_0$ may be 
+viewed as a special case of \ref{eqn:geosoltrans}, and gives reference 
+data for that case: 
+\begin{equation}
+  \label{eqn:analsoltrans1}
+  \td_{0,\lambda}(\xi,t) =  \tS_p[\kappa_0]\wl(\xi,t)  = a_0(\xi,z_s,z_r)\wl 
+  \left(t-\frac{|z_r-z_s|}{\tc_0(\xi)}\right) 
+\end{equation}
+where $a_0$ is given in \ref{eqn:anasoltrans}. So
+\[
+  \te(\xi,t) = \tdl(\xi,t)-\td_{0,\lambda}(\xi,t) =
+  \frac{1}{\sqrt{\lambda}}\te_1\left(\xi,\frac{t}{\lambda}\right) + O(\lambda),
+\]
+in which
+\begin{equation}
+  \label{eqn:e1def}
+  \te_1 = \td_1 -\td_{0,1}.
+\end{equation}
+In terms of the Fourier transform,
+\[
+  \hat{\te}(\xi,\omega) = \sqrt{\lambda}\hat{\te}_1(\xi,\lambda\omega)
+  + O(\lambda)
+\]
+
+Calculating the rate of change of traveltime between $z_s$ and $z_r$:
+\[
+  \delta \int_{z_s}^{z_r}\,\frac{1}{\tc}|_{\kappa=\kappa_0} =
+  -\frac{\rho \tc_0}{\kappa_0^2} \int_{z_s}^{z_r}\,\delta \kappa
+\]
+The rate at $\kappa=\kappa_0$ in the direction $\delta \kappa =
+-\nabla J_{\rm WRI}(\kappa_0)$ is therefore
+\[
+  = \left[(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi)
+    \int\,dt\, \te(\xi,t)^2\right)\right.
+\]
+\[
+ \left. +\frac{1}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\,W_2(\xi)\int\,d\omega\, 
+  |\hat{\te}(\xi,\omega)|^2 \int_{z_s}^{z_r}\, dz\,e^{-i\omega\frac{2(z_r-z)}{\tc_0(\xi)}} \right]+ O(\lambda)
+\]
+(all integrals are absolutely convergent hence can be interchanged)
+\[
+  = \left[(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi) 
+    \int\,dt\, \te(\xi,t)^2\right)\right. 
+\]
+\[
+ \left. +\frac{1}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_2(\xi)\int\,d\omega\, 
+  \lambda|\hat{\te}_1(\xi,\lambda\omega)|^2 \int_{z_s}^{z_r}\, dz\,e^{-i\omega\frac{2(z_r-z)}{\tc_0(\xi)}} \right]+ O(\lambda) 
+\]
+\[
+  = \left[(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi) 
+    \int\,dt\, \te(\xi,t)^2\right)\right. 
+\]
+\[
+ \left. +\frac{1}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_2(\xi)\lambda\int\,\frac{d\sigma}{\sigma}\, 
+  |\hat{\te}_1(\xi,\sigma)|^2 \int_{z_s}^{z_r}\, dz\,e^{-i\sigma\frac{2(z_r-z)}{\lambda\tc_0(\xi)}} \right]+ O(\lambda) 
+\]
+\[
+  = \left[(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi) 
+    \int\,dt\, \te(\xi,t)^2\right)\right. 
+\]
+\[
+ \left. +\frac{1}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_2(\xi)\lambda\int\,\frac{d\sigma}{\sigma}\, 
+   |\hat{\te}_1(\xi,\sigma)|^2 \int_{z_s}^{z_r}\,
+   dz\,\frac{\lambda\tc_0(\xi)}{2i\sigma}\frac{\partial}{\partial
+       z}e^{-i\sigma\frac{2(z_r-z)}{\lambda\tc_0(\xi)}} \right]+ O(\lambda) 
+\]
+\[
+  = \left[(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi) 
+    \int\,dt\, \te(\xi,t)^2\right)\right. 
+\]
+\[
+ \left. +\frac{\lambda^2}{2\pi}\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi\, \frac{\rho \tc_0(\xi)^2}{\kappa_0^2} W_2(\xi)\int\,d\sigma\, 
+   |\frac{\hat{\te}_1(\xi,\sigma)}{i\sigma}|^2 \frac{1}{2i}(1-e^{-i\sigma\frac{2(z_r-z_s)}{\lambda\tc_0(\xi)}}) \right]+ O(\lambda) 
+\]
+
+In view of the relation \ref{eqn:e1def}, the assumption that $w_1$ is
+the derivative of a $C_0^{\infty}$ primitive, and the uniform boundedness of
+the other factors in the integral with respect to $\lambda$, it
+follows finally that the rate is
+\begin{equation}
+  \label{eqn:dttwri}
+  =(z_r-z_s) \left(\int_{-\xi_{\rm max}}^{\xi_{\rm max}}\,d\xi \, \frac{\rho \tc_0(\xi)}{\kappa_0^2} W_0(\xi) 
+    \int\,dt\, \te(\xi,t)^2\right) + O(\lambda)
 \end{equation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 
 
@@ -1161,9 +1531,11 @@ Since
 \]
 obtain
 \begin{eqnarray}
-\label{eqn:sol1d}
-p(z,t) &=& \frac{1}{2c_0}\int dz_1 f\left(z_1,t - \frac{|z-z_1|}{c_0}\right) \\
-v(z,t) &=& \frac{1}{2\kappa_0} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac{|z-z_1|}{c_0}\right)\\
+\label{eqn:sol1dp}
+p(z,t) &=& \frac{1}{2c_0}\int dz_1 f\left(z_1,t -
+           \frac{|z-z_1|}{c_0}\right) \\
+  \label{eqn:sol1dv}
+v(z,t) &=& \frac{1}{2\kappa_0} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
 \end{eqnarray}
 
 \append{1D Born Approximation}
@@ -1184,7 +1556,7 @@ expressions for the solution of this system. As before, only $\kappa$ will be
 subject to perturbation in any of the problems considered in this
 report, so assume that that $\delta\rho=0$.
 
-From the second equation in the pair \ref{eqn:sol1d}
+From \ref{eqn:sol1dv}
 \[
   \frac{\partial v}{\partial z}(z,t) = \frac{1}{\kappa_0} f(z,t) 
 \]
@@ -1192,7 +1564,7 @@ From the second equation in the pair \ref{eqn:sol1d}
   \label{eqn:sol1ddvdz}
  - \frac{1}{2\kappa_0c_0} \int\, dz_2\, \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z-z_2|}{c_0}\right)
 \end{equation}
-Thus using the first equations in \ref{eqn:sol1d} and \ref{eqn:dawe1d}, 
+Thus using equation \ref{eqn:sol1dp} and \ref{eqn:dawe1d}, 
 \[
   \delta p(z,t) =- \frac{1}{2c_0} \int \, dz_1 \, \delta
   \kappa(z_1)\frac{\partial v}{\partial z}\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
@@ -1204,10 +1576,194 @@ Thus using the first equations in \ref{eqn:sol1d} and \ref{eqn:dawe1d},
 \begin{equation}
   \label{eqn:sol1ddp}
   + \frac{1}{4\kappa_0c_0^2} \int\,dz_2 \, \int \,dz_1\,\delta 
-  \kappa(z_1) \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z_2-z_1|+|z_1-z|}{c_0}\right)
+  \kappa(z_2) \frac{\partial f}{\partial t}\left(z_1,t - \frac{|z_1-z_2|+|z_2-z|}{c_0}\right)
 \end{equation}
 
-An important special case is the 1D point source,
+A convenient check on this calculation is available for constant
+$\delta \kappa = \delta \kappa_0$. Directly perturb the RHS of equation 
+\ref{eqn:sol1dp}, to obtain
+\[
+  \delta p(z,t) = -\frac{\delta c_0}{2 c_0^2} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+  +\frac{\delta c_0}{2c_0^3}\int
+  \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\]
+Since
+\[
+  \delta c_0 = \delta \left(\frac{\kappa_0}{\rho_0}\right)^{1/2} =
+  \frac{1}{2} \left(\frac{\kappa_0}{\rho_0}\right)^{-1/2}\frac{\delta
+    \kappa_0}{\rho_0}
+\]
+\[
+  = \frac{1}{2}\frac{\delta \kappa \rho_0^{1/2}}{\kappa_0^{1/2}\rho_0}
+  \]
+\[
+=\frac{1}{2} \frac{\delta
+  \kappa_0}{\kappa_0}\left(\frac{\kappa_0}{\rho_0}\right)^{1/2}
+=\frac{1}{2} \frac{c_0\delta \kappa_0}{\kappa_0}
+\]
+the identity above can be rewritten as
+\[
+  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+  \]
+\begin{equation}
+  \label{eqn:dpraw} 
+  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\int
+  \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\end{equation}
+The critical quantity is the integral in the second term:
+\[
+  \int \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\]
+\[
+  = \int_{-\infty}^z \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{z-z_1}{c_0}\right)(z-z_1)
+\]
+\[
+   + \int^{\infty}_z \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{z_1-z}{c_0}\right)(z_1-z)
+ \]
+ \[
+   =\int_{-\infty}^z \,dz_1\,\int_{z_1}^{z} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z-z_2+z_2-z_1}{c_0}\right)
+ \]
+ \[
+   + \int^{\infty}_z \,dz_1\,\int_{z}^{z_1}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z_2-z}{c_0}\right)
+ \]
+ Checking signs, one sees that this sum is equal to
+ \[
+   =\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   + \int^{\infty}_z \,dz_1\,\int_{-\infty}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z-z_2+z_1-z_2}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z_2-z+z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z-z_2}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_2-z_1 + z_2-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial }{\partial
+     z_2}f\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
+ \]
+\[
+   +\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial}{\partial
+     z_2}f\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
+ \]
+ \[
+   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     }{\partial z_2}f\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
+ \]
+ \[
+   +\frac{c_0}{2} \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     }{\partial z_2}f\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\, f\left(z_1,t-\frac{z-z_1}{c_0}\right)
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,f\left(z_1,t-\frac{z-z_1}{c_0}\right)
+ \]
+ \[
+   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
+   -\frac{c_0}{2} \int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
+ \]
+ \[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -c_0\int_{-\infty}^{\infty} \,dz_1\, f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+ \]
+ Insert the identity just established in the second term on the RHS of
+ \ref{eqn:dpraw}:
+ \[
+  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+\]
+\[
+  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\left(\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right) \right.
+\]
+\[
+  \left. -c_0\int_{-\infty}^{\infty} \,dz_1\,
+    f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)\right)
+\]
+\[
+=-\frac{\delta \kappa_0}{2\kappa_0c_0}\int_{-\infty}^{\infty} \,dz_1\,
+f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+\]
+\begin{equation}
+  \label{eqn:dpraw}
++  \frac{\delta \kappa_0}{4\kappa_0c_0^2}\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+  \end{equation}
+which is identical to the expression \ref{eqn:sol1ddp} for the case of constant
+$\delta \kappa = \delta \kappa_0$.
+
+An important special case of the identity \ref{eqn:sol1ddp} is the 1D point source,
 $f(z,t)=w(t)\delta(z-z_s)$: then
 \[
   \delta p(z,t) = -\frac{\delta \kappa(z_s)}{2\kappa_0c_0}w\left(t - \frac{|z-z_s|}{c_0}\right)
@@ -1241,7 +1797,7 @@ system, so the results of the last two appendices apply to the
 homogeneous case, in which $\kappa=\kappa_0$ and $\rho=\rho_0$ are
 independent of $z$. Comparing the plane wave system \ref{eqn:awepw1} with the 1D system
 \ref{eqn:awe1d}, and using the 1D solution for homogeneous fluids
-\ref{eqn:sol1d}, obtain
+\ref{eqn:sol1dp},\ref{eqn:sol1dv}, obtain
 \begin{eqnarray*}
 \tp(\xi,z,t) &=& \frac{1}{2\tc_0(\xi)}(1-c_0^2\xi^2)^{-1}\int dz_s
                  \tf\left(\xi,z_s,t -
@@ -1251,12 +1807,12 @@ independent of $z$. Comparing the plane wave system \ref{eqn:awepw1} with the 1D
 \end{eqnarray*}
 which becomes
 \begin{eqnarray}
-\label{eqn:solpw}
+\label{eqn:solpwp}
  \tp(\xi,z,t)   &=&\frac{1}{2c_0(1-c_0^2\xi^2)^{1/2}}\int dz_s 
                  \tf\left(\xi,z_s,t -
-                 \frac{|z-z_s|}{\tc_0(\xi)}\right) \nonumber \\
+                    \frac{|z-z_s|}{\tc_0(\xi)}\right)  \\
+  \label{eqn:solpwv}
 \tv(\xi,z,t) &=& \frac{1}{2\kappa_0} \int dz_s \mbox{sgn} (z-z_s)\tf\left(\xi,z_s,t - \frac{|z-z_s|}{\tc_0(\xi)}\right)
-                 \nonumber \\
 \end{eqnarray}
 after some simplification.
 
@@ -1304,44 +1860,58 @@ Expressions for linearized forward maps at homogeneous reference
 models, $D\tS[\kappa_0]\delta \kappa$, follow this observation and the
 results of the last two appendices. For the first summand, in
 \ref{eqn:sol1ddp}, substitute $\tk_0$ for $\kappa_0$, $\delta \tk$ for
-$\delta \kappa$, and $(1-c_0^2\xi^2)\tf$ for $\tf$ to obtain
+$\delta \kappa$, and $(1-c_0^2\xi^2)^{-1}\tf$ for $\tf$ to obtain
 \[
 -\frac{1}{2\tk_0(\xi)\tc_0(\xi)} \int \,dz_1\, \delta 
 \tk(\xi,z_1)(1-c_0\xi^2)^{-1} \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right)
 \]
 \[
-  + \frac{1}{4\tk_0(\xi)\tc_0(\xi)} \int\,dz_2 \, \int \,dz_1\,\delta 
+  + \frac{1}{4\tk_0(\xi)\tc_0(\xi)^2} \int\,dz_2 \, \int \,dz_1\,\delta 
   \tk(\xi,z_1) (1-c_0\xi^2)^{-1}\frac{\partial \tf}{\partial t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z|}{\tc_0(\xi)}\right) 
 \]
 Since
 \[
-\delta \tk = \delta \left(\frac{\kappa}{1-\kappa \xi^2/\rho}\right) = \delta \kappa (1-c^2\xi^2)^{-2}
+\delta \tk = \delta \left(\frac{\kappa}{1-\kappa \xi^2/\rho}\right) = \delta \kappa (1-c_0^2\xi^2)^{-2}
 \]
+at $\kappa=\kappa_0$,
 this amounts to
 \[
-=  -\frac{1}{2\kappa_0c_0 1-c_0\xi^2)^{3/2}} \int \,dz_1\, \delta 
-\kappa(z_1) (1-c_0^2\xi^2)^{-2} \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right) 
+-\frac{1}{2\kappa_0(1-c_0^2\xi^2)^{-1}c_0(1-c_0^2\xi^2)^{-1/2}} \int \,dz_1\, \delta 
+\kappa(z_1)(1-c_0\xi^2)^{-3} \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right)
+\]
+\[
+  + \frac{1}{4\kappa_0(1-c_0^2\xi^2)^{-1}c_0^2(1-c_0^2\xi^2)^{-1}} \int\,dz_2 \, \int \,dz_1\,\delta 
+  \kappa(z_1) (1-c_0\xi^2)^{-3}\frac{\partial \tf}{\partial t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z|}{\tc_0(\xi)}\right) 
+\]
+\[
+=  -\frac{1}{2\kappa_0c_0 (1-c_0\xi^2)^{3/2}} \int \,dz_1\, \delta 
+\kappa(z_1) \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right) 
 \]
 \begin{equation}
   \label{eqn:solpwdp1}
   + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
-  \kappa(z_1) (1-c_0^2\xi^2)^{-2}  \frac{\partial \tf}{\partial t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z|}{\tc_0(\xi)}\right) 
+  \kappa(z_1) \frac{\partial \tf}{\partial t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z|}{\tc_0(\xi)}\right) 
 \end{equation}
 
 Note that
 \[
-  (1-c^2\xi^2)^{-2}\delta (c^2)\xi^2= (1-c^2\xi^2)^{-2}\delta \kappa
+  (1-c^2\xi^2)^{-2}\delta (c^2)\xi^2= (1-c^2\xi^2)^{-2}\xi^2\delta \kappa
   /\rho
 \]
-Therefore, from \ref{eqn:sol1d}, the second summand identified above
+Therefore, from \ref{eqn:sol1dp}, the second summand identified above
 is
 \[
-  =\frac{1}{2\tc(\xi)\rho_0}\int \,dz_1\, \delta 
+  =\frac{\xi^2}{2\tc(\xi)\rho_0}\int \,dz_1\, \delta 
 \kappa(z_1)(1-c_0^2\xi^2)^{-2} \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right)
 \]
+\[
+  = \frac{\xi^2}{2c_0(1-c_0^2\xi^2)^{3/2}\rho_0}\int \,dz_1\, \delta 
+\kappa(z_1) \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right)
+\]
+
 \begin{equation}
   \label{eqn:solpwdp2}
-=\frac{c_0^2\xi)^2}{2\kappa_0c_0(1-c_0^2\xi^2)^{3/2}}\int \,dz_1\, \delta 
+=\frac{c_0^2\xi^2}{2\kappa_0c_0(1-c_0^2\xi^2)^{3/2}}\int \,dz_1\, \delta 
 \kappa(z_1) \tf \left(\xi,z_1,t - \frac{|z-z_1|}{\tc_0(\xi)}\right)
 \end{equation}
 Adding the quantities \ref{eqn:solpwdp1} and \ref{eqn:solpwdp2},
@@ -1352,32 +1922,32 @@ obtain
   \]
 \begin{equation}
   \label{eqn:solpwdp}
-  + \frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
+  + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
   \kappa(z_1)  \frac{\partial \tf}{\partial
     t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z|}{\tc_0(\xi)}\right)
   \end{equation}
 Consequently 
 \[
-  D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+  D(\tS[\kappa]\tf)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
   -\frac{1}{2\kappa_0c_0(1-c_0^2\xi^2)^{1/2}}\int \,dz_1\, \delta 
   \kappa(z_1) \tf \left(\xi,z_1,t - \frac{|z_r-z_1|}{\tc_0(\xi)}\right)
 \]
 \begin{equation}
-  \label{eqn:dmodhomst1}
-    + \frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
+  \label{eqn:dmodhomst1app}
+    + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int\,dz_2 \, \int \,dz_1\,\delta 
   \kappa(z_1)  \frac{\partial \tf}{\partial
     t}\left(\xi,z_2,t - \frac{|z_2-z_1|+|z_1-z_r|}{\tc_0(\xi)}\right)
 \end{equation}
-which is equation \ref{eqn:dmodhompwst}. For a point source
+which is equation \ref{eqn:dmodhompwst1}. For a point source
 $\tf(\xi,z,t) = w(t)\delta(z-z_s)$, this reduces to
 \[
-  D(\tS[\kappa]\tw)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
+  D(\tS_p[\kappa]w)_{\kappa=\kappa_0}\delta \kappa(\xi,t) =
   -\frac{1}{2\kappa_0c_0(1-c_0^2\xi^2)^{1/2}} \delta 
   \kappa(z_s) w\left(t - \frac{|z_r-z_s|}{\tc_0(\xi)}\right)
 \]
 \begin{equation}
   \label{eqn:dmodhompt1}
-    + \frac{}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
+    + \frac{1}{4\kappa_0c_0^2(1-c_0^2\xi^2)} \int \,dz\,\delta 
   \kappa(z) \frac{\partial w}{\partial
     t}\left(t - \frac{|z_s-z|+|z-z_r|}{\tc_0(\xi)}\right)
 \end{equation}
