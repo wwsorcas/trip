@@ -23,9 +23,9 @@ A simple example: acoustic transmission inversion - isotropic point radiator (``
 \label{eqn:awept}
 \frac{1}{\kappa}\frac{\partial p}{\partial t} = -\nabla \cdot {\bf v} + f(t)\delta(\bx-\bx_s), \,\rho \frac{\partial {\bf v}}{\partial t} = - \nabla p; \,p,{\bf v}=0, t \ll 0
 \end{equation}
-Bulk modulus is depicted in Figure \ref{fig:bml0}.
+Bulk modulus is depicted in Figure XXX \ref{fig:bml0}.
 
-\plot{bml0}{width=\textwidth}{Lens example: target bulk modulus $\kappa$}
+%\plot{bml0}{width=\textwidth}{Lens example: target bulk modulus $\kappa$}
 
 $x_s=3500$ m, $z_s=3000$ m, receiver positions $x_r=2000-6000$ m, $z_r=1000$ m
 
@@ -34,8 +34,10 @@ $x_s=3500$ m, $z_s=3000$ m, receiver positions $x_r=2000-6000$ m, $z_r=1000$ m
 Modeling operator $(S[\kappa]f)(t,x_r) = \phi(x_r) p(t,x_r,z_r)$ - linear in $f$, nonlinear in $\kappa$
 
 %\includegraphics[height=1.5in]{Fig/pulse00.pdf} %\includegraphics[height=1.5in]{Fig/ptpwindl0.pdf}\\
-\plot{pulse00}{width=0.5\textwidth}{Bandpass filter pulse $f$}
-\plot{ptpwindl0}{width=\textwidth}{Receiver line  $S(\kappa)$  at $z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. bulk modulus $\kappa$ with low velocity lens as in Figure \ref{fig:bml0}, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
+%\plot{pulse00}{width=0.5\textwidth}{Bandpass filter pulse $f$}
+%\plot{ptpwindl0}{width=\textwidth}{Receiver line  $S(\kappa)$  at
+%$z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. bulk modulus
+%$\kappa$ with low velocity lens as in Figure \ref{fig:bml0}, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
 % at receiver position $1000 m$ for source at $x=3500$ m, $z=3000$ m}
 
 {\bf F}ull {\bf W}aveform {\bf I}nversion = output least squares: minimize over $\kappa$ (for example)
@@ -92,7 +94,7 @@ Big deal: $\oS[\kappa]$ has a microlocal approximate inverse $\oS[\kappa]^{\dagg
 The approximate projectors $\Pi_s,\Pi_r \in OPS^0$ have symbols $\equiv 1$ in conic $\gamma_{s,r} \subset T^*(\Gamma_{s,r})$
 
 %\includegraphics[height=1.2in]{Fig/ptpwindl0.pdf}\includegraphics[height=1.2in]{Fig/cgwhestsourceplh0.pdf}\\
-\plot{cgwhestsourceplh0}{width=\textwidth}{$\of=\oS(\kappa_0)^{\dagger}d$ for $\kappa_0 \equiv 4.0$ GPa, approx. via CG - $r=2000 m$}
+%%\plot{cgwhestsourceplh0}{width=\textwidth}{$\of=\oS(\kappa_0)^{\dagger}d$ for $\kappa_0 \equiv 4.0$ GPa, approx. via CG - $r=2000 m$}
 
 At solution source should be supported at $x=x_s$ - in $\mbox{rng }E = \mbox{ker }A$
 
