@@ -1,0 +1,495 @@
+\title{Wavefield Reconstruction Inversion: an example}
+\author{William. W. Symes \thanks{The Rice Inversion Project,
+Department of Computational and Applied Mathematics, Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+
+\lefthead{Symes}
+
+\righthead{1D WRI}
+
+\section{Introduction}
+
+\section{Full Waveform Inversion}
+Full waveform inversion (FWI) is the current nomenclature for data-fitting parameter estimation driven by wavefield modeling. The aim of FWI is to fit a vector of data observations $d$ with a predicted data vector of the same form. The prediction is accomplished by application of a modeling operator $S$ to a vector of input observations $f$, representing sources of energy that initiate waves in the material model underlying $S$. $S$ propagates these waves to measurement locations at which the data samples are extracted from the wave fields, generating the output of $S$. The propagation dynamics depend on a vector of material parameters $c$, hence $S=S[c]$ also depends on $c$.
+
+A restatement of the goal: estimation of the materal parameters $c$ (hence the modeling operator $S[c]$) and the  from the data $d$, via the requirement that $S[c]f \approx d$. A typical mehod for enforcing this requirement is the minimization of an objective misfit measure (objective, for short), the most common choice being the square norm of a Hilbert space in which the data is presumed to reside:
+\begin{equation}
+  \label{eqn:deffwifull}
+  J_{\rm FWI}[c,f] = \frac{1}{2}\|S[c]f -d\|^2.
+\end{equation}
+This approach was first suggested in the 1980's (\cite{BamChavLai:79,Tara:84a,KolbColLai:86,Crasetal:90},
+and many other papers since then). Usually some form of regularization
+is applied, to compensate for poorly determined aspects of $c$
+and/or $f$, as is explained in Tarantola's influential book
+\cite[]{Tarantola:05}. Also, $f$ may be constrained in one way or another to embody characteristics of field energy sources (an example of this is given below).
+
+The example of FWI to be explored in this paper is one of the simplest possible, based on the 1D acoustics system connecting excess pressure $p$, particle velocity $v$, sonstitutive law defect (``source'') $f$, density $\rho$, and wave velocity $c$:
+\begin{eqnarray}
+\label{eqn:awe1d}
+\frac{\partial p}{\partial t} + \rho c^2\frac{\partial 
+  v}{\partial z} &=& f \nonumber\\
+\rho \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
+  z}&=&0\nonumber\\
+ p,v&=&0, t \ll 0. 
+\end{eqnarray}
+The fields $p,v,f$ are functions of spatial position $z \in \bR$ and time $t \in \bR$, whereas $c, \rho$ are functions of $z$ alone, so that the system \ref{eqn:awe1d} is autonomous.
+
+The system \ref{eqn:awe1d} has classical (smooth) solutions $(p,v)$ when $c, \rho,$ and $f$ are smooth, and $\log c$ and $\log \rho$ are bounded on $\bR$, as is well-established \cite[]{Lax:PDENotes}. In this paper, for reasons to be discussed below, $c$ and $\rho$ are constrained to be constant ($z$-independent) in which case solutions may be constructed by elementary methods (Appendix A).
+
+Choose $l_c, l_{\rho} >0$ and admit $c, \rho$ as coefficients in \ref{eqn:awe1d} for which $|\log c| \le l_c, |\log \rho| \le l_{\rho}$.
+
+Limit observations to the time interval $[0,T]$, at the spatial (``receiver'')  location $z_r$. The modeling operator outputs the pressure trace $p(z_r,t)$ over the time interval $[0,T]$:
+\begin{equation}
+  \label{eqn:defmod}
+  S[c]f = p|_{\{z_r\}\times [0,T]}
+\end{equation}
+
+The formulation of the inverse problem via least-squares requires a choice of Hilbert space structure for the domain and range of $S[c]$. A natural choice is
+\begin{equation}
+  
+  S[c]: L^2([z_{\rm min},z_{\rm max}] \times [0,T]) \rightarrow L^2[0,T]
+\end{equation}
+For homogeneous ($z$-independent) $\kappa$, Appendix A provides an explicit expression:
+\begin{equation}
+  \label{eqn:defmodhom}
+  S[c]f(t) = \frac{1}{2c}\int dz f\left(z,t - \frac{|z_r-z|}{c}\right) 
+\end{equation}
+From this expression it is simple to see that $S[c]$ is a bounded operator with the domain and range described in \ref{eqn:defmoddr}.
+
+With this framework, the data is presumed to lie in the range of $S[c]$: $d \in L^2[0,T]$, and all components of the basic FWI definition \ref{eqn:deffwifull} are defined.
+
+The version of FWI discussed here presumes that the source field corresponding to the data $d$ is supported at a point $z_s \ne z_r$, and is known. This field will be denoted depends on a function of time (``wavelet'') $w \in L^2[0,T]$. Formally, the resulting acoustic field satisfies the system \ref{eqn:awe1d} with $f=w(t)\delta(z-z_s)$. Inserting this expression in the explicit expression \ref{eqn:defmodhom}, obtain
+\begin{equation}
+  \label{eqn:defmodpt}
+  S[c](w\delta(\cdot-\z_s)) = \frac{1}{2c}w\left(t - \frac{|z_r-z_s|}{c}\right) = S_p[c]w(t)
+\end{equation}
+
+
+
+
+\section{Wavefield Reconstruction Inversion}
+This section will introduce Wavefield Reconstruction Inversion (WRI) and develop some of its formal algebraic properties. The notation $S[c]$ will represent a modeling operator based on wave dynamics of some sort, depending on a vector $c$ of material parameters. The conclusions developed here in fact apply to WRI in any such setting. These conclusions will be applied to 1D acoustics in the following section.
+
+WRI was introduced by \cite{LeeuwenHerrmannWRI:13}, and further
+developed by \cite{LeeuwenHerrmann:16,WangYingst:SEG16} and other
+authors. It is based on the presumption that the correct source $q$ is known.  and extension $S$ (equation \ref{eqn:fwd}), with full
+space-time volume source $f$, and presumes that the correct point
+source wavelet $w_*$ is known. 
+\begin{equation}
+  \label{eqn:defwri}
+  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }f \mbox{ to
+    minimize }
+  \| d -  S[\kappa]f\|^2+\alpha^2\|f-w_*\delta(\cdot-\bx_s)\|^2.
+\end{equation}
+Evidently the difference $f-w_*\delta(\cdot-\bx_s)$ should be such
+that the scaled sum-of-squares makes sense - this is always the case
+for discretizations, but for the continuum limit entails an actual
+assumption.
+
+\cite{LeeuwenHerrmannWRI:13} posed this problem slightly
+differently, in terms of the second order wave equation for the
+pressure wavefield $p$. From this viewpoint, $\partial/\partial t(f-w_*\delta(\cdot-z_s))$ is the residual, that is, the image of the 2nd order wave operator on $p$, so the second term penalizes the failure of $p$ to solve the wave equation with source $\partial w_*/\partial t \delta(\cdot-z_s)$. The formulation presented here is equivalent, and was
+introduced by \cite{WangYingst:SEG16}.
+
+\cite{LeeuwenHerrmann:16} used
+the variable projection method \cite[]{GolubPereyra:03}, eliminating the source $f$ in the
+inner step and updating the bulk modulus (or an equivalent quantity)
+in the outer step. That is, the problem \ref{eqn:defwri} is equivalent to minimization of
+\begin{equation}
+\label{eqn:defvpm}
+  J[\kappa] =
+  \mbox{min}_f \frac{1}{2}(\| d-S[\kappa]f\|^2+\alpha^2\|f-w_*\delta(\cdot-\bx_s)\|^2)
+\end{equation}
+over $\kappa$. This is the approach that I shall pursue here.
+
+In any penalty method, control of the penalty
+parameter has a large influence on the speed of
+convergence. \cite{Aghamiry:19} use an augmented Lagrangian algorithm
+to minimize the influence of the penalty weight choice. Alternatively, one can use a version of the discrepancy principle to adjust $\alpha$ dynamically \cite[]{FuSymes2017discrepancy}, as the WRI problem has the necessary features described in that paper.
+
+``Most'' source fields $f$ are non-radiating,
+that is, $S[\kappa]f=0$. The orthocomplement of the subspace of
+non-radiating sources is the range of the adjoint operator
+$S[\kappa]^T$. This observation suggest that the sources may be re-parametrized as images of
+$S[\kappa]^T$. Write $f = g + w_*\delta(\cdot-\bx_s)$: then the second term in
+the objective displayed in \ref{eqn:defwri} is simply $\|g\|^2$.
+Decompose $g = S[\kappa]^Te + n$, in
+which $e$ is the same type of object as $d$ and $S[\kappa]n=0$ (that
+is, $n$ is a non-radiating
+source), and note that the decomposition is orthogonal. Then
+\[
+  J[\kappa] =
+  \mbox{min}_{e,n} \frac{1}{2}(\| d-S[\kappa](S[\kappa]^Te+w_*\delta(\cdot-z_s))\|^2+\alpha^2(\|S[\kappa]^Te\|^2+\|n\|^2))
+  \]
+\begin{equation}
+  \label{eqn:defvpmred}
+   \mbox{min}_{e} \frac{1}{2}(\|r-S[\kappa]S[\kappa]^Te\|^2+\alpha^2\|S[\kappa]^Te\|^2)
+ \end{equation}
+ in which $r[\kappa]=d-S[\kappa]w_*\delta(\cdot-z_s)$ is the data residual.
+ 
+This reformulation has some computational advantages \cite[]{WangYingst:SEG16,Herrmann:SEG19}, but also leads to a useful analytic transformation of the WRI problem. The minimizer on the RHS of equation \ref{eqn:defvpmred} is the solution $e=e_{\alpha}[\kappa]$ of the normal equation
+\[
+ ( (S[\kappa]S[\kappa]^T)^2 + \alpha^2S[\kappa](S[\kappa]^T)e = S[\kappa]S[\kappa]^Tr[\kappa]
+\]
+whence
+\[
+  S[\kappa]S[\kappa]^Te_{\alpha}[\kappa] = S[\kappa]S[\kappa]^T(S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
+\]
+Assume that $S[\kappa]S[\kappa]^T$ is invertible - this is in fact for the problem outlined in the introduction, as will be verified shortly. Then
+\begin{equation}
+  \label{eqn:norsol}
+  e_{\alpha}[\kappa]=(S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
+\end{equation}
+Consequently
+\[
+  J[\kappa] =
+  \frac{1}{2}(\|r[\kappa]-S[\kappa]S[\kappa]^Te_{\alpha}[\kappa]\|^2+\alpha^2\|S[\kappa]^Te_{\alpha}[\kappa]\|^2)
+\]
+\[
+  = \frac{1}{2}(\|r[\kappa]-S[\kappa]S[\kappa]^T (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2+\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],
+  S[\kappa]S[\kappa]^T (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
+  \rangle
+\]
+\[
+  =\frac{1}{2}\left(\|\alpha^2 (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2
+  +\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],
+  -\alpha^2 (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\rangle\right.
+\]
+\[
+  + \left.\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],r[\kappa]\rangle\right)
+\]
+\[
+  =  \frac{1}{2}\left(
+\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],r[\kappa]\rangle +
+\alpha^2(1-\alpha^2)\| (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2\right) 
+\]
+\[
+  =  \frac{1}{2}
+  \langle ((S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}+\alpha^2(1-\alpha^2)(S[\kappa]S[\kappa]^T+
+  \alpha^2I)^{-2})r[\kappa],r[\kappa]\rangle
+\]
+That is,
+\begin{equation}
+  \label{eqn:defwrialt}
+  J[\kappa] = \frac{1}{2}\langle r[\kappa], W[\kappa] r[\kappa]\rangle
+\end{equation}
+with
+\begin{equation}
+  \label{eqn:defwriwt}
+  W[\kappa] = (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}+\alpha^2(1-\alpha^2)(S[\kappa]S[\kappa]^T+
+  \alpha^2I)^{-2}.
+\end{equation}
+This remarkable identity shows that the WRI objective function is a {\em weighted norm of the data residual $r[\kappa]$}. Note that this conclusion depends only on the presumption that the operator $S[\kappa]S[\kappa]^T$ is invertible (or, more precisely, injective), a condition that will be verified below for the problem considered in this paper, and which holds in many other settings in which WRI has been advocated.
+
+\section{WRI for 1D Acoustics}
+The preceding section provides the necessary ingredients for an assessment of the relation between WRI and FWI. While the conclusion reached below applies to many wave propagation settings, the 1D acoustic setting is particularly simple and yet illustrates clearly the nature of this relation.
+
+The first task is to give an explicit expression for the operator $S[c]S[c]^T$ appearing repeatedly in the expression \ref{eqn:defwriwt}. From the definition \ref{eqn:defmodhom}, it follows immediatlely that 
+\begin{equation}
+  \label{eqn:stmodhompwtrans}
+S[c]^Te(z,t)=\frac{1}{2c}e\left(t +  \frac{|z_r-z|}{c}\right). 
+\end{equation}
+whence
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\append{1D Radiation Problem}
+Begin with the 1D acoustics point source system. 
+\begin{eqnarray}
+\label{eqn:awe1dptsrc}
+\frac{\partial p}{\partial t} +\kappa\frac{\partial 
+  v}{\partial z} &=& w(t)\delta(z-z_s) \nonumber\\
+\rho \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
+  z}&=&0\nonumber\\
+ p,v&=&0, t \ll 0. 
+\end{eqnarray}
+Since the right hand side is singular, so is the solution, so it must
+be a solution in the weak sense. It follows from the weak solution
+conditions that the pressure is continuous at $z=z_s$, whence $v$ must
+have a discontinuity. 
+
+Now assume that $\kappa=\kappa_0 \in \bR^+, \rho=\rho_0 \in \bR^+, c_0
+= \sqrt{\kappa_0/\rho_0}$ are constant. 
+In $z \ne z_s$, the right hand side 
+vanishes, so the solution must be locally a combination of plane
+waves; causality implies that
+\[
+p(z,t)=a\left(t -\frac{|z-z_s|}{c_0}\right), \, v(z,t)=\mbox{sgn}(z-z_s) b\left(t -
+  \frac{|z-z_s|}{c_0}\right)
+\]
+From the second dynamical equation (Newton's law) it follows that $b =
+a/(\rho_0 c_0)$. The singularity on the LHS of the first dynamical
+equation (constitutive law) is
+\[
+\kappa_0 [v]_{z=z_s}\delta(z-z_s) =
+2\kappa_0 b\delta(z-z_s) = 2c_0 a\delta(z-z_s).
+\] 
+This must in turn equal the RHS of the constitutive law, whence
+$a=w/(2c_0)$. Thus
+\begin{eqnarray}
+\label{eqn:sol1dptsrc}
+p(z,t) &=& \frac{1}{2c_0}w\left(t - \frac{|z-z_s|}{c_0}\right) \nonumber \\
+v(z,t) &=& \mbox{sgn}(z-z_s)\frac{1}{2\kappa_0}w\left(t -\frac{|z-z_s|}{c_0}\right)
+           \nonumber \\
+\end{eqnarray}
+This result (computation of the Green's function for the acoustic
+system) permits an explicit expression for the system with a
+space-time source:
+\begin{eqnarray}
+\label{eqn:awe1d}
+\frac{\partial p}{\partial t} +\kappa_0\frac{\partial 
+  v}{\partial z} &=& f(z,t) \nonumber\\
+\rho_0 \frac{\partial v}{\partial t} + \frac{\partial p}{\partial 
+  z}&=&0\nonumber\\
+ p,v&=&0, t \ll 0. 
+\end{eqnarray}
+Since
+\[
+  f(z,t) = \int dz_1\,f(z_s,t)\delta(z-z_1)
+\]
+obtain
+\begin{eqnarray}
+\label{eqn:sol1dp}
+p(z,t) &=& \frac{1}{2c_0}\int dz_1 f\left(z_1,t -
+           \frac{|z-z_1|}{c_0}\right) \\
+  \label{eqn:sol1dv}
+v(z,t) &=& \frac{1}{2\kappa_0} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
+\end{eqnarray}
+
+\append{1D Born Approximation}
+
+The perturbational system for \ref{eqn:awe1d} is:
+\begin{eqnarray}
+\label{eqn:dawe1d}
+\frac{\partial \delta p}{\partial t} +\kappa\frac{\partial
+  \delta v}{\partial z} + \delta \kappa\frac{\partial
+  v}{\partial z} &=& 0 \nonumber\\
+\rho \frac{\partial \delta v}{\partial t} + \frac{\partial \delta p}{\partial
+  z}&=&0\nonumber\\
+\delta p,\delta v&=&0, t \ll 0.
+\end{eqnarray}
+
+If $\kappa=\kappa_0, \rho=\rho_0 $ are constant, it is possible to develop explicit
+expressions for the solution of this system. As before, only $\kappa$ will be
+subject to perturbation in any of the problems considered in this
+report, so assume that that $\delta\rho=0$.
+
+From \ref{eqn:sol1dv}
+\[
+  \frac{\partial v}{\partial z}(z,t) = \frac{1}{\kappa_0} f(z,t) 
+\]
+\begin{equation}
+  \label{eqn:sol1ddvdz}
+ - \frac{1}{2\kappa_0c_0} \int\, dz_2\, \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z-z_2|}{c_0}\right)
+\end{equation}
+Thus using equation \ref{eqn:sol1dp} and \ref{eqn:dawe1d}, 
+\[
+  \delta p(z,t) =- \frac{1}{2c_0} \int \, dz_1 \, \delta
+  \kappa(z_1)\frac{\partial v}{\partial z}\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
+\]
+\[
+  =-\frac{1}{2\kappa_0c_0} \int \,dz_1\, \delta
+  \kappa(z_1) f \left(z_1,t - \frac{|z-z_1|}{c_0}\right)
+  \]
+\begin{equation}
+  \label{eqn:sol1ddp}
+  + \frac{1}{4\kappa_0c_0^2} \int\,dz_2 \, \int \,dz_1\,\delta 
+  \kappa(z_2) \frac{\partial f}{\partial t}\left(z_1,t - \frac{|z_1-z_2|+|z_2-z|}{c_0}\right)
+\end{equation}
+
+A convenient check on this calculation is available for constant
+$\delta \kappa = \delta \kappa_0$. Directly perturb the RHS of equation 
+\ref{eqn:sol1dp}, to obtain
+\[
+  \delta p(z,t) = -\frac{\delta c_0}{2 c_0^2} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+  +\frac{\delta c_0}{2c_0^3}\int
+  \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\]
+Since
+\[
+  \delta c_0 = \delta \left(\frac{\kappa_0}{\rho_0}\right)^{1/2} =
+  \frac{1}{2} \left(\frac{\kappa_0}{\rho_0}\right)^{-1/2}\frac{\delta
+    \kappa_0}{\rho_0}
+\]
+\[
+  = \frac{1}{2}\frac{\delta \kappa \rho_0^{1/2}}{\kappa_0^{1/2}\rho_0}
+  \]
+\[
+=\frac{1}{2} \frac{\delta
+  \kappa_0}{\kappa_0}\left(\frac{\kappa_0}{\rho_0}\right)^{1/2}
+=\frac{1}{2} \frac{c_0\delta \kappa_0}{\kappa_0}
+\]
+the identity above can be rewritten as
+\[
+  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+  \]
+\begin{equation}
+  \label{eqn:dpraw} 
+  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\int
+  \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\end{equation}
+The critical quantity is the integral in the second term:
+\[
+  \int \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
+\]
+\[
+  = \int_{-\infty}^z \,dz_1\,\frac{\partial f}{\partial
+    t}\left(z_1,t-\frac{z-z_1}{c_0}\right)(z-z_1)
+\]
+\[
+   + \int^{\infty}_z \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{z_1-z}{c_0}\right)(z_1-z)
+ \]
+ \[
+   =\int_{-\infty}^z \,dz_1\,\int_{z_1}^{z} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z-z_2+z_2-z_1}{c_0}\right)
+ \]
+ \[
+   + \int^{\infty}_z \,dz_1\,\int_{z}^{z_1}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z_2-z}{c_0}\right)
+ \]
+ Checking signs, one sees that this sum is equal to
+ \[
+   =\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   + \int^{\infty}_z \,dz_1\,\int_{-\infty}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z-z_2+z_1-z_2}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z_2-z+z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z-z_2}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_2-z_1 + z_2-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
+ \]
+\[
+   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
+ \]
+ \[
+   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     f}{\partial t}\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial }{\partial
+     z_2}f\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
+ \]
+\[
+   +\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial}{\partial
+     z_2}f\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
+ \]
+ \[
+   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
+     }{\partial z_2}f\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
+ \]
+ \[
+   +\frac{c_0}{2} \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
+     }{\partial z_2}f\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
+ \]
+\[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\, f\left(z_1,t-\frac{z-z_1}{c_0}\right)
+   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,f\left(z_1,t-\frac{z-z_1}{c_0}\right)
+ \]
+ \[
+   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
+   -\frac{c_0}{2} \int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
+ \]
+ \[
+   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+ \]
+ \[
+   -c_0\int_{-\infty}^{\infty} \,dz_1\, f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+ \]
+ Insert the identity just established in the second term on the RHS of
+ \ref{eqn:dpraw}:
+ \[
+  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
+  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+\]
+\[
+  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\left(\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right) \right.
+\]
+\[
+  \left. -c_0\int_{-\infty}^{\infty} \,dz_1\,
+    f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)\right)
+\]
+\[
+=-\frac{\delta \kappa_0}{2\kappa_0c_0}\int_{-\infty}^{\infty} \,dz_1\,
+f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
+\]
+\begin{equation}
+  \label{eqn:dpraw}
++  \frac{\delta \kappa_0}{4\kappa_0c_0^2}\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
+      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
+  \end{equation}
+which is identical to the expression \ref{eqn:sol1ddp} for the case of constant
+$\delta \kappa = \delta \kappa_0$.
+
+An important special case of the identity \ref{eqn:sol1ddp} is the 1D point source,
+$f(z,t)=w(t)\delta(z-z_s)$: then
+\[
+  \delta p(z,t) = -\frac{\delta \kappa(z_s)}{2\kappa_0c_0}w\left(t - \frac{|z-z_s|}{c_0}\right)
+\]
+\begin{equation}
+  \label{eqn:sol1ddppw}
+  +\frac{1}{4\kappa_0c_0^2} \int \,dz_1\,\delta 
+  \kappa(z_1) \frac{\partial w}{\partial t}\left(t - \frac{|z_s-z_1|+|z_1-z|}{c_0}\right)
+\end{equation}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
