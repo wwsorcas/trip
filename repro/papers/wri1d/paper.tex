@@ -7,22 +7,175 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
 
 \righthead{1D WRI}
 
+\begin{abstract}
+  Full waveform inversion, or nonlinear least squares data-fitting
+  driven by wave equation simulation, has proven its ability to
+  extract detailed maps of earth structture from near-surface seismic
+  observations. However, the least squares error function at the heart
+  of this method tends to develop a high degree of nonconvexity, so
+  that local optimization methods (the only numerical methods feasible
+  for field-scale problems) tend to fail, unless provided with initial
+  estimates of a quality not always available. A number of alternative
+  optimization principles have been advanced that promise some degree
+  of release from the multimodality of Full Waveform Inversion,
+  amongst them Wavefield Reconstruction Inversion, the focus of this
+  paper. Applied to a simple 1D acoustic transmission problem, both
+  Full Waveform and Wavefield Reconstruction Inversion methods reduce
+  to minimization of explicitly computable functions, in an asymptotic
+  sense. The analysis presented here shows that Wavefield
+  Reconstruction Inversion can be vulnerable to the same
+  ``cycle-skipping'' failure mode as Full Waveform Inversion.
+\end{abstract}
+
 \section{Introduction}
 
-\section{Full Waveform Inversion}
-Full waveform inversion (FWI) is the current nomenclature for data-fitting parameter estimation driven by wavefield modeling. The aim of FWI is to fit a vector of data observations $d$ with a predicted data vector of the same form. The prediction is accomplished by application of a modeling operator $S$ to a vector of input observations $f$, representing sources of energy that initiate waves in the material model underlying $S$. $S$ propagates these waves to measurement locations at which the data samples are extracted from the wave fields, generating the output of $S$. The propagation dynamics depend on a vector of material parameters $c$, hence $S=S[c]$ also depends on $c$.
+Full waveform inversion (FWI) is the current nomenclature in the
+seismology literature for data-fitting earth structure estimation
+driven by wavefield modeling. The earth properties to be estimated
+(material densities, stiffnesses, attenuation rates,...) form a vector
+$c$ of spatially fields that appear as coefficients in systems of hyperbolic
+partial differential equations, modeling seismic wave
+propagation. The wavefields used in structure estimation (``imaging'')
+are small motion disturbances of the earth's equilibrium state, so the
+equations of motion are typically 
+linear(ized). Right-hand side vectors $f$ in these systems model energy
+input that initiates waves (earthquakes, man-made sources such as
+explosives or mechanical vibrators). Data vectors $d$ are simulated by
+sampling the solution fields at the locations of measurement devices
+(accelerometers, microphones,...)  over appropriate time
+intervals. The relation between the energy source $f$ and the
+simulated data is linear in $f$, but nonlinear in the coefficient
+vector $c$, so is naturally represented by a family of linear
+operators $S[c]$ parametrized by the coefficient vector $c$.
 
-A restatement of the goal: estimation of the materal parameters $c$ (hence the modeling operator $S[c]$) and the  from the data $d$, via the requirement that $S[c]f \approx d$. A typical mehod for enforcing this requirement is the minimization of an objective misfit measure (objective, for short), the most common choice being the square norm of a Hilbert space in which the data is presumed to reside:
+The objective of FWI is to find $c$ and $f$, given $d$, so that
+$S[c]f \approx d$. A typical method for enforcing this requirement is
+the minimization of an objective misfit measure (objective, for
+short), the most common choice being the square norm of a Hilbert
+space in which the data is presumed to reside:
 \begin{equation}
-  \label{eqn:deffwifull}
-  J_{\rm FWI}[c,f] = \frac{1}{2}\|S[c]f -d\|^2.
+  \label{eqn:deffwi}
+  \mbox{Given } d, \mbox{ find }c \mbox{ and }f \mbox{ to
+    minimize }
+  \|d -  S[c]f\|^2
 \end{equation}
-This approach was first suggested in the 1980's (\cite{BamChavLai:79,Tara:84a,KolbColLai:86,Crasetal:90},
-and many other papers since then). Usually some form of regularization
-is applied, to compensate for poorly determined aspects of $c$
-and/or $f$, as is explained in Tarantola's influential book
-\cite[]{Tarantola:05}. Also, $f$ may be constrained in one way or another to embody characteristics of field energy sources (an example of this is given below).
+in which $\|\cdot\|$ is the norm in a suitable Hilbert space. This
+approach was first suggested in the 1980's
+(\cite{BamChavLai:79,Tara:84a,KolbColLai:86,Crasetal:90}, and many
+other papers since then). Usually some form of regularization is
+applied, to compensate for poorly determined aspects of $c$ and/or
+$f$, as is explained in Tarantola's influential book
+\cite[]{Tarantola:05}. Also, $f$ may be constrained in one way or
+another to embody characteristics of field energy sources, or even
+regarded as known (an example of this is given below).
 
+Within a few years of its introduction into quantitative seismology,
+FWI was understood to suffer from a severe limitation. Because of the
+typical dimensions of earth models, and consequent cost of accurate
+computation of $S$, iterative local optimization provides the only
+feasible route to estimation of $c$ via solution of the optimization
+problem \ref{eqn:deffwi}. However the objective function of this
+optimization problem (the mean-square residual appearing in display \ref{eqn:deffwi}) has many local minima in general, most
+having nothing to do with a usable estimate of earth structure. [An
+explicit example of this multi-modal behaviour appears below.]
+Reliable estimation of $c$ via iterative local optimization requires
+that the initial estimate predict the correct arrival time of waves,
+as they appears in the data, within a wavelength at dominant
+frequencies \cite[]{GauTarVir:86,VirieuxOperto:09}.
+
+Despite this severe constraint, FWI has shown enough promise as a tool
+for both industrial and academic seismology that it is now a
+mainstream research topic, and to some extent a commercial
+product. Estimation of sufficiently accurate initial models via
+non-FWI methods is common practice, though what ``sufficiently
+accurate'' means may be difficult to discern
+\cite[]{Plessix:10}. The wavelength criterion mentioned in the last
+paragraph may be made less onerous by collection of relatively
+low-frequency data \cite[]{Wolfspar:16}. Finally, many alternatives to
+straightforward least-squares data fitting have been suggested, some
+of which appear to exhibit less tendency to develop local minima than
+does the problem described in \ref{eqn:deffwi} \cite[]{Symes:09}.
+
+This topic of this paper is one of these alternative approaches,
+Wavefield Reconstruction Inversion (``WRI''). WRI was introduced by \cite{LeeuwenHerrmannWRI:13}, and further
+developed by \cite{LeeuwenHerrmann:16,WangYingst:SEG16} and other
+authors. It is based on the presumption that the correct source (right
+hand side in the equations of motion) $q$ is
+known, and combines a penalty for data misfit with a penalty for
+failing to solve the equations of motion with the correct right hand side:
+\begin{equation}
+  \label{eqn:defwri}
+  \mbox{Given } d \mbox{ and }q, \mbox{ find }c \mbox{ and }f \mbox{ to
+    minimize }
+  \|d -  S[c]f\|^2+\alpha^2\|f-q\|^2.
+\end{equation}
+The penalty parameter $\alpha$ may be chosen small, and examples given
+by \cite{LeeuwenHerrmannWRI:13} and others suggest that the problem
+defined in display \ref{eqn:defwri} is less likely to develop
+uninformative local minima if $\alpha$ is small. This might be so for
+several reasons: one is that when less weight is
+put on making the residual in the wave equation ($f-q$) small, 
+$f$ may be chosen to make the data residual $d-S[c]f$ small
+instead. One aspect of failure to predict the arrival times of waves
+accurately is that small data residual is then difficult to
+achieve. By maintaining fidelity to
+the data, local minimization of the WRI objective might provide a
+spurious-minimum-free path to a satisfactory estimate of $c$. 
+
+The main result of this paper is that in one simple case, in which all
+of the necessary computations can be carried out by hand, this hope is
+not realized: minimization of the WRI objective is just as likely to
+be trapped in a spurious local minimizer as is the FWI objective.  The
+context of this conclusion is a simple transmission inverse problem
+for the 1D acoustic wave system, which models pulse transmission along
+a 1D continuum from a source point to a receiver point. The pulses
+used in this thought experiment are short, so the main information
+content of the data is the time of transit from source to
+receiver. The predominant information about the material model, in
+this case reduced to the wave velocity (a scalar function of
+position), is just this transit time, so I constrain both the target
+wave velocity $c_*$ generating the data and the trial wave velocity
+$c$ to be constant, that is, independent of position along the 1D
+continuum. I introduce a family of inverse problems, parametrized by a
+parameter $\lambda$ playing the role of wavelength. For sufficiently small
+$\lambda$, it is possible to show explicitly that the FWI problem
+possesses local minimizers far from the global minimizer at the target
+$c_*$, and that initiating a local iterative optimization, such as
+steepest descent or Newton's method, at a distance from $c_*$ bounded
+below by a multiple of the ``wavelength'' $\lambda$ will result in
+convergence to these spurious local minima. That is, FWI 
+behaves in exactly the manner described in much of the literature on
+this topic. However, an analysis of WRI applied to the same context
+yields the same result: spurious local minima exist for sufficiently
+small $\lambda$, and will be found by local optimization unless the
+starting point is within $O(\lambda)$ of the target. That is, WRI
+behaves in a manner qualitatively indistinguishable from FWI. In
+particular, its ability to allow good fit to data for small $\alpha$
+does not safeguard it from failure to converge globally to a ``good''
+local minimum.
+
+This paper begins with a description of the 1D inverse transmission
+problem and explicit computation of various components of the FWI
+approach, based on explicit solution of the 1D acoustic system
+presented in Appendix A. In the third section I introduce the $\lambda-$dependent
+family of problems, and establish the asymptotic properties of FWI as
+$\lambda \rightarrow 0$. The fourth section develops the algebraic
+structure of WRI, culminating in a remarkable identity revealing WRI
+to be equivalent to minimization of a weighted norm of the data
+residual, with a weight operator depending on the coefficient vector
+$c$. This result is quite general, applying to essentially any
+realization of WRI, and already shows that its behaviour must be
+closely related to that of FWI. In the fifth section I return to 
+1D acoustics problem and the $\lambda$-dependent family of inverse
+problems, compute that weight operator explicitly, and deduce the
+global behaviour of WRI in this instance. The paper ends with a
+discussion of the relation of the analysis presented here to a
+previous analysis of optimization formulations of wave inversion
+problems based on parameter-dependent quadratic forms
+\cite[]{StolkSymes:03}, and a brief discussion of some other
+alternatives to FWI.
+
+\section{FWI for 1D Acoustics}
 The example of FWI to be explored in this paper is one of the simplest possible, based on the 1D acoustics system connecting excess pressure $p$, particle velocity $v$, sonstitutive law defect (``source'') $f$, density $\rho$, and wave velocity $c$:
 \begin{eqnarray}
 \label{eqn:awe1d}
@@ -34,9 +187,18 @@ The example of FWI to be explored in this paper is one of the simplest possible,
 \end{eqnarray}
 The fields $p,v,f$ are functions of spatial position $z \in \bR$ and time $t \in \bR$, whereas $c, \rho$ are functions of $z$ alone, so that the system \ref{eqn:awe1d} is autonomous.
 
-The system \ref{eqn:awe1d} has classical (smooth) solutions $(p,v)$ when $c, \rho,$ and $f$ are smooth, and $\log c$ and $\log \rho$ are bounded on $\bR$, as is well-established \cite[]{Lax:PDENotes}. In this paper, for reasons to be discussed below, $c$ and $\rho$ are constrained to be constant ($z$-independent) in which case solutions may be constructed by elementary methods (Appendix A).
+The system \ref{eqn:awe1d} has classical (smooth) solutions $(p,v)$
+when $c, \rho,$ and $f$ are smooth, and $\log c$ and $\log \rho$ are
+bounded on $\bR$, as is well-established \cite[]{Lax:PDENotes}. In
+this paper, for reasons to be discussed below, $c$ and $\rho$ are
+constrained to be constant ($z$-independent) in which case solutions
+may be constructed by elementary methods (Appendix A). 
 
-Choose $l_c, l_{\rho} >0$ and admit $c, \rho$ as coefficients in \ref{eqn:awe1d} for which $|\log c| \le l_c, |\log \rho| \le l_{\rho}$.
+In fact, I shall assume $\rho>0$ to be fixed for the remainder of this
+paper, that is, not updated in the inversion process. The wave
+velocity $c$ will range over an interval: it is the parameter to be inverted.
+To be specific, choose $c_{\rm max} > c_{\rm min} > 0$, and require
+that $c$ satisfy $c_{\rm min} \le c \le c_{\rm max}$.
 
 Limit observations to the time interval $[0,T]$, at the spatial (``receiver'')  location $z_r$. The modeling operator outputs the pressure trace $p(z_r,t)$ over the time interval $[0,T]$:
 \begin{equation}
@@ -46,61 +208,199 @@ Limit observations to the time interval $[0,T]$, at the spatial (``receiver'')  
 
 The formulation of the inverse problem via least-squares requires a choice of Hilbert space structure for the domain and range of $S[c]$. A natural choice is
 \begin{equation}
-  
-  S[c]: L^2([z_{\rm min},z_{\rm max}] \times [0,T]) \rightarrow L^2[0,T]
+  \label{eqn:defmoddom}
+  S[c]: L^2([z_{\rm min},z_{\rm max}] \times \bR) \rightarrow L^2[0,T]
 \end{equation}
+As it will turn out, the choice of spatial interval $[z_{\rm min},z_{\rm max}]$ is arbitrary, so long as it has positive length and contains $z_s$ in its interior. 
+
 For homogeneous ($z$-independent) $\kappa$, Appendix A provides an explicit expression:
 \begin{equation}
   \label{eqn:defmodhom}
-  S[c]f(t) = \frac{1}{2c}\int dz f\left(z,t - \frac{|z_r-z|}{c}\right) 
+  S[c]f(t) = \frac{1}{2c}\int_{z_{\rm min}}^{z_{\rm max}} dz f\left(z,t - \frac{|z_r-z|}{c}\right) 
 \end{equation}
-From this expression it is simple to see that $S[c]$ is a bounded operator with the domain and range described in \ref{eqn:defmoddr}.
+From this expression it is simple to see that $S[c]$ is a bounded
+operator with the domain and range described in
+\ref{eqn:defmoddom}. The role of compact support in $z$ in ensuring
+boundedness is also evident. % It is also evident from that limiting source to have bounded support in $z$ is necessary make $S[c]$ bounded.
 
-With this framework, the data is presumed to lie in the range of $S[c]$: $d \in L^2[0,T]$, and all components of the basic FWI definition \ref{eqn:deffwifull} are defined.
+With this framework, the data is presumed to lie in the range space of $S[c]$: $d \in L^2[0,T]$.
 
-The version of FWI discussed here presumes that the source field corresponding to the data $d$ is supported at a point $z_s \ne z_r$, and is known. This field will be denoted depends on a function of time (``wavelet'') $w \in L^2[0,T]$. Formally, the resulting acoustic field satisfies the system \ref{eqn:awe1d} with $f=w(t)\delta(z-z_s)$. Inserting this expression in the explicit expression \ref{eqn:defmodhom}, obtain
+The version of FWI discussed here presumes that the source field corresponding to the data $d$ is supported at a point $z_s \ne z_r$, and is known. This field depends on a function of time (``wavelet'') $w \in L^2[0,T]$. Formally, the resulting acoustic field satisfies the system \ref{eqn:awe1d} with $f=w(t)\delta(z-z_s)$. Inserting this expression in the explicit expression \ref{eqn:defmodhom}, obtain
 \begin{equation}
   \label{eqn:defmodpt}
-  S[c](w\delta(\cdot-\z_s)) = \frac{1}{2c}w\left(t - \frac{|z_r-z_s|}{c}\right) = S_p[c]w(t)
+  S[c](w\delta(\cdot-z_s)) = \frac{1}{2c}w\left(t - \frac{|z_r-z_s|}{c}\right) = S_p[c]w(t)
 \end{equation}
-
-
-
-
-\section{Wavefield Reconstruction Inversion}
-This section will introduce Wavefield Reconstruction Inversion (WRI) and develop some of its formal algebraic properties. The notation $S[c]$ will represent a modeling operator based on wave dynamics of some sort, depending on a vector $c$ of material parameters. The conclusions developed here in fact apply to WRI in any such setting. These conclusions will be applied to 1D acoustics in the following section.
-
-WRI was introduced by \cite{LeeuwenHerrmannWRI:13}, and further
-developed by \cite{LeeuwenHerrmann:16,WangYingst:SEG16} and other
-authors. It is based on the presumption that the correct source $q$ is known.  and extension $S$ (equation \ref{eqn:fwd}), with full
-space-time volume source $f$, and presumes that the correct point
-source wavelet $w_*$ is known. 
+Thus for this restricted class of source fields, the FWI objective can be redefined as
 \begin{equation}
-  \label{eqn:defwri}
-  \mbox{Given } d, \mbox{ find }\kappa \mbox{ and }f \mbox{ to
-    minimize }
-  \| d -  S[\kappa]f\|^2+\alpha^2\|f-w_*\delta(\cdot-\bx_s)\|^2.
+  \label{eqn:deffwipt}
+  J_{\rm FWI}[c,d.w] = \frac{1}{2}\|S_p[c]w -d\|^2.
 \end{equation}
-Evidently the difference $f-w_*\delta(\cdot-\bx_s)$ should be such
-that the scaled sum-of-squares makes sense - this is always the case
-for discretizations, but for the continuum limit entails an actual
-assumption.
+$S_p[c]$ is a bounded operator with domain $L^2(\bR)$ and range $L^2([0,T])$. 
 
-\cite{LeeuwenHerrmannWRI:13} posed this problem slightly
-differently, in terms of the second order wave equation for the
-pressure wavefield $p$. From this viewpoint, $\partial/\partial t(f-w_*\delta(\cdot-z_s))$ is the residual, that is, the image of the 2nd order wave operator on $p$, so the second term penalizes the failure of $p$ to solve the wave equation with source $\partial w_*/\partial t \delta(\cdot-z_s)$. The formulation presented here is equivalent, and was
+To end this section, it is necessary to address an irritating technical point: the point source defined above is not a member of the domain of $S[c]$, as it was defined in display \ref{eqn:defmoddom}, so the left-hand side of equation \ref{eqn:defmodpt} does not actually make sense. The fix for this incompatibility actually elucidates the relation between $S[c]$ and $S_p[c]$. Appendix B describes the construction of a family of bounded injective operators  $:L^2(\bR) \rightarrow L^2([z_{\rm min},z_{\rm max}] \times \bR)$ for which
+\begin{equation}
+  \label{eqn:ext}
+  S_p[c] = S[c] \circ E[c]
+\end{equation}
+This relation exhibits $S[c]$ as an {\em extension} of $S_p[c]$ as
+described by \cite{Symes:09}, and identifies WRI as an extended
+inversion method.
+
+The construction described in Appendix B requires that $z_s \in
+(z_{\rm min},z_{\rm max})$, as mentioned above.
+
+\section{Global Asymptotics of FWI}
+The FWI objective is well-known to exhibit non-convexity unless
+data frequency content is limited to a small range near 0 Hz, how
+small being determined by other scales and by the extent to which the
+initial wave velocity differs from the target.
+
+To understand the non-convexity phenomenon and the
+relation of the various scales, it is advantageous to introduce a
+family of source wavelets, depending on a parameter $\lambda$ playing
+the role of wavelength:
+\begin{equation}
+  \label{eqn:wfam}
+  \wl(t) = \frac{1}{\sqrt{\lambda}}w_1\left(\frac{t}{\lambda}\right).
+\end{equation}
+In the definition \ref{eqn:wfam}, the ``mother wavelet'' $w_1\in
+C_0^{\infty}(0,T)$, and the scaling is chosen so fhat
+$\|\wl\|_{L^2(\bR)}$ is independent of $\lambda>0$.
+
+Evidently there is no control of $c$ at all in the data if the time
+interval of the observation, namely $[0,T]$, is so short that no
+signal arrives within it. Accordingly, add to the other assumptions
+made so far
+the requirement that the transit time between source and receiver at
+the slowest permitted velocity is less than $T$:
+\begin{equation}
+  \label{eqn:time}
+  \frac{|z_s-z_r|}{c_{\rm min}} < T
+\end{equation}
+
+Choose a target wave velocity $c_* \in [c_{\rm min},c_{\rm
+  max}]$. Introduce a family of consisten data $\dl$, generated by
+$c_*$ and the wavelet family $\wl$:
+\begin{equation}
+  \label{eqn:dfam}
+  \dl = S_p[c_*]\wl
+\end{equation}
+and a corresponding family of FWI objectives:
+\[
+  J_{\rm FWI}[c,\dl,\wl] = \frac{1}{2}\|\dl-S_p[c]\wl\|^2
+\]
+\begin{equation}
+  \label{eqn:fwiexpl}
+  =
+  \int_0^T\,dt\,\left|\frac{1}{2c_*}\wl\left(t-\frac{z_s-z_r}{c_*}\right)
+    - \frac{1}{2c}\wl\left(t-\frac{z_s-z_r}{c}\right)\right|^2
+\end{equation}
+Note that $\mbox{supp }\wl \subset [0,\lambda T]$, so
+\begin{equation}
+  \label{eqn:wlsupps}
+  \mbox{supp }S_p[c]\wl \subset \left[\frac{z_s-z_r}{c},\lambda
+    T+\frac{z_s-z_r}{c}\right] \cap [0,T]
+\end{equation}
+The transit time condition \ref{eqn:time} implies that there exists
+$\lambda_*>0$ so that for $\lambda < \lambda_*$,
+\[
+  \lambda T+\frac{z_s-z_r}{c} < T
+\]
+for all admissible $c$. That is, 
+for $\lambda <\lambda_*$
+\begin{equation}
+  \label{eqn:constnorm}
+  \|S_p[c]\wl\|^2 = \frac{1}{4c^2}\int_{-\infty}^{\infty}\,dt\,\left|
+    \wl\left(t-\frac{z_s-z_r}{c}\right)\right|^2 =
+  \frac{\|w_1\|^2}{4c^2}.
+\end{equation}
+
+Recall that the object of this study is the global behaviour of
+objective functions for velocity estimation: in this context, that
+means the behaviour for $c$ far from $c_*$.  Pick $\delta c >0$ for
+which $[c_*-\delta c, c_* + \delta c] \subset [c_{\rm min},c_{\rm
+  max}]$, that is, that the set of admissible $c$ further than $\delta
+c$ from $c_*$ is non-void.
+
+Then there is $\lambda_{**}$ depending on $\delta c, T, and
+|z_s-z_r|$ so that if $|c-c_*|>\delta c$ and $\lambda<\lambda_{**}$, then
+\[
+  \left|\frac{|z_s-z_r|}{c}-\frac{|z_s-z_r|}{c_*}\right| > 2\lambda T,
+\]
+that is, the infima of the supports of $S_p[c]\wl, \dl=S_p[c_*]\wl$
+are further apart than the lengths of these supports. In that case,
+necessarily
+\[
+  \mbox{supp }S_p[c]\wl \cap \mbox{supp }S_p[c_*]\wl = \emptyset.
+\]
+Therefore $S_p[c]\wl$ and $S_p[c_*]\wl$ are orthogonal in $L^2[0,T]$,
+and
+\begin{equation}
+  \label{eqn:fwiscrewed}
+  J_{\rm FWI,\lambda}[c] =
+  \frac{1}{2}\left(\frac{1}{4c^2}+\frac{1}{4c_*^2}\right)\|w_1\|^2.
+\end{equation}
+Amongst other consequences, one immediately deduces from the
+expression \ref{eqn:fwiscrewed} the non-convexity result:
+
+\begin{theorem}
+  \label{thm:thm1}
+  There exists $C>0$, $\lambda_0$ so that for $\lambda <
+  \lambda_0$, the minimizer of $J_{\rm FWI, \lambda}[c]$ on the
+  complement of $[c_*-C\lambda, c_*+C\lambda]$ is $c=c_{\rm max}$.
+\end{theorem}
+
+That is, outside of a neighborhood of width proportional to a
+wavelength, minimization of $J_{\rm FWI}$ yields a local minimizer far from
+the target $c_*$ which generates the (noise-free) data.
+
+For this 1D problem, a happy 1D accident occurs: a descent
+minimization starting at $c_0 < c_*$ will at least initially proceed
+in the right direction. With sufficiently small steps, it is possible
+that an interation might land in the (small) domain of attraction
+around $c_*$. However neither this nor various other accidental
+advantages stemming from the very special form of this problem should
+be regarded as of any importance.
+ 
+\section{Wavefield Reconstruction Inversion}
+This section will describe Wavefield Reconstruction Inversion (WRI)
+and develop some of its formal algebraic properties. The notation
+$S[c]$ will represent a modeling operator based on wave dynamics of
+some sort, depending on a vector $c$ of material parameters. The
+conclusions developed here in fact apply to WRI in any such
+setting. These conclusions will be applied to 1D acoustics in the
+following section, with $c$ specialized to a scalar (wave velocity).
+
+In the application below, the target source $q$ will be a point source
+as in the previous section, however for the development of the basic
+properties of WRI, that is immaterial.
+
+Note that in general $\alpha$ is a dimensional parameter, having the
+same dimensions as $S$.
+
+\cite{LeeuwenHerrmannWRI:13} posed this problem slightly differently:
+instead of the first order acoustics system (equation \ref{eqn:awe1d}
+for the 1D case), they pose the wave dynamics in terms of the second
+order wave equation for the pressure wavefield $p$. From this
+viewpoint, $\partial(f-q) /\partial t$ is the residual, that is, the
+difference between the image $\partial f/\partial t$ of the 2nd order
+wave operator on $p$, and the assumed right-hand side
+$\partial q/\partial t$. So in this form, the second term penalizes
+the failure of $p$ to solve the wave equation with the assumed
+source. The formulation presented here is equivalent, and was
 introduced by \cite{WangYingst:SEG16}.
 
-\cite{LeeuwenHerrmann:16} used
-the variable projection method \cite[]{GolubPereyra:03}, eliminating the source $f$ in the
-inner step and updating the bulk modulus (or an equivalent quantity)
-in the outer step. That is, the problem \ref{eqn:defwri} is equivalent to minimization of
+\cite{LeeuwenHerrmann:16} used the variable projection method
+\cite[]{GolubPereyra:03}, eliminating the source $f$ in the inner step
+and updating the bulk modulus (or an equivalent quantity) in the outer
+step. That is, the problem \ref{eqn:defwri} is equivalent to
+minimization of
 \begin{equation}
 \label{eqn:defvpm}
-  J[\kappa] =
-  \mbox{min}_f \frac{1}{2}(\| d-S[\kappa]f\|^2+\alpha^2\|f-w_*\delta(\cdot-\bx_s)\|^2)
+  J_{\rm WRI}[c,d,q] =
+  \mbox{min}_f \frac{1}{2}(\| d-S[c]f\|^2+\alpha^2\|f-q\|^2)
 \end{equation}
-over $\kappa$. This is the approach that I shall pursue here.
+over $c$. This is the approach that I shall pursue here.
 
 In any penalty method, control of the penalty
 parameter has a large influence on the speed of
@@ -108,88 +408,172 @@ convergence. \cite{Aghamiry:19} use an augmented Lagrangian algorithm
 to minimize the influence of the penalty weight choice. Alternatively, one can use a version of the discrepancy principle to adjust $\alpha$ dynamically \cite[]{FuSymes2017discrepancy}, as the WRI problem has the necessary features described in that paper.
 
 ``Most'' source fields $f$ are non-radiating,
-that is, $S[\kappa]f=0$. The orthocomplement of the subspace of
+that is, $S[c]f=0$. The orthocomplement of the subspace of
 non-radiating sources is the range of the adjoint operator
-$S[\kappa]^T$. This observation suggest that the sources may be re-parametrized as images of
-$S[\kappa]^T$. Write $f = g + w_*\delta(\cdot-\bx_s)$: then the second term in
+$S[c]^T$. This observation suggest that the sources may be re-parametrized as images of
+$S[c]^T$. Write $f = g + q$: then the second term in
 the objective displayed in \ref{eqn:defwri} is simply $\|g\|^2$.
-Decompose $g = S[\kappa]^Te + n$, in
-which $e$ is the same type of object as $d$ and $S[\kappa]n=0$ (that
+Decompose $g = S[c]^Te + n$, in
+which $e$ is the same type of object as $d$ and $S[c]n=0$ (that
 is, $n$ is a non-radiating
 source), and note that the decomposition is orthogonal. Then
 \[
-  J[\kappa] =
-  \mbox{min}_{e,n} \frac{1}{2}(\| d-S[\kappa](S[\kappa]^Te+w_*\delta(\cdot-z_s))\|^2+\alpha^2(\|S[\kappa]^Te\|^2+\|n\|^2))
+  J_{\rm WRI}[c,d,q] =
+  \mbox{min}_{e,n} \frac{1}{2}(\| d-S[c](S[c]^Te+q)\|^2+\alpha^2(\|S[c]^Te\|^2+\|n\|^2))
   \]
 \begin{equation}
   \label{eqn:defvpmred}
-   \mbox{min}_{e} \frac{1}{2}(\|r-S[\kappa]S[\kappa]^Te\|^2+\alpha^2\|S[\kappa]^Te\|^2)
+   \mbox{min}_{e} \frac{1}{2}(\|r-S[c]S[c]^Te\|^2+\alpha^2\|S[c]^Te\|^2)
  \end{equation}
- in which $r[\kappa]=d-S[\kappa]w_*\delta(\cdot-z_s)$ is the data residual.
+ in which $r[c]=d-S[c]q$ is the data residual.
  
-This reformulation has some computational advantages \cite[]{WangYingst:SEG16,Herrmann:SEG19}, but also leads to a useful analytic transformation of the WRI problem. The minimizer on the RHS of equation \ref{eqn:defvpmred} is the solution $e=e_{\alpha}[\kappa]$ of the normal equation
+This reformulation has some computational advantages \cite[]{WangYingst:SEG16,Herrmann:SEG19}, but also leads to a useful analytic transformation of the WRI problem. The minimizer on the RHS of equation \ref{eqn:defvpmred} is the solution $e=e_{\alpha}[c]$ of the normal equation
 \[
- ( (S[\kappa]S[\kappa]^T)^2 + \alpha^2S[\kappa](S[\kappa]^T)e = S[\kappa]S[\kappa]^Tr[\kappa]
+ ( (S[c]S[c]^T)^2 + \alpha^2S[c](S[c]^T)e = S[c]S[c]^Tr[c]
 \]
 whence
 \[
-  S[\kappa]S[\kappa]^Te_{\alpha}[\kappa] = S[\kappa]S[\kappa]^T(S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
+  S[c]S[c]^Te_{\alpha}[c] = S[c]S[c]^T(S[c]S[c]^T+\alpha^2I)^{-1}r[c]
 \]
-Assume that $S[\kappa]S[\kappa]^T$ is invertible - this is in fact for the problem outlined in the introduction, as will be verified shortly. Then
+Assume that $S[c]S[c]^T$ is invertible - this is in fact for the problem outlined in the introduction, as will be verified shortly. Then
 \begin{equation}
   \label{eqn:norsol}
-  e_{\alpha}[\kappa]=(S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
+  e_{\alpha}[c]=(S[c]S[c]^T+\alpha^2I)^{-1}r[c]
 \end{equation}
 Consequently
 \[
-  J[\kappa] =
-  \frac{1}{2}(\|r[\kappa]-S[\kappa]S[\kappa]^Te_{\alpha}[\kappa]\|^2+\alpha^2\|S[\kappa]^Te_{\alpha}[\kappa]\|^2)
+  J_{\rm WRI}[c,d,q] =
+  \frac{1}{2}(\|r[c]-S[c]S[c]^Te_{\alpha}[c]\|^2+\alpha^2\|S[c]^Te_{\alpha}[c]\|^2)
 \]
 \[
-  = \frac{1}{2}(\|r[\kappa]-S[\kappa]S[\kappa]^T (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2+\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],
-  S[\kappa]S[\kappa]^T (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]
-  \rangle
+  = \frac{1}{2}\left(\|r[c]-S[c]S[c]^T
+    (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2 \right.
 \]
 \[
-  =\frac{1}{2}\left(\|\alpha^2 (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2
-  +\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],
-  -\alpha^2 (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\rangle\right.
+  \left.+\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],
+  S[c]S[c]^T (S[c]S[c]^T+\alpha^2I)^{-1}r[c]
+  \rangle\right)
 \]
 \[
-  + \left.\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],r[\kappa]\rangle\right)
+  =\frac{1}{2}\left(\|\alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2\right.
 \]
 \[
-  =  \frac{1}{2}\left(
-\langle (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa],r[\kappa]\rangle +
-\alpha^2(1-\alpha^2)\| (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}r[\kappa]\|^2\right) 
+  \left.
+  +\alpha^2\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],
+  -\alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\rangle\right.
 \]
 \[
-  =  \frac{1}{2}
-  \langle ((S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}+\alpha^2(1-\alpha^2)(S[\kappa]S[\kappa]^T+
-  \alpha^2I)^{-2})r[\kappa],r[\kappa]\rangle
+  + \left.\alpha^2\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle\right)
+\]
+\[
+  =  \frac{\alpha^2}{2}
+\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle 
 \]
 That is,
 \begin{equation}
   \label{eqn:defwrialt}
-  J[\kappa] = \frac{1}{2}\langle r[\kappa], W[\kappa] r[\kappa]\rangle
+  J_{\rm WRI}[c,d,q] = \frac{1}{2}\langle r[c], W_{\alpha}[c] r[c]\rangle
 \end{equation}
 with
 \begin{equation}
   \label{eqn:defwriwt}
-  W[\kappa] = (S[\kappa]S[\kappa]^T+\alpha^2I)^{-1}+\alpha^2(1-\alpha^2)(S[\kappa]S[\kappa]^T+
-  \alpha^2I)^{-2}.
+  W_{\alpha}[c] = \frac{\alpha^2}{2}(S[c]S[c]^T+\alpha^2I)^{-1}
 \end{equation}
-This remarkable identity shows that the WRI objective function is a {\em weighted norm of the data residual $r[\kappa]$}. Note that this conclusion depends only on the presumption that the operator $S[\kappa]S[\kappa]^T$ is invertible (or, more precisely, injective), a condition that will be verified below for the problem considered in this paper, and which holds in many other settings in which WRI has been advocated.
+This remarkable identity shows that the WRI objective function is a {\em weighted norm of the data residual $r[c]$}. Note that this conclusion depends only on the presumption that the operator $S[c]S[c]^T$ is invertible (or, more precisely, injective), a condition that will be verified below for the problem considered in this paper, and which holds in many other settings in which WRI has been advocated.
 
 \section{WRI for 1D Acoustics}
 The preceding section provides the necessary ingredients for an assessment of the relation between WRI and FWI. While the conclusion reached below applies to many wave propagation settings, the 1D acoustic setting is particularly simple and yet illustrates clearly the nature of this relation.
 
 The first task is to give an explicit expression for the operator $S[c]S[c]^T$ appearing repeatedly in the expression \ref{eqn:defwriwt}. From the definition \ref{eqn:defmodhom}, it follows immediatlely that 
 \begin{equation}
-  \label{eqn:stmodhompwtrans}
-S[c]^Te(z,t)=\frac{1}{2c}e\left(t +  \frac{|z_r-z|}{c}\right). 
+  \label{eqn:modhomtrans}
+S[c]^Te(z,t)=
+\left\{
+    \begin{array}{c}
+      \frac{1}{2c}e\left(t +  \frac{|z_r-z|}{c}\right), \,z_{\rm min} \le z \le z_{\rm max};\\
+      0, else.
+    \end{array}
+  \right.
 \end{equation}
 whence
+\[
+  S[c]S[c]^Te(t) = \frac{z_{\rm max}-z_{\rm min}}{4c^2}e(t),
+\]
+that is,
+\begin{equation}
+  \label{eqn:modhomnormal}
+  S[c]S[c]^T = \frac{z_{\rm max}-z_{\rm min}}{4c^2}I
+\end{equation}
+Thus the weight operator $W[c]$ appearing in \ref{eqn:defwrialt} takes
+the form
+\[
+  W_{\alpha}[c] = u(c) I,
+\]
+\begin{equation}
+  \label{eqn:wriwthom}
+u(c) = \frac{\alpha^2}{2}\left(\frac{z_{\rm max}-z_{\rm min}}{4c^2}+\alpha^2\right)^{-1}.
+\end{equation}
+
+Next, suppose that $q = w\delta(z-z_s)$, that is, the target source is
+a point source, so that $S[c]q = S_p[c]w$ in the notation used in
+the discussion of FWI. Thus \ref{eqn:defwrialt} can be re-written as
+\begin{equation}
+  \label{eqn:wriscrewed}
+  J_{\rm WRI}[c,d,q]=u[c]J_{\rm FWI}[c,d,w]
+\end{equation}
+
+Recall the wavelength-dependent family of problems introduced in the derivation and
+statement of Theorem \ref{thm:thm1}: target wave velocity $c_*$, wavelength parameter
+$\lambda$, parametrized family of wavelets $\wl$ and corresponding
+data $\dl$.
+
+Define
+\begin{equation}
+  \label{eqn:defbeta}
+\beta = \frac{z_{\rm max}-z_{\rm min}}{c_*^2} - 4 \alpha^2
+\end{equation}
+\begin{theorem}
+  \label{thm:thm2}
+  There exist $C>0$, $\lambda_0$ so that for $\lambda <
+  \lambda_0$, the minimizer of $J_{\rm WRI}[c,\dl,\wl \delta(\cdot-z_s)]$ on the
+  complement of $[c_*-C\lambda, c_*+C\lambda]$ is
+  \begin{itemize}
+  \item $c=c_{\rm max}$ if $\beta<0$;
+  \item $c=c_{\rm min}$ if $\beta>0$;
+  \item any $c < c_*-C\lambda$ or $>c_*+C\lambda$ if $\beta=0$.
+  \end{itemize}
+\end{theorem}
+\begin{proof}
+  From \ref{eqn:wriscrewed}, \ref{eqn:wriwthom}, and
+  \ref{eqn:fwiscrewed},
+  \[
+    J_{\rm WRI}[c,\dl,\wl\delta(\cdot-z_s)] =
+    \frac{\alpha^2}{2}\left(\frac{z_{\rm max}-z_{\rm
+          min}}{4c^2}+\alpha^2\right)^{-1}\frac{1}{2}\left(\frac{1}{4c^2}+\frac{1}{4c_*^2}\right)\|w_1\|^2
+  \]
+  \[
+    =
+    \frac{\alpha^2}{4}\frac{1+\frac{c^2}{c_*^2}}{z_{\rm 
+        max}-z_{\rm min}+4c^2\alpha^2}
+  \]
+  This linear fractional function of $c^2$ is increasing, decreasing,
+  or constant if $\beta>0, \beta<0$ or $\beta=0$, respectively.
+\end{proof}
+
+In other words, $J_{\rm WRI}$ has local minima far from the target
+velocity $c_*$, in the same way as does $J_{\rm FWI}$. One of the
+local minima will be the result of a local optimization almost surely,
+unless the initial estimate of $c$ is ``within a wavelength'' of the
+target velocity.
+
+\section{Discussion}
+
+(TBA)
+
+\section{Conclusion}
+
+(TBA)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \append{1D Radiation Problem}
@@ -255,241 +639,10 @@ p(z,t) &=& \frac{1}{2c_0}\int dz_1 f\left(z_1,t -
 v(z,t) &=& \frac{1}{2\kappa_0} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
 \end{eqnarray}
 
-\append{1D Born Approximation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\append{Equivalence of Force and Defect}
 
-The perturbational system for \ref{eqn:awe1d} is:
-\begin{eqnarray}
-\label{eqn:dawe1d}
-\frac{\partial \delta p}{\partial t} +\kappa\frac{\partial
-  \delta v}{\partial z} + \delta \kappa\frac{\partial
-  v}{\partial z} &=& 0 \nonumber\\
-\rho \frac{\partial \delta v}{\partial t} + \frac{\partial \delta p}{\partial
-  z}&=&0\nonumber\\
-\delta p,\delta v&=&0, t \ll 0.
-\end{eqnarray}
-
-If $\kappa=\kappa_0, \rho=\rho_0 $ are constant, it is possible to develop explicit
-expressions for the solution of this system. As before, only $\kappa$ will be
-subject to perturbation in any of the problems considered in this
-report, so assume that that $\delta\rho=0$.
-
-From \ref{eqn:sol1dv}
-\[
-  \frac{\partial v}{\partial z}(z,t) = \frac{1}{\kappa_0} f(z,t) 
-\]
-\begin{equation}
-  \label{eqn:sol1ddvdz}
- - \frac{1}{2\kappa_0c_0} \int\, dz_2\, \frac{\partial f}{\partial t}\left(z_2,t - \frac{|z-z_2|}{c_0}\right)
-\end{equation}
-Thus using equation \ref{eqn:sol1dp} and \ref{eqn:dawe1d}, 
-\[
-  \delta p(z,t) =- \frac{1}{2c_0} \int \, dz_1 \, \delta
-  \kappa(z_1)\frac{\partial v}{\partial z}\left(z_1,t - \frac{|z-z_1|}{c_0}\right)
-\]
-\[
-  =-\frac{1}{2\kappa_0c_0} \int \,dz_1\, \delta
-  \kappa(z_1) f \left(z_1,t - \frac{|z-z_1|}{c_0}\right)
-  \]
-\begin{equation}
-  \label{eqn:sol1ddp}
-  + \frac{1}{4\kappa_0c_0^2} \int\,dz_2 \, \int \,dz_1\,\delta 
-  \kappa(z_2) \frac{\partial f}{\partial t}\left(z_1,t - \frac{|z_1-z_2|+|z_2-z|}{c_0}\right)
-\end{equation}
-
-A convenient check on this calculation is available for constant
-$\delta \kappa = \delta \kappa_0$. Directly perturb the RHS of equation 
-\ref{eqn:sol1dp}, to obtain
-\[
-  \delta p(z,t) = -\frac{\delta c_0}{2 c_0^2} \int
-  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
-  +\frac{\delta c_0}{2c_0^3}\int
-  \,dz_1\,\frac{\partial f}{\partial
-    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
-\]
-Since
-\[
-  \delta c_0 = \delta \left(\frac{\kappa_0}{\rho_0}\right)^{1/2} =
-  \frac{1}{2} \left(\frac{\kappa_0}{\rho_0}\right)^{-1/2}\frac{\delta
-    \kappa_0}{\rho_0}
-\]
-\[
-  = \frac{1}{2}\frac{\delta \kappa \rho_0^{1/2}}{\kappa_0^{1/2}\rho_0}
-  \]
-\[
-=\frac{1}{2} \frac{\delta
-  \kappa_0}{\kappa_0}\left(\frac{\kappa_0}{\rho_0}\right)^{1/2}
-=\frac{1}{2} \frac{c_0\delta \kappa_0}{\kappa_0}
-\]
-the identity above can be rewritten as
-\[
-  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
-  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
-  \]
-\begin{equation}
-  \label{eqn:dpraw} 
-  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\int
-  \,dz_1\,\frac{\partial f}{\partial
-    t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
-\end{equation}
-The critical quantity is the integral in the second term:
-\[
-  \int \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{|z-z_1|}{c_0}\right)|z-z_1|
-\]
-\[
-  = \int_{-\infty}^z \,dz_1\,\frac{\partial f}{\partial
-    t}\left(z_1,t-\frac{z-z_1}{c_0}\right)(z-z_1)
-\]
-\[
-   + \int^{\infty}_z \,dz_1\,\frac{\partial f}{\partial t}\left(z_1,t-\frac{z_1-z}{c_0}\right)(z_1-z)
- \]
- \[
-   =\int_{-\infty}^z \,dz_1\,\int_{z_1}^{z} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{z-z_2+z_2-z_1}{c_0}\right)
- \]
- \[
-   + \int^{\infty}_z \,dz_1\,\int_{z}^{z_1}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z_2-z}{c_0}\right)
- \]
- Checking signs, one sees that this sum is equal to
- \[
-   =\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   + \int^{\infty}_z \,dz_1\,\int_{-\infty}^{\infty}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
- \]
- \[
-   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
-\[
-   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{|z_1-z_2| + |z_2-z|}{c_0}\right)
- \]
-\[
-   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{z-z_2+z_1-z_2}{c_0}\right)
- \]
-\[
-   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{z_2-z+z_2-z_1|}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{z_1-z_2 + z-z_2}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{z_2-z_1 + z_2-z}{c_0}\right)
- \]
-\[
-   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   -\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
- \]
-\[
-   -\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
- \]
- \[
-   - \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
-     f}{\partial t}\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
- \]
-\[
-   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{-\infty}^{z_1} \,dz_2\, \frac{\partial }{\partial
-     z_2}f\left(z_1,t-\frac{z+z_1-2z_2}{c_0}\right)
- \]
-\[
-   +\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,\int_{z}^{\infty} \,dz_2\, \frac{\partial}{\partial
-     z_2}f\left(z_1,t-\frac{2z_2-z-z_1}{c_0}\right)
- \]
- \[
-   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,\int_{-\infty}^{z}\,dz_2\,\frac{\partial
-     }{\partial z_2}f\left(z_1,t-\frac{z_1+ z-2z_2}{c_0}\right)
- \]
- \[
-   +\frac{c_0}{2} \int^{\infty}_z \,dz_1\,\int_{z_1}^{\infty}\,dz_2\,\frac{\partial
-     }{\partial z_2}f\left(z_1,t-\frac{2z_2-z_1-z}{c_0}\right)
- \]
-\[
-   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\, f\left(z_1,t-\frac{z-z_1}{c_0}\right)
-   -\frac{c_0}{2}\int_{-\infty}^z \,dz_1\,f\left(z_1,t-\frac{z-z_1}{c_0}\right)
- \]
- \[
-   - \frac{c_0}{2}\int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
-   -\frac{c_0}{2} \int^{\infty}_z \,dz_1\,f\left(z_1,t-\frac{z_1-z}{c_0}\right)
- \]
- \[
-   =\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-     t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
- \]
- \[
-   -c_0\int_{-\infty}^{\infty} \,dz_1\, f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
- \]
- Insert the identity just established in the second term on the RHS of
- \ref{eqn:dpraw}:
- \[
-  \delta p(z,t) = -\frac{\delta \kappa_0}{4 \kappa_0 c_0} \int
-  \,dz_1\,f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
-\]
-\[
-  +\frac{\delta \kappa_0}{4\kappa_0c_0^2}\left(\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right) \right.
-\]
-\[
-  \left. -c_0\int_{-\infty}^{\infty} \,dz_1\,
-    f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)\right)
-\]
-\[
-=-\frac{\delta \kappa_0}{2\kappa_0c_0}\int_{-\infty}^{\infty} \,dz_1\,
-f\left(z_1,t-\frac{|z-z_1|}{c_0}\right)
-\]
-\begin{equation}
-  \label{eqn:dpraw}
-+  \frac{\delta \kappa_0}{4\kappa_0c_0^2}\int_{-\infty}^{\infty} \,dz_1\,\int_{-\infty}^{\infty} \,dz_2\, \frac{\partial f}{\partial
-      t}\left(z_1,t-\frac{|z-z_2|+|z_2-z_1|}{c_0}\right)
-  \end{equation}
-which is identical to the expression \ref{eqn:sol1ddp} for the case of constant
-$\delta \kappa = \delta \kappa_0$.
-
-An important special case of the identity \ref{eqn:sol1ddp} is the 1D point source,
-$f(z,t)=w(t)\delta(z-z_s)$: then
-\[
-  \delta p(z,t) = -\frac{\delta \kappa(z_s)}{2\kappa_0c_0}w\left(t - \frac{|z-z_s|}{c_0}\right)
-\]
-\begin{equation}
-  \label{eqn:sol1ddppw}
-  +\frac{1}{4\kappa_0c_0^2} \int \,dz_1\,\delta 
-  \kappa(z_1) \frac{\partial w}{\partial t}\left(t - \frac{|z_s-z_1|+|z_1-z|}{c_0}\right)
-\end{equation}
+(TBA)
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
