@@ -3,7 +3,7 @@ from rsf.tex import *
 End(
 #lclass='segabs',
 lclass='georeport',
-use='amsmath,setspace,wasysym,graphicx',
+use='amsmath,amssymb,amsthm,amscd,setspace,wasysym,graphicx',
 
 include=r'''
 \newcommand{\mb}{\mathbf}
@@ -22,11 +22,13 @@ include=r'''
 \newcommand{\tk}{\tilde{\kappa}}
 \newcommand{\tA}{\tilde{A}}
 \newcommand{\wl}{w_{\lambda}}
+\newcommand{\dl}{d_{\lambda}}
 \newcommand{\tdl}{\tilde{d}_{\lambda}}
 \newcommand{\tul}{\tilde{u}_{\lambda}}
 \newcommand{\bR}{\mathbf{R}}
 \newcommand{\cF}{{\cal F}}
 \newtheorem{exmp}{Example}
+\newtheorem{theorem}{Theorem}
 ''',
 color='ALL'
 )
