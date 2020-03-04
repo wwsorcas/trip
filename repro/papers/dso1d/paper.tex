@@ -1,4 +1,4 @@
-\title{Why it works}
+\title{Full Waveform Inversion by Source Extension: Why it works}
 \author{William. W. Symes \thanks{The Rice Inversion Project,
 Department of Computational and Applied Mathematics, Rice University,
 Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
@@ -13,24 +13,214 @@ An extremely simple example shows how extended modeling plus variable projection
 \end{abstract}
 
 \section{Introduction}
-Many of the extension concepts introduced to combat cycle-skipping in FWI sound good, and appear to work at least to some extent as one might hope from their heuristic justifications. However very few of these approaches have been assured of success via mathematical argument: in essence, they are mostly justified only ``in the rear-view mirror'', with no assurance that failure is not just around the corner, at the next example. On top of that, some of these approaches, for example those based on the computationally attractive Variable Projection Method (``VPM'') of \cite{GolubPereyra:03} have attributes such as gradient formulae cast in such form that the reasons for success are not readily apparent.
+Full Waveform Inversion (FWI) is now well-established as
+a useful tool for probing the earth's subsurface
+\cite[]{VirieuxOperto:09,Fichtner:10}, but its use is still
+impeded by so-called ``cycle-skipping''. Because the computational
+size of field inversion tasks is very large, only iterative local (descent)
+minimization of the data misfit function is computationally
+feasible. However such local descent methods tend to stagnate as
+suboptimal and geologically uninformative earth models, unless initial
+models are already quite close to optimal, in the sense of predicting
+the arrival times of seismic events to within a small multiple of a
+dominant wavelenght \cite[]{GauTarVir:86,Plessix:10}.
 
-This note shows exactly how VPM leads to successful velocity updates for a particular extension of a very simple inverse problem, which asks that a homogeneous velocity model be deduced from one trace at known offset. I put this computation forward not because there are not simpler ways of answering the question it poses - there certainly are - but because the formal ingredients of waveform-based velocity estimation in this very simple setting are common to many similar extended inversion algorithms, and because in this case every computation can be done analytically, nearly to completion. In particular, it becomes clear why the VPM gradient formula produces a constructive update, despite not incorporating explicitly the extension measure (``annihilator'') central to the approach.
+This paper concerns one of the many ideas that have been advanced to
+overcome cycle-skipping, namely so-called extended inversion
+\cite[]{geoprosp:2008}. ``Extended'' signifies that addional degrees
+of freedom are provided to the modeling process, in the hope of
+opening up more effective routes to geologically informative models
+with acceptable data fit. Since these extended degrees of freedom are
+not part of the basic physics chosen to model the data acquisition
+process, they should be suppressed in the eventual solution. Extended
+inversion methods differ by the choice of additional degrees of
+freedom, and by choice of penalty applied to eliminate them in the final
+result.
 
-\section{Theory}
-Suppose that a single trace is recorded, at distance $r$ from a source, and both source and receiver locations far enough from physical boundaries that the recorded wave has effectively propagated in free space. 
+Many of these extension concepts sound
+plausible, and appear to work at least to some extent as one might
+hope from their heuristic justifications. However very few of these
+approaches have been underwritten by mathematical argument: in
+essence, they are mostly justified only ``in the rear-view mirror'',
+with no assurance that failure is not just around the corner, at the
+next example. On top of that, some of these approaches, for example
+those based on the computationally attractive Variable Projection
+Method (``VPM'') of \cite{GolubPereyra:03}, are cast in such form that the reasons for success are
+not readily apparent.
 
-Assume acoustic propagation, constant density, and isotropic point source and receiver. With a single trace, at best the average velocity in a region between source and receiver can be estimated, so assume that the velocity is constant. Then the modeling operator depends on $v$ and maps the source pulse $f$ to the predicted trace $S[v]f$ by
+This note shows exactly how VPM leads to successful velocity updates
+for a particular extended inversion approach to a very simple inverse
+problem, which asks that a homogeneous velocity field be deduced from
+one trace at known offset. I put forward this inverse problem and
+extension-based solution not because there are not simpler
+ways of answering the question it poses - there certainly are - but
+because the formal ingredients of waveform-based velocity estimation
+in this very simple setting are common to many similar extended
+inversion algorithms, and because in this case every computation can
+be done analytically, nearly to completion. In particular, it becomes
+clear why the VPM gradient formula produces a constructive update,
+with no possibility of stagnation at local minimizers.
+
+The extended inversion approach
+developed here uses a {\em source extension}, in which source
+parameters form the additional degrees of freedom. This type of
+extension presumes that the actual or target source is constrained in
+some way; the extended source is allowed to violate the
+constraint. For the problem considered here, the source model reduces
+to a wavelet, and the target wavelet is assumed to be non-zero only in
+a short time
+interval (an approximate impulse). The extension consists in permitting energy to spread
+in time at intermediate iterations of the inversion. A simple penalty
+for energy spread (second moment of square amplitude) drives the
+extended source towards a focused source satisfying the assumed
+constraint. Not all penalties are created equal: the penalty used here
+has a critical {\em (pseudo-)differential} attribute necessary for avoidance of cycle-skipping.
+
+%despite not incorporating explicitly the extension measure
+%(``annihilator'') central to the approach.
+
+I begin with a quick sketch of constant density acoustics,
+and describe the single-trace transmission inverse problem. To make
+the role of data frequency content clear, I introduce a family of
+noise-free data parametrized by wavelength. For completeness, I show how
+the standard FWI approach to this problem generates multiple local
+minima that will be found by any descent method unless the initial
+estimate predicts travel time from source to receiver with an error
+on the order of a wavelength. The next section describes the source
+extension objective, and the reduced objective
+produced by VPM. As VPM eliminates the extended source, this
+function depends only on the velocity, just as does the FWI objective.  A
+nearly-explicit calculation of the VPM gradient 
+shows that the only stationary points are ``within a wavelength'' of
+the correct velocity, used to build the data: that is, cycle-skipping
+cannot occur. The paper ends with a discussion of the parallels
+between the calculations presented here and the structure of other
+extended inversion methods applicable to field-scale velocity
+estimation, and the critical role that the differential nature of the
+extension penalty plays in the success of this and other extension methods.
+
+\section{Preliminaries}
+Assume small amplitude (linearized) acoustic propagation, constant
+density, and isotropic point source and receiver. Denote by $m(\bx)$
+the slowness (reciprocal velocity) at spatial position $\bx$, $f(t)$
+the time dependence of the point source (``wavelet'') at location
+$\bx=\bx_s$. Then the (excess) pressure field $p(\bx,t)$ obeys a
+scalar wave equation:
+\begin{eqnarray}
+  \label{eqn:awe}
+  \left(m(\bx)^2\frac{\partial^2 p}{\partial t^2} - \nabla^2\right) p(\bx,t) &=&
+                                                                         f(t)\delta(\bx-\bx_s) \nonumber\\
+  p(\bx,t)&=&0, t\ll 0
+\end{eqnarray}
+Suppose that a single trace is recorded, at distance $r>0$ from the
+source position $\bx_s$. The dominant information in a single
+trace is the transient signal time of arrival, constraining only the mean slowness in the
+region
+between source and receiver, so assume that the
+slowness is constant, that is, independent of position $\bx$. The pressure field is simply the  the source
+wavelet $f(t)$ convolved with the
+acoustic Green's function, for which an analytic expression is
+available in the constant $m$ case \cite[]{CourHil:62}:
+\begin{equation}
+  \label{eqn:homsol}
+  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}f\left(t-m|\bx-\bx_s|\right).
+\end{equation}
+
+The receiver location $\bx_r$ lies at distance $r$ from the source
+location $\bx_s$, that is, $|\bx_r-\bx_s|=r$. The predicted signal at
+$p(\bx_r,t)$ depends nonlinearly on the slowness $m$ and linearly on the
+source wavelet $f$. Therefore it is naturally represented as the
+action of a $m$-dependent linear operator $S[m]$ on $f$:
 \begin{equation}
 \label{eqn:mod}
-S[v]f (t)= \frac{1}{4\pi r}f\left(t-\frac{r}{v}\right).
+S[m]f (t)= p(\bx_r,t) = \frac{1}{4\pi r}f\left(t-mr\right).
 \end{equation}
-Ignoring amplitude, this map implements a $v$-dependent time shift, which is everyone's favorite example to show why FWI cycle-skips and get stuck.
 
-An obvious extended model for this example is $\{v,f\}$, that is, pairs of velocity and source wavelet, with the extended modeling operator already defined by equation \ref{eqn:mod}. With an annihilator $A$, to be chosen below, the penalty form of extended inversion is: minimize over $\{v,f\}$
+Ignoring amplitude, this map implements a $m$-dependent time
+shift. This time shift operator is the basis of many descriptions of
+the cycle-skipping phenomenon (for example, \cite{VirieuxOperto:09},
+Figure 7), so it is unsurprising that an analysis of cycle-skipping
+can be based on the simple modeling operator described above, which
+amounts essentially to a time shift. To make the link with wavelet
+frequency content manifest, I introduce a family $\{\fl\}$ of
+wavelets parametrized by a nondimensional wavelength $\lambda$,
+\begin{equation}
+  \label{eqn:deffl}
+  \fl(t) = \frac{1}{\lambda}f_1\left(\frac{t}{\lambda}\right).
+\end{equation}
+The ``mother wavelet'' $f_1$ vanishes for $t>1$, and has positive
+mean-square. No other constraints need be placed on $f_1$. Note that
+the scaling is such that the mean-square
+\[
+  \|\fl\|^2 = \int\,dt\,|\fl(t)|^2
+\]
+is independent of $\lambda$.
+
+Note that in relations such as ``$t>1$'' a time unit is implicit in
+the right-hand side.
+
+To this family of wavelets and a choice of target slowness $m_*$  corresponds a family of noise-free data
+\begin{equation}
+  \label{eqn:defdata}
+  \dl=S[m_*]\fl.
+\end{equation}
+This family of data in turn defines a family of inverse problems, to
+which I now turn.
+
+\section{Full Waveform Inversion}
+The preceding section provided all of the raw ingredients to define
+full waveform inversion for estimation of $m$ from a single trace.
+It is only $m$ that is to be determined: the $\lambda-$dependent family of wavelets
+$\{\fl\}$ is regarded as known, along with the data family $\{\dl\}$. The aim
+is to chose $m$ to minimize 
+\begin{equation}
+  \label{eqn:FWIfix}
+  J_{\rm fix}[m] = \frac{1}{2}\|S[m]\fl-\dl\|^2.
+\end{equation}
+for all values of $\lambda > 0$.
+
+Written out in detail, this objective function is
+\[
+ J_{\rm fix}[m] =  \frac{1}{32\pi^2
+    r^2}\int\,dt\,\left|\fl\left(t-mr\right)-\fl\left(t-m_*r\right)\right|^2
+\]
+Since $f_1$ vanishes for $|t|>1$, $\fl$ vanishes for $|t|>\lambda$,
+and $S[m]\fl$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
+= |m-m_*|r > 2\lambda$, then $|t-mr|+|t-m_*r| \ge |mr-m_*r| >
+2\lambda$ so either $|t-mr|>\lambda$ or $|t-m_*r|>\lambda$, that is,
+either $S[m]\fl(t)=0$ or $S[m_*]\fl(t)=0$. Therefore $S[m]\fl$ and
+$S[m_*]\fl$ are orthogonal in the sense of the $L^2$ inner product:
+\begin{equation}
+  \label{eqn:ortho}
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \langle S[m]\fl,
+  S[m_*]\fl\rangle = \int\,dt\,S[m]\fl(t)S[m_*]\fl(t) = 0
+\end{equation}
+But $\dl = S[m_*]\fl$, so this is the same as saying that $\dl$ is
+orthogonal to $S[m]\fl$. So conclude that
+\begin{equation}
+  \label{eqn:iso}
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, J_{\rm fix}[m]=\frac{1}{16\pi^2
+    r^2}\|f_1\|^2.
+\end{equation}
+using the previously observed independence of $\|\fl\|$ from
+$\lambda$.
+
+That is, for slowness $m$ in error by more than $\lambda/r$ from the
+target slowness $m_*$, the FWI objective \ref{eqn:FWIfix} is perfectly
+flat: all nearby values of $m$ are local minima. Therefore the local
+exploration of the objective
+gives no useful information whatever about constructive search
+directions towards the global minimizer $m=m_*$, for which the
+objective value is of course = 0, if the initial estimate of $m$ in
+error by an amount greater than a fixed multiple of $\lambda$. This is
+precisely the behaviour of FWI noted many times in the literature: the
+model must be known to ``within a wavelength''. 
+
+\section{Source Extension Inversion}
+An obvious extended model for this example is $\{m,f\}$, that is, pairs of velocity and source wavelet, with the extended modeling operator already defined by equation \ref{eqn:mod}. With an annihilator $A$, to be chosen below, the penalty form of extended inversion is: minimize over $\{v,f\}$
 \begin{equation}
 \label{eqn:obj}
-J[v,f] = \frac{1}{2}(\|S[v]f-d\|^2 + \alpha^2 \|Af\|^2).
+J[v,f] = \frac{1}{2}(\|S[m]f-d\|^2 + \alpha^2 \|Af\|^2).
 \end{equation}
 VPM \cite[]{GolubPereyra:03} takes advantage of $J$ being quadratic in $f$ to solve for $f$ given $v$, thus producing a reducted objective of $v$ alone:
 \begin{equation}
@@ -38,20 +228,20 @@ VPM \cite[]{GolubPereyra:03} takes advantage of $J$ being quadratic in $f$ to so
 J_{\rm red}[v] = \min_f J[v,f] = J[v,f[v]],
 \end{equation}
 where $f[v]$ is the minimizer of $J$ over $f$ for given $v$.
-For this example, $J_{\rm red}$ is simple to compute. First observe that apart from amplitude, $S[v]$ is unitary:
+For this example, $J_{\rm red}$ is simple to compute. First observe that apart from amplitude, $S[m]$ is unitary:
 \begin{equation}
 \label{eqn:tran}
-S[v]^T g (t) = \frac{1}{4\pi r}g\left(t+\frac{r}{v}\right)
+S[m]^T g (t) = \frac{1}{4\pi r}g\left(t+\frac{r}{v}\right)
 \end{equation}
 so
 \begin{equation}
 \label{eqn:unit}
-S[v]^TS[v] f (t) = \frac{1}{(4\pi r)^2} f(t).
+S[m]^TS[m] f (t) = \frac{1}{(4\pi r)^2} f(t).
 \end{equation}
 Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:red} is
 \begin{equation}
 \label{eqn:norm1}
-\left(\frac{1}{(4\pi r)^2} I + \alpha^2 A^TA\right)f = S[v]^Td.
+\left(\frac{1}{(4\pi r)^2} I + \alpha^2 A^TA\right)f = S[m]^Td.
 \end{equation}
 
 At this point I have to come clean about the actual choice of $A$. As usual with source extensions, the proper annihilator depends on modeling assumptions, not fundamental physics. Assume that signature decon has been applied and the target source $f_*$ is a zero-phase bandpass filter, reasonably well focused at time $t=0$. Since there is no spatial structure to exploit in this hyper-simple problem, we construct $A$ to penalize energy away from $t=0$:
@@ -77,17 +267,17 @@ f[v](t) = \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2\right)^{-1}\frac{1}{(4\pi r)
 so the residual is, after a little algebra,
 \begin{equation}
 \label{eqn:resid}
-(S[v]f[v]-d)(t) =\frac{1}{4\pi r}[ (1+(4\pi r)^2 \alpha^2 (t-r/v)^2)^{-1} - 1]f_*(t-r/v_*)
+(S[m]f[v]-d)(t) =\frac{1}{4\pi r}[ (1+(4\pi r)^2 \alpha^2 (t-r/v)^2)^{-1} - 1]f_*(t-r/v_*)
 \end{equation}
 The gradient of $J_{\rm red}$ is given by the famous VPM formula (well-known to those who know it well):
 \begin{equation}
 \label{eqn:grad}
-\nabla J[v] = (DS[v]f[v])^*(S[v]f[v]-d)
+\nabla J[v] = (DS[m]f[v])^*(S[m]f[v]-d)
 \end{equation}.
-In this formula, $DS[v]$ is the derivative with respect to $v$ - since we can make explicit use of the Green's function, easy to see that
+In this formula, $DS[m]$ is the derivative with respect to $v$ - since we can make explicit use of the Green's function, easy to see that
 \begin{equation}
 \label{eqn:deriv}
-(DS[v]\delta v)f (t) = \frac{\delta v}{4\pi v^2}\frac{df}{dt}(t-r/v) = S[v](Q[v]\delta v)f (t),
+(DS[m]\delta v)f (t) = \frac{\delta v}{4\pi v^2}\frac{df}{dt}(t-r/v) = S[m](Q[v]\delta v)f (t),
 \end{equation}
 where 
 \begin{equation}
@@ -95,22 +285,23 @@ where
 (Q[v]\delta v)f = \frac{r \delta v}{v^2} \frac{df}{dt}.
 \end{equation}
 That is, $Q[v]\delta v$ is a skew-adjoint operator depending linearly on $\delta v$ - more on this below.
-The adjoint $(DS[v]f)^*$ is the adjoint of the map from model space to data space:
+The adjoint $(DS[m]f)^*$ is the adjoint of the map from model space to data space:
 \[
-(DS[v]f): \delta v \mapsto (DS[v]\delta v)f
+(DS[m]f): \delta v \mapsto (DS[m]\delta v)f
 \]
-and is NOT the same as the adjoint denoted by $S[v]^T$, which is the data-space-to-data-space adjoint (got that?).
+and is NOT the same as the adjoint denoted by $S[m]^T$, which is the data-space-to-data-space adjoint (got that?).
 That is, this adjoint make this relation true, for all $\delta v,f,$ and $d$:
 \begin{equation}
 \label{eqn:vadj}
-\delta v \cdot (DS[v]f)^*d = \int \,dt\,[(DS[v]\delta v)f] (t) d(t) 
+\delta v \cdot (DS[m]f)^*d = \int \,dt\,[(DS[m]\delta v)f] (t) d(t) 
 \end{equation}
 On the left side is the dot product in model space - since model space is just 1D in this example, that's just the numerical product. On the right is the dot product in data space, in the idealized continuum limit. Using equations \ref{eqn:deriv}, \ref{eqn:defq} and \ref{eqn:vadj},
 \[
-\delta v \cdot \nabla J[v] =  \int \,dt\,[(DS[v]\delta v)f[v]] (t) (S[v]f[v]-d)(t)
+\delta v \cdot \nabla J[v] =  \int \,dt\,[(DS[m]\delta v)f[v]] (t) (S[m]f[v]-d)(t)
 \]
 \[
-= \int \,dt\, [S[v](Q[v]\delta v)f[v](t)] (S[v]f[v]-d)(t) = \int \,dt\,(Q[v]\delta v)f[v](t) S[v]^T(S[v]f[v]-d)(t)
+= \int \,dt\, [S[m](Q[v]\delta v)f[v](t)] (S[m]f[v]-d)(t) = \int
+\,dt\,(Q[v]\delta v)f[v](t) S[m]^T(S[m]  f[v]-d)(t)
 \]
 Now invoke the normal equation \ref{eqn:norm1}: and replace the last factor:
 \begin{equation}
