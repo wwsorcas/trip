@@ -153,7 +153,7 @@ behaves in a manner qualitatively indistinguishable from FWI. In
 particular, its ability to allow good fit to data for small $\alpha$
 does not safeguard it from failure to converge globally to a ``good''
 local minimum. In fact, the $\alpha \rightarrow 0$ limit of the WRI
-objective is well-defined (after scaling by $1/alpha^2$ and also behaves in
+objective is well-defined (after scaling by $1/\alpha^2$) and also behaves in
 qualitatively the same way as the FWI objective. So the apparent
 ability to maintain better data fit via reduction of $\alpha$ does not
 lead to global behaviour asymptotically more amenable to local optimization.
@@ -369,7 +369,7 @@ Therefore $S_p[c]\wl$ and $S_p[c_*]\wl$ are orthogonal in $L^2[0,T]$,
 and
 \begin{equation}
   \label{eqn:fwiscrewed}
-  J_{\rm FWI,\lambda}[c] =
+   J_{\rm FWI}[c,\dl,\wl]  =
   \frac{1}{2}\left(\frac{1}{4c^2}+\frac{1}{4c_*^2}\right)\|w_1\|^2.
 \end{equation}
 Amongst other consequences, one immediately deduces from the
@@ -883,7 +883,7 @@ v(z,t) &=& \frac{1}{2\rho c^2} \int dz_1 \mbox{sgn} (z-z_1) f\left(z_1,t - \frac
 
 As noted in the text, the point source $w(t)\delta(z-z_s)$ is not a
 member of the domain of the simulation operator $S[c]$, as it is not
-square-integrable. The object of this appendix is to construct a square-integral right-hand side in the
+square-integrable. The object of this appendix is to construct a square-integrable right-hand side in the
 system \ref{eqn:awe1d} for which the pressure field $p$
 is the same as that of the weak solution to the point source problem \ref{eqn:awe1dptsrc}
 constructed in the last section, near the receiver point $z=z_r$, and
