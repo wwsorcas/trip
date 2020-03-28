@@ -9,23 +9,43 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
 
 \maketitle
 \begin{abstract}
-An extremely simple example shows how extended modeling plus variable projection plus a suitable annihilator lead to constructive velocity updates.
+  An extremely simple single-trace transmission example shows how an
+  extended source formulation of full waveform inversion can produce
+  an optimization problem without spurious local minima (``cycle
+  skipping''). The data consist of a single trace recorded at a given
+  distance from a point source. The velocity or slowness is presumed
+  homogeneous, and the target source wavelet is presumed
+  quasi-impulsive or focused at zero time lag. The source is extended
+  by permitting energy to spread in time, and the spread is controlled
+  by adding a weighted mean square of the extended source wavelet to
+  the data misfit, to produce the extended inversion objective. The
+  objective function and its gradient can be computed explicitly, and
+  it is easily seen that all local minimizers must be within a
+  wavelength of the correct slowness. The derivation shows several
+  important features of all similar extended source algorithms. For
+  example, nested optimization, with the source estimation in the
+  inner optimization (variable projection method), is essential. The
+  choice of the weight operator, controlling the extended source
+  degrees of freedom, is critical: the choice presented here is a
+  differential operator, and that property is crucial for production
+  of an objective immune from cycle-skipping.
 \end{abstract}
 
 \section{Introduction}
-Full Waveform Inversion (FWI) is now well-established as
-a useful tool for probing the earth's subsurface
-\cite[]{VirieuxOperto:09,Fichtner:10}, but its use is still
-impeded by so-called ``cycle-skipping''. Because the computational
-size of field inversion tasks is very large, only iterative local (descent)
-minimization of the data misfit function is computationally
-feasible. However such local descent methods tend to stagnate as
-suboptimal and geologically uninformative earth models, unless initial
-models are already quite close to optimal, in the sense of predicting
-the arrival times of seismic events to within a small multiple of a
-dominant wavelenght \cite[]{GauTarVir:86,Plessix:10}.
+Full Waveform Inversion (FWI), or estimation of earth structure by
+model-driven least squares data fitting, is now well-established as a
+useful tool for probing the earth's subsurface
+\cite[]{VirieuxOperto:09,Fichtner:10}. However, so-called ``cycle-skipping'', the tendency of iterative FWI
+algorithms to stagnate at suboptimal and geologically uninformative
+earth models, still impedes its use. Because the computational size of field inversion tasks
+is very large, only iterative local (descent) minimization of the data
+misfit function is computationally feasible. However local
+descent methods avoid suboptimal stagnation only if initial models are
+already quite close to optimal, in the sense of predicting the arrival
+times of seismic events to within a small multiple of a dominant
+wavelength \cite[]{GauTarVir:86,Plessix:10}.
 
-This paper concerns one of the many ideas that have been advanced to
+This paper concerns one of the several ideas that have been advanced to
 overcome cycle-skipping, namely so-called extended inversion
 \cite[]{geoprosp:2008}. ``Extended'' signifies that addional degrees
 of freedom are provided to the modeling process, in the hope of
@@ -37,16 +57,16 @@ inversion methods differ by the choice of additional degrees of
 freedom, and by choice of penalty applied to eliminate them in the final
 result.
 
-Many of these extension concepts sound
-plausible, and appear to work at least to some extent as one might
-hope from their heuristic justifications. However very few of these
-approaches have been underwritten by mathematical argument: in
-essence, they are mostly justified only ``in the rear-view mirror'',
-with no assurance that failure is not just around the corner, at the
-next example. On top of that, some of these approaches, for example
-those based on the computationally attractive Variable Projection
-Method (``VPM'') of \cite{GolubPereyra:03}, are cast in such form that the reasons for success are
-not readily apparent.
+Many of these extended inversion concepts sound plausible, and appear
+to work at least to some extent as one might hope from their heuristic
+justifications. However very few of these approaches have been
+underwritten by mathematical argument: in essence, they are mostly
+justified only ``in the rear-view mirror'', with no assurance that
+failure is not just around the corner, at the next example. On top of
+that, some of these approaches, for example those based on the
+computationally attractive Variable Projection Method (``VPM'') of
+\cite{GolubPereyra:03}, are cast in such form that the reasons for
+success are not readily apparent.
 
 This note shows exactly how VPM leads to successful velocity updates
 for a particular extended inversion approach to a very simple inverse
@@ -59,22 +79,29 @@ in this very simple setting are common to many similar extended
 inversion algorithms, and because in this case every computation can
 be done analytically, nearly to completion. In particular, it becomes
 clear why the VPM gradient formula produces a constructive update,
-with no possibility of stagnation at local minimizers.
+with no possibility of stagnation away from the global minimum.
 
 The extended inversion approach
 developed here uses a {\em source extension}, in which source
 parameters form the additional degrees of freedom. This type of
 extension presumes that the actual or target source is constrained in
 some way; the extended source is allowed to violate the
-constraint. For the problem considered here, the source model reduces
+constraint. For recent overview of source extension methods, see
+\cite{HuangNammourSymesDollizal:SEG19}. Source
+extension methods have computational complexity approximately the same
+as that of FWI, a signal advantage over the alterantive medium
+extension class described for instance in \cite[]{geoprosp:2008}.
+
+For the problem considered here, the source model amounts 
 to a wavelet, and the target wavelet is assumed to be non-zero only in
 a short time
-interval (an approximate impulse). The extension consists in permitting energy to spread
+interval (an approximate impulse, perhaps as the result of signature deconvolution). The extension consists in permitting energy to spread
 in time at intermediate iterations of the inversion. A simple penalty
 for energy spread (second moment of square amplitude) drives the
-extended source towards a focused source satisfying the assumed
+extended source towards a focused source approximately satisfying the assumed
 constraint. Not all penalties are created equal: the penalty used here
-has a critical {\em (pseudo-)differential} attribute necessary for avoidance of cycle-skipping.
+has the critical {\em (pseudo-)differential} attribute necessary for
+avoidance of cycle-skipping, as will be explained in the Discussion section.
 
 %despite not incorporating explicitly the extension measure
 %(``annihilator'') central to the approach.
@@ -143,21 +170,24 @@ Figure 7), so it is unsurprising that an analysis of cycle-skipping
 can be based on the simple modeling operator described above, which
 amounts essentially to a time shift. To make the link with wavelet
 frequency content manifest, I introduce a family $\{\fl\}$ of
-wavelets parametrized by a nondimensional wavelength $\lambda$,
+wavelets indexed by $\lambda$, a parameter having dimensions of time,
 \begin{equation}
   \label{eqn:deffl}
   \fl(t) = \frac{1}{\lambda}f_1\left(\frac{t}{\lambda}\right).
 \end{equation}
-The ``mother wavelet'' $f_1$ vanishes for $t>1$, and has positive
-mean-square. No other constraints need be placed on $f_1$. Note that
+The argument $s$ of the ``mother wavelet'' $f_1$ is
+nondimensional. The only constraints placed on $f_1$ are that (i) 
+$f_1(s)=0$ for $|s|\ge 1$, and (ii) $f_1$  has positive
+mean-square, that is, does not vanish identically. Note that
 the scaling is such that the mean-square
 \[
   \|\fl\|^2 = \int\,dt\,|\fl(t)|^2
 \]
 is independent of $\lambda$.
 
-Note that in relations such as ``$t>1$'' a time unit is implicit in
-the right-hand side.
+I shall refer to $\lambda$ as ``wavelength'': if $f_1$ has a dominant
+period of oscillation, then so does $\fl$, and it is proportional to
+$\lambda$.
 
 To this family of wavelets and a choice of target slowness $m_*$  corresponds a family of noise-free data
 \begin{equation}
@@ -175,13 +205,13 @@ $\{\fl\}$ is regarded as known, along with the data family $\{\dl\}$. The aim
 is to chose $m$ to minimize 
 \begin{equation}
   \label{eqn:FWIfix}
-  J_{\rm fix}[m] = \frac{1}{2}\|S[m]\fl-\dl\|^2.
+  J_{\rm FWI}[m] = \frac{1}{2}\|S[m]\fl-\dl\|^2.
 \end{equation}
 for all values of $\lambda > 0$.
 
 Written out in detail, this objective function is
 \[
- J_{\rm fix}[m] =  \frac{1}{32\pi^2
+ J_{\rm FWI}[m] =  \frac{1}{32\pi^2
     r^2}\int\,dt\,\left|\fl\left(t-mr\right)-\fl\left(t-m_*r\right)\right|^2
 \]
 Since $f_1$ vanishes for $|t|>1$, $\fl$ vanishes for $|t|>\lambda$,
@@ -199,14 +229,14 @@ But $\dl = S[m_*]\fl$, so this is the same as saying that $\dl$ is
 orthogonal to $S[m]\fl$. So conclude that
 \begin{equation}
   \label{eqn:iso}
-  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, J_{\rm fix}[m]=\frac{1}{16\pi^2
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, J_{\rm FWI}[m]=\frac{1}{16\pi^2
     r^2}\|f_1\|^2.
 \end{equation}
 using the previously observed independence of $\|\fl\|$ from
 $\lambda$.
 
-That is, for slowness $m$ in error by more than $\lambda/r$ from the
-target slowness $m_*$, the FWI objective \ref{eqn:FWIfix} is perfectly
+That is, for slowness $m$ in error by more than $2\lambda/r$ from the
+target slowness $m_*$, the FWI objective $J_{\rm FWI}$ is perfectly
 flat: all nearby values of $m$ are local minima. Therefore the local
 exploration of the objective
 gives no useful information whatever about constructive search
@@ -216,22 +246,61 @@ error by an amount greater than a fixed multiple of $\lambda$. This is
 precisely the behaviour of FWI noted many times in the literature: the
 model must be known to ``within a wavelength''. 
 
-\section{Source Extension Inversion}
-An obvious extended model for this example is $\{m,f\}$, that is, pairs of velocity and source wavelet, with the extended modeling operator already defined by equation \ref{eqn:mod}. With an annihilator $A$, to be chosen below, the penalty form of extended inversion is: minimize over $\{v,f\}$
+\section{Extended Source Inversion}
+As mentioned in the introduction, the modeling operator introduced in
+the last section, $m \mapsto S[m]\fl$, may be extended simply by
+including the source wavelet as one of the model parameters: that is,
+the model vector becomes $(m,f)$, and the modeling operator, $(m,f)
+\mapsto S[m]f$.
+
+The reader will have no trouble seeing that the data misfit using this
+extended modeling operator can always be made to vanish entirely by
+proper choice of wavelet $f$, unless $f$ must satisfy some additional
+constraints. \cite{HuangNammourSymesDollizal:SEG19} describe a
+plethora of possible constraints for this and similar source
+extensions. Many (but not all) take the form of a quadratic penalty,
+that is, the mean square of $Af$, $A$ being a suitable operator,
+commonly dubbed an {\em annihilator}: in many examples the ideal
+output for $A$ applied to a source obeying the target constraints
+is the zero vector \cite[]{geoprosp:2008}. With an annihilator $A$, to
+be chosen below, the penalty form of extended inversion is: minimize
+over $\{m,f\}$
 \begin{equation}
 \label{eqn:obj}
-J[v,f] = \frac{1}{2}(\|S[m]f-d\|^2 + \alpha^2 \|Af\|^2).
+J_{\rm ESI}[m,f] = \frac{1}{2}(\|S[m]f-\dl\|^2 + \alpha^2 \|Af\|^2).
 \end{equation}
-VPM \cite[]{GolubPereyra:03} takes advantage of $J$ being quadratic in $f$ to solve for $f$ given $v$, thus producing a reducted objective of $v$ alone:
+
+The choice of penalty weight $\alpha$ has a profound influence on the
+character of this optimization problem. For the moment, I will mandate
+only that $\alpha > 0$. A detailed discussion of methods for setting
+$\alpha$ is beyond the scope of this brief paper.  In the Discussion
+section, I mention an effective method for choosing $\alpha$ to
+optimize convergence of iterative minimization, that applies (and has
+been applied) to much larger-scale inversion problems with features
+similar to those of this simple example.
+
+While minimization of $J_{\rm ESI}$ might be tackled directly - by
+alternately minimizations between $m$ and $f$, or by computing updates
+for $m$ and $f$ simultaneously - such joint mimization performs
+poorly, as \cite{YinHuang:16} has shown. The reason for this poor
+performance is that $J_{\rm ESI}$ has dramatically different
+sensitivity to $m$ versus $f$, especially for high frequency $f$, as
+the reader will see below. Instead, a nested approach, in which $f$ is
+eliminated in an inner optimization,
+generally gives far better numerical performance.  This Variable
+Projection Method (VPM) \cite[]{GolubPereyra:03} takes advantage of
+$J_{\rm ESI}$ being quadratic in
+$f$ to solve for $f$ given $m$, thus producing a reduced objective of
+$m$ alone:
 \begin{equation}
 \label{eqn:red}
-J_{\rm red}[v] = \min_f J[v,f] = J[v,f[v]],
+J_{\rm VPM}[m] = \min_f J_{\rm ESI}[m,f] = J_{\rm ESI}[m,f[m]],
 \end{equation}
-where $f[v]$ is the minimizer of $J$ over $f$ for given $v$.
-For this example, $J_{\rm red}$ is simple to compute. First observe that apart from amplitude, $S[m]$ is unitary:
+where $f[m]$ is the minimizer of $J_{\rm ESI}$ over $f$ for given $m$.
+For the problem considered here, $J_{\rm VPM}$ is explicitly computable. First observe that apart from amplitude, $S[m]$ is unitary:
 \begin{equation}
 \label{eqn:tran}
-S[m]^T g (t) = \frac{1}{4\pi r}g\left(t+\frac{r}{v}\right)
+S[m]^T g (t) = \frac{1}{4\pi r}g\left(t+mr\right)
 \end{equation}
 so
 \begin{equation}
@@ -241,136 +310,307 @@ S[m]^TS[m] f (t) = \frac{1}{(4\pi r)^2} f(t).
 Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:red} is
 \begin{equation}
 \label{eqn:norm1}
-\left(\frac{1}{(4\pi r)^2} I + \alpha^2 A^TA\right)f = S[m]^Td.
+\left(\frac{1}{(4\pi r)^2} I + \alpha^2 A^TA\right)f[m] = S[m]^T\dl.
 \end{equation}
 
-At this point I have to come clean about the actual choice of $A$. As usual with source extensions, the proper annihilator depends on modeling assumptions, not fundamental physics. Assume that signature decon has been applied and the target source $f_*$ is a zero-phase bandpass filter, reasonably well focused at time $t=0$. Since there is no spatial structure to exploit in this hyper-simple problem, we construct $A$ to penalize energy away from $t=0$:
+At this point I have to come clean about the actual choice of
+$A$. Recall that $A$ is called an ``annihilator'', as it vanishes when
+applied to the target source field, at least in an idealized
+limit. Thus the choice of $A$ depends on modeling assumptions, not
+fundamental physics, as is characteristic of extended source
+inversion. As $\lambda \rightarrow 0$, the target source wavelet $\fl$
+focuses at time $t=0$, in the sense that it vanishes for
+$|t| > \lambda$. Therefore I choose $A$ to penalize energy away from
+$t=0$:
 \begin{equation}
 \label{eqn:ann}
 Af(t) = tf(t).
 \end{equation}
-Then the normal operator on the LHS of \ref{eqn:norm1} is simply multiplication by a positive function of time, and can be inverted by inspection. Using the identity \ref{eqn:tran} for the adjoint operator, obtain
-\begin{equation}
-\label{eqn:soln} 
-f[v](t) = \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2\right)^{-1}\frac{1}{4\pi r}d\left(t+\frac{r}{v}\right)  
-\end{equation} 
-Suppose that the data is noise-free: 
-\begin{equation}
-\label{eqn:nonoise}
-d(t) = S[v_*]f_*(t) = \frac{1}{4\pi r}f_*\left(t-\frac{r}{v_*}\right)
-\end{equation}
-Then
+This
+particular annihilator has been employed in earlier papers on extended
+source inversion
+\cite[]{Plessix:00a,LuoSava:11,Warner:14,HuangSymes:SEG15a,Warner:16,HuangSymes:GEO17}.
+
+With this choice of $A$, the normal operator on the LHS of \ref{eqn:norm1} is simply multiplication by a positive function of time, and can be inverted by inspection. Using the identity \ref{eqn:tran} for the adjoint operator, obtain
+\[
+f[m](t) = \left(\frac{1}{(4\pi r)^2} + \alpha^2
+  t^2\right)^{-1}\frac{1}{4\pi r}\dl\left(t+mr\right)
+\]
 \begin{equation}
 \label{eqn:solnnon}
-f[v](t) = \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2\right)^{-1}\frac{1}{(4\pi r)^2}f_*\left(t-\frac{r}{v_*}+\frac{r}{v}\right) 
+= \left(1+ (4\pi r)^2\alpha^2 t^2\right)^{-1}\fl\left(t+(m-m_*)r\right) 
 \end{equation}
-so the residual is, after a little algebra,
+thanks to the definition of the data $\dl$ (equation \ref{eqn:defdata}).
+After a little algebra,
 \begin{equation}
 \label{eqn:resid}
-(S[m]f[v]-d)(t) =\frac{1}{4\pi r}[ (1+(4\pi r)^2 \alpha^2 (t-r/v)^2)^{-1} - 1]f_*(t-r/v_*)
+(S[m]f[m]-d)(t) =\frac{1}{4\pi r}[ (1+(4\pi r)^2 \alpha^2 (t-mr)^2)^{-1} - 1]\fl(t-m_*r)
 \end{equation}
-The gradient of $J_{\rm red}$ is given by the famous VPM formula (well-known to those who know it well):
+and
+\begin{equation}
+  \label{eqn:anniexp}
+  Af[m] = t \left(1+ (4\pi r)^2\alpha^2
+    t^2\right)^{-1}\fl\left(t+(m-m_*)r\right).
+\end{equation}
+So
+\[
+  J_{\rm VPM}[m] = \frac{1}{2}\int\,dt\, \left( \frac{1}{(4\pi r)^2}[
+    (1+(4\pi r)^2 \alpha^2 (t+(m_*-m)r)^2)^{-1} - 1]^2 +
+  \right.
+  \]
+  \[
+   \left. \alpha^2(t+(m_*-m)r)^2 \left(1+ (4\pi r)^2\alpha^2
+      (t+(m_*-m)r)^2\right)^{-2}\right)|\fl(t)|^2
+\]
+\begin{equation}
+\label{eqn:vpmexpl}
+=\frac{1}{2(4\pi r)^2}\int\,dt\, [1-(1+(4\pi r)^2 \alpha^2
+(t+(m_*-m)r)^2)^{-1}]|\fl(t)|^2
+\end{equation}
+
+The gradient of $J_{\rm VPM}$ can be extracted by elementary means
+from the identity \ref{eqn:vpmexpl}, but instead we will derive it in
+using some important features that this inverse problem shares with
+other inverse wave problems with more complex physics. To begin with, the gradient of a VPM
+objective of the form \ref{eqn:red} is given by the formula 
 \begin{equation}
 \label{eqn:grad}
-\nabla J[v] = (DS[m]f[v])^*(S[m]f[v]-d)
-\end{equation}.
-In this formula, $DS[m]$ is the derivative with respect to $v$ - since we can make explicit use of the Green's function, easy to see that
+\nabla J_{\rm VPM}[m] = (DS[m]f[m])^*(S[m]f[m]-d).
+\end{equation}
+This easily derived result is in some sense the main content of \cite[]{GolubPereyra:03}.  In this formula, $DS[m]f$ is the derivative
+of the modeling operator $S[m]f$
+with respect to $m$, that is, with $f$ held fixed. The adjoint $(DS[m]f)^*$ is the adjoint of the map from model space to data space:
+\[
+(DS[m]f): \delta m \mapsto (DS[m]\delta m)f
+\]
+and is NOT the same as the adjoint denoted by $S[m]^T$, which is the source-space-to-data-space adjoint.
+That is, this adjoint make this relation true, for all $m, \delta m,f,$ and $d$:
+\begin{equation}
+\label{eqn:vadj}
+\delta m \cdot (DS[m]f)^*d = \int \,dt\,[(DS[m]\delta m)f] (t) d(t) 
+\end{equation}
+On the left side is the dot product in model space - since model space
+is just 1D in this example, that's just the numerical product. On the
+right is the dot product in data space, in the idealized continuum
+limit.
+
+Note that the VPM gradient formula is remarkable in two ways. First,
+it is exactly the same as the FWI gradient, that is, the gradient of
+$J_{\rm FWI}$ if you happen to insert the solution $f[m]$ of the
+normal equation for $f$. Second, it does not mention the annihilator
+$A$ at all: its impact is locked up in $f[m]$.
+
+The key to unlocking the meaning of the VPM gradient formula for this
+and similar problems is a remarkable feature of the derivative
+operator $DS[m]$: from the definition \ref{eqn:mod},
 \begin{equation}
 \label{eqn:deriv}
-(DS[m]\delta v)f (t) = \frac{\delta v}{4\pi v^2}\frac{df}{dt}(t-r/v) = S[m](Q[v]\delta v)f (t),
+(DS[m]\delta m)f (t) = -\frac{\delta m}{4\pi}\frac{df}{dt}(t-mr) = S[m](Q[m]\delta m)f (t),
 \end{equation}
 where 
 \begin{equation}
 \label{eqn:defq}
-(Q[v]\delta v)f = \frac{r \delta v}{v^2} \frac{df}{dt}.
+(Q[m]\delta m)f = -r\delta m \frac{df}{dt}.
 \end{equation}
-That is, $Q[v]\delta v$ is a skew-adjoint operator depending linearly on $\delta v$ - more on this below.
-The adjoint $(DS[m]f)^*$ is the adjoint of the map from model space to data space:
-\[
-(DS[m]f): \delta v \mapsto (DS[m]\delta v)f
-\]
-and is NOT the same as the adjoint denoted by $S[m]^T$, which is the data-space-to-data-space adjoint (got that?).
-That is, this adjoint make this relation true, for all $\delta v,f,$ and $d$:
-\begin{equation}
-\label{eqn:vadj}
-\delta v \cdot (DS[m]f)^*d = \int \,dt\,[(DS[m]\delta v)f] (t) d(t) 
-\end{equation}
-On the left side is the dot product in model space - since model space is just 1D in this example, that's just the numerical product. On the right is the dot product in data space, in the idealized continuum limit. Using equations \ref{eqn:deriv}, \ref{eqn:defq} and \ref{eqn:vadj},
-\[
-\delta v \cdot \nabla J[v] =  \int \,dt\,[(DS[m]\delta v)f[v]] (t) (S[m]f[v]-d)(t)
-\]
-\[
-= \int \,dt\, [S[m](Q[v]\delta v)f[v](t)] (S[m]f[v]-d)(t) = \int
-\,dt\,(Q[v]\delta v)f[v](t) S[m]^T(S[m]  f[v]-d)(t)
-\]
-Now invoke the normal equation \ref{eqn:norm1}: and replace the last factor:
-\begin{equation}
-\label{eqn:comm1}
-= -\alpha^2\int \,dt\, (Q[v]\delta v)f[v](t)A^TAf[v](t)
-\end{equation}
-Since $Q[v]\delta v$ is skew-symmetric, shift it onto the other factor in this $L^2$ inner product (why not):
-\[
-= \alpha^2\int \,dt\, f[v](t)(Q[v]\delta v)A^TAf[v](t) 
-\]
-\begin{equation}
-\label{eqn:comm2}
-= \alpha^2\int \,dt\, (A^TAf[v](t)(Q[v]\delta v)f[v](t) + f[v](t)[(Q[v]\delta v),A^TA]f[v](t))
-\end{equation}
-where I swapped $Q$ and $A^TA$ at the cost of introducing a term involving the commutator $[Q,A^TA] = QA^TA-A^TAQ$, and rearranged the first term using the symmetry of $A^TA$. Now notice that this first term is exactly the same as the RHS of equation \ref{eqn:comm1}, except for the minus sign - so subtracting the RHS of \ref{eqn:comm2}
-from \ref{eqn:comm1} and rearranging, get
-\[
--\alpha^2\int \,dt\, (Q[v]\delta v)f[v](t)A^TAf[v](t) = \frac{1}{2}\alpha^2\int \,dt\,f[v](t)[(Q[v]\delta v),A^TA]f[v](t)
-\]
-hence 
+That is, $Q[m]\delta m$ is a skew-adjoint operator depending linearly
+on $\delta m$ - more on this below.
+
+A calculation, detailed in Appendix A, yields an expression for the
+gradient \ref{eqn:grad} in terms of $Q$:
 \begin{equation}
 \label{eqn:gradcomm}
-\delta v \cdot \nabla J[v] = \frac{1}{2}\alpha^2\int \,dt\,f[v](t)[(Q[v]\delta v),A^TA]f[v](t)
+\delta m \cdot \nabla J_{\rm VPM}[m] = \frac{1}{2}\alpha^2\int \,dt\,f[m](t)[(Q[m]\delta m),A^TA]f[m](t)
 \end{equation}
+Here, the symbol $[L,M]$ denotes the {\em commutator} of the operators
+$L$ and $M$: $[L,M]=LM-ML$.
+
+Note that the annihilator $A$ is explicitly present in
+\ref{eqn:gradcomm}. The structure displayed in this expression is
+common to many other extended inversion methods. The extreme
+simplicity of the factorization \ref{eqn:deriv}, \ref{eqn:defq} and
+the gradient expression \ref{eqn:gradcomm} is
+modified for more complex inversion problems by asymptotically
+negligible corrections \cite[]{Symes:IPTA14,tenKroode:IPTA14,Symes:Madrid}.
+
+%%%%%%%%%%%
+
 Remember that $A^TA$ amounts to multiplying by $t^2$, and $Q$ is the scaled time derivative (equation \ref{eqn:defq}), so
 \begin{equation}
 \label{eqn:comm3}
-[(Q[v]\delta v),A^TA]=\frac{2r\delta v}{v^2}t
+[(Q[m]\delta m),A^TA]=-2r\delta mt
 \end{equation}
 Insert this identity into equation \ref{eqn:gradcomm} to obtain
 \begin{equation}
 \label{eqn:comm4}
-\delta v \cdot \nabla J_{\rm red}[v] =  \delta v\frac{r \alpha^2}{v^2}\int \,dt\,tf[v]^2(t)
+\delta m \cdot \nabla J_{\rm VPM}[m] =  -r\delta m \alpha^2\int \,dt\,tf[m]^2(t)
 \end{equation}
-Combine this identity with the formula \ref{eqn:solnnon} for the solution of the inner problem, and divide out the common factor $\delta v$, to obtain
-\[
-\nabla J_{\rm red}[v] = \frac{r\alpha^2}{v^2}\int \,dt\,t\left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2\right)^{-1}\frac{1}{(4\pi r)^2}f_*\left(t-\frac{r}{v_*}+\frac{r}{v}\right)^2
-\]
+Combine this identity with the formula \ref{eqn:solnnon} for the
+solution of the inner problem, and divide out the common factor
+$\delta m $, to obtain
 \begin{equation}
 \label{eqn:gradfinal}
-= \frac{r\alpha^2}{v^2}\int \,dt\,\left(t+\frac{r}{v_*}-\frac{r}{v}\right)\left(1 + (4\pi r)^2\alpha^2 \left(t+\frac{r}{v_*}-\frac{r}{v}\right)^2\right)^{-1}f_*(t)^2
+\nabla J_{\rm VPM}[m] = -r\alpha^2\int \,dt\,t\left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2\right)^{-1}\frac{1}{(4\pi r)^2}\fl\left(t+(m-m_*)r\right)^2
 \end{equation}
-
-Recall that the definition of $A$ (multiplication by $t$) was justified by a modeling assumption, that the actual source is (possibly after designature) highly localized at $t=0$ - ideally a Dirac delta, but because of bandlimitation not quite. Still, a high degree of localization, as implicit in this choice of annihilator, means that the integral above is approximately proportional to the integrand at $t=0$, that is, 
+Recall that $f_1(s)$ vanishes if $|s|\ge 1$, so $\fl(t+(m-m_*)r)$
+vanishes if $|t+(m-m_*)r| > \lambda$. Therefore the integral on the
+RHS of equation \ref{eqn:gradfinal} can be re-written
 \[
-\approx \frac{r\alpha^2}{v^2}\left(\frac{r}{v_*}-\frac{r}{v}\right)\left(1 + (4\pi r)^2\alpha^2 \left(\frac{r}{v_*}-\frac{r}{v}\right)^2\right)^{-1}
+  = -r\alpha^2\int_{-(m-m_*)r-\lambda}^{-(m-m_*)r+\lambda}
+  \,dt\, \frac{t}{1+(4\pi r)^2\alpha^2 t^2}\fl\left(t+(m-m_*)r\right)^2
 \]
-Note that to the extent that this approximation is accurate,
-\begin{itemize}
-\item if $v > v_*$, then $\nabla J_{\rm red}[v] > 0$, and
-\item if $v < v_*$, then $\nabla J_{\rm red}[v] < 0$, and
-\end{itemize}
-That is, within the domain of validity of this approximation (setting $t=0$ in equation \ref{eqn:gradfinal}), {\em there are no local mins:} the gradient has the correct sign and velocity updates computed from it will be constructive.
+If $m > m_*+\lambda/r$, then the entire interval of integration is a proper
+subset of the negative half-axis. Consequently the first factor in the
+integrand satisfies
+\[
+ \frac{t}{1+(4\pi r)^2\alpha^2 t^2}
+  \le -(m-m_*)r+\lambda < 0
+\]
+over the interval of integration. Consequently, the integral is
+negative (since $\fl$ has a positive mean square) and so the gradient
+is positive. Similar reasoning applies to the case $m <
+m_*-\lambda/r$.
 
-On the other hand, careful examination of equation \ref{eqn:gradfinal} (which involves no approximations) shows that if $\alpha$ is too large, then the finite-frequency spread of $f_*$ is guaranteed to result in non-convex behaviour, since the side-lobes will dominate. This message is consistent with the import of many other similar computations.
+To summarize,
+\begin{itemize}
+\item if $m > m_*+\lambda/r$, then $\nabla J_{\rm VPM}[m] > 0$, and
+\item if $m < m_*-\lambda/r$, then $\nabla J_{\rm VPM}[m] < 0$.
+\end{itemize}
+That is, {\em $J_{\rm VPM}$ has no local minima
+  further than  $O(\lambda)$ from the global minimum:} the gradient
+has the correct sign and slowness updates computed from it will be
+constructive, unless the slowness estimate is already ``within a
+wavelength'' of being correct.
+
+On the other hand, careful examination of equation \ref{eqn:gradfinal}
+shows that $J_{\rm VPM}$ is not convex: there is an inflection point
+$O(1/\alpha)$ from the global minimizer $m_*$, and in fact as $\alpha
+\rightarrow \infty$ for fixed $\lambda$, the $J_{\rm VPM}$
+approximates $J_{\rm FWI}$. 
 
 \section{Discussion}
-There remain two important points to be made. 
+There remain several important points to be made. 
 
-First, the formal computations centering on the operator $Q$ (equations \ref{eqn:deriv} through \ref{eqn:gradcomm}) depend only on the relation \ref{eqn:deriv} and the skew-symmetry of $Q$, which hold with minor modifications for other more complex waveform inversion problems. These other more complex problems do not submit to such a simple treatment as is shown in the equations following \ref{eqn:gradcomm}, but for example it is possible in some cases to use the relation \ref{eqn:deriv} to extract a relation between extended waveform inversion and traveltime tomography, via analysis of the Hessian at a zero-residual global minimizer. See for instance \cite{tenKroode:IPTA14,Symes:IPTA14,Symes:Madrid}. Up to that point the reasoning is quite general, and central to the understanding gained so far of extended inversion methods. 
+First, the formal computations centering on the operator $Q$
+(equations \ref{eqn:deriv} through \ref{eqn:gradcomm}) depend only on
+the relation \ref{eqn:deriv} and the skew-symmetry of $Q$, which hold
+with minor modifications for other more complex waveform inversion
+problems. These other more complex problems do not submit to such a
+simple treatment as is shown in the equations following
+\ref{eqn:gradcomm}, but for example it is possible in some cases to
+use a relation analogous to \ref{eqn:deriv} to extract a relation between extended waveform inversion and traveltime tomography, via analysis of the Hessian at a zero-residual global minimizer. See for instance \cite{tenKroode:IPTA14,Symes:IPTA14,Symes:Madrid}. Up to that point the reasoning is quite general, and central to the understanding gained so far of extended inversion methods. 
 
-The cited papers are set in the context of subsurface-offset extended Born inversion, and demand a single scattering approximation and high-frequency asymptotics - that is, microlocal anallysis. Somewhat surprisingly, it has recently proven possible to establish the existence of a variant of the operator $Q$ for acoustic problems with transmission configuration but without the assumed smoothness of the material parameter fields essential for microlocal analysis. That is, at least in some circumstances $DS=SQ$ with approximately skew-symmetric $Q$, even when reflections (even multiple) occur in the material model. It remains to be seen whether enough can be established about these more general versions of $Q$ (which are for example in general not pseudodifferential0 to gain any hold over the corresponding inverse problems.
+Another issue mentioned in the last section is that the penalty weight
+$\alpha$ must be chosen somehow, and its choice influences heavily the
+convergence rate of iterative optimization algorithms applied to $J_{
+  \rm VPM}$ (or $J_{\rm ESI}$, though (as also mentioned above) it is a
+poor candidate for local optimization). Two solutions to the weight
+assignment problem has emerged in the last few years, both quite effective. One applies
+directly to VPM problem, via use of the Discrepancy Principle
+\cite[]{Morozov:84}. This algorithm controls the size of the data
+misfit term in $J_{\rm ESI}$ to lie in an interval chosen to contain
+the assumed level of data noise, by adjusting $\alpha$ sporadically as
+the optimization proceeds. While this approach requires an estimate of
+data misfit to be achieved at the optimal model, it is very effective
+in maintaining convergence \cite[]{FuSymes2017discrepancy}. Another
+approach modifies the VPM problem by means of the Augmented Lagrangian
+method \cite[]{NocedalWright}. This reformulation appears to suppress
+much of the sensitivity to $\alpha$ of VPM optimization, and has been
+successfully used in extended inversion \cite[]{Aghamiry:19}.
 
-The second point to be made has to do with the necessity of nested optimization, of which VPM is a variant. The aim is to find a minimizer of the bivariate objective $J[v,f]$ (and ultimately of data fitting, that is, FWI), but the bivariate problem is computationally intractable. The framework developed here can be used to explain why this is so: optimization in $v$ and $f$ simultaneously is very ill-conditioned (in the continuum limit, infinitely so), whereas reduced objetives (of which VPM produces one possibility) are much easier to optimize. Yin Huang's thesis \cite[]{YinHuang:16} shows this contrast between global and nested optimization very clearly, using a different extension.
+Perhaps the most important general message implicit in the example
+presented here is that the choice of the annihilator $A$ determines
+whether the extended inversion algorithm achieves global or semiglobal
+convexity, as is accomplished in the present example. The annihilator
+used here has a property whose importance can be guessed by
+examining the gradient formula \ref{eqn:gradcomm}. The operator $Q$ is
+a first order differential operator. The gradient is a quadratic form
+whose Hessian is the communator $[Q,A^TA]$, and whose argument is
+$f[m]$. In order that the VPM objective be continuous for any model
+$m$ and finite energy data $d$, this form should admit any
+finite-energy source as argument: in technical terms, it should be a
+bounded (or continuous) operator on the Hilbert space of finite energy
+traces. If one asks for a bit more, namely that VPM objective function
+have derivatives of arbitrary order, then it is not too hard to see
+that the iterated commutators $[Q,...[Q,A^TA]...]$ must all be bounded
+operators. This is a very strong restriction on $A^TA$: this operator
+must be {\em pseudodifferential}, that is, a combination of
+differential operators and powers of the Laplace operator
+\cite[]{Tay:81}. For the present operator, $A^TA$ is
+multiplication by $t^2$, a very simple pseudodifferential
+operator. For more discussion of this requirement in the context of
+annihilators in extended inverseion, see \cite{geoprosp:2008}, where
+you can also find references to the technical backstory.
+
+This constraint actually rules out some popular approaches to FWI. To
+begin with, basic least-squares FWI as formulated in the third section
+above can be reformulated as a quadratic form whose Hessian turns out
+not to be pseudodifferential. Therefore the FWI objective is not
+smooth in data and model jointly, a fact that is linked to the
+cycle-skipping behaviour demonstrated above. More surprising, perhaps,
+the same turns out to be true for Wavefield Reconstruction Inversion (WRI),
+an extended source inversion algorithm introduced by
+\cite{LeeuwenHerrmannWRI:13}, and further developed by
+\cite{LeeuwenHerrmann:16}, \cite{WangYingst:SEG16}, and
+\cite{Aghamiry:19}, amongst others. This approach turns out to be closely
+linked to basic FWI, and can be formulated as minimization of a similar quadratic form
+which once again has a non-pseudodifferential Hessian. Not
+coincidentally, it also exhibits cycle-skipping behaviour. Just as for
+FWI, in simple cases such as the problem studied in this paper, WRI
+can be shown explicitly to have local minima far from the global
+minimum, and a region of attraction for the global minimum on the
+order of a wavelength in diameter, just as does FWI.
 
 \section{Conclusion}
-Desipite its simplicity, the single-trace inversion transmission problem proves typical of many more complex waveform inversion problems. The structure of the derivative is similar in many of these problems, and for the particularly simple one explained here, can be analysed on paper to the point of showing explicitly why this approach to waveform inversino works.
+Desipite its simplicity, the single-trace transmission inversion
+problem proves typical of many more complex waveform inversion
+problems. The structure of the derivative is similar in many of these
+problems, and for the particularly simple one explained here, can be
+analysed on paper to the point of showing explicitly why a simple
+extended source approach to waveform inversion works - that is,
+generates an objective all of whose local minima are ``within a
+wavelength'' of the global minimizer. Otherwise stated, this
+particular extended source inversion is genuinely immune to
+cycle-skipping. The simple structure of this problem showcases the
+importance of the variable projection reduction (elimination of the
+extended source) and a proper choice of annihilator in the formulation
+of the basic objective. It also makes clear the central role played by
+a factorization of the linearized modeling operator, a feature shared
+with many more complex extended source methods applicable at field scale.
 
-
+\append{Calculation of the VPM Gradient}
+Using equations \ref{eqn:deriv}, \ref{eqn:defq} and \ref{eqn:vadj},
+and \ref{eqn:grad},
+\[
+\delta m \cdot \nabla J_{\rm VPM}[m] =  \int \,dt\,[(DS[m]\delta m)f[m]] (t) (S[m]f[m]-d)(t)
+\]
+\[
+= \int \,dt\, [S[m](Q[m]\delta m)f[m](t)] (S[m]f[m]-d)(t) = \int
+\,dt\,(Q[m]\delta m)f[m](t) S[m]^T(S[m]  f[m]-d)(t)
+\]
+Now invoke the normal equation \ref{eqn:norm1}: and replace the last factor:
+\begin{equation}
+\label{eqn:comm1}
+= -\alpha^2\int \,dt\, (Q[m]\delta m)f[m](t)A^TAf[m](t)
+\end{equation}
+Since $Q[m]\delta m$ is skew-symmetric, shift it onto the other factor in this $L^2$ inner product (why not):
+\[
+= \alpha^2\int \,dt\, f[m](t)(Q[m]\delta m)A^TAf[m](t) 
+\]
+\begin{equation}
+\label{eqn:comm2}
+= \alpha^2\int \,dt\, (A^TAf[m](t)(Q[m]\delta m)f[m](t) + f[m](t)[(Q[m]\delta m),A^TA]f[m](t))
+\end{equation}
+where I swapped $Q$ and $A^TA$ at the cost of introducing a term involving the commutator $[Q,A^TA] = QA^TA-A^TAQ$, and rearranged the first term using the symmetry of $A^TA$. Now notice that this first term is exactly the same as the RHS of equation \ref{eqn:comm1}, except for the minus sign - so subtracting the RHS of \ref{eqn:comm2}
+from \ref{eqn:comm1} and rearranging, get
+\[
+-\alpha^2\int \,dt\, (Q[m]\delta m)f[m](t)A^TAf[m](t) = \frac{1}{2}\alpha^2\int \,dt\,f[m](t)[(Q[m]\delta m),A^TA]f[m](t)
+\]
+hence 
+\begin{equation}
+\label{eqn:gradcomm-app}
+\delta m \cdot \nabla J_{\rm VPM}[m] = \frac{1}{2}\alpha^2\int \,dt\,f[m](t)[(Q[m]\delta m),A^TA]f[m](t)
+\end{equation}
+which is identical to equation \ref{eqn:gradcomm}.
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
 
