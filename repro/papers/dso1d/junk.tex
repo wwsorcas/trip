@@ -1,0 +1,62 @@
+The second version of the FWI objective responds to the observation
+that seismic sources are themselves subject to much uncertainty, and
+therefore could reasonably be included in the unknowns of the inverse
+problem \cite[]{SymMink:97,VirieuxOperto:09}. Thus: chose $m$ {\em
+  and} $f$ to minimize
+\begin{equation}
+  \label{eqn:FWIvar}
+  J_{\rm var}[m,f] = \frac{1}{2}\|S[m]f-\dl\|^2.
+\end{equation}
+It might be thought that the additional degrees of freedom represented
+by the unknown source function in \ref{eqn:FWIvar} would ``relax'' the
+minimization and open up more paths to the global
+solution. Paradoxically, a good way to use these extra degrees of
+freedom is to get rid of them: define
+\begin{equation}
+  \label{eqn:FWIvarvpm}
+  J_{\rm var}^{\rm vpm}[m] = \min_f \frac{1}{2}\|S[m]f-\dl\|^2
+\end{equation}
+Replacement of $J_{\rm var}$ by $J_{\rm var}^{\rm vpm}$ is the
+so-called Variable Projection Method \cite[]{GolubPereyra:03}, applied to the problem at
+hand. Note that local, respectively global minimizers $m$ of $J_{\rm
+  var}^{\rm vpm}$ are necessarily the first components of local,
+respectively global, minimizers of $J_{\rm var}$, therefore
+minimization of $J_{\rm var}$ is logically equivalent to minimization
+of $J_{\rm var}^{\rm vpm}$. A number of authors have specifically
+suggested that this approach be applied eliminate ``nuisance''
+parameters such as seismic source models that do not represent the
+main information content to be extracted from the data
+\cite[]{MulderVanLeeuwen:09,Rickett:SEG12,Aravkin:12,LiRickettAbubakar:13}.
+
+For the present problem, it is easy to explicitly compute $ J_{\rm
+  var}^{\rm vpm}$. If $f[m]$ denotes the minimizer of $J_{\rm
+  var}[m,f]$ over $f$, then
+\[
+  J_{\rm  var}^{\rm vpm}[m]=J_{\var}[m,f[m]].
+\]
+Since $J_{\var}[m,f]$ is quadratic in $f$, $f[m]$ is a solution of the
+normal equation
+\begin{equation}
+  \label{eqn:defnormal}
+  S[m]^TS[m] f[m] = S[m]^T\dl
+\end{equation}
+It follows immediately from the definition \ref{eqn:mod} that
+\begin{equation}
+\label{eqn:tran}
+S[m]^T g (t) = \frac{1}{4\pi r}g\left(t+mr\right)
+\end{equation}
+so
+\begin{equation}
+\label{eqn:unit}
+S[m]^TS[m] f (t) = \frac{1}{(4\pi r)^2} f(t).
+\end{equation}
+From the definition \ref{eqn:defdata} of the data and the identity \ref{eqn:tran},
+\[
+  S[m]^T\dl = \frac{1}{(4\pi r)^2}\fl(t-(m_*-m)r)
+\]
+so from the identity \ref{eqn:unit} and the normal equatioh
+\ref{eqn:defnormal} obtain
+\[
+  f[m] = \fl(t-(m_*-m)r).
+\]
+Therefore $S[m]f[m] = \fl(t-m_*r)

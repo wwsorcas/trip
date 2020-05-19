@@ -5,9 +5,10 @@ lclass='georeport',
 options='notimes',
 use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,float,wasysym,setspace,bm',
 include=r'''
-      \newcommand{\be}{\begin{eqnarray}}
-      \newcommand{\ee}{\end{eqnarray}}
       \newcommand{\oF}{\bar{F}}
       \newcommand{\oS}{\bar{S}}
+      \newcommand{\fl}{f_{\lambda}}
+      \newcommand{\dl}{d_{\lambda}}
+      \newcommand{\bx}{{\bf x}}
 ''')
 
