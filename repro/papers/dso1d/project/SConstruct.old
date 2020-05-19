@@ -1,0 +1,215 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+b2a             = os.path.join(CWPROOT,'bin/b2a')
+farith          = os.path.join(CWPROOT,'bin/farith')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+sumean          = os.path.join(CWPROOT,'bin/sumean')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
+sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
+sfadd           = os.path.join(RSFROOT,'bin/sfadd')
+sfget           = os.path.join(RSFROOT,'bin/sfget')
+sfspray         = os.path.join(RSFROOT,'bin/sfspray')
+
+########### archive - unarchive ##############
+
+### create 20, 40 Hz Rickers and relevant data
+
+freq = 1.0
+samp = 0.004
+tmax=1.0
+nt = 2*(tmax/samp)+1
+
+Flow('rick.su', None,
+     suwaveform + ' type=ricker1 fpeak=' + str(freq) +
+     ' dt=' + str(samp) + ' | ' +
+     sushw + ' delrt=-1000*' + str(tmax))
+Flow('ricksq.su', 'rick.su',
+     suop + ' op=sqr')
+
+# range = 1 km
+r    = 1
+
+# slownesses from 0.2 to 0.6 s/km
+mex  = 0.4
+dm   = 0.01
+mmin = 0.2
+#mmin=0.4
+nm   = 40
+#nm=0
+
+#index range suitable for bash for loop
+jnk=['1']
+for i in range(2,nm+1):
+    jnk.append(jnk[i-2]+' '+str(i))
+rng=jnk[nm-1]
+print(rng)
+
+# pi
+pi = 3.1415927
+
+# penalty weight
+alpha=10.0
+
+# frequency range
+lam = [0.05, 0.025]
+
+# loop over frequencies
+#for i in range(len(lam)):
+for i in [0]:
+
+# denominator factor
+    la2 = lam[i]*lam[i]*alpha*alpha
+    denfac = (4*pi*r)*(4*pi*r)*la2
+
+# j=0 case:
+    i0 = str(i)+'-0'
+    
+# create numerator
+    Flow('num' + i0 + '.su','rick.su',
+         sugain + ' scale=0.0' + ' | ' + 
+         sugain + ' bias=1.0' + ' | ' +
+         sugain + ' tpow=1' + ' | ' +
+         sugain + ' bias=' + str((mex-mmin)*r/lam[i]) + ' | ' +
+         suop + ' op=sqr')
+
+# create denominator
+    Flow('den' + i0 + '.su', 'num' + i0 + '.su',
+         sugain + ' scale=' + str(denfac) + ' | ' +
+         sugain + ' bias=1.0')
+
+# create integrand
+# ricksq times num
+    Flow('grandtmp' + i0 + '.su', ['ricksq.su', 'num' + i0 + '.su'],
+         suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=prod')
+             
+# divide by denom and scale             
+    Flow('grandfin' + i0 + '.su', ['grandtmp' + i0 + '.su', 'den' + i0 + '.su'],
+         suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=quo | ' +
+         sugain + ' scale=' + str(0.5*la2) + ' > ${TARGET}',
+         stdin=0, stdout=-1)
+
+# j>0 case:
+    for j in range(1,nm+1):
+        ij = str(i)+'-'+str(j)
+        ijm1 = str(i)+'-'+str(j-1)
+	
+# create numerator
+        Flow('num' + ij + '.su','rick.su',
+             sugain + ' scale=0.0' + ' | ' + 
+             sugain + ' bias=1.0' + ' | ' +
+             sugain + ' tpow=1' + ' | ' +
+             sugain + ' bias=' + str((mex-mmin-j*dm)*r/lam[i]) + ' | ' +
+             suop + ' op=sqr')
+
+# create denominator
+        Flow('den' + ij + '.su', 'num' + ij + '.su',
+             sugain + ' scale=' + str(denfac) + ' | ' +
+             sugain + ' bias=1.0')
+
+# create integrand
+# ricksq times num
+        Flow('grandtmp' + ij + '.su', ['ricksq.su', 'num' + ij + '.su'],
+             suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=prod')
+             
+# divide by denom and scale             
+        Flow('grandfin' + ij + '.su',
+	    ['grandtmp' + ij + '.su',
+	     'grandfin' + ijm1 + '.su',
+	     'den' + ij + '.su'],
+             suop2 + ' ${SOURCES[0]} ${SOURCES[2]} op=quo | ' +
+             sugain + ' scale=' + str(0.5*la2) + ' > ${TARGET}',
+	     stdout=-1)
+
+# concatenate
+# have to generate explicit list as inner shell is not version 3, apparently
+    Flow('grand' + str(i) + '.su', 'grandfin' + str(i) + '-' + str(nm) + '.su',
+         'fn=grandfin' + str(i) + '-' + str(0) + '.su; cat $$fn > ${TARGET}; for j in ' + rng + ' ; do (fn=grandfin' + str(i) + '-; fn="$$fn$$j.su"; echo $$fn; cat $$fn >> ${TARGET}); done',
+         stdin=0,stdout=-1)
+
+# sum to approximate integral, dump as sumean output
+    Flow('jtmp'+str(i)+'.txt', 'grand'+str(i)+'.su',
+	 sumean + ' power=1.0 verbose=1 outpar=${TARGET}',
+	 stdout=-1)
+
+# strip extraneous strings, create binary rsf data file w extra trace
+# of scaled sample numbers
+    Flow('j'+str(i)+'a.txt', 'jtmp'+str(i)+'.txt',
+         '/bin/cat ${SOURCE} | ' +
+         'sed s/"trace: "//g | ' +
+         'sed s/" mean value: "//g  | ' +
+         'grep -v "global mean" > ${TARGET}',
+         stdin=0, stdout=-1)
+
+    Flow('j'+str(i)+'s.txt', 'j'+str(i)+'a.txt',
+         a2b + ' n1=2 | ' +
+         farith + ' op=scale scale=' + str(samp) + ' | ' +
+         b2a + ' n1=2')
+
+# create ascii rsf header file w extra trace of scaled sample numbers
+    Flow('j'+str(i)+'s.rsf', 'j'+str(i)+'s.txt',
+         'echo "n2="' + str(nm+1) + ' >  ${TARGET}; ' + 
+         'echo "d2="' + str(dm) + ' >> ${TARGET}; ' +
+         'echo "o2="' + str(mmin) + ' >> ${TARGET}; ' +
+         'echo "n1=2" >> ${TARGET}; ' + 
+         'echo "d1=1" >> ${TARGET}; ' +
+         'echo "o1=0" >> ${TARGET}; ' +
+         'echo "esize=0" >> ${TARGET}; ' +
+         'echo "data_format=\"ascii_float\"" >> ${TARGET}; ' +
+         'echo "in=./\c" >> ${TARGET}; ' +
+         'echo ${SOURCE} >> ${TARGET}; ',
+          stdin=0, stdout=-1)
+
+# convert to native float w extra trace
+    Flow('j'+str(i)+'a','j'+str(i)+'s',
+         'dd type=float form=native')
+
+# strip off first trace (i1=0)
+    Flow('j'+str(i), 'j'+str(i)+'a',
+         'window min1=1')
+	    
+
+
+
+
+
+	     
+
+

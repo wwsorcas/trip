@@ -1,0 +1,94 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from trip.proj import getThreads
+from trip.proj import getCommand
+from trip.prog import run
+
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+b2a             = os.path.join(CWPROOT,'bin/b2a')
+farith          = os.path.join(CWPROOT,'bin/farith')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+sumean          = os.path.join(CWPROOT,'bin/sumean')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
+sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
+sfadd           = os.path.join(RSFROOT,'bin/sfadd')
+sfget           = os.path.join(RSFROOT,'bin/sfget')
+sfspray         = os.path.join(RSFROOT,'bin/sfspray')
+MYAPPS          = os.getenv("MYAPPS")
+wiw             = os.path.join(MYAPPS,'trip/iwave/trace/main/wiw.x')
+
+########### archive - unarchive ##############
+
+### create 20, 40 Hz Rickers and relevant data
+
+freq = 20
+samp = 0.004
+tmax=1.0
+nt = 2*(tmax/samp)+1
+
+Flow('rick.su', None,
+     suwaveform + ' type=ricker1 fpeak=' + str(freq) +
+     ' dt=' + str(samp) + ' | ' +
+     sushw + ' delrt=-1000*' + str(tmax))
+
+# slownesses from 0.2 to 0.6 s/km
+mex  = 0.4
+mmin = 0.2
+mmax = 0.6
+nm   = 101
+
+# penalty weight
+alpha=[0.1,0.2,0.5,1.0,2.0,5.0,10.0]
+
+# support range
+lam = [0.05]
+
+# loop over frequencies
+for i in range(len(alpha)):
+
+    Flow('j'+str(i),'rick.su',
+         wiw +
+	 ' wavelet=${SOURCE}' +
+	 ' jvpm=${TARGET}' + 
+	 ' lambda=' + str(lam[0]) +
+	 ' alpha=' + str(alpha[i]) +
+	 ' mex=' + str(mex) +
+	 ' mmin=' + str(mmin) +
+	 ' mmax=' + str(mmax) +
+	 ' nm=' + str(nm),
+	 stdin=0, stdout=-1)
+
+    Result('j'+str(i),'graph min2=0 plotfat=6 wanttitle=n label1=Slowness unit1=km/s label2=VPM unit2=GPa*s')
