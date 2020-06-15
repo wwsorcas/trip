@@ -1,0 +1,189 @@
+\section{Variable projection method with loss of derivative}
+
+While minimization of $J_{\alpha}$ might be tackled directly - by
+alternately minimizations between $m$ and $w$, or by computing updates
+for $m$ and $w$ simultaneously - such joint mimization performs
+poorly, as \cite{YinHuang:16} has shown. The reason for this poor
+performance is that $J_{\alpha}$ has dramatically different
+sensitivity to $m$ versus $w$,
+as will be explained below.
+The separable nature of the least-squares inverse problems defined in \ref{eqn:obj} invites use of the variable projection method, a nested optimization approach. First, in the inner loop, the objective function is optimized over linear parameter $w$ with the nonlinear parameter $m$ fixed. 
+The gradient of the objective function $\Ja[m, w]$ with respect to $w$ is
+\begin{equation}
+\nabla _{w} \Ja[m, w;d] =F[m]^T (F[m] w - d) 
++ \alpha A^T A  w 
+\label{eqn:grad1}
+\end{equation}
+where $T$ denotes transpose.  A stationary point of equation \ref{eqn:obj} satisfies the {\em normal equation}
+\begin{equation}
+(F[m]^T F[m] + \alpha A^T A ) w = F[m]^T d.
+\label{eqn:condition}
+\end{equation}
+In view of Assumption A above, the Lax-Milgram Theorem (\cite{Yosida}, p. 92)
+applies to show that the system \ref{eqn:condition} has a
+unique solution. Since $m$, $d$ and $\alpha$ determine the operator on the LHS
+of equation \ref{eqn:condition} and its RHS, its solution becomes a
+function $\aw[m;d]$ of these quantities. Continuity in $d$ is a
+consequence of the Lax-Milgram result. 
+
+As observed by \cite{GolubPereyra:73,GolubPereyra:03}, $\Ja$ may be minimized over $m,w$ by minimizing the reduced objective
+\begin{equation}
+  \label{eqn:red}
+  \tJa[m; d] = \Ja[m,\aw[m;d];d]
+\end{equation}
+over $m$. It is natural, and the goal of this paper, to use local,
+Newton-like methods to minimize. However such
+methods require at least a gradient, and therefore derivatives of $F$,
+and so far I have not specified any regularity properties of $F$.
+
+In fact, if the theory is to encompass inverse problems in wave
+propagation in which wave velocities are amongst the model parameters
+to be estimated, then $F$ cannot be presumed to be differentiable, or
+even locally uniformly continuous, as a ${\cal B}(W,D)$-valued
+function on $M$. Instead, it is {\em differentiable with loss of
+  regularity}, as I will now explain.
+
+The mapping properties of typical modeling operators $F$ may be
+described with the help of a {\em scales of Hilbert spaces}
+$\{W^s, D^s\}_{s=0}^{\infty}$, with the following properties:
+
+\noindent {\bf Assumption C:}
+\begin{itemize}
+\item $\{W^s\}_{s=0}^{\infty}$ and $\{D^s\}_{s=0}^{\infty}$ are {\em decreasing}, that is,
+  $W^{s+1} \subset W^s$ for $s \ge 0$, and similarly for $\{D^s\}_{s=0}^{\infty}$;
+\item denoting by $\|\cdot\|_s$ the norm in $W^s$, $\|w\|_t \ge
+  \|w\|_s$ if $t \ge s$ and $w \in W^t$, with a similar property for $\{D^s\}_{s=0}^{\infty}$;
+\item $W^0=W$, $D^0=D$;
+\item 
+  \begin{equation}
+    \label{eqn:reg0}
+    F[m] \in {\cal B}(W^s,D^s),\,F[m]^T \in {\cal B}(D^s,W^s) \mbox{
+      for any } s\ge 0, m\in M
+  \end{equation}
+  (here $F[m]^T$ denotes the adjoint of $F[m] \in {\cal B}(W^0,D^0)$,
+  that is, $\langle F[m]w,d \rangle_{D^0} = \langle w,F[m]^T
+  \rangle_{W^0}$ for $w \in W^0=W, d \in D^0=D$);
+\item $A \in {\cal B}(W^s,W^s)$ for any $s \ge 0$;
+\item For each $\alpha > 0$, 
+  \begin{equation}
+    \label{eqn:normsm}
+    F^TF+\alpha^2A^TA \in C^{\infty}(M, {\cal I}(W^s,W^s)).
+  \end{equation}
+  There exists $C_{s,\alpha}>0$ so  that for all
+    $m\in M$, 
+    \begin{equation}
+      \label{eqn:nopco}
+      \|(F[m]^TF[m]+\alpha^2A^TA)^{-1}\|_{{\cal B}(W^s,W^s)} \le
+      C_{s,\alpha}.
+    \end{equation}
+\item 
+  \begin{eqnarray}
+    F &\in& C^k(M, {\cal B}(W^s,D^t)) \mbox{ provided that }s > t+k, t, 
+    k \ge 0;\\
+    \label{eqn:reg1}
+    F^T &\in& C^k(M, {\cal B}(D^s,W^t)) \mbox{ provided that }s > t+k, t, 
+    k \ge 0;
+    \label{eqn:reg2}
+  \end{eqnarray}
+\end{itemize}
+Note that the inequality of indices in the condition \ref{eqn:reg1} is {\em
+  strict}. In particular, $F$ is not assumed to be continuous as a map
+from $M$ to ${\cal B}(W^s,D^s)$ for any $s$. This constraint is
+necessary, as even the simplest examples show. For instance, the
+example considered later in this paper has this property, as I will
+show explicitly. On the other hand,
+\cite{BlazekStolkSymes:13} show that versions of conditions
+\ref{eqn:reg0}, \ref{eqn:reg1} hold in
+general for mappings defined by symmetric hyperbolic
+integro-differential systems, encompassing most common physical models
+of wave propagation.
+
+Note also that, despite the relatively weak differentiability properties of $F$, as
+indicated in condition \ref{eqn:reg1}, its normal operator is actually
+smooth as a ${\cal I}(W^s,W^s)$-valued function for all $s\ge 0$
+(condition \ref{eqn:nopco}). This condition also abstracts properties
+common to many (though not all) extended inversion frameworks. It 
+certainly holds for the example described in this paper.
+
+The scales appearing in the examples that motivated Assumption C
+calibrate regularity: that is, members of $W^t$ are more regular as
+functions on space-time than members of $W^s$ if $t>s$. Thus the
+condition \ref{eqn:reg1} expresses differentiability (of $F$ as a
+function on $M$) with loss of regularity (of the arguments as
+functions on space-time).
+
+A first consequence of Assumption C is that the solution $\aw[m;d]$ of
+the normal equation \ref{eqn:condition} is a continuously differentiable $W^s$-valued
+function on $M \times D^{s+2}$ for any $s \ge 0, \alpha>0$. Indeed, condition
+\ref{eqn:nopco} implies that the inverse of the normal operator is a
+smooth ${\cal B}(W^s,W^s)$-valued function on $M$, and condition
+\ref{eqn:reg2} that the RHS of the normal equation \ref{eqn:condition}
+depends differentiably on $(m,d) \in M \times D^t$ so long as $t>s+1$.
+
+From its definition
+the definition of $\Ja$ (\ref{eqn:obj}), and the conclusion of the
+preceding paragraph, conclude that $\tJa[m;d] \in C^1(M \times D^4)$.
+Indeed, $\aw \in C^1(M \times D^4,W^2)$ from the preceding paragraph,
+and the data residual $(m,w,d) \mapsto F[m]w-d$ is in $C^1(M \times
+W^2 \times D^0)$ according to condition \ref{eqn:reg1}.  
+  
+The main result of \cite[]{GolubPereyra:73} is a formula for the
+gradient of the reduced objective \ref{eqn:red}.  Justification of this
+formula in the present context rests on the mapping properties of the
+derivative $DF$, which are naturally posed in
+terms of the tangent space of the domain of $F$.  Recall that $M$ is
+an open subset of a Hilbert space, which has so far gone
+un-named. This ambient Hilbert space can be identified with the
+tangent space $T_mM$ of $M$ at any point $m \in M$, and these tangent
+spaces are all isomophic to the ambient space. Taking advantage of
+this fact, I will drop the subscript and refer to $TM (=T_mM$ for any
+$m \in M)$ as the tangent space of $M$. Thus assumption \ref{eqn:reg1}
+implies that for $m \in M$, $DF[m] \in {\cal B}(TM,{\cal B}(W,D))$.
+
+A particular instance of \ref{eqn:reg1} is the assertion that $F \in
+C^1(M,{\cal B}(W^2,D^0))$. Consequently for $m \in M$, $(\delta m,w)
+\rightarrow (DF[m]\delta m)w$ is continuous and bilinear $:TM \times
+W^2 \rightarrow D^0$. The derivative of $\tJa$ is
+\[
+    D\tJa[m;d]\delta m = \langle 
+  (DF[m]\delta m)\aw[m,d],F[m]\aw[m;d]-d\rangle_{D^0}
+\]
+\begin{equation}
+  \label{eqn:grad1}
+ +\langle D\aw[m;d]\delta m,F[m]^T(F[m]\aw[m;d]-d)+\alpha^2A^TA\aw[m;d]\rangle_{W^0}
+\end{equation}
+for any $\delta m \in TM$, provided that the derivatives appearing on
+the RHS make sense, which they do if $d \in D^4$, as noted above. Note
+that the second term on the RHS of equation \ref{eqn:grad1} vanishes
+thanks to the normal equation \ref{eqn:condition}.
+
+Given $w \in
+W^2$, the adjoint of the continuous linear map $T_mM \rightarrow D^0$
+given by $\delta m \rightarrow
+(DF[m]\delta m)w$ will be denoted $DF[m]^*(w,\cdot)$: that is,
+\begin{equation}
+  \label{eqn:madj}
+  \langle (DF[m]\delta m)w,d\rangle_{D^0} = \langle \delta m,
+  DF[m]^*(w,d)\rangle_{TM}.
+\end{equation}
+  
+With this convention, the result \ref{eqn:grad1} can be re-written
+\begin{equation}
+  \label{eqn:deriv}
+  D\tJa[m;d]\delta m = \langle \delta m, DF[m]^*(\aw[m;d], F[m]\aw[m;d]-d)\rangle_{TM}
+\end{equation}
+Therefore
+
+\begin{theorem}\label{eqn:vpmgrad}
+  Under Assumptions A, B, and C,  $\tJa[\cdot;d] \in C^k(M)$ provided
+  that $k \ge 1$ and $d \in D^{3+k}$. Its gradient is given by
+ \begin{equation}
+   \nabla _{m} \tJa[m; d] = D F[m]^*(\aw[m;d],F[m]\aw[m;d]-d))
+   \label{eqn:grad2}
+ \end{equation}
+ \end{theorem}
+The identity \ref{eqn:grad2} has precisely the form of the formula derived
+\cite{GolubPereyra:03,GolubPereyra:73} for differentiable separable
+least squares problems on $\bR^n$. The existence of higher derivatives
+than the first under the circumstances indicated follows from very
+similar reasoning to that used to establish the assertion for $k=1$.

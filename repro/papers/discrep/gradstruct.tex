@@ -1,0 +1,131 @@
+\section{Structure of the Gradient}
+As was mentioned in the introduction, proper choice of norms in domain
+and range of the example modeling operator $F$ described there renders
+it unitary. If $F$ were also differentiable (rather than
+``differentiable with loss of a derivative'', as explained above),
+$Q[m,\delta m] = F[m]^TDF[m]\delta m$ would factor $DF[m]\delta m =
+F[m]Q[m,\delta m]$, and $Q[m,\delta m]$ is skew-symmetric. This
+section presents a precise variant of this structure that is shared by
+the simple example studied in this paper and by many other inverse
+problems in wave propagation. 
+
+The substitute for unitarity that can be achieved in for many such
+problems is
+
+\noindent {\bf Assumption D:} For each $m \in M$, $F[m]$ is
+{\em approximately unitary}: there exist
+\begin{eqnarray}
+  W_X&\in& C^{\infty}(M,\cap_{s=0}^{\infty}{\cal I}(X^s,X^s)),\\\nonumber
+  W_D&\in& C^{\infty}(M,\cap_{s=0}^{\infty}{\cal I}(D^s,D^s))
+  \label{eqn:w}
+\end{eqnarray}
+for all $s \ge 0$, so that
+\begin{equation}
+\label{eqn:appinvdef}
+F^{\dagger} = W_X^{-1}F^TW_D: M \rightarrow {\cal B}(D^s,X^s),
+\end{equation}
+satisfies
+\begin{equation}
+  \label{eqn:appinvprop}
+  F^{\dagger}F = I +R_X,\,FF^{\dagger}=I+R_D
+\end{equation}
+with
+\begin{eqnarray}
+   R_X&\in& C^{\infty}(M,\cap_{s,t=0}^{\infty}{\cal B}(X^s,X^{s+t})),\\\nonumber
+  R_D&\in& C^{\infty}(M,\cap_{s,t=0}^{\infty}{\cal B}(D^s,D^{s+t}))
+  \label{eqn:r}
+\end{eqnarray}
+
+Note that the Assumption D together with condition \ref{eqn:reg1} from
+Assumption C imply that $F^{\dagger}$ is also ``differentiable with loss of a derivative'':
+\begin{equation}
+\label{eqn:appinvderiv}
+F^{\dagger} \in C^k(M, {\cal B}(D^s,X^t)) \mbox{ provided that
+}s > t+k, t.
+\end{equation}
+$F^{\dagger}$ is the adjoint of $F$ with respect to the $M$-dependent
+norms
+\begin{eqnarray}
+  \|x\|^2_m &=& \langle x, W_X[m]x\rangle_0,\\ \nonumber
+  \|d\|^2_m &=& \langle d, W_D[m]d\rangle_0
+  \label{eqn:unit}
+\end{eqnarray}
+
+\noindent {\bf Remark:} As mentioned earlier, in concrete instances,
+$X^s,D^s$ are$L^2$-based  Sobolev spaces, for
+which the index $s$ indicates the number of square-integrable
+derivatives. The assertion \ref{eqn:r} thus means that the
+``remainder'' operators $R_X,R_D$ are smoothing: outputs are
+arbitrarily smoother than inputs. For the very simple example
+described in the introductions, in fact $R_X=0=R_D$.
+
+\begin{theorem}
+  \label{thm:q} Under Assumptions A-D, 
+the derivative $DF$ admits the factorization
+\begin{equation}
+  \label{eqn:decomp}
+  DF[m]\delta m = F[m]Q[m,\delta m] + E[m,\delta m],
+\end{equation}
+in which $ Q \in \cap_{s \ge 0}C^{\infty}(M \times TM, {\cal
+  B}(X^{s+1},X^s))$ and $E \in C^{\infty}(M \times TM, ,\cap_{s,t=0}^{\infty}{\cal B}(X^s,D^{s+t}))$
+are linear in their second arguments. Also, $Q$ is {\em essentially skew-adjoint}, in the sense that for any $m \in M,  \delta m \in TM$, and $x_1,x_2 \in X^1$,
+\begin{equation}
+  \label{eqn:essskew}
+  \langle Q[m,\delta m] x_1,x_2 \rangle_{X^0} = -\langle x_1, Q[m,\delta
+  m]x_2\rangle_{X^0}
+  + \langle R[m,\delta m]x_1,x_2\rangle_{X^0},
+\end{equation}
+with $R \in \cap_{s,t \ge 0}C^{\infty}(M \times TM, {\cal B}(X^s,X^{s+t}))$,
+also linear in its second argument.
+\end{theorem}
+
+\begin{proof} Define $Q = F^{\dagger}DF$. Then
+  \[
+    FQ = (I+R_D)DF = DF + E
+  \]
+  \[
+    D (F^{\dagger}F) = DF^{\dagger}F+F^{\dagger}DF 
+  \]
+  \[
+    = D(W_X^{-1}F^TW_D)F +Q = -W_X^{-1}DW_X W_X^{-1}F^TW_DF
+  \]
+  \[+
+  W_X^{-1}(Q^TF^T-E)W_DF + W_X^{-1}F^TW_D W_D^{-1}DW_DF +Q
+\]
+\[
+=-W_X^{-1}DW_XF^{\dagger}F + Q^{\dagger}F^{\dagger}F - E^{\dagger}F + F^{\dagger}W_D^{-1}DW_DF+Q
+\]
+\[
+  = -W_X^{-1}DW_X(I+R_X) + Q(I+R_X) - E^{\dagger}F +
+  F^{\dagger}W_D^{-1}DW_DF+Q
+\]
+\[
+  = Q^{\dagger} + Q -W_X^{-1}DW_X(I+R_X) + QR_X - E^{\dagger}F +
+  F^{\dagger}W_D^{-1}DW_DF
+  \]
+\end{proof}
+
+From equations \ref{eqn:grad1} and \ref{eqn:decomp},
+\[
+    D\tJa[m;d]\delta m = \langle 
+  (DF[m]\delta m)\ax[m,d],F[m]\ax[m;d]-d\rangle_{D^0}
+\]
+\[
+  =\langle F[m]Q[m,\delta m]\ax[m;d],F[m]\ax[m;d]-d\rangle_{D^0}
+\]
+\[
+  = \langle Q[m,\delta m]\ax[m;d],F[m]^T(F[m]\ax[m;d]-d)\rangle_{D^0}
+\]
+\[
+  = -\langle Q[m,\delta m]\ax[m;d],A^TA\ax[m;d]\rangle_{X^0}
+\]
+\[
+  = -\alpha^2\langle A^TA Q[m,\delta m]\ax[m;d],\ax[m;d]\rangle_{X^0}
+\]
+\[
+  =\alpha^2\langle [Q[m,\delta m],A^TA]\ax[m;d],\ax[m;d]\rangle_{X^0} -\alpha^2\langle Q[m,\delta m]A^TA\ax[m;d],\ax[m;d]\rangle_{X^0}
+\]
+\[
+  =\alpha^2\langle [Q[m,\delta m],A^TA]\ax[m;d],\ax[m;d]\rangle_{X^0}-\alpha^2\langle Q[m,\delta m]^T\ax[m;d], A^TA\ax[m;d]\rangle_{X^0}
+\]
+

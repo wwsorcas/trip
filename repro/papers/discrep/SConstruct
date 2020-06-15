@@ -1,0 +1,24 @@
+from rsf.tex import *
+
+End(
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,listings,amsmath,amsthm,amssymb,amsbsy,float,wasysym,setspace,bm',
+include=r'''
+      \newcommand{\lW}{W_{\lambda}}
+      \newcommand{\oS}{\bar{S}}
+      \newcommand{\wl}{w_{\lambda}}
+      \newcommand{\dl}{d_{\lambda}}
+      \newcommand{\lE}{E_{\lambda}}
+      \newcommand{\lF}{F_{\lambda}}
+      \newcommand{\Ja}{J_{\alpha}}
+      \newcommand{\tJa}{\tilde{J}_{\alpha}}	
+      \newcommand{\bx}{{\bf x}}
+      \newcommand{\bR}{{\bf R}}
+      \newcommand{\aw}{w_{\alpha}}
+      \newtheorem{theorem}{Theorem}
+      \newtheorem{corollary}{Corollary}
+      \newtheorem{lemma}{Lemma}
+      \newtheorem{proposition}{Proposition}
+''')
+
