@@ -1,5 +1,6 @@
 from rsf.tex import *
 
+
 End(
 lclass='georeport',
 options='notimes',
@@ -16,6 +17,8 @@ include=r'''
       \newcommand{\bx}{{\bf x}}
       \newcommand{\bR}{{\bf R}}
       \newcommand{\aw}{w_{\alpha}}
+      \newcommand{\krms}{k_{\rm RMS}}
+      \newcommand{\dlam}{\Delta \lambda}
       \newtheorem{theorem}{Theorem}
       \newtheorem{corollary}{Corollary}
       \newtheorem{lemma}{Lemma}
