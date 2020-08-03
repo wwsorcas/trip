@@ -228,6 +228,22 @@ as holding for $t \in [t_{\rm min},t_{\rm  max}]$). So
   \frac{1}{4\pi r}.
 \end{equation}
 
+Note also that $F[m]$ is surjective for every $m \in M$.
+
+In computational practice, $W$ will have to be replaced by a
+finite-dimensional subspace of $L^2(\bR)$. Many such choices will
+implicitly limit the support of $w \in W$ to a bounded interval, say
+$[T_{\rm min},T_{\rm max}]$. To maintain the surjective property,
+these bounds should be chosen so that $[t_{\rm min}, t_{\rm max}]
+\subset [T_{\rm min}+mr,T_{\rm max}+mr]$ for all $m \in M$, that is,
+\begin{eqnarray}
+  \label{eqn:dombounds}
+  t_{\rm min} &\ge & T_{\rm min}+m_{\rm max}r,\nonumber\\
+  t_{\rm max} &\le & T_{\rm max}+m_{\rm min}r.
+\end{eqnarray}
+We will ignore these computational necessities in this work,
+maintaining the defintion $W=L^2(\bR)$.
+
 \section{The Inverse Problem}
 
 Part of the definition of an inverse problem based on the model
@@ -277,7 +293,7 @@ $[ m_{\rm min}r-\lambda,m_{\rm max}r+\lambda] \subset
   \subset [t_{\rm min},t_{\rm max}].
 \end{equation}
 Then for 
-$m \in M$, $0 <\lambda \le \lambda_{\rm max}$, $F[m] \in {\cal B}(\lW,D)$ is coercive.
+$m \in M$, $0 <\lambda \le \lambda_{\rm max}$, $\lF[m] \in {\cal B}(\lW,D)$ is coercive.
 
 Note that condition \ref{eqn:fullrec} implies
 \begin{eqnarray}
@@ -628,6 +644,35 @@ objective $\tJa$ is given by the expression \ref{eqn:objexp}.
 The results of the previous theorem imply those of
 
 \begin{theorem}
+  \label{thm:epjgen}
+  Assume the hypotheses of Theorem \ref{thm:norminv}. Then
+  \begin{equation}
+  \label{eqn:residnormgen}
+  e[m,\aw[m,d];d] = \frac{1}{2}\int \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
+\end{equation}
+\begin{equation}
+  \label{eqn:anninormgen}
+  p[m,\aw[m,d];d] = \frac{1}{2}\int \,dt\,(4\pi r a(t-mr))^2(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)
+\end{equation}
+
+\begin{equation}
+  \label{eqn:expjgen}
+\tJa[m;d] = \frac{1}{2}\int\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
+a(t-mr))^2)^{-1}d(t)^2. 
+\end{equation}
+Finally, if $a \in W^{1,1}(\bR)$ (distributions with integrable 
+derivatives), then $\tJa[\cdot;d]$ is differentiable, and 
+\begin{equation}
+  \label{eqn:dexpjgen}
+  \frac{d}{dm}\tJa[m;d] = -(4 \pi r \alpha)^2 \int \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-mr)(1+(4\pi r \alpha 
+  a(t-mr))^2)^{-2}d(t)^2. 
+\end{equation}
+\end{theorem}
+
+\begin{corollary}
   \label{thm:epjnonoise}
   Assume the hypotheses of Theorem \ref{thm:norminv}, item 3. Then 
 \begin{equation}
@@ -641,16 +686,23 @@ The results of the previous theorem imply those of
   p[m,\aw[m,d];d] = \frac{1}{2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
     a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
 \end{equation}
-so finally
+so 
 \begin{equation}
-\label{eqn:expjgen}
-\tJa[m;d] = =\frac{\alpha^2}{2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
-  a(t-(m-m^*)r)^2)^{-1}w_*(t)^2.
+\label{eqn:expjnonoise}
+\tJa[m;d] = \frac{\alpha^2}{2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-1}w_*(t)^2. 
 \end{equation}
-\end{theorem}
+Finally, if $a \in W^{1,1}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, and 
+\begin{equation}
+  \label{eqn:dexpjnonoise}
+  \frac{d}{dm}\tJa[m;d] = -r \alpha^2 \int \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
+\end{equation}
+\end{corollary}
 
 I willl now examine two possible choices of penalty multipler $a$ in
-defintion \ref{eqn:annmult}.
+definition \ref{eqn:annmult}.
 
 A penalty operator $A$ of which $\lW$ is the null space would be a
 natural choice. Such operators have come to be called
@@ -711,7 +763,10 @@ This
 particular annihilator has been employed in earlier papers on extended 
 source inversion 
 \cite[]{Plessix:00a,LuoSava:11,Warner:14,HuangSymes:SEG15a,Warner:16,HuangSymes:GEO17}. It
-satisfies condition \ref{eqn:abnd} with $C=\lambda$.
+satisfies condition \ref{eqn:abnd} with $C=\lambda$, and is a member
+of $W^{1,1}(\bR)$, so that the resulting objective $\tJa$ is
+differentiable, with derivative given by equation \ref{eqn:dexpgen},
+or \ref{eqn:dexpjnonoise} in the noise-free case. 
 
 Surprisingly, the choice \ref{eqn:ann} yields an optimization
 problem with better global convergence properties:
@@ -728,24 +783,15 @@ problem with better global convergence properties:
 \begin{proof}
   As observed before, $\mbox{supp }\aw[m;d] \subset [t_{\rm
     min}-mr,t_{\rm max}-mr]\subset [-\tau,\tau]$, with $\tau$ defined
-  in \ref{eqn:taudef}. Therefore for $t \in  [t_{\rm min}-mr,t_{\rm
-    max}-mr]$, $a(t) = |t|$, and reason analogous to the proof of
-  Theorem \ref{thm:norminv}, item 2, shows that
-  \begin{equation}
-    \label{eqn:solnnon}
-    \aw[m,d](t)= \left(1+ (4\pi r)^2\alpha^2 t^2\right)^{-1}w_*\left(t+(m-m_*)r\right) 
-  \end{equation}
-  Straightforward modification of the proof of Theorem
-  \ref{thm:epjnonoise} gives
-  \begin{equation}
-    \label{eqn:expj}
-    \tJa[m;d] =\frac{\alpha^2}{2}\int\,dt\,(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
-    (t-(m-m^*)r)^2)^{-1}w_*(t)^2.
-  \end{equation}
-  A brief calculation yields
+  in \ref{eqn:taudef}. Therefore, $a(t) = |t|$ $a a'(t) = t$ in the
+  support of the integrand on the RHS of equation
+  \ref{eqn:depjnonoise}, which therefore 
+  becomes (after change of integration variable)
   \begin{equation}
     \label{eqn:gradfinal}
-    \frac{\partial}{\partial m}\tJa[m;d] = -r\alpha^2\int \,dt\,\frac{t}{(1+(4\pi r)^2\alpha^2 t^2)^2}w_*(t+(m-m_*)r)^2.
+    \frac{d}{dm}\tJa[m;d] = -r \alpha^2 \int \,dt \, 
+  t(1+(4\pi r)^2 \alpha^2 
+  t^2)^{-2}w_*(t+(m-m_*))^2.
   \end{equation}
   Recall that $w_*(t+(m-m_*)r)$
   vanishes if $|t+(m-m_*)r| > \lambda$. Therefore the integral on the
@@ -754,7 +800,10 @@ problem with better global convergence properties:
     = -r\alpha^2\int_{-(m-m_*)r-\lambda}^{-(m-m_*)r+\lambda}
     \,dt\, \frac{t}{(1+(4\pi r)^2\alpha^2 t^2)^2}w_*\left(t+(m-m_*)r\right)^2
   \]
-  If $m > m_*+\lambda/r$, then the entire interval of integration is a proper
+  Suppose that $\mu < \lambda$ and $w_* \in W_{\mu}$. Then for
+  $t+(m-m_*)r \in \mbox{supp }w_*$, $t\le\mu-(m-m_*)r$.
+  If $m > m_*+\lambda/r$, then $t >\mu-\lambda<0$, so the support of
+  the $[-\mu-(m-m_*)r, \mu-(m-m_*)r]$ is a proper
   subset of the negative half-axis. Consequently the first factor in the
   integrand satisfies
   \[
@@ -762,7 +811,11 @@ problem with better global convergence properties:
   \]
   over the interval of integration. The integral is
   negative, so the derivative
-  is positive. Similar reasoning applies to the case $m <
+  is positive. In fact, the quantity displayed above is
+  \[
+    \le 
+  \]
+  Similar reasoning applies to the case $m <
   m_*-\lambda/r$. Thus
   \begin{eqnarray}
     m > m_*+\lambda/r & \Rightarrow & \frac{\partial \tJa}{\partial
@@ -1070,7 +1123,7 @@ least.
 Suppose that the data trace $d$ takes the form
 \begin{equation}
   \label{eqn:defdatanoisy}
-  d = F[m_*]w_* + n
+  d = F[m_*]w_* + n = d_*+n,
 \end{equation}
 with $m_* \in M, w_* \in \lW$ as before, and noise trace $n \in
 D$. Since no support assumptions can be made about $n$, equation
@@ -1078,6 +1131,78 @@ D$. Since no support assumptions can be made about $n$, equation
 $\alpha$.  Therefore minimization of $\tJa$ cannot by itself yield a
 solution of the inverse problem as defined in the problem statement
 \ref{eqn:probstat0}.
+
+Recall that $F[m]$ is surjective for every $m \in M$. Define for each
+$m \in M$
+\begin{equation}
+  \label{eqn:defnoisewavelet}
+  w_{n}[m] = \mbox{arg}\min_w\{\|w\|: F[m]w=n\}.
+\end{equation}
+That is,
+\[
+  w_n[m](t) =
+  \left\{
+    \begin{array}{c}
+      4\pi r n(t+mr),\,t \in [t_{\rm min}-mr,t_{\rm max}-mr];\\
+      0, \mbox{ else.}
+    \end{array}
+  \right.
+\]
+Set
+\begin{equation}
+  \label{eqn:defwflat}
+  w_{\flat} = w_* + w_n[m_*];
+\end{equation}
+then
+\begin{equation}
+  \label{eqn:datacomplete}
+  d = F[m_*]w_{\flat}.
+\end{equation}
+That is, we can treat the data as if it were noise-free, for the price
+of altering the wavelet. The altered wavelet is of course not a member
+of $\lW$.
+
+From the proof of Theorem \ref{thm:norminv}, for the choice
+$a(t)=\min(|t|,\tau)$ with $\tau$ defined in \ref{eqn:taudef},
+\begin{equation}
+  \label{eqn:solnoise}
+  \aw[m,d](t)= \left(1+ (4\pi r)^2\alpha^2 t^2\right)^{-1}w_{\flat}\left(t+(m-m_*)r\right).
+\end{equation}
+and from Theorem \ref{thm:epjnonoise}
+\begin{equation}
+\label{eqn:expjgen}
+\tJa[m;d] = =\frac{\alpha^2}{2}\int\,dt\,(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
+  (t-(m-m^*)r)^2)^{-1}w_{\flat}(t)^2.
+\end{equation}
+whence via the same short computation as before
+\[
+  \frac{\partial}{\partial m}\tJa[m;d] = -r\alpha^2\int \,dt\,\frac{t-(m-m_*)r}{(1+(4\pi r)^2\alpha^2 (t-(m-m_*)r)^2)^2}w_{\flat}(t)^2. 
+\]
+\[
+  = -r\alpha^2 \int \, dt \, (t-(m-m_*)r)\aw[m;d](t)^2 
+\]  
+\[
+  = -r\alpha^2\left\{ \int_{-\lambda}^{\lambda} \, dt \, 
+    (t-(m-m_*)r)(w_*(t)^2 +2w_*(t)w_n[m_*](t))\right\}
+\]
+\begin{equation}
+  \label{eqn:gradnoise}
+-r\alpha^2\int_{-\infty}^{\infty} \, dt \, a(t-(m-m_*)r) w_n[m_*](t)^2.
+\end{equation}
+The last line recalls the definition of $a$ for this example
+(\ref{eqn:deftau}).
+
+We will follow the pattern laid down in the proof of Theorem
+\ref{thm:rampgood}. However to obtain an estimate depending on some
+measure of noise, it is necessary to explicitly quantify the bounds
+within which stationary points of $\tJa$ are located. Pick $\dlam >0$,
+and suppose that $|m-m_*|r > \lambda + \dlam$. Then for $t \in
+[-\lambda,\lambda]$,
+\begin{eqnarray*}
+  (m-m_*)r >   \lambda +\dlam & \Rightarrow & t-(m-m_*)r < -\dl, \\
+  (m-m_*)r < -\lambda +\dlam & \Rightarrow & t-(m-m_*)r >   \dl.
+\end{eqnarray*}
+In the first case, 
 
 Recall that $\lE$ is the projection of $W$ onto $\lW$
 (i.e. multiplication by ${\bf 1}_{[-\lambda,\lambda]}$.
