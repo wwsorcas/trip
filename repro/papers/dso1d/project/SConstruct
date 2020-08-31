@@ -4,9 +4,11 @@
 from rsf.proj import *
 from trip.proj import getThreads
 from trip.proj import getCommand
+from trip.proj import getnum
 from trip.prog import run
 
 import os
+import math
 
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
@@ -40,6 +42,9 @@ suop            = os.path.join(CWPROOT,'bin/suop')
 sunull          = os.path.join(CWPROOT,'bin/sunull')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 sumean          = os.path.join(CWPROOT,'bin/sumean')
+suaddnoise      = os.path.join(CWPROOT,'bin/suaddnoise')
+sunormalize     = os.path.join(CWPROOT,'bin/sunormalize')
+sushift         = os.path.join(CWPROOT,'bin/sushift')
 RSFROOT         = os.getenv('RSFROOT')
 sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
 sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
@@ -49,46 +54,203 @@ sfget           = os.path.join(RSFROOT,'bin/sfget')
 sfspray         = os.path.join(RSFROOT,'bin/sfspray')
 MYAPPS          = os.getenv("MYAPPS")
 wiw             = os.path.join(MYAPPS,'trip/iwave/trace/main/wiw.x')
+wiwdisc         = os.path.join(MYAPPS,'trip/iwave/trace/main/wiwdisc.x')
 
 ########### archive - unarchive ##############
 
+
 ### create 20, 40 Hz Rickers and relevant data
 
-freq = 20
+freq = 20.0
 samp = 0.004
-tmax=1.0
-nt = 2*(tmax/samp)+1
+#freq = 40.0
+#samp = 0.002
+# suwaveform outputs a ricker supported on [-lam,lam]
+lam = 1.0/freq
+# number of time samples in wavelet file
+wnt = 2*(lam/samp) + 1
+# scale factor to make up for stupidity in sunormalize
+wsc = 1.0/math.sqrt(wnt*samp*1000)
 
 Flow('rick.su', None,
      suwaveform + ' type=ricker1 fpeak=' + str(freq) +
      ' dt=' + str(samp) + ' | ' +
-     sushw + ' delrt=-1000*' + str(tmax))
+     sushw + ' key=delrt a=' + str(-1000*lam) + ' | ' +
+     sunormalize + ' | ' + sugain + ' scale=' + str(wsc))
 
 # slownesses from 0.2 to 0.6 s/km
+# since r=1, mmin and mmax are min and max shifts
+# safe interval for noise-free data is [mmin-lam,mmax+lam]
 mex  = 0.4
 mmin = 0.2
 mmax = 0.6
 nm   = 101
+tmin=0
+tmax=mmax+lam
+nt=1+(tmax-tmin)/samp
+
+# useful numbers
+fourpir=4.0*3.1415927
+oneoverfourpir = 1.0/fourpir
+
+#sjnk='ms.txt'
+#smopt='mopt'
+#Flow('test.txt', 'ms.txt',
+#     'echo ' + str(getnum(sjnk,smopt)),
+#     stdin=0)
+
+#pars='outn2.txt'
+#Flow('datatest.su',['rick.su',pars],
+#     sushift + ' < ${SOURCES[0]}' + 
+#     ' tmin=' + str(tmin-getnum(pars,smopt)) +
+#     ' tmax=' + str(tmax-getnum(pars,smopt)) +
+#     ' dt=' + str(1000000*samp) + ' | ' +
+#     sushw + ' key=delrt a=' + str(tmin) + ' | ' +
+#     sugain + ' scale=' + str(oneoverfourpir) +
+#     ' > ${TARGET}; /bin/rm jnk',
+#     stdin=0,stdout=-1)
+     
+# create noise-free data by shifting wavelet
+Flow('data.su', 'rick.su',
+     sushift +
+     ' tmin=' + str(tmin-mex) +
+     ' tmax=' + str(tmax-mex) +
+     ' dt=' + str(1000000*samp) + ' | ' +
+     sushw + ' key=delrt a=' + str(tmin) + ' | ' +
+     sugain + ' scale=' + str(oneoverfourpir))
+
+# scale factor to make up for stupidity in sunormalize
+sc = 1.0/math.sqrt((nt-1)*samp*1000)
+
+# filtered Gaussian noise, scaled to RMS=1
+Flow('tmp.su','data.su',
+     suaddnoise + ' sn=1.0 noise=gauss | ' +
+     sufilter + ' f=2,5,45,60 amps=0,1,1,0')
+#Flow('tmp.su','data.su',
+#     suaddnoise + ' sn=1.0 noise=gauss | ' +
+#     sufilter + ' f=4,10,90,120 amps=0,1,1,0')
+Flow('noise.su',['tmp.su', 'data.su'],
+     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff | ' +
+     sunormalize + ' | ' +
+     sugain + ' scale=' + str(sc))
 
 # penalty weight
 alpha=[0.1,0.2,0.5,1.0,2.0,5.0,10.0]
 
-# support range
-lam = [0.05]
+# noise-to-signal rms
+eta = [0.0,0.1,0.25,0.5,1.0,2.0]
 
-# loop over frequencies
-for i in range(len(alpha)):
+Result('noise','noise.su',
+        'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
 
-    Flow('j'+str(i),'rick.su',
-         wiw +
-	 ' wavelet=${SOURCE}' +
-	 ' jvpm=${TARGET}' + 
-	 ' lambda=' + str(lam[0]) +
-	 ' alpha=' + str(alpha[i]) +
-	 ' mex=' + str(mex) +
-	 ' mmin=' + str(mmin) +
-	 ' mmax=' + str(mmax) +
-	 ' nm=' + str(nm),
+# loop over noise levels
+for n in range(len(eta)):
+    
+    # create noisy data
+    Flow('snoise'+str(n)+'.su','noise.su',
+        sugain + ' scale=' + str(oneoverfourpir*eta[n]))
+    Flow('datan'+str(n)+'.su', ['data.su', 'snoise'+str(n)+'.su'],
+        suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+        stdin=0)
+    Result('datan'+str(n),'datan'+str(n)+'.su',
+        'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
+    dcmd = 'echo ' + "'" +'\\\plot{datan' + str(n) + '}{width=' + '\\' + '\\' + 'textwidth}{Data plus noise, noise-to-signal ratio $' + '\\' + '\\' + 'eta$ =' + str(eta[n]) + '}' + "'"
+    Flow('datan' + str(n) +'.tex', None, dcmd, stdin=0)
+
+    # create plots of dso objective and components
+    for i in range(len(alpha)):
+        Flow('j'+str(i)+'n'+str(n),'datan'+str(n)+'.su',
+            wiw +
+            ' data=${SOURCE}' +
+            ' jvpm=${TARGET}' + 
+            ' alpha=' + str(alpha[i]) +
+            ' mmin=' + str(mmin) +
+            ' mmax=' + str(mmax) +
+            ' nm=' + str(nm),
+            stdin=0, stdout=-1)
+
+        Result('j'+str(i)+'n'+str(n),'graph min2=0 plotfat=6 plotcol=6,5,4 wanttitle=n label1=Slowness unit1=km/s label2=Amplitude unit2=GPa*GPa*s')
+
+        cmd = 'echo ' + "'" +'\\\plot{j' +str(i) +'n' + str(n) + '}{width=' + '\\' + '\\' + 'textwidth}{$' + '\\' + '\\' + 'alpha$ =' + str(alpha[i]) + ', $' + '\\' + '\\' + 'eta$ =' + str(eta[n]) + ': $ ' + 'J' + '_' + '{' + '\\' + '\\' + 'rm VPM}$ ' + '(' + 'blue' + ')' + ', $ ' + 'e' + '$ ' + '(' + 'red' + ')' + ', and $' + '\\' + '\\' + 'alpha^2 p$ ' + '(' + 'magenta' + ')' + '}' + "'"
+#        print(cmd)
+        Flow('j'+str(i)+'n'+str(n)+'.tex',None, cmd,stdin=0)
+
+# discrepancy principle computations
+# create dictionary of actual/estimated noise pairs,
+# based on eta list for actual
+
+NOISE = [ { 'eta': 0.2, 'etaest': 0.2, 'lambda': 0.1, 'mopt': 0.0 },
+          { 'eta': 0.1, 'etaest': 0.2, 'lambda': 0.1, 'mopt': 0.0 },
+      ]
+
+
+for etapair in range(len(NOISE)):
+
+    # create noisy data	
+    Flow('snoisep'+str(etapair)+'.su','noise.su',
+        sugain + ' scale=' + str(oneoverfourpir*NOISE[etapair]['eta']))
+    Flow('datanp'+str(etapair)+'.su', ['data.su', 'snoisep'+str(etapair)+'.su'],
+        suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+        stdin=0)
+    Result('datanp'+str(etapair),'datanp'+str(etapair)+'.su',
+        'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
+    ddcmd = 'echo ' + "'" +'\\\plot{datanp' + str(etapair) + '}{width=' + '\\' + '\\' + 'textwidth}{Data plus noise, noise-to-signal ratio $' + '\\' + '\\' + 'eta$ =' + str(NOISE[etapair]['eta']) + '}' + "'"
+    Flow('ddatan' + str(etapair) +'.tex', None, dcmd, stdin=0)
+
+    maxit=30
+    efactor=0.9
+    rule='secant'
+    
+    # estimate optimal slowness, penalty weight via discrepancy principle
+    Flow(['resnp'+str(etapair)+'.su', 'outnp' + str(etapair) + '.txt'],
+         ['datanp' + str(etapair) + '.su'],
+	 wiwdisc + ' data=${SOURCES[0]} res=${TARGETS[0]}' +
+	 ' out=${TARGETS[1]} maxit=' + str(maxit) +
+	 ' mmin=' + str(mmin) + ' mmax=' + str(mmax) + ' nm=' + str(nm) +
+	 ' sn=' + str(1.0/(NOISE[etapair]['etaest'])) +
+	 ' efactor=' + str(efactor) + ' rule=' + rule,
 	 stdin=0, stdout=-1)
 
-    Result('j'+str(i),'graph min2=0 plotfat=6 wanttitle=n label1=Slowness unit1=km/s label2=VPM unit2=GPa*s')
+    # resimulated data
+    Flow('resimp' + str(etapair) + '.su',
+         ['resnp' + str(etapair) + '.su',
+	  'datanp' + str(etapair) + '.su'],
+	 suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+	 stdin=0)
+
+    # extract est wavelet
+    pars = 'outnp' + str(etapair) + '.txt'
+    smopt='mopt'
+    Flow('wavp' + str(etapair) + '.su',
+         ['resimp' + str(etapair) + '.su',
+	  'outnp' + str(etapair) + '.txt'],
+         suwind +
+	 ' < ${SOURCES[0]}' + 
+	 ' tmin=' + str(getnum(pars,smopt)-NOISE[etapair]['lambda']) +
+	 ' tmax=' + str(getnum(pars,smopt)+NOISE[etapair]['lambda']) + ' | ' +
+	 sushw + ' key=delrt a=-' +
+	 str(NOISE[etapair]['lambda']) + ' | ' +
+	 sugain + ' scale=' + str(fourpir),
+	 stdin=0)
+
+    # projected resimulation
+    Flow('presimp' + str(etapair) + '.su',
+         ['wavp' + str(etapair) + '.su',
+          'outnp' + str(etapair) + '.txt'],
+         sushift + ' < ${SOURCES[0]}' + 
+         ' tmin=' + str(tmin-getnum(pars,smopt)) +
+         ' tmax=' + str(tmax-getnum(pars,smopt)) +
+         ' dt=' + str(1000000*samp) + ' | ' +
+         sushw + ' key=delrt a=' + str(tmin) + ' | ' +
+         sugain + ' scale=' + str(oneoverfourpir) +
+         ' > ${TARGET}',
+         stdin=0,stdout=-1)	 
+    
+    # projected residual data
+    Flow('presnp' + str(etapair) + '.su',
+         ['presimp' + str(etapair) + '.su',
+	  'datanp' + str(etapair) + '.su'],
+	 suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+	 stdin=0)
+	 
+End()
