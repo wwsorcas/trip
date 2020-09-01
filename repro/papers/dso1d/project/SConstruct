@@ -229,7 +229,7 @@ for etapair in range(len(NOISE)):
 	 ' tmin=' + str(getnum(pars,smopt)-NOISE[etapair]['lambda']) +
 	 ' tmax=' + str(getnum(pars,smopt)+NOISE[etapair]['lambda']) + ' | ' +
 	 sushw + ' key=delrt a=-' +
-	 str(NOISE[etapair]['lambda']) + ' | ' +
+	 str(1000.0*NOISE[etapair]['lambda']) + ' | ' +
 	 sugain + ' scale=' + str(fourpir),
 	 stdin=0)
 
