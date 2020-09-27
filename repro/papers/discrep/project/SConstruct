@@ -6,9 +6,11 @@ from trip.proj import getThreads
 from trip.proj import getCommand
 from trip.proj import getnum
 from trip.prog import run
+from subprocess import call
 
 import os
 import math
+import subprocess
 
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
@@ -66,8 +68,9 @@ freq = 20.0
 samp = 0.004
 #freq = 40.0
 #samp = 0.002
-# suwaveform outputs a ricker supported on [-lam,lam]
-lam = 1.0/freq
+# suwaveform outputs a ricker supported on [-1/freq,1/freq]
+# lam is max lambda - should be checked
+lam = 0.2
 # number of time samples in wavelet file
 wnt = 2*(lam/samp) + 1
 # scale factor to make up for stupidity in sunormalize
@@ -75,8 +78,9 @@ wsc = 1.0/math.sqrt(wnt*samp*1000)
 
 Flow('rick.su', None,
      suwaveform + ' type=ricker1 fpeak=' + str(freq) +
-     ' dt=' + str(samp) + ' | ' +
-     sushw + ' key=delrt a=' + str(-1000*lam) + ' | ' +
+     ' dt=' + str(samp) + ' ns=' + str(wnt) + ' | ' +
+     sushw + ' key=delrt a=' + str(-1000/freq) + ' | ' +
+     sushift + ' tmin=-' + str(lam) + ' tmax=' + str(lam) + '| ' +
      sunormalize + ' | ' + sugain + ' scale=' + str(wsc))
 
 # slownesses from 0.2 to 0.6 s/km
@@ -87,7 +91,8 @@ mmin = 0.2
 mmax = 0.6
 nm   = 101
 tmin=0
-tmax=mmax+lam
+tmax=mmax+(1.0/freq);
+#tmax=mmax+lam
 nt=1+(tmax-tmin)/samp
 
 # useful numbers
@@ -125,9 +130,18 @@ Result('noise','noise.su',
 # create dictionary of actual/estimated noise pairs,
 # based on eta list for actual
 
-NOISE = [ { 'eta': 0.2, 'etaest': 0.2, 'lambda': 0.1, 'pars': 'outnp0.txt' },
-          { 'eta': 0.2, 'etaest': 0.3, 'lambda': 0.1, 'pars': 'outnp1.txt' },
-          { 'eta': 0.2, 'etaest': 0.1, 'lambda': 0.1, 'pars': 'outnp2.txt' },  
+NOISE = [ { 'eta': 0.2, 'etaest': 0.4, 'lambda': 0.1, 'pars': 'outnp0.txt' },
+          { 'eta': 0.2, 'etaest': 0.2, 'lambda': 0.1, 'pars': 'outnp1.txt' },
+          { 'eta': 0.2, 'etaest': 0.1, 'lambda': 0.1, 'pars': 'outnp2.txt' },
+          { 'eta': 0.2, 'etaest': 0.05,'lambda': 0.1, 'pars': 'outnp3.txt' }, 
+          { 'eta': 0.2, 'etaest': 0.4, 'lambda': 0.05,'pars': 'outnp4.txt' },
+          { 'eta': 0.2, 'etaest': 0.2, 'lambda': 0.05,'pars': 'outnp5.txt' },
+          { 'eta': 0.2, 'etaest': 0.1, 'lambda': 0.05,'pars': 'outnp6.txt' },
+          { 'eta': 0.2, 'etaest': 0.05,'lambda': 0.05,'pars': 'outnp7.txt' }, 
+          { 'eta': 1.0, 'etaest': 1.0, 'lambda': 0.1, 'pars': 'outnp8.txt' },
+          { 'eta': 1.0, 'etaest': 0.5, 'lambda': 0.1, 'pars': 'outnp9.txt' },
+          { 'eta': 1.0, 'etaest': 0.1, 'lambda': 0.1, 'pars': 'outnp10.txt' },
+          { 'eta': 0.0, 'etaest': 0.1, 'lambda': 0.1, 'pars': 'outnp11.txt' },            { 'eta': 0.0, 'etaest': 0.01, 'lambda': 0.1, 'pars': 'outnp12.txt' },           { 'eta': 0.0, 'etaest': 0.001, 'lambda': 0.1, 'pars': 'outnp13.txt' },  	  
       ]
 
 # identify output
@@ -135,8 +149,22 @@ smopt='mopt'
 seopt='eopt'
 saopt='aopt'     
 
+maxit=10
+maxalpha=50
+efactor=0.9
+rule='secant'
+
 for etapair in range(len(NOISE)):
 
+#    hcmd = '/bin/echo -n ' + "'" +  '\\' + 'section{Example ' + str(etapair) + '}' +
+#    '\\' + 'begin{itemize}' +
+#    '\\' + 'item target slowness = ' + str(mex) +
+#    '\\' + 'item nominal snr = ' + str(1.0/(NOISE[etapair]['eta'])) +
+#    '\\' + 'item target snr = ' + str(1.0/(NOISE[etapair]['etaest'])) +
+#    '\\' + 'end{itemize}' +
+#    "'" 
+#    Flow('header'+str(etapair)+'.tex', None, hcmd, stdin=0)
+	 
     # create noisy data	
     Flow('snoisep'+str(etapair)+'.su','noise.su',
         sugain + ' scale=' + str(oneoverfourpir*NOISE[etapair]['eta']))
@@ -145,18 +173,15 @@ for etapair in range(len(NOISE)):
         stdin=0)
     Result('datanp'+str(etapair),'datanp'+str(etapair)+'.su',
         'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
-    ddcmd = '/bin/echo -n ' + "'" +'\\\plot{datanp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Data plus noise, noise-to-signal ratio $' + '\\' + 'eta$ =' + str(NOISE[etapair]['eta']) + '}' + "'"
+    ddcmd = '/bin/echo -n ' + "'" +'\\plot{datanp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Data plus noise, noise-to-signal ratio $' + '\\' + 'eta$ =' + str(NOISE[etapair]['eta']) + '}' + "'"
     Flow('datanp' + str(etapair) +'.tex', None, ddcmd, stdin=0)
 
-    maxit=30
-    efactor=0.9
-    rule='secant'
-    
     # estimate optimal slowness, penalty weight via discrepancy principle
     Flow(['resnp'+str(etapair)+'.su',  NOISE[etapair]['pars'] ],
          ['datanp' + str(etapair) + '.su'],
 	 wiwdisc + ' data=${SOURCES[0]} res=${TARGETS[0]}' +
 	 ' out=${TARGETS[1]} maxit=' + str(maxit) +
+	 ' maxalpha=' + str(maxalpha) + 
 	 ' mmin=' + str(mmin) + ' mmax=' + str(mmax) + ' nm=' + str(nm) +
 	 ' sn=' + str(1.0/(NOISE[etapair]['etaest'])) +
 	 ' efactor=' + str(efactor) + ' rule=' + rule,
@@ -164,8 +189,17 @@ for etapair in range(len(NOISE)):
 
     Result('resnp'+str(etapair),'resnp'+str(etapair)+'.su',
         'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
-    rdcmd = '/bin/echo -n ' + "'" +'\\plot{resnp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Residual at VPM inversion, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio =' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio =' + str('{:f}'.format(math.sqrt(2*getnum(NOISE[etapair]['pars'],seopt)))) + '.}' + "'"
-    Flow('resnp' + str(etapair) +'.tex', None, rdcmd, stdin=0)	 
+#    rdcmd = '/bin/echo -n ' + "'" +'\\plot{resnp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Residual at VPM inversion, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio =' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio =' + str('{:f}'.format(math.sqrt(2*getnum(NOISE[etapair]['pars'],seopt)))) + ', estimated slowness=' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
+    rdcmd1 = '/bin/echo -n ' + "'" +'\\plot{resnp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Residual at VPM inversion, penalty weight $' + '\\' + 'alpha$ = ' + "'"
+    rdcmd2 = '/bin/echo -n ' + "'" + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio =' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio =' + "'";
+    rdcmd3 = '/bin/echo ' + "'" + ', estimated slowness=' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
+    Flow('resnp' + str(etapair) +'.tex', NOISE[etapair]['pars'],
+         rdcmd1 + ' > ${TARGET} && ' +
+	 'printf "%f" `/bin/cat ' + NOISE[etapair]['pars'] + ' | /usr/bin/grep aopt | /usr/bin/sed s/"aopt="// ` >> ${TARGET} && ' +
+         rdcmd2 + ' >> ${TARGET} && ' +
+	 'printf "%f" `/bin/cat ' + NOISE[etapair]['pars'] + ' | /usr/bin/grep ropt | /usr/bin/sed s/"ropt="// ` >> ${TARGET} && ' +	 
+	 rdcmd3 + ' >> ${TARGET}',
+	 stdin=0, stdout=-1)	 
 
     # resimulated data
     Flow('resimp' + str(etapair) + '.su',
@@ -175,8 +209,16 @@ for etapair in range(len(NOISE)):
 	 stdin=0)
     Result('resimp'+str(etapair),'resimp'+str(etapair)+'.su',
         'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
-    sdcmd = '/bin/echo -n ' + "'" +'\\plot{resimp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Resimulation at VPM inversion, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio =' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio =' + str('{:f}'.format(math.sqrt(2*getnum(NOISE[etapair]['pars'],seopt)))) + '.}' + "'"
-    Flow('resimp' + str(etapair) +'.tex', None, sdcmd, stdin=0)
+    sdcmd1 = '/bin/echo -n ' + "'" +'\\plot{resimp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Resimulation at VPM inversion, penalty weight $' + '\\' + 'alpha$ = ' + "'"
+    sdcmd2 = '/bin/echo -n ' + "'" + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio =' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio =' + "'"
+    Flow('resimp' + str(etapair) +'.tex',
+         'resnp' + str(etapair) + '.su', 
+         sdcmd1 + ' > ${TARGET} && ' +
+	 'printf "%f" `/bin/cat ' + NOISE[etapair]['pars'] + ' | /usr/bin/grep aopt | /usr/bin/sed s/"aopt="// ` >> ${TARGET} && ' +
+         sdcmd2 + ' >> ${TARGET} && ' +
+	 'printf "%f" `/bin/cat ' + NOISE[etapair]['pars'] + ' | /usr/bin/grep ropt | /usr/bin/sed s/"ropt="// ` >> ${TARGET} && ' +	 
+	 rdcmd3 + ' >> ${TARGET}',
+	 stdin=0, stdout=-1)
 
     # extract est wavelet
     Flow('wavp' + str(etapair) + '.su',
@@ -184,15 +226,22 @@ for etapair in range(len(NOISE)):
 	  NOISE[etapair]['pars']],
          suwind +
 	 ' < ${SOURCES[0]}' + 
-	 ' tmin=' + str(getnum(NOISE[etapair]['pars'],smopt)-NOISE[etapair]['lambda']) +
-	 ' tmax=' + str(getnum(NOISE[etapair]['pars'],smopt)+NOISE[etapair]['lambda']) + ' | ' +
+	 ' tmin=' + str(getnum(NOISE[etapair]["pars"],smopt) - NOISE[etapair]["lambda"]) +
+	 ' tmax=' + str(getnum(NOISE[etapair]["pars"],smopt) + NOISE[etapair]["lambda"]) + ' | ' +
 	 sushw + ' key=delrt a=-' +
 	 str(1000.0*NOISE[etapair]['lambda']) + ' | ' +
 	 sugain + ' scale=' + str(fourpir),
 	 stdin=0)
-    Result('wavp'+str(etapair),'wavp'+str(etapair)+'.su',
-        'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
-    wdcmd = '/bin/echo -n ' + "'" +'\\plot{wavp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Estimated Wavelet at VPM inversion, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', data noise-to-signal ratio $' + '\\' + 'eta$ =' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', assumed support radius =' + str('{:f}'.format(NOISE[etapair]['lambda'])) + ', estimated slowness =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
+    Flow('wpr'+str(etapair)+'.su',
+        ['wavp'+str(etapair)+'.su','rick.su'],
+         '/bin/cat ${SOURCES[0]} > ${TARGET}; ' +
+	 suwind + ' < ${SOURCES[1]}' +
+	 ' tmin=-' + str(NOISE[etapair]['lambda']) +
+	 ' tmax= ' + str(NOISE[etapair]['lambda']) + ' >> ${TARGET}',
+	 stdin=0, stdout=-1)	 
+    Result('wavp'+str(etapair),'wpr'+str(etapair)+'.su',
+        'suread endian=0 read=data | graph plotfat=6 plotcol=6,5 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
+    wdcmd = '/bin/echo -n ' + "'" +'\\plot{wavp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', assumed support radius =' + str('{:f}'.format(NOISE[etapair]['lambda'])) + ', estimated slowness =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
     Flow('wavp' + str(etapair) +'.tex', None, wdcmd, stdin=0)	 	 
 
     # projected resimulation
@@ -207,10 +256,17 @@ for etapair in range(len(NOISE)):
          sugain + ' scale=' + str(oneoverfourpir) +
          ' > ${TARGET}',
          stdin=0,stdout=-1)
-    Result('presimp'+str(etapair),'presimp'+str(etapair)+'.su',
-        'suread endian=0 read=data | graph plotfat=6 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
-    pdcmd = '/bin/echo -n ' + "'" +'\\plot{presimp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Resimulation at projected VPM inversion, wavelet from Figure ' + '\\' + 'ref{fig:wavp' + str(etapair) + '}, estimated slowness =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
-    Flow('presimp' + str(etapair) +'.tex', None, pdcmd, stdin=0)
+    Flow('ppd'+str(etapair)+'.su',['presimp'+str(etapair)+'.su','data.su'],
+         '/bin/cat ${SOURCES[0]} > ${TARGET}; /bin/cat ${SOURCES[1]} >> ${TARGET}', stdin=0, stdout=-1)
+    Result('presimp'+str(etapair),'ppd'+str(etapair)+'.su',
+        'suread endian=0 read=data | graph plotfat=6 plotcol=6,5 wanttitle=n label1=Time unit1=s label2=Amplitude unit2=GPa')
+    pdcmd = '/bin/echo -n ' + "'" +'\\plot{presimp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure ' + '\\' + 'ref{fig:wavp' + str(etapair) + '}, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', actual noise-to-signal ratio ' + str('{:f}'.format(NOISE[etapair]['eta']))+ ', target noise-to-signal ratio ' + str('{:f}'.format(NOISE[etapair]['etaest']))+ ', achieved noise-to-signal ratio = ' + "'"
+    qdcmd = '/bin/echo ' + "'" + ', assumed support radius =' + str('{:f}'.format(NOISE[etapair]['lambda'])) + ', estimated slowness =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
+    Flow('presimp' + str(etapair) +'.tex',
+         'ns' + str(etapair) + '.txt',
+         pdcmd + '> ${TARGET} && ' + 
+         qdcmd + ' >> ${TARGET} ',
+	 stdin=0, stdout=-1)
     
     # projected residual data
     Flow('presnp' + str(etapair) + '.su',
@@ -232,12 +288,38 @@ for etapair in range(len(NOISE)):
          ['ndat' + str(etapair) + '.bin', 'nres' + str(etapair) + '.bin'],
 	 farith + ' in=${SOURCES[1]} in2=${SOURCES[0]} op=div | ' +
 	 b2a + ' n1=1 | /usr/bin/tr -d "\\n"',stdin=0)
-    xdcmd = '/bin/echo -n ' + "'" +'\\plot{presnp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Residual at projected VPM inversion, resimulation from Figure ' + '\\' + 'ref{fig:presimp' + str(etapair) + '}, data from Figure ' + '\\' + 'ref{fig:datanp' + str(etapair) + '}, actual noise-to-signal ratio = ' + str('{:f}'.format(NOISE[etapair]['eta'])) + ', achieved noise-to-signal ratio = ' + "'"
+    xdcmd = '/bin/echo -n ' + "'" +'\\plot{presnp' + str(etapair) + '}{width=' + '\\' + 'textwidth}{Residual at projected VPM inversion, resimulation from Figure ' + '\\' + 'ref{fig:presimp' + str(etapair) + '}, data from Figure ' + '\\' + 'ref{fig:datanp' + str(etapair) + '}, actual noise-to-signal ratio = ' + str('{:f}'.format(NOISE[etapair]['eta'])) + ', target noise-to-signal ratio = ' + str('{:f}'.format(NOISE[etapair]['etaest'])) + ', achieved noise-to-signal ratio = ' + "'"
+    ydcmd = '/bin/echo ' + "'" + ', wavelet from Figure ' + '\\' + 'ref{fig:wavp' + str(etapair) + '}, penalty weight $' + '\\' + 'alpha$ =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],saopt))) + ', assumed support radius =' + str('{:f}'.format(NOISE[etapair]['lambda'])) + ', estimated slowness =' + str('{:f}'.format(getnum(NOISE[etapair]['pars'],smopt))) + '.}' + "'"
     Flow('presnp' + str(etapair) +'.tex',
          'ns' + str(etapair) + '.txt',
          xdcmd + '> ${TARGET} && ' + 
 	 'printf "%f" `/bin/cat ns' + str(etapair) + '.txt`  >> ${TARGET} && ' +
-	 'echo .} >> ${TARGET} ',
+         ydcmd + ' >> ${TARGET} ',
+	 stdin=0, stdout=-1)
+
+    Flow('figs' + str(etapair) + '.tex',
+         ['datanp' + str(etapair) + '.tex',
+	  'resnp' + str(etapair) + '.tex',
+	  'resimp' + str(etapair) + '.tex',
+	  'wavp' + str(etapair) + '.tex',
+          'presimp' + str(etapair) + '.tex',
+	  'presnp' + str(etapair) + '.tex'],
+	 '/bin/echo ' + "'" + '\\section{' + str(etapair) + '. ' +
+	 'nominal N/S=' + str(NOISE[etapair]['eta']) + ', ' +
+	 'target N/S=' + str(NOISE[etapair]['etaest']) + ', ' +
+	 'radius=' + str(NOISE[etapair]['lambda']) + '} ' + "'" +
+	 ' > ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[0]} >> ${TARGET} && ' 
+	 'echo >> ${TARGET} && echo >> ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[1]} >> ${TARGET} && ' +	 
+	 'echo >> ${TARGET} && echo >> ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[2]} >> ${TARGET} && ' +
+	 'echo >> ${TARGET} && echo >> ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[3]} >> ${TARGET} && ' +
+	 'echo >> ${TARGET} && echo >> ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[4]} >> ${TARGET} && ' +
+	 'echo >> ${TARGET} && echo >> ${TARGET} && ' +
+	 '/bin/cat ${SOURCES[5]} >> ${TARGET}',
 	 stdin=0, stdout=-1)
 	 
 End()
