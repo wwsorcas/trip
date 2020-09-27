@@ -1,0 +1,141 @@
+\title{Discrepancy Algorithm for Single-Trace Transmission Inverse Problem}
+\author{William W. Symes}
+
+\lefthead{Symes}
+
+\righthead{Algorithm}
+
+\maketitle
+\begin{abstract}
+  Concise statement of the discrepancy algorithm for solving the single-trace transmission inverse problem.
+\end{abstract}
+
+\section{Definitions}
+``The paper'' throughout refers to ``Solution of an Acoustic Transmission Inverse Problem by Extended Inversion'', current draft.
+
+Note that I have changed the notation for the penalty term to $g$, rather than $p$ as has been the case before, in order to avoid conflict with the conventional notation for the acoustic pressure field.
+
+The mean square error $e$, penalty term $g$, and extended objective $\Ja $ are defined in equations 4, 5, and 6. These quantities are normalized via division by the norm-squared of the data. In recent drafts I also introduced a notation for the relative $L^2$ error = noise-to-signal ratio:
+\begin{equation}
+  \label{eqn:rmsgen}
+  r[m,w;d] = \|F[m]w-d\|/\|d\| = \sqrt{2 e[m,w;d]}
+\end{equation}
+The algorithm presented here assumes that the multiplier $a$ appearing in equation 39 (and in the definition of the annihilator $A$) is given by $a(t)=|t|$. The paper explains how this choice can be regarded as defining a bounded $A$, due to the bounded range of time allowed in the data.
+
+The minimizer of $\Ja $ over the wavelet $w$ is given by solution of the normal equation. Under the conditions stated in Proposition 2, this minimizer is given in equation 39 of the paper:
+\begin{equation}
+  \label{eqn:normsol}
+  \aw[m;d](t) = \left\{
+    \begin{array}{c}
+      \left(\frac{1}{(4\pi r)^2} + \alpha^2
+      t^2\right)^{-1}\frac{1}{4 \pi r}d(t+mr), t \in [t_{\rm
+      min}-mr, t_{\rm max}-mr];\\
+      0, \mbox{ else;}
+    \end{array}
+  \right.
+\end{equation}
+The reduced quantities for the Variable Projection Method are obtained by substituting $\aw[m;d]$ for $w$ in equations 4, 5, and 6 to obtain equations 41, 42, and 43, then using $a(t)=|t|$:
+\begin{equation}
+  \label{eqn:residnormgen}
+  e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha (t-mr))^4(1 +
+  (4\pi r \alpha (t-mr))^2)^{-2}d(t)^2
+\end{equation}
+\begin{equation}
+  \label{eqn:anninormgen}
+  g[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r (t-mr))^2(1 +
+  (4\pi r \alpha (t-mr))^2)^{-2}d(t)
+\end{equation}
+
+\begin{equation}
+  \label{eqn:expjgen}
+\tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha (t-mr))^2(1+(4\pi r \alpha 
+(t-mr))^2)^{-1}d(t)^2. 
+\end{equation}
+The derivative with respect to $m$ of $\tJa $ is
+\begin{equation}
+  \label{eqn:dexpjgen}
+  \frac{d}{dm}\tJa[m;d] = -\frac{(4 \pi r \alpha)^2}{\|d\|^2} \int_{t_{\rm min}}^{t_{\rm max}} \,dt \,  (t-mr)(1+(4\pi r \alpha (t-mr))^2)^{-2}d(t)^2. 
+\end{equation}
+
+The data $d$ is sampled on a uniform grid of cell size $dt$ (in matlab notation, $t_{\rm min}:dt:t_{\rm max}$). The integrals in the preceding equations, and the integral in the defintion of $\|d\|^2$, should be approximated by a quadrature rule. The trapezoidal rule should be accurate enough, provided that $d$ is bandlimited. In our numerical experiments, both noise-free data and noise are obtained by convolving numerical delta functions (``spikes'') with sampled Ricker wavelets. If the center frequency of the Ricker wavelet is $f$, then the usual rule of thumb is that Fourier components above frequencies of $2.5f$ are negligible. Sampling at 10 gridpoints per wavelength is a roughly adequate choice for the trapezoidal rule.
+
+For example, if the center frequency is 20 Hz, Fourier components at frequencies above 50 Hz are negligible. 50 Hz corresponds to a wavelength of 0.02 s, so a suitable sample interval for our calculations is $dt = 0.002$ s.
+
+\section{Algorithm}
+The ideal goal of the discrepancy algorithm is:
+
+\begin{quote}
+  Given data $d$, a target noise-to-signal ratio $r_{\rm tgt}$ (or equivalently a target signal-to-noise ratio of $1/r_{\rm tgt}$), and a fudge factor $C<1$, find a stationary point $m_{\infty}$ of the VPM objective $\tJa[\cdot;d]$ so that
+\begin{equation}
+  \label{eqn:discrep}
+  r_-=Cr_{\rm tgt} \le r[m,\aw[m;d];d] \le r_+= C^{-1}r_{\rm tgt}, 
+\end{equation}
+or equivalently
+\begin{equation}
+  \label{eqn:discrepsq}
+  e_-=C^2e_{\rm tgt} \le e[m,\aw[m;d];d] \le e_+=C^{-2}e_{\rm tgt}.
+\end{equation}
+\end{quote}
+Note: in the Fu paper, $e_{\pm}$ were denoted $X_{\pm}$, and $e_{\rm tgt}$ was denoted $X$.
+
+This statement is ideal because an actual stationary point cannot be found exactly. Instead, accept an approximate stationary point $m_{\rm approx}$ defined by a choice of tolerance $\delta$ for the norm of the gradient:
+\begin{equation}
+  \label{eqn:approx}
+  \left|\frac{d \tJa}{dm}[m_{\rm approx};d]\right| \le \delta.
+\end{equation}
+
+Schematic statement of the discrepancy algorithm:
+\begin{algorithm}[H]
+\caption{Discrepancy algorithm for updating $m, \alpha$}
+\begin{algorithmic}[1]
+  \State print parameters: $e_{\rm tgt},e_-,e_+,\delta$, max number of iterations allowed for outer loop, $\alpha$ update loop, $m$ update loop.
+  \State print target slowness $m_*$, plot target wavelet $w_*$, noise-free data $d_*=F[m_*]w_*$, noise $n$, data $d=d_*+n$
+  \State Choose $m\in M$, $\alpha=0$;
+  \Repeat
+  \Repeat
+  \State print iteration number, $m$, $\alpha$, $r$, $e$, $g$, $\tJa$ before update
+  \State update $\alpha$ for fixed $m$
+  \State print $m$, $\alpha$, $r$, $e$, $g$, $\tJa$ after update  
+  \Until inequalities \ref{eqn:discrepsq} are satisfied
+  \Repeat
+  \State print iteration number, $m$, $\alpha$, $r$, $e$, $g$, $\tJa$ before update
+  \State update $m$ for fixed $\alpha$
+  \State print $m$, $\alpha$, $r$, $e$, $g$, $\tJa$ after update  
+  \Until{inequalities \ref{eqn:discrepsq} are not satisfied, or $\|\nabla \tJa[m;d]\|$
+    sufficiently small}
+  \Until{inequalities \ref{eqn:discrepsq} are satisfied}
+  \State print final values of $m$, $\alpha$, $r$, $e$, $g$, $\tJa$
+  \State plot estimated wavelet $\aw[m;d]$, estimated data $F[m]\aw[m;d]$, and residual $F[m]\aw[m;d]-d$
+\end{algorithmic}
+\end{algorithm}
+
+Note: Each loop (outer, $m$, $\alpha$ needs to be supplied with a limit on the number of iterations. If a loop comes to the limit without satisfying the convergence criterion for that loop (``until''), then the algorithm should exit with an appropriate failure message.
+
+Note: plots of data ($d_*$, $n$, $d$, $F[m]\aw[m;d]$, $F[m]\aw[m;d]-d$) should have same vertical scale. Same for plots of wavelets ($w_*$, $\aw[m;d]$).
+
+\section{Update $\alpha $}
+The Fu paper (repeated in Appendix A in the current draft) sketches a proof that if $e_{\rm curr} = e[m,w_{\alpha_{\rm curr}}[m;d];d]< e_+$, then  $\alpha_{\rm next}$ given by  
+\begin{equation}
+\label{eqn:alphasecant}
+\alpha^2_{\rm next} = \alpha^2_{\rm curr} + \frac{e_{+}-e_{\rm curr}}{2p[m,w_{\alpha_{\rm curr}}[m;d];d]} 
+\end{equation}
+satisfies
+\[
+  e_{\rm curr}  < e_{\rm next} =  e[m,w_{\alpha_{\rm next}}[m;d];d]  < e_+.
+\]
+That is, the update rule \ref{eqn:alphasecant} produces an increasing sequence of values of $e$ in the interval $[0,e_+)$.
+
+We are currently lacking a proof that in fact the sequence of $e$ values so generated converges to $e_+$ for fixed $m$, but numerical evidence is very strong that this is so. Therefore we expect the stopping criterion in line 9 of the algorithm to be satisfied after some number of iterations, so this is a suitable update rule for $\alpha$.
+
+This iteration does appear to be fairly slow, compared to some alternatives. However it is reliable. Since the current computations are very inexpensive, use it.
+  
+\section{Update $m$}
+
+Any local optimization algorithm may be used, provided that is has the property called ``global convergence'' in the literature of optimization. This property does {\em not} mean ``converges to the global optimum''. In fact it means ``converges globally (starting from any initial guess) to a local minimum''.
+
+An example of such an algorithm is steepest descent with backtracking line search. The line search should include a ``sufficient decrease'' test. Huiyi's recent algorithm is a good choice. Also, good implementations of Brent's method for one-variable minimization are also globally convergent.
+
+The intent of the discrepancy algorithm design is that eventually the gradient decrease criterion will be satisfied, that is, that the iteration will converge before the bounds \ref{eqn:discrepsq} are violated. That is why we use membership in an interval containing $e_{\rm tgt}$, rather than equality with $e_{\rm tgt}$, as the termination criterion. When the $m$ update converges (small gradient) while the bounds \ref{eqn:discrepsq} are satisfied, the outer iteration (over both $m$ and $\alpha$) will terminate, with a satisfactory solution (line 15).
+
+Again, there is convincing numerical evidence that this will generally happen, but a proof is currently lacking.
+

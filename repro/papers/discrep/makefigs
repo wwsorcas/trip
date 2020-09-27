@@ -1,0 +1,6 @@
+cat figshdr.tex > figs.tex
+for i in {0..13}
+  do
+    echo '\newpage' >> figs.tex
+    cat project/figs$i.tex >> figs.tex
+  done
