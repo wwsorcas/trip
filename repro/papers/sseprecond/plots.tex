@@ -1,17 +1,30 @@
+\title{Plots for ``Efficient Computation of Extended Sources''}
+\author{William. W. Symes \thanks{Orcas Island, WA 98280, email {\tt symes@rice.edu}.}}
+
+\lefthead{Symes}
+
+\righthead{Approximate Source Inversion}
+
+\maketitle
+\begin{abstract}
+Examples illustrating preconditioner developed in the text.
+\end{abstract}
+
+\inputdir{project}
 
 These examples are based on two different material models. The first is a homogeneous model, with $\kappa=4.0$ GPa and $\rho=1.0$ g/cm$^{3}$. Figure \ref{fig:ptpwindh0} shows the shot gather computed in the configuration descritbed above for this choice of propagation medium. As mentioned in the preceding section, the velocity traces can be recorded in the same IWAVE workflow: these are displayed in 
 \ref{fig:ptvzwindh0}. 
 
 The first group of plots show pressure traces for source position $z_s=3$ km, $x_s=3$ km, 201 receivers at $z_r=1$ km, $2 \le x_r \le 6$ km. 
 
-\plot{ptpwindh0}{width=15cm}{Receiver line at $z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. Homogeneous material model, $\kappa=4$ GPa, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
-\plot{ptvzwindhh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindh0}.}
+\plot{ptpwindhh0}{width=15cm}{Receiver line at $z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. Homogeneous material model, $\kappa=4$ GPa, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
+\plot{ptvzwindhh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindhh0}.}
 \plot{srcvzghh0}{width=15cm}{Source reconstructed from $v_z$ traces in Figure \ref{fig:ptvzwindhh0} by time reversal (approximate inverse) algorithm explained in text.}
 \plot{reptpwindhh0}{width=15cm}{Resimulated pressure data from reconstructed source if Figure \ref{fig:srcvzghh0}.} 
-\plot{trcftrhh0}{width=15cm}{Middle trace from pressure, resimulated pressure traces in Figures \ref{fig:ptpwindh0}, \ref{fig:reptpwindhh0}.}.
+\plot{trcftrhh0}{width=15cm}{Middle trace from pressure, resimulated pressure traces in Figures \ref{fig:ptpwindhh0}, \ref{fig:reptpwindhh0}.}.
 
 \plot{bml0}{width=15cm}{Inhomogenous bulk modulus field, with low velocity lens.}
-\plot{ptpwindl0}{width=15cm}{Receiver line at $z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. bulk modulus with low velocity lens as in Figure \ref{fig:bml0}, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
+\plot{ptpwindll0}{width=15cm}{Receiver line at $z_r=1$ km for source at $z_s=3$ km, $x_s=3$ km. bulk modulus with low velocity lens as in Figure \ref{fig:bml0}, $\rho$=1 g/cm$^{3}$. Coarse grid: $dx=dz=20$ m, $dt=$ 8 ms, (2,4) staggered grid scheme. }
 \plot{ptvzwindll0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindl0}.}
 
 \plot{srcvzglh0}{width=15cm}{Source reconstructed from $v_z$ traces in Figure \ref{fig:ptvzwindll0} by time reversal (approximate inverse) algorithm explained in text, propagation in homogeneous material model (that is, ``wrong velocity'').}
@@ -20,5 +33,5 @@ The first group of plots show pressure traces for source position $z_s=3$ km, $x
 
 \plot{srcvzgll0}{width=15cm}{Source reconstructed from $v_z$ traces in Figure \ref{fig:ptvzwindll0} by time reversal (approximate inverse) algorithm explained in text, propagation in bulk modulus of Figure \ref{fig:bml0} (that is, ``correct velocity'').}
 \plot{reptpwindll0}{width=15cm}{Resimulated pressure data from reconstructed source if Figure \ref{fig:srcvzgll0}, both approximate inversion and re-simulation in bulk modulus of Figure \ref{fig:bml0} (``correct velocity'').} 
-\plot{trcftrll0}{width=15cm}{Middle trace from pressure, resimulated pressure traces in Figures \ref{fig:ptpwindl0}, \ref{fig:reptpwindll0}.}
+\plot{trcftrll0}{width=15cm}{Middle trace from pressure, resimulated pressure traces in Figures \ref{fig:ptpwindll0}, \ref{fig:reptpwindll0}.}
 
