@@ -53,11 +53,11 @@ for probing the earth's subsurface
 application to seismology, FWI encounters a serious
 practical obstacle, so-called ``cycle-skipping''. This term signifies
 the tendency of the mean-square error function to exhibit many
-stationary points, and local minima far from the global minimizer (we
+stationary points far from the global minimizer (we
 show an explicit example of this phenomenon later in this paper). Because of the
 typical dimensions of field FWI problems, only local gradient-based
-minimization algorithms are computationally practical, and these find
-local minimizers, so may stagnate at suboptimal and geologically
+minimization algorithms are computationally practical. These find
+stationary points (or local minima), so may stagnate at suboptimal and geologically
 uninformative earth models. Local descent methods avoid suboptimal
 stagnation only if initial models are already quite close to optimal,
 in the sense of predicting the arrival times of seismic events to
@@ -65,41 +65,88 @@ within a small multiple of the dominant data wavelength
 \cite[]{GauTarVir:86,VirieuxOperto:09,Plessix:10}.
 
 This paper examines one of a number of proposed alternatives to least
-squares FWI, based on an extension of the model-to-data mapping.  We
-show exactly how an example of this {\em extended inversion} approach
-leads to solution of a very simple acoustic transmission
-inverse problem {\em via} local gradient-based optimization. Despite
-its simplicity, this problem exhibits several important
-characteristics of all inverse problems in wave propagation in which
-wave velocities are amongst the unknowns. It has the advantage of
-permitting explicit calculations that reveal clearly the failure
-mechanism for FWI, that is, straightforward nonlinear least squares,
-and also the reasons for success of an extended inversion approach.
+squares FWI, based on an extension of the model-to-data mapping
+(``extended inversion''), in the context of 
+a very simple acoustic transmission inverse problem: the sound
+velocity in a fluid is to be determined from a single recording of a
+pressure wave propagated over a known distance, originating at a known
+location around a known time. We show precisely
+how descent-based FWI fails to solve this problem absent a very good
+initial model estimate, and precisely why extended inversion succeeds, using the same type
+of optimization, and from essentially arbitrary initial model
+estimate. We give rigorous estimates for the accuracy of the sound
+velocity determination in terms of the time extent of the energy
+excitation and the signal-to-noise ratio of the data. We also illustrate
+these mathematical conclusions with numerical
+examples.
 
-In the remainder of this introduction, we will briefly describe the conceptual
-framework of this inverse problem, and sketch our main results. We leave out
-some technical details that are supplied in the next section, where we give
-precise statements of our results. In particular, theorems referenced
-in the rest of this section are to be found, stated in full, in the
-next section.
+The single-trace transmission problem studied in this paper is a
+drastically simplified cartoon of actual seismic prospecting. It seems
+worth careful study nonetheless for two reasons: it exhibits the
+phenomenon of cycle-skipping, and its simplicity allows the properties
+of both FWI and extended inversion approaches to be established
+rigorously. The underlying mathematical structures are common to many
+inverse problems in wave propagation in which wave velocities are
+amongst the unknowns. For example, we offer an ad hoc calculation of
+the gradient of the extended inversion objective, taking advantage of
+the simplicity of the problem context. However we also show, in an
+appendix, how that calculation hides an abstract structure shared by
+many other problems.% - see for example
+%\cite{Symes:IPTA14,tenKroode:IPTA14,Symes:EAGE15,HuangSymes:SEG15a}.
 
-The physical setting for our discussion is the propagation of waves through a
+In the next (``Overview'') section, we describe the conceptual
+framework of this inverse problem, review the related literature, and
+state the essence of our main results, leaving out a few technical
+details that are supplied later. Numerical illustrations of these
+results occupy the following (``Examples'') section. The fourth
+(``Findings'') section of the paper contains precise statements of the
+mathematical results and supporting discussion, followed by
+derivations. In particular, theorems referenced in the Overview
+section are to be found, stated in full with their proofs, in the this
+final part of the paper. Three appendices describe the algorithm used to
+control the penalty weight in our formulation of extended
+inversion, further refinement of error estimates based ond the
+Heisenberg inequality, and the abstract structure of objective derivatives
+inherent in extended inversion based on wave propagation.
+
+\section{Overview}
+
+The physical setting for our discussion is the propagation of
+small-amplitude pressure waves through a
 homogeneous acoustic fluid occupying $\bR^3$ \cite[]{Frie:58}. The
 fluid's salient characteristic for present purposes is the
 slowness, or reciprocal wave velocity, $m > 0$. A source of acoustic
-energy localized at a point in $\bR^3$ radiates uniformly in all
-directions with time-dependent intensity $w(t)$. Both the acoustic
-pressure field and the intensity (``wavelet'') $w$ vanish at large
-negative time. A receiver records the pressure values at a distance
-$r>0$ from the source position, between the times $t_{\rm min}$ and
-$t_{\rm max}$. As explained in the next section, the
-recorded presssure is predicted to be
+energy localized at a (``source'') point $\bx_s \in \bR^3$ radiates uniformly in all
+directions with time-dependent intensity $w(t)$, generating a pressure
+field $p(\bx,t)$. Both the 
+pressure field $p$ and the intensity (``wavelet'') $w$ vanish at large
+negative time. A receiver records the pressure values at a point
+$\bx_r \in \bR^3$, a distance
+$r>0$ from the source position $\bx_s$, between the times $t_{\rm min}$ and
+$t_{\rm max}$. According to linear acoustics, the pressure field
+solves the the wave equation \cite[]{Frie:58}:
+\begin{eqnarray}
+  \label{eqn:awe}
+  \left(m^2\frac{\partial^2 p}{\partial t^2} - \nabla^2\right) p(\bx,t) &=&
+                                                                         w(t)\delta(\bx-\bx_s) \nonumber\\
+  p(\bx,t)&=&0, t\ll 0.
+\end{eqnarray}
+As the system \ref{eqn:awe} is linear and autonomous, the solution is
+the convolution of the source
+wavelet $w$ with the Green's function or fundamental solution. For
+constant $m$, the result is the well-known expression
+(\cite{CourHil:62}, Chapter VI, section 12, equation 47):
+\begin{equation}
+  \label{eqn:homsol}
+  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-m|\bx-\bx_s|\right),
+\end{equation}
+so the predicted pressure at the receiver point $\bx_r$ is
 \begin{equation}
 \label{eqn:mod}
-\frac{1}{4\pi r}w\left(t-mr\right)  = F[m]w(t)
+p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right)  = F[m]w(t)
 \end{equation}
-Ignoring the amplitude factor $1/(4\pi r)$, this map implements a $m$-dependent time
-shift. This time shift operator is the basis of many illustrations of
+The mapping $F[m]$ so defined is (ignoring the amplitude factor
+$1/(4\pi r)$), an $m$-dependent time shift. This time shift operator is the basis of many illustrations of
 the cycle-skipping phenomenon (for example, \cite{VirieuxOperto:09},
 Figure 7), so it is unsurprising that an analysis of cycle-skipping
 can be based on the simple modeling operator described above.
@@ -130,15 +177,23 @@ over considerable time intervals. An example from exploration
 seismology is the airgun, the most commonly used
 marine source: an airgun (or array of airguns, the usual apparatus)
 produces an oscillating pressure pulse that dies away
-slowly. It is commonplace to estimate this pulse then deconvolve it
+slowly. It is commonplace to estimate this pulse, usually by recording
+the emitted pressure field at a position where it should nominally be isolated from other
+signal, then deconvolve it
 from the data by safeguarded Fourier division or other means. This
 so-called signature deconvolution results in modified data
 corresponding to a source equal to signature deconvolution of the
 pulse estimate itself. The deconvolved source pulse approximates an
 impulse ($\delta(t)$): it cannot have point support, due to the finite
-frequency nature of seismic data, hence the bandlimited nature of the
-pulse estimate, but its support is ultimately much smaller than that
-of the original pulse estimate. 
+frequency nature of seismic data and the Heisenberg principle (see
+Appendix B), but its amplitudes are typically small outside of a small
+much smaller time interval than is the case for the original pulse
+estimate. Thus after a small modification, the deconvolved source
+pulse has small support.
+
+For a contemporary description of view on signature deconvolution as
+practiced in the seismic industry, see \cite{SheriffGeldart:1995},
+section 9.5 and \cite{Yil:01}, Chapter 2.
 
 Abusing notation slightly, we identify $L^2([-\lambda,\lambda])$ with
 a subspace of $L^2(\bR)$ via extension by $0$. Denote by $\lF$
@@ -148,9 +203,10 @@ described in the last paragraph, can be crudely phrased: given $d \in
 L^2([t_{\rm min},t_{\rm max}])$, find $(m,w)$ in the domain of $\lF$ so that $\lF[m,w]
 \approx d$.
 
-Despite its simplicity, this problem exhibits the
-cycle-skipping pathology characteristic of field-scale FWI. Specifically, we show that the reduced mean square
-error function, the objective function of FWI for this problem, 
+Despite its simplicity, this problem exhibits the cycle-skipping
+pathology characteristic of field-scale FWI. Specifically, we show
+that the reduced mean square error function, the objective function of
+FWI for this problem,
 \begin{equation}
   \label{eqn:redms}
   \lerr[m,w;d]=\frac{1}{2}\|\lF[m]w-d\|^2/\|d\|^2,
@@ -159,10 +215,15 @@ has local minimizers far from any global minimizer, even for noise-free
 data (Theorem \ref{thm:fwi}).
 
 This fact implies that local optimization must fail to solve a precise
-version of the FWI problem: given $\epsilon, \lambda > 0$, $(m,w)$ is
-a solution if it lies in the domain of $\lF$ and
-$\|F[m]w-d\| \le \epsilon\|d\|$ (Problem Statement
-\ref{eqn:probstat0} below).  In fact, we show
+version of the FWI problem:
+\begin{quote} given $\epsilon, \lambda > 0$, fine $(m,w)$ in the
+domain of $\lF$ so that
+\begin{equation}
+  \label{eqn:probstat}
+  \|\lF[m]w-d\| \le \epsilon\|d\|.
+\end{equation}
+\end{quote}
+In fact, we show
 that``large residual'' local minima of $\lerr[\cdot,\cdot,d]$ exist,
 at which its value is much greater than its global minimum
 value. Therefore if $1/2\epsilon^2$ is near the global minimum value
@@ -175,12 +236,15 @@ Extended inversion involves an extension of the model-to-data map, in
 this case $\lF$.  The extension used here consists in dropping the
 support constraint on $w$, so the extended map is simply $F$ as
 defined above ($\lF$ is a restriction of $F$, so $F$ is an extension
-of $\lF$). To compensate for the resulting indeterminacy in the
-estimation of $m$, we add a penalty term to the objective: for $m \in
+of $\lF$).
+
+To compensate for the resulting indeterminacy in the
+estimation of $m$, we add a penalty term to the objective, defined by
+a penalty operator $A$ with domain and range $L^2(\bR)$: for $m \in
 \bR^+,w\in L^2(\bR), d \in L^2([t_{\rm min},t_{\rm max}])$, define
 \begin{eqnarray}
   r[m,w;d] & = & \|F[m]w-d\|/\|d\|, \label{eqn:rmserr}\\
-  e[m,w;d] & = & r[m,w;d]^2, \label{eqn:mserr}\\
+  e[m,w;d] & = & \frac{1}{2}r[m,w;d]^2, \label{eqn:mserr}\\
   g[w] & = & \frac{1}{2}\|Aw\|^2/\|d\|^2, \label{eqn:pen} \\
   \Ja[m, w;d] &=& e[m,w;d] + \alpha^2 g[w] \nonumber\\
   &=& \frac{1}{2}(\|F[m]w-d\|^2 + \alpha^2 \|Aw\|^2)/\|d\|^2.
@@ -189,9 +253,11 @@ estimation of $m$, we add a penalty term to the objective: for $m \in
 
 The normalizations by the data norm $\|d\|$ in the definitions
 \ref{eqn:rmserr}, \ref{eqn:mserr}, \ref{eqn:pen}, and \ref{eqn:penerr} make the values
-of $r$, $e$, $\alpha^2 g$, and $\Ja$ nondimensional.
+of $r$, $e$, $\alpha^2 g$, and $\Ja$ nondimensional, and simplifies
+both the statements of theoretical results and the interpretation of
+numerical examples.
 
-The only obvious requirement on the penalty operator $A$ is that it
+Apart from dimensional correctness, the only obvious requirement on the penalty operator $A$ is that it
 penalize 
 nonzero values of $w$ for large $|t|$, so that minimizers $(m,w)$ of
 $\Ja$ should have $w$
@@ -204,7 +270,7 @@ penalty weight $\alpha$ must be chosen somehow; we review a simple
 algorithm for controlling $\alpha$ later in the paper.
 
 Assume that $\mu>0$ and $d = F[m_*]w_* + n$, with $\mbox{supp }w_*
-\subset [-\mu,\mu]$, and denote by $\eta = \|n\|/\|F[m_*,w_*]\|$
+\subset [-\mu,\mu]$, and denote by $\eta = \|n\|/\|F[m_*]w_*\|$
 the noise-to-signal ratio. We show that any local minimizer $(m,w)$
 of $\Ja$ satisfies 
 \begin{itemize}
@@ -238,28 +304,105 @@ the projection onto $L^2([-\lambda,\lambda])$ must in general be at least twice 
 support radius of the ``noise free'' wavelet $w_*$, plus an additional
 allowance for noise.
 
-The remainder of the paper begins with a complete description of the acoustic transmission problem and precise
-statements of our main results, filling in the
-few details not discussed in the preceding sketch. Then we provide a
-discussion of the potential theoretical and practical import of these
-results, including relation with prior work, some numerical
-illustrations, and directions for further research. Following this
-discussion section, we give complete proofs of all of our results.
-An appendix describes the computational algorithm used in producing
-the numerical examples, including a method for controlling the penalty
-weight $\alpha$ based on the Discrepancy Principle
-\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}. A second appendix
-explains the relation between the support constraint and well-known
-criteria for success of FWI based on data frequency content. The basis
-for this relation is the Heisenberg inequality \cite[]{Folland:07}.
+Use of model extension to reveal the influence of earth mechanical
+parameters on data is an old idea, and underlies several classes of
+seismic data processing methods in widespread use for decades
+\cite[]{geoprosp:2008}. Use of model extension to create optimization
+principles for inversion is a more recent development
+\cite[]{SymesCar:91,Plessix:00a,Symes:09,LuoSava:11,BiondiAlmomin:SEG12,LeeuwenHerrmannWRI:13,LiuSymesLi:14,Warner:14,ChaurisGP:14,Warner:16,LeeuwenHerrmann:16,Herve2017,HouSymes:Geo18}. Extended
+inversion methods differ by the choice of additional degrees of
+freedom, and by choice of penalty applied to eliminate them in the
+final result. The approach studied in this paper belongs to the {\em
+  source extension} variety: the extra parameters are provided by
+permitting the energy source component of the experimental model to
+have more, or less constrained, parameters than the experimental
+design suggests. \cite{HuangNammourSymesDollizal:SEG19} give an
+overview and taxonomy of source extension methods, with extensive
+references.
 
-\section{An Acoustic Transmission Inverse Problem}
-In this section, we describe solution of the radiation
-problem for acoustic wave
-propagation in a homogeneous fluid, and various operators based on
-this solution. Using these operators, we formulate the single-trace
-acoustic transmission inverse problem. Finally, we state the main
-results of our paper.
+Extended inversion is not the only alternative to straightforward
+least-squares data fitting that may overcome cycle-skipping. For
+example, evidence has recently emerged that the Wasserstein metric
+from arising in the theory of optimal transport may provide a measure
+of error between model-predicted and observed seismic data less
+oscillatory than the mean-square
+\cite[]{EngquistYang:GEO18,Metivier:GEO18}. 
+
+%In many cases, the constraint posed by membership of the second component $w$ in the subspace $\lW$ is an approximation to an idealized limit $\lambda \rightarrow 0$.
+%It may be that $W_0 = \cap_{\lambda > 0}\lW$ is non-trivial, in which
+%case $F$ may be viewed as an extension of $F_0 = F|_{ M \times
+%  W_0}$. In that case, $F_0$ and $F$ realize the idealized extension
+%structure discussed in many prior works on extended inversion (for
+%example, \cite[]{geoprosp:2008}): $F_0$ is the physical modeling
+%operator, and $W_0$ consists of second components of physical or
+%feasible models. However, in many of these examples, $W_0$ is not
+%computationally accessible, or - even if it is - gives results that
+%closely approximate those obtained with $\lW$ for small $\lambda$. For
+%other examples, for instance that  discussed later in this paper (and
+%implicitly in \cite[]{Warner:16}, for instance), $W_0=\{0\}$ and the
+%family $\{\lW: \lambda > 0\}$ actually embodies all of the necessary
+%physics.
+
+\section{Examples}
+This section presents numerical examples of the estimates of $m$ and
+$w$ obtained by minimization of $\Ja$. We have selected these examples
+to illustrate the conclusions described in the Overview section.
+
+While minimization of $\Ja$ might be tackled directly - by
+alternating minimizations over $m$ and $w$, or by computing updates
+for $m$ and $w$ simultaneously - such joint minimization performs
+poorly, as \cite{YinHuang:16} has shown. The reason for this poor
+performance is that $\Ja$ has dramatically different
+sensitivity to $m$ versus $w$, as observed in the cited reference and elsewhere.
+Instead, a nested approach, in which $w$ is
+eliminated in an inner optimization,
+generally gives far better numerical performance. This approach was
+formalized by \cite{GolubPereyra:73,GolubPereyra:03} as the {\em
+  Variable Projection Method} (``VPM''). Besides being the main
+computational device used in our examples, it also plays a central
+role in the theory developed in the next section.
+
+The minimization of $\Ja$ over $w$ yields a function $\tJa$ of $m$
+alone:
+\begin{equation}
+  \label{eqn:redexp0}
+  \tJa[m;d] = \inf_w \Ja[m,w;d]
+\end{equation}
+Under appropriate conditions, met in our examples (Theorem
+\ref{thm:norminv}, $\tJa$ has an alternate expression
+\begin{equation}
+  \label{eqn:redexp10}
+  \tJa[m;d] = \Ja[m,\aw[m;d];d],
+\end{equation}
+in which $\aw[m;d] \in W$ is the solution of the normal
+equation
+\begin{equation}
+  \label{eqn:norm0}
+  (F[m]^TF[m]+\alpha^2A^TA)w= F[m]^Td.
+\end{equation}
+
+[ examples and discussion - Huiyi]
+
+[ may need to repeat some of the explicit formulas for $\aw, e, g,
+\tJa$ from the next section - refer to theorems]
+
+
+
+%\section{Theory}
+
+%\cite{FuSymes2017discrepancy} introduce a version of the discrepancy
+%principle and its application to separable nonlinear least squares
+%problems in penalty form \ref{eqn:basic}. The algorithm developed
+%there is incomplete, however: it lacks  termination criteria. In this
+%section, I review the discrepancy-based algorithm and introduce an
+%appropriate stopping rule, thus completing the development of the
+%algorithm presented in \cite{FuSymes2017discrepancy}.
+
+\section{Findings}
+This section describes the mathematical infrastructure necessary to
+make precise the conclusions described in the Overview section, then
+gives complete statements and proofs, along with those of
+necessary auxiliary results. 
 
 We shall use the abbreviations ${\cal B}(X,Y)$ and ${\cal I}(X,Y)$ for 
 the algebra of bounded linear operators from the Hilbert space $X$ to 
@@ -269,58 +412,21 @@ members of ${\cal B}(X,Y)$ for some choice of Hilbert spaces $X$ and
 $Y$, and superscript $T$ denotes the transpose or adjoint of a such an
 operator in the sense specified by its domain and range Hilbert structure.
 
-\subsection{Acoustic transmission}
-Assume small amplitude (linearized) acoustic propagation, constant
-density, and isotropic point source and receiver. Denote by $m(\bx)$
-the slowness (reciprocal velocity) at spatial position $\bx$, $w(t)$
-the time dependence of the point source intensity (``wavelet'' or
-``source wavelet'') at location
-$\bx=\bx_s$. Then the (excess) pressure field $p(\bx,t)$ obeys a
-scalar wave equation \cite[]{Frie:58}:
-\begin{eqnarray}
-  \label{eqn:awe}
-  \left(m(\bx)^2\frac{\partial^2 p}{\partial t^2} - \nabla^2\right) p(\bx,t) &=&
-                                                                         w(t)\delta(\bx-\bx_s) \nonumber\\
-  p(\bx,t)&=&0, t\ll 0
-\end{eqnarray}
-Suppose that the pressure at a receiver position $\bx=\bx_r$ is recorded, at distance $r>0$ from the
-source position $\bx_s$. We shall refer to the resulting function of
-time as a {\em trace}, from common seismic usage. The dominant information in a single
-trace is the transient signal time of arrival, constraining only the mean slowness in the
-region
-between source and receiver, so assume that the
-slowness is constant, that is, independent of position $\bx$. The pressure field is simply the  the source
-wavelet $w(t)$ convolved with the
-acoustic Green's function, for which an analytic expression is
-available in the constant $m$ case \cite[]{CourHil:62}:
-\begin{equation}
-  \label{eqn:homsol}
-  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-m|\bx-\bx_s|\right).
-\end{equation}
-
-Define $r=|\bx_r-\bx_s| $ to be the source-receiver distance
-(``offset''). The predicted signal at
-$p(\bx_r,t)$ depends nonlinearly on the slowness $m$ and linearly on the
-source wavelet $w$. Therefore it is naturally represented as the
-action of a $m$-dependent linear operator $F[m]$ on $w$, as described
-in \ref{eqn:mod}, which we repeat here for convenience:
+\subsection{An Acoustic transmission Inverse Problem}
+The data prediction or modeling operator for the single-trace acoustic
+transmission problem has been defined above, in equation
+\ref{eqn:mod}, which we restate here for convenience:
 \begin{equation}
 \label{eqn:mod1}
-F[m]w(t)= p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right).
+F[m]w(t)  = p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right) 
 \end{equation}
-
 The slowness $m$ must be positive, as follows from basic acoustics,
 and in fact reside in a range characteristic of the
 material model: for crustal rock, a reasonable choice would be
 $m_{\rm min}=0.125, m_{\rm max}=0.6$ s/km.
 
-Field recording takes place over finite time intervals (and with
-finite sample rate, a detail we shall ignore in this paper). Denote by
-$[t_{\rm min},t_{\rm max}]$ the recording interval for the
-hypothetical single trace data.
-
 Natural choices for domain and
-range of $F$ are
+range of $F$ are thus
 \begin{itemize}
 \item $M=(m_{\rm min}, m_{\rm max}),\,0 < m_{\rm min} \le m_{\rm
     max}$;
@@ -351,13 +457,12 @@ these bounds should be chosen so that $[t_{\rm min}, t_{\rm max}]
 We will ignore these computational necessities in this work,
 maintaining the definition $W=L^2(\bR)$.
 
-\subsection{An inverse problem}
 As mentioned earlier, $F[m]$ is surjective for every
 $m \in M$. Since all possible data lie in the range of $F[m]$ for any
 $m \in M$, some restriction of the domain
 of $F$ is necessary in order that fitting the data constrain
-$m$. A more precise version of the constraint proposed in the
-introduction involves a selection of a maxium support radius
+$m$. The constraint proposed in the
+Overview section involves a selection of a maxium support radius
 $\lambda_{\rm max} >0$. Then define for $\lambda \in (0,\lambda_{\rm max}]$:
 \begin{itemize}
 \item $\lW = \{w \in W:
@@ -366,7 +471,8 @@ $\lambda_{\rm max} >0$. Then define for $\lambda \in (0,\lambda_{\rm max}]$:
 \end{itemize}
 
 In terms of this infrastructure, the inverse problem studied in 
-this paper is: 
+this paper may be stated as a slightly refined version of the problem statement
+\ref{eqn:probstat}: 
 
 \begin{quote}
 \noindent {\bf Problem Statement:}
@@ -407,7 +513,7 @@ such data a solution of the Problem Statement \ref{eqn:probstat0}
 exists with arbitrarily small $\epsilon>0$.
 
 
-\subsection{Main Results}
+\subsection{Results}
 While $F[m]$ is surjective for every $m \in M$, as noted above, it is
 very far from injective. On the other hand, under a constraint that
 will be assumed throughout, $\lF[m]$ is injective (in fact, $4 \pi r
@@ -441,17 +547,14 @@ error = 1.0.
 \end{theorem}
 
 The main theoretical device used in the proofs of our main results on 
-extended inversion is the reduction of the penalty objective $\Ja$
+extended inversion is Variable Projection reduction of the penalty objective $\Ja$
 (equation \ref{eqn:penerr}) to a function $\tJa$ of 
-$m$ alone, by minimization over $w$: 
+$m$ alone, by minimization over $w$, as described in the Examples
+section. We repeat the definition here for the reader's convenience:
 \begin{equation}
   \label{eqn:redexp}
   \tJa[m;d] = \inf_w \Ja[m,w;d]
 \end{equation}
-This reduction is the foundation 
-of the {\em Variable Projection Method} (VPM) 
-\cite[]{GolubPereyra:03} for solution of partly linear (``separable'') 
-least squares problems.
 
 A minimizer $w$ on the right-hand side of definition
 \ref{eqn:redexp} must solve the {\em normal equation}
@@ -511,8 +614,7 @@ penalty operator $A$:
 
 This phenomenon - nondifferentiable objective, differentiable reduced
 objective - is replicated for a wide variety of extended
-approaches for inverse problems in wave propagation. We will have
-more to say about it in the Discussion section.
+approaches for inverse problems in wave propagation. See for example \cite{Symes:EAGE15}.
   
 We examine two choices for $A$. For each choice, we ask first whether local minimizers 
 of the resulting VPM objective $\tJa[\cdot;d]$ occur far from a slowness $m_*$. 
@@ -669,122 +771,9 @@ of $\lambda$ consistent with this bound, $(m,{\bf
 problem for any $\epsilon > 0$ provided that $\alpha$ is chosen
 sufficiently small ($O(\sqrt{\epsilon})$).
 
-\section{Discussion}
-
-Use of model extension to reveal the influence of earth mechanical
-parameters on data is an old idea, and underlies several classes of
-seismic data processing methods in widespread use for decades
-\cite[]{geoprosp:2008}. Use of model extension to create optimization
-principles for inversion is a more recent development
-\cite[]{SymesCar:91,Plessix:00a,Symes:09,LuoSava:11,BiondiAlmomin:SEG12,LeeuwenHerrmannWRI:13,LiuSymesLi:14,Warner:14,ChaurisGP:14,Warner:16,LeeuwenHerrmann:16,Herve2017,HouSymes:Geo18}. Extended
-inversion methods differ by the choice of additional degrees of
-freedom, and by choice of penalty applied to eliminate them in the
-final result. The approach studied in this paper belongs to the {\em
-  source extension} variety: the extra parameters are provided by
-permitting the energy source component of the experimental model to
-have more, or less constrained, parameters than the experimental
-design suggests. \cite{HuangNammourSymesDollizal:SEG19} give an
-overview and taxonomy of source extension methods, with extensive
-references.
-
-Extended inversion is not the only alternative to straightforward
-least-squares data fitting that may overcome cycle-skipping. For
-example, evidence has recently emerged that the Wasserstein metric
-from arising in the theory of optimal transport may provide a measure
-of error between model-predicted and observed seismic data less
-oscillatory than the mean-square
-\cite[]{EngquistYang:GEO18,Metivier:GEO18}. 
 
 
-Many inversion concepts sound plausible, and appear
-to work at least to some extent as one might hope from their heuristic
-justifications. However very few of these approaches have been
-underwritten by mathematical argument: in essence, they are mostly
-justified only by numerical example, ``in the rear-view mirror'', with no assurance that
-failure is not just around the corner, at the next example. On top of
-that, some of these approaches, for example those based on the
-computationally attractive Variable Projection Method (``VPM'') of
-\cite{GolubPereyra:03}, are cast in such form that the reasons for
-success are not readily apparent.
-
-In many cases, the constraint posed by membership of the second component $w$ in the subspace $\lW$ is an approximation to an idealized limit $\lambda \rightarrow 0$.
-It may be that $W_0 = \cap_{\lambda > 0}\lW$ is non-trivial, in which
-case $F$ may be viewed as an extension of $F_0 = F|_{ M \times
-  W_0}$. In that case, $F_0$ and $F$ realize the idealized extension
-structure discussed in many prior works on extended inversion (for
-example, \cite[]{geoprosp:2008}): $F_0$ is the physical modeling
-operator, and $W_0$ consists of second components of physical or
-feasible models. However, in many of these examples, $W_0$ is not
-computationally accessible, or - even if it is - gives results that
-closely approximate those obtained with $\lW$ for small $\lambda$. For
-other examples, for instance that  discussed later in this paper (and
-implicitly in \cite[]{Warner:16}, for instance), $W_0=\{0\}$ and the
-family $\{\lW: \lambda > 0\}$ actually embodies all of the necessary
-physics.
-
-
-While minimization of $\Ja$ might be tackled directly - by
-alternating minimizations over $m$ and $w$, or by computing updates
-for $m$ and $w$ simultaneously - such joint minimization performs
-poorly, as \cite{YinHuang:16} has shown. The reason for this poor
-performance is that $\Ja$ has dramatically different
-sensitivity to $m$ versus $w$, as observed in the cited reference and elsewhere.
-%especially for high frequency $f$, as
-%the reader will see below.
-%as will be established below.
-Instead, a nested approach, in which $w$ is
-eliminated in an inner optimization,
-generally gives far better numerical performance.  This takes advantage of
-$\Ja$ being quadratic in
-$w$ to eliminate $w$ from the problem statement, as described in the
-following theorem.
-%\section{Theory}
-
-%\cite{FuSymes2017discrepancy} introduce a version of the discrepancy
-%principle and its application to separable nonlinear least squares
-%problems in penalty form \ref{eqn:basic}. The algorithm developed
-%there is incomplete, however: it lacks  termination criteria. In this
-%section, I review the discrepancy-based algorithm and introduce an
-%appropriate stopping rule, thus completing the development of the
-%algorithm presented in \cite{FuSymes2017discrepancy}.
-
-The inverse problem stated at the beginning of this paper concerns
-three types of
-objects: a set of vectors of measured or observed parameters (``the
-data''); a set of vectors of non-observed parameters (``the model''); and a
-modeling or prediction operator, which accepts model vectors as
-input and produces predicted data vectors as output.
-
-The ``inverse problem'' is really a family of questions, parametrized
-by a scalar tolerance. The question implicitly posed in the statement
-\ref{eqn:probstat0} is: given a tolerance and an observed data vector,
-is there a model vector for which the predicted data vector is within
-the tolerance of the observed data vector, in the sense of a distance
-function on the collection of all possible data vectors.
-
-This deterministic definition of inverse problems has been presented by
-many authors, for instance \cite{ddjackson:72,Parker:94}. Most variants 
-presume that the data and model vectors form Hilbert spaces, or
-possibly subsets of Hilbert spaces, and that the distance between
-predicted and observed data vectors is the norm of the difference. Our
-approach fits squarely in this tradition.
-
-In any concrete instance, a ``yes'' answer can only be justified by
-exhibition of a model vector satisfying the fit criterion, hence the
-form of the statement \ref{eqn:probstat0}. The extension approach
-discussed in this paper relies on use of an extended modeling or
-prediction operator, satisfying two criteria:
-\begin{itemize}
-\item the extended operator is an extension of the modeling
-  operator, that is, its domain is a superset of the model vector
-  space and, when fed a model vector, it replicates the action of
-  the modeling operator;
-\item the extended operator is {\em surjective}, that is, all data
-  vectors can be fit without error.
-\end{itemize}
-
-
-\section{Derivations}
+\subsection{Proof of Theorem \ref{thm:fwi}}
 \noindent{\bf Remark:} A useful consequence of the condition 
 \ref{eqn:fullrec}: for every $m \in M$, 
 \begin{equation}
@@ -793,7 +782,6 @@ prediction operator, satisfying two criteria:
   \label{eqn:zeroinc}
 \end{equation}
 
-\subsection{Proof of Theorem \ref{thm:fwi}}
 %A natural formulation of the Problem Statement \ref{eqn:probstat0} is
 %via least squares: that is, given $d \in D$, $\lambda >0$, find
 %$(m,w) \in M \times \lW$ to minimize
@@ -821,7 +809,7 @@ prediction operator, satisfying two criteria:
 \begin{proof} of Theorem \ref{thm:fwi}: From the definition \ref{eqn:mod},
 \[
  \lerr[m,w;d] =  \frac{1}{32\pi^2
-    r^2}\int_0^T\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
+    r^2\|d\|^2}\int_0^T\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
 \]
 Since $w_*, w$ vanish for $|t|>\lambda$,
 $\lF[m_*]w_*(t)$ vanishes if $|t-m_*r|>\lambda$ and $\lF[m]w$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
@@ -837,13 +825,16 @@ $\langle \cdot,\cdot \rangle_D$ on $D$:
 \end{equation}
 But $d = \lF[m_*]w_*$, so this is the same as saying that $d$ is
 orthogonal to $F[m]w$. So conclude after a minor manipulation that
+\[
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \lerr[m,w;d]=\frac{1}{32\pi^2 
+    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2).
+\]
 \begin{equation}
   \label{eqn:iso}
-  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, e[m,w;d]=\frac{1}{32\pi^2
-    r^2}(\|w\|^2 + \|w_*\|^2).
+  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right)
 \end{equation}
 That is, for slowness $m$ in error by more than $2\lambda/r$ from the 
-target slowness $m_*$, the means square error (FWI objective) $e$ is independent of
+target slowness $m_*$, the means square error (FWI objective) $\lerr$ is independent of
 $m$, and its minimum over $w$ is attained for $w=0$
 \end{proof}
 %\begin{theorem}
@@ -936,9 +927,6 @@ Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:
       t_{\rm max}-mr]} + \alpha^2 A^TA\right)w= F[m]^Td.
 \end{equation}
 
-The role of $A$ is to penalize distance from the constrained
-subspace $\lW$, in some sense. 
-
 With these choices, the normal equation \ref{eqn:norm1} becomes
 \begin{equation}
 \label{eqn:norm2}
@@ -984,7 +972,7 @@ With these choices, the normal equation \ref{eqn:norm1} becomes
   \end{itemize}
 \end{proposition}
 
-\begin{proof}
+\begin{proof} of Theorem \ref{thm:norminv}:
   \begin{itemize}
   \item[1. ]Note that thanks to \ref{eqn:zeroinc}, if $|t|\le
     \lambda \le \lambda_{\rm max}$, then ${\bf 1}_{[t_{\rm min}-mr,  
@@ -1022,11 +1010,11 @@ With these choices, the normal equation \ref{eqn:norm1} becomes
   \end{itemize}
 \end{proof}
 
-\begin{proof} of Theorem \ref{thm:norminv}: Since the normal operator
-  is invertible (item 1 of Proposition \ref{thm:norminvexp}), the
-  conclusions of this theorem follow from the Lax-Milgram Theorem
-  (\cite{Yosida}, III.7).
-\end{proof}
+%\begin{proof} of Theorem \ref{thm:norminv}: Since the normal operator
+%  is invertible (item 1 of Proposition \ref{thm:norminvexp}), the
+%  conclusions of this theorem follow from the Lax-Milgram Theorem
+%  (\cite{Yosida}, III.7).
+%\end{proof}
 
 \subsection{Proof of Theorem \ref{thm:diffobj}}
 
@@ -1035,18 +1023,18 @@ With these choices, the normal equation \ref{eqn:norm1} becomes
   Assume the hypotheses of Proposition \ref{thm:norminvexp}. Then
   \begin{equation}
   \label{eqn:residnormgen}
-  e[m,\aw[m,d];d] = \frac{1}{2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
+  e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
   (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
 \end{equation}
 \begin{equation}
   \label{eqn:anninormgen}
-  p[m,\aw[m,d];d] = \frac{1}{2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
+  p[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
   (4\pi r \alpha a(t-mr))^2)^{-2}d(t)
 \end{equation}
 
 \begin{equation}
   \label{eqn:expjgen}
-\tJa[m;d] = \frac{1}{2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
+\tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
 a(t-mr))^2)^{-1}d(t)^2. 
 \end{equation}
 \end{proposition}
@@ -1092,7 +1080,7 @@ Suppose first that $a \in C^1(\bR)$. Differentiation under the integral sign
   yields the expression for its derivative:
 \begin{equation}
   \label{eqn:dexpjgen}
-  \frac{d}{dm}\tJa[m;d] = -(4 \pi r \alpha)^2 \int_{t_{\rm min}}^{t_{\rm max}} \,dt \, 
+  \frac{d}{dm}\tJa[m;d] = -\frac{(4 \pi r \alpha)^2}{\|d\|^2} \int_{t_{\rm min}}^{t_{\rm max}} \,dt \, 
   \left(a\frac{da}{dt}\right)(t-mr)(1+(4\pi r \alpha 
   a(t-mr))^2)^{-2}d(t)^2. 
 \end{equation}
@@ -1103,28 +1091,29 @@ same expression gives the derivative of $\tJa$.
 \subsection{Proof of Theorem \ref{thm:boxcarbad}}
 \begin{corollary}
   \label{thm:epjnonoise}
-  Assume the hypotheses of Proposition \ref{thm:norminvexp}, item 3. Then 
+  Assume the hypotheses of Proposition \ref{thm:norminvexp}, item
+  3. Then noting that $\|d\| = \|w_*\|/(4 \pi r)$
 \begin{equation}
   \label{eqn:residnorm}
   e[m,\aw[m,d];d] 
-= 8 \pi^2 r^2 \alpha^4\int\,dt\,a(t-(m-m_*)r)^4(1+(4\pi r)^2 \alpha^2 
+= \frac{\alpha^4}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^4(1+(4\pi r)^2 \alpha^2 
     a(t-(m-m^*)r)^2)^{-2}w_*(t)^2.
 \end{equation}
 \begin{equation}
   \label{eqn:anninorm}
-  p[m,\aw[m,d];d] = \frac{1}{2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
+  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
     a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
 \end{equation}
 so 
 \begin{equation}
 \label{eqn:expjnonoise}
-\tJa[m;d] = \frac{\alpha^2}{2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
+\tJa[m;d] = \frac{(4\pi r \alpha)^2}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
   a(t-(m-m_*)r)^2)^{-1}w_*(t)^2. 
 \end{equation}
 Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, and 
 \begin{equation}
   \label{eqn:dexpjnonoise}
-  \frac{d}{dm}\tJa[m;d] = -r \alpha^2 \int \,dt \, 
+  \frac{d}{dm}\tJa[m;d] = -\frac{r (4\pi r \alpha)^2}{\|w_*\|^2} \int \,dt \, 
   \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
   a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
 \end{equation}
@@ -1160,10 +1149,11 @@ Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiab
 \begin{proof}
   As observed before, $\mbox{supp }\aw[m;d_*] \subset [t_{\rm
     min}-mr,t_{\rm max}-mr]\subset [-\tau,\tau]$, with $\tau$ defined
-  in \ref{eqn:taudef}. Therefore, $a(t) = |t|$ $a a'(t) = t$ in the
+  in \ref{eqn:taudef}. Therefore, $a(t) = |t|$, $a a'(t) = t$ in the
   support of the integrand on the RHS of equation
   \ref{eqn:dexpjnonoise}, which therefore 
   becomes (after change of integration variable)
+  %%%%%%%%%%%%%%%%%%%%%%%%%
   \begin{equation}
     \label{eqn:gradfinal}
     \frac{d}{dm}\tJa[m;d_*] = -r \alpha^2 \int \,dt \, 
@@ -1372,12 +1362,55 @@ then $|m-m_*|\le \lambda/r$. Rearranging, obtain the conclusion.
   $\lambda$ and substitute in inequality\ref{eqn:mnoisebndfin}.
 \end{proof}
 
-\noindent {\bf Remark:} This is the only error bound in our treatment
-of this problem in which the size of $\alpha$ plays a role. It
-suggests that the estimate of $m$ becomes more accurate in the
-presence of noise for larger $\alpha$. This result is intuitively
+\noindent {\bf Remark:} This is the only error bound on $m$ in which
+the size of $\alpha$ plays a significant role. It
+suggests that error in the estimate of $m$ due to data noise is a
+decreasing function of $\alpha$, at least for small $\alpha$. This result is intuitively
 appealing, and is supported by numerical evidence, as shown below.
 
+%%%%%%%%%%%
+\begin{proposition}
+  \label{thm:wnoiseres}
+  Asumme that
+  \begin{itemize}
+  \item[1. ] $\alpha, \mu> 0$,
+  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
+  \item[3. ] $d_* = F[m_*]w_*$,
+  \item[4. ] $n \in D$ and $d = d_* + n$.
+  \end{itemize}
+  Set $\eta = \|n\|/\|d_*\|$, and assume further that
+  \begin{itemize}
+  \item[5. ]
+    \begin{equation}
+      \label{eqn:mnoisecond}
+      \eta < \frac{\sqrt{5}-1}{2}, and
+    \end{equation}
+  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
+  \end{itemize}
+  Then
+  \begin{equation}
+    \label{eqn:mnoisesuff}
+    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
+  \end{equation}
+\end{proposition}
+
+\begin{proof}
+  From equation \ref{eqn:normsol},
+  \[
+    \aw[m;d](t) = 
+    \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
+  \]
+  \[
+    =4\pi r(1 + (4\pi r \alpha t)^2)^{-1} (\frac{1}{4\pi r}
+    w_*(t+(m-m_*)r) + n(t+mr) 
+  \]
+  so
+  \begin{equation}
+    \label{eqn:wres}
+    \aw[m;d](t) - w_*(t) = (4\pi r \alpha t)^2 (1+ (4\pi r \alpha t)^2)^{-1}w_*(t+(m-m_*)r)
+    +w_*(t+(m-m_*)r)-w_*(t) + 4 \pi r (1 + (4\pi r \alpha t)^2)^{-1}n(t+mr)
+  \end{equation}
+\end{proof}
 %  \begin{itemize}
 %    \item[1. ] the bound \ref{eqn:mnoisebnd} holds only if 
 %      noise level $\eta=\|n\|/\|d_*\|$ satisfies
@@ -1558,6 +1591,9 @@ that the relative residual is $\le \epsilon$.
 \bibliography{../../bib/masterref}
 
 \append{Numerics and penalty selection via the Discrepancy Principle}
+This appendix describes a method for controlling the penalty
+weight $\alpha$ based on the Discrepancy Principle
+\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}.
 
 Modified Problem Statement:
 \begin{quote}
@@ -1729,10 +1765,6 @@ That is, unless $p(\alpha^2_+) = 0$ (in which case a physical solution of the in
 
 
 \append{Heisenberg, support, and wavelength}
-
-[THE NEXT BIT MAY OR MAY NOT BE WORTH KEEPING - IT WAS INTERESTING TO
-WORK OUT]
-
 Without further contraints on data or solution, nothing more can be
 said about bounds on $\alpha$. If the data $d$ (and the target wavelet
 $w_*$) are assumed to have a square integrable derivative, then a
