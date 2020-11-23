@@ -68,332 +68,449 @@ The wavefield $u$ in this work is presumed to exist in all of Euclicean space-ti
 
 Achieving a small residual in the source subproblem \ref{eqn:esis} for arbitrary $c$ is a critical part of the convergence mechanism for the extended source approach to FWI \cite[]{HuangNammourSymesDollizal:SEG19}. However, for arbitrary data $d$, coefficient array $c$, and source location $\bx_s$, there does not exist an isotropic point source $f_{\rm pt}$ of the form \ref{eqn:ptsrc} for which $PL[c]^{-1}f_{\rm pt} \approx d$. This is so even if there does exist a coefficient array $c^*$ and point source $f_{\rm pt}^*$ located at $\bx_s$ with wavelet $w^*(t)$ for which $d = PL[c^*]^{-1}f_{\rm pt}^*$, if $c$ differs substantially from $c^*$. It is this fact that underlies the effectiveness of the extended source approach to FWI:  driving the residual in the problem \ref{eqn:esi} towards zero necessarily requires modifying $c$ to resemble $c^*$, assuming the latter exists, as well as pushing the optimal $f$ towards the null space of $A$. Conversely, the source subproblem \ref{eqn:esis} does not have a small residual solution of point source form \ref{eqn:ptsrc}, in general, for a given choice of $c$, even if that were the case for a different choice ($c^*$). Therefore a more general class of source models than that specified by the condition \ref{eqn:ptsrc} must be admitted to the feasible set for the source subproblem \ref{eqn:esis} if it is to serve as the inner problem in a variable projection formulation of extended source FWI.
 
-The class of non-point sources investigated here are those confined a hypersurface assumed to contain the locations of physical (point) sources, but not a priori required to have point support. These {\em surface extended sources} are able to yield a relatively small residual in the source subproblem \ref{eqn:esis} for more or less arbitrary coefficient array $c$. This observation is a by-product of the approximate solution for \ref{eqn:esis} constructed below. The construction of the approximate solution is closely related to the {\em time reversal} method of photoacoustic tomography (see \cite{StefanovUhlmannIP:09} and references cited there).
+The class of non-point sources investigated here are those confined a hypersurface assumed to contain the locations of physical (point) sources, but not {\em a priori} required to have point support. These {\em surface extended sources} are able to yield a relatively small residual in the source subproblem \ref{eqn:esis} for more or less arbitrary coefficient array $c$. This observation is a by-product of the approximate solution for \ref{eqn:esis} constructed below. The construction of the approximate solution is closely related to the {\em time reversal} method of photoacoustic tomography (see \cite{StefanovUhlmannIP:09} and references cited there).
 
-The next section gives a precise description of an acoustic version of problem \ref{eqn:esis}, and points out two interesting special cases, the {\em crosswell} and {\em diving wave} configurations. The assumptions detailed here imply that the data $d$ of the inverse problems \ref{eqn:esi}, \ref{eqn:esis} have the physical character of {\em transmitted waves}. There are no mathematical results at present concerning reflected wave inverse problems treated by source extension methods, though there are tantalizing numerical clues \cite[]{LeeuwenHerrmannWRI:13,Warner:14,Warner:16,LeeuwenHerrmann:16,HuangSymes:Geo17,HuangSymes:Geo18a,HuangSymes:Geo18b}.
+The next section gives a precise description of an acoustic version of problem \ref{eqn:esis} for an idealized {\em crosswell} configuration, in which source located on a surface $z=z_s$ generate waves that propagate to to a receiver surface $z=z_r > z_s$. In principle, {\em diving waves} can be described with similar mathematics, but with some additional complications, so I do not treat the diving wave case explicitly in this paper. The assumptions detailed here imply that the data $d$ of the inverse problems \ref{eqn:esi}, \ref{eqn:esis} have the physical character of {\em transmitted waves}. There are no mathematical results at present concerning reflected wave inverse problems treated by source extension methods, though there are tantalizing numerical clues \cite[]{LeeuwenHerrmannWRI:13,Warner:14,Warner:16,LeeuwenHerrmann:16,HuangSymes:Geo17,HuangSymes:Geo18a,HuangSymes:Geo18b}.
 
 The following section describes the construction of the approximate inverse and explains the conditions under which accuracy should be expected. I observe that the approximate inverse is approximately the adjoint of the modeling operator $PL[c]^{-1}$ with respect to weighted norms in its domain and range (see \cite{HouSymes:15} for a similar observation in a different context). This fact immediately suggests use of the approximate inverse as a preconditioner to accelerate convergence of Krylov space methods such as conjugate gradient iteration applied to the least squares problem \ref{eqn:esis}. However, its straightforward application in the preconditioned conjugate gradient (PCG) method \cite[]{Golub:2012} involves explicitly a version the so called Dirichlet-to-Neumann (D2N) operator, which is computationally awkward. I show how to reorganize the PCG iteration so that only solutions of $L[c]u=f$ are required. The penultimate section presents some 2D examples in the crosswell configuration, illustrating the accuracy of the approximate inversion and the accelerated convergence of PCG. The examples are chosen to emphasize that surface extended sources can be constructed to fit more or less arbitrary data, unlike point sources - as mentioned before, this approximate invertibility property of the modeling operator is of critical importance in the application to extended FWI. The paper ends with a discussion of several important matters not addressed here, and a restatement of the conclusions.
 
 The intent of the main body of this paper is to present the formal structure of the extended source subproblem and the way in which this structure leads to accelerated numerical solution. This formal structure is however supported by a rigorous foundation. In order to avoid disrupting the formal account, this foundation material is relegated to an appendix.
 
-%The penalty operator $A$ is chosen to penalize non-physical aspects of the trial source $g$: physical sources are supposed to constitute the null space of $A$.
+\section{Operators and Adjoints}
 
-%In some cases, the resulting  relaxed data fit problem has been observed to be more amenable to solution by local optimization. The main goal of this paper is explain why this should be so,  in a particular instance of source-extended FWI. I will show that for a specific choice of {\em annihilator} $A$, the optimization problem \ref{eqn:esi} possesses a {\em qualitatively} larger domain of convexity for consistent data ($PL[c]^{-1}g = d, Ag=0$) than does the FWI problem \ref{eqn:ols}, while possessing the same solution. 
-
-%For sake of argument (and because almost all work so far has assumed it), adopt the isotropic point source as the model: for the data gather at source positon $\bx_s$, the source takes the form
-%\begin{equation}
-%\label{eqn:ptsrc}
-%f(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s). 
-%\end{equation}
-%in which the {\em wavelet} $w(t)$ has whatever structure is necessary for $f$ to lie in the range of the wave operator $L[c]$. FWI can also accommodate more complex source models reflecting the nontrivial radiation patterns of actual sources. 
-%The data projection operator $P$ involves the restriction of one or more components of the field $u$ to a hypersurface $X_r$. The simplest interesting choice of $X_r$ is a hyperplane, say $z=z_r$ (with the convention that $\bx=(x,y,z)$). To emulate the limited aperture of any experimental data system, include multiplication by a smooth cut-off or taper function $\phi$. Component selection is a special case of multiplication by a matrix $P_c \in \bR^{n_d \times n_s}$, in which $n_d$ is the number of data components and $n_s$ is the dimension of the state vector $u$.
-%\begin{equation}
-%\label{eqn:data}
-%Pu(x,y,t) = \phi(x,y,z_r)P_cu(x,y,z_r,t)
-%\end{equation}
-%in which $P_c$ is a 
-
-
-%Source extension replaces $f(\bx,t;\bx_s)$ with an artificial source $g(\bx,t; \bx_s)$ with more degrees of freedom than merely a single common source wavelet $w(t)$ as in definition \ref{eqn:ptsrc}. Assuming that \ref{eqn:ptsrc} is actually correct physics, these extra degrees of freedom have to be suppressed in the optimal solution, via an {\em annihilator} $A$, an operator acting on extended sources $g$, whose null space is precisely the physical sources (of the form \ref{eqn:ptsrc}). Extended source inversion replaces the FWI objective with a penalty function
-
-%The way in which degrees of freedom are introduced, and the choice of annihilator, distinguish the various source extension methods, of which there are many - see \cite{HuangNammourSymesDollizal:SEG19}, who introduce the {\em surface source} extension. It is this surface source extension that is the topic of this paper. It is similar  to the volume extension \cite[]{HuangSymes:Geo18b}, but the source is spread over the source space-time surface, rather than over space at $t=0$.
-%Similar to the space-time and volume extensions \cite[]{HuangSymes:Geo18a,HuangSymes:Geo18b}, the annihilator is given by the {\em localization penalty}:
-%\begin{equation}
-%\label{eqn:msste}
-%A[g](\bx,t;\bx_s) = |\bx-\bx_s|g(\bx,t;\bx_s). 
-%\end{equation} 
-%Therefore an estimate of the the source wavelet is a by-product of the inversion, and does not need to be specified {\em a priori}. Like the volume extension (and unlike, for example, Wavefield Reconstruction Inversion \cite[]{LeeuwenHerrmannWRI:13,LeeuwenHerrmann:16}), the additional data volume required is on the same order of size as the data.
-
-
-%The volume and surface extensions have a well-defined relation to tomographic principles (slope or traveltime, depending on type of annihilator). This relation holds regardless of ray geometry (with or without triplication) in transmission configuration.
-
-%Again, nothing is known theoretically about the behaviour of any of these methods for reflection data, and numerical evidence is ambiguous.
-
-\section{Extended Source Modeling}
-For acoustic wave physics, the coefficient vector $c$ is the pair $c=(\kappa,\beta)$ of bulk modulus $\kappa$ and buoyancy (reciprocal density) $\beta$, and the state vector $u=(p,\bv)$ consists of pressure $p$ (a scalar space-time field) and particle velocity $\bv$ (a vector space-time field). The wave operator $L[c]$ is given by the linear acoustics system:
+For acoustic wave physics, the coefficient vector $c$ is the pair $c=(\kappa,\beta)$ of bulk modulus $\kappa$ and density $\rho$, and the state vector $u=(p,\bv)^T$ consists of pressure $p$ (a scalar space-time field) and particle velocity $\bv$ (a vector space-time field). The wave operator $L[c]$ is given by the linear acoustics system:
 \begin{equation}
-\label{eqn:awe}
+\label{eqn:aweop}
 L[c]u = 
 \left(
 \begin{array}{c}
-\partial_t p  + \kappa \nabla \cdot \bv \\
-\partial_t \bv + \beta \nabla p
+\frac{1}{\kappa}\frac{\partial p}{\partial t}  + \nabla \cdot \bv, \\
+\rho\frac{\partial \bv}{\partial t} + \nabla p.
 \end{array}
 \right) 
 \end{equation}
-
-The space dimension will be denoted by $d$. Most of what follows is valid for any $d >0$. The choice $d=2$ is computationally convenient, if non-physical. 
-
-As mentioned earlier, in this paper the coefficients $c$ is regarded as defined throughout space $\bR^d$, the state vector $u$ throughout space-time $\bR^{d+1}$. 
-
-Real-world sampling is discrete and direction-sensitive. This paper ignores such issues and presumes that the sampling operator $P$ simply restricts its argument to a cylindrical space-time hypersurface $\Gamma_r \times \bR$.  Here $\Gamma_r \subset \bR^d$ is an open subset of a smooth codimension 1 oriented hypersurface. To distinguish this output or receiver sampling operator from another similar operator, add the subscript $r$ to the notation, that is, write $P_r$ rather than $P$. For technical reasons (and to emulate actual acquisition practice) include multiplication by a cutoff or mute $\phi_r \in C_0^{\infty}(\bR^{d+1})$, and extract only samples of the pressure field:
+That is,
 \begin{equation}
-\label{eqn:recp}
-(P_ru)(\bx,t) = \phi_r(\bx,t)p(\bx,t),\,\bx \in \Gamma_r, t \in \bR. 
-\end{equation}
-A similar sampling operator for the velocity field will also be required below. Denote by ${\bf n}_r$ the outward unit normal field on $\Gamma_r$, and define
-\begin{equation}
-\label{eqn:recv}
-(V_ru)(\bx,t) = \phi_r(\bx,t){\bf n}_r(\bx)\cdot \bv(\bx,t),\,\bx \in \Gamma_r, t \in \bR.
+  \label{eqn:awemat}
+  L[c] = \left(
+    \begin{array}{cc}
+      \frac{1}{\kappa}\frac{\partial}{\partial t} & \nabla \cdot \\
+      \nabla & \rho \frac{\partial}{\partial t}
+    \end{array}
+  \right)
 \end{equation}
 
-Physical sources are modeled as an isotropic constitutive law defects of point support. As mentioned earlier, it is simple to accommodate more complex source models. Assume that all source lie in an open subset $\Gamma_s \subset \bR^d$ of a smooth orientable codimension 1 hypersurface in $\bR^d$, possibly different from the hypersurface containing $\Gamma_r$. Denote by $P_s, V_s$ sampling operators on $\Gamma_s \times \bR$ defined precisely analogously to $P_r$ and $V_r$ (equations \ref{eqn:recp}, \ref{eqn:recv}):
-\begin{equation}
-\label{eqn:recp}
-(P_su)(\bx,t) = \phi_s(\bx,t)p(\bx,t),\,\bx \in \Gamma_s, t \in \bR. 
-\end{equation}
-and similarly for $V_s$. Denote by $\delta_{\bx_s}$ the delta distribution on $\Gamma_s$ at $\bx_s \in \Gamma_s$, and by $w \in C_0^{\infty}(\bR)$ a choice of source wavelet. The corresponding physical source is then the right-hand side in the acoustic system
-\begin{equation}
-\label{eqn:awe-src}
-L[c]u = P_s^T(w\delta_{\bx_s}) 
-\end{equation}
-With dummy space and time variables, the right hand side above is exactly the form $w(t)e_1\delta(\bx-\bx_s)$ given in the point source definition \ref{eqn:ptsrc}, where , ${\bf e}_1$ the standard basis vector $e_1=(1,0,...,0) \in \bR^{d+1}$.
+The space dimension is $d$. Most of what follows is valid for any $d >0$. Examples later in this paper will use $d=2$ for computationally convenience.
 
-As explained in the introduction, unless the data $d$ and the coefficient array $c$ are compatible, the source subproblem \ref{eqn:esis} has no low-residual solution of the form $f = P_s^T(w\delta_{\bx_s}) $. A larger class of source models is required to fit data. A precise description of the class described in the introduction is simply the range of $P_s^T$: that is, for $h \in C^{\infty}(\Gamma_s \times \bR)$, define
-\begin{equation}
-S[c]h = P_rL[c]^{-1}P_s^T h.
-\end{equation}
-$S[c]$ is the surface source extension modeling operator. For this class of sources, the source subproblem becomes 
-\begin{equation}
-\label{eqn:esis-sse}
-\mbox{given } c, \mbox{ choose } h  \mbox{ to minimize } \|S[c]h -d \|^2 + \alpha \|Ah\|^2 
-\end{equation}
-To complete the definition of this problem, a choice of {\em annihilator} $A$ is required. A simple choice is
-\begin{equation}
-\label{eqn:msste}
-Ah(\bx,t) = |\bx-\bx_s|h(\bx,t). 
-\end{equation} 
+As mentioned earlier, in this paper the coefficients $c$ is regarded as defined throughout space $\bR^d$, the state vector $u$ throughout space-time $\bR^{d+1}$.
 
-Formally, the solution of the source subproblem is also the solution of the normal equation
-\begin{equation}
-\label{eqn:normal}
-(S[c]^TS[c] + \alpha^2 A^TA) h = S[c]^T d 
-\end{equation}
-This relation holds, and a solution $h$ is guaranteed to exist, if the $\alpha=0$ normal operator $S[c]^TS[c]$ is well-defined and continuous in $L^2(\bar{\Gamma}_s \times \bR)$, and there exists $C>0$ so that 
-\begin{equation}
-\label{eqn:coercive}
-\|S[c]h\|^2 \le C|h|^2,\,\,\|S[c]h\|^2 + \alpha^2 \|Ah\|^2 \ge C^{-1}\|h\|^2
-\end{equation}
-for all $h \in L^2(\bar{\Gamma}_s)$. These estimates hold under various conditions. One particular setting in which the least squares problem \ref{eqn:esis} is well-posed is given by 
-
-\noindent {\bf Assumption A:} There exists $\theta_*>0$ so that for every ray connecting a point in $\mbox{supp }\phi_s$ with a point in $\mbox{supp }\phi_r$, the angles $\theta_s$ and $\theta_r$ subtended by the ray and the tangent planes of $\Gamma_s$ and $\Gamma_r$ respectively are both greater than $\theta_*$ in absolute value.
-
-The first appendix provides a proof of the following statement:
-
-\begin{theorem} 
-\label{thm:one}
-Suppose that $\log \kappa, \log \beta \in C^{\infty}(\bR^d) \cap L^{\infty}(\bR^d)$, and that Assumption A holds. Then the estimates \ref{eqn:coercive} hold for $h \in C^{\infty}_0(\Gamma_s \times \bR)$, hence $S[c]$ extends to $L^2(\bar{\Gamma}_s \times \bR)$ with the same estimates.
-\end{theorem}
-
-The assumptions made in the hypotheses of \ref{thm:one} imply that the inverse wave problems under consideration in this paper are of the transmission type, that is, do not involve reflected waves. The reflected wave concept is well-defined only in terms of high-frequency asymptotics: because the coefficients are assumed smooth, there are no material singularities to generate reflections.  Two configurations of sources and receivers that naturally fit this framework, at least in an ideal sense, are
-\begin{itemize}
-\item the {\em crosswell} configuration, in which $\Gamma_s$ and $\Gamma_r$ are parallel hyperplanes. In reality, wells are approximately 1D structures embedded in 3D ambient media, so this configuration does not really model them well. However it has become commonplace to use the 2D version of this configuration as a model, assuming that the waves propagate in-plane between the wells  \cite[]{BregChapBai:86,Harr:93,Zhouetal:93,Pratt:99b,Plessix:00}.
-\item the {\em diving wave} configuration, $\Gamma_s$ and $\Gamma_r$ are both subsets of a horizontal plane at the source, respectively receiver, depth (assumed well-defined). In marine towed streamer and ocean bottom seismometer surveys, a set of refracted waves arrives earlier than the direct wave in the water column, at sufficient distance from the source. The mutes $\phi_s, \phi_r$ isolate these refacted (``diving wave'') arrivals. This data is the focus of the ``classic'' period of FWI \cite[]{SirgPratt02,BrendersPratt:06a,BrendersPratt:06b,VirieuxOperto:09,Vigh:10,Vigh13}.
-\end{itemize}
-In both cases, it is possible (though not necessary) that Assumption A is satisfied. Note that in the diving wave configuration, the mutes $\phi_S,\phi_r$ are responsible for eliminating direct wave energy, hence enforcing the acute incidence of the waves connecting the admitted source and receiver points. The numerical examples presented below will fall into the crosswell category. 
-
-Assumption A is not by any means the most general hypothesis under which the source subproblem has a well-behaved solution. However weaker hypotheses typically involve multidimensional filters applied to data (and extended sources) to eliminate waves propagating tangent to the source and receiver surfaces, so require more involved implementations. 
-
-
-
-
-
-%Denote by $J_{\alpha}[g,c;d]$ the objective function defined in \ref{eqn:esi}:
-%\begin{equation}
-%\label{eqn:jdef}
-%J_{\alpha}[g,c;d] = \frac{1}{2}( \|PL[c]^{-1}g -d \|^2 + \alpha \|A[g]\|^2) 
-%\end{equation}
-%To compute the objective 
-%\begin{itemize}
-%\item solve the acoustic wave system \ref{eqn:awe} with $g$ as in \ref{eqn:mssur}
-%\item sample at receiver locations and compute mean-square difference with pressure data traces, take mean square
-%\item add scaled mean square of annihilator applied to the source
-%\end{itemize}
-
-%The variable projection method \cite[]{GolubPereyra:03} applied to the objective \ref{eqn:esi} approaches its minimization via a nested algorithm: first minimize \ref{eqn:esi} over the source $g$ for given coefficients $c$, thus making $g = g[c]$ a function of $c$ (inner minimization); then substitute $g[c]$ in $J$ and minimize the resulting function of $c$ (outer minimization). The optimal $g[c]$ solves the first order necessary condition for minimization of $J$ over $g$: $\nabla_g J_{\alpha}[g,c;d] = 0$. For linear annihilators such as that defined by \ref{eqn:mssur}, $J$ is quadratic in $g$, so the first order necessary condition is also sufficient, and is equivalent to the linear {\em normal equation}:
-
-%where I have written $S[c]=PL[c]^{-1}$ for the operator that maps the (extended) source to the data traces. Substitution of $g[c]$ in $J$ results in the {\em reduced objective}
-%\begin{equation}
-%\label{eqn:jred}
-%\tilde{J}_{\alpha}[c;d] = J_{\alpha}[g[c],c;d].
-%\end{equation}
-%The gradient would appear to involve the derivative of the inner solution $g[c]$ with respect to $c$, computation of which implies solution of additional linear systems. However by fortunate accident, the chain rule and the normal equation \ref{eqn:normal}
-%conspire to eliminate all terms involving derivatives of $g[c]$. Consequently the direction derivative of $\tilde{J}_{\alpha}$ in the direction $\delta c$ is
-%\begin{equation}
-%\label{eqn:tildejderiv}
-%D_c\tilde{J}_{\alpha}[c;d]\delta c = \langle D(S[c]g)\delta c,S[c]g-d \rangle|_{g=g[c]}
-%\end{equation}
-%whence
-%\begin{equation}
-%\label{eqn:l2grad}
-%\nabla \tilde{J}_{\alpha}[c;d] = D_c(S[c]g)^T|_{g=g[c]}(S[c]g[c]-d)
-%\end{equation}
-%Let us field-strip the expression on the right. The rightmost factor is the data residual, which is a by-product of many methods for the solution of the normal equation \ref{eqn:normal}. $D_cS$ is the linearization or Born approximation of $S$, or perturbation with respect to $c$, with $g$ fixed:
-%\[
-%S[c+\delta c]g \approx S[c]g + D_c(S[c]g)\delta c
-%\]
-%That is, $D_c(S[c]g)$ is the object commonly called the Born modeling operator, with source wavefield $g$. Its adjoint or transpose is $D_c(S[c]g)^T$ - as is well known, this is the RTM operator (or rather a version of it), computed via the adjoint state method in the time domain. Note that the Born and RTM operators need to match, i.e. both be derived from the same underlying full waveform modeling operator (in this case acoustodynamics, but the same would apply for any other wave theory).
-
-%The upshot is that the computation of the gradient goes like this:
-%\begin{itemize}
-%\item solve the normal equation \ref{eqn:normal} for $g[c]$
-%\item compute (or retain) the data residual $S[c]g[c]-d$
-%\item reverse-time migrate the data residual, using $g[c]$ to generate the source wavefield in the adjoint state method - the output is the gradient of $\tilde{J}_{\alpha}$.
-%\end{itemize}
-
-%To make this algorithm practical and efficient, effective preconditioning needs to be applied to both inner and outer problems.
-
-
-\subsection{Time Reversal}
-%In contrast to the outer problem, a preconditioner for the inner problem is available that works regardless of medium smoothness, so for both transmission and reflection (the latter with some caveats). 
-%First the transmission case - a sort of rotated crosswell configuration. Idealize the receiver set as a continuum plane $z=z_r$, with $z_r > z_s$ - not essential but simpler. 
-
-%NB: the definition of the forward map (and the data) should include a taper $\phi(\bx_r,\bx_s)$ masking out the shot gather $d_r(\cdot,\cdot;\bx_s)$ for each source position $\bx_s$. However I will not explicitly mention this operation.
-
-Change notation slightly, and write $S[c]h_s$ rather than $S[c]g$ with $g = h_s \delta(z-z_s)$, as $z_s$ will be presumed ot be the same for all shots. The pressure and velocity fields occuring in the computation of $d_r=S[c]h_s$ form the solution of
+The idealized ``crosswell'' configuration involves sources confined to $z=z_s$. I will mostly represent sources as constitutive law defects, that is, right-hand sides in the system $L[c]u=f$ of the form $f(\bx,t) = (h_s(x,y,t)\delta(z-z_s), {\bf 0})^T$. With the choice $L[c]$ given in \ref{eqn:aweop}, the causal wave system $L[c]u^+=f$ takes the form
 \begin{eqnarray}
-\label{eqn:awedata}
-\frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv +
-h \delta(z-z_s), \nonumber \\
-\frac{\partial \bv}{\partial t} & = & - \beta \nabla p,\nonumber \\
-p & =& 0 \mbox{ for } t<0\nonumber\\ 
-\bv & = & 0 \mbox{ for } t<0 \nonumber\\
- p|_{z=z_r}& = & d_r
+\label{eqn:awep}
+\frac{1}{\kappa}\frac{\partial p^{+}}{\partial t} & = & - \nabla \cdot \bv^{+} +
+h_s \delta(z-z_s), \nonumber \\
+\rho\frac{\partial \bv^{+}}{\partial t} & = & - \nabla p^{+},\nonumber \\
+p^{+} & =& 0 \mbox{ for } t \ll 0,\nonumber\\ 
+\bv^{+} & = & 0 \mbox{ for } t \ll 0.
 \end{eqnarray}
-Suppose that the recording time interval $[0,T]$ is long enough that $ d_r \approx 0$ for $t > T$. Note that $p,\bv$ are {\em incoming} (downgoing) in $z>z_s$. Therefore in $z<z_r$ {\em the same fields} approximately solve
-\begin{eqnarray}
-\label{eqn:awetr}
-\frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv \nonumber \\
-\frac{\partial \bv}{\partial t} & = & - \beta \nabla p,\nonumber \\
-p & =& 0 \mbox{ for } t>T\nonumber\\ 
-\bv & = & 0 \mbox{ for } t>T \nonumber\\
-p|_{z=z_r} &=&  d_r
-\end{eqnarray} 
-The last equation defines $p$ on the entire plane $z=z_r$ for $t<T$, and the previous two define final conditions at $t=T$. So the {\em time-reversed} system \ref{eqn:awetr} has unique solutions in $z<z_r, t<T$ and $z>z_r,t<T$. The solution in $z<z_r$ is incoming (downgoing) at $z=z_s$, and is {\em the same vector of fields} (approximately) as the solution of \ref{eqn:awedata} in the region $z_s<z<z_r$ between the source and receiver surfaces. 
 
-Define $d_s =p|_{z=z_s}$ for the solution of \ref{eqn:awedata}. Then $p,\bv$ is also the solution of
+Similarly, the anti-causal wave system $L[c]u^-=f$ takes the form
 \begin{eqnarray}
-\label{eqn:awedir}
-\frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv \nonumber \\
-\frac{\partial \bv}{\partial t} & = & - \beta \nabla p,\nonumber \\
-p &=&0, t< 0,\nonumber\\
-\bv &=&0,t<0,\nonumber\\
-p|_{z=z_s }& = &d_s
+ \label{eqn:awem}
+\frac{1}{\kappa}\frac{\partial p^{-}}{\partial t} & = & - \nabla \cdot \bv^{-} +
+h_s \delta(z-z_s), \nonumber \\
+\rho \frac{\partial \bv^{-}}{\partial t} & = & - \nabla p^{-},\nonumber \\
+p^{-} & =& 0 \mbox{ for } t \gg 0,\nonumber\\ 
+\bv^{-} & = & 0 \mbox{ for } t \gg 0.
 \end{eqnarray}
-in both $z>z_s$ and $z<z_s$, since the pressure field for the solution of \ref{eqn:awedata} is continuous across $z=z_s$. Since the same fields solve the two different systems, there must be a relation between the data. In fact, the normal component of velocity $v_z$ is discontinuous, and (recalling the $g(\bx,t;\bx_s) = h_s(x,y)\delta(z-z_s)$). A calculation using integration by parts shows that $h_s$ is precisely the jump in $v_z$ across $z=z_s$:
+Sampling the causal pressure field $p^{+}$ on the surface $z=z_r$ defines the causal forward modeling operator $S^{+}_{z_s,z_r}[c]$:
 \begin{equation}
-\label{eqn:vjump}
-h_s = [v_z]|_{z=z_s}.
+  \label{eqn:fwd}
+  S^{+}_{z_s,z_r}[c]h_s = p^+|_{z=z_r}
 \end{equation}
-A further simplification occurs if $\kappa, \rho$ are constant near $z=z_s$, then by symmetry
-\begin{equation}
-\label{eqn:vsimp}
-[v_z]|_{z=z_s}=2 \lim_{z \rightarrow z_s^+} v_z
-\end{equation}
+The anti-causal forward modeling operator $S^-_{z_s,z_r}$ has a similar definition.
+The subscript signifies that sources are located on $z=z_s$, the receivers on $z=z_r$. It's necessary to include this information in the notation, as versions of $S$ with sources and receivers in several locations will be needed in the discussion below.
 
-With these preparations, define 
-\begin{equation}
-\label{eqn:psinv}
-S[c]^{\dagger}d_r= [v_z]|_{z=z_s}.
-\end{equation}
-where the jump in $v_z$ at $z=z_s$ is computed by
-\begin{itemize}
-\item solving \ref{eqn:awetr} backwards in time,
-\item reading off $d_s=p$ at $z=z_s$,
-\item solving \ref{eqn:awedir} and computing $[v_z]|_{z=z_s}$, or if appropriate simply using \ref{eqn:vsimp}.
-\end{itemize}
- The relations developed in the last few paragraphs may be summarized as follows:
-\begin{equation}
-\label{eqn:appinv}
-d_r = S[c]h_s \,\,\Leftrightarrow \,\, h_s \approx S[c]^{\dagger}d_r
-\end{equation}
-that is, $S[c]^{\dagger}$ is an approximate inverse of $S[c]$.
-
-As I will show in the example section, the approximation may be accurate enough without any further improvement. However, a closer examination shows that in fact it is possible to express the relation between $S[c]$ and $S[c]^{\dagger}$ in terms of a change of norm, that is, in terms of a preconditioner, and this relation can be used to considerably accelerate an iterative solution of the normal equation \ref{eqn:normal}. 
-
-To see this, first compute the adjoint $S[c]^T$, by a variant of the adjoint state method, in this case a by-product of the conservation of energy. Suppose that 
-$\tilde{p},\tilde{\bv}$ solve
-\begin{eqnarray}
-\label{eqn:aweadj}
-\frac{\partial \tilde{p}}{\partial t} & = & \kappa (-\nabla \cdot \tilde{\bv} + 
- d_r \delta(z-z_r))\nonumber \\
-\frac{\partial \tilde{\bv}}{\partial t} & = & - \beta \nabla \tilde{p},\nonumber \\
-\tilde{p} & =& 0 \mbox{ for } t>T\nonumber\\ 
-\tilde{\bv} & = & 0 \mbox{ for } t>T 
-\end{eqnarray} 
-Then
+The adjoint of $S^+_{z_s,z_r}[c]$ can be computed
+by a variant of the adjoint state method, in this case a by-product of the conservation of energy. Suppose that $p^-,\bv^-$ solve \ref{eqn:awem} with $h_s\delta(z-z_s)$ replaced by $ h_r \delta(z-z_r)$. Then
 \[
 0 = 
-\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  
-\frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=T}
+\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  
+\rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow \infty}
 -
-\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=0}
+\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow -\infty}
 \]
 \[
 = 
-\int_{0}^{T} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)
+\int_{-\infty}^{\infty} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)
 \]
 \[
 = 
-\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p}{\partial t} \tilde {p} + \kappa p \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} \right.
+\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p^+}{\partial t} p^- +  p^+ \frac{1}{\kappa}\frac{\partial p^-}{\partial t} \right.
 \]
 \[
 +
-\left. \frac{1}{\beta} \frac{\partial \bv}{\partial t} \cdot \tilde{\bv} + \frac{1}{\beta} \bv \cdot \frac{\partial \tilde{\bv}}{\partial t} \right)
+\left. \rho \frac{\partial \bv^+}{\partial t} \cdot \bv^- + \rho \bv^+ \cdot \frac{\partial \bv^-}{\partial t} \right)
 \]
 \[
 = 
-\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv + 
- \frac{h_s}{\kappa} \delta(z-z_s)\right) \tilde{p} + p \left(- \nabla \cdot \tilde{\bv} + 
- d_r \delta(z-z_r)\right) \right.
+\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
+ h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
+ h_r \delta(z-z_r)\right) \right.
 \]
 \[
 +
-\left.  (- \nabla p) \cdot \tilde{\bv} + \bv \cdot (-\nabla \tilde{p}) \right)
+\left.  (- \nabla p^+) \cdot \bv^- + \bv^+ \cdot (-\nabla p^-) \right)
 \]
 \[
 = 
-\int_{0}^{T}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv + 
- \frac{h_s}{\kappa} \delta(z-z_s)\right) \tilde{p} + p \left(- \nabla \cdot \tilde{\bv} + 
- d_r \delta(z-z_r)\right) \right.
+\int_{-\infty}^{\infty}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
+ h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
+ h_r \delta(z-z_r)\right) \right.
 \]
 \[
 +
-\left.  p (\nabla \cdot \tilde{\bv}) + (\nabla \cdot \bv) \tilde{p} \right)
+\left.  p^+ (\nabla \cdot \bv^-) + (\nabla \cdot \bv^+) p^- \right)
 \]
 after integration by parts in the last two terms. Most of what is left cancels, leaving 
 \[
-0 = \int\,dt\,dx\,dy\, h_s \left(\frac{\tilde{p}}{\kappa}\right)_{z=z_s} + (p  d_r)_{z=z_r}
+0 = \int_{-\infty}^{\infty}\,dt\,dx\,dy\, h_sp^-|_{z=z_s} +  h_rp^+|_{z=z_r} = \langle h_s, p^-|_{z=z_s}\rangle + \langle h_r, S[c]^+_{z_s,z_r}[c]h_s \rangle
 \]
 whence
 \begin{equation}
 \label{eqn:sadj}
- S[c]^T d_r = -\left(\frac{\tilde{p}}{\kappa}\right)|_{z=z_s}
+ S^+_{z_s,z_r}[c]^T h_r = -p^-|_{z=z_s}
 \end{equation}
-Both $S[c]^T$ and $S[c]^{\dagger}$ are defined by time-reversed solutions of the same acoustic system, except with different data. System \ref{eqn:aweadj} places $d_r$ as a pressure source on $z=z_r$, with an additional factor of $\kappa$, and its trace on $z=z_s$ must be scaled by $1/\kappa$. System \ref{eqn:awetr} employs $d_r$ as a Dirichlet boundary condition, and the trace of its pressure component must be employed as a Dirichlet boundary condition for the forward-in-time problem \ref{eqn:awedir}, after which the jump in the normal velocity is extracted. 
+
+The systems \ref{eqn:awep} and \ref{eqn:awem} differ only in the direction of time evolution (causal vs. anti-causal). Define $R$ to be the {\em time-reversal operator} on functions of space-time,
+$Rf(\bx,t) = f(\bx,-t)$, and ${\cal R}$ to be the {\em acoustic field time-reversal operator} 
+\begin{equation}
+  \label{eqn:trdef}
+  {\cal R} \left(
+    \begin{array}{c}
+      p\\
+      \bv
+    \end{array}
+  \right) =
+  \left(
+    \begin{array}{c}
+      Rp\\
+      -R\bv
+    \end{array}
+  \right)
+\end{equation}
+Then ${\cal R}(p^-,\bv^-)$ solves \ref{eqn:awep} with $h_s\delta(z-z_s)$ replaced by $-Rh_r\delta(z-z_r)$. That is,
+\begin{equation}
+  \label{eqn:trsadj}
+  Rp^-|_{z=z_s} = -S^+_{z_r,z_s}[c]Rh_r
+\end{equation}
+Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn:trsadj} imply that
+\begin{equation} 
+  \label{eqn:trtr}
+  S^+_{z_s,z_r}[c]^T = RS^+_{z_r,z_s}[c]R.
+\end{equation}
+
+\section{Surface source-to-pressure operator}
+
+A particular case of the relation \ref{eqn:trtr} is important in its own right, when $z_r=z_s$. Define surface source-to-pressure operator $\Lambda_{z_s}$ by
+\begin{equation}
+  \label{eqn:ntoddef}
+  \Lambda_{z_s} = S^+_{z_s,z_s}.
+\end{equation}
+Then \ref{eqn:trtr} reads
+\begin{equation}
+  \label{eqn:ntodtr}
+  \Lambda_{z_s}^T = R\Lambda_{z_s}R.
+\end{equation}
+This operator is closely related to the operator mapping $\lim_{z\rightarrow z_s^+} \bv_z^+$ to $\lim_{z\rightarrow z_s^+}  p^+$, often called the {\em Neumann-to-Dirichlet} operator. The connection is explained below.
+
+The quadratic form defined by $\Lambda_{z_s}$ has fundamental physical significance. Suppose that the surface source $h_s$ vanishes outside of a bounded time interval $[t_{\rm min},t_{\rm max}]$. Then the causal acoustic field $(p^+,\bv^+)$, solution of the system \ref{eqn:awep}, vanishes for $t<t_{\rm min}$. Define the total acoustic energy $E(t)$ at time $t$ by
+\begin{equation}
+  \label{eqn:defae}
+  E(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^+)^2}{\kappa} + \rho |\bv^+|^2\right)
+\end{equation}
+Then since $E(t_{\rm min})=0$,
+\[
+  E(t_{\rm max}) = \int_{t_{\rm min}}^{t_{\rm max}} \frac{dE}{dt}
+\]
+\[
+  = \int_{t_{\rm min}}^{t_{\rm max}} \int\,d\bx\, \left(p^+ \frac{1}{\kappa}\frac{\partial p^+}{\partial t} + \bv^+ \cdot \rho \frac{\partial \bv^+}{\partial t}\right)
+\]
+\[
+  =\int_{t_{\rm min}}^{t_{\rm max}} \int\,d\bx\,\left(p^+(-\nabla \cdot \bv^{+} + h_s\delta(z-z_s)) + \bv^+ \cdot \rho \frac{\partial \bv^+}{\partial t}\right)
+\]
+\[
+  \int_{t_{\rm min}}^{t_{\rm max}}\int\,d\bx\, \left(\left(\nabla p^+\rho \frac{\partial \bv^+}{\partial t}\right) + p^+h_s\delta(z-z_s)\right)
+\]
+\[
+  =  \int_{t_{\rm min}}^{t_{\rm max}}\int\,dxdy h_s p^+|_{z=z_s} = \langle h_s, \Lambda_{z_s} h_s \rangle.
+\]
+Since the source $h_s\delta(z-z_s)$ no longer acts on the fluid for $t >t_{\rm max}$, $E_{\rm tot}= E(t_{\rm max})$ is the total energy transferred from the source to the fluid, and
+\begin{equation}
+  \label{eqn:surfenergy}
+  E_{\rm tot} = \langle h_s, \Lambda_{z_s} h_s \rangle.
+\end{equation}
+We can conclude from identity \ref{eqn:surfenergy} that the symmetric part of $\Lambda_{z_s}$ is positive semidefinite:
+\begin{equation}
+  \label{eqn:lamsd}
+  \frac{1}{2}(\Lambda_{z_s}^T + \Lambda_{z_s}) \ge 0.
+\end{equation}
+
+Observe that the causal acoustic system \ref{eqn:awep} implies directly that
+\begin{equation}
+  \label{eqn:sourcevjump}
+  h_s= [v_z]|_{z_s}.
+\end{equation}
+
+\section{Progressing Waves and Symbols}
+
+The symbol $\sigma(L[c])$ of a matrix operator $L[c]$ is a complex scalar-valued matrix of the same size. In terms of its product with an arbitrary vector $\bu \in \bR^{d+1}$, it is
+\[
+  \sigma(L[c]) \bu = e^{-i(\omega t + \bk \cdot \bx)} (L[c]e^{i(\omega t + \bk \cdot \bx)}\bu).
+\]
+For $L[c]$ given by the definition \ref{eqn:awemat}, obtain
+\begin{equation}
+  \sigma(L[c])(t,\bx,\omega,\bk) = i\left(
+    \begin{array}{cc}
+      \frac{\omega}{\kappa(\bx)} & \bk^T \\
+      \bk & \rho(\bx) \omega)
+    \end{array}
+  \right)
+\end{equation}
+
+The characteristic equation of $L[c]$ is $\det \sigma(L[c]) = 0$. The significance of the characteristic equation is its role in constraining the phase $\psi(\bx)$ in the progressing wave ansatz,
+\begin{equation}
+  \label{eqn:go}
+  \bu(\bx,t) = e^{i\omega (t-\psi(\bx))} \ba (\bx).
+\end{equation}
+Applying $L[c]$ to this ansatz, obtain
+\[
+  L[c]\bu(\bx,t)=i \omega
+  \left(
+    \begin{array}{c}
+      \frac{1}{\kappa}a_p -  \nabla \psi \cdot \ba_v \\
+      -a_p \nabla \psi + \rho \ba_v
+    \end{array}
+  \right) + ...
+\]
+\[
+  = i \omega \sigma(L[c])(t,\bx,1,- \nabla \psi(\bx))ba + ...
+\]
+where ``$...$'' denotes terms of lower order in $\omega$. Thus $\bu$ as defined in equation \ref{eqn:go} is a high-frequency asymptotic solution, $L[c]\bu \approx 0$, if
+\begin{itemize}
+\item
+  \begin{equation}
+    \label{eqn:eik}
+    \det(\sigma(L[c])(t,\bx,1,-\nabla \psi(\bx))) = 0,
+  \end{equation}
+  (eikonal equation), and
+\item
+  $\ba$ is a null vector of $\sigma(L[c])(t,\bx,1,-\nabla \psi)$.
+\end{itemize}
+Explicitly, the eikonal equation reads
+\[
+  0 = \rho^2\left(\frac{\rho}{\kappa}-|\nabla \psi|^2\right),
+\]
+equivalent to the familar form
+\begin{equation}
+  \label{eqn:usualeik}
+  c|\nabla \psi| = 1,
+\end{equation}
+in which $c = \rho/\kappa$ is the wave velocity. Solution via the method of characteristics gives
+\[
+  \psi(\bx(t)) = \psi(\bx(0)) + t
+\]
+for a ray $t \mapsto \bx(t)$ satisfying
+\[
+  \frac{d\bx}{dt}(t) = -c(\bx)^2\nabla \psi(\bx(t))
+\]
+Finally, $\ba$ is a null vector of $\sigma(L[c])(\cdot,\cdot,1,-\nabla \psi)$ iff
+\begin{equation}
+  \label{eqn:godton}
+  \ba_v = \frac{a_p}{\rho}\nabla \psi
+\end{equation}
+The scalar $a_p$ evolves along the ray according to the transport equation, which I will not derive here; suffice it to say that $a_p(t) = a_p(0) \gamma(t)$, where $\gamma > 0$ is smooth and $\gamma(0)=1$.
+
+Suppose that $\bx_0 = (x,y,z_s)^T$ and $(\xi_x,\xi_y) \in \bR^2$ satisfies $c(\bx_0)|(\xi_x,\xi_y)|<1$. Then there is a neighborhood $\Omega$ of $\bx_0$ and $\xi_z \in C^{\infty}(\Omega), \xi_z>0$, so that $\bxi^{\pm}(\bx)=(\xi_x,\xi_y,\pm \xi_z(\bx))$ satisfy $c(\bx)|\bxi^{\pm}(\bx)|=1$ for $\bx \in \Omega$.
+
+A standard argument shows that there exists $\epsilon > 0$ for which a solution $\psi^{\pm}$ of the eikonal equation exists in $\Omega \cap \{\bx: |z-z_s|<\epsilon\}$ with
+\begin{equation}
+  \label{eqn:eikic}
+  \psi^{\pm}(x,y,z_s,t) = t -x \xi_x - y \xi_y, \, \frac{\partial \psi}{\partial z}(x,y,z_s,t) = \pm \xi_z(x,y,z_s).
+\end{equation}
+Let $\chi \in C_0^{\infty}, \chi(\bx_0)=1$, and set $p_0^{\pm}(x,y,t) = \chi(x,y,z_s)e^{i\omega(t-x\xi_x - y\xi_y)}$. Define $p_{\rm go}^{\pm} \in C^{\infty}(\Omega \cap \{\bx: |z-z_s|<\epsilon\})$ by
+\[
+  p_{\rm go}^{\pm}(\bx,t) = a^{\pm}_p(\bx) e^{i\omega (t-\psi^{\pm}(\bx))}.
+\]
+where $a^{\pm}_p$ solves the transport equation with $a^{\pm}_p|_{z=z_s} = \chi$. Set
+\[
+  \bv^{\pm}_{\rm go}(\bx,t) = \frac{a^{\pm}_p(\bx)}{\rho(\bx)}\nabla \psi^{\pm}(\bx) e^{i\omega (t-\psi^{\pm}(\bx))}
+\]
+Then $\bu^{\pm}_{\rm go} = (p^{\pm}_{\rm go}, \bv^{\pm}_{\rm go})$ is an asymptotic solution of $L[c]\bu = 0$ with $p^{\pm}_{\rm go}|_{z=z_s} = \chi e^{i\omega(t-x\xi_x - y\xi_y)}$.
+
+From equations \ref{eqn:godton} and \ref{eqn:eikic},
+\[
+  v_{z,{\rm go}}^{\pm}(x,y,z_s,t) = \pm \frac{\chi(x,y,t)}{\rho(x,y,z_s)}\xi_z  e^{i\omega(t-x\xi_x - y\xi_y)}
+\]
+\begin{equation}
+  \label{eqn:asymdton}
+= \pm \frac{\chi(x,y,t)}{\rho(x,y,z_s)c(x,y,z_s)}\sqrt{1-c(x,y,z_s)^2(\xi_x^2+\xi_y^2)}
+\end{equation}
+
+Integration over frequency produces a progressing wave traveling (at least near $z=z_s$) downwards, that is, increasing $z$ with increasing $t$, for the choice of sight $\pm = +$, and upwards, that is, decreasing $z$ with increasing $t$, for the other sign. Therefore a causal progressing wave with $p$ given on $z=z_s$ is obtained by synthesizing distorted plane waves as just described with $\pm = +$ in $z>z_s$, $\pm=-$ in $z<z_s$. From equation \ref{eqn:asymdton}, the normal components of $\bv$ have limits equal in magnitude but of opposite sign as $z\rightarrow 0^{\pm}$, up to a lower frequency error. That is, the jump in $\bv$ satisfies
+\begin{equation}
+  \label{eqn:asymjump}
+  [v_z]\approx \lim_{z\rightarrow 0^+} v_{z}
+\end{equation}
+where $\approx$ denotes ``up to a low frequency error'', from here on.
+
+This construction also implies an approximation of the source-to-pressure operator as a pseudodifferential operator. Choose a partition of unity in $z=z_s$, for which the support of every member is a domain $\Omega$ for which the construction above can be carried out: this implies that there be a uniform $\delta > 0$ so that
+\begin{equation}
+  \label{eqn:nongraze}
+  1>\delta + c(x,y,z_s)\sqrt{\xi_x^2+\xi_y^2}
+\end{equation}
+for all $(x,y,t,1,\xi_x,\xi_y) \in WF(p_0)$. Denote by $\Gamma$ the subset of $(x,y,t,k_x,k_y,\omega) \in T^*(\bR^3)$ for which $x,y,\xi_{xy}=k_{xy}/\omega$ satisfy the inequality \ref{eqn:nongraze}.
+
+Then near $z=z_s$, $p$ is approximately a sum of geometric optics solutions of the type displayed above, integrated over $\omega,k_x,k_y$, with $k_{x,y} = \omega \xi_{x,y}$.  Thus
+\[
+  p(x,y,z_s,t) \approx \frac{1}{2}\int_{\Gamma(x,y)} \,d\omega\,dk_x\,dk_y \hat{[v_z]}\rho(x,y,z_s)c(x,y,z_s)
+\]
+\[
+   \times \left(1-c^2(x,y,z_s)\left(\left(\frac{k_x}{\omega}\right)^2 + \left(\frac{k_y}{\omega}\right) ^2\right)\right)^{-1/2}e^{\i(\omega t + k_x x+ k_y y)}
+\]
+Since $p$ is the pressure component of a solution of \ref{eqn:awep}, equation \ref{eqn:sourcevjump} implies that
+\begin{equation}
+  \label{eqn:psidodton}
+  \Lambda_s h_s(x,y,t) \approx \frac{1}{2}\int_{\Gamma(x,y)} \,d\omega\,dk_x\,dk_y
+  \lambda_s(x,y,t,k_x,k_y,\omega) \hat{h_s}(k_x,k_y,\omega) e^{\i(\omega t + k_x x+ k_y y)}
+\end{equation}
+with
+\begin{equation}
+  \label{eqn:symboldton}
+  \lambda_s(x,y,t,k_x,k_y,\omega) =\frac{1}{2}\rho(x,y,z_s)c(x,y,z_s)\left(1-c^2(x,y,z_s)\left(\left(\frac{k_x}{\omega}\right)^2 + \left(\frac{k_y}{\omega}\right) ^2\right)\right)^{-1/2}
+\end{equation}
+
+Restricted to $\Gamma$, $\lambda \in S^0_{0,1}(\bR^2)$ is real-valued, hence defines an essentially symmetric operator. That is,
+\begin{equation}
+  \label{eqn:approxsymm}
+  \Lambda_s^T \approx \Lambda_s.
+\end{equation}
+
+\section{Parametrix via Time-reversal}
+
+Both $S[c]^T$ and $S[c]^{\dagger}$ are defined by time-reversed solutions of the same acoustic system, except with different data:
+\begin{itemize}
+\item system \ref{eqn:aweadj} inputs $d_r$ as a pressure source on $z=z_r$, with an additional factor of $\kappa$, and outputs the trace of the reverse-time propagated field on $z=z_s$, scaled by $1/\kappa$, to obtaint $S[c]^Td_r$;
+\item system \ref{eqn:awetr} inputs $d_r$ as a Dirichlet boundary condition, and the trace of its pressure component must be employed as a Dirichlet boundary condition for the forward-in-time problem \ref{eqn:awedir}, after which the jump in the normal velocity is extracted.
+\end{itemize}
 
 The relation between a Dirichlet boundary condition and a source has already been explained, in the context of justifying the approximation property of $S[c]^{\dagger}$:
 \begin{quote}
 The surface source producing the same field as a Dirichlet boundary condition (on either side of the boundary surface) is the jump in the normal velocity component of the Dirichlet field. 
 \end{quote}
-Call the operator that produces the jump in normal velocity from Dirichlet pressure data $\Lambda[c]_s$ for the source surface $z=z_s$, $\Lambda[c]_r$ for the receiver surface $z=z_r$ (in the math literature, this is the ``Dirichlet-to-Neumann operator'', more or less). The discussion so far can be summarized as follows:
+Call the operator that produces the jump in normal velocity from Dirichlet pressure data $\Lambda[c]_s$ for the source surface $z=z_s$ and forward in time, $\Lambda[c]_r$ for the receiver surface $z=z_r$ backwards in time (in the math literature, these are ``Dirichlet-to-Neumann operators'', more or less).
+
+\cite{HouSymes:EAGE16} demonstrated a very similar preconditioner for Least Squares Migration, also for its subsurface offset extension \cite[]{HouSymes:16}, motivated by \cite{tenKroode:12}. These constructions all involve the Dirichlet-to-Neumann operator. This concept also turns up in hidden form in the work of Yu Zhang and collaborators on true amplitude migration \cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09,Zhang YuSun:08,ZhangSunGray:07,ZhangBleistein:05,Bleisteinetal:05}. 
+
+\section{Efficient Preconditioned CG}
+
+The discussion so far can be summarized as follows: an efficient pseudoinverse for $S[c]$ is the weighted adjoint operator
 \begin{equation}
 \label{eqn:wadj}
-S[c]^{\dagger} = W[c]_m^{-1}S[c]^TW[c]_d 
+S[c]^{\dagger} = W[c]_m^{-1}S[c]^TW[c]_d,
 \end{equation}
 in which 
 \begin{equation}
 \label{eqn:weights}
-W[c]_m = \kappa^{-1},\,\, W[c]_d = \kappa^{-1}\Lambda[c]_r
+W[c]_m = \kappa^{-1}\Lambda[c]^{-1}_s,\,\, W[c]_d = \kappa^{-1}\Lambda[c]_r
 \end{equation}
-in which ``$\kappa$'' means the operator ``multiply by $\kappa$''. This means that $S[c]^{\dagger}$ {\em is} the adjoint of $S[c]$ with respect to weighted norms 
+Here ``$\kappa$'' means the operator ``multiply by $\kappa$''.
+
+The statement that $S[c]^{\dagger}$ is the weighted adjoint of $S[c]$ means that $S[c]^{\dagger}$ {\em is} the adjoint of $S[c]$ with respect to weighted norms 
 \begin{itemize}
 \item on the source space ($h_s$): weight $W[c]_m$
 \item on the data space ($d_r$): weight $W[c]_d$
 \end{itemize}
-Since $S[c]^{\dagger}S[c] \approx I$ as shown above, $S[c]$ is approximately unitary in the Hilbert spaces of source and data traces with norms defined by the weighting operators $W_m$ and $W_d$ respectively. Therefore a Krylov space method employing these norms will converge rapidly.
+Since $S[c]^{\dagger}S[c] \approx I$ in subspaces of the domain space, as shown above, $S[c]$ is approximately unitary in (subspaces of) the Hilbert spaces of source and data traces with norms defined by the weighting operators $W_m$ and $W_d$ respectively. Therefore a Krylov space method employing these norms will converge rapidly, at least for the well-determined components of the solution.
 
-\cite{HouSymes:EAGE16} demonstrated a very similar preconditioner for Least Squares Migration, also for its subsurface offset extension \cite[]{HouSymes:16}, motivated by \cite{tenKroode:12}. These constructions all involve the Dirichlet-to-Neumann operator. This concept also turns up in hidden form in the work of Yu Zhang and collaborators on true amplitude migration \cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09,ZhangYuSun:08,ZhangSunGray:07,ZhangBleistein:05,Bleisteinetal:05}.
+The most convenient arrangement the CG algorithm taking advantage of the structure \ref{eqn:wadj} is the {\em Preconditioned CG}. Since the coefficient array $c$ will remain unchanged during the iteration, write $S$ instead of $S[c]$, etc. 
+
+Allowing that the fit error will be measured by the data space norm, the least squares problem to be solved is not just $Sh \approx d$, but a regularized version:
+\begin{equation}
+  \label{eqn:einv}
+  \mbox{minimize}_h \|Sh-d\|^2_d + \alpha^2 \|Ah\|^2_m
+\end{equation}
+
+[The modified data space norm $\|d\|_d^2 = \langle d, W_d d\rangle$ has physical meaning: for acoustics, it is proportional to the power transmitted through the surface $z=z_r$.]
+
+The minimizer of the objective defined in equation \ref{eqn:einv} solves the normal equation
+\begin{equation}
+  \label{eqn:norm}
+  (S^{\dagger}S + \alpha^2 A^{\dagger}A)h = S^{\dagger}d 
+\end{equation}
+
+where the weighted adjoint $S^{\dagger}$ has already been defined in equation \ref{eqn:wadj}, and $A^{\dagger}$ is the adjoint of $A$ in the weighted model space norm defined by $W_m$, namely
+\begin{equation}
+  \label{eqn:aadj}
+  A^{\dagger} = W_m^{-1}A W_m.
+\end{equation}
+
+Introducing these definitions in the normal equation \ref{eqn:norm},
+\begin{equation}
+  \label{eqn:norm1}
+  W_m^{-1}(S^TW_dS + \alpha^2 A^TW_mA)h = W_m^{-1}S^TW_md 
+\end{equation}
+Since $W_m$ is self-adjoint and positive definite, the common factor on both sides of \ref{eqn:norm1} can be re-written as
+
+write $S^*, A^*$ for the adjoints with the original (Euclidean) inner product in the domains but the weighted inner product in data space:
+\begin{equation}
+  \label{eqn:normpart}
+  Nh = (S^*S + \alpha^2 A^*A)h = S^*d 
+\end{equation}
+using the ``partly weighted'' adjoints
+\begin{eqnarray}
+  \label{eqn:sadj}
+  S^* &=& S^T W_d,\\
+  A^* &=& A^T W_m.
+\end{eqnarray}
+The Preconditioned Conjugate Gradient (``PCG'') algorithm for solution of equation \ref{eqn:normpart} with preconditioner $W_m$ is usually written as Algorithm 1.
+
+\begin{algorithm}[H]
+\caption{Preconditioned Conjugate Gradient Algorithm, Standard Version}
+\begin{algorithmic}[1]
+\State Choose $h_0=0$ 
+  \State $r_0 \gets S^*d$
+  \State $p_0 \gets W_m^{-1}r_0$
+  \State $g_0 \gets p_0$
+  \State $q_0 \gets Np_0$
+  \State $k \gets 0$
+  \Repeat
+  \State $\alpha_k \gets \frac{\langle g_k,r_k \rangle}{\langle p_k,q_k\rangle}$
+  \State $h_{k+1} \gets h_k + \alpha_k p_k$
+  \State $r_{k+1} \gets r_k - \alpha_kq_k$
+  \State $g_{k+1} \gets W_m^{-1}r_{k+1}$
+  \State $\beta_{k+1} \gets \frac{\langle g_{k+1},r_{k+1}\rangle}{\langle g_k,r_k\rangle}$
+  \State $p_{k+1}\gets g_{k+1}+\beta_{k+1}p_k$
+  \State $q_{k+1} \gets Np_{k+1}$
+  \State $k \gets k+1$
+  \Until{Error is sufficiently small, or max iteration count exceeded} 
+\end{algorithmic}
+\end{algorithm}
+
+The operator whose eigenvalue spectrum determines the speed of convergence here is the preconditioned normal operator
+\begin{equation}
+  \label{eqn:pno}
+  W_m^{-1}N = S^{\dagger}S +\alpha^2 A^{\dagger}A
+\end{equation}
+This isn't just an approximate identity on a subspace, as $S^{\dagger}S$ is. The addition of the penalty term affects the spectrum, pushing parts of it away from $1$. I have not yet analyzed this effect, however for the ``in-aperture'' part of the model space,
+\[
+  W_m^{-1}N \approx I +\alpha^2 W_m^{-1}A^TW_mA
+\]
+For small $\alpha$, this operator is a perturbation of the spectrum of the identity, so convergence should be rapid. 
+
+In the preceding section, I showed that effective choices for the weight operators are $W_m = \Lambda_s^{-1}$ and $W_d = \Lambda_r$, which are resepctively the ``Neumann-to-Dirichlet'' operator mapping pressure to normal particle velocity on the source surface $\{z=z_s\}$, and the ``Dirichlet-to-Neumann'' operator mapping pressure to normal particle velocity on the receiver surface. Application of these operators are expensive and/or awkward, so should be avoided if at all possible. 
+
+A very important point: the weighted ``partial'' adjoint $S^*=S^TW_d$ appears {\em only} in combination with $S$ in the algorithm listed above, {\em except} for the very first line. That is, one can calculate $W_dS$ followed by $S^T$, rather than $S$ followed by $S^TW_d$, provided that you can take care of the first line. $W_dS$ For any variant of elasticity, $W_d$ relates two combinations of dynamical field components - for acoustics, it returns the normal velocity for a given pressure field on the receiver surface. In the solution of the dynamical equations (for instance \ref{eqn:awe}), all components are calculated. Therefore obtaining the output of $W_d$ amounts to extracting the appropriate field combination. For acoustics, simply record the normal velocity rather than the pressure: then you have computed $W_dS$. Therefore no additional expensive computations are required. It is only the very first instance of $S^*$, on the first line, where an actual computation of $W_d$ is required, unless cheap workarounds like that explained by \cite{HouSymes:15} are available.
 
 \section{Prototype Numerical Examples}
 I present a collection of simple examples that illustrate the features of the surface source extension claimed in preceding sections. 
@@ -446,257 +563,6 @@ This is the approximate inverse computed in the examples. Note that only the val
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
 
-\append{Proof of Theorem 1}
-Following the notation of \cite{BaoSy:91b}, denote by $\gamma_s$ ($\gamma_r$)the closed conic subset of $T^*(\Gamma_s\times \bR)|_{\mbox{supp } \phi_s}$ ($T^*(\Gamma_r\times \bR)|_{\mbox{supp } \phi_r}$) consisting of tangential components of null bicharacteristics passing over points of $\mbox{supp }\phi_s$ and $\mbox{supp }\phi_r$. That is, the ray with initial condition $(\bx,t,\xi,\omega) \in T^*(\Gamma_s\times \bR)|_{\mbox{supp } \phi_s}$ passes over $\mbox{supp }\phi_r$ if and only if $(\bx,t,\xi,\omega) \in \gamma_s$. Since each such ray is paired with the ray with the same spatial projection traversed backwards, it is also the case that $(\bx,t,\xi,\omega) \in T^*(\Gamma_r\times \bR)|_{\mbox{supp } \phi_r}$ passes over $\mbox{supp }\phi_s$ if and only if $(\bx,t,\xi,\omega) \in \gamma_r$. 
-
-Define $s=\sqrt{\kappa/\rho}$ to be the wave slowness (reciprocal velocity), and
-\[
-c(\bx,t,\xi,\omega) = s(\bx)^2\omega^2-|\xi|^2
-\]
-to be the characteristic polynomial of the acoustic wave system, and $C=c^{-1}(0)$ the characteristic variety.  The angle condition in Assumption A implies the existence of a conic neighborhood $\tilde{\gamma}_s$ of $\gamma_s$, so that for  $(\bx,t,\xi,\omega) \in \tilde{\gamma}_s$, the polynomial $\tau \mapsto c(\bx,t,\xi + \tau{\bf n}_s(\bx),\omega)$ has two distinct roots, $\pm \tau_s$. Let $\gamma_{1,s}$ be a conic neighborhood of the complement $\tilde{\gamma}_s^C$, chosen so that $\gamma_{1,s} \cap \gamma_s = \emptyset$. Let $\gamma_s' = \Pi_s^*(\gamma_{1,s})$, where $\Pi_s^*$ is the pullback map: $T^*(\Gamma_s\times \bR) \rightarrow T^*(\bR^{d+1})$. Similarly, construct $\gamma_r'$ and $\gamma_{1,r}$. 
-
-The null bicharacteristic through $(\bx,\xi,\omega,\xi) \in \gamma_r' \cap C$ does not pass over $\mbox{supp } \phi_s$ by construction, hence the RHS of the system $L[c]u=P_r^Th$ is microlocally of class $H^1$ (in fact, smooth) near this bicharacteristic,  thanks to the microlocal propagation of singularities theorem \cite[]{BealsReed:82}: that is, $p \in H^1_{ml}(\gamma_r')$. 
-
-Need to know $p \in L^2$. Restart: consider $F_{r,s}$ mapping Cauchy data at $t=T$ by reverse time to $P_{r,s} p$, $\mbox{supp }\phi_s \cup \mbox{supp }\phi_r \subset \{t<T\}$. Only relevant rays are continuations of those in $\gamma_r$. Represent $S$ as composition: $S=F_rF_s^T$. $F_s$ $L^2$-bounded $\Rightarrow$ for $u, v \in C_0^{\infty}$,
-\[
-|\langle F_s u, v \rangle| = \le C\|u\|\|v\|=|\langle u, F_s^T v\rangle|
-\]
-Indep arg establishes that $F_s^Tv$
-
-
-
-%for which $(\bx,t,\xi\pm \tau_s{\bf n}_s(\bx),\omega)$ is the initial condition on $\Gamma_s \times \bR$ of a ray passing over $\mbox{supp }\phi_r$. Choose a conic neighborhood $\tilde{\gamma}_s$ of $\gamma_s$ 
-
-Denote by 
-
-
-%,  $T^*(\Gamma_r\times \bR)|_{\mbox{supp \phi_r}}$ for which Note that the angle condition mentioned in Theorem \ref{thm:one} implies that if $(\bx,t,\xi,\omega) \in \gamma' $ and $\bx \in \Gamma_s$ or $\Gamma_r$, then $\omega$ is a simple root of are distinct, and even a lower bound on the difference proportional to $\epsilon$. It also implies that $\gamma'$ is disjoint from a neighborhood of the normal bundles of $\Gamma_s \times \bR$, $\Gamma_r \times \bR$.
-
-\append{Transpose of Full Acoustic Modeling Operator}
-
-In this section I compute the adjoint operator form modeling with both pressure and velocity source inputs and pressure and velocity trace outputs. The forward modeling operator is defined by solving
-\begin{eqnarray}
-\label{eqn:fawedata}
-\frac{\partial p}{\partial t} & = & - \kappa( \nabla \cdot \bv +
-h_s \delta(z-z_s)), \nonumber \\
-\frac{\partial \bv}{\partial t} & = & - \beta ( \nabla p + l_s {\bf e}_z\delta(z-z_s)),\nonumber \\
-p & =& 0 \mbox{ for } t<0\nonumber\\ 
-\bv & = & 0 \mbox{ for } t<0 \nonumber\\
-\end{eqnarray}
-The new elements here are the point load time function $l_s(\bx,t;\bx_s)$, and the vertical unit vector ${\bf e}_z=(0,1)^T$ for 2D, $=(0,0,1)^T$ for 3D. The forward map ${\bf F}$ is defined as implicit in the discussion of the Intrinsically Preconditioned CG algorithm: let ${\bf h}_s=(h_s,l_s)^T$, then 
-\begin{equation}
-\label{eqn:ffwd}
-{\bf F}{\bf h}_s =\left\{ \left[
-\begin{array}{c}
-p(\bx,t;\bx_s)\\
-v_z(\bx,t;\bx_s)
-\end{array}
-\right]_{z=z_r}\right\}
-\end{equation}
-
-Let $\tilde{\bf h}_r=(\tilde{h}_r,\tilde{l}_r)^T$ be a function on $z=z_r$, 
-and 
-$\tilde{p},\tilde{\bv}$ solve the backwards-in-time boundary value problem:
-\begin{eqnarray}
-\label{eqn:faweadj}
-\frac{\partial \tilde{p}}{\partial t} & = & \kappa (-\nabla \cdot \tilde{\bv} + 
- \tilde{h}_r \delta(z-z_r))\nonumber \\
-\frac{\partial \tilde{\bv}}{\partial t} & = & \beta (\nabla \tilde{p} + \tilde{l}_r{\bf e}_z\delta(z-z_r),\nonumber \\
-\tilde{p} & =& 0 \mbox{ for } t>T\nonumber\\ 
-\tilde{\bv} & = & 0 \mbox{ for } t>T 
-\end{eqnarray} 
-Then
-\[
-0 = 
-\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  
-\frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=T}
--
-\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)|_{t=0}
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p}{\partial t} \tilde {p} +  p \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} \right.
-\]
-\[
-+
-\left. \frac{1}{\beta} \frac{\partial \bv}{\partial t} \cdot \tilde{\bv} + \frac{1}{\beta} \bv \cdot \frac{\partial \tilde{\bv}}{\partial t} \right)
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv + 
- h_s \delta(z-z_s)\right) \tilde{p} + p \left(- \nabla \cdot \tilde{\bv} + 
- \tilde{h}_r \delta(z-z_r)\right) \right.
-\]
-\[
-+
-\left.  (- \nabla p + l_s{\bf e}_z\delta(z-z_s)) \cdot \tilde{\bv} + \bv \cdot (-\nabla \tilde{p} + \tilde{l}_r{\bf e}_z\delta(z-z_r)) \right)
-\]
-\[
-= 
-\int_{0}^{T}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv \tilde{p} + 
- h_s\tilde{p}|_{z=z_s} - p\nabla \cdot \tilde{\bv} + 
- \tilde{h}_r p|_{z=z_r}\right) \right.
-\]
-\[
-+
-\left.  p (\nabla \cdot \tilde{\bv}) + l_s \tilde{v}_z|_{z=z_r}+ (\nabla \cdot \bv) \tilde{p}  + l_r  v_z|_{z=z_r}\right)
-\]
-after integration by parts in the last two terms. Most of what is left cancels, leaving 
-\[
-0 = \int\,dt\,dx\,dy\, (h_s \tilde{p})_{z=z_s} + (p  \tilde{h}_r)_{z=z_r} + (l_s\tilde{v}_z)_{z=z_s} + (v_z \tilde{l}_r)_{z=z_r},
-\]
-whence
-\begin{equation}
-\label{eqn:fadj}
- {\bf F}^T {\bf h}_r = -\left[
-\begin{array}{c}
-\tilde{p}(\bx,t;\bx_s)\\
-\tilde{\bf v}(\bx,t;\bx_s)
-\end{array}
-\right]_{z=z_s}
-\end{equation}
-
-\append{Transpose of Cauchy Data to Trace operator}
-
-For $u_0=(p_0,\bv_0) \in (C_0^{\infty}(\bR^d))^{d+1}$, define ${\bf F}u_0 = (P_r p, P_r {\bf n}_r\cdot \bv)$ where $u=(p,\bv)$ solves
-\begin{eqnarray}
-\label{eqn:fawedata}
-\frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv, \nonumber \\
-\frac{\partial \bv}{\partial t} & = & - \beta \nabla p ,\nonumber \\
-p(\cdot,T) & =& p_0 \\ 
-\bv(\cdot,T) & = & \bv_0\\
-\end{eqnarray}
-(Note: assumed that $\mbox{supp }\phi_r \subset \bR^d \times (0,T)$.)
-
-Let $\tilde{\bf h}_r=(\tilde{p}_r,\tilde{v_{nr}})^T \in (C_0^{\infty}(\Gamma_r \times (0,T)))^2$ 
-and 
-$\tilde{u}=(\tilde{p},\tilde{\bv})$ solve 
-\begin{eqnarray}
-\label{eqn:faweadj}
-\frac{\partial \tilde{p}}{\partial t} & = & \kappa (-\nabla \cdot \tilde{\bv} + 
- \tilde{p}_r \phi_r \delta_{\Gamma_r \times \bR})\nonumber \\
-\frac{\partial \tilde{\bv}}{\partial t} & = & \beta (-\nabla \tilde{p} + \tilde{v}_{nr}{\bf n}_r \phi_r \delta_{\Gamma_r \times \bR},)\nonumber \\
-\tilde{p} & =& 0 \mbox{ for } t<0\nonumber\\ 
-\tilde{\bv} & = & 0 \mbox{ for } t<0 
-\end{eqnarray} 
-Then
-\[
-0 = 
-\left(\int\, dx\,dy\,dz\, \frac{p_0 \tilde{p}}{\kappa} +  
-\frac{\bv_0 \cdot \tilde{\bv}}{\beta} \right)|_{t=T}
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p \tilde{p}}{\kappa} +  \frac{\bv \cdot \tilde{\bv}}{\beta} \right)
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p}{\partial t} \tilde {p} +  p \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} \right.
-\]
-\[
-+
-\left. \frac{1}{\beta} \frac{\partial \bv}{\partial t} \cdot \tilde{\bv} + \frac{1}{\beta} \bv \cdot \frac{\partial \tilde{\bv}}{\partial t} \right)
-\]
-\[
-= 
-\int_{0}^{T} \,dt\, \int\, dx\,dy\,dz\, \left((- \nabla \cdot \bv) \tilde{p} + p (- \nabla \cdot \tilde{\bv})\right.
-\]
-\[
-\left.- \nabla p  \cdot \tilde{\bv} + \bv \cdot( -\nabla \tilde{p})\right)
-\]
-\[
-+ \int_0^T \,dt \, \int_{\Gamma_r}\, dS_{\Gamma_r}( p \tilde{p}_r + \bv \cdot {\bf n}_r \tilde{v}_{nr})
-\]
-The first term vanishes after integration by parts. Accordingly,
-\begin{equation}
-\label{eqn:fadj}
- {\bf F}^T {\bf h}_r= -\tilde{u}(\cdot,T).
-\end{equation}
-
-\append{$L^2$ estimates}
-This appendix lays out the proof of 
-
-\begin{theorem} 
-\label{thm:one}
-Suppose that $\log \kappa, \log \beta \in C^{\infty}(\bR^d) \cap L^{\infty}(\bR^d)$, and that Assumption A holds. Then the estimates \ref{eqn:coercive} hold for $h \in C^{\infty}_0(\Gamma_s \times \bR)$, hence $S[c]$ extends to $L^2(\bar{\Gamma}_s \times \bR)$ with the same estimates.
-\end{theorem}
-
-For convenience, I restate
-
-\noindent {\bf Assumption A:} There exists $\theta_*>0$ so that for every ray connecting a point in $\mbox{supp }\phi_s$ with a point in $\mbox{supp }\phi_r$, the angles $\theta_s$ and $\theta_r$ subtended by the ray and the tangent planes of $\Gamma_s$ and $\Gamma_r$ respectively are both greater than $\theta_*$ in absolute value.
-
-Recall that $\Gamma_r \subset \bR^d$ is a smooth embedded surface containing the receiver locations. Denote by 
-${\cal I}_r$ the injection of $\Gamma_r \times \bR$ into $\bR^{d+1}$. Define the angle $\theta(\xi)$ made by a covector $\xi \in T^*(\bR^d)|_{\Gamma_r}$ with $\Gamma_r$ by 
-\begin{equation}
-\label{eqn:angledef}
-\cos \theta(\xi) = \frac{\|  (D{\cal I}_r)^T\xi\|}{\|\xi\|}.
-\end{equation}
-in which $\| \cdot \|$ denotes the induced Euclidean norm.
-
-For a covector $(\xi,\omega) \in  T^*(\bR^{d+1})$, define the angle with $\Gamma_r \times \bR$ to be the angle made by $\xi$ with $\Gamma_r$.
-
-Choose $\theta^*>0$, and denote by $\lambda_r$ the open conic subset of $T^*(\bR^{d+1}) |_{\Gamma_r \times \bR}$ of covectors making angle $> \theta*$ with $\Gamma_r \times \bR$. The projection $\gamma_r = (D{\cal I}_r)^T\lambda_r$ consists of tangential components of these covectors; it is easy to see that $\gamma_r$ is also open. 
-
-Let $P$ denote the symbol of the acoustic system
-\begin{equation}
-P(\bx,\omega,\bk) = 
-i\left(
-\begin{array}{cc}
-\frac{\omega}{\kappa(\bx)} & \bk^T\\
-\bk &  \rho(\bx)\omega I_{3\times3}
-\end{array}
-\right)
-\end{equation}
-For a normal covector $\nu \in {\cal N}(\Gamma_r \times \bR)  = ((D{\cal I}_r)^T)^{-1}(0)$ and $\bk \in \gamma_r$, the polynomial
-\[
-\omega \mapsto \det P(\bx,\omega,\bk)
-\]
-has two distinct nonzero roots $\pm \omega(\bx,\bk)$. 
-
-Let $\beta_r$ be an open conic neighborhood of $\gamma_r^C$, and define $\alpha_r = ((D{\cal I}_r)^T)^{-1}\beta_r \subset T^*(\bR^{d+1}) |_{\Gamma_r \times \bR}$.
-
-Let $H \in OPS^0(\bR^{d+1})$ be elliptic with symbol asymptotic to 1 near the characteristic variety 
-\begin{equation}
-\label{eqn:chardef}
-C = \{(\bx,t,\bk,\omega): \det P(\bx,\bk,\omega)=0\}
-\end{equation}. That is,
- $ES(H)$ is a small nbhd of characteristic variety. Note that
-\[ ES(H) \cap {\cal N}(\Gamma_r \times \bR) = \emptyset\]
-From the second of these facts and the definition of $\beta_r$, the Theorem
-in \cite{BaoSy:91b} implies that for $\Phi \in C_0^{\infty}(\bR^{d+1})$,
-\begin{equation}
-\label{eqn:baosymes}
-Pu=0 \mbox{ and } u \in L^2(\bR^{d+1}) \cap H^1_{ml}(ES(H) \cap \beta_r) \,\Rightarrow\, {\cal I_r}^*(\Phi u) \in L^2(\Gamma_r \times \bR)
-\end{equation}
-
-Unpack this: $u \in H^1_{ml}(ES(H) \cap \beta_r),\, s \ge 0$ means that there exists $A \in OPS^1(\bR^{d+1})$, elliptic in $ES(H) \cap \beta_r$, so that $Au \in L^2_{\rm loc}(\bR^{d+1})$. Choose $\Phi \in C_0^{\infty}(\bR^{d+1})$, that is, $\Phi Au \in L^2_{\rm loc}(\bR^{d+1})$, that is, $u \in {\rm Dom}(\Phi A)$. Denote by $\| \cdot \|_{\Phi A}$ the graph norm of $\Phi A$, and by $H^s_{\Phi A}$ the completion of $C_0^{\infty}(\bR^{d+1})$ with respect to $\| \cdot \|_{\Phi A}$, with its natural injection into $L^2(\bR^{d+1})$. Then  
-\[
-u \in H^s_{ml}(ES(H) \cap \beta_r) \,\Leftrightarrow \, u \in H^s_{\Phi A}
-\]
-for any $\Phi$, suitable choice of $A$. Further, the proof of the Theorem in \cite{BaoSy:91b} actually implies that for $\Phi$, $A$ as above with $s=1$,
-\[
-\|{\cal I}_r^*(\Phi u)\| \le C \|u\|_{\Phi A},
-\]
-That is, the localized restriction map is continuous on $H^1_{\Phi A}$.
-
- $\lambda_T \subset T^*(\bR^{d+1})_{t=T}$ = intersection with flow-out of $\lambda_r$, ${\cal I}_t =$ injection $\bR^d \rightarrow \bR^d \times \{t\} \subset \bR^{d+1}$, $\gamma_T = (D{\cal I})^T\lambda_T$. $\gamma_T$ = projection of flow-out to $\{t=T\}$ of lift of $\gamma_r$.
-
-$R_T \in OPS^1(\bR^d)$ elliptic of order 1 in nbhd of $\bar{\gamma}_T^c$ so $ES(R_T)^c \subset \gamma_T$. $R \in C^{\infty}(\bR, OPS^1(\bR^d))$ flow-out of $R_T$. Write (lifted essential support) 
-\[
-LES(R) = \cup_{t \in \bR} ((D({\cal I}_t)^T)^{-1}ES(R_t). 
-\]
-\begin{lemma}
-\label{thm:lem1} $(D{\cal I}_r)^T (LES(R) \cap T^*(\bR^{d+1})_{\Gamma_r \times \bR})$ contains a neighborhood of $\bar{\gamma}_r^c$.
-\end{lemma}
-\begin{proof}
-$(\bx,t,\xi,\omega) \in T^*(\bR^{d+1})_{\Gamma_r \times \bR}, \notin LES(R)$ means that $(D({\cal I}_r)^T(\bx,t,\xi,\omega) = (\bx,\xi) \notin ES(R_t)$. Let ${\bf H}$ denote the flow. Then ${\bf H}_{T-t}(\bx,\xi) \notin ES(R_T)$ so ${\bf H}_{T-t}(\bx,\xi) = (\bx_T,\xi_T) \in \gamma_T$ so there are $\omega_T, \omega_r$ for which $(\bx_T,T,\xi_T,\omega_T) \in \lambda_T \cap \mbox{ Char }$ is on ray through $(\bx,t,\xi,\omega_r) \in \lambda_r$, whence $(D{\cal I}_r)^T (\bx,t,\xi,\omega_r) \in \gamma_r$.
-\end{proof}
-
-Then Prop. 2 in BaoSymes implies that for $ \Phi \in C_0^{\infty}(\bR^{d+1})$, $R\Phi H \in OPS^1(\bR^{d+1})$ and $ \lambda_r^C \subset ES(R\Phi H) \subset LES(R) \cap ES(H)$. Standard energy estimates imply if $R_Tu_T \in L^2(\bR^d)$ then $Ru \in L^2(\bR^{d+1})$. Also $(I-H)\Psi u \in H^m_{\rm loc}(\bR^{d+1})$ for any $m>0$ whence $R\Phi(I-H)\Psi u \in H^m_{\rm loc}(\bR^{d+1})$ for any $m \ge 0$ assume $\Psi \Phi = \Phi $. So $R\Phi Hu \in L^2(\bR^{d+1})$.
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
