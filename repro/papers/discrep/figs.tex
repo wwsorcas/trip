@@ -1,0 +1,237 @@
+\title{Discrepancy Algorithm Examples}
+\author{William W. Symes}
+
+\lefthead{Symes}
+
+\righthead{Examples}
+
+\maketitle
+\begin{abstract}
+Numerical examples of discrepancy inversion.
+\end{abstract}
+
+\inputdir{project}
+\newpage
+\section{0. nominal N/S=0.2, target N/S=0.4, radius=0.1} 
+\plot{datanp0}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp0}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 3.243320, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.400000, achieved noise-to-signal ratio =0.407452, estimated slowness=0.396000.}
+
+
+\plot{resimp0}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 3.243320, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.400000, achieved noise-to-signal ratio =0.407452, estimated slowness=0.396000.}
+
+
+\plot{wavp0}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =3.243320, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp0}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp0}, penalty weight $\alpha$ =3.243320, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.400000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp0}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp0}, data from Figure \ref{fig:datanp0}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.400000, achieved noise-to-signal ratio = 0.289792, wavelet from Figure \ref{fig:wavp0}, penalty weight $\alpha$ =3.243320, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{1. nominal N/S=0.2, target N/S=0.2, radius=0.1} 
+\plot{datanp1}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp1}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 1.000780, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.200000, achieved noise-to-signal ratio =0.206226, estimated slowness=0.396000.}
+
+
+\plot{resimp1}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 1.000780, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.200000, achieved noise-to-signal ratio =0.206226, estimated slowness=0.396000.}
+
+
+\plot{wavp1}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =1.000780, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp1}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp1}, penalty weight $\alpha$ =1.000780, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.200000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp1}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp1}, data from Figure \ref{fig:datanp1}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.200000, achieved noise-to-signal ratio = 0.169006, wavelet from Figure \ref{fig:wavp1}, penalty weight $\alpha$ =1.000780, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{2. nominal N/S=0.2, target N/S=0.1, radius=0.1} 
+\plot{datanp2}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp2}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.329086, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.103459, estimated slowness=0.396000.}
+
+
+\plot{resimp2}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.329086, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.103459, estimated slowness=0.396000.}
+
+
+\plot{wavp2}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.329086, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp2}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp2}, penalty weight $\alpha$ =0.329086, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.100000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp2}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp2}, data from Figure \ref{fig:datanp2}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.100000, achieved noise-to-signal ratio = 0.159951, wavelet from Figure \ref{fig:wavp2}, penalty weight $\alpha$ =0.329086, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{3. nominal N/S=0.2, target N/S=0.05, radius=0.1} 
+\plot{datanp3}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp3}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.176535, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.050000, achieved noise-to-signal ratio =0.050243, estimated slowness=0.396000.}
+
+
+\plot{resimp3}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.176535, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.050000, achieved noise-to-signal ratio =0.050243, estimated slowness=0.396000.}
+
+
+\plot{wavp3}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.176535, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp3}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp3}, penalty weight $\alpha$ =0.176535, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.050000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp3}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp3}, data from Figure \ref{fig:datanp3}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.050000, achieved noise-to-signal ratio = 0.159736, wavelet from Figure \ref{fig:wavp3}, penalty weight $\alpha$ =0.176535, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{4. nominal N/S=0.2, target N/S=0.4, radius=0.05} 
+\plot{datanp4}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp4}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 3.243320, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.400000, achieved noise-to-signal ratio =0.407452, estimated slowness=0.396000.}
+
+
+\plot{resimp4}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 3.243320, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.400000, achieved noise-to-signal ratio =0.407452, estimated slowness=0.396000.}
+
+
+\plot{wavp4}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =3.243320, assumed support radius =0.050000, estimated slowness =0.396000.}
+
+\plot{presimp4}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp4}, penalty weight $\alpha$ =3.243320, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.400000, achieved noise-to-signal ratio = , assumed support radius =0.050000, estimated slowness =0.396000.}
+
+
+\plot{presnp4}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp4}, data from Figure \ref{fig:datanp4}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.400000, achieved noise-to-signal ratio = 0.291543, wavelet from Figure \ref{fig:wavp4}, penalty weight $\alpha$ =3.243320, assumed support radius =0.050000, estimated slowness =0.396000.}
+\newpage
+\section{5. nominal N/S=0.2, target N/S=0.2, radius=0.05} 
+\plot{datanp5}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp5}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 1.000780, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.200000, achieved noise-to-signal ratio =0.206226, estimated slowness=0.396000.}
+
+
+\plot{resimp5}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 1.000780, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.200000, achieved noise-to-signal ratio =0.206226, estimated slowness=0.396000.}
+
+
+\plot{wavp5}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =1.000780, assumed support radius =0.050000, estimated slowness =0.396000.}
+
+\plot{presimp5}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp5}, penalty weight $\alpha$ =1.000780, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.200000, achieved noise-to-signal ratio = , assumed support radius =0.050000, estimated slowness =0.396000.}
+
+
+\plot{presnp5}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp5}, data from Figure \ref{fig:datanp5}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.200000, achieved noise-to-signal ratio = 0.181122, wavelet from Figure \ref{fig:wavp5}, penalty weight $\alpha$ =1.000780, assumed support radius =0.050000, estimated slowness =0.396000.}
+\newpage
+\section{6. nominal N/S=0.2, target N/S=0.1, radius=0.05} 
+\plot{datanp6}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp6}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.329086, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.103459, estimated slowness=0.396000.}
+
+
+\plot{resimp6}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.329086, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.103459, estimated slowness=0.396000.}
+
+
+\plot{wavp6}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.329086, assumed support radius =0.050000, estimated slowness =0.396000.}
+
+\plot{presimp6}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp6}, penalty weight $\alpha$ =0.329086, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.100000, achieved noise-to-signal ratio = , assumed support radius =0.050000, estimated slowness =0.396000.}
+
+
+\plot{presnp6}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp6}, data from Figure \ref{fig:datanp6}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.100000, achieved noise-to-signal ratio = 0.176239, wavelet from Figure \ref{fig:wavp6}, penalty weight $\alpha$ =0.329086, assumed support radius =0.050000, estimated slowness =0.396000.}
+\newpage
+\section{7. nominal N/S=0.2, target N/S=0.05, radius=0.05} 
+\plot{datanp7}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.2}
+
+\plot{resnp7}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.176535, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.050000, achieved noise-to-signal ratio =0.050243, estimated slowness=0.396000.}
+
+
+\plot{resimp7}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.176535, data noise-to-signal ratio $\eta$ =0.200000, target noise-to-signal ratio =0.050000, achieved noise-to-signal ratio =0.050243, estimated slowness=0.396000.}
+
+
+\plot{wavp7}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.176535, assumed support radius =0.050000, estimated slowness =0.396000.}
+
+\plot{presimp7}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp7}, penalty weight $\alpha$ =0.176535, actual noise-to-signal ratio 0.200000, target noise-to-signal ratio 0.050000, achieved noise-to-signal ratio = , assumed support radius =0.050000, estimated slowness =0.396000.}
+
+
+\plot{presnp7}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp7}, data from Figure \ref{fig:datanp7}, actual noise-to-signal ratio = 0.200000, target noise-to-signal ratio = 0.050000, achieved noise-to-signal ratio = 0.176169, wavelet from Figure \ref{fig:wavp7}, penalty weight $\alpha$ =0.176535, assumed support radius =0.050000, estimated slowness =0.396000.}
+\newpage
+\section{8. nominal N/S=1.0, target N/S=1.0, radius=0.1} 
+\plot{datanp8}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =1.0}
+
+\plot{resnp8}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 5.505000, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =1.000000, achieved noise-to-signal ratio =0.973389, estimated slowness=0.396000.}
+
+
+\plot{resimp8}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 5.505000, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =1.000000, achieved noise-to-signal ratio =0.973389, estimated slowness=0.396000.}
+
+
+\plot{wavp8}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =5.505000, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp8}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp8}, penalty weight $\alpha$ =5.505000, actual noise-to-signal ratio 1.000000, target noise-to-signal ratio 1.000000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp8}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp8}, data from Figure \ref{fig:datanp8}, actual noise-to-signal ratio = 1.000000, target noise-to-signal ratio = 1.000000, achieved noise-to-signal ratio = 0.691375, wavelet from Figure \ref{fig:wavp8}, penalty weight $\alpha$ =5.505000, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{9. nominal N/S=1.0, target N/S=0.5, radius=0.1} 
+\plot{datanp9}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =1.0}
+
+\plot{resnp9}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.546527, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =0.500000, achieved noise-to-signal ratio =0.523341, estimated slowness=0.388000.}
+
+
+\plot{resimp9}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.546527, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =0.500000, achieved noise-to-signal ratio =0.523341, estimated slowness=0.388000.}
+
+
+\plot{wavp9}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.546527, assumed support radius =0.100000, estimated slowness =0.388000.}
+
+\plot{presimp9}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp9}, penalty weight $\alpha$ =0.546527, actual noise-to-signal ratio 1.000000, target noise-to-signal ratio 0.500000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.388000.}
+
+
+\plot{presnp9}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp9}, data from Figure \ref{fig:datanp9}, actual noise-to-signal ratio = 1.000000, target noise-to-signal ratio = 0.500000, achieved noise-to-signal ratio = 0.559738, wavelet from Figure \ref{fig:wavp9}, penalty weight $\alpha$ =0.546527, assumed support radius =0.100000, estimated slowness =0.388000.}
+\newpage
+\section{10. nominal N/S=1.0, target N/S=0.1, radius=0.1} 
+\plot{datanp10}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =1.0}
+
+\plot{resnp10}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.133101, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.102812, estimated slowness=0.364000.}
+
+
+\plot{resimp10}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.133101, data noise-to-signal ratio $\eta$ =1.000000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.102812, estimated slowness=0.364000.}
+
+
+\plot{wavp10}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.133101, assumed support radius =0.100000, estimated slowness =0.364000.}
+
+\plot{presimp10}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp10}, penalty weight $\alpha$ =0.133101, actual noise-to-signal ratio 1.000000, target noise-to-signal ratio 0.100000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.364000.}
+
+
+\plot{presnp10}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp10}, data from Figure \ref{fig:datanp10}, actual noise-to-signal ratio = 1.000000, target noise-to-signal ratio = 0.100000, achieved noise-to-signal ratio = 0.529947, wavelet from Figure \ref{fig:wavp10}, penalty weight $\alpha$ =0.133101, assumed support radius =0.100000, estimated slowness =0.364000.}
+\newpage
+\section{11. nominal N/S=0.0, target N/S=0.1, radius=0.1} 
+\plot{datanp11}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.0}
+
+\plot{resnp11}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 1.389380, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.101633, estimated slowness=0.396000.}
+
+
+\plot{resimp11}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 1.389380, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.100000, achieved noise-to-signal ratio =0.101633, estimated slowness=0.396000.}
+
+
+\plot{wavp11}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =1.389380, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp11}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp11}, penalty weight $\alpha$ =1.389380, actual noise-to-signal ratio 0.000000, target noise-to-signal ratio 0.100000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp11}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp11}, data from Figure \ref{fig:datanp11}, actual noise-to-signal ratio = 0.000000, target noise-to-signal ratio = 0.100000, achieved noise-to-signal ratio = 0.071865, wavelet from Figure \ref{fig:wavp11}, penalty weight $\alpha$ =1.389380, assumed support radius =0.100000, estimated slowness =0.396000.}
+\newpage
+\section{12. nominal N/S=0.0, target N/S=0.01, radius=0.1} 
+\plot{datanp12}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.0}
+
+\plot{resnp12}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.410373, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.010000, achieved noise-to-signal ratio =0.010434, estimated slowness=0.400000.}
+
+
+\plot{resimp12}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.410373, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.010000, achieved noise-to-signal ratio =0.010434, estimated slowness=0.400000.}
+
+
+\plot{wavp12}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.410373, assumed support radius =0.100000, estimated slowness =0.400000.}
+
+\plot{presimp12}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp12}, penalty weight $\alpha$ =0.410373, actual noise-to-signal ratio 0.000000, target noise-to-signal ratio 0.010000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.400000.}
+
+
+\plot{presnp12}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp12}, data from Figure \ref{fig:datanp12}, actual noise-to-signal ratio = 0.000000, target noise-to-signal ratio = 0.010000, achieved noise-to-signal ratio = 0.007378, wavelet from Figure \ref{fig:wavp12}, penalty weight $\alpha$ =0.410373, assumed support radius =0.100000, estimated slowness =0.400000.}
+\newpage
+\section{13. nominal N/S=0.0, target N/S=0.001, radius=0.1} 
+\plot{datanp13}{width=\textwidth}{Data plus noise, noise-to-signal ratio $\eta$ =0.0}
+
+\plot{resnp13}{width=\textwidth}{Residual at VPM inversion, penalty weight $\alpha$ = 0.126322, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.001000, achieved noise-to-signal ratio =0.001005, estimated slowness=0.396000.}
+
+
+\plot{resimp13}{width=\textwidth}{Resimulation at VPM inversion, penalty weight $\alpha$ = 0.126322, data noise-to-signal ratio $\eta$ =0.000000, target noise-to-signal ratio =0.001000, achieved noise-to-signal ratio =0.001005, estimated slowness=0.396000.}
+
+
+\plot{wavp13}{width=\textwidth}{Estimated wavelet at VPM inversion (blue) vs. noise-free wavelet (red), penalty weight $\alpha$ =0.126322, assumed support radius =0.100000, estimated slowness =0.396000.}
+
+\plot{presimp13}{width=\textwidth}{Resimulation at projected VPM inversion (blue), noise-free data trace (red). Wavelet from Figure \ref{fig:wavp13}, penalty weight $\alpha$ =0.126322, actual noise-to-signal ratio 0.000000, target noise-to-signal ratio 0.001000, achieved noise-to-signal ratio = , assumed support radius =0.100000, estimated slowness =0.396000.}
+
+
+\plot{presnp13}{width=\textwidth}{Residual at projected VPM inversion, resimulation from Figure \ref{fig:presimp13}, data from Figure \ref{fig:datanp13}, actual noise-to-signal ratio = 0.000000, target noise-to-signal ratio = 0.001000, achieved noise-to-signal ratio = 0.000710, wavelet from Figure \ref{fig:wavp13}, penalty weight $\alpha$ =0.126322, assumed support radius =0.100000, estimated slowness =0.396000.}

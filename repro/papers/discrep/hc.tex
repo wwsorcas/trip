@@ -1,0 +1,46 @@
+\title{Example Plots}
+\author{William. W. Symes \email{\tt symes@rice.edu}}
+
+\lefthead{WWS}
+
+\righthead{HC Examples}
+
+\maketitle
+\begin{abstract}
+Examples from HC, 2020.10.08.
+\end{abstract}
+
+\section{Introduction}
+Data process:
+
+For example {\tt n, n=1, 3, 4} and {\tt type} = {\tt data}, {\tt residual}:
+\begin{itemize}
+\item read HC file {\tt file.txt} = ex{\tt n\_type\_}(appropriate figure number){\tt.txt}, use {\tt grep -v} to remove comment ilne
+\item use SU utility {\tt a2b} to convert ascii file {\tt file.txt} to binary file {\tt file.bin}
+\item use SU utility {\tt suaddhead} to add headers {\tt ns} and {\tt dt} to produce SEGY file {\tt file.su}
+\item use Madagascar utility {\tt sfsuread} to convert SEGY file {\tt file.su} to RSF file {\tt file.rsf} for plotting
+\item use IWAVE utility {\tt SEGYNorm} to output L2 norm of the data in {\tt file.su} to terminal.
+\end{itemize}
+
+For example  {\tt n, n=1, 3, 4}, use Madagascar utility {\tt sfcat} to concatenate the data and residual {\tt .rsf} files, then use {\tt sfgraph} to plot two curves, with data in blue and residual in red.
+
+{\tt SEGYNorm} computes the scaled $l^2$ norm of a vector $x$ (interpreted as the vector of samples of a function of a real variable on a regular grid) with length $ns$ and sample interval $dt$:
+\[
+  \|x\| = \left(dt \sum_{i=0}^{ns-1} |x[i]|^2\right)^{1/2}
+\]
+Note that if the extreme samples are $=0$, then this expession is equivalent to the trapezoidal rule.
+
+There are (at least) two obvious ways of defining SNR. By ``SNR'' in the captions below, I mean the norm of the data divided by the norm of the residual. The meaning in the current draft paper might be called ``ideal SNR'', meaning the norm of the {\em noise-free} data (the data of Example 1 in all cases), divided by the difference of the predicted data minus the noise-free data (rather than the input data, which the algorithm is trying to fit). There shouldn't be much difference between these two, though they are certainly not the same. I have only given the straightforward SNR since in any non-synthetic situation you would not know the ``noise-free'' data.
+
+\section{Examples}
+
+\inputdir{hc}
+
+\plot{ex1}{width=\textwidth}{Example 1 (combines Figures 3 and 5 in HC notes of 2020.10.05): data = blue curve, residual = red curve. Data norm = 1.3765, residual norm = 0.724783, achieved signal-noise ratio = 1.899.}
+
+\plot{ex3}{width=\textwidth}{Example 3 (combines Figures 18 and 21 in HC notes of 2020.10.05): data = blue curve, residual = red curve. Data norm = 2.01366, residual norm = 0.595673, achieved signal-noise ratio = 3.38.}
+
+\plot{ex4}{width=\textwidth}{Example 4 (combines Figures 27 and 30 in HC notes of 2020.10.05): data = blue curve, residual = red curve. Data norm = 1.60526, residual norm = 0.685794, achieved signal-noise ratio = 2.341.}
+
+
+

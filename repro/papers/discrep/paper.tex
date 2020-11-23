@@ -100,14 +100,12 @@ state the essence of our main results, leaving out a few technical
 details that are supplied later. Numerical illustrations of these
 results occupy the following (``Examples'') section. The fourth
 (``Findings'') section of the paper contains precise statements of the
-mathematical results and supporting discussion, followed by
-derivations. In particular, theorems referenced in the Overview
-section are to be found, stated in full with their proofs, in the this
-final part of the paper. Three appendices describe the algorithm used to
-control the penalty weight in our formulation of extended
-inversion, further refinement of error estimates based ond the
-Heisenberg inequality, and the abstract structure of objective derivatives
-inherent in extended inversion based on wave propagation.
+mathematical results, derivations, and supporting discussion. Three
+appendices describe the algorithm used to control the penalty weight
+in our formulation of extended inversion, further refinement of error
+estimates based ond the Heisenberg inequality, and the abstract
+structure of extended inversion implicit in the derivations presented
+in the ``Findings'' section.
 
 \section{Overview}
 
@@ -513,7 +511,7 @@ such data a solution of the Problem Statement \ref{eqn:probstat0}
 exists with arbitrarily small $\epsilon>0$.
 
 
-\subsection{Results}
+\subsection{Full Waveform Inversion}
 While $F[m]$ is surjective for every $m \in M$, as noted above, it is
 very far from injective. On the other hand, under a constraint that
 will be assumed throughout, $\lF[m]$ is injective (in fact, $4 \pi r
@@ -529,6 +527,14 @@ will be assumed throughout, $\lF[m]$ is injective (in fact, $4 \pi r
   Then $\lF[m]\in {\cal B}(\lW,D)$ is coercive for every $m \in M, \lambda \in
   (0,\lambda_{\rm max}]$.
 \end{proposition}
+
+\noindent{\bf Remark:} A useful consequence of the condition 
+\ref{eqn:fullrec}: for every $m \in M$, 
+\begin{equation}
+  [-\lambda_{\rm max}, -\lambda_{\rm max}] \subset[ t_{\rm min}-mr , 
+  t_{\rm max}-mr]. 
+  \label{eqn:zeroinc}
+\end{equation}
 
 The first main result establishes the existence of large (100 \%)
 residual local minimizers for the basic FWI objective $\lerr$, even
@@ -546,6 +552,50 @@ and any such $(m,0)$ is a local minimizer of $\lerr$ with relative RMS
 error = 1.0.
 \end{theorem}
 
+\begin{proof} From the definition \ref{eqn:mod},
+\[
+ \lerr[m,w;d] =  \frac{1}{32\pi^2
+    r^2\|d\|^2}\int_0^T\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
+\]
+Since $w_*, w$ vanish for $|t|>\lambda$,
+$\lF[m_*]w_*(t)$ vanishes if $|t-m_*r|>\lambda$ and $\lF[m]w$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
+= |m-m_*|r > 2\lambda$, then $|t-mr|+|t-m_*r| \ge |mr-m_*r| >
+2\lambda$ so either $|t-mr|>\lambda$ or $|t-m_*r|>\lambda$, that is,
+either $\lF[m]w(t)=0$ or $\lF[m_*]w_*=0$. Therefore $\lF[m]w$ and
+$\lF[m_*]w_*$ are orthogonal in the sense of the $L^2$ inner product
+$\langle \cdot,\cdot \rangle_D$ on $D$:
+\begin{equation}
+  \label{eqn:ortho}
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \langle F[m]w,
+  F[m_*]w_*\rangle_D = 0
+\end{equation}
+But $d = \lF[m_*]w_*$, so this is the same as saying that $d$ is
+orthogonal to $F[m]w$. So conclude after a minor manipulation that
+\[
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \lerr[m,w;d]=\frac{1}{32\pi^2 
+    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2).
+\]
+\begin{equation}
+  \label{eqn:iso}
+  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right)
+\end{equation}
+That is, for slowness $m$ in error by more than $2\lambda/r$ from the 
+target slowness $m_*$, the means square error (FWI objective) $\lerr$ is independent of
+$m$, and its minimum over $w$ is attained for $w=0$
+\end{proof}
+
+Therefore local minimizers of $\lerr$ abound, as far as you like from the
+global minimizer $(m_*,w_*)$. Local exploration of the FWI objective
+$e$ gives no useful information whatever about constructive search
+directions, and descent-based optimization tends to fail if the
+initial estimate $m_0$ is in error by more than $2\lambda/r$
+(``further than a multiple of a wavelength'', per discussion
+in the second Appendix). In fact the actual behaviour of FWI itererations is worse
+(failure if $m_0$ is in error by ``half a wavelength''), as follows
+from a more refined analysis of the ``cycle-skipping'' local behaviour of $\lerr$ near its
+global minimizer.
+
+\subsection{Variable Projection}
 The main theoretical device used in the proofs of our main results on 
 extended inversion is Variable Projection reduction of the penalty objective $\Ja$
 (equation \ref{eqn:penerr}) to a function $\tJa$ of 
@@ -569,6 +619,119 @@ multiplication operators on $W$ defined by a choice of multiplier $a \in L^{\inf
   \label{eqn:annmult}
   A w(t)= a(t)w(t), \, t\in \bR.
 \end{equation}
+With $A$ of this form, $\tilde{J}_{\alpha}$ is explicitly
+computable. First observe that apart from amplitude, $F[m]$ is
+unitary: for $g \in D$,
+\begin{equation}
+\label{eqn:tran}
+F[m]^T g (t) =
+\left\{
+  \begin{array}{c}
+    \frac{1}{4\pi r}g\left(t+mr\right), \, t \in [t_{\rm min}-mr,
+    t_{\rm max}-mr],\\
+    0, \mbox{ else.}
+  \end{array}
+\right.
+\end{equation}
+so
+\begin{equation}
+  \label{eqn:unit}
+  F[m]^TF[m] = \frac{1}{(4\pi r)^2}{\bf 1}_{[t_{\rm min}-mr,  
+    t_{\rm max}-mr]}
+\end{equation}
+in which ${\bf 1}_{S}$ denotes
+multiplication by the characteristic function of a measurable 
+$S \subset \bR$.
+
+Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:redexp} is
+\begin{equation}
+  \label{eqn:norm1}
+  \left(\frac{1}{(4\pi r)^2} {\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]} + \alpha^2 A^TA\right)w= F[m]^Td.
+\end{equation}
+
+With these choices, the normal equation \ref{eqn:norm1} becomes
+\begin{equation}
+\label{eqn:norm2}
+\left(\frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]} + \alpha^2a^2\right)w= F[m]^Td.
+\end{equation}
+
+\begin{proposition}
+  \label{thm:norminvexp}
+  Assume the conditions \ref{eqn:mod}, \ref{eqn:fullrec},
+  \ref{eqn:annmult}. Also assume that $\lambda \in (0,\lambda_{\rm
+    max}], \alpha > 0,$ and that  $C>0$ exists so that $a \in L^{\infty}(\bR)$
+  mentioned in condition \ref{eqn:annmult} satisfies condition
+  \ref{eqn:abnd}.
+%  \begin{equation}
+%   \label{eqn:abnd}
+%    |t| > \lambda \Rightarrow a(t) \ge C,
+%  \end{equation}
+%  in which $C>0$ may depend on $\lambda$.
+  Then
+  \begin{itemize}
+  \item[1. ]the normal operator $F[m]^TF[m] + \alpha^2A^TA$ is
+    invertible for any $m \in M$, $\alpha > 0$;
+  \item[2. ]the solution $\aw[m;d]\in W$ of the normal equation
+    \ref{eqn:norm} is given by
+    \begin{equation}
+      \label{eqn:normsol}
+      \aw[m;d](t) = \left\{
+        \begin{array}{c}
+          \left(\frac{1}{(4\pi r)^2} + \alpha^2
+          a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr), t \in [t_{\rm
+          min}-mr, t_{\rm max}-mr];\\
+          0, \mbox{ else;}
+        \end{array}
+      \right.
+    \end{equation}
+  \item[3. ]if in addition $d=F[m_*]w_*, w_* \in \lW$ is noise-free, as in equation
+    \ref{eqn:defdatanonoise},
+    \begin{equation}
+      \label{eqn:solnonoise}
+      \aw[m,d](t)= \left(1+ (4\pi r)^2\alpha^2 a(t)^2\right)^{-1}w_*\left(t+(m-m_*)r\right).
+    \end{equation}
+  \end{itemize}
+\end{proposition}
+
+\begin{proof} 
+  \begin{itemize}
+  \item[1. ]Note that thanks to \ref{eqn:zeroinc}, if $|t|\le
+    \lambda \le \lambda_{\rm max}$, then ${\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]}(t) = 1$, whereas if $|t|>\lambda$,
+    then $a(t) \ge C$, whence
+    \[
+      \frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
+        t_{\rm max}-mr]} + \alpha^2a^2  \ge \min\{(4\pi r)^2,
+      \alpha^2\min\{1/(4\pi r)^2,C^2\} \}> 0.
+    \]
+    Therefore the normal operator is invertible under the stated
+    conditions.
+
+  \item[2. ]From the identity \ref{eqn:tran}.
+    \[
+      \mbox{supp }F[m]^Td \subset [t_{\rm min}-mr,t_{\rm max}-mr].
+    \]
+    Define $w_{\rm tmp}$ to be the right-hand side of equation \ref{eqn:normsol}. Then
+    from the previous observation and identity \ref{eqn:tran},
+    \[
+      \mbox{supp }w_{\rm tmp} \subset [t_{\rm min}-mr,t_{\rm max}-mr].
+    \]
+    From the identity \ref{eqn:unit}, for any $w \in W$,
+    \[
+      t \in [t_{\rm min}-mr,t_{\rm max}-mr] \Rightarrow F[m]^TF[m]w(t)
+      = \frac{1}{(4 \pi r)^2}w(t).
+    \]
+    It follows from this and the previous two observations that
+    $w_{\rm tmp}$ solves the normal equation \ref{eqn:norm}, and
+    therefore that $\aw[m;d]=w_{\rm tmp}$.
+
+  \item[3. ]Follows by inserting the definition
+    \ref{eqn:defdatanonoise} of $d$ in \ref{eqn:normsol} and
+    rearranging.
+  \end{itemize}
+\end{proof}
 
 \begin{theorem}
   \label{thm:norminv}
@@ -597,13 +760,80 @@ multiplication operators on $W$ defined by a choice of multiplier $a \in L^{\inf
   \end{itemize}
 \end{theorem}
 
+\begin{proof} These conclusions follow immediately from Proposition
+  \ref{thm:norminvexp}.
+\end{proof}
+
 \noindent{\bf Remark:} If $\Ja[\cdot,\cdot;d]$ and $\tJa[\cdot;d]$
 were differentiable, then ``local minimizer'' in the conclusion of the
 preceding theorem could be replaced by ``stationary point''. However,
 for the problem addressed in this paper, $\Ja[\cdot,\cdot;d]$ {\em is
   not} differentiable without added smoothness constraints on $w$,
 whereas $\tJa[\cdot;d]$ {\em is} differentiable for proper choice of
-penalty operator $A$:
+penalty operator $A$. 
+
+This conclusion follows from properties of the modeling operator $F$
+shared with many other inverse problems in wave propagation, as
+explained in the third appendix. Here, we derive it from explicit
+expressions for $\tJa$ and its components.
+
+\begin{proposition}
+  \label{thm:epjgen}
+  Assume the hypotheses of Proposition \ref{thm:norminvexp}. Then
+  \begin{equation}
+  \label{eqn:residnormgen}
+  e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
+\end{equation}
+\begin{equation}
+  \label{eqn:anninormgen}
+  p[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)
+\end{equation}
+
+\begin{equation}
+  \label{eqn:expjgen}
+\tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
+a(t-mr))^2)^{-1}d(t)^2. 
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+  From equation \ref{eqn:normsol},
+  \[
+    F[m]\aw[m;d](t) = 
+    \frac{1}{4 \pi r}\left(\frac{1}{(4\pi r)^2} + \alpha^2
+      a^2(t-mr)\right)^{-1}\frac{1}{4 \pi r}d(t),
+  \]
+  so
+  \[
+    (F[m]\aw[m;d]-d)(t) = (1 + (4 \pi r\alpha
+    a(t-mr))^2)^{-1}-1)d(t)
+  \]
+  \[
+    = -(4 \pi r\alpha a(t-mr))^2(1 + (4 \pi r\alpha
+    a(t-mr))^2)^{-1}d(t).
+  \]
+  Half the integral of the square of this data residual is
+  $e[m,\aw[m;d],d]$, which proves identity \ref{eqn:residnormgen}.
+
+  To compute $p[m,\aw[m;d],d]$, note that
+  \[
+    A\aw[m;d](t)=a(t) \left(\frac{1}{(4\pi r)^2} + \alpha^2
+      a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
+  \]
+  \[
+    = 4\pi r a(t) (1 + (4\pi r \alpha a(t))^2)^{-1}d(t+mr)
+  \]
+  for $ t \in [t_{\rm min}-mr, t_{\rm max}-mr]$, so squaring,
+  integrating, and changing integration variables $t \mapsto t-mr$
+  gives the result \ref{eqn:anninormgen}
+
+  That the VPM objective $\tJa$ is given by \ref{eqn:expjgen} follows from equations \ref{eqn:pen},
+  \ref{eqn:redexp}, \ref{eqn:residnormgen}, and
+  \ref{eqn:anninormgen}.
+\end{proof}
+
 
 \begin{theorem}
   \label{thm:diffobj}
@@ -612,10 +842,55 @@ penalty operator $A$:
   \in C^1(M)$.
 \end{theorem}
 
-This phenomenon - nondifferentiable objective, differentiable reduced
-objective - is replicated for a wide variety of extended
-approaches for inverse problems in wave propagation. See for example \cite{Symes:EAGE15}.
-  
+\begin{proof}
+Suppose first that $a \in C^1(\bR)$. Differentiation under the integral sign  
+  yields the expression for its derivative:
+\begin{equation}
+  \label{eqn:dexpjgen}
+  \frac{d}{dm}\tJa[m;d] = -\frac{(4 \pi r \alpha)^2}{\|d\|^2} \int_{t_{\rm min}}^{t_{\rm max}} \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-mr)(1+(4\pi r \alpha 
+  a(t-mr))^2)^{-2}d(t)^2. 
+\end{equation}
+For $a \in W^{1,\infty}_{\rm loc}(\bR)$ a limiting argument shows that the
+same expression gives the derivative of $\tJa$.
+\end{proof}
+
+It will be useful to record expressions for the various componenets of
+$\tJa$ when the data is noise-free, that is, the context of
+Proposition \ref{thm:norminvexp}, item 3.
+
+\begin{corollary}
+  \label{thm:epjnonoise}
+  Assume the hypotheses of Proposition \ref{thm:norminvexp}, item
+  3. Then noting that $\|d\| = \|w_*\|/(4 \pi r)$
+\begin{equation}
+  \label{eqn:residnorm}
+  e[m,\aw[m,d];d] 
+= \frac{\alpha^4}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^4(1+(4\pi r)^2 \alpha^2 
+    a(t-(m-m^*)r)^2)^{-2}w_*(t)^2.
+\end{equation}
+\begin{equation}
+  \label{eqn:anninorm}
+  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
+    a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
+\end{equation}
+so 
+\begin{equation}
+\label{eqn:expjnonoise}
+\tJa[m;d] = \frac{(4\pi r \alpha)^2}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-1}w_*(t)^2. 
+\end{equation}
+Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, and 
+\begin{equation}
+  \label{eqn:dexpjnonoise}
+  \frac{d}{dm}\tJa[m;d] = -\frac{r (4\pi r \alpha)^2}{\|w_*\|^2} \int \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
+\end{equation}
+\end{corollary}
+
+\subsection{Choice of Penalty Operator}
+
 We examine two choices for $A$. For each choice, we ask first whether local minimizers 
 of the resulting VPM objective $\tJa[\cdot;d]$ occur far from a slowness $m_*$. 
 
@@ -774,13 +1049,7 @@ sufficiently small ($O(\sqrt{\epsilon})$).
 
 
 \subsection{Proof of Theorem \ref{thm:fwi}}
-\noindent{\bf Remark:} A useful consequence of the condition 
-\ref{eqn:fullrec}: for every $m \in M$, 
-\begin{equation}
-  [-\lambda_{\rm max}, -\lambda_{\rm max}] \subset[ t_{\rm min}-mr , 
-  t_{\rm max}-mr]. 
-  \label{eqn:zeroinc}
-\end{equation}
+
 
 %A natural formulation of the Problem Statement \ref{eqn:probstat0} is
 %via least squares: that is, given $d \in D$, $\lambda >0$, find
@@ -806,37 +1075,7 @@ sufficiently small ($O(\sqrt{\epsilon})$).
 %constraints must be imposed on $(m_0,w_0)$ in order that the resulting
 %sequence of iterates convertes to a global minimizer?  
 
-\begin{proof} of Theorem \ref{thm:fwi}: From the definition \ref{eqn:mod},
-\[
- \lerr[m,w;d] =  \frac{1}{32\pi^2
-    r^2\|d\|^2}\int_0^T\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
-\]
-Since $w_*, w$ vanish for $|t|>\lambda$,
-$\lF[m_*]w_*(t)$ vanishes if $|t-m_*r|>\lambda$ and $\lF[m]w$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
-= |m-m_*|r > 2\lambda$, then $|t-mr|+|t-m_*r| \ge |mr-m_*r| >
-2\lambda$ so either $|t-mr|>\lambda$ or $|t-m_*r|>\lambda$, that is,
-either $\lF[m]w(t)=0$ or $\lF[m_*]w_*=0$. Therefore $\lF[m]w$ and
-$\lF[m_*]w_*$ are orthogonal in the sense of the $L^2$ inner product
-$\langle \cdot,\cdot \rangle_D$ on $D$:
-\begin{equation}
-  \label{eqn:ortho}
-  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \langle F[m]w,
-  F[m_*]w_*\rangle_D = 0
-\end{equation}
-But $d = \lF[m_*]w_*$, so this is the same as saying that $d$ is
-orthogonal to $F[m]w$. So conclude after a minor manipulation that
-\[
-  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \lerr[m,w;d]=\frac{1}{32\pi^2 
-    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2).
-\]
-\begin{equation}
-  \label{eqn:iso}
-  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right)
-\end{equation}
-That is, for slowness $m$ in error by more than $2\lambda/r$ from the 
-target slowness $m_*$, the means square error (FWI objective) $\lerr$ is independent of
-$m$, and its minimum over $w$ is attained for $w=0$
-\end{proof}
+
 %\begin{theorem}
 %  \label{thm:fwi}
 %  Suppose that $0 <\lambda\le \lambda_{\rm max}$,  $m_* \in M, w_*
@@ -849,16 +1088,7 @@ $m$, and its minimum over $w$ is attained for $w=0$
 %and any such $(m,0)$ is a stationary point of $e$.
 %\end{theorem}
 
-Therefore local minimizers of $\lerr$ abound, as far as you like from the
-global minimizer $(m_*,w_*)$. Local exploration of the FWI objective
-$e$ gives no useful information whatever about constructive search
-directions, and descent-based optimization tends to fail if the
-initial estimate $m_0$ is in error by more than $2\lambda/r$
-(``further than a multiple of a wavelength'', per discussion
-above). In fact the actual behaviour of FWI itererations is worse
-(failure if $m_0$ is in error by ``half a wavelength''), as follows
-from a more refined analysis of the ``cycle-skipping'' local behaviour of $\lerr$ near its
-global minimizer.
+
 
 
 
@@ -896,119 +1126,8 @@ global minimizer.
 %constructive determination of $\alpha$.
 
 \subsection{Proof of Theorem \ref{thm:norminv}}
-For the single-trace transmission inverse problem, $\tilde{J}_{\alpha}$ is explicitly
-computable. First observe that apart from amplitude, $F[m]$ is
-unitary: for $g \in D$,
-\begin{equation}
-\label{eqn:tran}
-F[m]^T g (t) =
-\left\{
-  \begin{array}{c}
-    \frac{1}{4\pi r}g\left(t+mr\right), \, t \in [t_{\rm min}-mr,
-    t_{\rm max}-mr],\\
-    0, \mbox{ else.}
-  \end{array}
-\right.
-\end{equation}
-so
-\begin{equation}
-  \label{eqn:unit}
-  F[m]^TF[m] = \frac{1}{(4\pi r)^2}{\bf 1}_{[t_{\rm min}-mr,  
-    t_{\rm max}-mr]}
-\end{equation}
-in which ${\bf 1}_{S}$ denotes
-multiplication by the characteristic function of a measurable 
-$S \subset \bR$.
 
-Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:redexp} is
-\begin{equation}
-  \label{eqn:norm1}
-  \left(\frac{1}{(4\pi r)^2} {\bf 1}_{[t_{\rm min}-mr,  
-      t_{\rm max}-mr]} + \alpha^2 A^TA\right)w= F[m]^Td.
-\end{equation}
 
-With these choices, the normal equation \ref{eqn:norm1} becomes
-\begin{equation}
-\label{eqn:norm2}
-\left(\frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
-      t_{\rm max}-mr]} + \alpha^2a^2\right)w= F[m]^Td.
-\end{equation}
-
-\begin{proposition}
-  \label{thm:norminvexp}
-  Assume the conditions \ref{eqn:mod}, \ref{eqn:fullrec},
-  \ref{eqn:annmult}. Also assume that $\lambda \in (0,\lambda_{\rm
-    max}], \alpha > 0,$ and that  $C>0$ exists so that $a \in L^{\infty}(\bR)$
-  mentioned in condition \ref{eqn:annmult} satisfies condition
-  \ref{eqn:abnd}.
-%  \begin{equation}
-%   \label{eqn:abnd}
-%    |t| > \lambda \Rightarrow a(t) \ge C,
-%  \end{equation}
-%  in which $C>0$ may depend on $\lambda$.
-  Then
-  \begin{itemize}
-  \item[1. ]the normal operator $F[m]^TF[m] + \alpha^2A^TA$ is
-    invertible for any $m \in M$, $\alpha > 0$;
-  \item[2. ]the solution $\aw[m;d]\in W$ of the normal equation
-    \ref{eqn:norm} is given by
-    \begin{equation}
-      \label{eqn:normsol}
-      \aw[m;d](t) = \left\{
-        \begin{array}{c}
-          \left(\frac{1}{(4\pi r)^2} + \alpha^2
-          a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr), t \in [t_{\rm
-          min}-mr, t_{\rm max}-mr];\\
-          0, \mbox{ else;}
-        \end{array}
-      \right.
-    \end{equation}
-  \item[3. ]if in addition $d=F[m_*]w_*, w_* \in \lW$ is noise-free, as in equation
-    \ref{eqn:defdatanonoise},
-    \begin{equation}
-      \label{eqn:solnonoise}
-      \aw[m,d](t)= \left(1+ (4\pi r)^2\alpha^2 a(t)^2\right)^{-1}w_*\left(t+(m-m_*)r\right).
-    \end{equation}
-  \end{itemize}
-\end{proposition}
-
-\begin{proof} of Theorem \ref{thm:norminv}:
-  \begin{itemize}
-  \item[1. ]Note that thanks to \ref{eqn:zeroinc}, if $|t|\le
-    \lambda \le \lambda_{\rm max}$, then ${\bf 1}_{[t_{\rm min}-mr,  
-      t_{\rm max}-mr]}(t) = 1$, whereas if $|t|>\lambda$,
-    then $a(t) \ge C$, whence
-    \[
-      \frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
-        t_{\rm max}-mr]} + \alpha^2a^2  \ge \min\{(4\pi r)^2,
-      \alpha^2\min\{1/(4\pi r)^2,C^2\} \}> 0.
-    \]
-    Therefore the normal operator is invertible under the stated
-    conditions.
-
-  \item[2. ]From the identity \ref{eqn:tran}.
-    \[
-      \mbox{supp }F[m]^Td \subset [t_{\rm min}-mr,t_{\rm max}-mr].
-    \]
-    Define $w_{\rm tmp}$ to be the right-hand side of equation \ref{eqn:normsol}. Then
-    from the previous observation and identity \ref{eqn:tran},
-    \[
-      \mbox{supp }w_{\rm tmp} \subset [t_{\rm min}-mr,t_{\rm max}-mr].
-    \]
-    From the identity \ref{eqn:unit}, for any $w \in W$,
-    \[
-      t \in [t_{\rm min}-mr,t_{\rm max}-mr] \Rightarrow F[m]^TF[m]w(t)
-      = \frac{1}{(4 \pi r)^2}w(t).
-    \]
-    It follows from this and the previous two observations that
-    $w_{\rm tmp}$ solves the normal equation \ref{eqn:norm}, and
-    therefore that $\aw[m;d]=w_{\rm tmp}$.
-
-  \item[3. ]Follows by inserting the definition
-    \ref{eqn:defdatanonoise} of $d$ in \ref{eqn:normsol} and
-    rearranging.
-  \end{itemize}
-\end{proof}
 
 %\begin{proof} of Theorem \ref{thm:norminv}: Since the normal operator
 %  is invertible (item 1 of Proposition \ref{thm:norminvexp}), the
@@ -1018,106 +1137,10 @@ With these choices, the normal equation \ref{eqn:norm1} becomes
 
 \subsection{Proof of Theorem \ref{thm:diffobj}}
 
-\begin{proposition}
-  \label{thm:epjgen}
-  Assume the hypotheses of Proposition \ref{thm:norminvexp}. Then
-  \begin{equation}
-  \label{eqn:residnormgen}
-  e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
-  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
-\end{equation}
-\begin{equation}
-  \label{eqn:anninormgen}
-  p[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
-  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)
-\end{equation}
 
-\begin{equation}
-  \label{eqn:expjgen}
-\tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
-a(t-mr))^2)^{-1}d(t)^2. 
-\end{equation}
-\end{proposition}
-
-\begin{proof}
-  From equation \ref{eqn:normsol},
-  \[
-    F[m]\aw[m;d](t) = 
-    \frac{1}{4 \pi r}\left(\frac{1}{(4\pi r)^2} + \alpha^2
-      a^2(t-mr)\right)^{-1}\frac{1}{4 \pi r}d(t),
-  \]
-  so
-  \[
-    (F[m]\aw[m;d]-d)(t) = (1 + (4 \pi r\alpha
-    a(t-mr))^2)^{-1}-1)d(t)
-  \]
-  \[
-    = -(4 \pi r\alpha a(t-mr))^2(1 + (4 \pi r\alpha
-    a(t-mr))^2)^{-1}d(t).
-  \]
-  Half the integral of the square of this data residual is
-  $e[m,\aw[m;d],d]$, which proves identity \ref{eqn:residnormgen}.
-
-  To compute $p[m,\aw[m;d],d]$, note that
-  \[
-    A\aw[m;d](t)=a(t) \left(\frac{1}{(4\pi r)^2} + \alpha^2
-      a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
-  \]
-  \[
-    = 4\pi r a(t) (1 + (4\pi r \alpha a(t))^2)^{-1}d(t+mr)
-  \]
-  for $ t \in [t_{\rm min}-mr, t_{\rm max}-mr]$, so squaring,
-  integrating, and changing integration variables $t \mapsto t-mr$
-  gives the result \ref{eqn:anninormgen}
-
-  That the VPM objective $\tJa$ is given by \ref{eqn:expjgen} follows from equations \ref{eqn:pen},
-  \ref{eqn:redexp}, \ref{eqn:residnormgen}, and
-  \ref{eqn:anninormgen}.
-\end{proof}
-
-\begin{proof} of Theorem \ref{thm:diffobj}:
-Suppose first that $a \in C^1(\bR)$. Differentiation under the integral sign  
-  yields the expression for its derivative:
-\begin{equation}
-  \label{eqn:dexpjgen}
-  \frac{d}{dm}\tJa[m;d] = -\frac{(4 \pi r \alpha)^2}{\|d\|^2} \int_{t_{\rm min}}^{t_{\rm max}} \,dt \, 
-  \left(a\frac{da}{dt}\right)(t-mr)(1+(4\pi r \alpha 
-  a(t-mr))^2)^{-2}d(t)^2. 
-\end{equation}
-For $a \in W^{1,\infty}_{\rm loc}(\bR)$ a limiting argument shows that the
-same expression gives the derivative of $\tJa$.
-\end{proof}
 
 \subsection{Proof of Theorem \ref{thm:boxcarbad}}
-\begin{corollary}
-  \label{thm:epjnonoise}
-  Assume the hypotheses of Proposition \ref{thm:norminvexp}, item
-  3. Then noting that $\|d\| = \|w_*\|/(4 \pi r)$
-\begin{equation}
-  \label{eqn:residnorm}
-  e[m,\aw[m,d];d] 
-= \frac{\alpha^4}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^4(1+(4\pi r)^2 \alpha^2 
-    a(t-(m-m^*)r)^2)^{-2}w_*(t)^2.
-\end{equation}
-\begin{equation}
-  \label{eqn:anninorm}
-  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
-    a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
-\end{equation}
-so 
-\begin{equation}
-\label{eqn:expjnonoise}
-\tJa[m;d] = \frac{(4\pi r \alpha)^2}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
-  a(t-(m-m_*)r)^2)^{-1}w_*(t)^2. 
-\end{equation}
-Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, and 
-\begin{equation}
-  \label{eqn:dexpjnonoise}
-  \frac{d}{dm}\tJa[m;d] = -\frac{r (4\pi r \alpha)^2}{\|w_*\|^2} \int \,dt \, 
-  \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
-  a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
-\end{equation}
-\end{corollary}
+
 
 \begin{proof} of Theorem \ref{thm:boxcarbad}
   
