@@ -12,6 +12,8 @@ Examples illustrating preconditioner developed in the text.
 
 \inputdir{project}
 
+\section{Approximate Inversion}
+
 These examples are based on two different material models. The first is a homogeneous model, with $\kappa=4.0$ GPa and $\rho=1.0$ g/cm$^{3}$. Figure \ref{fig:ptpwindh0} shows the shot gather computed in the configuration descritbed above for this choice of propagation medium. As mentioned in the preceding section, the velocity traces can be recorded in the same IWAVE workflow: these are displayed in 
 \ref{fig:ptvzwindh0}. 
 
@@ -34,4 +36,51 @@ The first group of plots show pressure traces for source position $z_s=3$ km, $x
 \plot{srcvzgll0}{width=15cm}{Source reconstructed from $v_z$ traces in Figure \ref{fig:ptvzwindll0} by time reversal (approximate inverse) algorithm explained in text, propagation in bulk modulus of Figure \ref{fig:bml0} (that is, ``correct velocity'').}
 \plot{reptpwindll0}{width=15cm}{Resimulated pressure data from reconstructed source if Figure \ref{fig:srcvzgll0}, both approximate inversion and re-simulation in bulk modulus of Figure \ref{fig:bml0} (``correct velocity'').} 
 \plot{trcftrll0}{width=15cm}{Middle trace from pressure, resimulated pressure traces in Figures \ref{fig:ptpwindll0}, \ref{fig:reptpwindll0}.}
+
+
+\section{Dirichlet-to-Neumann map}
+
+If the  (causal) pressure field $p$ is specified and continuous across $z=z_s$, then the acoustic fields are uniquely determined in $z<z_s$ and $z>z_s$. In particular, limits of  the normal ($z$) component of velocity  as $z\rightarrow z_s^{\pm}$ are determined, and the jump discontinuity in $z$ is equal to the surface pressure source generating the fields. The limits from the two sides are equal except for sign, therefore the surface source is equal to twice the limiting boundary value of the normal velocity.
+
+Similarly, specification of the (continuous) normal velocity uniquely determines the acoustic fields on either side of the surface $z=z_s$. The limits of the pressure as $z \rightarrow z_s^{\pm}$ have opposite signs and the jump discontinuity is equal to the surface normal velocity source generating the fields.
+
+The last observation leads to a prescription for computing the map from pressure trace on $z=z_s$ to normal velocity on $z=z_s$: form the surface source equal to twice the pressure trace (to account for the change of sign across the surface); solve the acoustic problem with this source; read off the normal component of velocity on $z=z_s$.
+
+Note that IWAVE treats every right-hand side point as defining a point source, that is, an amplitude divided by $\Delta x \Delta z$. Since the surface source is a surface $\delta$, that is (numerical approximation) an amplitude divided by $\Delta z$, it is necessary to precondition the source by multiplying the amplitude by $\Delta x$. Since the discontinuity is equal to twice the source amplitude, another factor of 2 is required. Finally, IWAVE does not include the bulk modulus and bulk modulus coefficients in the source injection, so these must also be multiplied in.
+
+The upshot is the cycle represented in the figures \ref{fig:srcvzhh0},  \ref{fig:resrcvzhh0}, \ref{fig:srcvzlh0},  \ref{fig:resrcvzlh0}. Figure \ref{fig:srcvzhh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{fig:ptpwindh0} at $z_r=1$ km, propagation and backpropagation in homogeneous material model with $\kappa = $ 4 Gpa, $\rho = $ 1 g/m$^{-6}$.The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzhh0}. The difference is displayed as figure \ref{fig:dresrcvzhh0}.
+
+Similarly, Figure \ref{fig:srcvzlh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{ptpwindl0} at $z_r=1$ km, propagation in the model with the model with bulk modulus displayed in Figure \ref{fig:bml0} and density $\rho = $ 1 g/m$^{-6}$, and backpropagation in the homogeneous model with bulk modulus = 4 GPa. The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzlh0}. The difference is displayed as figure \ref{fig:dresrcvzlh0}.
+
+%%%%%%%%%%%%%%%%%%%
+
+\plot{srcptphh0}{width=15cm}{Pressure traces corresponding to the pressure traces of Figure \ref{fig:ptpwindhh0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{srcvzhh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindhh0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{resrcvzhh0}{width=15cm}{Output of synthetic DtoN map: $v_z$ traces for velocity source scaled from display \ref{fig:srcptphh0}.}
+
+\plot{dresrcvzhh0}{width=15cm}{Difference of figures \ref{fig:srcvzhh0}, \ref{fig:resrcvzhh0}.}
+
+\plot{srcptplh0}{width=15cm}{Pressure traces corresponding to the pressure traces of Figure \ref{fig:ptpwindll0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{srcvzlh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindll0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{resrcvzlh0}{width=15cm}{Output of synthetic DtoN map: $v_z$ traces for source scaled from display \ref{fig:srcptplh0}.}
+
+\plot{dresrcvzlh0}{width=15cm}{Difference of figures \ref{fig:srcvzlh0}, \ref{fig:resrcvzlh0}.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\plot{srcvzhh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindhh0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{resrcptphh0}{width=15cm}{Output of synthetic  NtoD map: pressure traces for source scaled from display \ref{fig:srcvzhh0}.}
+
+\plot{dresrcptphh0}{width=15cm}{Difference of figures \ref{fig:srcptphh0}, \ref{fig:resrcptphh0}.}
+
+\plot{srcvzlh0}{width=15cm}{$v_z$ traces corresponding to the pressure traces of Figure \ref{fig:ptpwindll0}, backpropagated in homogeneous medium with $\kappa = $ 4 GPa, density = 1 g/cm$^3$.}
+
+\plot{resrcptplh0}{width=15cm}{Output of synthetic NtoD map: pressure traces for source scaled from display \ref{fig:srcvzlh0}.}
+
+\plot{dresrcptplh0}{width=15cm}{Difference of figures \ref{fig:srcptplh0}, \ref{fig:resrcptplh0}.}
 
