@@ -12,32 +12,54 @@
   produce an optimization problem without spurious local minima
   (``cycle skipping''), hence efficiently solvable via Newton-like
   local optimization methods. The data consist of a single trace
-  recorded at a given distance from a point source. The velocity or
-  slowness is presumed homogeneous, and the target source wavelet is
-  presumed quasi-impulsive or localized near zero time lag. The source
-  is extended by permitting energy to spread in time, and the spread
-  is controlled by adding a weighted mean square of the extended
-  source wavelet to the data misfit, to produce the extended inversion
-  objective. The objective function and its gradient can be computed
-  explicitly, and it is easily seen that the error in any local
-  minimizer is bounded by a multiple of the permitted energy spread,
-  which may be interpreted as a wavelength. The derivation shows several
-  important features of all similar extended source algorithms. For
-  example, nested optimization, with the source estimation in the
-  inner optimization (variable projection method), is essential. The
-  choice of the penalty operator, controlling the extended source
-  degrees of freedom, is critical: in order to produce an objective
-  immune from cycle-skipping, the penalty operator must be
-  (pseudo-)differential. The penalty weight is chosen dynamically,
-  according to a version of the Discrepancy Principle, in order to
-  accelerate convergence to a near-global minimum. Like many other
-  extended formulations, the example problem considered here permits
-  the discrepancy criterion to be satisfied with zero penalty
-  weight. This unusual feature removes a common obstacle to the use of
-  the discrepancy principle, namely the determination of a
-  satisfactory initial estimate of the penalty weight: the initial weight may
-  be set to zero, and the dynamic algorithm updates the weight until
-  convergence is achieved.
+  extracted from a causal pressure field, propagating in a fluid
+  according to linear acoustics and recorded at a given distance from
+  a transient point energy source. The velocity or slowness of the
+  fluid is presumed homogeneous, and the target source intensity
+  (``wavelet'') is presumed quasi-impulsive, with zero energy for time
+  lags greater than a specified maximum lag (specified support). The
+  data are assumed noisy, with known RMS signal-to-noise ratio. The
+  inverse problem is: from the recorded trace, recover both the sound
+  velocity and source wavelet with specified support, so that the data
+  is fit with prescribed RMS relative error. After showing explicitly that
+  the obvious least squares objective has multiple large residual
+  minimizers, we introduce an extended approach. The source is extended by
+  permitting energy to spread in time. The spread is controlled by
+  adding a weighted mean square of the extended source wavelet to the
+  data misfit, to produce the extended inversion objective. We choose
+  a weight operator to penalize source energy away from zero lag via
+  multiplication by the time lag. The resulting objective function and
+  its gradient can be computed explicitly. We show that the error in 
+  slowness component of any local minimizer is bounded by multiple of
+  the maximum lag and the assumed noise level. In particular, there
+  are no spurious local minima. We also show that the projection of
+  the extended wavelet onto the interval of support yields a solution
+  of the inverse problem as posed above, with appropriate choice of
+  maxiumum lag and RMS relative error. In several appendices, we
+  describe a constructive algorithm for controlling the penalty
+  weight, the relation between maxiumum lag and RMS central frequency
+  via the Heisenberg principle, and some structural details which the
+  very simple inverse problem discussed here shares with more
+  prototypical problems in industrial and academic seismology.
+  
+  %which may be interpreted as a wavelength.
+  %The derivation shows
+  %several important features of all similar extended source
+  %algorithms. For example, nested optimization, with the source
+  %estimation in the inner optimization (variable projection method),
+  %is essential. The choice of the penalty operator, controlling the
+  %extended source degrees of freedom, is critical: in order to produce
+  %an objective immune from cycle-skipping, the penalty operator must
+  %be (pseudo-)differential. The penalty weight is chosen dynamically,
+  %according to a version of the Discrepancy Principle, in order to
+  %accelerate convergence to a near-global minimum. Like many other
+  %extended formulations, the example problem considered here permits
+  %the discrepancy criterion to be satisfied with zero penalty
+ % weight. This unusual feature removes a common obstacle to the use of
+  %the discrepancy principle, namely the determination of a
+  %satisfactory initial estimate of the penalty weight: the initial
+ % weight may be set to zero, and the dynamic algorithm updates the
+ % weight until convergence is achieved.
 
 \end{abstract}
 
@@ -925,6 +947,13 @@ orthocomplement, an operator of the form \ref{eqn:annmult} with $a
   \]
 \end{theorem}
 
+\begin{proof} of Theorem \ref{thm:boxcarbad}
+  
+ This is clear from the definition $a = 1-{\bf 1}_{-\lambda,\lambda]}$ and equation \ref{eqn:expjnonoise}, as the supports of $w_*$ and ${\bf
+    1}_{[-\lambda,\lambda]}(t-(m-m_*))$ are disjoint for the range of
+  $m$ identified in the theorem.
+\end{proof}
+
 \noindent {\bf Remark.}
 One might have thought that $A=E^c_{\lambda}$ would be a better choice
 of annihilator, as for noise-free
@@ -956,200 +985,6 @@ particular annihilator has been employed in earlier papers on extended
 source inversion 
 \cite[]{Plessix:00a,LuoSava:11,Warner:14,HuangSymes:SEG15a,Warner:16,HuangSymes:GEO17}.
 
-\begin{theorem}
-  \label{thm:mnoiseres}
-  Asumme that
-  \begin{itemize}
-  \item[1. ] $\alpha, \mu> 0$,
-  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
-  \item[3. ] $d_* = F[m_*]w_*$,
-  \item[4. ] $n \in D$ and $d = d_* + n$.
-  \end{itemize}
-  Set $\eta = \|n\|/\|d_*\|$, and assume further that
-  \begin{itemize}
-  \item[5. ]
-    \begin{equation}
-      \label{eqn:mnoisecond}
-      \eta < \frac{\sqrt{5}-1}{2}, and
-    \end{equation}
-  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
-  \end{itemize}
-  Then
-  \begin{equation}
-    \label{eqn:mnoisesuff}
-    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
-  \end{equation}
-\end{theorem}
-
-\noindent {\bf Remark.} That is, {\em with the choice of penalty
-  multiplier $a$ given in equation \ref{eqn:ann}, and support radius
-  $\mu$ of the ``noise-free'' wavelet $w_*$, $\Ja$ has no local
-  minima with slownesses further than $(1+O(\eta))\mu/r)$ from the slowness used to
-  generate the data}.
-
-\noindent {\bf Remark.} The estimate $|m-m_*|r<\mu(1+O(\eta))$ for
-local minima of $\Ja$ is sharp: it is possible to choose $w_* \in W_{\mu}$
-so that $\mu - |m-m_*|r$ is as small as you like. In particular,
-the ``exact'' or ``true'' slowness $m_*$ is not necessarily the only
-slowness component of a local minimizer, or even the slowness
-component of any local minimizer, and in particular
-is not (necessarily) the slowness component of a global minimizer of $\Ja$.
-
-\noindent {\bf Remark.} No similar bound could hold for much larger
-noise levels than specified in condition \ref{eqn:mnoisecond}, the
-right-hand side of which is a bit larger than 0.6. For example, if the noise is
-the predicted data for the same wavelet $w_*$ with a substantially different
-slowness $m_{\flat}$, that is, $n=F[m_{\flat}]w_*$, then a simple
-symmetry argument shows that if there is a local minimizer of $\Ja[\cdot,\cdot;d_*+n]$. with
-slowness near $m_*$,
-there must also be a minimizer with slowness near $m_{\flat}$.
-so that the difference with $m_*$ is not constrained at
-all by the assumed support radius of $w_*$. So for this example with 100\% noise, no
-bound of the type given by conclusion 2 could possibly hold. We will
-illustrate this phenomenon numerically later in the paper.
-
-\noindent{\bf Remark.} Note that $\alpha$ plays no role in the
-conclusions of this theorem. It is only required that $\alpha >0$.
-
-Unless the data is noise-free, there is no reason to suppose that the
-estimated wavelet $\aw[m;d]$ (Theorem \ref{thm:norminv}) will lie in
-$\lW$, unless the support of the noise $n$ is not restricted. In order
-to construct a solution of the inverse problem \ref{eqn:probstat0}, we
-project $\aw[m;d]$ onto $\lW$. For sufficiently large $\lambda,
-\epsilon$, the result is a solution of the inverse problem:
-
-\begin{theorem}
-  \label{thm:ipnoisesuf}
-  Assume the hypotheses of Theorem \ref{thm:mnoiseres}, and that
-  inequality \ref{eqn:mnoisecond} holds, and $\mu \in
-  (0,\lambda_{\rm max}]$. Then the pair
-  \[
-    (m,{\bf 1}_{[-\lambda,\lambda]}\aw[m,d])
-  \]
-  solves the inverse problem as stated in \ref{eqn:probstat0} if
-  \begin{equation}
-    \label{eqn:ipnoiselam}
-    \left( 2+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\mu \le \lambda
-    \le \lambda_{\rm max}, 
-  \end{equation}
-  and
-  \begin{equation}
-    \label{eqn:ipnoiseeps}
-    \epsilon \ge (4 \pi r \alpha\lambda)^2+\eta. 
-  \end{equation}    
-\end{theorem}
-
-\noindent {\bf Remark:} Note that the sufficient condition \ref{eqn:ipnoiselam} for
-$\lambda$ is independent of $\alpha$. It follows that for any choice
-of $\lambda$ consistent with this bound, $(m,{\bf
-  1}_{[-\lambda,\lambda]}\aw[m,d])$ is a solution of the inverse
-problem for any $\epsilon > 0$ provided that $\alpha$ is chosen
-sufficiently small ($O(\sqrt{\epsilon})$).
-
-
-
-\subsection{Proof of Theorem \ref{thm:fwi}}
-
-
-%A natural formulation of the Problem Statement \ref{eqn:probstat0} is
-%via least squares: that is, given $d \in D$, $\lambda >0$, find
-%$(m,w) \in M \times \lW$ to minimize
-%$\lerr: M \times W \rightarrow \bR$, defined in display
-%\ref{eqn:redms}.  A pair $(m,w) \in M\times \lW$ satisfies the
-%condition \ref{eqn:probstat0} iff $\lerr[m,w;d] \le \epsilon^2/2$, so a
-%solution exists iff a global minimizer of $\lerr$ satisfies this
-%inequality.
-
-%In this discussion, I will presume that $d$ is 
-%noise-free, as defined at the end of the last section (equation
-%\ref{eqn:defdatanonoise}). Thus {\em a priori} a global minimizer of
-%$e$ is a solution of the Problem Statement for any
-%$\epsilon > 0$. The only
-%question is how to find such a global minimizer. As mentioned in the
-%introduction, the simple model problem studied here is a proxy for
-%large-scale data fitting problems for which the only computationally
-%feastible approach to minimization of analogs of $e$
-%is some form of descent-based iterative local optimization. Any such
-%algorithm requires the specification of an initial iterate
-%$(m_0,w_0)$. Therefore the key question is: what
-%constraints must be imposed on $(m_0,w_0)$ in order that the resulting
-%sequence of iterates convertes to a global minimizer?  
-
-
-%\begin{theorem}
-%  \label{thm:fwi}
-%  Suppose that $0 <\lambda\le \lambda_{\rm max}$,  $m_* \in M, w_*
-%  \in \lW, d=\lF[m_*]w_*$ is noise-free data per definition \ref{eqn:defdatanonoise},
-%  Under assumption \ref{eqn:fullrec}, for any $m \in M$ with $r|m-m_*|>2\lambda$,
-%\begin{equation}
-%  \label{eqn:isovpm}
-% \min_w e[m,w;d]=e[m,0,d]=\frac{1}{32\pi^2 r^2}\|w_*\|^2,
-%\end{equation}
-%and any such $(m,0)$ is a stationary point of $e$.
-%\end{theorem}
-
-
-
-
-
-%\begin{theorem}
-%\label{thm:red}
-%$\Ja[m,\cdot;d]$ is invertible:
-%\begin{equation}
-%\label{eqn:norminv}
-%F[m]^TF[m] +\alpha^2 A^TA \in {\cal I}(W,W).
-%\end{equation}
-%(The superscript $T$ denotes the adjoint with respect to the inner products 
-%in $W=L^2(\bR)$ and $D=L^2([t_{\rm min},t_{\rm max}])$.)
-%Then the unique stationary point $\aw[m;d] \in W$ of
-%$\Ja[m,\cdot;d]$ is a global minimizer, and is the solution of the {\em normal equation}:
-%\begin{equation}
- % \label{eqn:norm}
-  %(F[m]^TF[m]+\alpha^2A^TA)w= F[m]^Td, 
-%\end{equation}
-%The reduced or variable projection objective $\tJa$ defined in
-%equation \ref{eqn:redexp} is also given by
-%\begin{equation}
- % \label{eqn:redexp1}
- % \tJa[m;d] =\Ja[m,w_{\alpha}[m;d];d] = \min_w \Ja[m,w;d]
-%\end{equation}
-%Then $(m,w)$ is a local minimizer of $\Ja[\cdot,\cdot;d]$ if and only
-%if $m$ is a local minimizer of $\tJa[\cdot;d]$ and $w=\aw[m;d]$.
-%\end{theorem}
-
-%\noindent{\bf Remark:} The choice
-%of penalty weight $\alpha$ has a significant influence on the
-%performance of numerical optimization algorithms in minimizing
-%$\Ja$ and/or $\tJa$, but relatively little influence on the error estimates to
-%follow. For the discussion of these estimates, we assume only that
-%$\alpha>0$. Appendix A contains a description of an algorithm for
-%constructive determination of $\alpha$.
-
-\subsection{Proof of Theorem \ref{thm:norminv}}
-
-
-
-%\begin{proof} of Theorem \ref{thm:norminv}: Since the normal operator
-%  is invertible (item 1 of Proposition \ref{thm:norminvexp}), the
-%  conclusions of this theorem follow from the Lax-Milgram Theorem
-%  (\cite{Yosida}, III.7).
-%\end{proof}
-
-\subsection{Proof of Theorem \ref{thm:diffobj}}
-
-
-
-\subsection{Proof of Theorem \ref{thm:boxcarbad}}
-
-
-\begin{proof} of Theorem \ref{thm:boxcarbad}
-  
- This is clear from the definition $a = 1-{\bf 1}_{-\lambda,\lambda]}$ and equation \ref{eqn:expjnonoise}, as the supports of $w_*$ and ${\bf
-    1}_{[-\lambda,\lambda]}(t-(m-m_*))$ are disjoint for the range of
-  $m$ identified in the theorem.
-\end{proof}
-
-\subsection{Proof of Theorem \ref{thm:mnoiseres}}
 \begin{proposition}
   \label{thm:rampgood}
   Suppose that
@@ -1454,6 +1289,31 @@ appealing, and is supported by numerical evidence, as shown below.
 %    \end{itemize}
 %\end{corollary}
 
+\begin{theorem}
+  \label{thm:mnoiseres}
+  Asumme that
+  \begin{itemize}
+  \item[1. ] $\alpha, \mu> 0$,
+  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
+  \item[3. ] $d_* = F[m_*]w_*$,
+  \item[4. ] $n \in D$ and $d = d_* + n$.
+  \end{itemize}
+  Set $\eta = \|n\|/\|d_*\|$, and assume further that
+  \begin{itemize}
+  \item[5. ]
+    \begin{equation}
+      \label{eqn:mnoisecond}
+      \eta < \frac{\sqrt{5}-1}{2}, and
+    \end{equation}
+  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
+  \end{itemize}
+  Then
+  \begin{equation}
+    \label{eqn:mnoisesuff}
+    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
+  \end{equation}
+\end{theorem}
+
 \begin{proof} of Theorem \ref{thm:mnoiseres}:
   Write $\lambda = (1+\delta)\mu$, and $x=4 \pi r \alpha \mu$. Then
   the right-hand side of equation \ref{eqn:mnoisebnd} may be written as
@@ -1495,6 +1355,36 @@ appealing, and is supported by numerical evidence, as shown below.
   Proposition \ref{thm:mnoise} finishes the proof.
 \end{proof}
 
+\noindent {\bf Remark.} That is, {\em with the choice of penalty
+  multiplier $a$ given in equation \ref{eqn:ann}, and support radius
+  $\mu$ of the ``noise-free'' wavelet $w_*$, $\Ja$ has no local
+  minima with slownesses further than $(1+O(\eta))\mu/r)$ from the slowness used to
+  generate the data}.
+
+\noindent {\bf Remark.} The estimate $|m-m_*|r<\mu(1+O(\eta))$ for
+local minima of $\Ja$ is sharp: it is possible to choose $w_* \in W_{\mu}$
+so that $\mu - |m-m_*|r$ is as small as you like. In particular,
+the ``exact'' or ``true'' slowness $m_*$ is not necessarily the only
+slowness component of a local minimizer, or even the slowness
+component of any local minimizer, and in particular
+is not (necessarily) the slowness component of a global minimizer of $\Ja$.
+
+\noindent {\bf Remark.} No similar bound could hold for much larger
+noise levels than specified in condition \ref{eqn:mnoisecond}, the
+right-hand side of which is a bit larger than 0.6. For example, if the noise is
+the predicted data for the same wavelet $w_*$ with a substantially different
+slowness $m_{\flat}$, that is, $n=F[m_{\flat}]w_*$, then a simple
+symmetry argument shows that if there is a local minimizer of $\Ja[\cdot,\cdot;d_*+n]$. with
+slowness near $m_*$,
+there must also be a minimizer with slowness near $m_{\flat}$.
+so that the difference with $m_*$ is not constrained at
+all by the assumed support radius of $w_*$. So for this example with 100\% noise, no
+bound of the type given by conclusion 2 could possibly hold. We will
+illustrate this phenomenon numerically later in the paper.
+
+\noindent{\bf Remark.} Note that $\alpha$ plays no role in the
+conclusions of this theorem. It is only required that $\alpha >0$.
+
 \noindent {\bf Remark:} We emphasize that Theorem \ref{thm:mnoiseres} states {\em sufficient} conditions for a bound on
 the slowness error $|m-m_*|$ in terms of the relative data noise level $\eta$,
 giving an additional ``fudge factor'' beyond the support size $\mu$
@@ -1518,11 +1408,35 @@ coefficient of $\eta$ on the left-hand side of inequality
 \ref{eqn:mnoisebnd} is effectively much less that 1, resulting in a
 larger range of allowable $\eta$. While we will not formulate such a
 result, one of the numerical examples below suggests its feasibility.
-  
-    % Recall that $\lE$ is the projection of $W$ onto $\lW$
-%(i.e. multiplication by ${\bf 1}_{[-\lambda,\lambda]}$.
 
-\subsection{Proof of Theorem \ref{thm:ipnoisesuf}}
+Unless the data is noise-free, there is no reason to suppose that the
+estimated wavelet $\aw[m;d]$ (Theorem \ref{thm:norminv}) will lie in
+$\lW$, unless the support of the noise $n$ is not restricted. In order
+to construct a solution of the inverse problem \ref{eqn:probstat0}, we
+project $\aw[m;d]$ onto $\lW$. For sufficiently large $\lambda,
+\epsilon$, the result is a solution of the inverse problem:
+
+\begin{theorem}
+  \label{thm:ipnoisesuf}
+  Assume the hypotheses of Theorem \ref{thm:mnoiseres}, and that
+  inequality \ref{eqn:mnoisecond} holds, and $\mu \in
+  (0,\lambda_{\rm max}]$. Then the pair
+  \[
+    (m,{\bf 1}_{[-\lambda,\lambda]}\aw[m,d])
+  \]
+  solves the inverse problem as stated in \ref{eqn:probstat0} if
+  \begin{equation}
+    \label{eqn:ipnoiselam}
+    \left( 2+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\mu \le \lambda
+    \le \lambda_{\rm max}, 
+  \end{equation}
+  and
+  \begin{equation}
+    \label{eqn:ipnoiseeps}
+    \epsilon \ge (4 \pi r \alpha\lambda)^2+\eta. 
+  \end{equation}    
+\end{theorem}
+
 \begin{proof} of Theorem \ref{thm:ipnoisesuf}:
 From Theorem \ref{thm:norminv}, 
 \[
@@ -1609,6 +1523,14 @@ preceding inequality is bounded by the right hand side of assumption
 \ref{eqn:ipnoiseeps} of the theorem. Therefore this assumption implies
 that the relative residual is $\le \epsilon$.
 \end{proof}
+
+\noindent {\bf Remark:} Note that the sufficient condition \ref{eqn:ipnoiselam} for
+$\lambda$ is independent of $\alpha$. It follows that for any choice
+of $\lambda$ consistent with this bound, $(m,{\bf
+  1}_{[-\lambda,\lambda]}\aw[m,d])$ is a solution of the inverse
+problem for any $\epsilon > 0$ provided that $\alpha$ is chosen
+sufficiently small ($O(\sqrt{\epsilon})$).
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
