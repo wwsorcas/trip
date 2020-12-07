@@ -104,11 +104,12 @@ J_{\rm FWI}[m;w_{\lambda},d] = \|d\|^2, \,\, \nabla_m J_{\rm FWI}[m;w_{\lambda},
 \]
 }
 \only<4>{
-$J_{\rm FWI}[m;w_{\lambda},d]$, $d=F[m_*]w_{\lambda}$, $w_{\lambda}$ = Ricker wavelet center frequency = $1/\lambda$, $m_*=0.4$ s/km, $h=1 km$
+$J_{\rm FWI}[m;w_{\lambda},d]$, $d=F[m_*]w_{\lambda}$, $w_{\lambda}$ = Ricker ctr freq = $1/\lambda$, $m_*=0.4$ s/km, $h=1$ km
+\vspace{-0.75cm}
 \begin{center}
-\includegraphics[height=4cm]{Fig/FWI.png}
+\includegraphics[height=5cm]{Fig/FWI.png}
 \end{center}
-Red: $\lambda=0.05$ (20 Hz), Blue: $\lambda = 0.25$ (40 Hz) [H. Chen et al. SEG 20]
+Red: $\lambda=0.05$ s (20 Hz), Blue: $\lambda = 0.025$ s (40 Hz) [H. Chen et al. SEG 20]
 }
 \only<5>{
 Postmortem:
@@ -177,7 +178,7 @@ $e[m]=F[m]q-d$ = usual data residual
 
 WRI: given $q,d$, 
 \[
-\min_{m,g} \|F[m]g+e[m]|^2 + \alpha^2 \|g|^2
+\min_{m,g} \|F[m]g+e[m]\|^2 + \alpha^2 \|g\|^2
 \]
 }
 \only<5>{
@@ -189,7 +190,7 @@ J_{\rm WRI}[m;q,d] = \min_{g} \|F[m]g+e[m]\|^2 + \alpha^2 \|g\|^2
 \]
 minimizer = $g[m;q,d]$, then
 \[
-=\|F[m]g[m;q,d]+e[m]|^2 + \alpha^2 \|g[m;q,d]\|^2
+=\|F[m]g[m;q,d]+e[m]\|^2 + \alpha^2 \|g[m;q,d]\|^2
 \]
 $m$ minimizes $J_{\rm WRI}$ $\Leftrightarrow$ $(m,g[m;q,d])$ solves WRI problem 
 }
