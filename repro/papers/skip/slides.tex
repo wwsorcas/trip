@@ -98,17 +98,18 @@ Scaled wavelets $w_{\lambda} = \frac{1}{\sqrt{\lambda}}w_1(t/\lambda)$: $w_{\lam
 
 NB: if center frequency of $w_1 = \omega_1$, then center frequency of $w_{\lambda} = \omega_1/\lambda$
 
-Theorem Uh-Oh: If $d = F[m_*]w_{\lambda}$ (noise-free transient data) and $|m-m_*| > 2\lambda/r$, then
+Theorem Uh-Oh: If $d = F[m_*]w_{\lambda}$ (noise-free transient data) and $|m-m_*| > 2\lambda/h$, then
 \[
 J_{\rm FWI}[m;w_{\lambda},d] = \|d\|^2, \,\, \nabla_m J_{\rm FWI}[m;w_{\lambda},d] = 0
 \]
 }
 \only<4>{
-$J_{\rm FWI}[m;w_{\lambda},d]$, $d=F[m_*]w_{\lambda}$, $w_{\lambda}$ = Ricker ctr freq = $1/\lambda$, $m_*=0.4$ s/km, $h=1$ km
-\vspace{-0.75cm}
+$J_{\rm FWI}$: $d=F[m_*]w_{\lambda}$, $m_*=0.4$ s/km, $w_{\lambda}$ = Ricker ctr freq = $1/\lambda$ Hz, $h=1$ km
+\vspace{-0.5cm}
 \begin{center}
 \includegraphics[height=5cm]{Fig/FWI.png}
 \end{center}
+\vspace{-0.5cm}
 Red: $\lambda=0.05$ s (20 Hz), Blue: $\lambda = 0.025$ s (40 Hz) [H. Chen et al. SEG 20]
 }
 \only<5>{
@@ -141,12 +142,9 @@ Rationale: more likely to be able to
 Cast: 
 \begin{itemize}
 \item model parameters $m$ (eg. $m$=slowness)
-\item Wave operator $L[m]$ (eg. constant density acoustic op
-\[
-\left. L[m]=m^2\frac{\partial^2}{\partial t^2} - \nabla^2\right)
-\]
+\item Wave operator $L[m]$ (eg. constant density acoustic op $L[m]=m^2\partial_t^2 - \nabla^2$)
 \item Known (!) source field $q(\bx,t)$ (eg. point source $w(t)\delta(\bx-\bx_s)$
-\item dynamic fields $u(\bx,t)$ solve $L[m]u=q$ (eg. $u=$ pressure
+\item dynamic fields $u(\bx,t)$ solve $L[m]u=q$ (eg. $u=$ pressure)
 \item Sampling operator $P$ extracts data trace(s) (pressure or ...) from $u$
 \item Modeling operator $F[m]=PL[m]^{-1}$
 \end{itemize}
@@ -211,6 +209,7 @@ so
 \[
 J_{\rm WRI}[m;q,d] = \min_s \|F[m]F[m]^Ts-e[m]\|^2 + \alpha^2\|F[m]^Ts\|^2 
 \]
+NB: $g$ is space-time field, $s$ is data - vast memory reduction, practical 3D time domain (Yingst \& Wang SEG 16, Rizzuti et al. SEG 19)
 }
 \only<7>{
 Simplification 3:
@@ -260,7 +259,7 @@ Postmortem:
 }
 \end{frame}
 
-\begin{frame}\frametitle{Matched Source Extension}
+\begin{frame}\frametitle{Matched Source Inversion}
 \only<1>{
 Back to FWI setting:
 \[
@@ -272,11 +271,71 @@ However, $F[m]$ is invertible for every $m$, so need constraint on $w$
 
 Idea: after signature decon, wavelet should be {\em compact} $\sim$ nonzero only near $t=0$ - inspires {\em Matched Source Objective}
 \[
-\min_{m,w} \|F[m]w-d\|^2 + \|Aw\|^2, \,\,Aw(t)=tw(t)
+\min_{m,w} \|F[m]w-d\|^2 + \alpha^2\|Aw\|^2, \,\,Aw(t)=tw(t)
 \]
 (S. 94, Plessix et al. 99, similar to Adaptive Waveform Inversion (AWI) Warner \& Guatsch 14)
 }
+\only<2>{
+Variable Projection: 
+\[
+J_{\rm MSI}[m;d] = \min_w \|F[m]w-d\|^2 +\alpha^2 \|Aw\|^2
+\]
+Minimizer $w[m;d]$ solves normal equation
+\[
+(F[m]^TF[m] + \alpha^2A^TA) w = F[m]^T d
+\]
+Explicit calculation:
+\[
+F[m]^TF[m] + \alpha^2A^TA = \left(\frac{1}{(4\pi h)^2} + \alpha^2 t^2\right)I, \,\,F[m]^Td(t) = \frac{1}{4\pi h}d(t+mh)
+\]
+}
+\only<3>{
+Plug it in, get explicit formulas for everything - in particular, if data is noise-free, $d=F[m_*]w_{\lambda}$, then
+\[
+\nabla_m J_{\rm MSI}[m;d] = -h \alpha^2 \int \,dt\, \frac{t-(m-m_*)h}{(1+(4\pi h \alpha (t-(m-m_*)h))^2)^2}w_{\lambda}(t)^2
+\]
+
+Theorem Ah-Ha! If $d=F[m_*]w_{\lambda}$,
+\[
+\nabla_m J_{\rm MSI}[m;d] \left\{\begin{array}{c}
+< 0 \mbox{ if }m < m_*-\lambda/h\\
+> 0 \mbox{ if }m > m_*+\lambda/h
+\end{array}
+\right.
+\]
+$\Rightarrow$ if $m$ is stationary point of $J_{\rm MSI}[\cdot;d]$, then $|m-m_*| \le \lambda$.
+}
+\only<4>{
+$J_{\rm MSI}$: $d=F[m_*]w_{\lambda}$, $m_*=0.4$ s/km, $w_{\lambda}$ = Ricker ctr freq = $1/\lambda$ Hz, $h=1$ km, $\alpha=1 s^{-1}km^{-1}$
+\vspace{-0.5cm}
+\begin{center}
+\includegraphics[height=5cm]{Fig/VPM.png}
+\end{center}
+\vspace{-0.5cm}
+Red: $\lambda=0.05$ s (20 Hz), Blue: $\lambda = 0.025$ s (40 Hz) [H. Chen et al. SEG 20]
+}
+\only<5>{
+$J_{\rm MSI} vs. J_{\rm FWI}$: $d=F[m_*]w_{\lambda}$, $m_*=0.4$ s/km, $w_{\lambda}$ = Ricker ctr freq = 40 Hz ($\lambda = 0.025$ s), $h=1$ km, $\alpha=1 s^{-1}km^{-1}$
+\vspace{-0.5cm}
+\begin{center}
+\includegraphics[height=5cm]{Fig/FWI-VPM-40.png}
+\end{center}
+\vspace{-0.5cm}
+Red: MSI, Blue: FWI [H. Chen et al. SEG 20]
+}
+\only<6>{
+$J_{\rm MSI} vs. J_{\rm FWI}$: $d=F[m_*]w_{\lambda}+n$, $n$ = 100\% RMS filtered stationary random noise, otherwise same
+\vspace{-0.5cm}
+\begin{center}
+\includegraphics[height=5cm]{Fig/FWI-VPM-noisy.pdf}
+\end{center}
+\vspace{-0.5cm}
+Red: MSI, Blue: FWI [H. Chen]
+}
 \end{frame}
+
+
+
 \end{document}
 
 
