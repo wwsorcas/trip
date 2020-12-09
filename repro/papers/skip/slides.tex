@@ -63,7 +63,23 @@
 \titlepage
 }
 
-\begin{frame}\frametitle{How to Cycle-Skip, in one easy lesson}
+\begin{frame}\frametitle{Overview}
+Apply sophisticated methods to a simple inversion problem
+
+Why:
+\begin{itemize}
+\item clear understanding of what works and what doesn't, and why
+\item all details ``on paper''
+\item conclusions not justified only ``in rear view mirror'' by a few numerical examples
+\item road map for application to industrially relevant technology
+\end{itemize}
+
+{\em ``You can do this at home!''}
+
+Thanks to Prof. Sue Minkoff and GRA Huiyi Chen, UT Dallas
+\end{frame}
+
+\begin{frame}\frametitle{World's simplest waveform inversion problem}
 \only<1>{
 Single trace transmission in a fluid:
 
@@ -75,21 +91,25 @@ Pressure trace predicted by linear acoustics:
 \[
 p(t) = \frac{1}{4\pi h}w(t-mh) = (F[m]w)(t)
 \]
-where $m =$ pressure wave slowness ($=1/v_p$), $F$ = modeling operator - linear in w, nonlinear in m
+where $m =$ pressure wave slowness ($=1/v_p$), $F$ = modeling operator - linear in w, nonlinear in $m$
 }
 \only<2>{
 Inverse problem: given pressure trace $d(t)$, wavelet $w(t)$, and offset $h$, find slowness $m$ so that
 \[
 F[m] w  \approx d
 \]
-Standard approach: turn it into an optimization - minimize over $m$ the {\em mean square error}
+Can solve by inspection! Use a ruler to measure time shift between $w(t)$ and $w(t-mh)$
+
+BUT let's use the standard approach instead: turn it into an optimization - minimize over $m$ the {\em mean square error}
 \[
 \frac{1}{2}\int\,dt\, (F[m]w(t) -d(t))^2 = \frac{1}{2}\|F[m]w-d\|^2 = J_{\rm FWI}[m;w,d]
 \]
-
 = world's simplest FWI task
 }
-\only<3>{
+\end{frame}
+
+\begin{frame}\frametitle{How to cycle-skip, in one easy lesson}
+\only<1>{
 Asymptotic transient-ness:
 
 Mother wavelet $w_1$: $w_1(t)=0, |t|>1$ and $\int w_1^2 = 1$
@@ -97,13 +117,24 @@ Mother wavelet $w_1$: $w_1(t)=0, |t|>1$ and $\int w_1^2 = 1$
 Scaled wavelets $w_{\lambda} = \frac{1}{\sqrt{\lambda}}w_1(t/\lambda)$: $w_{\lambda}(t)=0, |t|>\lambda$ and $\int w_{\lambda}^2 = 1$
 
 NB: if center frequency of $w_1 = \omega_1$, then center frequency of $w_{\lambda} = \omega_1/\lambda$
+}
+\only<2>{
 
 Theorem Uh-Oh: If $d = F[m_*]w_{\lambda}$ (noise-free transient data) and $|m-m_*| > 2\lambda/h$, then
 \[
 J_{\rm FWI}[m;w_{\lambda},d] = \|d\|^2, \,\, \nabla_m J_{\rm FWI}[m;w_{\lambda},d] = 0
 \]
+Proof.
+\begin{center}
+\vspace{-0.5cm}
+\includegraphics[height=3cm]{Fig/datas.pdf}\\
+Data: same wavelet, $m$ = 0.25 s/km (red) and $m_*$ = 0.4 s/km (blue)
+\end{center}
+\vspace{-0.5cm}
+$F[m]w_{\lambda}$ orthogonal to $F[m_*]w_{\lambda}$ if $|m-m_*| > 2\lambda/h$
+\hfill Q. E. D.
 }
-\only<4>{
+\only<3>{
 $J_{\rm FWI}$: $d=F[m_*]w_{\lambda}$, $m_*=0.4$ s/km, $w_{\lambda}$ = Ricker ctr freq = $1/\lambda$ Hz, $h=1$ km
 \vspace{-0.5cm}
 \begin{center}
@@ -112,7 +143,7 @@ $J_{\rm FWI}$: $d=F[m_*]w_{\lambda}$, $m_*=0.4$ s/km, $w_{\lambda}$ = Ricker ctr
 \vspace{-0.5cm}
 Red: $\lambda=0.05$ s (20 Hz), Blue: $\lambda = 0.025$ s (40 Hz) [H. Chen et al. SEG 20]
 }
-\only<5>{
+\only<4>{
 Postmortem:
 
 \begin{itemize}
@@ -128,22 +159,23 @@ Postmortem:
 \only<1>{
 Extended inversion: {\em enlarge the model space} = add (nonphysical) degrees of freedom, converge to point in original model space
 
-WRI - van Leeuwen \& Herrmann GJI 13, IP 16, many other papers - most studied extended inversion approach
-
-Idea: view wave equation as {\em weak constraint} $\sim$ {\em add source parameters}
-
 Rationale: more likely to be able to 
 \begin{itemize}
 \item find low residual (extended) models (``hug your data''),
 \item explore useful update directions
 \end{itemize}
+
+WRI - van Leeuwen \& Herrmann GJI 13, IP 16, many other papers - most studied extended inversion approach
+
+Idea: view wave equation as {\em weak constraint} $\sim$ {\em add source parameters}
+
 }
 \only<2>{
 Cast: 
 \begin{itemize}
 \item model parameters $m$ (eg. $m$=slowness)
 \item Wave operator $L[m]$ (eg. constant density acoustic op $L[m]=m^2\partial_t^2 - \nabla^2$)
-\item Known (!) source field $q(\bx,t)$ (eg. point source $w(t)\delta(\bx-\bx_s)$
+\item Known (!) source field $q(\bx,t)$ (eg. point source $w(t)\delta(\bx-\bx_s)$)
 \item dynamic fields $u(\bx,t)$ solve $L[m]u=q$ (eg. $u=$ pressure)
 \item Sampling operator $P$ extracts data trace(s) (pressure or ...) from $u$
 \item Modeling operator $F[m]=PL[m]^{-1}$
@@ -168,7 +200,7 @@ WRI: given $d$, $q$,
 \only<4>{
 equivalent (eg. Yingst \& Wang SEG 16): 
 
-given $d$, $q$, set $g=L[m]u-q$, 
+given $d$, $q$, set $g=L[m]u-q$ (``residual source''), 
 
 then $Pu-d = PL[m]^{-1}(g+q)-d = F[m]g + e[m]$ 
 
@@ -186,11 +218,7 @@ Variable Projection (Golub \& Pereyra 73, 03): eliminate $g$ by solving quadrati
 \[
 J_{\rm WRI}[m;q,d] = \min_{g} \|F[m]g+e[m]\|^2 + \alpha^2 \|g\|^2
 \]
-minimizer = $g[m;q,d]$, then
-\[
-=\|F[m]g[m;q,d]+e[m]\|^2 + \alpha^2 \|g[m;q,d]\|^2
-\]
-$m$ minimizes $J_{\rm WRI}$ $\Leftrightarrow$ $(m,g[m;q,d])$ solves WRI problem 
+Since $\min_{m,g}(...) = \min_m(\min_g (...))$, WRI problem $\equiv$ minimize $J_{\rm WRI}$
 }
 \only<6>{
 Simplification 2:
@@ -218,7 +246,7 @@ Minimization over $s$ $\Leftrightarrow$ solution of normal equation
 \[
 ((F[m]F[m]^T)^2 + \alpha^2 F[m]F[m]^T)s = F[m]F[m]^Te[m]
 \]
-Substitute solution into def of $J_{\rm WRI}$, do a page of algebra (IP, v. 36 no. 10 (2020)), then...
+Substitute solution into def of $J_{\rm WRI}$, do a page of algebra (S., IP 20), then...
 \[
 J_{\rm WRI} = \alpha^2 e[m]^T(F[m]F[m]^T + \alpha^2 I)^{-1} e[m]
 \]
@@ -254,7 +282,7 @@ Postmortem:
 \item WRI just as skippy as FWI!!!
 \item enlarging the search space not enough
 \item ``hugging your data'' also not enough: WRI cycle-skips for small $\alpha$
-\item conclusion not limited to single trace transmission: similar for other transmission IPs, eg. diving wave inversion
+\item conclusion not limited to single trace transmission: similar for other transmission IPs, eg. diving wave inversion (Fang \& Demanet, SEG 20)
 \end{itemize}
 }
 \end{frame}
@@ -332,6 +360,87 @@ $J_{\rm MSI} vs. J_{\rm FWI}$: $d=F[m_*]w_{\lambda}+n$, $n$ = 100\% RMS filtered
 \vspace{-0.5cm}
 Red: MSI, Blue: FWI [H. Chen]
 }
+\only<7>{
+Verdict: MSI
+\begin{itemize}
+\item appears to avoid cycle-skipping
+\item ``hugs data'', expands search space - but effectively
+\item Lots of multi-D relatives show good cycle-skip busting examples:  matched source extension (Huang \& S. 16), volume and space-time source extensions (Huang et al GEO 18), surface source extension (Huang et al. SEG 19), receiver shift extension (M\'{e}tivier SEG 20),  AWI (Warner \& Guatsch GEO 16 - field scale 3D, commercial)
+\end{itemize}
+}
+\end{frame}
+
+\begin{frame}\frametitle{So why?}
+\only<1>{
+Common penalty form for extended source inversion methods:
+\[
+\min_{m,w} \|F[m]w-d\|^2 + \alpha^2 \|Aw\|^2
+\]
+\begin{itemize}
+\item $m = $ vector of parameter {\em fields} incl. velocities
+\item $F[m] = $ modeling operator
+\item $d=$ multichannel data 
+\item $w$ =  extended source, $A = $ annihilator: physical source satisfy $Aw \approx 0$
+\end{itemize}
+Example: (AWI/MSI) point radiator  $w(t)\delta(\bx-\bx_s)$: physical source = impulsive, focused at $t=0$; extended source: spread in $t$; $Aw(t)=tw(t)$.
+}
+\only<2>{
+Necessary condition: reduced objective (VPM) must be regular (differentiable) in $m, d$ {\em jointly}
+
+For penalty functions as above: $A$ {\em must} be (pseudo)differential (Stolk \& S 03)
+
+Re-write of FWI, WRI reduced objectives: analogous op {\em not} pseudodifferential
+
+\begin{itemize}
+\item FWI, WRI {\em fail}, MSI {\em passes} (S. IP 20)
+\end{itemize}
+
+
+}
+\only<3>{
+Sufficient condition: gradient related to traveltime tomography gradient
+\begin{itemize}
+\item Structure of wave-based modeling operators:
+\[
+D_m (F[m]w)\delta m = {\color{blue}Q[m,\delta m]}F[m]w
+\]
+$Q$ = order 1 approx. skew-symm. (pseudo)differential op
+\end{itemize}
+Example: (AWI/MSI) $F[m]w(\bx_r,t) \approx a(\bx_s,\bx_r)w(t-\tau[m](\bx_s,\bx_r))$, so
+\[
+D_m (F[m]w)\delta m \approx {\color{blue}-D\tau(\bx_s,\bx_r)\delta m\frac{\partial}{\partial t}}F[m]w
+\] 
+(chain rule!)
+}
+\only<4>{
+(...bunch of algebra...) $\Rightarrow$ 
+\[
+\nabla J_{\rm MSI} \propto \nabla_m \|\tau[m]-\tau_{\rm data}\|^2
+\]
+so MSI $\approx$ travel time inversion
+
+And that's why.
+
+(Chen et al. SEG 20, Huang \& S. SEG 16) 
+}
+\end{frame}
+
+\begin{frame}\frametitle{Thanks to...}
+\begin{itemize}
+\item Prof. Susan. E. Minkoff, GRA Huiyi Chen, UT Dallas
+\item Guanghui Huang (PGS), Rami Nammour, Mohamed Dolliazal, Paul Williamson (Total)
+\item many other students, postdocs, and colleagues
+\item former sponsors of The Rice Inversion Project (1992-2019)
+\item you!
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Key References}
+G. Huang et al., ``Waveform Inversion by Source Extension'': SEG 2019
+
+H. Chen et al., ``Full waveform inversion by source extension: why it works", SEG 2020
+
+W. Symes, ``Wavefield reconstruction inversion: an example'', {\em Inverse Problems} v. 36(10), 2020
 \end{frame}
 
 
