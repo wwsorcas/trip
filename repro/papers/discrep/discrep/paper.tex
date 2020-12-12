@@ -1,0 +1,1915 @@
+\title{Solution of an Acoustic Transmission Inverse Problem by Extended Inversion}
+\author{William W. Symes\footnotemark[1], Huiyi Chen\footnotemark[2],
+  and Susan E. Minkoff\footnotemark[2]}
+\address{\footnotemark[1]PO Box 43, Orcas, WA 98280 USA\\
+  \footnotemark[2]Department of Mathematical Sciences, FO 35, 
+  University of Texas at Dallas, Richardson, TX 75080 USA}
+
+\lefthead{Symes}
+
+\righthead{Discrepancy}
+
+\maketitle
+\begin{abstract}
+  Study of an extremely simple single-trace transmission example shows
+  how an extended source formulation of full waveform inversion can
+  produce an optimization problem without spurious local minima
+  (``cycle skipping''), hence efficiently solvable via Newton-like
+  local optimization methods. The data consist of a single trace
+  extracted from a causal pressure field, propagating in a fluid
+  according to linear acoustics and recorded at a given distance from
+  a transient point energy source. The velocity or slowness of the
+  fluid is presumed homogeneous, and the target source intensity
+  (``wavelet'') is presumed quasi-impulsive, with zero energy for time
+  lags greater than a specified maximum lag (specified support). The
+  data are assumed noisy, with known RMS signal-to-noise ratio. The
+  inverse problem is: from the recorded trace, recover both the sound
+  velocity and source wavelet with specified support, so that the data
+  is fit with prescribed RMS relative error. After showing explicitly that
+  the obvious least squares objective has multiple large residual
+  minimizers, we introduce an extended approach. The source is extended by
+  permitting energy to spread in time. The spread is controlled by
+  adding a weighted mean square of the extended source wavelet to the
+  data misfit, to produce the extended inversion objective. We choose
+  a weight operator to penalize source energy away from zero lag via
+  multiplication by the time lag. The resulting objective function and
+  its gradient can be computed explicitly. We show that the error in 
+  slowness component of any local minimizer is bounded by multiple of
+  the maximum lag and the assumed noise level. In particular, there
+  are no spurious local minima. We also show that the projection of
+  the extended wavelet onto the interval of support yields a solution
+  of the inverse problem as posed above, with appropriate choice of
+  maxiumum lag and RMS relative error. In several appendices, we
+  describe a constructive algorithm for controlling the penalty
+  weight, the relation between maxiumum lag and RMS central frequency
+  via the Heisenberg principle, and some structural details which the
+  very simple inverse problem discussed here shares with more
+  prototypical problems in industrial and academic seismology.
+  
+  %which may be interpreted as a wavelength.
+  %The derivation shows
+  %several important features of all similar extended source
+  %algorithms. For example, nested optimization, with the source
+  %estimation in the inner optimization (variable projection method),
+  %is essential. The choice of the penalty operator, controlling the
+  %extended source degrees of freedom, is critical: in order to produce
+  %an objective immune from cycle-skipping, the penalty operator must
+  %be (pseudo-)differential. The penalty weight is chosen dynamically,
+  %according to a version of the Discrepancy Principle, in order to
+  %accelerate convergence to a near-global minimum. Like many other
+  %extended formulations, the example problem considered here permits
+  %the discrepancy criterion to be satisfied with zero penalty
+ % weight. This unusual feature removes a common obstacle to the use of
+  %the discrepancy principle, namely the determination of a
+  %satisfactory initial estimate of the penalty weight: the initial
+ % weight may be set to zero, and the dynamic algorithm updates the
+ % weight until convergence is achieved.
+
+\end{abstract}
+
+\section{Introduction}
+Model-based parameter estimation by least squares data fitting is a
+widely used and successful technique for data analysis in science and
+engineering \cite[]{Bertero:98,Vogel:02}, particularly in the
+geosciences \cite[]{Parker:94,Tarantola:05}. In its application to
+seismology, least-squares data fitting has come to be known as Full
+Waveform Inversion (FWI), and is now well-established as a useful tool
+for probing the earth's subsurface
+\cite[]{VirieuxOperto:09,Fichtner:10,Schuster:17}. However, in its
+application to seismology, FWI encounters a serious
+practical obstacle, so-called ``cycle-skipping''. This term signifies
+the tendency of the mean-square error function to exhibit many
+stationary points far from the global minimizer (we
+show an explicit example of this phenomenon later in this paper). Because of the
+typical dimensions of field FWI problems, only local gradient-based
+minimization algorithms are computationally practical. These find
+stationary points (or local minima), so may stagnate at suboptimal and geologically
+uninformative earth models. Local descent methods avoid suboptimal
+stagnation only if initial models are already quite close to optimal,
+in the sense of predicting the arrival times of seismic events to
+within a small multiple of the dominant data wavelength
+\cite[]{GauTarVir:86,VirieuxOperto:09,Plessix:10}.
+
+This paper examines one of a number of proposed alternatives to least
+squares FWI, based on an extension of the model-to-data mapping
+(``extended inversion''), in the context of 
+a very simple acoustic transmission inverse problem: the sound
+velocity in a fluid is to be determined from a single recording of a
+pressure wave propagated over a known distance, originating at a known
+location around a known time. We show precisely
+how descent-based FWI fails to solve this problem absent a very good
+initial model estimate, and precisely why extended inversion succeeds, using the same type
+of optimization, and from essentially arbitrary initial model
+estimate. We give rigorous estimates for the accuracy of the sound
+velocity determination in terms of the time extent of the energy
+excitation and the signal-to-noise ratio of the data. We also illustrate
+these mathematical conclusions with numerical
+examples.
+
+The single-trace transmission problem studied in this paper is a
+drastically simplified cartoon of actual seismic prospecting. It seems
+worth careful study nonetheless for two reasons: it exhibits the
+phenomenon of cycle-skipping, and its simplicity allows the properties
+of both FWI and extended inversion approaches to be established
+rigorously. The underlying mathematical structures are common to many
+inverse problems in wave propagation in which wave velocities are
+amongst the unknowns. For example, we offer an ad hoc calculation of
+the gradient of the extended inversion objective, taking advantage of
+the simplicity of the problem context. However we also show, in an
+appendix, how that calculation hides an abstract structure shared by
+many other problems.% - see for example
+%\cite{Symes:IPTA14,tenKroode:IPTA14,Symes:EAGE15,HuangSymes:SEG15a}.
+
+In the next (``Overview'') section, we describe the conceptual
+framework of this inverse problem, review the related literature, and
+state the essence of our main results, leaving out a few technical
+details that are supplied later. Numerical illustrations of these
+results occupy the following (``Examples'') section. The fourth
+(``Findings'') section of the paper contains precise statements of the
+mathematical results, derivations, and supporting discussion. Three
+appendices describe the algorithm used to control the penalty weight
+in our formulation of extended inversion, further refinement of error
+estimates based ond the Heisenberg inequality, and the abstract
+structure of extended inversion implicit in the derivations presented
+in the ``Findings'' section.
+
+\section{Overview}
+
+The physical setting for our discussion is the propagation of
+small-amplitude pressure waves through a
+homogeneous acoustic fluid occupying $\bR^3$ \cite[]{Frie:58}. The
+fluid's salient characteristic for present purposes is the
+slowness, or reciprocal wave velocity, $m > 0$. A source of acoustic
+energy localized at a (``source'') point $\bx_s \in \bR^3$ radiates uniformly in all
+directions with time-dependent intensity $w(t)$, generating a pressure
+field $p(\bx,t)$. Both the 
+pressure field $p$ and the intensity (``wavelet'') $w$ vanish at large
+negative time. A receiver records the pressure values at a point
+$\bx_r \in \bR^3$, a distance
+$r>0$ from the source position $\bx_s$, between the times $t_{\rm min}$ and
+$t_{\rm max}$. According to linear acoustics, the pressure field
+solves the the wave equation \cite[]{Frie:58}:
+\begin{eqnarray}
+  \label{eqn:awe}
+  \left(m^2\frac{\partial^2 p}{\partial t^2} - \nabla^2\right) p(\bx,t) &=&
+                                                                         w(t)\delta(\bx-\bx_s) \nonumber\\
+  p(\bx,t)&=&0, t\ll 0.
+\end{eqnarray}
+As the system \ref{eqn:awe} is linear and autonomous, the solution is
+the convolution of the source
+wavelet $w$ with the Green's function or fundamental solution. For
+constant $m$, the result is the well-known expression
+(\cite{CourHil:62}, Chapter VI, section 12, equation 47):
+\begin{equation}
+  \label{eqn:homsol}
+  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-m|\bx-\bx_s|\right),
+\end{equation}
+so the predicted pressure at the receiver point $\bx_r$ is
+\begin{equation}
+\label{eqn:mod}
+p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right)  = F[m]w(t)
+\end{equation}
+The mapping $F[m]$ so defined is (ignoring the amplitude factor
+$1/(4\pi r)$), an $m$-dependent time shift. This time shift operator is the basis of many illustrations of
+the cycle-skipping phenomenon (for example, \cite{VirieuxOperto:09},
+Figure 7), so it is unsurprising that an analysis of cycle-skipping
+can be based on the simple modeling operator described above.
+
+If the wavelet $w$ is square-integrable, so is the predicted
+recorded pressure $F[m]w$ - its $L^2$ norm is the cumulative power trasferred
+from the fluid to the receiver \cite[]{SantosaSymes:00}. Thus this relation defines a map
+$F: \bR^+ \times L^2(\bR) \rightarrow
+L^2([t_{\rm min},t_{\rm max}])$, linear in its second argument.
+
+A naive version of the inverse problem investigated in this paper
+would be: given recorded data
+$d \in L^2([t_{\rm min},t_{\rm max}])$, find $m \in \bR^+$ and $w \in L^2(\bR)$ so that
+$F[m]w \approx d$. Clearly this problem statement is not interesting as it
+stands, since $F[m]$ is surjective for every $m \in \bR^+$: fitting
+the data does not constrain the slowness $m$ at all.
+
+To be useful, the problem statement must be augmented with a
+constraint on the model $(m,w)$.  One natural constraint is to assume
+that the support of $w$ is limited: choose $\lambda > 0$ and search
+for $w$ with $\mbox{supp }w \subset [-\lambda,\lambda]$. The quantity
+$\lambda$ is to be considered ``small''. Under some circumstances, it
+is related to a mean wavelength of $w$ (Appendix B).
+
+An assumption of small support may be justified as
+follows. In practical seismic data processing, actual sources may act
+over considerable time intervals. An example from exploration
+seismology is the airgun, the most commonly used
+marine source: an airgun (or array of airguns, the usual apparatus)
+produces an oscillating pressure pulse that dies away
+slowly. It is commonplace to estimate this pulse, usually by recording
+the emitted pressure field at a position where it should nominally be isolated from other
+signal, then deconvolve it
+from the data by safeguarded Fourier division or other means. This
+so-called signature deconvolution results in modified data
+corresponding to a source equal to signature deconvolution of the
+pulse estimate itself. The deconvolved source pulse approximates an
+impulse ($\delta(t)$): it cannot have point support, due to the finite
+frequency nature of seismic data and the Heisenberg principle (see
+Appendix B), but its amplitudes are typically small outside of a small
+much smaller time interval than is the case for the original pulse
+estimate. Thus after a small modification, the deconvolved source
+pulse has small support.
+
+For a contemporary description of view on signature deconvolution as
+practiced in the seismic industry, see \cite{SheriffGeldart:1995},
+section 9.5 and \cite{Yil:01}, Chapter 2.
+
+Abusing notation slightly, we identify $L^2([-\lambda,\lambda])$ with
+a subspace of $L^2(\bR)$ via extension by $0$. Denote by $\lF$
+restriction of $F$ to $\bR^+ \times L^2([-\lambda,\lambda])$ defined by equation
+\ref{eqn:mod}. Then the FWI problem with support constraint,
+described in the last paragraph, can be crudely phrased: given $d \in
+L^2([t_{\rm min},t_{\rm max}])$, find $(m,w)$ in the domain of $\lF$ so that $\lF[m,w]
+\approx d$.
+
+Despite its simplicity, this problem exhibits the cycle-skipping
+pathology characteristic of field-scale FWI. Specifically, we show
+that the reduced mean square error function, the objective function of
+FWI for this problem,
+\begin{equation}
+  \label{eqn:redms}
+  \lerr[m,w;d]=\frac{1}{2}\|\lF[m]w-d\|^2/\|d\|^2,
+\end{equation}
+has local minimizers far from any global minimizer, even for noise-free
+data (Theorem \ref{thm:fwi}).
+
+This fact implies that local optimization must fail to solve a precise
+version of the FWI problem:
+\begin{quote} given $\epsilon, \lambda > 0$, fine $(m,w)$ in the
+domain of $\lF$ so that
+\begin{equation}
+  \label{eqn:probstat}
+  \|\lF[m]w-d\| \le \epsilon\|d\|.
+\end{equation}
+\end{quote}
+In fact, we show
+that``large residual'' local minima of $\lerr[\cdot,\cdot,d]$ exist,
+at which its value is much greater than its global minimum
+value. Therefore if $1/2\epsilon^2$ is near the global minimum value
+of $\lerr[\cdot,cdot;d]$, then
+local minimization of $\lerr[\cdot,\cdot;d]$ can fail to find a
+solution of the inverse problem. This phenomenon is what is meant by
+``cycle-skipping''.
+
+Extended inversion involves an extension of the model-to-data map, in
+this case $\lF$.  The extension used here consists in dropping the
+support constraint on $w$, so the extended map is simply $F$ as
+defined above ($\lF$ is a restriction of $F$, so $F$ is an extension
+of $\lF$).
+
+To compensate for the resulting indeterminacy in the
+estimation of $m$, we add a penalty term to the objective, defined by
+a penalty operator $A$ with domain and range $L^2(\bR)$: for $m \in
+\bR^+,w\in L^2(\bR), d \in L^2([t_{\rm min},t_{\rm max}])$, define
+\begin{eqnarray}
+  r[m,w;d] & = & \|F[m]w-d\|/\|d\|, \label{eqn:rmserr}\\
+  e[m,w;d] & = & \frac{1}{2}r[m,w;d]^2, \label{eqn:mserr}\\
+  g[w] & = & \frac{1}{2}\|Aw\|^2/\|d\|^2, \label{eqn:pen} \\
+  \Ja[m, w;d] &=& e[m,w;d] + \alpha^2 g[w] \nonumber\\
+  &=& \frac{1}{2}(\|F[m]w-d\|^2 + \alpha^2 \|Aw\|^2)/\|d\|^2.
+\label{eqn:penerr}
+\end{eqnarray}
+
+The normalizations by the data norm $\|d\|$ in the definitions
+\ref{eqn:rmserr}, \ref{eqn:mserr}, \ref{eqn:pen}, and \ref{eqn:penerr} make the values
+of $r$, $e$, $\alpha^2 g$, and $\Ja$ nondimensional, and simplifies
+both the statements of theoretical results and the interpretation of
+numerical examples.
+
+Apart from dimensional correctness, the only obvious requirement on the penalty operator $A$ is that it
+penalize 
+nonzero values of $w$ for large $|t|$, so that minimizers $(m,w)$ of
+$\Ja$ should have $w$
+concentrated near $t=0$. Thus the penalty is a soft stand-in for the
+support constraint. We
+show that a good choice for $A$ is given (essentially) by
+$(Aw)(t)=tw(t)$ (Proposition \ref{thm:rampgood}), and the
+remainder of the discussion in this section makes this assumption. The
+penalty weight $\alpha$ must be chosen somehow; we review a simple
+algorithm for controlling $\alpha$ later in the paper.
+
+Assume that $\mu>0$ and $d = F[m_*]w_* + n$, with $\mbox{supp }w_*
+\subset [-\mu,\mu]$, and denote by $\eta = \|n\|/\|F[m_*]w_*\|$
+the noise-to-signal ratio. We show that any local minimizer $(m,w)$
+of $\Ja$ satisfies 
+\begin{itemize}
+\item If $\eta \le 0.6$,
+  \begin{equation}
+    \label{eqn:mbnd}
+    |m-m_*| \le (1+f(\eta))\frac{\mu}{r},
+  \end{equation}
+  where $f(\eta)=2\eta+O(\eta^2)$ (Theorem \ref{thm:mnoiseres});
+\item 
+  $(m,{\bf 1}_{[-\lambda,\lambda]}w)$ is a solution of the FWI problem
+  as stated above, that is,
+  \begin{equation}
+    \label{eqn:success}
+    \lerr[m, {\bf 1}_{[-\lambda,\lambda]}w;d] \le \frac{1}{2}\epsilon^2,
+  \end{equation}
+  so long as
+  \begin{eqnarray}
+    \lambda & \ge & (2+f(\eta))\mu,\nonumber\\
+    \epsilon &\ge & (4\pi r \alpha \lambda)^2 +\eta.
+    \label{eqn:solcond}
+  \end{eqnarray}
+  (Theorem \ref{thm:ipnoisesuf})
+\end{itemize}.
+That is, the minimization of the extended objective $\Ja$ provides a
+solution of the FWI problem, with constraints on the achievable
+performance and bounds on the errors. All of these
+bounds are shown to be sharp, and the constraints cannot be
+significantly weakened. For example, in conclusion \ref{eqn:solcond}, the support radius $\lambda$ in
+the projection onto $L^2([-\lambda,\lambda])$ must in general be at least twice the
+support radius of the ``noise free'' wavelet $w_*$, plus an additional
+allowance for noise.
+
+Use of model extension to reveal the influence of earth mechanical
+parameters on data is an old idea, and underlies several classes of
+seismic data processing methods in widespread use for decades
+\cite[]{geoprosp:2008}. Use of model extension to create optimization
+principles for inversion is a more recent development
+\cite[]{SymesCar:91,Plessix:00a,Symes:09,LuoSava:11,BiondiAlmomin:SEG12,LeeuwenHerrmannWRI:13,LiuSymesLi:14,Warner:14,ChaurisGP:14,Warner:16,LeeuwenHerrmann:16,Herve2017,HouSymes:Geo18}. Extended
+inversion methods differ by the choice of additional degrees of
+freedom, and by choice of penalty applied to eliminate them in the
+final result. The approach studied in this paper belongs to the {\em
+  source extension} variety: the extra parameters are provided by
+permitting the energy source component of the experimental model to
+have more, or less constrained, parameters than the experimental
+design suggests. \cite{HuangNammourSymesDollizal:SEG19} give an
+overview and taxonomy of source extension methods, with extensive
+references.
+
+Extended inversion is not the only alternative to straightforward
+least-squares data fitting that may overcome cycle-skipping. For
+example, evidence has recently emerged that the Wasserstein metric
+from arising in the theory of optimal transport may provide a measure
+of error between model-predicted and observed seismic data less
+oscillatory than the mean-square
+\cite[]{EngquistYang:GEO18,Metivier:GEO18}. 
+
+%In many cases, the constraint posed by membership of the second component $w$ in the subspace $\lW$ is an approximation to an idealized limit $\lambda \rightarrow 0$.
+%It may be that $W_0 = \cap_{\lambda > 0}\lW$ is non-trivial, in which
+%case $F$ may be viewed as an extension of $F_0 = F|_{ M \times
+%  W_0}$. In that case, $F_0$ and $F$ realize the idealized extension
+%structure discussed in many prior works on extended inversion (for
+%example, \cite[]{geoprosp:2008}): $F_0$ is the physical modeling
+%operator, and $W_0$ consists of second components of physical or
+%feasible models. However, in many of these examples, $W_0$ is not
+%computationally accessible, or - even if it is - gives results that
+%closely approximate those obtained with $\lW$ for small $\lambda$. For
+%other examples, for instance that  discussed later in this paper (and
+%implicitly in \cite[]{Warner:16}, for instance), $W_0=\{0\}$ and the
+%family $\{\lW: \lambda > 0\}$ actually embodies all of the necessary
+%physics.
+
+\section{Examples}
+This section presents numerical examples of the estimates of $m$ and
+$w$ obtained by minimization of $\Ja$. We have selected these examples
+to illustrate the conclusions described in the Overview section.
+
+While minimization of $\Ja$ might be tackled directly - by
+alternating minimizations over $m$ and $w$, or by computing updates
+for $m$ and $w$ simultaneously - such joint minimization performs
+poorly, as \cite{YinHuang:16} has shown. The reason for this poor
+performance is that $\Ja$ has dramatically different
+sensitivity to $m$ versus $w$, as observed in the cited reference and elsewhere.
+Instead, a nested approach, in which $w$ is
+eliminated in an inner optimization,
+generally gives far better numerical performance. This approach was
+formalized by \cite{GolubPereyra:73,GolubPereyra:03} as the {\em
+  Variable Projection Method} (``VPM''). Besides being the main
+computational device used in our examples, it also plays a central
+role in the theory developed in the next section.
+
+The minimization of $\Ja$ over $w$ yields a function $\tJa$ of $m$
+alone:
+\begin{equation}
+  \label{eqn:redexp0}
+  \tJa[m;d] = \inf_w \Ja[m,w;d]
+\end{equation}
+Under appropriate conditions, met in our examples (Theorem
+\ref{thm:norminv}, $\tJa$ has an alternate expression
+\begin{equation}
+  \label{eqn:redexp10}
+  \tJa[m;d] = \Ja[m,\aw[m;d];d],
+\end{equation}
+in which $\aw[m;d] \in W$ is the solution of the normal
+equation
+\begin{equation}
+  \label{eqn:norm0}
+  (F[m]^TF[m]+\alpha^2A^TA)w= F[m]^Td.
+\end{equation}
+
+[ examples and discussion - Huiyi]
+
+[ may need to repeat some of the explicit formulas for $\aw, e, g,
+\tJa$ from the next section - refer to theorems]
+
+
+
+%\section{Theory}
+
+%\cite{FuSymes2017discrepancy} introduce a version of the discrepancy
+%principle and its application to separable nonlinear least squares
+%problems in penalty form \ref{eqn:basic}. The algorithm developed
+%there is incomplete, however: it lacks  termination criteria. In this
+%section, I review the discrepancy-based algorithm and introduce an
+%appropriate stopping rule, thus completing the development of the
+%algorithm presented in \cite{FuSymes2017discrepancy}.
+
+\section{Findings}
+This section describes the mathematical infrastructure necessary to
+make precise the conclusions described in the Overview section, then
+gives complete statements and proofs, along with those of
+necessary auxiliary results. 
+
+We shall use the abbreviations ${\cal B}(X,Y)$ and ${\cal I}(X,Y)$ for 
+the algebra of bounded linear operators from the Hilbert space $X$ to 
+the Hilbert space $Y$, and its subalgebra of invertible
+operators. All of the operators appearing in this discussion are
+members of ${\cal B}(X,Y)$ for some choice of Hilbert spaces $X$ and
+$Y$, and superscript $T$ denotes the transpose or adjoint of a such an
+operator in the sense specified by its domain and range Hilbert structure.
+
+\subsection{An Acoustic transmission Inverse Problem}
+The data prediction or modeling operator for the single-trace acoustic
+transmission problem has been defined above, in equation
+\ref{eqn:mod}, which we restate here for convenience:
+\begin{equation}
+\label{eqn:mod1}
+F[m]w(t)  = p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right) 
+\end{equation}
+The slowness $m$ must be positive, as follows from basic acoustics,
+and in fact reside in a range characteristic of the
+material model: for crustal rock, a reasonable choice would be
+$m_{\rm min}=0.125, m_{\rm max}=0.6$ s/km.
+
+Natural choices for domain and
+range of $F$ are thus
+\begin{itemize}
+\item $M=(m_{\rm min}, m_{\rm max}),\,0 < m_{\rm min} \le m_{\rm
+    max}$;
+\item $W = L^2(\bR)$;
+\item $D=L^2([t_{\rm min},t_{\rm max}]),\, t_{\rm min}<t_{\rm max}$;
+\item $F: M \times W \rightarrow D$ as specified in \ref{eqn:mod}.
+\end{itemize}
+It is immediately evident from these choices and from the definition
+\ref{eqn:mod} that
+\begin{equation}
+  \label{eqn:mapprop}
+  \mbox{for }m \in M, F[m] \in {\cal B}(W,D),\mbox{ and }\|F[m]\| =
+  \frac{1}{4\pi r}.
+\end{equation}
+Note also that $F[m]$ is surjective for every $m \in M$.
+
+\noindent{\bf Remark:} In computational practice, $W$ will have to be replaced by a
+finite-dimensional subspace of $L^2(\bR)$. Many such choices will
+implicitly limit the support of $w \in W$ to a bounded interval, say
+$[T_{\rm min},T_{\rm max}]$. To maintain the surjective property,
+these bounds should be chosen so that $[t_{\rm min}, t_{\rm max}]
+\subset [T_{\rm min}+mr,T_{\rm max}+mr]$ for all $m \in M$, that is,
+\begin{eqnarray}
+  \label{eqn:dombounds}
+  t_{\rm min} &\ge & T_{\rm min}+m_{\rm max}r,\nonumber\\
+  t_{\rm max} &\le & T_{\rm max}+m_{\rm min}r.
+\end{eqnarray}
+We will ignore these computational necessities in this work,
+maintaining the definition $W=L^2(\bR)$.
+
+As mentioned earlier, $F[m]$ is surjective for every
+$m \in M$. Since all possible data lie in the range of $F[m]$ for any
+$m \in M$, some restriction of the domain
+of $F$ is necessary in order that fitting the data constrain
+$m$. The constraint proposed in the
+Overview section involves a selection of a maxium support radius
+$\lambda_{\rm max} >0$. Then define for $\lambda \in (0,\lambda_{\rm max}]$:
+\begin{itemize}
+\item $\lW = \{w \in W:
+  \mbox{supp }w \subset [-\lambda,\lambda]\}$;
+\item $\lF = F|_{M \times \lW}$.
+\end{itemize}
+
+In terms of this infrastructure, the inverse problem studied in 
+this paper may be stated as a slightly refined version of the problem statement
+\ref{eqn:probstat}: 
+
+\begin{quote}
+\noindent {\bf Problem Statement:}
+  given data $d \in D$, relative error level $\epsilon \in
+  [0,1)$, and support radius $\lambda \in (0, \lambda_{\rm
+    max}]$, find $(m,w) \in M \times \lW$ for which 
+\begin{equation}
+  \label{eqn:probstat0}  \|\lF[m]w-d\| \le \epsilon\|d\|,
+\end{equation}
+or equivalently
+\begin{equation}
+  \label{eqn:probstat1}
+  \lerr[m,w;d] \le \frac{1}{2}\epsilon^2,
+\end{equation}
+with $\lerr$ defined in equation \ref{eqn:redms}.
+\end{quote}
+
+\noindent{\bf Remark:} The constraint $\epsilon < 1$ imposed on the
+target noise level is eliminates the obvious choice $(m,0)$, which
+satisfies the data misfit constraint for any $m \in M$. 
+
+\noindent{\bf Remark:} The support constraint is closely linked to the
+folk theorem about FWI noted many times in the literature: convergence
+of a descent method requires that the initial slowness must be known
+to ``within a (fraction of a) wavelength''. The relation is a
+consequence of Heisenberg's inequality, and will be reviewed in
+Appendix B.
+
+The best case for data fitting
+is clearly the one in which the data can be fit precisely: that is,
+there exists $(m_*,w_*) \in M\times \lW$ so that
+\begin{equation}
+  \label{eqn:defdatanonoise}
+  d=\lF[m_*]w_*.
+\end{equation}
+Such data $d$ is {\em noise-free}, in the range of the map $\lF$. For
+such data a solution of the Problem Statement \ref{eqn:probstat0}
+exists with arbitrarily small $\epsilon>0$.
+
+
+\subsection{Full Waveform Inversion}
+While $F[m]$ is surjective for every $m \in M$, as noted above, it is
+very far from injective. On the other hand, under a constraint that
+will be assumed throughout, $\lF[m]$ is injective (in fact, $4 \pi r
+\lF[m]$ is an isometry):
+\begin{proposition}
+  \label{thm:fullrec}
+  Suppose that 
+  \begin{equation}
+    \label{eqn:fullrec}
+    [ m_{\rm min}r-\lambda_{\rm max}, m_{\rm max}r+\lambda_{\rm max}]
+    \subset [t_{\rm min},t_{\rm max}].
+  \end{equation}
+  Then $\lF[m]\in {\cal B}(\lW,D)$ is coercive for every $m \in M, \lambda \in
+  (0,\lambda_{\rm max}]$.
+\end{proposition}
+
+\noindent{\bf Remark:} A useful consequence of the condition 
+\ref{eqn:fullrec}: for every $m \in M$, 
+\begin{equation}
+  [-\lambda_{\rm max}, -\lambda_{\rm max}] \subset[ t_{\rm min}-mr , 
+  t_{\rm max}-mr]. 
+  \label{eqn:zeroinc}
+\end{equation}
+
+The first main result establishes the existence of large (100 \%)
+residual local minimizers for the basic FWI objective $\lerr$, even
+for noise-free data.
+\begin{theorem}
+  \label{thm:fwi}
+  Suppose that $0 <\lambda\le \lambda_{\rm max}$,  $m_* \in M, w_*
+  \in \lW, d=\lF[m_*]w_*$ is noise-free data per definition \ref{eqn:defdatanonoise},
+  Under assumption \ref{eqn:fullrec}, for any $m \in M$ with $|m-m_*|r>2\lambda$,
+\begin{equation}
+  \label{eqn:isovpm}
+ \min_w \lerr[m,w;d]=\lerr[m,0;d] = \frac{1}{2},
+\end{equation}
+and any such $(m,0)$ is a local minimizer of $\lerr$ with relative RMS
+error = 1.0.
+\end{theorem}
+
+\begin{proof} From the definition \ref{eqn:mod},
+\[
+ \lerr[m,w;d] =  \frac{1}{32\pi^2
+    r^2\|d\|^2}\int_0^T\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
+\]
+Since $w_*, w$ vanish for $|t|>\lambda$,
+$\lF[m_*]w_*(t)$ vanishes if $|t-m_*r|>\lambda$ and $\lF[m]w$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
+= |m-m_*|r > 2\lambda$, then $|t-mr|+|t-m_*r| \ge |mr-m_*r| >
+2\lambda$ so either $|t-mr|>\lambda$ or $|t-m_*r|>\lambda$, that is,
+either $\lF[m]w(t)=0$ or $\lF[m_*]w_*=0$. Therefore $\lF[m]w$ and
+$\lF[m_*]w_*$ are orthogonal in the sense of the $L^2$ inner product
+$\langle \cdot,\cdot \rangle_D$ on $D$:
+\begin{equation}
+  \label{eqn:ortho}
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \langle F[m]w,
+  F[m_*]w_*\rangle_D = 0
+\end{equation}
+But $d = \lF[m_*]w_*$, so this is the same as saying that $d$ is
+orthogonal to $F[m]w$. So conclude after a minor manipulation that
+\[
+  |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \lerr[m,w;d]=\frac{1}{32\pi^2 
+    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2).
+\]
+\begin{equation}
+  \label{eqn:iso}
+  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right)
+\end{equation}
+That is, for slowness $m$ in error by more than $2\lambda/r$ from the 
+target slowness $m_*$, the means square error (FWI objective) $\lerr$ is independent of
+$m$, and its minimum over $w$ is attained for $w=0$
+\end{proof}
+
+Therefore local minimizers of $\lerr$ abound, as far as you like from the
+global minimizer $(m_*,w_*)$. Local exploration of the FWI objective
+$e$ gives no useful information whatever about constructive search
+directions, and descent-based optimization tends to fail if the
+initial estimate $m_0$ is in error by more than $2\lambda/r$
+(``further than a multiple of a wavelength'', per discussion
+in the second Appendix). In fact the actual behaviour of FWI itererations is worse
+(failure if $m_0$ is in error by ``half a wavelength''), as follows
+from a more refined analysis of the ``cycle-skipping'' local behaviour of $\lerr$ near its
+global minimizer.
+
+\subsection{Variable Projection}
+The main theoretical device used in the proofs of our main results on 
+extended inversion is Variable Projection reduction of the penalty objective $\Ja$
+(equation \ref{eqn:penerr}) to a function $\tJa$ of 
+$m$ alone, by minimization over $w$, as described in the Examples
+section. We repeat the definition here for the reader's convenience:
+\begin{equation}
+  \label{eqn:redexp}
+  \tJa[m;d] = \inf_w \Ja[m,w;d]
+\end{equation}
+
+A minimizer $w$ on the right-hand side of definition
+\ref{eqn:redexp} must solve the {\em normal equation}
+\begin{equation}
+  \label{eqn:norm}
+  (F[m]^TF[m]+\alpha^2A^TA)w= F[m]^Td, 
+\end{equation}
+
+The choices for the penalty operator $A$ considered here are scalar 
+multiplication operators on $W$ defined by a choice of multiplier $a \in L^{\infty}(\bR)$:
+\begin{equation}
+  \label{eqn:annmult}
+  A w(t)= a(t)w(t), \, t\in \bR.
+\end{equation}
+With $A$ of this form, $\tilde{J}_{\alpha}$ is explicitly
+computable. First observe that apart from amplitude, $F[m]$ is
+unitary: for $g \in D$,
+\begin{equation}
+\label{eqn:tran}
+F[m]^T g (t) =
+\left\{
+  \begin{array}{c}
+    \frac{1}{4\pi r}g\left(t+mr\right), \, t \in [t_{\rm min}-mr,
+    t_{\rm max}-mr],\\
+    0, \mbox{ else.}
+  \end{array}
+\right.
+\end{equation}
+so
+\begin{equation}
+  \label{eqn:unit}
+  F[m]^TF[m] = \frac{1}{(4\pi r)^2}{\bf 1}_{[t_{\rm min}-mr,  
+    t_{\rm max}-mr]}
+\end{equation}
+in which ${\bf 1}_{S}$ denotes
+multiplication by the characteristic function of a measurable 
+$S \subset \bR$.
+
+Therefore the normal equation for the minimizer on the RHS of equation \ref{eqn:redexp} is
+\begin{equation}
+  \label{eqn:norm1}
+  \left(\frac{1}{(4\pi r)^2} {\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]} + \alpha^2 A^TA\right)w= F[m]^Td.
+\end{equation}
+
+With these choices, the normal equation \ref{eqn:norm1} becomes
+\begin{equation}
+\label{eqn:norm2}
+\left(\frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]} + \alpha^2a^2\right)w= F[m]^Td.
+\end{equation}
+
+\begin{proposition}
+  \label{thm:norminvexp}
+  Assume the conditions \ref{eqn:mod}, \ref{eqn:fullrec},
+  \ref{eqn:annmult}. Also assume that $\lambda \in (0,\lambda_{\rm
+    max}], \alpha > 0,$ and that  $C>0$ exists so that $a \in L^{\infty}(\bR)$
+  mentioned in condition \ref{eqn:annmult} satisfies condition
+  \ref{eqn:abnd}.
+%  \begin{equation}
+%   \label{eqn:abnd}
+%    |t| > \lambda \Rightarrow a(t) \ge C,
+%  \end{equation}
+%  in which $C>0$ may depend on $\lambda$.
+  Then
+  \begin{itemize}
+  \item[1. ]the normal operator $F[m]^TF[m] + \alpha^2A^TA$ is
+    invertible for any $m \in M$, $\alpha > 0$;
+  \item[2. ]the solution $\aw[m;d]\in W$ of the normal equation
+    \ref{eqn:norm} is given by
+    \begin{equation}
+      \label{eqn:normsol}
+      \aw[m;d](t) = \left\{
+        \begin{array}{c}
+          \left(\frac{1}{(4\pi r)^2} + \alpha^2
+          a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr), t \in [t_{\rm
+          min}-mr, t_{\rm max}-mr];\\
+          0, \mbox{ else;}
+        \end{array}
+      \right.
+    \end{equation}
+  \item[3. ]if in addition $d=F[m_*]w_*, w_* \in \lW$ is noise-free, as in equation
+    \ref{eqn:defdatanonoise},
+    \begin{equation}
+      \label{eqn:solnonoise}
+      \aw[m,d](t)= \left(1+ (4\pi r)^2\alpha^2 a(t)^2\right)^{-1}w_*\left(t+(m-m_*)r\right).
+    \end{equation}
+  \end{itemize}
+\end{proposition}
+
+\begin{proof} 
+  \begin{itemize}
+  \item[1. ]Note that thanks to \ref{eqn:zeroinc}, if $|t|\le
+    \lambda \le \lambda_{\rm max}$, then ${\bf 1}_{[t_{\rm min}-mr,  
+      t_{\rm max}-mr]}(t) = 1$, whereas if $|t|>\lambda$,
+    then $a(t) \ge C$, whence
+    \[
+      \frac{1}{(4\pi r)^2}  {\bf 1}_{[t_{\rm min}-mr,  
+        t_{\rm max}-mr]} + \alpha^2a^2  \ge \min\{(4\pi r)^2,
+      \alpha^2\min\{1/(4\pi r)^2,C^2\} \}> 0.
+    \]
+    Therefore the normal operator is invertible under the stated
+    conditions.
+
+  \item[2. ]From the identity \ref{eqn:tran}.
+    \[
+      \mbox{supp }F[m]^Td \subset [t_{\rm min}-mr,t_{\rm max}-mr].
+    \]
+    Define $w_{\rm tmp}$ to be the right-hand side of equation \ref{eqn:normsol}. Then
+    from the previous observation and identity \ref{eqn:tran},
+    \[
+      \mbox{supp }w_{\rm tmp} \subset [t_{\rm min}-mr,t_{\rm max}-mr].
+    \]
+    From the identity \ref{eqn:unit}, for any $w \in W$,
+    \[
+      t \in [t_{\rm min}-mr,t_{\rm max}-mr] \Rightarrow F[m]^TF[m]w(t)
+      = \frac{1}{(4 \pi r)^2}w(t).
+    \]
+    It follows from this and the previous two observations that
+    $w_{\rm tmp}$ solves the normal equation \ref{eqn:norm}, and
+    therefore that $\aw[m;d]=w_{\rm tmp}$.
+
+  \item[3. ]Follows by inserting the definition
+    \ref{eqn:defdatanonoise} of $d$ in \ref{eqn:normsol} and
+    rearranging.
+  \end{itemize}
+\end{proof}
+
+\begin{theorem}
+  \label{thm:norminv}
+  Assume the condition \ref{eqn:fullrec}, $C>0$, and suppose that $A$ is
+  given by equation \ref{eqn:annmult} for $a \in L^{\infty}(\bR)$
+  satisfying
+  \begin{equation}
+    \label{eqn:abnd} 
+    a \ge 0; \, a(t) \ge C\mbox{ for }|t| \ge \lambda_{\rm max}.
+  \end{equation}
+  Then \begin{itemize}
+  \item[1. ]the reduced objective $\tJa$ is given by
+    \begin{equation}
+      \label{eqn:redexp1}
+      \tJa[m;d] = \Ja[m,\aw[m;d];d],
+    \end{equation}
+    in which $\aw[m;d] \in W$ is the unique solution of the normal
+    equation \ref{eqn:norm}.
+  \item[2. ]The following are equivalent:
+    \begin{itemize}
+    \item[i. ]$(m,w) \in M \times W$ is a local minimizer of
+      $\Ja[\cdot,\cdot;d]$, and
+    \item[ii. ]$m$ is a local minimizer of $\tJa[\cdot;d]$ and
+      $w=\aw[m;d]$.
+    \end{itemize}
+  \end{itemize}
+\end{theorem}
+
+\begin{proof} These conclusions follow immediately from Proposition
+  \ref{thm:norminvexp}.
+\end{proof}
+
+\noindent{\bf Remark:} If $\Ja[\cdot,\cdot;d]$ and $\tJa[\cdot;d]$
+were differentiable, then ``local minimizer'' in the conclusion of the
+preceding theorem could be replaced by ``stationary point''. However,
+for the problem addressed in this paper, $\Ja[\cdot,\cdot;d]$ {\em is
+  not} differentiable without added smoothness constraints on $w$,
+whereas $\tJa[\cdot;d]$ {\em is} differentiable for proper choice of
+penalty operator $A$. 
+
+This conclusion follows from properties of the modeling operator $F$
+shared with many other inverse problems in wave propagation, as
+explained in the third appendix. Here, we derive it from explicit
+expressions for $\tJa$ and its components.
+
+\begin{proposition}
+  \label{thm:epjgen}
+  Assume the hypotheses of Proposition \ref{thm:norminvexp}. Then
+  \begin{equation}
+  \label{eqn:residnormgen}
+  e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
+\end{equation}
+\begin{equation}
+  \label{eqn:anninormgen}
+  p[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)
+\end{equation}
+
+\begin{equation}
+  \label{eqn:expjgen}
+\tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
+a(t-mr))^2)^{-1}d(t)^2. 
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+  From equation \ref{eqn:normsol},
+  \[
+    F[m]\aw[m;d](t) = 
+    \frac{1}{4 \pi r}\left(\frac{1}{(4\pi r)^2} + \alpha^2
+      a^2(t-mr)\right)^{-1}\frac{1}{4 \pi r}d(t),
+  \]
+  so
+  \[
+    (F[m]\aw[m;d]-d)(t) = (1 + (4 \pi r\alpha
+    a(t-mr))^2)^{-1}-1)d(t)
+  \]
+  \[
+    = -(4 \pi r\alpha a(t-mr))^2(1 + (4 \pi r\alpha
+    a(t-mr))^2)^{-1}d(t).
+  \]
+  Half the integral of the square of this data residual is
+  $e[m,\aw[m;d],d]$, which proves identity \ref{eqn:residnormgen}.
+
+  To compute $p[m,\aw[m;d],d]$, note that
+  \[
+    A\aw[m;d](t)=a(t) \left(\frac{1}{(4\pi r)^2} + \alpha^2
+      a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
+  \]
+  \[
+    = 4\pi r a(t) (1 + (4\pi r \alpha a(t))^2)^{-1}d(t+mr)
+  \]
+  for $ t \in [t_{\rm min}-mr, t_{\rm max}-mr]$, so squaring,
+  integrating, and changing integration variables $t \mapsto t-mr$
+  gives the result \ref{eqn:anninormgen}
+
+  That the VPM objective $\tJa$ is given by \ref{eqn:expjgen} follows from equations \ref{eqn:pen},
+  \ref{eqn:redexp}, \ref{eqn:residnormgen}, and
+  \ref{eqn:anninormgen}.
+\end{proof}
+
+
+\begin{theorem}
+  \label{thm:diffobj}
+  Suppose that in addition to the hypotheses of Theorem
+  \ref{thm:norminv}, $a \in W^{1,\infty}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]
+  \in C^1(M)$.
+\end{theorem}
+
+\begin{proof}
+Suppose first that $a \in C^1(\bR)$. Differentiation under the integral sign  
+  yields the expression for its derivative:
+\begin{equation}
+  \label{eqn:dexpjgen}
+  \frac{d}{dm}\tJa[m;d] = -\frac{(4 \pi r \alpha)^2}{\|d\|^2} \int_{t_{\rm min}}^{t_{\rm max}} \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-mr)(1+(4\pi r \alpha 
+  a(t-mr))^2)^{-2}d(t)^2. 
+\end{equation}
+For $a \in W^{1,\infty}_{\rm loc}(\bR)$ a limiting argument shows that the
+same expression gives the derivative of $\tJa$.
+\end{proof}
+
+It will be useful to record expressions for the various componenets of
+$\tJa$ when the data is noise-free, that is, the context of
+Proposition \ref{thm:norminvexp}, item 3.
+
+\begin{corollary}
+  \label{thm:epjnonoise}
+  Assume the hypotheses of Proposition \ref{thm:norminvexp}, item
+  3. Then noting that $\|d\| = \|w_*\|/(4 \pi r)$
+\begin{equation}
+  \label{eqn:residnorm}
+  e[m,\aw[m,d];d] 
+= \frac{\alpha^4}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^4(1+(4\pi r)^2 \alpha^2 
+    a(t-(m-m^*)r)^2)^{-2}w_*(t)^2.
+\end{equation}
+\begin{equation}
+  \label{eqn:anninorm}
+  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
+    a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
+\end{equation}
+so 
+\begin{equation}
+\label{eqn:expjnonoise}
+\tJa[m;d] = \frac{(4\pi r \alpha)^2}{2\|w_*\|^2}\int\,dt\,a(t-(m-m_*)r)^2(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-1}w_*(t)^2. 
+\end{equation}
+Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, and 
+\begin{equation}
+  \label{eqn:dexpjnonoise}
+  \frac{d}{dm}\tJa[m;d] = -\frac{r (4\pi r \alpha)^2}{\|w_*\|^2} \int \,dt \, 
+  \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
+\end{equation}
+\end{corollary}
+
+\subsection{Choice of Penalty Operator}
+
+We examine two choices for $A$. For each choice, we ask first whether local minimizers 
+of the resulting VPM objective $\tJa[\cdot;d]$ occur far from a slowness $m_*$. 
+
+A penalty operator $A$ of which $\lW$ is the null space would be a
+natural choice. Such operators have come to be called
+``annihilators'', since they map all members of the constraint
+subspace $\lW$ to zero.  A simple example is
+\begin{eqnarray}
+  A = E^c_{\lambda}&=&I - E_{\lambda},\mbox{ where } \nonumber \\
+  E_{\lambda}w(t) &=&{\bf 1}_{[-\lambda,\lambda]}(t)w(t). 
+                      \label{eqn:ann0}
+\end{eqnarray}
+That is, $E_{\lambda}$ is the orthogonal projector onto $\lW$,
+and $E_{\lambda}^c$ is the orthogonal projector onto its
+orthocomplement, an operator of the form \ref{eqn:annmult} with $a
+= 1 - {\bf 1}_{[-\lambda,\lambda]}$. %Note that this choice of $a$
+%satisfies condition \ref{eqn:abnd} with $C \equiv 1$.
+
+\begin{theorem}
+  \label{thm:boxcarbad}
+  Suppose that
+  \begin{itemize}
+  \item[1. ] $\lambda \in (0,\lambda_{\rm max}]$;
+  \item[2. ] $m_*\in M, w_*\in \lW$, and $d=F[m_*]w_*$ (noise-free
+    data);
+  \item[3. ] $A=E^c_{\lambda}$, that is, $a=1-{\bf 1}_{-\lambda,\lambda]}$ in
+    the definition \ref{eqn:annmult}.
+  \end{itemize}
+  Then if $|m-m_*| >  2\lambda/r$,
+  \[
+    \tJa[m;d] = \frac{(4\pi r \alpha)^2}{2(1+(4 \pi r \alpha)^2)}.
+  \]
+\end{theorem}
+
+\begin{proof} of Theorem \ref{thm:boxcarbad}
+  
+ This is clear from the definition $a = 1-{\bf 1}_{-\lambda,\lambda]}$ and equation \ref{eqn:expjnonoise}, as the supports of $w_*$ and ${\bf
+    1}_{[-\lambda,\lambda]}(t-(m-m_*))$ are disjoint for the range of
+  $m$ identified in the theorem.
+\end{proof}
+
+\noindent {\bf Remark.}
+One might have thought that $A=E^c_{\lambda}$ would be a better choice
+of annihilator, as for noise-free
+data, the solution set defined by the problem statement
+\ref{eqn:probstat0} is the same as the set of global minimizers of
+$\Ja$ in this case. However, for this choice of annihilator,
+$t\Ja$ exhibits the same feature as the mean square error $e$, namely
+a continuum of local minimizers at any distance from the global
+minimizer $m_*$ greater than a multiple of $\lambda$. Therefore the
+extended inversion with this choice of annihilator is no more amenable
+to local optimization than is FWI.
+
+A second possible 
+penalty operator penalizes energy away from 
+$t=0$: choose $\tau > 0$ and set 
+\begin{equation}
+  \label{eqn:ann}
+  a(t) = \min(|t|, \tau). 
+\end{equation}
+Note that $a \ge 0$ and $a \in L^{\infty}(\bR) \cap W^{1,1}_{\rm
+  loc}(\bR)$. The cutoff $\tau$ will be chosen large enough to be effectively inactive: 
+specifically, hindsight suggests 
+\begin{equation}
+  \label{eqn:taudef}
+  \tau = \max\{|t_{\rm min}-m_{\rm min}r|,|t_{\rm min}-m_{\rm max}r|, |t_{\rm max}-m_{\rm min}r|, |t_{\rm max}-m_{\rm max}r|\}. 
+\end{equation}
+This 
+particular annihilator has been employed in earlier papers on extended 
+source inversion 
+\cite[]{Plessix:00a,LuoSava:11,Warner:14,HuangSymes:SEG15a,Warner:16,HuangSymes:GEO17}.
+
+\begin{proposition}
+  \label{thm:rampgood}
+  Suppose that
+  \begin{enumerate}
+  \item $m_* \in M$;
+  \item $0 < \mu \le \lambda$, and $w_* \in W_{\mu}$;
+  \item $d_* = F[m_*]w_*$;
+  \item $a(t)=\min\{|t|,\tau\}$ in the definition \ref{eqn:annmult},
+    with $\tau$ given by equation \ref{eqn:taudef}; and
+  \item $\alpha > 0$.
+  \end{enumerate}
+  Then for any $m \in M$, 
+  \begin{equation}
+    | (m - m_*)r| > \lambda  \Rightarrow  \left|\frac{d}{dm}\tJa[m;d_*]\right| > \alpha^2 
+    \frac{\lambda-\mu}{(1+(4\pi r)^2\alpha^2 
+      (\lambda+\mu)^2)^{2}} \|w_*\|^2 
+    \label{eqn:gradbndnonoise}
+  \end{equation}
+\end{proposition}
+\begin{proof}
+  As observed before, $\mbox{supp }\aw[m;d_*] \subset [t_{\rm
+    min}-mr,t_{\rm max}-mr]\subset [-\tau,\tau]$, with $\tau$ defined
+  in \ref{eqn:taudef}. Therefore, $a(t) = |t|$, $a a'(t) = t$ in the
+  support of the integrand on the RHS of equation
+  \ref{eqn:dexpjnonoise}, which therefore 
+  becomes (after change of integration variable)
+  %%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{equation}
+    \label{eqn:gradfinal}
+    \frac{d}{dm}\tJa[m;d_*] = -r \alpha^2 \int \,dt \, 
+  t(1+(4\pi r)^2 \alpha^2 
+  t^2)^{-2}w_*(t+(m-m_*))^2.
+  \end{equation}
+  Recall that $w_*(t+(m-m_*)r)$
+  vanishes if $|t+(m-m_*)r| > \lambda$. Therefore the integral on the
+  RHS of equation \ref{eqn:gradfinal} can be re-written
+  \[
+    = -r\alpha^2\int_{-(m-m_*)r-\lambda}^{-(m-m_*)r+\lambda}
+    \,dt\, t(1+(4\pi r)^2\alpha^2 t^2)^{-2}w_*\left(t+(m-m_*)r\right)^2
+  \]
+  Suppose that $\mu \le \lambda$ and $w_* \in W_{\mu}$. 
+  If $m > m_*+\lambda/r$, then $t+(m-m_*)r \in \mbox{supp }w_*$
+  implies $-\mu - \lambda < t < \mu-\lambda<0$, so 
+  \[
+    t(1+(4\pi r)^2\alpha^2 t^2)^{-2} < (\mu-\lambda)(1+(4\pi r)^2\alpha^2 (\mu+\lambda)^2)^{-2}<0
+  \]
+  in the support of the integrand in equation
+  \ref{eqn:gradfinal}. Arguing similarly for $m<m_*-\lambda/r$, obtain
+  a similar inequality, implying the conclusion \ref{eqn:gradbndnonoise}.
+\end{proof}
+
+\begin{corollary}
+  \label{thm:rampreallygood}
+  Suppose that
+  \begin{enumerate}
+  \item $m_* \in M$;
+  \item $0 <  \lambda$, and $w_* \in \lW$;
+  \item $d_* = F[m_*]w_*$;
+  \item $a(t)=\min\{|t|,\tau\}$ in the definition \ref{eqn:annmult},
+    with $\tau$ given by equation \ref{eqn:taudef}; 
+  \item $\alpha > 0$; and
+  \item$m \in M$ is a stationary point of $\tJa[\cdot;d_*]$.
+  \end{enumerate}
+  Then $|m-m_*| < \lambda /r$.
+\end{corollary}
+
+\begin{proof} Follows directly from Theorem \ref{thm:rampgood} by
+  taking $\mu=\lambda$.
+\end{proof}
+
+The preceding theorem established that a proper choice of annihilator
+leads to a reduced penalty objective all of whose stationary points
+are within $O(\lambda)$ of the target slowness $m_*$, provided that
+the data are noise-free in the sense of equation
+\ref{eqn:defdatanonoise}. This result leaves open two questions:
+\begin{itemize}
+\item how does one use this reduced penalty minimization to produce
+  a solution of the inverse problem as in problem statement
+  \ref{eqn:probstat0}? 
+\item how does one answer the same question for noisy data?
+\end{itemize}
+
+The next result answers the first question, in the case of noise-free data:
+\begin{proposition}
+  \label{thm:ipnonoisesuf}
+  Suppose that $a$ is given by definition \ref{eqn:ann}, $\alpha$,
+  $\mu \in (0,\lambda_{\rm max}]$,
+  $d$ is given by
+  \ref{eqn:defdatanonoise} with $w_* \in W_{\mu}$, and  $m_{\infty}$ is a stationary
+  point of $\tJa[\cdot;d]$. Then $(m_{\infty},\aw[m_{\infty};d])$ is a
+  solution of the inverse problem \ref{eqn:probstat0} for any $\lambda
+  \ge 2\mu$ and $\epsilon \ge (4\pi r \lambda \alpha)^2$.
+\end{proposition}
+
+\begin{proof}
+  From the assumption $w_* \in W_{\mu}$ and Corollary
+  \ref{thm:rampreallygood}, $|(m_{\infty}-m_*)r|\le \mu$. From the
+  identity \ref{eqn:solnonoise},
+  $\mbox{supp }\aw[m_{\infty};d] \subset
+  [(m_{\infty}-m_*)r-\mu,(m_{\infty}-m_*)r+\mu] \subset
+  [-2\mu,2\mu]$. Because of the support limitation, $a(t)=|t|$ in the
+  interval of integration appearing in \ref{eqn:residnorm}, so
+\[
+  e[m_{\infty},\aw[m_{\infty},d];d] 
+= 8 \pi^2 r^2 \alpha^4\int^{\mu}_{-\mu}\,dt\,|t-(m_{\infty}-m_*)r|^4(1+(4\pi r)^2 \alpha^2 
+|t-(m_{\infty}-m^*)r|^2)^{-2}w_*(t)^2.
+\]
+and therefore
+\begin{equation}
+  \label{eqn:estresidnorm}
+e[m_{\infty},\aw[m_{\infty};d];d] \le 8 \pi^2 r^2 (2\mu\alpha)^4 \|w_*\|^2 =
+\frac{1}{2}(8 \pi r \mu \alpha)^4 \|d\|^2
+\end{equation}
+\end{proof}
+
+The inequality \ref{eqn:estresidnorm} can be interpreted as a bound 
+on $\alpha$, given $\epsilon$ and $\lambda$, for a
+stationary point of $\tJa$ to yield a solution of the inverse
+problem: one obtains a solution, provided that $\alpha$ is
+sufficiently small. On the other hand, it is clear that $\alpha$
+cannot be too large if stationary points of $\tJa$ are to yield
+solutions: the integrand in \ref{eqn:residnorm} is increasing in
+$\alpha$ for every $t$ and $m$, and the multiplier
+\[
+t \mapsto (4\pi r \alpha(t-(m_{\infty}-m_*)r))^4(1+(4\pi r)^2 \alpha^2 
+|t-(m_{\infty}-m^*)r|^2)^{-2}
+\]
+tends monotonically to $1$ as $\alpha \rightarrow \infty$, uniformly
+on the complement of any open interval containing
+$t=(m_{\infty}-m_*)r$. Therefore
+\begin{equation}
+  \label{eqn:elimit}
+  \lim_{\alpha \rightarrow \infty}e[m_{\infty},\aw[m_{\infty};d];d] =
+  \frac{1}{2}\frac{1}{(4 \pi r)^2}\|w_*\|^2 = \frac{1}{2}\|d\|^2.
+\end{equation}
+Consequently, there exists $\alpha_{\rm max}(\epsilon,\lambda,d)$ so
+that
+\[
+  e[m_{\infty},\aw[m_{\infty};d];d]  \le \frac{1}{2}\epsilon^2\|d\|^2
+  \Rightarrow \alpha \le \alpha_{\rm max}(\epsilon,\lambda,d).
+\]
+The existence of this limiting penalty weight has been inferred
+indirectly; the next section is devoted to a constructive algorithm
+for its approximation.
+
+We turn now to the second issue identified above, the effect of
+noise. Suppose that the data trace $d$ takes the form
+\begin{equation}
+  \label{eqn:defdatanoisy}
+  d = F[m_*]w_* + n = d_*+n,
+\end{equation}
+with $m_* \in M, w_* \in W_{\mu}$, $0<\mu<\lambda$, and noise trace $n \in
+D$. Since no support assumptions can be made about $n$, equation
+\ref{eqn:normsol} implies that $\aw[m;d] \notin \lW$ for any values of
+$\alpha$ and $\lambda$.  Therefore minimization of $\tJa$ cannot by itself yield a
+solution of the inverse problem as defined in the problem statement
+\ref{eqn:probstat0}. In this section, we explain how a solution may
+nontheless be constructed from a stationary point of $\tJa$.
+
+First we examine the effect of additive noise on the estimation of the
+slowness $m$. In expressing the result, we use the dimensionless
+relative data error
+\begin{equation}
+  \label{eqn:defeta}
+  \eta = \frac{\|n\|}{\|d_*\|}. 
+\end{equation}
+
+\begin{proposition}
+  \label{thm:mnoise}
+  Assume the hypotheses of Proposition \ref{thm:rampgood}, and that $d$ is
+  given by definition \ref{eqn:defdatanoisy}. Suppose that $m \in M$
+  is a stationary point of $\tJa[\cdot;d]$, and that
+  \begin{equation}
+    \label{eqn:mnoisebnd}
+    \eta(1+\eta) \le \frac{16}{3\sqrt{3}}\frac{4\pi r \alpha
+      (\lambda-\mu)}{(1+(4\pi r\alpha(\lambda+\mu))^2)^2}
+  \end{equation}
+  Then
+  \begin{equation}
+    \label{eqn:mnoisebndfin}
+    |m-m_*| \le \frac{\lambda}{r}
+  \end{equation}.
+\end{proposition}
+
+\begin{proof}
+  From equation \ref{eqn:dexpjgen}, $d \tJa / dm$ is the
+value of a quadratic form in $d$ with (indefinite) symmetric operator
+$B = $ multiplication by
+\[
+  b(t;m,\alpha)  = -\frac{(4 \pi r \alpha)^2 (t-mr)}{(1+(4\pi r \alpha (t-mr))^2)^{2}}
+\]
+Therefore
+\begin{equation}
+  \label{eqn:gradlip}
+  \left|\frac{d}{dm}\tJa[m;d]-\frac{d}{dm}\tJa[m;d_*]\right| =
+  |\langle (d+d_*),B(d-d_*)\rangle| \le \max_{t \in
+    \bR}|b(t;m,\alpha)|\eta(1+\eta)\|d_*\|^2
+\end{equation}
+A straightforward calculation shows that
+\[
+  \max_{t \in \bR} b(t;m,\alpha) = \frac{3\sqrt{3}}{16} 4\pi r\alpha.
+\]
+For a stationary point $m$ of
+$\tJa[\cdot;d]$, the inequality \ref{eqn:gradlip} implies
+\[
+  \left|\frac{d}{dm}\tJa[m;d_*]\right| \le \frac{3\sqrt{3}}{16} 4\pi
+  r\alpha \eta(1+\eta)\|d_*\|^2
+\]
+On the other hand, the conclusion \ref{eqn:gradbndnonoise} of Proposition
+\ref{thm:rampgood} implies that if also
+\[
+  \frac{3\sqrt{3}}{16} 4\pi r\alpha \eta(1+\eta)\|d_*\|^2 \le (4 \pi r
+  \alpha)^2 \frac{\lambda-\mu}{(1+(4\pi r)^2\alpha^2
+    (\lambda+\mu)^2)^{2}} \|d_*\|^2
+\]
+then $|m-m_*|\le \lambda/r$. Rearranging, obtain the conclusion.
+\end{proof}
+
+\begin{corollary}
+  \label{thm:mnoisecor}
+  Asumme the hypotheses of Theorem \ref{thm:mnoise}, in particular
+  that $m$ is a stationary point of $\tJa[\cdot;d]$, $d=d_*+n$. Then
+  \begin{equation}
+    \label{eqn:mnoisecor}
+    |m-m_*| \le \frac{\mu}{r} + \frac{\eta}{\alpha} \left(\frac{3\sqrt{3}(1+\eta)}{64\pi r^2}(1+(8\pi r \alpha
+      \lambda_{\rm max})^2)^2\right)
+  \end{equation}
+\end{corollary}
+
+\begin{proof} Assume that $\lambda$ is chosen to obtain equality in
+  the condition \ref{eqn:mnoisebnd}, substitute the bound $2
+  \lambda_{\rm max}$ for $\lambda + \mu$ in the denominator, solve for
+  $\lambda$ and substitute in inequality\ref{eqn:mnoisebndfin}.
+\end{proof}
+
+\noindent {\bf Remark:} This is the only error bound on $m$ in which
+the size of $\alpha$ plays a significant role. It
+suggests that error in the estimate of $m$ due to data noise is a
+decreasing function of $\alpha$, at least for small $\alpha$. This result is intuitively
+appealing, and is supported by numerical evidence, as shown below.
+
+%%%%%%%%%%%
+\begin{proposition}
+  \label{thm:wnoiseres}
+  Asumme that
+  \begin{itemize}
+  \item[1. ] $\alpha, \mu> 0$,
+  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
+  \item[3. ] $d_* = F[m_*]w_*$,
+  \item[4. ] $n \in D$ and $d = d_* + n$.
+  \end{itemize}
+  Set $\eta = \|n\|/\|d_*\|$, and assume further that
+  \begin{itemize}
+  \item[5. ]
+    \begin{equation}
+      \label{eqn:mnoisecond}
+      \eta < \frac{\sqrt{5}-1}{2}, and
+    \end{equation}
+  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
+  \end{itemize}
+  Then
+  \begin{equation}
+    \label{eqn:mnoisesuff}
+    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
+  \end{equation}
+\end{proposition}
+
+\begin{proof}
+  From equation \ref{eqn:normsol},
+  \[
+    \aw[m;d](t) = 
+    \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
+  \]
+  \[
+    =4\pi r(1 + (4\pi r \alpha t)^2)^{-1} (\frac{1}{4\pi r}
+    w_*(t+(m-m_*)r) + n(t+mr) 
+  \]
+  so
+  \begin{equation}
+    \label{eqn:wres}
+    \aw[m;d](t) - w_*(t) = (4\pi r \alpha t)^2 (1+ (4\pi r \alpha t)^2)^{-1}w_*(t+(m-m_*)r)
+    +w_*(t+(m-m_*)r)-w_*(t) + 4 \pi r (1 + (4\pi r \alpha t)^2)^{-1}n(t+mr)
+  \end{equation}
+\end{proof}
+%  \begin{itemize}
+%    \item[1. ] the bound \ref{eqn:mnoisebnd} holds only if 
+%      noise level $\eta=\|n\|/\|d_*\|$ satisfies
+%      \begin{equation}
+%        \label{eqn:mnoisecond}
+%        \eta < \frac{1+\sqrt{5}}{2} < 1;
+%      \end{equation}
+%    \item[2. ] if condition \ref{eqn:mnoisecond} holds, then
+%      $|m-m_*|<\lambda/r$ provided that
+%      \begin{equation}
+%        \label{eqn:mnoisesuff}
+%        \frac{\lambda}{\mu} \ge 1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}. 
+%      \end{equation}
+%      \begin{equation}
+%        \label{eqn:mnoisesuff}
+%        |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}. 
+%      \end{equation}
+%    \end{itemize}
+%\end{corollary}
+
+\begin{theorem}
+  \label{thm:mnoiseres}
+  Asumme that
+  \begin{itemize}
+  \item[1. ] $\alpha, \mu> 0$,
+  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
+  \item[3. ] $d_* = F[m_*]w_*$,
+  \item[4. ] $n \in D$ and $d = d_* + n$.
+  \end{itemize}
+  Set $\eta = \|n\|/\|d_*\|$, and assume further that
+  \begin{itemize}
+  \item[5. ]
+    \begin{equation}
+      \label{eqn:mnoisecond}
+      \eta < \frac{\sqrt{5}-1}{2}, and
+    \end{equation}
+  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
+  \end{itemize}
+  Then
+  \begin{equation}
+    \label{eqn:mnoisesuff}
+    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
+  \end{equation}
+\end{theorem}
+
+\begin{proof} of Theorem \ref{thm:mnoiseres}:
+  Write $\lambda = (1+\delta)\mu$, and $x=4 \pi r \alpha \mu$. Then
+  the right-hand side of equation \ref{eqn:mnoisebnd} may be written as
+  \begin{equation}
+    \label{eqn:mnoisebndrev}
+    \frac{16}{3\sqrt{3}}\frac{4\pi r \alpha
+      (\lambda-\mu)}{(1+(4\pi r\alpha(\lambda+\mu))^2)^2} = D
+    \frac{x}{(1+C^2 x^2)^2},
+  \end{equation}
+  where
+  \[
+    D=\frac{16}{3\sqrt{3}}\delta,\,C=2+\delta.
+  \]
+  The positive stationary point of the quantity on the right-hand side
+  of \ref{eqn:mnoisebndrev} is a maximum, and occurs at
+  $x=1/(\sqrt{3}C)$, that is
+  \[
+    4 \pi r \alpha \mu = \frac{1}{\sqrt{3}(2+\delta)}.
+  \]
+  Thus
+  \[
+    1+C^2x^2 = \frac{4}{3}
+  \]
+  hence the maximum value is
+  \[
+    \frac{D3\sqrt{3}}{16C} = \frac{\delta}{2+\delta}.
+  \]
+  This maximum value must be larger than the left hand side of inequality
+  \ref{eqn:mnoisebnd}, that is,
+  \[
+    \eta(1+\eta) \le \frac{\delta}{2+\delta},
+  \]
+  in order that there be any solutions at all, but the right hand side
+  is less than $1$. This observation establishes the necessity of
+  hypothesis \ref{eqn:mnoisecond} of the
+  theorem. Solving this above inequality for $\delta$ and unwinding
+  the definitions, one finds that the right-hand side of inequality
+  \ref{eqn:mnoisebnd} is bounded by \ref{eqn:mnoisesuff}, so appeal to
+  Proposition \ref{thm:mnoise} finishes the proof.
+\end{proof}
+
+\noindent {\bf Remark.} That is, {\em with the choice of penalty
+  multiplier $a$ given in equation \ref{eqn:ann}, and support radius
+  $\mu$ of the ``noise-free'' wavelet $w_*$, $\Ja$ has no local
+  minima with slownesses further than $(1+O(\eta))\mu/r)$ from the slowness used to
+  generate the data}.
+
+\noindent {\bf Remark.} The estimate $|m-m_*|r<\mu(1+O(\eta))$ for
+local minima of $\Ja$ is sharp: it is possible to choose $w_* \in W_{\mu}$
+so that $\mu - |m-m_*|r$ is as small as you like. In particular,
+the ``exact'' or ``true'' slowness $m_*$ is not necessarily the only
+slowness component of a local minimizer, or even the slowness
+component of any local minimizer, and in particular
+is not (necessarily) the slowness component of a global minimizer of $\Ja$.
+
+\noindent {\bf Remark.} No similar bound could hold for much larger
+noise levels than specified in condition \ref{eqn:mnoisecond}, the
+right-hand side of which is a bit larger than 0.6. For example, if the noise is
+the predicted data for the same wavelet $w_*$ with a substantially different
+slowness $m_{\flat}$, that is, $n=F[m_{\flat}]w_*$, then a simple
+symmetry argument shows that if there is a local minimizer of $\Ja[\cdot,\cdot;d_*+n]$. with
+slowness near $m_*$,
+there must also be a minimizer with slowness near $m_{\flat}$.
+so that the difference with $m_*$ is not constrained at
+all by the assumed support radius of $w_*$. So for this example with 100\% noise, no
+bound of the type given by conclusion 2 could possibly hold. We will
+illustrate this phenomenon numerically later in the paper.
+
+\noindent{\bf Remark.} Note that $\alpha$ plays no role in the
+conclusions of this theorem. It is only required that $\alpha >0$.
+
+\noindent {\bf Remark:} We emphasize that Theorem \ref{thm:mnoiseres} states {\em sufficient} conditions for a bound on
+the slowness error $|m-m_*|$ in terms of the relative data noise level $\eta$,
+giving an additional ``fudge factor'' beyond the support size $\mu$
+of the noise-free wavelet $w_*$ for an interval within which the slowness error is
+guaranteed to lie.
+
+Conclusion 1 in Theorem \ref{thm:mnoiseres} constrains the range of
+noise level to which these results apply to a bit more than 60\%. That
+is, the bound given by conclusion 2 is useful only for small noise. In
+the limit as $\eta \rightarrow 0$, conclusion 2 becomes
+$\lambda/\mu \gtrsim 1 + 2\eta$, that is, the ``fudge factor'' beyond
+the noise-free bound is approximatly twice the noise level.
+
+On the other hand, stronger bounds than given by Theorem
+\ref{thm:mnoiseres} are possible, given additional constraints on the
+noise $n$. A natural example is uniformly distributed random noise,
+filtered to have the same spectrum as the source. The expression
+\ref{eqn:dexpjgen} implies that the interaction of noise $n$ and
+signal $d_*$ in the derivative of $\tJa$ is local, so that the
+coefficient of $\eta$ on the left-hand side of inequality
+\ref{eqn:mnoisebnd} is effectively much less that 1, resulting in a
+larger range of allowable $\eta$. While we will not formulate such a
+result, one of the numerical examples below suggests its feasibility.
+
+Unless the data is noise-free, there is no reason to suppose that the
+estimated wavelet $\aw[m;d]$ (Theorem \ref{thm:norminv}) will lie in
+$\lW$, unless the support of the noise $n$ is not restricted. In order
+to construct a solution of the inverse problem \ref{eqn:probstat0}, we
+project $\aw[m;d]$ onto $\lW$. For sufficiently large $\lambda,
+\epsilon$, the result is a solution of the inverse problem:
+
+\begin{theorem}
+  \label{thm:ipnoisesuf}
+  Assume the hypotheses of Theorem \ref{thm:mnoiseres}, and that
+  inequality \ref{eqn:mnoisecond} holds, and $\mu \in
+  (0,\lambda_{\rm max}]$. Then the pair
+  \[
+    (m,{\bf 1}_{[-\lambda,\lambda]}\aw[m,d])
+  \]
+  solves the inverse problem as stated in \ref{eqn:probstat0} if
+  \begin{equation}
+    \label{eqn:ipnoiselam}
+    \left( 2+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\mu \le \lambda
+    \le \lambda_{\rm max}, 
+  \end{equation}
+  and
+  \begin{equation}
+    \label{eqn:ipnoiseeps}
+    \epsilon \ge (4 \pi r \alpha\lambda)^2+\eta. 
+  \end{equation}    
+\end{theorem}
+
+\begin{proof} of Theorem \ref{thm:ipnoisesuf}:
+From Theorem \ref{thm:norminv}, 
+\[
+  \aw[m;d](t) = (1+ (4 \pi r \alpha t)^2)^{-1}(w_*(t+(m-m_*)) + 4\pi r 
+  n(t+mr)) 
+\]
+\[
+  = \aw[m;d_*] + (1+ (4 \pi r \alpha t)^2)^{-1}4\pi r n(t+mr)
+\]
+
+From Theorem \ref{thm:mnoiseres},
+\[
+  |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r} 
+\]
+which from assumption \ref{eqn:ipnoiselam} is
+\[
+  =\left(2+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}
+  -\frac{\mu}{r} \le \left(\frac{\lambda}{\mu}-1\right)\frac{\mu}{r}
+\]
+That is,
+\[
+  |m-m_*|r \le \lambda-\mu.
+\]
+From Theorem \ref{thm:norminv},
+\[
+  \mbox{supp }\aw[m;d_*] \subset [-\mu-(m-m_*)r, \mu-(m-m_*)r]
+  \subset [-\lambda,\lambda]
+\]
+so
+\[
+  E_{\lambda}\aw[m;d](t) = \aw[m;d_*](t) + E_{\lambda}(1+ (4 \pi r \alpha
+  t)^2)^{-1}4\pi r n(t+mr)
+\]
+From the definition of $F[m]$, for any $t_1<t_2$, $w \in W$,  
+\[
+  F[m]{\bf 1}_{[t_1.t_2]}w = {\bf 1}_{[t_1+mr,t_2+mr]}F[m]w  
+\]
+Thus the data residual after projection is
+\[
+  F[m]E_{\lambda}\aw[m,d](t) -d(t) = F[m]\aw[m,d_*](t) -d_*(t)  
+\]
+\[
+  + {\bf 1}_{[-\lambda+mr,\lambda+mr]}(4 \pi r \alpha (t-mr))^2 (1+ (4 \pi
+  r \alpha (t-mr))^2)^{-1} n(t)
+\]
+\[
+  -(1- {\bf 1}_{[-\lambda+mr,\lambda+mr]})n(t)
+\]
+From \ref{eqn:residnorm} and the bound on $m-m_*$,
+\[
+  \| F[m]E_{\lambda}\aw[m,d_*] -d_*\|^2 = (4 \pi r \alpha)^4
+  \int_{-\lambda+(m-m_*)r}^{\lambda+(m-m_*)r}\,dt\, (t-(m-m_*)r)^4
+\]
+\[
+  \times (1+(4\pi r \alpha)^2 
+  (t-(m-m^*)r)^2)^{-2}d_*(t)^2
+\]
+\[
+  \le (4 \pi r \alpha \lambda)^4\|d_*\|^2
+\]
+Similarly, the norm squared of the sum of the last two terms is 
+\[
+  \le (4 \pi r \alpha \lambda)^2 \|{\bf 1}_{[-\lambda+mr,\lambda+mr]}
+  n\|^2 + \|(1 - {\bf 1}_{[-\lambda+mr,\lambda+mr]}n\|^2
+\]
+Without additional hypotheses to outlaw the accumulation of $n$ near
+$t=mr$, all that can be said is that this is
+\[
+  \le \max \{(4 \pi r \alpha \lambda)^2, 1\} \|n\|^2
+\]
+Putting this all together,
+\[
+  \|F[m]E_{\lambda}\aw[m,d]-d\| \le (4 \pi r \alpha
+  \lambda)^2\|d_*\| + \max \{4\pi r \alpha \lambda, 1\}\|n\|
+\]
+\[
+  \le ((4 \pi r \alpha \lambda)^2 +\max \{4\pi r \alpha \lambda, 1\}
+  \eta)\|d_*\|.
+\]
+If the right-hand side is to be less than $\|d_*\|$ as required by the
+definition \ref{eqn:probstat0} of the inverse problem, then
+necessarily $4\pi r\alpha \lambda < 1$, so the right hand side in the
+preceding inequality is bounded by the right hand side of assumption
+\ref{eqn:ipnoiseeps} of the theorem. Therefore this assumption implies
+that the relative residual is $\le \epsilon$.
+\end{proof}
+
+\noindent {\bf Remark:} Note that the sufficient condition \ref{eqn:ipnoiselam} for
+$\lambda$ is independent of $\alpha$. It follows that for any choice
+of $\lambda$ consistent with this bound, $(m,{\bf
+  1}_{[-\lambda,\lambda]}\aw[m,d])$ is a solution of the inverse
+problem for any $\epsilon > 0$ provided that $\alpha$ is chosen
+sufficiently small ($O(\sqrt{\epsilon})$).
+
+
+\bibliographystyle{seg}
+\bibliography{masterref,local}
+
+\append{Numerics and penalty selection via the Discrepancy Principle}
+This appendix describes a method for controlling the penalty
+weight $\alpha$ based on the Discrepancy Principle
+\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}.
+
+Modified Problem Statement:
+\begin{quote}
+  \label{eqn:probmod}
+  given $d \in D$ and $0 < e_- < e_+$,  find  $m \in M, \alpha \in \bR^+$ so that
+  \begin{itemize}
+  \item[(i) ]$m$ is a stationary point of $\tJa[\cdot;d]$, and
+  \item[(ii) ]$e[m,\aw[m;d];d] \in [e_-,e_+]$.
+  \end{itemize}
+\end{quote}
+
+\noindent {\bf Remark:} Given a solution $m_{\infty}, \alpha_{\infty}$, the pair
+$(m_{\infty},w_{\alpha_{\infty}}[m_{\infty};d])$ is a local minimizer
+of $J_{\alpha_{\infty}}[\cdot,\cdot;d]$ (Theorem \ref{thm:norminv}).
+%.
+%so is also a minimizer of $g[w]$ over the set
+%\[
+%  \{(m,w): e[m,w;d] \ge
+%  e[m_{\infty},w_{\alpha_{\infty}}[m_{\infty};d]]\}
+%\]
+%or equivalently a maximizer of $e[m,w,d]$ over the set
+%\[
+%  \{(m,w): m \in M, g[w] \le g[w_{\alpha_{\infty}}[m_{\infty};d]]\}
+%\]
+%according to standard Lagrange multiplier theory. That is, 
+
+We describe an alternating, or coordinate search, algorithm for
+solution of problem \ref{eqn:probmod}, combining a local optimization
+algorithm for updating $m$, and a second algorithm for updating
+$\alpha$. A first version of this algorithm appeared in \cite{FuSymes2017discrepancy}.
+
+Given an
+objective function $\Phi: M \rightarrow \bR$, a local optimization algorithm generates 
+generates a map $G[\Phi,...]: M \rightarrow M$, mapping a current estimate
+of $m$ to an updated estimate. The update rule may depend only on the
+current estimate, as is the case for steepest descent, the
+Gauss-Newton method, or Newton's method, or may also depend on
+information generated during earlier updates, as for secant-type
+methods such as BFGS. The notation is intended to allow for this
+latter possibility. Under ``standard conditions'' on $\Phi$ and the initial estimate for
+$m$, and equipped with so-called globalization safeguards to ensure
+satisfaction of sufficient decrease conditions
+(see \cite{NocedalWright}), the iteration produces a sequence in $M$
+converging to a local minimizer of $\Phi$. An example of such a local
+optimization algorithm is steepest descent with backtracking line
+search.
+
+A normal stopping criterion for such an algorithm would be a tolerance
+test for the norm of $\nabla \Phi$ (and a limit on iteration count, of
+course). In our application to $\Ja = e + \alpha^2 g$, we add another
+stopping criterion:
+\begin{quote}
+  stop if $e \notin [e_-,e_+]$.
+\end{quote}
+Since $e$ is a summand in $\tJa$, $e$ will typically decrease along a
+minimizing sequence, so the expected condition invoking this stopping
+rule is $e<e_-$. We denote a update rule with this enhancement,
+applied to $\tJa$, by $G[\alpha,e_-,e_+,...]$, still allowing the
+possibility of information in addition to the current iterate.
+
+We will also require a rule for updating $\alpha$, defining a map $H: M \times E
+\rightarrow \bR^+$, in which $E=\{(e_-,e_+) \in \bR^2:
+e_-<e_+\}$. For any $m \in M$ the rule is required to produce an $\alpha$ for which
+the error bounds are satisfied: If $(m, e_-, e_+) \in M \times E$ and $\alpha = H(m, e_-,
+e_+)$, then $e[m,\aw[m,d];d] \in [e_-,e_+]$. We will describe two
+such rules below.
+
+In outline, the algorithm is as follows:
+\begin{algorithm}[H]
+\caption{Scheme for updating $m, \alpha$}
+\begin{algorithmic}[1]
+  \State Choose $m\in M$
+  \Repeat
+  \State $\alpha \gets H[m,e_-,e_+]$
+  \Repeat
+  \State $m \gets G[\alpha,e_-,e_+,...](m)$
+  \Until{$e[m,\aw[m,d];d] \notin [e_-,e_+]$ or $\|\nabla \tJa[m;d]\|$
+    sufficiently small, or...}
+  \Until{$e[m,\aw[m,d];d] \in [e_-,e_+]$} 
+\end{algorithmic}
+\end{algorithm}
+Note that after step 3, the error bounds are satisfied, that is,
+$e[m,\aw[m;d];d] \in [e_-,e_+]$, but after step 4, that is likely not
+to be the case: the alteration of $m$ is likely to reduce $e$, as it is a
+summand in the definition of $\tJa$. If the $e$ is reduced below
+$e_-$, or if an approximate local minimizer is detected, then the condition in step 6 is satisfied, so control returns
+to step 7. If it is satisfied, the algorithm terminates, elsewhich
+control loops back to step 2, $\alpha$ is updated, and the inner $m$
+update loop is entered again. Termination requires that the bounds on
+$e$ are satisfied (step 7), hence that the $m$ update loop terminates
+by finding a local min which satisfies these bounds. 
+
+
+
+
+Accordingly, regard $m$ as fixed and suppress it from the notation for the remainder of ;dthis section, and introduce the abbreviations
+\begin{eqnarray}
+\label{eqn:erralph}a
+e(\alpha) &=& e[m,\aw[m;d],d]\\
+\label{eqn:penalph}
+p(\alpha) &=& p[m,\aw[m;d],d]
+\end{eqnarray}
+Since the normal matrix $F^T F + \alpha^2 A^T A$ has been assumed
+invertible (condition \ref{eqn:nopco}), the solution of $\aw$ of the
+normal equation \ref{eqn:condition} is smooth in $\alpha^2$.
+Differentiating equation \ref{eqn:condition} with respect to  $\alpha^2$ leads to the relation
+\begin{equation}
+(F^T F + \alpha^2 A^T A ) \frac{dw}{d\alpha^2} = -A^T A w
+\label{eqn:dnorm}
+\end{equation}
+whence
+\begin{align}
+\frac{de}{d\alpha^2} 
+&=\left\langle\frac{dw}{d\alpha^2},F^T(Fw-d) \right\rangle \nonumber \\
+&=-\alpha^2\left\langle\frac{dw}{d\alpha^2},A^TAw\right\rangle \nonumber \\ 
+&=\alpha^2 \langle A^TAw,(F^TF + \alpha^2 A^TA)^{-1}A^TAw\rangle \nonumber \\
+&\ge 0
+\label{eqn:de}
+\end{align}
+Note that the inequality in equation \ref{eqn:de} is {\em strict}  if $p > 0$ hence $A^TAw \ne 0$, since the normal operator is assumed to be positive definite.
+The derivative of $p(\alpha^2)$ with respect to $\alpha^2$ is
+\begin{align}
+\frac{dp}{d\alpha^2} &=  -\langle A^T Aw,(F^TF + \alpha^2 A^TA)^{-1}A^TAw \rangle \nonumber \\
+&\leq 0
+\label{eqn:dp}
+\end{align}
+similarly a strict inequality if $p > 0$.
+
+Equations \ref{eqn:de} and \ref{eqn:dp} show that increasing $\alpha^2$ implies increasing $e$ while decreasing $p$, and
+\begin{align}
+&\langle A^TA w,(F^TF + \alpha^2 A^TA)^{-1} A^TA w \rangle \nonumber \\ 
+=& \langle (A^TA)^{1/2}w,[(A^TA)^{-1/2}F^TF(A^TA)^{-1/2} + \alpha^2 I]^{-1}(A^TA)^{1/2}w \rangle \nonumber \\ 
+\le& \frac{1}{\alpha^2} \langle A^TA w, w\rangle = \frac{2}{\alpha^2}p
+\end{align}
+In view of equation \ref{eqn:de},
+\begin{equation}
+\label{eqn:lep}
+\frac{de}{d\alpha^2}  \le 2p.
+\end{equation}
+with this inequality also being strict if $p > 0$.
+
+Suppose the current weight is $\alpha^2_c$ and denote a candidate for an updated weight by $\alpha^2_+$. Then from inequality \ref{eqn:lep},
+\begin{equation}
+e(\alpha^2_+)-e(\alpha^2_c) \le \int_{\alpha^2_c}^{\alpha^2_+} 2p d\alpha^2
+\end{equation}
+If $\alpha^2_+ \ge \alpha^2_c$, then in view of inequality \ref{eqn:dp}, the above is
+\begin{equation}
+\label{eqn:basic}
+\le 2 p(\alpha^2_c) (\alpha^2_+-\alpha^2_c)  
+\end{equation}
+
+Let us suppose that $e(\alpha^2_c) < e_{+}$. Then setting 
+\begin{equation}
+\label{eqn:alphasecant}
+\alpha^2_+ = \alpha^2_c + \frac{e_{+}-e(\alpha^2_c)}{2p(\alpha^2_c)} 
+\end{equation}
+implies via inequality \ref{eqn:basic} that 
+\begin{equation}
+e(\alpha^2_+)-e(\alpha^2_c) \le e_{+}-e(\alpha^2_c)
+\end{equation}
+
+Assuming that $p(\alpha^2_+) > 0$, hence $p(\alpha^2)>0$ for $\alpha^2_c \le \alpha^2 \le \alpha^2_+$,  we conclude that if $\alpha^2_+$ is given by the rule \ref{eqn:alphasecant},
+then
+\begin{equation}
+\label{eqn:assert}
+e(\alpha^2_c) < e(\alpha^2_+) \le e_{+}
+\end{equation}
+That is, unless $p(\alpha^2_+) = 0$ (in which case a physical solution of the inverse problem has been reached),  $e(\alpha^2_+)$ is larger than $e(\alpha^2_c)$ but in any case does not exceed $e_+$. The rule \ref{eqn:alphasecant} therefore provides a feasible updated $\alpha^2$ consistent with the upper bound in the discrepancy principle.
+
+
+\append{Heisenberg, support, and wavelength}
+Without further contraints on data or solution, nothing more can be
+said about bounds on $\alpha$. If the data $d$ (and the target wavelet
+$w_*$) are assumed to have a square integrable derivative, then a
+necessary condition follows from the Heisenberg
+inequality (see for example \cite{Folland:07}, p. 255). To formulate
+this result in its most general form, introduce the Hilbert subspaces
+$V^0 \subset L^2(\bR), V^1 \subset H^1(\bR)$:
+\begin{eqnarray}
+  V^0 & = & \{ f \in L^2(\bR): Af \in L^2(\bR)\}, \nonumber\\
+  V^1 & = & V^0 \cap H^1(\bR).
+            \label{eqn:vdef}
+\end{eqnarray}
+$V^0$ is the domain of $A$, and equipped with the graph norm of $A$. A
+natural norm in $V^1$ is
+\[
+  \|f\|^2_{V^1} = \|f\|_{V^0}^2 + \|f\|_{H^1}^2.
+\]
+$V^j$ is the completion of $C_0^{\infty}(\bR)$ in the corresponding
+norm, j=0,1.
+
+\begin{proposition}
+  \label{thm:heis}
+For $w \in V^1$,
+  \begin{equation}
+    \label{eqn:heis}
+    \|Aw\|\|w'\| \ge \frac{1}{2}\|w\|^2
+  \end{equation}
+\end{proposition}
+
+\begin{proof}
+  For $w \in C_0^{\infty}(\bR)$,
+  \[
+    \int w^2 = \left|\int\,dt\, t (w(t)^2)' \right|= \left|2\int\,dt\,tw(t)w'(t)\right| \le
+    2\|Aw\| \|w'\|
+  \]
+  by the Cauchy-Schwarz inequality. Since $C_0^{\infty}(\bR)$ is dense
+  in $V^1$, the conclusion follows by continuity.
+\end{proof}
+
+In the conventional formulation of the Heisenberg inequality, the $L^2$ norm of
+$w'$ is replaced by the its equivalent in terms of the Fourier
+transform $\hat{w}$. Adopting temporarily the use of dummy variables
+in the expression of functions, the identity \ref{eqn:heis} turns into
+the usual form of the Heisenberg inequality: for $w \in V^1$,
+\begin{equation}
+\label{eqn:fheis}
+\|tw(t)\|\|k\hat{w}(k)\| \ge \frac{1}{4\pi}\|w\|^2.
+\end{equation}
+
+Define $\krms[w]$, the root mean square estimator of frequency of $w
+\in V^1$, by
+\begin{equation}
+  \label{eqn:krms}
+  \krms[w]=\frac{1}{2\pi}\frac{\|w'\|}{\|w\|} = \left(\int
+    \,dk\,\frac{|\hat{w}(k)|^2}{\|\hat{w}\|^2} k^2\right)^{1/2}.
+\end{equation}
+Then the inequalities \ref{eqn:heis}, \ref{eqn:fheis} can be rewritten as
+\begin{equation}
+  \label{eqn:frmsheis}
+  \|Aw\| \ge \frac{\|w\|}{4\pi \krms[w]}.
+\end{equation}
+
+For $\lambda >0$, define
+\begin{equation}
+  \label{eqn:wlam1}
+  \lW^1 = \lW \cap H^1(\bR).
+\end{equation}
+Note that $\lW^1 \subset V^1$ is a closed subspace for any
+$\lambda>0$.
+
+\begin{proposition}
+  \label{thm:klam}
+  For $w \in \lW^1$,
+  \[
+    \krms[w] \ge \frac{1}{4 \pi \lambda}
+  \]
+\end{proposition}
+
+\begin{proof}
+  Follows directly from inequality \ref{eqn:frmsheis} and the obvious bound
+  $\|A|_{\lW}\|\le \lambda$.
+\end{proof}
+
+\noindent{\bf Remark:} This result is the link mentioned earlier between the support
+constraint and the well-known frequency-based criteria for success of
+FWI. The result of Theorem \ref{thm:fwi} can be rephrased as showing the
+existence of many stationary points of the mean-square error function
+for which the travel time is in error by more than
+$\lambda \ge 1/{4 \pi \krms[w]|}$. In fact, the usual error criterion mentioned in the
+literature is that the initial estimate of travel time must be in error by at most ``half a
+wavelength'' if FWI is to converge reliably. This is correct in some
+circumstances, depending on features of the target wavelet $w_*$ of
+which the arguments in this paper do not take account.
+
+\begin{proposition}
+  \label{thm:heis2}
+  For $\lambda>0, w \in \lW^1$,
+  \begin{equation}
+    \label{eqn:heis2}
+    \|A^2w\| \ge \frac{\|w\|}{24 \lambda (2\pi\krms[w])^3}.
+  \end{equation}
+\end{proposition}
+
+\begin{proof}
+  Since $A$  preserves $\lW^1$, inequality \ref{eqn:heis} implies
+  \begin{equation}
+    \label{eqn:heissq}
+    \|A^2w\| \ge \frac{\|Aw\|^2}{2\|(Aw)'\|}.
+  \end{equation}
+  From the definition of $A$, $(Aw)'=w +Aw'$, so for $w \in \lW^1$,
+  \[
+    \|(Aw)'\| \le \|w\|+ \lambda\|w'\|.
+  \]
+  Applying \ref{eqn:heis} again,
+  \[
+    \|w\|^2 \le 2\|w'\|\|Aw\|\le 2\lambda \|w'\|\|w\|,
+  \]
+  so obtain the 1D Poincar\'{e} inequality: for $w \in \lW^1$,
+  \[
+    \|w\| \le 2\lambda\|w'\|.
+  \]
+  Thus
+  \[
+    \|(Aw)'\| \le 3\lambda\|w'\|.
+  \]
+  Apply this estimate together with the basic Heisenberg estimate
+  \ref{eqn:heis} to the inequality \ref{eqn:heissq} to obtain
+  \[
+    \|A^2w\| \ge \frac{\|w\|^4}{24\lambda \|w'\|^3}
+  \]
+  Rearranging and using the definition \ref{eqn:krms} of $\krms[w]$,
+  arrive at inequality \ref{eqn:heis2}.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:ipnonoisenec}
+  Suppose that $a$ is given by definition \ref{eqn:ann}, $\alpha$,
+  $\mu \in (0,\lambda_{\rm max}/2]$, $d$ is given by
+  \ref{eqn:defdatanonoise} with $w_* \in W_{\mu}^1$, and that a
+  stationary point $m_{\infty}$ of $\tJa[\cdot;d]$ yields a solution
+  of the inverse problem \ref{eqn:probstat0} for $\lambda \ge 2\mu$,
+  $\epsilon>0$. Then
+\begin{equation}
+  \label{eqn:epsalpha}
+  3 (4\pi \lambda \krms[w_*])^3 \epsilon \ge \frac{(4\pi  r\alpha\lambda)^2}
+  {(1+(4\pi r \alpha \lambda)^2)}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+  Rearranging the identity \ref{eqn:residnorm}, and observing as in
+  the proof of Theorem \ref{thm:ipnonoisesuf} that the support of the
+  integrand is contained in $[-2\mu, 2\mu] \subset [\lambda,\lambda]$,
+  \[
+  e[m_{\infty},\aw[m_{\infty},d];d] 
+= 8 \pi^2 r^2 \alpha^4\int\,dt\,t^4(1+(4\pi r)^2 \alpha^2 t^2)^{-2}w_*(t+(m_{\infty}-m_*))^2
+\]
+\[
+  \ge \frac{8\pi^2r^2\alpha^4}{(1+(4\pi r)^2 \alpha^2
+    \lambda^2)^{2}}\int\,dt\,t^4w_*(t+(m_{\infty}-m_*))^2
+\]
+\begin{equation}
+  \label{eqn:residnormbis}
+  \ge \frac{8\pi^2r^2\alpha^4}{(1+(4\pi r)^2 \alpha^2
+    \lambda^2)^{2}}\|A^2w_*(\cdot + (m_{\infty}-m_*)r)\|^2.
+ \end{equation}
+Since $\krms[w]$ is invariant under translation of $w \in V^1$,
+Proposition \ref{thm:heis2} implies that this is
+\[
+  \ge \frac{8\pi^2r^2\alpha^4}{(1+(4\pi r)^2 \alpha^2
+    \lambda^2)^{2}}\frac{\|w_*\|^2}{(24)^2 \lambda^2 (2\pi\krms[w_*])^6}
+\]
+\[
+  = \frac{1}{2}\frac{(4\pi r\alpha\lambda)^4}{(1+(4\pi r \alpha
+    \lambda)^2)^{2}}\frac{\|d\|^2}{(24)^2 (2\pi
+    \lambda \krms[w_*])^6}
+\]
+The pair $(m_{\infty}, \aw[m_{\infty},d])$ is presumed to solve the inverse
+problem as stated in \ref{eqn:probstat0}, in particular
+\[
+  \epsilon \ge (2 e[m_{\infty}, \aw[m_{\infty},d],d])^{1/2}/\|d\|
+\]
+the inequality \ref{eqn:epsalpha} follows.
+
+\end{proof}
+
+Inequality \ref{eqn:epsalpha} couples the dimensionless quantites
+$\epsilon$,  $4\pi r \lambda \alpha$, and $4 \pi \lambda
+\krms[w_*]$. Proposition \ref{thm:klam}, implies that the left
+hand side is $\ge 3\epsilon$. Since the right hand side is $\le 1$,
+the inequality implies no limitation on $\alpha$ if the left hand side
+is $\ge 1$. For small $\epsilon$, the the largest permissible $\alpha$
+is $O(\sqrt{\epsilon})$. The permissible range of $\alpha$ increases with
+nondimensionalized RMS frequency $4\pi \lambda \krms[w_*]$. Since
+$\krms$ is invariant under translation and scaling of its argument,
+$\krms[w_*]=\krms[d]$, that is, the nondimensionalized RMS frequency
+is an observable property of the data, in the noise-free case at
+least.
+
