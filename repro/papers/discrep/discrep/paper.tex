@@ -70,8 +70,8 @@
 \section{Introduction}
 Model-based parameter estimation by least squares data fitting is a
 widely used and successful technique for data analysis in science and
-engineering \cite[]{Bertero:98,Vogel:02}, particularly in the
-geosciences \cite[]{Parker:94,Tarantola:05}. In its application to
+engineering \cite{Bertero:98,Vogel:02}, particularly in the
+geosciences \cite{Parker:94,Tarantola:05}. In its application to
 seismology, least-squares data fitting has come to be known as Full
 Waveform Inversion (FWI), and is now well-established as a useful tool
 for probing the earth's subsurface
@@ -897,8 +897,9 @@ Proposition \ref{thm:norminvexp}, item 3.
 \end{equation}
 \begin{equation}
   \label{eqn:anninorm}
-  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  a(t-(m-m_*)r)^2 \left(1+ (4\pi r)^2\alpha^2
-    a(t-(m-m_*)r)^2\right)^{-2}w_*(t)^2.
+  p[m,\aw[m,d];d] = \frac{(4\pi r)^2}{2\|w_*\|^2}\int \,dt\,  
+  \frac{a(t-(m-m_*)r)^2}{(1+ (4\pi r)^2\alpha^2
+    a(t-(m-m_*)r)^2)^{2}}w_*(t)^2.
 \end{equation}
 so 
 \begin{equation}
@@ -910,8 +911,8 @@ Finally, if $a \in W^{1,1}_{\rm loc}(\bR)$, then $\tJa[\cdot;d]$ is differentiab
 \begin{equation}
   \label{eqn:dexpjnonoise}
   \frac{d}{dm}\tJa[m;d] = -\frac{r (4\pi r \alpha)^2}{\|w_*\|^2} \int \,dt \, 
-  \left(a\frac{da}{dt}\right)(t-(m-m_*)r)(1+(4\pi r)^2 \alpha^2 
-  a(t-(m-m_*)r)^2)^{-2}w_*(t)^2. 
+  \frac{\left(a\frac{da}{dt}\right)(t-(m-m_*)r)}{(1+(4\pi r)^2 \alpha^2 
+  a(t-(m-m_*)r)^2)^{2}}w_*(t)^2. 
 \end{equation}
 \end{corollary}
 
@@ -1093,8 +1094,8 @@ The next result answers the first question, in the case of noise-free data:
   interval of integration appearing in \ref{eqn:residnorm}, so
 \[
   e[m_{\infty},\aw[m_{\infty},d];d] 
-= 8 \pi^2 r^2 \alpha^4\int^{\mu}_{-\mu}\,dt\,|t-(m_{\infty}-m_*)r|^4(1+(4\pi r)^2 \alpha^2 
-|t-(m_{\infty}-m^*)r|^2)^{-2}w_*(t)^2.
+= 8 \pi^2 r^2 \alpha^4\int^{\mu}_{-\mu}\,dt\,\frac{|t-(m_{\infty}-m_*)r|^4}{(1+(4\pi r)^2 \alpha^2 
+|t-(m_{\infty}-m^*)r|^2)^{2}}w_*(t)^2.
 \]
 and therefore
 \begin{equation}
@@ -1230,69 +1231,6 @@ suggests that error in the estimate of $m$ due to data noise is a
 decreasing function of $\alpha$, at least for small $\alpha$. This result is intuitively
 appealing, and is supported by numerical evidence, as shown below.
 
-%%%%%%%%%%%
-\begin{proposition}
-  \label{thm:wnoiseres}
-  Asumme that
-  \begin{itemize}
-  \item[1. ] $\alpha, \mu> 0$,
-  \item[2. ] $m_* \in M, w_* \in W_{\mu}$,
-  \item[3. ] $d_* = F[m_*]w_*$,
-  \item[4. ] $n \in D$ and $d = d_* + n$.
-  \end{itemize}
-  Set $\eta = \|n\|/\|d_*\|$, and assume further that
-  \begin{itemize}
-  \item[5. ]
-    \begin{equation}
-      \label{eqn:mnoisecond}
-      \eta < \frac{\sqrt{5}-1}{2}, and
-    \end{equation}
-  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
-  \end{itemize}
-  Then
-  \begin{equation}
-    \label{eqn:mnoisesuff}
-    |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}.
-  \end{equation}
-\end{proposition}
-
-\begin{proof}
-  From equation \ref{eqn:normsol},
-  \[
-    \aw[m;d](t) = 
-    \left(\frac{1}{(4\pi r)^2} + \alpha^2 t^2)\right)^{-1}\frac{1}{4 \pi r}d(t+mr)
-  \]
-  \[
-    =4\pi r(1 + (4\pi r \alpha t)^2)^{-1} (\frac{1}{4\pi r}
-    w_*(t+(m-m_*)r) + n(t+mr) 
-  \]
-  so
-  \begin{equation}
-    \label{eqn:wres}
-    \aw[m;d](t) - w_*(t) = (4\pi r \alpha t)^2 (1+ (4\pi r \alpha t)^2)^{-1}w_*(t+(m-m_*)r)
-    +w_*(t+(m-m_*)r)-w_*(t) + 4 \pi r (1 + (4\pi r \alpha t)^2)^{-1}n(t+mr)
-  \end{equation}
-\end{proof}
-%  \begin{itemize}
-%    \item[1. ] the bound \ref{eqn:mnoisebnd} holds only if 
-%      noise level $\eta=\|n\|/\|d_*\|$ satisfies
-%      \begin{equation}
-%        \label{eqn:mnoisecond}
-%        \eta < \frac{1+\sqrt{5}}{2} < 1;
-%      \end{equation}
-%    \item[2. ] if condition \ref{eqn:mnoisecond} holds, then
-%      $|m-m_*|<\lambda/r$ provided that
-%      \begin{equation}
-%        \label{eqn:mnoisesuff}
-%        \frac{\lambda}{\mu} \ge 1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}. 
-%      \end{equation}
-%      \begin{equation}
-%        \label{eqn:mnoisesuff}
-%        |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}. 
-%      \end{equation}
-%    \end{itemize}
-%\end{corollary}
-
 \begin{theorem}
   \label{thm:mnoiseres}
   Asumme that
@@ -1302,15 +1240,11 @@ appealing, and is supported by numerical evidence, as shown below.
   \item[3. ] $d_* = F[m_*]w_*$,
   \item[4. ] $n \in D$ and $d = d_* + n$.
   \end{itemize}
-  Set $\eta = \|n\|/\|d_*\|$, and assume further that
-  \begin{itemize}
-  \item[5. ]
-    \begin{equation}
-      \label{eqn:mnoisecond}
-      \eta < \frac{\sqrt{5}-1}{2}, and
-    \end{equation}
-  \item[6. ] $m$ is a stationary point of $\tJa[\cdot;d]$.
-  \end{itemize}
+  Set $\eta = \|n\|/\|d_*\|$. Assume that $\eta$ satisfies inequality \begin{equation}
+  \label{eqn:mnoisecond}    
+  \eta < \frac{\sqrt{5}-1}{2},
+  \end{equation}
+  and that $m$ is a stationary point of $\tJa[\cdot;d]$.
   Then
   \begin{equation}
     \label{eqn:mnoisesuff}
@@ -1537,12 +1471,12 @@ sufficiently small ($O(\sqrt{\epsilon})$).
 
 
 \bibliographystyle{seg}
-\bibliography{masterref,local}
+\bibliography{masterref}
 
-\append{Numerics and penalty selection via the Discrepancy Principle}
+\append{Penalty weight selection via the Discrepancy Principle}
 This appendix describes a method for controlling the penalty
-weight $\alpha$ based on the Discrepancy Principle
-\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}.
+weight $\alpha$ based on a version the Discrepancy Principle
+\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}. 
 
 Modified Problem Statement:
 \begin{quote}
@@ -1557,17 +1491,6 @@ Modified Problem Statement:
 \noindent {\bf Remark:} Given a solution $m_{\infty}, \alpha_{\infty}$, the pair
 $(m_{\infty},w_{\alpha_{\infty}}[m_{\infty};d])$ is a local minimizer
 of $J_{\alpha_{\infty}}[\cdot,\cdot;d]$ (Theorem \ref{thm:norminv}).
-%.
-%so is also a minimizer of $g[w]$ over the set
-%\[
-%  \{(m,w): e[m,w;d] \ge
-%  e[m_{\infty},w_{\alpha_{\infty}}[m_{\infty};d]]\}
-%\]
-%or equivalently a maximizer of $e[m,w,d]$ over the set
-%\[
-%  \{(m,w): m \in M, g[w] \le g[w_{\alpha_{\infty}}[m_{\infty};d]]\}
-%\]
-%according to standard Lagrange multiplier theory. That is, 
 
 We describe an alternating, or coordinate search, algorithm for
 solution of problem \ref{eqn:probmod}, combining a local optimization
@@ -1575,7 +1498,7 @@ algorithm for updating $m$, and a second algorithm for updating
 $\alpha$. A first version of this algorithm appeared in \cite{FuSymes2017discrepancy}.
 
 Given an
-objective function $\Phi: M \rightarrow \bR$, a local optimization algorithm generates 
+objective function $\Phi: M \rightarrow \bR$, a local optimization algorithm 
 generates a map $G[\Phi,...]: M \rightarrow M$, mapping a current estimate
 of $m$ to an updated estimate. The update rule may depend only on the
 current estimate, as is the case for steepest descent, the
@@ -1629,7 +1552,7 @@ $e[m,\aw[m;d];d] \in [e_-,e_+]$, but after step 4, that is likely not
 to be the case: the alteration of $m$ is likely to reduce $e$, as it is a
 summand in the definition of $\tJa$. If the $e$ is reduced below
 $e_-$, or if an approximate local minimizer is detected, then the condition in step 6 is satisfied, so control returns
-to step 7. If it is satisfied, the algorithm terminates, elsewhich
+to step 7. If it is satisfied, the algorithm terminates, else
 control loops back to step 2, $\alpha$ is updated, and the inner $m$
 update loop is entered again. Termination requires that the bounds on
 $e$ are satisfied (step 7), hence that the $m$ update loop terminates
@@ -1638,17 +1561,18 @@ by finding a local min which satisfies these bounds.
 
 
 
-Accordingly, regard $m$ as fixed and suppress it from the notation for the remainder of ;dthis section, and introduce the abbreviations
+Accordingly, regard $m$ as fixed and suppress it from the notation for the remainder of this section, and introduce the abbreviations
 \begin{eqnarray}
 \label{eqn:erralph}a
 e(\alpha) &=& e[m,\aw[m;d],d]\\
 \label{eqn:penalph}
 p(\alpha) &=& p[m,\aw[m;d],d]
 \end{eqnarray}
-Since the normal matrix $F^T F + \alpha^2 A^T A$ has been assumed
-invertible (condition \ref{eqn:nopco}), the solution of $\aw$ of the
-normal equation \ref{eqn:condition} is smooth in $\alpha^2$.
-Differentiating equation \ref{eqn:condition} with respect to  $\alpha^2$ leads to the relation
+Assume that the normal operator $F^T F + \alpha^2 A^T A$ is boundedly invertible, as for example in Theorem \ref{thm:norminv}. Then the solution of $\aw$ of the
+normal equation \ref{eqn:norm}
+is smooth in $\alpha^2$.
+Differentiating equation the normal equation  
+with respect to  $\alpha^2$ leads to the relation
 \begin{equation}
 (F^T F + \alpha^2 A^T A ) \frac{dw}{d\alpha^2} = -A^T A w
 \label{eqn:dnorm}
