@@ -1056,7 +1056,7 @@ source inversion
   Then $|m-m_*| < \lambda /r$.
 \end{corollary}
 
-\begin{proof} Follows directly from Theorem \ref{thm:rampgood} by
+\begin{proof} Follows directly from Proposition \ref{thm:rampgood} by
   taking $\mu=\lambda$.
 \end{proof}
 
@@ -1132,7 +1132,7 @@ that
   \Rightarrow \alpha \le \alpha_{\rm max}(\epsilon,\lambda,d).
 \]
 The existence of this limiting penalty weight has been inferred
-indirectly; the next section is devoted to a constructive algorithm
+indirectly; Appendix A describes a constructive algorithm
 for its approximation.
 
 We turn now to the second issue identified above, the effect of
@@ -1471,31 +1471,29 @@ sufficiently small ($O(\sqrt{\epsilon})$).
 
 
 \bibliographystyle{seg}
-\bibliography{masterref}
+\bibliography{masterref,local}
 
 \append{Penalty weight selection via the Discrepancy Principle}
-This appendix describes a method for controlling the penalty
+This appendix describes an algorithm for controlling the penalty
 weight $\alpha$ based on a version the Discrepancy Principle
-\cite[]{EnglHankeNeubauer,FuSymes2017discrepancy}. 
-
-Modified Problem Statement:
+\cite[]{EnglHankeNeubauer,Hanke:17,FuSymes2017discrepancy}. 
+The algorithm solves the problem
 \begin{quote}
   \label{eqn:probmod}
   given $d \in D$ and $0 < e_- < e_+$,  find  $m \in M, \alpha \in \bR^+$ so that
   \begin{itemize}
   \item[(i) ]$m$ is a stationary point of $\tJa[\cdot;d]$, and
-  \item[(ii) ]$e[m,\aw[m;d];d] \in [e_-,e_+]$.
+  \item[(ii) ]$e[m,\aw[m;d];d] \in (e_-,e_+)$.
   \end{itemize}
-\end{quote}
-
-\noindent {\bf Remark:} Given a solution $m_{\infty}, \alpha_{\infty}$, the pair
-$(m_{\infty},w_{\alpha_{\infty}}[m_{\infty};d])$ is a local minimizer
-of $J_{\alpha_{\infty}}[\cdot,\cdot;d]$ (Theorem \ref{thm:norminv}).
-
+\end{quote} 
 We describe an alternating, or coordinate search, algorithm for
-solution of problem \ref{eqn:probmod}, combining a local optimization
+solution of this problem, combining a local optimization
 algorithm for updating $m$, and a second algorithm for updating
-$\alpha$. A first version of this algorithm appeared in \cite{FuSymes2017discrepancy}.
+$\alpha$. A first version of this algorithm appeared in \cite{FuSymes2017discrepancy}.Note that the mean square error $e$ lies in an open interval $(e_-,e_+)$ at a solution of this problem. Use of an interval, rather than a single target error level, accomplishes two objectives:
+\begin{itemize}
+    \item it is consistent with the general lack of precise knowledge of data error in most applications;
+    \item it permits a local optimization algorithm to make several small updates of $m$ before an update of $\alpha$ is required, as is required for good performance of algorithms such as BFGS.
+\end{itemize}
 
 Given an
 objective function $\Phi: M \rightarrow \bR$, a local optimization algorithm 
@@ -1508,10 +1506,8 @@ methods such as BFGS. The notation is intended to allow for this
 latter possibility. Under ``standard conditions'' on $\Phi$ and the initial estimate for
 $m$, and equipped with so-called globalization safeguards to ensure
 satisfaction of sufficient decrease conditions
-(see \cite{NocedalWright}), the iteration produces a sequence in $M$
-converging to a local minimizer of $\Phi$. An example of such a local
-optimization algorithm is steepest descent with backtracking line
-search.
+(see \cite{NocedalWright}), iteration of $G$ produces a sequence in $M$
+converging to a local minimizer of $\Phi$. 
 
 A normal stopping criterion for such an algorithm would be a tolerance
 test for the norm of $\nabla \Phi$ (and a limit on iteration count, of
@@ -1527,7 +1523,7 @@ applied to $\tJa$, by $G[\alpha,e_-,e_+,...]$, still allowing the
 possibility of information in addition to the current iterate.
 
 We will also require a rule for updating $\alpha$, defining a map $H: M \times E
-\rightarrow \bR^+$, in which $E=\{(e_-,e_+) \in \bR^2:
+\rightarrow \bR^+$, in which $E=\{(e_-,e_+) \in \bR^2: 0 < 
 e_-<e_+\}$. For any $m \in M$ the rule is required to produce an $\alpha$ for which
 the error bounds are satisfied: If $(m, e_-, e_+) \in M \times E$ and $\alpha = H(m, e_-,
 e_+)$, then $e[m,\aw[m,d];d] \in [e_-,e_+]$. We will describe two
@@ -1558,21 +1554,36 @@ update loop is entered again. Termination requires that the bounds on
 $e$ are satisfied (step 7), hence that the $m$ update loop terminates
 by finding a local min which satisfies these bounds. 
 
+The penalty parameter update strategies are based on the following fact about linear combinations of quadratic forms, similar to well-known results from the theory of Tihonov regularization \cite[]{Hanke:17}:
 
+\begin{theorem}
+  \label{thm:tich}
+  Suppose that $W, D$ are Hilbert spaces, $F \in \cal{B}(W,D)$, $A \in \cal{B}(W,W)$, $F^TF + \alpha^2 A^TA > 0$ for any $\alpha \ge 0$ (in particular, $F^TF>0$), and $A$ is injective. For $d \in D$, define 
+  $w: D \times \bR^+ \rightarrow W$,
+  $e: D \times \bR^+ \rightarrow \bR^+$, and $g: D \times \bR^+ \rightarrow \bR^+$ by
+  \begin{eqnarray}
+    w[d,\alpha] &=& (F^TF + \alpha^2 A^TA)^{-1}F^Td \nonumber \\
+    e[d,\alpha] &=& \frac{1}{2\|d\|^2}\|Fw[d,\alpha]-d\|^2 \nonumber \\
+    g[d,\alpha] &=& \frac{1}{2\|d\|^2}\|Aw[d,\alpha]\|^2
+    \label{eqn:tichdefs}
+  \end{eqnarray}
+  Then for any $d\in D$, $w[d,\cdot]$, $e[d,\cdot]$, and $g[d,\cdot]$ are of class $ C^{\infty}(\bR^+)$, and 
+  \begin{itemize}
+      \item[0. ] EITHER $d$ is perpindicular to the range of $F$, $e \equiv \frac{1}{2}, g \equiv 0$ for all $\alpha \ge 0$, 
+      \item[1. ] OR $e$ is positive and strictly increasing, $g$ is positive and strictly decreasing for  $\alpha\ge 0$, and 
+      \begin{equation}
+        \label{eqn:lep}
+        \frac{de}{d\alpha^2}  \le 2g.
+      \end{equation}
+  \end{itemize}
+\end{theorem}
 
+\noindent {\bf Remark:} The conditions on $F$ and $A$ in the statement of this theorem might seem unduly restrictive. Both hold for the cartoon problem studied in the body of this paper. In fact, in most cases studied in the literature, the extended modeling operator represented here by $F$ is not coercive, and must be modified by regularization to meet the conditions of the theorem. Instances of the penalty operator $A$ studied in the literature are in fact usually injective, though this fact is commonly overlooked. See \cite{Symes:09} for some discussion.
 
-Accordingly, regard $m$ as fixed and suppress it from the notation for the remainder of this section, and introduce the abbreviations
-\begin{eqnarray}
-\label{eqn:erralph}a
-e(\alpha) &=& e[m,\aw[m;d],d]\\
-\label{eqn:penalph}
-p(\alpha) &=& p[m,\aw[m;d],d]
-\end{eqnarray}
-Assume that the normal operator $F^T F + \alpha^2 A^T A$ is boundedly invertible, as for example in Theorem \ref{thm:norminv}. Then the solution of $\aw$ of the
-normal equation \ref{eqn:norm}
-is smooth in $\alpha^2$.
-Differentiating equation the normal equation  
-with respect to  $\alpha^2$ leads to the relation
+\begin{proof}
+Since the normal operator $F^T F + \alpha^2 A^T A$ is boundedly invertible and smooth in $\alpha \ge 0$, $w$ is smooth in $\alpha$, as are $e$ and $g$. 
+Differentiate the definition of $w$ 
+with respect to  $\alpha^2$ to obtain
 \begin{equation}
 (F^T F + \alpha^2 A^T A ) \frac{dw}{d\alpha^2} = -A^T A w
 \label{eqn:dnorm}
@@ -1586,57 +1597,118 @@ whence
 &\ge 0
 \label{eqn:de}
 \end{align}
-Note that the inequality in equation \ref{eqn:de} is {\em strict}  if $p > 0$ hence $A^TAw \ne 0$, since the normal operator is assumed to be positive definite.
-The derivative of $p(\alpha^2)$ with respect to $\alpha^2$ is
+Note that the inequality in equation \ref{eqn:de} is {\em strict}  if $g[d,\alpha] > 0$ hence $A^TAw[d,\alpha] \ne 0$, since the normal operator is assumed to be positive definite.
+Also,
 \begin{align}
-\frac{dp}{d\alpha^2} &=  -\langle A^T Aw,(F^TF + \alpha^2 A^TA)^{-1}A^TAw \rangle \nonumber \\
+\frac{dg}{d\alpha^2} &=  -\langle A^T Aw,(F^TF + \alpha^2 A^TA)^{-1}A^TAw \rangle \nonumber \\
 &\leq 0
 \label{eqn:dp}
 \end{align}
-similarly a strict inequality if $p > 0$.
+similarly a strict inequality if $g \ne 0$.
 
-Equations \ref{eqn:de} and \ref{eqn:dp} show that increasing $\alpha^2$ implies increasing $e$ while decreasing $p$, and
+It follows that either $g[d,\alpha]>0$ for all $\alpha\ge 0$, or there exists $\alpha_0\ge 0$ for which $g[d,\alpha]>0$ for $0
+\le \alpha<\alpha_0$ and $g[d,\alpha]=0$ for $\alpha \ge \alpha_0$, hence $Aw[d,\alpha]=0$ for $\alpha \ge \alpha_0$. Since $A$ is assumed injective, $w[d,\alpha]=0$ for $\alpha > \alpha_0$. From the definition of $w$, it follows that $F^Td=0$, that is, $d$ is orthogonal to the range of $F$, and in fact $\alpha_0=0$, $g \equiv 0$ and $e \equiv \frac{1}{2}$ for all $\alpha\ge 0$. 
+
+In the first case, that is, $F^Td \ne 0$, equations \ref{eqn:de} and \ref{eqn:dp} show that increasing $\alpha^2$ implies increasing $e$ while decreasing $g$, and
 \begin{align}
 &\langle A^TA w,(F^TF + \alpha^2 A^TA)^{-1} A^TA w \rangle \nonumber \\ 
-=& \langle (A^TA)^{1/2}w,[(A^TA)^{-1/2}F^TF(A^TA)^{-1/2} + \alpha^2 I]^{-1}(A^TA)^{1/2}w \rangle \nonumber \\ 
-\le& \frac{1}{\alpha^2} \langle A^TA w, w\rangle = \frac{2}{\alpha^2}p
+=& \lim_{\epsilon \rightarrow 0}\langle (A^TA+\epsilon^2I)^{1/2}w,[(A^TA+\epsilon^2I)^{-1/2}F^TF(A^TA+\epsilon^2I)^{-1/2} + \alpha^2 I]^{-1}(A^TA+\epsilon^2I)^{1/2}w \rangle \nonumber \\ 
+\le& \lim_{\epsilon \rightarrow 0}\frac{1}{\alpha^2} \langle (A^TA+\epsilon^2I) w, w\rangle = \frac{2}{\alpha^2}g.
 \end{align}
-In view of equation \ref{eqn:de},
-\begin{equation}
-\label{eqn:lep}
-\frac{de}{d\alpha^2}  \le 2p.
-\end{equation}
-with this inequality also being strict if $p > 0$.
+which establishes inequality \ref{eqn:lep}.
+\end{proof}
 
-Suppose the current weight is $\alpha^2_c$ and denote a candidate for an updated weight by $\alpha^2_+$. Then from inequality \ref{eqn:lep},
-\begin{equation}
-e(\alpha^2_+)-e(\alpha^2_c) \le \int_{\alpha^2_c}^{\alpha^2_+} 2p d\alpha^2
-\end{equation}
-If $\alpha^2_+ \ge \alpha^2_c$, then in view of inequality \ref{eqn:dp}, the above is
+\begin{proposition}
+  \label{thm:alphainf}
+  Under the hypotheses of Theorem \ref{thm:tich}, 
+  \begin{eqnarray}
+  \label{eqn:walphainf}
+  \lim_{\alpha \rightarrow \infty} w(d,\alpha) & = & 0,\\
+  \label{eqn:ealphainf} 
+  \lim_{\alpha \rightarrow \infty} e(d,\alpha) & = & 1/2.
+  \end{eqnarray}
+\end{proposition}
+\begin{proof}
+  Since $F^TF$ is positive-definite, it has a positive-definite square root, and the definition \ref{eqn:tichdefs} of $w(d,\alpha)$ is equivalent to
+  \begin{equation}\label{eqn:ftfw}
+  (F^TF)^{1/2}w(d,\alpha) = (I+\alpha^2 (F^TF)^{-1/2}A^TA(F^TF)^{-1/2})^{-1}(F^TF)^{-1/2}F^Td.
+  \end{equation}
+  Denote by $E:\bR \rightarrow {\cal B}(W,W)$ the resolution of the identity for the self-adjoint bounded operator $(F^TF)^{-1/2}A^TA(F^TF)^{-1/2}$. According to the theorem on spectral representation of functions of self-adjoint operators (\cite{Yosida}, section XI.5, Theorem 1),
+  \begin{equation}\label{eqn:specw}
+  \|(F^TF)^{1/2}w(d,\alpha)\|^2 = \int_0^{\|F^TF\|}\frac{1}{1+\alpha^2 \lambda}d \|E(\lambda)(F^TF)^{-1/2}F^Td\|^2.
+  \end{equation}
+  Since $A^TA$ is assumed injective, so is $F^TF)^{-1/2}A^TA(F^TF)^{-1/2}$, whence $0$ is either a member of the resolvent set of the latter operator, or of its continuous spectrum. In either case, $\{0\}$ is a set of measure zero with respect to $\|E(\lambda)(F^TF)^{-1/2}F^Td\|^2$, so the integrand $(1+\alpha^2 \lambda)$ converges to zero $\|E(\lambda)(F^TF)^{-1/2}F^Td\|^2$-almost everywhere as $\alpha \rightarrow \infty$, and is bounded above by $1$ on the spectrum. The Dominated Convergence Theorem implies that $\|(F^TF)^{1/2}w(d,\alpha)\|^2 \rightarrow 0$ as $\alpha \rightarrow 0$, which establishes the first conclusion. The second follows from the definition of $e$ and the continuity of the operators involved in it.
+\end{proof}
+
+\begin{proposition}
+  \label{thm:psidef}
+  In addition to the hypotheses of Theorem \ref{thm:tich}, assume that $F^Td \ne 0$, and that $e[d,0]<e_+ \le 1/2$. Then there exists a unique $\alpha_+ > 0$ satisfying $e_+ = e[d,\alpha_+]$, and $e[d,\alpha]<e_+$ for $\alpha \in [0,\alpha_+)$. Define $\Psi: [0,\alpha_+] \rightarrow \bR$ by
+ \begin{equation}
+\label{eqn:alphasecant}
+\Psi(\alpha)= \left(\alpha^2 + \frac{e_{+}-e[d,\alpha]}{2g[d,\alpha]} \right)^{1/2}
+\end{equation} 
+Then $\Psi([0,\alpha_+]) \subset (0,\alpha_+]$ and $\alpha<\Psi(\alpha)<\alpha_+$ for $\alpha \in [0,\alpha_+)$. 
+\end{proposition}
+
+\noindent {\bf Remark:} Note that $\Psi(0)$ is well-defined and $>0$.
+
+\begin{proof} Existence and uniqueness of $\alpha_+$ follows from Theorem \ref{thm:tich}, Proposition \ref{thm:alphainf}, and the assumption that $e[d,0]<e_+\le 1/2$. Since $e$ is strictly increasing under the assumption that $d$ is not perpindicular to the range of $F$, $e[d,\alpha]<e_+$ for $\alpha \in [0,\alpha_+)$. 
+
+Suppose that $0 \le \alpha \le \psi \le \alpha_+$. From inequality \ref{eqn:lep}, 
+\[
+e[d,\psi]-e[d,\alpha] \le \int^{\psi^2}_{\alpha^2} d\tau^2 g[d,\tau] 
+\]
 \begin{equation}
 \label{eqn:basic}
-\le 2 p(\alpha^2_c) (\alpha^2_+-\alpha^2_c)  
+< 2 g[d,\alpha] (\psi^2-\alpha^2)  
 \end{equation}
-
-Let us suppose that $e(\alpha^2_c) < e_{+}$. Then setting 
-\begin{equation}
-\label{eqn:alphasecant}
-\alpha^2_+ = \alpha^2_c + \frac{e_{+}-e(\alpha^2_c)}{2p(\alpha^2_c)} 
-\end{equation}
-implies via inequality \ref{eqn:basic} that 
-\begin{equation}
-e(\alpha^2_+)-e(\alpha^2_c) \le e_{+}-e(\alpha^2_c)
-\end{equation}
-
-Assuming that $p(\alpha^2_+) > 0$, hence $p(\alpha^2)>0$ for $\alpha^2_c \le \alpha^2 \le \alpha^2_+$,  we conclude that if $\alpha^2_+$ is given by the rule \ref{eqn:alphasecant},
-then
+since $g$ is positive and strictly decreasing. From the definition \ref{eqn:alphasecant}, $\Psi(\alpha) \ge \alpha$ for $\alpha \in [0,\alpha_+]$, and $\Psi(\alpha)>\alpha$ if $\alpha \in [0,\alpha_+)$. Setting $\psi=\Psi(\alpha)$, 
+inequality \ref{eqn:basic} and definition \ref{eqn:alphasecant} imply
+\[
+e[d,\Psi(\alpha)]-e[d,\alpha] < e_{+}-e[d,\alpha]
+\]
+so
 \begin{equation}
 \label{eqn:assert}
-e(\alpha^2_c) < e(\alpha^2_+) \le e_{+}
+\alpha \in [0,\alpha_+) \Rightarrow e[d,\alpha] < e[d,\Psi(\alpha)] < e_{+}.
 \end{equation}
-That is, unless $p(\alpha^2_+) = 0$ (in which case a physical solution of the inverse problem has been reached),  $e(\alpha^2_+)$ is larger than $e(\alpha^2_c)$ but in any case does not exceed $e_+$. The rule \ref{eqn:alphasecant} therefore provides a feasible updated $\alpha^2$ consistent with the upper bound in the discrepancy principle.
+The last inequality ans the strict increase of $e$ imply that $\Psi(\alpha)<e_+$ if $\alpha \in [0,\alpha_+)$.
+\end{proof}
 
+These results suggest an algorithm to determine $\alpha$: select an initial $\alpha_0 \ge 0$ for which $e[d,\alpha_0]<e_-$, then set $\alpha_n=\Psi(\alpha_{n-1}), n=1,2,...$, until $e[d,\alpha_n] > e_-$. Since $e_-<e_+$, the preceding result implies that $e[d,\alpha_n]<e_+$ also. 
 
+That is, iteration of $\Psi$ produces an increasing sequence in $[0,\alpha_+]$. Two further ingredients are required to view it as an algorithm for production of an $\alpha$ satisfying the discrepancy principle:  a method for selection of an initial $\alpha_0$, and assurance that the error $e$ will eventually exceed the lower bound $e_-$. 
+
+\begin{theorem}
+  \label{thm:discrepalg} In addition to the hypotheses of Proposition\ref{thm:psidef}, assume that $e[d,0] <e_-<e_+\le 1/2$. Define the sequence $\{\alpha_n: n \in {\bf Z}_+\}$ by
+  \begin{itemize}
+      \item $\alpha_0=0$, and
+      \item $\alpha_{n+1}=\Psi(\alpha_n), n \in {\bf Z}_+$.
+  \end{itemize}
+  Then there exists $N=N(d,e_-,e_+) \in {\bf Z}_+$ for which 
+  \begin{itemize}
+      \item $e(d,\alpha_n) \le e_-$ for $0 \le n <N$, and
+      \item $e(d,\alpha_N) \in (e_-,e_+)$
+  \end{itemize}
+\end{theorem}
+
+\begin{proof}
+  By hypothesis, the first conclusion is satisfied for $N=0$. From the definition \ref{eqn:alphasecant} of $\Psi$ and the conclusions of Proposition \ref{thm:psidef}, $\{\alpha_n\}$ is strictly increasing and $\alpha_n \le \alpha_+$ for all $n \ge 0$, so has a limit point $\alpha_{\infty} \in (0,\alpha_+]$. If $\alpha_{\infty}<\alpha_+$, $\epsilon = \Psi(\alpha_{\infty})-\alpha_{\infty} >0$. Since $\alpha \mapsto \Psi(\alpha)-\alpha$ is continuous, there is $\delta>0$ so that if $|\alpha-\alpha_{\infty}|<\delta$, then $\Psi(\alpha)-\alpha >\epsilon/2$. Since $\alpha_{\infty}=\lim_{n\rightarrow \infty}\alpha_n$, there is $m \in {\bf Z}_+$ for which $\alpha_m \in (\alpha_{\infty}-\min(\epsilon/2,\delta),\alpha_{\infty})$, so that $\alpha_{m+1} = \Psi(\alpha_m) >\alpha_m + \epsilon/2>\alpha_{\infty}$, contradicting the definition of $\alpha_{\infty}$ as the limit of the increasing sequence $\{\alpha_n\}$. Therefore, we conclude that $\alpha_{\infty}=\alpha_+$.
+  
+  Since $\alpha_n <\alpha_+$ for all $n$, according to Proposition \ref{thm:psidef}, there must exist a least $n = N(d,e_-,e_+)$ for which $\alpha_n \in (e_-,e_+)$.
+\end{proof}
+
+\noindent {\bf Remark:} The condition $e(d,0)\le e_-$ means that $\sqrt{2e_-}$ is an upper bound for the distance from $d$ to the range of $F$. Recall that $e_-$ represents an underestimate for data noise level. That is, it is assumed that the data is within data noise level of the range of $F$. Such an assumption is unlikely to be tenable for the physical (non-extended) modeling operator, unless the nonlinear model parameters ($m$ in this discussion) are chosen near-optimally. The ability to fit data, even when the parameters represented by $m$ are greatly in error, is an essential characteristic of successful extended inversion strategies. 
+
+\noindent {\bf Remark:} The update rule \ref{eqn:alphasecant} is convergent to a satisfactory value, as just shown, but in practice is rather slow. Accelerated updates using variants of the secant rule are possible, but an analysis of those possibilities is beyond the scope of this paper. The numerical examples shown above use the rule \ref{eqn:alphasecant}.
+
+A satisfactory penalty parameter selection rule can now be defined: in the notation introduced at the beginning of this appendix, define 
+\begin{equation}
+    H[m,e_-,e_+] = \alpha_{N(d,e_-,e_+)}.
+\end{equation}
+Choosing $F=F[m]$ in Theorem \ref{thm:discrepalg}, conclude that $H$, so defined, has the required properties.
+
+This is as far as we can go without more concrete assumptions on $F$ and $A$. For a few problems, analysis of the gradient of the reduced objective $\tJa$ shows that its  domain of convexity is large in some sense for a range of $\alpha$, then the discrepancy algorithm sketched here can efficiently drive $\alpha$ to near its largest feasible value, thus giving the best resolution near the global minimizer. That program has been carried out for the simple cartoon problem of this paper, and partly for some other more protypical inverse wave problem, as mentioned in the introduction.
 \append{Heisenberg, support, and wavelength}
 Without further contraints on data or solution, nothing more can be
 said about bounds on $\alpha$. If the data $d$ (and the target wavelet
