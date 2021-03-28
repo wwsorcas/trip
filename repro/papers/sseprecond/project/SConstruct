@@ -237,7 +237,7 @@ for i in [0]:
 ### lh = lens data inverted in homog medium
 ### ll = lens data inverted in lens medium
 
-    for med in ['hh', 'wh', 'lh', 'll']:
+    for med in ['hh', 'lh', 'll']:
 
         exp = med + str(i)
     
@@ -502,7 +502,7 @@ for i in [0]:
 
 # window, convert to rsf for plotting - 
 
-for exp in ['hh'+str(i), 'wh'+str(i), 'lh'+str(i), 'll'+str(i)]:
+for exp in ['hh'+str(i), 'lh'+str(i), 'll'+str(i)]:
 
 #    Flow('ptvzwind' + exp + '.su','ptvz' + exp + '.su',
 #         suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX)) 
@@ -631,6 +631,31 @@ for exp in ['hh'+str(i), 'wh'+str(i), 'lh'+str(i), 'll'+str(i)]:
            'graph wantitle=n')
     Result('srcvzgftr' + exp,
            'graph wantitle=n')
+
+# results from d2n - make first
+
+    Result('recp' + exp,'../d2n/recp' + exp + '.rsf',
+           'grey clip='+str(CLIP[i])+' color=j scalebar=y')
+    Result('rerecp' + exp,'../d2n/rerecp' + exp + '.rsf',
+           'grey clip='+str(CLIP[i])+' color=j scalebar=y')
+    Result('reptr21' + exp,
+          ['../d2n/recp' + exp + 'tr21.rsf', '../d2n/rerecp' + exp + 'tr21.rsf'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
+           graph plotcol=5,6 plotfat=4 wanttitle=n label2=Pressure unit2=GPa
+           ''')
+    Result('reptr51' + exp,
+          ['../d2n/recp' + exp + 'tr51.rsf', '../d2n/rerecp' + exp + 'tr51.rsf'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
+           graph plotcol=5,6 plotfat=4 wanttitle=n label2=Pressure unit2=GPa
+           ''')
+    Result('reptr81' + exp,
+          ['../d2n/recp' + exp + 'tr81.rsf', '../d2n/rerecp' + exp + 'tr81.rsf'],
+           '''
+           cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
+           graph plotcol=5,6 plotfat=4 wanttitle=n label2=Pressure unit2=GPa
+           ''')
 
 
 End()
