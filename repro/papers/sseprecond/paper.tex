@@ -29,63 +29,83 @@ The basic FWI problem is: given data $d$, find $\bf{c}$ so that
 P\bu \approx d \mbox{ and } L[\bf{c}]\bu = \bff.
 \end{equation}
 
-The energy source $\bff$ may also be largely undetermined, apart from some known characteristics such as localization in space and/or time. In fact, additional source degrees of freedom, beyond those needed to describe physically realized sources, may be useful in rendering the FWI problem \ref{eqn:fwi} more amenable to numerical solution, via so-called extended modeling (see \cite{geoprosp:2008}, \cite{LeeuwenHerrmannWRI:13}, \cite{HuangNammourSymesDollizal:SEG19}, and many references cited there). Therefore it is natural to view $\bff$ as also an unknown in formulating the problem \ref{eqn:fwi} via nonlinear least squares:
-%A typical nonlinear least squares formulation is:
-%\begin{equation}
-%\label{eqn:ols}
-%\mbox{choose } c \mbox{ to minimize } \|PL[c]^{-1}f -d \|^2.
-%\end{equation}
+%The energy source $\bff$ may also be largely undetermined, apart from some known characteristics such as localization in space and/or time. In fact, additional source degrees of freedom, beyond those needed to describe physically realized sources, may be useful in rendering the FWI problem \ref{eqn:fwi} more amenable to numerical solution, via so-called extended modeling (see \cite{geoprosp:2008}, \cite{LeeuwenHerrmannWRI:13}, \cite{HuangNammourSymesDollizal:SEG19}, and many references cited there). Therefore it is natural to view $\bff$ as also an unknown in formulating the problem \ref{eqn:fwi} via nonlinear least squares:
+A simple nonlinear least squares formulation is:
+\begin{equation}
+\label{eqn:ols}
+\mbox{choose } \bf{c} \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2.
+\end{equation}
+Practical optimization formulations typically augment the objective in
+\ref{eqn:ols} by additive penalties or other constraints.
 
-%As is well-known, local optimization methods are the only feasible approach given the dimensions of a typical instance of \ref{eqn:fwi}, and those have a tendency to stall due to ``cycle-skipping''. Source extension is one approach to avoiding this problem. It consists in imposing the wave equation as a soft as opposed to hard constraint, by allowing the source to have more degrees of freedom than is permitted by a faithful  model model of the seismic experiment, and constraining these additional degrees of freedom by means of an additive penalty modifying the probem \ref{eqn:ols}:
+As is well-known, local optimization methods are the only feasible
+approach given the dimensions of a typical instance of \ref{eqn:fwi},
+and those have a tendency to stall due to ``cycle-skipping''. Source
+extension is one approach to avoiding this problem. It consists in
+imposing the wave equation as a soft as opposed to hard constraint, by
+allowing the source field $\bff$ to have more degrees of freedom than
+is permitted by a faithful model model of the seismic experiment, and
+constraining these additional degrees of freedom by means of an
+additive penalty modifying the probem \ref{eqn:ols}:
 \begin{equation}
 \label{eqn:esi}
 \mbox{choose } \bf{c}, \bff \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2 + \alpha^2 \|A\bff\|^2 
 \end{equation}
-The operator $A$ penalizes deviation from known (or assumed) characteristics of the source function - its null space consists of feasible source models. 
+The operator $A$ penalizes deviation from known (or assumed)
+characteristics of the source function - its null space consists of
+feasible (or ``physical'') source models.
+
+\cite{HuangNammourSymesDollizal:SEG19} present an overview of the
+literature on source extension methods, describing a variety of
+methods to add degrees of freedom to physical source model. The present paper
+concerns {\em surface source extension}: physical sources are
+presumed to be concentrated at points $\bx_s$ in space, whereas their extended
+counterparts are permitted to spread energy over surfaces containing
+the physical source locations. A simple choice for the penalty
+operator $A$ is then multiplication by the distance $|\bx-\bx_s|$ to the physical
+source location:
+\begin{equation}
+  \label{eqn:penop}
+  (A\bff)(\bx,t) = |\bx-\bx_s|\bff(\bx,t)
+\end{equation}
+I shall use this choice of penalty operator whenever a specific choice
+is necessary in the development of the theory below.
 
 This paper presents a numerically efficient approach to solving the {\em source subproblem}
 \begin{equation}
 \label{eqn:esis}
 \mbox{given } \bf{c}, \mbox{ choose } \bff \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2 + \alpha \|A\bff\|^2 
 \end{equation}
+Solution of this subproblem is an essential component of {\em variable
+  projection} algorithms for solution of the nonlinear inverse problem
+\ref{eqn:esi}. Variable projection is not merely a convenient choice
+of algorithm for this purpose: it is in some sense essential, see for
+example \cite{Symes:SEG20}. It replaces the nonlinear
+least squares problem \ref{eqn:esi} with a {\em reduced} problem, to
+be solved iteratively. Each iteration involves solution of the
+subproblem \ref{eqn:esis}. Therefore efficient solution of the
+subproblem is essential to efficient solution of the nonlinear problem
+via variable projection.
 
-The penalty operator $A$ is assumed linear in this work, so the source subproblem is a linear least squares problem. Under some additional assumptions to be described below, I shall show how to construct an accurate approximate solution operator for problem \ref{eqn:esis}. This approximate solution operator may be used to accelerate Krylov space methods for the solution of the source subproblem \ref{eqn:esis}. Numerical examples suggest the effectiveness of this acceleration.
+The penalty operator $A$ defined in \ref{eqn:penop} is linear, so the source
+subproblem is a linear least squares problem. Under some additional
+assumptions to be described below, I shall show how to construct an
+accurate approximate solution operator for problem
+\ref{eqn:esis}. This approximate solution operator may be used to
+accelerate Krylov space methods for the solution of the source
+subproblem \ref{eqn:esis}. Numerical examples suggest the
+effectiveness of this acceleration.
 
-The source subproblem is a necessary step in solving the overall FWI problem \ref{eqn:fwi}. In particular, the nonlinear least squares realization \ref{eqn:esi} of source-extended FWI is naturally approached via the {\em variable projection method} \cite[]{GolubPereyra:73,GolubPereyra:03,vanLeeuwenMulder:09,Rickett:SEG12}, in which the minimum over $\bff$ in \ref{eqn:esis} is treated as a function of $\bf{c}$, which is in turn minimized. Variable projection thus treats the source subproblem as an inner problem, which must be solved for an estimate of $\bff$ at every step of an iterative method for the outer problem of minimization over $\bf{c}$. Efficiency in solving the source subproblem \ref{eqn:esis} is critical to efficient implementation of variable projection for solving the regularized FWI problem \ref{eqn:esi}.
+\section{Operators and Adjoints}
 
-This paper restricts the choice of wave physics embodied in
-$L[\bf{c}]$ to linear acoustics.  Thus $\bf{c}=(\kappa,\rho)$ is the
-pair (bulk modulus, density) of positive functions of spatial
-position. The principal characteristics assumed of sources $\bff=$ are localization and isotropy. That is, physical sources will be assumed to be isotropic point radiators, described by the functional form
-\begin{equation}
-\label{eqn:ptsrc}
-f_{\rm pt}(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s). 
-\end{equation}
-Source locations $\bx_s$ are assumed known (as is natural for active source methods), and the source {\em wavelet} $w(t)$ is to be found as part of the solution of \ref{eqn:esi}. A convenient choice of penalty operator $A$ is then multiplication by the {\em offset} $|\bx-\bx_s|$: its null space consists precisely of distributions of the form \ref{eqn:ptsrc}. 
-
-More complex radiation characteristics may be accommodated with similar but more complex choice for the operator $A$. Since the core analysis is similar, this paper deals only with the simplest case \ref{eqn:ptsrc}.
-
-The wavefield $u$ in this work is presumed to exist in all of Euclicean space-time: in other words, boundary effects have been removed from $u$, by surface-related multiple elimination or other techniques. Predicted data traces are simply the samples of one or more components of $u$ at receiver points $\bx_r$.
-
-%The domain of wave propagation is denoted $\Omega$, and two subsets of its boundary are identified: $\Gamma_s$ contains the support (non-zeroes) of the (extended) sources and in particular the locations $\bx_s$ of physical sources. Data trace locations $\bx_r$ lie in another subset $\Gamma_r$. The data projection operator $P$ samples the acoustic field $u$ on $\Gamma_r$, and includes a finite aperture mute.  
-
-Achieving a small residual in the source subproblem \ref{eqn:esis} for arbitrary $c$ is a critical part of the convergence mechanism for the extended source approach to FWI \cite[]{HuangNammourSymesDollizal:SEG19}. However, for arbitrary data $d$, coefficient array $c$, and source location $\bx_s$, there does not exist an isotropic point source $f_{\rm pt}$ of the form \ref{eqn:ptsrc} for which $PL[c]^{-1}f_{\rm pt} \approx d$. This is so even if there does exist a coefficient array $c^*$ and point source $f_{\rm pt}^*$ located at $\bx_s$ with wavelet $w^*(t)$ for which $d = PL[c^*]^{-1}f_{\rm pt}^*$, if $c$ differs substantially from $c^*$. It is this fact that underlies the effectiveness of the extended source approach to FWI:  driving the residual in the problem \ref{eqn:esi} towards zero necessarily requires modifying $c$ to resemble $c^*$, assuming the latter exists, as well as pushing the optimal $f$ towards the null space of $A$. Conversely, the source subproblem \ref{eqn:esis} does not have a small residual solution of point source form \ref{eqn:ptsrc}, in general, for a given choice of $c$, even if that were the case for a different choice ($c^*$). Therefore a more general class of source models than that specified by the condition \ref{eqn:ptsrc} must be admitted to the feasible set for the source subproblem \ref{eqn:esis} if it is to serve as the inner problem in a variable projection formulation of extended source FWI.
-
-The class of non-point sources investigated here are those confined a hypersurface assumed to contain the locations of physical (point) sources, but not {\em a priori} required to have point support. These {\em surface extended sources} are able to yield a relatively small residual in the source subproblem \ref{eqn:esis} for more or less arbitrary coefficient array $c$. This observation is a by-product of the approximate solution for \ref{eqn:esis} constructed below. The construction of the approximate solution is closely related to the {\em time reversal} method of photoacoustic tomography (see \cite{StefanovUhlmannIP:09} and references cited there).
-
-The next section gives a precise description of an acoustic version of problem \ref{eqn:esis} for an idealized {\em crosswell} configuration, in which source located on a surface $z=z_s$ generate waves that propagate to to a receiver surface $z=z_r > z_s$. In principle, {\em diving waves} can be described with similar mathematics, but with some additional complications, so I do not treat the diving wave case explicitly in this paper. The assumptions detailed here imply that the data $d$ of the inverse problems \ref{eqn:esi}, \ref{eqn:esis} have the physical character of {\em transmitted waves}. There are no mathematical results at present concerning reflected wave inverse problems treated by source extension methods, though there are tantalizing numerical clues \cite[]{LeeuwenHerrmannWRI:13,Warner:14,Warner:16,LeeuwenHerrmann:16,HuangSymes:Geo17,HuangSymes:Geo18a,HuangSymes:Geo18b}.
-
-The following section describes the construction of the approximate
-inverse and explains the conditions under which accuracy should be expected. I observe that the approximate inverse is approximately the adjoint of the modeling operator $PL[c]^{-1}$ with respect to weighted norms in its domain and range (see \cite{HouSymes:15} for a similar observation in a different context). This fact immediately suggests use of the approximate inverse as a preconditioner to accelerate convergence of Krylov space methods such as conjugate gradient iteration applied to the least squares problem \ref{eqn:esis}. However, its straightforward application in the preconditioned conjugate gradient (PCG) method \cite[]{Golub:2012} involves explicitly a version the so called Dirichlet-to-Neumann (D2N) operator, which is computationally awkward. I show how to reorganize the PCG iteration so that only solutions of $L[c]u=f$ are required. The penultimate section presents some 2D examples in the crosswell configuration, illustrating the accuracy of the approximate inversion and the accelerated convergence of PCG. The examples are chosen to emphasize that surface extended sources can be constructed to fit more or less arbitrary data, unlike point sources - as mentioned before, this approximate invertibility property of the modeling operator is of critical importance in the application to extended FWI. The paper ends with a discussion of several important matters not addressed here, and a restatement of the conclusions.
-
-The intent of the main body of this paper is to present the formal structure of the extended source subproblem and the way in which this structure leads to accelerated numerical solution. This formal structure is however supported by a rigorous foundation. In order to avoid disrupting the formal account, this foundation material is relegated to an appendix.
-
-\section{Surface Sources and Solutions}
-
-For acoustic wave physics, the coefficient vector $c$ is the pair $\bf{c}=(\kappa,\rho)$ of bulk modulus $\kappa$ and density $\rho$, and the state vector $\bu=(p,\bv)^T$ consists of pressure $p$ (a scalar space-time field) and particle velocity $\bv$ (a vector space-time field). The wave operator $L[\bf{c}]$ is given by the linear acoustics system:
+For acoustic wave physics, the coefficient vector is
+$\bf{c}=(\kappa,\rho)$, with components bulk modulus $\kappa$ and
+density $\rho$, and the state vector $\bu=(p,\bv)^T$ consists of
+pressure $p$ (a scalar space-time field) and particle velocity $\bv$
+(a vector space-time field). The wave operator $L[\bf{c}]$ is:
 \begin{equation}
 \label{eqn:aweop}
-L[c]u = 
+L[\bf{c}]\bf{u} = 
 \left(
 \begin{array}{c}
 \frac{1}{\kappa}\frac{\partial p}{\partial t}  + \nabla \cdot \bv, \\
@@ -96,7 +116,7 @@ L[c]u =
 That is,
 \begin{equation}
   \label{eqn:awemat}
-  L[c] = \left(
+  L[\bf{c}] = \left(
     \begin{array}{cc}
       \frac{1}{\kappa}\frac{\partial}{\partial t} & \nabla \cdot \\
       \nabla & \rho \frac{\partial}{\partial t}
@@ -104,56 +124,475 @@ That is,
   \right)
 \end{equation}
 
-Most of what follows is valid for any space dimension $n >0$. Examples
-later in this paper will use $n=2$ for computationally convenience. In
-the mathematical development that follows, I will set $n=3$.
+Most of what follows is valid for any space dimension $n >0$. The
+coefficient vector $\bf{c}=(\kappa,\rho)$ is defined throughout space
+$\bR^n$, the state vector $\bu$ throughout space-time
+$\bR^{n+1}$. Whenever convenient for mathematical manipulations,
+$n=3$: for instance, I will write $\bx=(x,y,z)^T$ for the spatial
+coordinate vector, and refer to the third (vertical) coordinate of
+particle velocity as $v_z$. Examples
+later in this paper will use $n=2$ for computational convenience.
 
-As mentioned earlier, in this paper the coefficients $\bf{c}$ is regarded as defined throughout space $\bR^d$, the state vector $\bu$ throughout space-time $\bR^{d+1}$.
+Since all of the operators in the discussion that follows depend on
+$\bf{c}$, I will suppress it from the notation, for example, $L=L[\bf{c}]$.
 
-The idealized ``crosswell'' configuration involves sources confined to
-$z=z_s$. Such sources are combinations of constitutive law defects and
+The extended ``crosswell'' configuration involves sources confined to
+a spatial hypersurface. For convenience, choose this to be the hyperplane
+$\{(x,y,z,t): z=z_s\}$. Such sources are combinations of constitutive law defects and
 loads normal to the surface, that is, right-hand sides in the system
-$L[c]\bf{u}=\bf{f}$ of the form $\bf{f}(\bx,t) =
+$L\bu=\bff$ of the form $\bff(\bx,t) =
 (h_s(x,y,t)\delta(z-z_s), f_s(x,y,t)\bf{e}_z\delta(z-z_s))^T$ for scalar
-defect $h_s$ and normal force $f_s$ and $\bf{e}_z=(0,0,1)^T$. With the choice $L[\bf{c}]$ given in \ref{eqn:aweop}, the causal wave system $L[\bf{c}]\bu^+=\bff$ takes the form
+defect $h_s$ and normal force $f_s$  ($\bf{e}_z=(0,0,1)$). With the choice $L$ given in \ref{eqn:awemat}, the causal/anti-causal wave system $L\bu^{\pm}=\bff$ takes the form
 \begin{eqnarray}
-\label{eqn:awep}
-\frac{1}{\kappa}\frac{\partial p^{+}}{\partial t} & = & - \nabla \cdot \bv^{+} +
+\label{eqn:awepm}
+\frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} & = & - \nabla \cdot \bv^{\pm} +
 h_s \delta(z-z_s), \nonumber \\
-\rho\frac{\partial \bv^{+}}{\partial t} & = & - \nabla p^{+} + f_s\bf{e}_z \delta(z-z_s),\nonumber \\
-p^{+} & =& 0 \mbox{ for } t \ll 0,\nonumber\\ 
-\bv^{+} & = & 0 \mbox{ for } t \ll 0.
+\rho\frac{\partial \bv^{\pm}}{\partial t} & = & - \nabla p^{\pm} + f_s\bf{e}_z \delta(z-z_s),\nonumber \\
+p^{\pm} & =& 0 \mbox{ for } \pm t \ll 0,\nonumber\\ 
+\bv^{\pm} & = & 0 \mbox{ for } \pm t \ll 0.
 \end{eqnarray}
 
-Similarly, the anti-causal wave system $L[c]u^-=f$ takes the form
-\begin{eqnarray}
- \label{eqn:awem}
-\frac{1}{\kappa}\frac{\partial p^{-}}{\partial t} & = & - \nabla \cdot \bv^{-} +
-h_s \delta(z-z_s), \nonumber \\
-\rho \frac{\partial \bv^{-}}{\partial t} & = & - \nabla p^{-} + f_s\bf{e}_z \delta(z-z_s),\nonumber \\
-p^{-} & =& 0 \mbox{ for } t \gg 0,\nonumber\\ 
-\bv^{-} & = & 0 \mbox{ for } t \gg 0.
-\end{eqnarray}
-
-\section{Operators and Adjoints}
-All of the operators discussed in this section depend on the
-coefficient array $\bf{c}$, which I will suppress from the notation.
-Denote by $P_s,P_r$ the trace (sampling) operators on $z=z_s$, $z=z_r$
-respectively. The causal and anticausal modeling operators
-${\cal S}^{+}_{z_s,z_r}$ and ${\cal S}^-_{z_s,z_r}$ are defined in
+\noindent {\bf Remark:} In system \ref{eqn:awepm} and many similar
+systems to follow, I will use the shorthand
+\[
+  p^+ = 0 \mbox{ for } t \ll 0
+\]
+to mean
+\[
+  \mbox{For some } T \in \bR, p^+(\cdot,t) = 0 \mbox{ for all } t \ge
+  T.
+\]
+Extended forward modeling consists in solving \ref{eqn:awepm} and
+sampling the solution components on another spatial hyperplane $\{(x,y,z,t): z=z_r\}$. Denote by $P_s,P_r$ the trace (sampling) operators on $z=z_s$, $z=z_r$
+respectively. The causal/anti-causal modeling operators
+${\cal S}^{\pm}_{z_s,z_r}$ are defined in
 terms of the solutions $(p^{\pm},\bv^{\pm})$ of the systems
-\ref{eqn:awep} and \ref{eqn:awem} by
-\begin{eqnarray}
-  {\cal S}^{+}_{z_s,z_r}(h_s,f_s) & = & (P_rp^+,P_r v_z^+)|_{z=z_r},
-                                        \nonumber\\
-  {\cal S}^{-}_{z_s,z_r}(h_s,f_s) & = & (P_rp^-,P_r v_z^-)|_{z=z_r}.
+\ref{eqn:awepm} by
+\begin{equation}
+  {\cal S}^{\pm}_{z_s,z_r}(h_s,f_s)  = (P_rp^{\pm},P_r v_z^{\pm}),
   \label{eqn:fwd}
-\end{eqnarray}
+\end{equation}
 The subscript signifies that sources are located on $z=z_s$, the
 receivers on $z=z_r$. It is necessary to include this information in
 the notation, as versions of ${\cal S}^{\pm}$ with sources and receivers in
 several locations will be needed in the discussion below.
 
+It follows from the adjoint state method (see Derivations section
+below for details) that
+\begin{equation}
+  \label{eqn:sadj1}
+  ({\cal S}^{\pm}_{z_s, z_r})^T = -{\cal S}^{\mp}_{z_r,z_s}
+\end{equation}
+
+Define $R$ to be the {\em time-reversal operator} on functions of
+space-time, $Rf(\bx,t) = f(\bx,-t)$, and ${\cal R}$ to be the {\em
+  acoustic field time-reversal operator}
+\begin{equation}
+  \label{eqn:trdef}
+  {\cal R} \left(
+    \begin{array}{c}
+      p\\
+      \bv
+    \end{array}
+  \right) =
+  \left(
+    \begin{array}{c}
+      Rp\\
+      -R\bv
+    \end{array}
+  \right)
+\end{equation}
+Then 
+\begin{equation}
+  \label{eqn:trsadj}
+  {\cal R}{\cal S}^{\mp} = -{\cal S}^{\pm}_{z_r,z_s}{\cal R}
+\end{equation}
+Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn:trsadj} imply that
+
+\begin{equation} 
+  \label{eqn:trtr}
+ ({\cal S}^{\pm}_{z_s,z_r})^T = {\cal R}{\cal S}_{z_r,z_s}^{\pm}{\cal R}=
+ -{\cal S}^{\mp}_{z_r,z_s}.
+\end{equation}
+
+Define $\Pi_i, i=0,1$ to be the projection on the first,
+respectively second, component of a vector in $\bR^2$. Define the
+forward modeling operator from pressure source to pressure trace by
+\begin{equation}
+  \label{eqn:sdef}
+  S^{\pm}_{z_s,z_r} = \Pi_0 {\cal S}^{\pm}_{z_s,z_r} \Pi_0^T 
+\end{equation}
+and the forward modeling operator from velocity source (normal force)
+to velocity trace by 
+\begin{equation}
+  \label{eqn:vdef}
+  V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
+\end{equation}
+The relation \ref{eqn:trtr} implies that
+\begin{eqnarray}
+  (S^{\pm}_{z_s,z_r})^T &=& -S^{\mp}_{z_r,z_s} \nonumber\\
+                        &=& R S^{\pm}_{z_r,z_s}R, \nonumber\\
+    (V^{\pm}_{z_s,z_r})^T &=& -V^{\mp}_{z_r,z_s} \nonumber\\
+                        &=& R V^{\pm}_{z_r,z_s}R.
+                            \label{eqn:trtrcomp}
+\end{eqnarray}
+  
+\section{Fields, Traces and Sources}
+In this section, $(p^{\pm}_0,\bv^{\pm}_0)$ denotes an acoustic field,
+continuous in the region $z_s \le z $, obeying the homogeneous wave
+equation in the interior $z_s < z $:
+\begin{eqnarray}
+\label{eqn:awe1}
+  \frac{1}{\kappa}\frac{\partial p^{\pm}_0}{\partial t} & = & - \nabla \cdot \bv^{\pm}_0, \nonumber \\
+  \rho\frac{\partial \bv^{\pm}_0}{\partial t} & = & - \nabla
+                                                    p^{\pm}_0, \nonumber \\
+  p^{\pm}_0 & =& 0,  \mbox{ for } t \ll 0, \nonumber\\ 
+  \bv^{\pm}_0 & = & 0 \mbox{ for } t \ll 0.
+\end{eqnarray}
+I will show how to view $(p^{\pm}_0,\bv^{\pm}_0)$ as the $z>z_s$ part
+of a solution of the system \ref{eqn:awepm} in two different ways,
+corresponding to two different extensions to the whole space. An
+important relation between the components of the operator
+${\cal S}^{\pm}_{z_s,z_r}$ follows (equation \ref{eqn:lamnull} below).
+
+Given a function $\phi$ on $z=z_s$, define $(p^{\pm}_1,\bv^{\pm}_1)$
+as the solution in the two half-spaces $z <z_s, z>z_s$ of
+\begin{eqnarray}
+\label{eqn:awe1}
+  \frac{1}{\kappa}\frac{\partial p_1}{\partial t} & = & - \nabla \cdot \bv_1, \nonumber \\
+  \rho\frac{\partial \bv_1}{\partial t} & = & - \nabla p_1,\nonumber \\
+  p^{\pm}_1 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
+  \bv^{\pm}_1 & = & 0 \mbox{ for } \pm t \ll 0,\nonumber\\
+  \lim_{z \rightarrow z_s} P_sp^{\pm}_1& =& \phi.
+\end{eqnarray}
+By construction, $p^{\pm}_1$ is continuous across $z=z_s$. The
+discontinuity $[v^{\pm}_{1,z}]|_{z=z_s}$ is a linear function of
+$\phi$. Define the {\em pressure-to-source map} $\Lambda^{\pm}_{z_s}$ by
+\begin{equation}
+  \label{eqn:deflam}
+  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]|_{z=z_s}
+\end{equation}
+Then as a distribution on all of $\bR^4$, $(p^{\pm}_1,\bv^{\pm}_1)$ solve the
+inhomogeneous system
+\begin{eqnarray}
+\label{eqn:sawe1}
+  \frac{1}{\kappa}\frac{\partial p^{\pm}_1}{\partial t} & = &
+                                                        (\Lambda^{\pm}_{z_s}\phi)\delta(z-z_s) - \nabla \cdot \bv^{\pm}_1, \nonumber \\
+  \rho\frac{\partial \bv^{\pm}_1}{\partial t} & = & - \nabla p^{\pm}_1,\nonumber \\
+  p^{\pm}_1 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
+  \bv^{\pm}_1 & = & 0 \mbox{ for } \pm t \ll 0.
+\end{eqnarray}
+
+This is precisely the causal option of system \ref{eqn:awepm} for
+$f_s=0$ and $h_s=\Lambda^{\pm}_{z_s}\phi$. From \ref{eqn:awe1} and the definition
+\ref{eqn:fwd},
+\begin{equation}
+  \label{eqn:lamfwd}
+  \phi = S^{\pm}_{z_s,z_s}\Lambda^{\pm}_{z_s}\phi,
+\end{equation}
+that is,
+\begin{equation}
+  \label{eqn:lamfwd1}
+  S^{\pm}_{z_s,z_s} = (\Lambda^{\pm}_{z_s})^{-1}.
+\end{equation}
+
+Similarly, suppose $\psi$ is a function on $z=z_s$, and that
+$(p^{\pm}_2,\bv^{\pm}_2)$ solves
+\begin{eqnarray}
+\label{eqn:awe2}
+  \frac{1}{\kappa}\frac{\partial p^{\pm}_2}{\partial t} & = & - \nabla \cdot \bv^{\pm}_2, \nonumber \\
+  \rho\frac{\partial \bv^{\pm}_2}{\partial t} & = & - \nabla p^{\pm}_2,\nonumber \\
+  p^{\pm}_2 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
+  \bv^{\pm}_2 & = & 0 \mbox{ for } \pm t \ll 0,\nonumber\\
+  \lim_{z \rightarrow z_s} P_sv^{\pm}_{2,z} &=& \psi.
+\end{eqnarray}
+in the two half-spaces $z<z_s, z > z_s$. In this case, $v^{\pm}_{2,z}$
+is continuous at $z=z_s$ by construction. Viewed as a
+distribution on all of $\bR^4$, $(p^{\pm}_2,\bv^{\pm}_2)$ solve the
+system \ref{eqn:awepm} with $h_s=0$, and the discontinuity in pressure
+across $z=z_s$ as the inhomogeneous term in Newton's law:
+\begin{eqnarray}
+\label{eqn:sawe2}
+  \frac{1}{\kappa}\frac{\partial p^{\pm}_2}{\partial t} & = &
+                                                        - \nabla \cdot \bv^{\pm}_2, \nonumber \\
+  \rho\frac{\partial \bv^{\pm}_2}{\partial t} & = & 
+                                                    [p^{\pm}_2]|_{z=z_s}{\bf e_z}\delta(z-z_s) - \nabla p^{\pm}_2,\nonumber \\
+  p^{\pm}_2 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
+  \bv^{\pm}_2 & = & 0 \mbox{ for } \pm t \ll 0.
+\end{eqnarray}
+This relation defines a map from the velocity boundary data $\psi$ to
+the source in the velocity equation, having units of force/volume,
+similar to $\Lambda^{\pm}_{z_s}$. As it's not needed in the sequel, I
+won't name this map.
+
+The quadratic form defined by $\Lambda^{\pm}_{z_s}$ has fundamental
+physical significance. Define the total acoustic energy $E^{\pm}(t)$ of the
+field $(p^{\pm},\bv^{\pm})$, at time $t$ by
+\begin{equation}
+  \label{eqn:defae0}
+  E^{\pm}(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^{\pm})^2}{\kappa} + \rho |\bv^{\pm}|^2\right)
+\end{equation}
+Then
+\begin{equation}
+  \label{eqn:elim}
+  \pm \lim_{\pm t \rightarrow \infty} E^{\pm}(t) =  \langle P_sp^{\pm},
+  (\Lambda^{\pm}_{z_s} P_sp^{\pm}) \rangle_{L^2(z=z_s)}.
+\end{equation}
+That is, the value of the quadratic form defined by
+$\Lambda^{\pm}_{z_s}$, evaluated at the pressure trace on $z=z_s$,
+gives the total energy transferred from the source to the
+acoustic field over time. Since $E$ is itself a positive definite
+quadratic form in the acoustic field, it follows that $\pm
+\Lambda^{\pm}_{z_s}$ is positive semi-definite.
+
+A closer relation between traces and sources follows from the
+geometric optics analysis of the half-space solution, presented
+below. I will show that, for propagating wave data,
+\begin{equation}
+  \label{eqn:odd1}
+  \lim_{z\rightarrow z_s^+} v_{1,z} \approx - \lim_{z\rightarrow z_s^-}
+  v_{1,z}
+\end{equation}
+Similarly,
+\begin{equation}
+  \label{eqn:odd2}
+  \lim_{z\rightarrow z_s^+} p_{2} \approx - \lim_{z\rightarrow z_s^-}
+  p_{2}
+\end{equation}
+for the velocity field solving \ref{eqn:awe1}, or equivalently
+\ref{eqn:awe1}. Here ``$\approx$'' means in the sense of high
+frequency asymptotics, that is, that the difference between the two
+sides is relatively smooth, hence small if the data is highly
+oscillatory. Similarly, for the pressure field solving \ref{eqn:awe2}
+or \ref{eqn:sawe2}, the jump at $z=z_s$ is twice the limiting value
+(trace) from above, up to a smooth error. Therefore
+\begin{eqnarray}
+  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]|_{z=z_s} &\approx& 2
+                              \lim_{z\rightarrow z_s}v^{\pm}_{1,z},\\  \label{eqn:tracejump1}
+  [p^{\pm}_2]|_{z=z_s} &\approx& 2 \lim_{z\rightarrow z_s^+}p^{\pm}_{2},\\  \label{eqn:tracejump2}
+\end{eqnarray}
+
+These apparently harmless relations have a profound consequence,
+because of a final step: identify the boundary data $\phi$ and $\psi$,
+so far arbitrary, as the traces of $p^{\pm}_0$ and $v^{\pm}_{0,z}$ on $z=z_s$,
+that is, set
+\begin{eqnarray}
+  \phi & = & P_s p^{\pm}_0, \nonumber \\
+  \psi & = & P_s v^{\pm}_{0,z}.
+             \label{eqn:bv0}
+\end{eqnarray}
+Since the traces on $z=z_s$ of the pressure fields $p^{\pm}_0$ and $p^{\pm}_1$ are
+the same, and both are pressure components of solutions of the same homogeneous
+acoustic system in $z>z_s$, the standard energy identity implies that
+$(p^{\pm}_0,\bv^{\pm}_0) = (p^{\pm}_1,\bv^{\pm}_1)$ in
+$z > z_s$. Similarly, $P_sv^{\pm}_{0,z}$ and $P_sv^{\pm}_{2,z}$ are
+the same, whence $(p^{\pm}_0,\bv^{\pm}_0) = (p^{\pm}_2,\bv^{\pm}_2)$ in
+$z>z_s$.
+
+Therefore the assumption \ref{eqn:bv0} implies that
+\begin{equation}
+  \label{eqn:jump0}
+  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]_{z=z_s} \approx 2P_s v^{\pm}_{0,z}  = 2\psi,
+\end{equation}
+and
+\begin{equation}
+  \label{eqn:jump1}
+[p_2^{\pm}]_{z=z_s} \approx  2P_s p^{\pm}_{0}= 2 \phi.           
+\end{equation}
+In the notation of the last section, set $2 \phi = 2P_sp^{\pm}_0= f_s,
+2\psi = 2P_s v^{\pm}_{0,z}= h_s$. Then relation \ref{eqn:jump0}
+implies that
+\begin{equation}
+  \label{eqn:lamfh}
+  \Lambda^{\pm}_{z_s}f_s \approx h_s.
+\end{equation}
+
+From the definitions in the last section and the system \ref{eqn:sawe1},
+\begin{equation}
+  \label{eqn:pident0}
+P_r p^{\pm}_0 = \Pi_0{\cal S}^{\pm}(h_s,0)^T = \Pi_0{\cal
+  S}^{\pm}\Pi_0^Th_s,
+\end{equation}
+and
+\begin{equation}
+  \label{eqn:pident1}
+P_r p^{\pm}_0 \approx \Pi_0{\cal S}^{\pm}_{z_s,z_r} (0,f_s)^T = \Pi_0{\cal
+  S}^{\pm}_{z_s,z_r} \Pi_1^Tf_s,
+\end{equation}
+Similarly, from the relations above and \ref{eqn:sawe2},
+\begin{equation}
+  \label{eqn:vident0}
+  P_r  v^{\pm}_{0,z}  \approx \Pi_1{\cal S}^{\pm}_{z_s,z_r}(h_s,0)^T  =
+  \Pi_1{\cal S}^{\pm}_{z_s,z_r} \Pi_0^Th_s 
+\end{equation}
+and
+\begin{equation}
+  \label{eqn:vident1}
+  P_r  v^{\pm}_{0,z}  = \Pi_1{\cal S}^{\pm}_{z_s,z_r}(0,f_s)^T  =
+  \Pi_1{\cal S}^{\pm}_{z_s,z_r} \Pi_1^Tf_s 
+\end{equation}
+Together with \ref{eqn:lamfh}, these equations imply that
+\begin{equation}
+  \label{eqn:lamnull}
+{\cal  S}_{z_s,z_r}^{\pm}P_0^T\Lambda^{\pm}_{z_s} \approx {\cal S}^{\pm}_{z_s,z_r}P_1^T.
+\end{equation}
+Consequently, ${\cal S}_{z_s,z_r}$ has an ``approximate null space'',
+in the sense that its composition with the block operator
+$(\Lambda^{\pm}_{z_s},-I)^T$ is asymptotically negligible.
+
+\section{Parametrix via Time Reversal}
+
+Computation of $\Lambda^{\pm}_{z_s}$ will prove a critical step in an
+efficient iterative solution of the linear subproblem
+\ref{eqn:esis}. Direct computation, for instance by solving
+\ref{eqn:sawe2} and reading off $P_sv^{\pm}_{2,z}$, turns out to be
+numerically ill-behaved. An accurate computation is available via the
+computation of a {\em parametrix} (high frequency approximate inverse)
+for $S^{\pm}_{z_s,z_r}$. This parametrix also justifies the use of the
+symmetric part of $\Lambda^{\pm}_{z_s}$ as a preconditioner. In this
+section I will explain the parametrix construction, and also show how
+to extract the symmetric part of $\Lambda^{\pm}_{z_s}$.
+
+The key ingredient in this {\em time reversal} construction is a
+{\em local energy decay} assumption. Define the local energy in the
+acoustic field $(p,\bv)$ at
+time $t$ in a region $\Omega \subset \bR^3$ by imiting the integration
+in the definition of total energy \ref{eqn:defae0} to $\Omega$:
+\begin{equation}
+  \label{eqn:defaeloc}
+  E_{\Omega}[(p,\bv)](t) = \frac{1}{2} \int_{\Omega} \,d\bx \, \left(\frac{p(\bx,t)^2}{\kappa(\bx)} + \rho(\bx) |\bv(\bx,t)|^2\right)
+\end{equation}
+
+We assume that $(p^+,\bv^+)$ is {\em downgoing} in the half-space
+$\Omega = \{(x,y,z): z \le z_r\}$: that is, there exists a solution of
+the acoustic system $(\tilde{p}^+,\tilde{\bv}^+)$ in space-time $\bR^4$
+for which
+\begin{itemize}
+\item[1. ] $p^+ \approx \tilde{p}^+, \bv^+ \approx \tilde{\bv}^+$ in
+  the slab $\Gamma = \{(x,y,z): z_s \le z \le z_r\}$, and
+\item[2. ] The energy in $(\tilde{p}^+,\tilde{\bv}^+)$ decays in
+  forward time, in the half-space $\Omega$:  $E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](t) \rightarrow 0$
+  as $t \rightarrow \infty$.
+\end{itemize}
+
+Conditions for local energy decay have been widely studied in various
+settings \cite[]{MorawetzPhillipsLax:05,Hristova:09}. For the half-space
+geometries considered here, local energy does not decay in general,
+because of the existence of ``trapped'' rays traveling parallel to the
+boundary. Instead, high frequency data associated with rays crossing
+the boundary $\{z=z_r\}$ transversally, and never returning to the slab, have
+the local energy decay property.
+
+The downgoing constraint has mostly been studied in relation to
+seismology, mostly as a ray-theoretic concept: downgoing fields are
+concentrated in phase space along rays for which depth $z$ is
+increasing with $t$. The version above is stated without reference to
+ray theory, but the setting of this paper allows its use and in a
+later section I will explicitly construct the downgoing approximation
+under appropriate ray-theoretic conditions. The numerical examples will
+illustrate the necessary assumptions. When ray-theory is appropriate,
+the downgoing constraint can be {\em ex post facto} enforced via dip
+filtering. For example, the application of the ideas developed here to
+diving wave inversion will require such a filtering step.
+
+An immediate consequence of the energy decay assumption is that in the
+slab $\Gamma$, the field $(p^+,\bv^+)$ approximates the solution of an
+anti-causal evolution equation. For any choice of $T$, define
+$(\tilde{p}^-,\tilde{\bv}^-)$ to be the solution in the half-space
+$\Omega$ of
+\begin{eqnarray}
+\label{eqn:revawe}
+  \frac{1}{\kappa}\frac{\partial \tilde{p}^-}{\partial t} & = & - \nabla \cdot \tilde{\bv}^-, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}^-}{\partial t} & = & - \nabla \tilde{p}^-,\nonumber \\
+  \tilde{p}^- & =& 0,  \mbox{ for } t=T,\nonumber\\ 
+  \tilde{\bv}^- & = & 0 \mbox{ for } t=T,\nonumber\\
+  P_r\tilde{p}^- &=& P_rp^+ \mbox { for } t \le T . 
+\end{eqnarray}
+As will be shown later, under the downgoing assumtion, $P_r p^+
+\approx P_r \tilde{p}^+$.
+Therefore $(\delta p,\delta \bv)=(\tilde{p}^+-\tilde{p}^-,\tilde{\bv}^+-\tilde{\bv}^-)$
+differs negligibly from the solution of
+\begin{eqnarray}
+\label{eqn:deltaawe}
+  \frac{1}{\kappa}\frac{\partial \delta p}{\partial t} & = & -
+                                                               \nabla
+                                                               \cdot
+                                                               \delta \bv, \nonumber \\
+  \rho\frac{\partial \delta \bv}{\partial t} & = & - \nabla \delta p,\nonumber \\
+  \delta p & =& \tilde{p}^+,  \mbox{ for } t=T,\nonumber\\ 
+  \delta \bv & = & \tilde{\bv}^+ \mbox{ for } t=T,\nonumber\\
+  P_r\delta p & = & 0,
+\end{eqnarray}
+in $\Omega \times \bR$. Since
+$E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](T) \rightarrow 0$ as $T
+\rightarrow \infty$, the usual energy estimate implies that the energy $\delta
+E$ in this field,
+\[
+  \delta E_{\Omega}(t) = \frac{1}{2} \int_{\Omega} \,d\bx \,
+ \left(\frac{(\delta p)^2}{\kappa} + \rho |\delta \bv|^2\right)
+\]
+satisfies $\delta E_{\Omega}(t) \rightarrow 0$ as $T \rightarrow
+\infty$. This decay does not generally imply that $P_s\delta p, P_s \delta \bv)
+\rightarrow 0$ (for instance) as $T \rightarrow \infty$, since the trace operator
+$P_s$ is not continuous, but it does so imply for purely downgoing
+fields, as will be demonstrated later, so
+\begin{equation}
+  \label{eqn:approxinv0}
+  \lim_{T \rightarrow \infty} P_s\tilde{v}_z^- \approx \lim_{z \rightarrow
+    0^+}\tilde{v}_z^+ \approx \lim_{z \rightarrow 0^+}v^+_z
+\end{equation}
+  
+Recall (equations \ref{eqn:deflam}, \ref{eqn:jump0}) that
+\[
+  \Lambda^+_{z_s} P_s p^+ = 2 \lim_{z \rightarrow z_s^+}v^+_z 
+\]
+and that with $h_s= \Lambda^+_{z_s}P_sp^+$,
+\[
+  S^+_{z_s,z_r}h_s = P_r p^+
+\]
+Together with the last two equations, the relation
+\ref{eqn:approxinv0} implies that
+\begin{equation}
+  \label{eqn:approxinv1}
+  S^+_{z_s,z_r}(2 P_s \tilde{v}_z^-) = P_rp^+.
+\end{equation}
+As shown in the last section, the solution of the system
+\ref{eqn:revawe} differs negligibly from the anti-causal solution $(p^-_2,\bv^-_2)$
+of the system \ref{eqn:sawe2} with (i) $z_s$ replaced by $z_r$, and
+(ii) $\psi = [p^-_2]|_{z=z_r} = -2 lim_{z \rightarrow z_r^-} p^-_2
+\approx -2 P_rp^+$. Therefore (definitions \ref{eqn:sdef}, \ref{eqn:vdef})
+\begin{equation}
+  \label{eqn:approxinv2}
+  P_s \tilde{v}_z^- \approx V^-_{z_r,z_s}(-2 P_rp^+).
+\end{equation}
+Taken together, relations \ref{eqn:approxinv1} and
+\ref{eqn:approxinv2} yield the first equation in the first main result of this section:
+\begin{eqnarray}
+  \label{eqn:approxinv}
+  V^-_{z_r,z_s} S^+_{z_s,z_r} &=& \frac{1}{4}I, \nonumber\\
+  S^-_{z_r,z_s} V^+_{z_s,z_r} &=& \frac{1}{4}I.
+\end{eqnarray}.
+The second equation follows by an exactly analogous argument.
+
+
+\section{Derivations}
+\subsection{Extension to whole space}
+If $\phi$ is smooth and vanishes for large negative $t$, then
+$(p_1,\bv_1)$ can be constructed by pasting together the smooth
+solutions of the inhomogeneous Dirichlet problems in the half-spaces
+$\pm z > z_s$. Construct these by extending $\phi$ smoothly to
+$\pm z>z_s$, and solve systems similar to \ref{eqn:awe1} for the
+difference with $(p_1,\bv_1)$ by quoting the main results from
+\cite{BlazekStolkSymes:13}. Since the right hand side in this
+difference system is smooth, and the system is causal, the solution is
+smooth and vanishes on $z=z_s$. Adding back the extension of $\phi$
+produces smooth solutions in $\pm z > z_s$; define $(p_1,\bv)_1$ to be
+these smooth functions in $z \ne z_s$. Since the boundary values for
+pressure are the same, $p_1$ extends continuously to $z=z_s$. 
+The pressure boundary value $\phi$ uniquely determines the solutions
+in the two half-spaces, by standard energy estimates,
+
+\subsection{Adjoint Computation}
 The adjoint of ${\cal S}^+_{z_s,z_r}$ can be computed by a variant of
 the adjoint state method, in this case a by-product of the
 conservation of energy. Suppose that $p^-,\bv^-$ solve \ref{eqn:awem}
@@ -236,11 +675,6 @@ $(-Rh_r\delta(z-z_r), Rf_r\bf{e_z}\delta(z-z_r))$. That is,
   {\cal R}{\cal S}^- = -{\cal S}^+_{z_r,z_s}{\cal R}
 \end{equation}
 Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn:trsadj} imply that
-\begin{equation} 
-  \label{eqn:trtr}
- ({\cal S}^+_{z_s,z_r})^T = {\cal R}{\cal S}_{z_r,z_s}^+{\cal R}=
- -{\cal S}^-_{z_r,z_s}.
-\end{equation}
 
 \section{Surface source-to-pressure operator}
 
@@ -326,15 +760,16 @@ Also onclude from identity \ref{eqn:etot} that the symmetric part of $\Lambda^+_
 %  h_s= [v_z]|_{z=z_s}.
 %\end{equation}
 
-\section{Parametrix via Time Reversal}
+%######################################
+\section{Propagating Waves}
+Define $H$ to be the subspace $\{\bu \in (L^2(\bR^3))^4: \bu=0,z\ge
+z_s\}$, by analogy with \cite{Lax:PDENotes}, p. 122.
+%Note: must add microlocal $H^1$ constraint per
+%\cite[]{BaoSy:91b} so that trace operator is well-defined - postpone
+%this.
 
-Define $H$ to be the subspace $\{u \in (L^2(\bR^3))^4: \mbox{supp
-}u\subset \{z<z_s\}\}$, by analogy with \cite{Lax:PDENotes},
-p. 122. Note: must add microlocal $H^1$ constraint per
-\cite[]{BaoSy:91b} so that trace operator is well-defined - postpone
-this.
-
-Given $u=(\bar{p}_0,\bar{\bv}_0) \in H$, extend in $t$ by solving the acoustic system
+Given $u=(\bar{p}_0,\bar{\bv}_0) \in H$, extend in $t$ by solving the
+acoustic initial value problem
 \begin{eqnarray}
 \label{eqn:awe0}
   \frac{1}{\kappa}\frac{\partial p_0}{\partial t} & = & - \nabla \cdot \bv_0, \nonumber \\
@@ -342,148 +777,31 @@ Given $u=(\bar{p}_0,\bar{\bv}_0) \in H$, extend in $t$ by solving the acoustic s
   p_0 & =& \bar{p}_0, t=0,\nonumber\\ 
   \bv_0 & = & \bar{\bv}_0, t=0,\nonumber\\
 \end{eqnarray}
-Note that $(p_0,\bv_0)=0$ near $t=0$ in the region $z>z_s$.
+Standard results on hyperbolic systems assure existence of a unique
+square-integrable (weak) solution, which is smooth if $(p_0,\bv_0)$ is
+smooth at $t=0$ \cite[]{CourHil:62,LaxPDENotes}.
 
-Denote by $P_s$, respectively $P_r$, the trace operator on $z=z_s$,
-respectively $z=z_r$. Given $(p_0,\bv_0)$ as above, define
-$(p_1,\bv_1)$ as the solution in $z \ne z_s$ of
-\begin{eqnarray}
-\label{eqn:awe1}
-  \frac{1}{\kappa}\frac{\partial p_1}{\partial t} & = & - \nabla \cdot \bv_1, \nonumber \\
-  \rho\frac{\partial \bv_1}{\partial t} & = & - \nabla p_1,\nonumber \\
-  p_1 & =& 0,  \mbox{ for } 0,\nonumber\\ 
-  \bv_1 & = & 0 \mbox{ for } 0,\nonumber\\
-  P_sp_1 = P_sp_0. 
-\end{eqnarray}
-Extended to form a distribution on all of $\bR^4$, $(p_1,\bv_1)$ solve the
-inhomogeneous system
-\begin{eqnarray}
-\label{eqn:awe1}
-  \frac{1}{\kappa}\frac{\partial p_1}{\partial t} & = &
-                                                        ((\Lambda^+_{z_s})^{-1}P_sp_0)\delta(z-z_s) - \nabla \cdot \bv_1, \nonumber \\
-  \rho\frac{\partial \bv_1}{\partial t} & = & - \nabla p_1,\nonumber \\
-  p_1 & =& 0,  \mbox{ for } t=0,\nonumber\\ 
-  \bv_1 & = & 0 \mbox{ for } t=0.\nonumber\\
-\end{eqnarray}
-where
+Note that $(p_0,\bv_0)=0$ near $t=0$ in the half-space $z>z_s$.
+
+For any suitable space-time function $u$, define
 \begin{equation}
-  \label{eqn:defhs}
-  (\Lambda^+_{z_s})^{-1}P_sp_0 = P_s[(\bv_1)_z].
+  \label{eqn:postrace}
+  P^+_{z_s}u(x,y,t) =
+  \left\{
+    \begin{array}{c}
+      u(x,y,z_s,t), t>0,\\
+      0, t\le 0.
+    \end{array}
+  \right\}
 \end{equation}
+(Here, ``suitable'' means: the trace on $z=z_s$ makes sense. More on
+this later.)
+
 
 Since $p_0$ also solves the acoustic system \ref{eqn:awe1} in $z>z_s$
 and has the same data at $t=0, z>z_s$ and trace on $z=z_s$, standard
 uniqueness theorem shows that $(p_1,\bv_1) = (p_0, \bv_0)$ in $z>z_s$.
 
-Introduce the operator $T^+_{z_s,z_r}$ mapping pressure on $z=z_s$ to
-pressure on $z=z_r$: that is, $T^{+}_{z_s,z_r}P_sp_0 = P_rp_0$. From
-the previous observation, $T^{+}_{z_s,z_r}P_sp_0 = P_rp_1$, that is,
-you can compute $T^{+}$ by solving the system defining $p_1$, with
-data $P_sp_0$. From the definition of $S^{+}_{z_s,z_r}$, the definition
-\ref{eqn:defhs}, and the boundary condition for $p_1$,
-\begin{equation}
-  \label{eqn:relnST}
-  T^+_{z_s,z_r} = S^+_{z_s,z_r} (\Lambda^+_{z_s})^{-1}.
-\end{equation}
-
-Let $\epsilon>0$ satisfy
-\begin{equation}
-  \label{eqn:defeps}
-  E[{\bf 1}_{\bR^2 \times (-\infty,z_r]}(p_0,\bv_0)](T) \le \epsilon E[(p_0,\bv_0)]
-\end{equation}
-Omit the time on the RHS because the energy of the full field is
-time-invariant. Inequality \ref{eqn:defeps} states that at time
-$t=T$, the energy in
-the region $z<z_r$ is at most $\epsilon$ times the energy in all of
-space. For small $\epsilon$, in other words, most of the
-energy has left $z<z_r$, at least temporarily, at $t=T$. This
-assertion is similar to the outgoing field condition in Lax-Phillips
-scattering theory, but is time-local and approximate.
-
-Define $p_2$ to be the solution in $z \le z_r$ of
-\begin{eqnarray}
-\label{eqn:awe2}
-  \frac{1}{\kappa}\frac{\partial p_2}{\partial t} & = & - \nabla \cdot \bv_2, \nonumber \\
-  \rho\frac{\partial \bv_2}{\partial t} & = & - \nabla p_2,\nonumber \\
-  p_2 & =& 0,  \mbox{ for } t=T,\nonumber\\ 
-  \bv_2 & = & 0 \mbox{ for } t=T,\nonumber\\
-  P_rp_2 = P_rp_0. 
-\end{eqnarray}
-Then $(\delta p_2,\delta \bv_2)=(p_0-p_2,\bv_0-\bv_2)$ solves
-\begin{eqnarray}
-\label{eqn:awe2}
-  \frac{1}{\kappa}\frac{\partial \delta p_2}{\partial t} & = & -
-                                                               \nabla
-                                                               \cdot
-                                                               \delta \bv_2, \nonumber \\
-  \rho\frac{\partial \delta \bv_2}{\partial t} & = & - \nabla \delta p_2,\nonumber \\
-  \delta p_2 & =& p_0,  \mbox{ for } t=T,\nonumber\\ 
-  \delta \bv_2 & = & \bv_0 \mbox{ for } t=T,\nonumber\\
-  P_r\delta p_2 = 0. 
-\end{eqnarray}
-Using the standard energy estimate for homogenous Dirichlet
-problem,
-\begin{equation}
-  \label{eqn:errtr}
-  E[{\bf 1}_{\bR^2 \times (-\infty,z_r]}(\delta p_2,\delta \bv_2)](t) \le
-  \epsilon E[(p_0,\bv_0)], \, 0 \le t \le T.
-\end{equation}
-
-Define $T^{-}P_rp_0 = P_sp_2$. Then
-\[
-  T_{z_r,z_s}^{-}P_rp_0-P_sp_0 = P_s\delta p_2.
-\]
-For the time being, write $O(\epsilon)$ for errors in the trace at
-$z_s$ (output of $P_s$) for solutions of the forward Dirichlet problem
-for initial data satisfying the estimate \ref{eqn:errtr}. Of course
-this does not imply any $L^2$ bound on the trace - for that,
-additional constraints on the initial data are required, to be
-discussed below. With this convention,
-\[
-  T_{z_r,z_s}^{-}P_rp_0 =
-  S^{-}_{z_r,z_s}(\Lambda^{-}_{z_r})^{-1}P_rp_0
-\]
-\[
-  =  S^{-}_{z_r,z_s}(\Lambda^{-}_{z_r})^{-1}T_{z_s,z_r}^+P_sp_0
-\]
-\[
-=
-S^{-}_{z_r,z_s}(\Lambda^{-}_{z_r})^{-1}S_{z_s,z_r}^+(\Lambda^{+}_{z_s})^{-1}P_sp_0
-\]
-\[
-  = P_s p_0 + O(\epsilon)
-\]
-Setting $h_s= +(\Lambda^{+}_{z_s})^{-1}P_sp_0$ and applying
-$+(\Lambda^{+}_{z_s})^{-1}$ to both sides, obtain
-\[
-  h_s =
-  (\Lambda^{+}_{z_s})^{-1}S^{-}_{z_r,z_s}(\Lambda^{-}_{z_r})^{-1}S_{z_s,z_r}^+h_s
-  + O(\epsilon)
-\]
-\[
-  =
- -(\Lambda^{+}_{z_s})^{-1}(S^{+}_{z_r,z_s})^T(\Lambda^{-}_{z_r})^{-1}S_{z_s,z_r}^+h_s
-  +O(\epsilon)
-\]
-\begin{equation}
-  \label{eqn:approxunit}
- =(\Lambda^{+}_{z_s})^{-1}(S^{+}_{z_r,z_s})^T((\Lambda^{+}_{z_r})^{-1})^TS_{z_s,z_r}^+h_s
-  +O(\epsilon)
-\end{equation}
-The last two steps are justified by appeal to identities
-\ref{eqn:trtr} and \ref{eqn:ntodtr}.
-
-Define
-\begin{equation}
-  \label{eqn:appinv}
-  (S^+_{z_s,z_r})^{\dagger} =
-  (\Lambda^{+}_{z_s})^{-1}(S^{+}_{z_r,z_s})^T((\Lambda^{+}_{z_r})^{-1})^T.
-\end{equation}
-Then equation \ref{eqn:approxunit} asserts that
-$(S^+_{z_s,z_r})^{\dagger}$ is an approximate inverse to
-$S^+_{z_s,z_r}$, in the sense that the error is the trace of a
-ssolution with small Cauchy condition at $t=0$. Later will specify
-conditions under which the output error is small in $L^2$.
 
 
 \section{Progressing Waves and Symbols}
@@ -799,10 +1117,43 @@ S_{\rm asg}[c]^{\dagger}=\kappa S[c]^{\dagger} = \kappa\Lambda[c]_s S[c]^T \Lamb
 \label{eqn:asginv}
 = \kappa \Lambda[c]_s \kappa S_{\rm asg}[c]^T\Lambda[c]_r
 \end{equation}
-This is the approximate inverse computed in the examples. Note that only the values of $\kappa$ near the source datum $z=z_s$ play a role in the relation \ref{eqn:sreln} or in the definition \ref{eqn:asginv} of the IWAVE ASG approximate inverse.
+This is the approximate inverse computed in the examples. Note that
+only the values of $\kappa$ near the source datum $z=z_s$ play a role
+in the relation \ref{eqn:sreln} or in the definition \ref{eqn:asginv}
+of the IWAVE ASG approximate inverse.
+
+\section{Discussion}
+
+The source subproblem is a necessary step in solving the overall FWI problem \ref{eqn:fwi}. In particular, the nonlinear least squares realization \ref{eqn:esi} of source-extended FWI is naturally approached via the {\em variable projection method} \cite[]{GolubPereyra:73,GolubPereyra:03,vanLeeuwenMulder:09,Rickett:SEG12}, in which the minimum over $\bff$ in \ref{eqn:esis} is treated as a function of $\bf{c}$, which is in turn minimized. Variable projection thus treats the source subproblem as an inner problem, which must be solved for an estimate of $\bff$ at every step of an iterative method for the outer problem of minimization over $\bf{c}$. Efficiency in solving the source subproblem \ref{eqn:esis} is critical to efficient implementation of variable projection for solving the regularized FWI problem \ref{eqn:esi}.
+
+This paper restricts the choice of wave physics embodied in
+$L[\bf{c}]$ to linear acoustics.  Thus $\bf{c}=(\kappa,\rho)$ is the
+pair (bulk modulus, density) of positive functions of spatial
+position. The principal characteristics assumed of sources $\bff=$ are localization and isotropy. That is, physical sources will be assumed to be isotropic point radiators, described by the functional form
+\begin{equation}
+\label{eqn:ptsrc}
+f_{\rm pt}(\bx,t;\bx_s) = w(t)\delta(\bx-\bx_s). 
+\end{equation}
+Source locations $\bx_s$ are assumed known (as is natural for active source methods), and the source {\em wavelet} $w(t)$ is to be found as part of the solution of \ref{eqn:esi}. A convenient choice of penalty operator $A$ is then multiplication by the {\em offset} $|\bx-\bx_s|$: its null space consists precisely of distributions of the form \ref{eqn:ptsrc}. 
+
+More complex radiation characteristics may be accommodated with similar but more complex choice for the operator $A$. Since the core analysis is similar, this paper deals only with the simplest case \ref{eqn:ptsrc}.
+
+The wavefield $u$ in this work is presumed to exist in all of Euclicean space-time: in other words, boundary effects have been removed from $u$, by surface-related multiple elimination or other techniques. Predicted data traces are simply the samples of one or more components of $u$ at receiver points $\bx_r$.
+
+%The domain of wave propagation is denoted $\Omega$, and two subsets of its boundary are identified: $\Gamma_s$ contains the support (non-zeroes) of the (extended) sources and in particular the locations $\bx_s$ of physical sources. Data trace locations $\bx_r$ lie in another subset $\Gamma_r$. The data projection operator $P$ samples the acoustic field $u$ on $\Gamma_r$, and includes a finite aperture mute.  
+
+Achieving a small residual in the source subproblem \ref{eqn:esis} for arbitrary $c$ is a critical part of the convergence mechanism for the extended source approach to FWI \cite[]{HuangNammourSymesDollizal:SEG19}. However, for arbitrary data $d$, coefficient array $c$, and source location $\bx_s$, there does not exist an isotropic point source $f_{\rm pt}$ of the form \ref{eqn:ptsrc} for which $PL[c]^{-1}f_{\rm pt} \approx d$. This is so even if there does exist a coefficient array $c^*$ and point source $f_{\rm pt}^*$ located at $\bx_s$ with wavelet $w^*(t)$ for which $d = PL[c^*]^{-1}f_{\rm pt}^*$, if $c$ differs substantially from $c^*$. It is this fact that underlies the effectiveness of the extended source approach to FWI:  driving the residual in the problem \ref{eqn:esi} towards zero necessarily requires modifying $c$ to resemble $c^*$, assuming the latter exists, as well as pushing the optimal $f$ towards the null space of $A$. Conversely, the source subproblem \ref{eqn:esis} does not have a small residual solution of point source form \ref{eqn:ptsrc}, in general, for a given choice of $c$, even if that were the case for a different choice ($c^*$). Therefore a more general class of source models than that specified by the condition \ref{eqn:ptsrc} must be admitted to the feasible set for the source subproblem \ref{eqn:esis} if it is to serve as the inner problem in a variable projection formulation of extended source FWI.
+
+The class of non-point sources investigated here are those confined a hypersurface assumed to contain the locations of physical (point) sources, but not {\em a priori} required to have point support. These {\em surface extended sources} are able to yield a relatively small residual in the source subproblem \ref{eqn:esis} for more or less arbitrary coefficient array $c$. This observation is a by-product of the approximate solution for \ref{eqn:esis} constructed below. The construction of the approximate solution is closely related to the {\em time reversal} method of photoacoustic tomography (see \cite{StefanovUhlmannIP:09} and references cited there).
+
+The next section gives a precise description of an acoustic version of problem \ref{eqn:esis} for an idealized {\em crosswell} configuration, in which source located on a surface $z=z_s$ generate waves that propagate to to a receiver surface $z=z_r > z_s$. In principle, {\em diving waves} can be described with similar mathematics, but with some additional complications, so I do not treat the diving wave case explicitly in this paper. The assumptions detailed here imply that the data $d$ of the inverse problems \ref{eqn:esi}, \ref{eqn:esis} have the physical character of {\em transmitted waves}. There are no mathematical results at present concerning reflected wave inverse problems treated by source extension methods, though there are tantalizing numerical clues \cite[]{LeeuwenHerrmannWRI:13,Warner:14,Warner:16,LeeuwenHerrmann:16,HuangSymes:Geo17,HuangSymes:Geo18a,HuangSymes:Geo18b}.
+
+The following section describes the construction of the approximate
+inverse and explains the conditions under which accuracy should be expected. I observe that the approximate inverse is approximately the adjoint of the modeling operator $PL[c]^{-1}$ with respect to weighted norms in its domain and range (see \cite{HouSymes:15} for a similar observation in a different context). This fact immediately suggests use of the approximate inverse as a preconditioner to accelerate convergence of Krylov space methods such as conjugate gradient iteration applied to the least squares problem \ref{eqn:esis}. However, its straightforward application in the preconditioned conjugate gradient (PCG) method \cite[]{Golub:2012} involves explicitly a version the so called Dirichlet-to-Neumann (D2N) operator, which is computationally awkward. I show how to reorganize the PCG iteration so that only solutions of $L[c]u=f$ are required. The penultimate section presents some 2D examples in the crosswell configuration, illustrating the accuracy of the approximate inversion and the accelerated convergence of PCG. The examples are chosen to emphasize that surface extended sources can be constructed to fit more or less arbitrary data, unlike point sources - as mentioned before, this approximate invertibility property of the modeling operator is of critical importance in the application to extended FWI. The paper ends with a discussion of several important matters not addressed here, and a restatement of the conclusions.
+
+The intent of the main body of this paper is to present the formal structure of the extended source subproblem and the way in which this structure leads to accelerated numerical solution. This formal structure is however supported by a rigorous foundation. In order to avoid disrupting the formal account, this foundation material is relegated to an appendix.
+
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
 
 
-\bibliographystyle{seg}
-\bibliography{../../bib/masterref}
