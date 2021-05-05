@@ -272,7 +272,7 @@ $\phi$. Define the {\em pressure-to-source map} $\Lambda^{\pm}_{z_s}$ by
   \label{eqn:deflam}
   \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]|_{z=z_s}
 \end{equation}
-Then as a distribution on all of $\bR^4$, $(p^{\pm}_1,\bv^{\pm}_1)$ solve the
+Then as a distribution on all of $\bR^4$, $(p^{\pm}_1,\bv^{\pm}_1)$ solves the
 inhomogeneous system
 \begin{eqnarray}
 \label{eqn:sawe1}
@@ -434,7 +434,7 @@ and
 Together with \ref{eqn:lamfh}, these equations imply that
 \begin{equation}
   \label{eqn:lamnull}
-{\cal  S}_{z_s,z_r}^{\pm}P_0^T\Lambda^{\pm}_{z_s} \approx {\cal S}^{\pm}_{z_s,z_r}P_1^T.
+{\cal  S}_{z_s,z_r}^{\pm}\Pi_0^T\Lambda^{\pm}_{z_s} \approx {\cal S}^{\pm}_{z_s,z_r}\Pi_1^T.
 \end{equation}
 Consequently, ${\cal S}_{z_s,z_r}$ has an ``approximate null space'',
 in the sense that its composition with the block operator
@@ -569,11 +569,65 @@ Taken together, relations \ref{eqn:approxinv1} and
 \ref{eqn:approxinv2} yield the first equation in the first main result of this section:
 \begin{eqnarray}
   \label{eqn:approxinv}
-  V^-_{z_r,z_s} S^+_{z_s,z_r} &=& \frac{1}{4}I, \nonumber\\
-  S^-_{z_r,z_s} V^+_{z_s,z_r} &=& \frac{1}{4}I.
+  V^-_{z_r,z_s} S^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
+  S^-_{z_r,z_s} V^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
+  V^+_{z_s,z_r} S^-_{z_r,z_s} & \approx & \frac{1}{4}I, \nonumber\\
+  S^+_{z_s,z_r} V^-_{z_r,z_s} & \approx & \frac{1}{4}I.\\
 \end{eqnarray}.
-The second equation follows by an exactly analogous argument.
+The second equation follows by an exactly analogous argument, and the
+last two by time reversal and interchange of the roles of $z_s$ and
+$z_r$.
 
+Having identified approximate two-sided inverses for $S^{\pm},
+V^{\pm}$, the approximate null space identity \ref{eqn:lamnull} leads
+to a relation between $\Lambda^{\pm}$ and ${\cal S}^{\pm}$ that
+provides the foundation for practical computations. Applying $\Pi_0$
+to both sides of \ref{eqn:lamnull} gives
+\[
+ \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_0^T
+ \Lambda^+_{z_s} = S^+{z_s,z_r} \Lambda^+_{z_s}.
+\]
+From the first approximate identity in \ref{eqn:approxinv},
+\begin{equation}
+  \label{eqn:lamident}
+  V^{-}_{z_r,z_s}\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \frac{1}{4}\Lambda^+_{z_s}.
+\end{equation}
+This identity is the second major result of this section: it shows how
+to compute that action of $\Lambda^+_{z_s}$ by propagating the input
+pressure trace, identified as a source for the velocity evolution,
+forward in time from $z_s$ to $z_r$
+reading off the pressure trace on $z=z_r$, identifying it once more as
+a source for velocity, propagating it backwards in time from $z_r$ to
+$z_s$, and finally reading off the velocity trace, interpreted as a
+pressure evolution source on $z_s$. I will give a detailed description
+of this computation in the section on numerical results.
+
+The importance of this result lies in the failure of the obvious
+method for computing the action of $\Lambda^{\pm}_{z_s}$, namely to
+employ the pressure trace as a source in the velocity equation ($f_s$,
+in the notation used above) at $z=z_s$, and read off the velocity
+field also at $z=z_s$. This difficulty is related to the existence of
+tangentially propagating waves and the lack of continuity of the trace
+operator. The method implicit in equation \ref{eqn:lamident} avoids
+this difficulty by propagating the fields a positive distance in $z$:
+assuming as always that the causal fields are downgoing, this step
+eliminates any tangentially propagating fields from consideration.
+
+Computation of the transpose of $\Lambda^+$ (exact, not approximate in
+the high frequency sense) will be important in the
+construction of a preconditioner. The relation \ref{eqn:lamident} also
+provides an computation for this operator. The idea is to treat the
+left-hand side of equation \ref{eqn:lamident} as an approximation to
+$\Lambda$, and compute its exact transposes via the adjoint state
+method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
+\begin{equation}
+  \label{eqn:lamtransp}
+   \Pi_1 {\cal S}^-_{z_r,z_s}\Pi_0^T V^{+}_{z_s,z_r} \approx \frac{1}{4}(\Lambda^+_{z_s})^T.
+\end{equation} 
+The left-hand sides of \ref{eqn:lamident} and \ref{eqn:lamtransp} will
+simply be substituted for $\Lambda$ and its transpose in the
+preconditioner construction: preconditioners must be (precisely)
+self-adjoint, but need only be approximated to perform well.
 
 \section{Derivations}
 \subsection{Extension to whole space}
