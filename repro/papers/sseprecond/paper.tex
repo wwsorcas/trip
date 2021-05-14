@@ -99,7 +99,7 @@ effectiveness of this acceleration.
 \section{Operators and Adjoints}
 
 For acoustic wave physics, the coefficient vector is
-$\bf{c}=(\kappa,\rho)$, with components bulk modulus $\kappa$ and
+$\bf{c}=(\kappa,\rho)^T$, with components bulk modulus $\kappa$ and
 density $\rho$, and the state vector $\bu=(p,\bv)^T$ consists of
 pressure $p$ (a scalar space-time field) and particle velocity $\bv$
 (a vector space-time field). The wave operator $L[\bf{c}]$ is:
@@ -134,15 +134,21 @@ particle velocity as $v_z$. Examples
 later in this paper will use $n=2$ for computational convenience.
 
 Since all of the operators in the discussion that follows depend on
+the coefficient vector 
 $\bf{c}$, I will suppress it from the notation, for example, $L=L[\bf{c}]$.
 
-The extended ``crosswell'' configuration involves sources confined to
-a spatial hypersurface. For convenience, choose this to be the hyperplane
-$\{(x,y,z,t): z=z_s\}$. Such sources are combinations of constitutive law defects and
-loads normal to the surface, that is, right-hand sides in the system
-$L\bu=\bff$ of the form $\bff(\bx,t) =
-(h_s(x,y,t)\delta(z-z_s), f_s(x,y,t)\bf{e}_z\delta(z-z_s))^T$ for scalar
-defect $h_s$ and normal force $f_s$  ($\bf{e}_z=(0,0,1)$). With the choice $L$ given in \ref{eqn:awemat}, the causal/anti-causal wave system $L\bu^{\pm}=\bff$ takes the form
+The surface source extension replaces point sources on or near a
+surface in $\bR^3$ with source functions confined to the same
+surface. The simplest example of this extended geometry specifies a
+plane $\{(x,y,z,t): z=z_s\}$ at source depth $z_s$ as the surface. For
+acoustic modeling, surface sources are combinations of constitutive law
+defects and loads normal to the surface, localized on $z=z_s$. That
+is, right-hand sides in the system $L\bu=\bff$ take the form
+$\bff(\bx,t) = (h_s(x,y,t)\delta(z-z_s),
+f_s(x,y,t)\bf{e}_z\delta(z-z_s))^T$ for scalar defect $h_s$ and normal
+force $f_s$ ($\bf{e}_z=(0,0,1)$). With the choice $L$ given in
+\ref{eqn:awemat}, the causal/anti-causal wave system $L\bu^{\pm}=\bff$
+takes the form
 \begin{eqnarray}
 \label{eqn:awepm}
 \frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} & = & - \nabla \cdot \bv^{\pm} +
@@ -155,27 +161,71 @@ p^{\pm} & =& 0 \mbox{ for } \pm t \ll 0,\nonumber\\
 \noindent {\bf Remark:} In system \ref{eqn:awepm} and many similar
 systems to follow, I will use the shorthand
 \[
-  p^+ = 0 \mbox{ for } t \ll 0
+  p^+ = 0 \mbox{ for } t \ll 0 
 \]
-to mean
+to mean that $p^+$ is {\em causal}, that is,
 \[
-  \mbox{For some } T \in \bR, p^+(\cdot,t) = 0 \mbox{ for all } t \ge
+  \mbox{For some } T \in \bR, p^+(\cdot,t) = 0 \mbox{ for all } t <
   T.
 \]
+Similarly,
+\[
+  p^- = 0 \mbox{ for } t \gg 0 
+\]
+signifies that $p^-$ is anti-causal.
+
 Extended forward modeling consists in solving \ref{eqn:awepm} and
-sampling the solution components on another spatial hyperplane $\{(x,y,z,t): z=z_r\}$. Denote by $P_s,P_r$ the trace (sampling) operators on $z=z_s$, $z=z_r$
-respectively. The causal/anti-causal modeling operators
-${\cal S}^{\pm}_{z_s,z_r}$ are defined in
-terms of the solutions $(p^{\pm},\bv^{\pm})$ of the systems
-\ref{eqn:awepm} by
+sampling the solution components at receiver locations. For
+simplicity, throughout this paper I will assume that the receivers are
+located on another spatial hyperplane $\{(x,y,z,t): z=z_r\}$ at
+receiver depth $z_r>z_s$.
+
+Denote by $P_s,P_r$ the trace (sampling)
+operators on $z=z_s$, $z=z_r$ respectively.
+Under the standing assumptions to be made on
+the solutions of system \ref{eqn:awepm}, the key components of the
+solution ($p^{\pm}$ and $v^{\pm}_z$) are continuous functions of $z$
+in the open slab $z_s<z<z_r$, but may be discontinuous at the source
+plane $z=z_s$. Similarly, the roles of $z_s$ and $z_r$ will be
+interchanged in some of the constructions to come, and the
+corresponding solutions may be discontinuous at $z=z_r$. Accordingly,
+interpret $P_s$, $P_r$ as the limit from right and left respectively:
+for $u=p^{\pm}$ or $v^{\pm}_z$,
+\begin{eqnarray}
+  \label{eqn:defsamp}
+  P_su(x,y,t) &=& \lim_{z \rightarrow z_s^+} u(x,y,z,t),\nonumber \\
+  P_ru(x,y,t) &=& \lim_{z \rightarrow z_r^-} u(x,y,z,t).                  
+\end{eqnarray}
+
+The causal/anti-causal vector
+modeling operators ${\cal S}^{\pm}_{z_s,z_r}$ are defined in terms of
+the solutions $(p^{\pm},\bv^{\pm})$ of the systems \ref{eqn:awepm} by
 \begin{equation}
-  {\cal S}^{\pm}_{z_s,z_r}(h_s,f_s)  = (P_rp^{\pm},P_r v_z^{\pm}),
+  {\cal S}^{\pm}_{z_s,z_r}(h_s,f_s)^T  = (P_rp^{\pm},P_r v_z^{\pm})^T,
   \label{eqn:fwd}
 \end{equation}
 The subscript signifies that sources are located on $z=z_s$, the
 receivers on $z=z_r$. It is necessary to include this information in
 the notation, as versions of ${\cal S}^{\pm}$ with sources and receivers in
 several locations will be needed in the discussion below.
+
+As will be shown later, ${\cal S}^{\pm}$ is not stably invertible, in fact
+having rank 1 (in an approximate sense). The diagonal components of
+${\cal S}^{\pm}$ thus carry essentially all of its information.
+Denote by $\Pi_i, i=0,1$ the projection on the first,
+respectively second, component of a vector in $\bR^2$. The 
+forward modeling operator from pressure source to pressure trace is
+\begin{equation}
+  \label{eqn:sdef}
+  S^{\pm}_{z_s,z_r} = \Pi_0 {\cal S}^{\pm}_{z_s,z_r} \Pi_0^T 
+\end{equation}
+and the forward modeling operator from velocity source (normal force)
+to velocity trace is
+\begin{equation}
+  \label{eqn:vdef}
+  V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
+\end{equation}
+
 
 It follows from the adjoint state method (see Derivations section
 below for details) that
@@ -215,19 +265,7 @@ Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn
  -{\cal S}^{\mp}_{z_r,z_s}.
 \end{equation}
 
-Define $\Pi_i, i=0,1$ to be the projection on the first,
-respectively second, component of a vector in $\bR^2$. Define the
-forward modeling operator from pressure source to pressure trace by
-\begin{equation}
-  \label{eqn:sdef}
-  S^{\pm}_{z_s,z_r} = \Pi_0 {\cal S}^{\pm}_{z_s,z_r} \Pi_0^T 
-\end{equation}
-and the forward modeling operator from velocity source (normal force)
-to velocity trace by 
-\begin{equation}
-  \label{eqn:vdef}
-  V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
-\end{equation}
+
 The relation \ref{eqn:trtr} implies that
 \begin{eqnarray}
   (S^{\pm}_{z_s,z_r})^T &=& -S^{\mp}_{z_r,z_s} \nonumber\\
@@ -544,7 +582,7 @@ fields, as will be demonstrated later, so
   
 Recall (equations \ref{eqn:deflam}, \ref{eqn:jump0}) that
 \[
-  \Lambda^+_{z_s} P_s p^+ = 2 \lim_{z \rightarrow z_s^+}v^+_z 
+  \Lambda^+_{z_s} P_s p^+ \approx 2 \lim_{z \rightarrow z_s^+}v^+_z 
 \]
 and that with $h_s= \Lambda^+_{z_s}P_sp^+$,
 \[
@@ -554,12 +592,12 @@ Together with the last two equations, the relation
 \ref{eqn:approxinv0} implies that
 \begin{equation}
   \label{eqn:approxinv1}
-  S^+_{z_s,z_r}(2 P_s \tilde{v}_z^-) = P_rp^+.
+  S^+_{z_s,z_r}(2 P_s \tilde{v}_z^-) \approx P_rp^+.
 \end{equation}
 As shown in the last section, the solution of the system
 \ref{eqn:revawe} differs negligibly from the anti-causal solution $(p^-_2,\bv^-_2)$
 of the system \ref{eqn:sawe2} with (i) $z_s$ replaced by $z_r$, and
-(ii) $\psi = [p^-_2]|_{z=z_r} = -2 lim_{z \rightarrow z_r^-} p^-_2
+(ii) $\psi = [p^-_2]|_{z=z_r} = -2 \lim_{z \rightarrow z_r^-} p^-_2
 \approx -2 P_rp^+$. Therefore (definitions \ref{eqn:sdef}, \ref{eqn:vdef})
 \begin{equation}
   \label{eqn:approxinv2}
@@ -569,10 +607,10 @@ Taken together, relations \ref{eqn:approxinv1} and
 \ref{eqn:approxinv2} yield the first equation in the first main result of this section:
 \begin{eqnarray}
   \label{eqn:approxinv}
-  V^-_{z_r,z_s} S^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
-  S^-_{z_r,z_s} V^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
-  V^+_{z_s,z_r} S^-_{z_r,z_s} & \approx & \frac{1}{4}I, \nonumber\\
-  S^+_{z_s,z_r} V^-_{z_r,z_s} & \approx & \frac{1}{4}I.\\
+  V^-_{z_r,z_s} S^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
+  S^-_{z_r,z_s} V^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
+  V^+_{z_s,z_r} S^-_{z_r,z_s} & \approx & -\frac{1}{4}I, \nonumber\\
+  S^+_{z_s,z_r} V^-_{z_r,z_s} & \approx & -\frac{1}{4}I.\\
 \end{eqnarray}.
 The second equation follows by an exactly analogous argument, and the
 last two by time reversal and interchange of the roles of $z_s$ and
@@ -585,12 +623,12 @@ provides the foundation for practical computations. Applying $\Pi_0$
 to both sides of \ref{eqn:lamnull} gives
 \[
  \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_0^T
- \Lambda^+_{z_s} = S^+{z_s,z_r} \Lambda^+_{z_s}.
+ \Lambda^+_{z_s} = S^+_{z_s,z_r} \Lambda^+_{z_s}.
 \]
 From the first approximate identity in \ref{eqn:approxinv},
 \begin{equation}
   \label{eqn:lamident}
-  V^{-}_{z_r,z_s}\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \frac{1}{4}\Lambda^+_{z_s}.
+  V^{-}_{z_r,z_s}\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx -\frac{1}{4}\Lambda^+_{z_s}.
 \end{equation}
 This identity is the second major result of this section: it shows how
 to compute that action of $\Lambda^+_{z_s}$ by propagating the input
@@ -622,12 +660,65 @@ $\Lambda$, and compute its exact transposes via the adjoint state
 method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
 \begin{equation}
   \label{eqn:lamtransp}
-   \Pi_1 {\cal S}^-_{z_r,z_s}\Pi_0^T V^{+}_{z_s,z_r} \approx \frac{1}{4}(\Lambda^+_{z_s})^T.
+   \Pi_1 {\cal S}^-_{z_r,z_s}\Pi_0^T V^{+}_{z_s,z_r} \approx -\frac{1}{4}(\Lambda^+_{z_s})^T.
 \end{equation} 
 The left-hand sides of \ref{eqn:lamident} and \ref{eqn:lamtransp} will
 simply be substituted for $\Lambda$ and its transpose in the
 preconditioner construction: preconditioners must be (precisely)
 self-adjoint, but need only be approximated to perform well.
+
+\section{Approximate Unitarity}
+Recall that the fields $(p^{\pm},\bv^{\pm})$ in $z>z_s$ can be viewed
+as either the solution of the system \ref{eqn:awepm} with pressure source $h_s=0$ and
+a suitable choice of velocity source $f_s$, or of the same system with
+suitable choice of $h_s$ and $f_s=0$, and that these choices are
+related by equation \ref{eqn:lamfh}: $\Lambda^{\pm}f_s = h_s$. The
+pressure traces at $z=z_r>z_s$ are the same: from the definitions
+\ref{eqn:sdef}, \ref{eqn:vdef},
+\begin{eqnarray}
+  \label{eqn:sandv}
+  S^{\pm}_{z_s,z_r}h_s& =& P_rp^{\pm},\nonumber \\
+  V^{\pm}_{z_s,z_r}f_s &=& P_rv_z^{\pm}.
+\end{eqnarray}
+Applying the same reasoning to traces on $z=z_r$: create pressure and
+velocity sources $h_r$ and $f_r$ at $z=z_r$ by odd extension of the
+velocity, respectively pressure, fields, and using the jumps as source
+coefficients. Then as before
+$\Lambda^{\pm}_{z_r}f_r=h_r=-P_rv^{\pm}_z$ (the sign change is due to
+$Lambda$ producing the jump, whereas $P_rv^{\pm}_z$ is the limit from
+the left of the field $v^{\pm}_{1,z}$ of system \ref{eqn:awe1}), hence
+$\Lambda^{\pm}_{z_r}P_rp^{\pm} = P_rv_z^{\pm}$. Combining this
+observation with equations
+\ref{eqn:lamfh}, \ref{eqn:sandv}, obtain (with roles of $z_s,z_r$ interchanged)
+\[
+V^{\pm}_{z_r,z_w}(-2P_rp^{\pm}) =
+  \Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}(-2P_rv_z^{\pm})  =
+  \Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}(-2\Lambda^{\pm}_{z_r}P_rp^{\pm})
+\]
+whence
+\begin{equation}
+  \label{eqn:preunit}
+ V^{\pm}_{z_r,z_w}
+ =\Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}\Lambda^{\pm}_{z_r}.
+\end{equation}
+
+In view of the relations \ref{eqn:trtrcomp}, equation
+\ref{eqn:preunit} implies that
+\[
+  V^-_{z_r,z_s}=-(V^+_{z_s,z_r})^T = -\Lambda^{-}_{z_s}(S^+_{z_s,z_r})^T\Lambda^{-}_{z_r}.
+\]
+\[
+  =-(\Lambda^{+}_{z_s})^T(S^+_{z_s,z_r})^T(\Lambda^{+}_{z_r})^T.
+\]
+Therefore the first equation in display \ref{eqn:approxinv} can be re-written
+\[
+  -4V^-_{z_r,z_s}S^+_{z_s,z_r} =
+\]
+\begin{equation}
+  \label{eqn:baseunit}
+ 4 (\Lambda^{+}_{z_s})^T(S^+_{z_s,z_r})^T(\Lambda^{+}_{z_r})^T
+  S^+_{z_s,z_r} \approx I
+\end{equation}
 
 \section{Derivations}
 \subsection{Extension to whole space}
