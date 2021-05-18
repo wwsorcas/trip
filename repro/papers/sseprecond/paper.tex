@@ -15,32 +15,36 @@ Source extension is a reformulation of inverse problems in wave propagation, tha
 \section{Introduction}
 Full Waveform Inversion (FWI) can be described in terms of 
 \begin{enumerate}
-\item a linear wave operator $L[\bf{c}]$, depending on an array of space-dependent coefficients $\bf{c}$ and acting on wavefields $\bu$ vanishing in negative time:
+\item a linear wave operator $L[{\bf c}]$, depending on a vector of
+  space-dependent coefficients ${\bf c}$ and acting on causal vector wavefields $\bu$ vanishing in negative time:
 \begin{equation}
 \label{eqn:init}
 \bu \equiv 0, t \ll 0; 
 \end{equation}
 \item a trace sampling operator $P$ acting on wavefields and producing data traces;
-\item and a source function (of space and time) $\bff$ representing energy input to the system. 
+\item and a (vector) source function (of space and time) $\bff$ representing energy input to the system. 
 \end{enumerate}
-The basic FWI problem is: given data $d$, find $\bf{c}$ so that 
+The basic FWI problem is: given data $d$, find ${\bf c}$ so that 
 \begin{equation}
 \label{eqn:fwi}
 P\bu \approx d \mbox{ and } L[\bf{c}]\bu = \bff.
 \end{equation}
+In this formulation, the source function $\bff$ may be given, or
+to be determined subject to some constraints.
 
 %The energy source $\bff$ may also be largely undetermined, apart from some known characteristics such as localization in space and/or time. In fact, additional source degrees of freedom, beyond those needed to describe physically realized sources, may be useful in rendering the FWI problem \ref{eqn:fwi} more amenable to numerical solution, via so-called extended modeling (see \cite{geoprosp:2008}, \cite{LeeuwenHerrmannWRI:13}, \cite{HuangNammourSymesDollizal:SEG19}, and many references cited there). Therefore it is natural to view $\bff$ as also an unknown in formulating the problem \ref{eqn:fwi} via nonlinear least squares:
 A simple nonlinear least squares formulation is:
 \begin{equation}
 \label{eqn:ols}
-\mbox{choose } \bf{c} \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2.
+\mbox{choose } {\bf c} \mbox{ to minimize } \|PL[{\bf c}]^{-1}\bff -d \|^2.
 \end{equation}
 Practical optimization formulations typically augment the objective in
 \ref{eqn:ols} by additive penalties or other constraints.
 
 As is well-known, local optimization methods are the only feasible
 approach given the dimensions of a typical instance of \ref{eqn:fwi},
-and those have a tendency to stall due to ``cycle-skipping''. Source
+and those have a tendency to stall due to ``cycle-skipping''. See for
+exampe \cite{VirieuxOperto:09} and many references cited there. Source
 extension is one approach to avoiding this problem. It consists in
 imposing the wave equation as a soft as opposed to hard constraint, by
 allowing the source field $\bff$ to have more degrees of freedom than
@@ -49,7 +53,7 @@ constraining these additional degrees of freedom by means of an
 additive penalty modifying the probem \ref{eqn:ols}:
 \begin{equation}
 \label{eqn:esi}
-\mbox{choose } \bf{c}, \bff \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2 + \alpha^2 \|A\bff\|^2 
+\mbox{choose } {\bf c}, \bff \mbox{ to minimize } \|PL[{\bf c}]^{-1}\bff -d \|^2 + \alpha^2 \|A\bff\|^2 
 \end{equation}
 The operator $A$ penalizes deviation from known (or assumed)
 characteristics of the source function - its null space consists of
@@ -71,10 +75,12 @@ source location:
 I shall use this choice of penalty operator whenever a specific choice
 is necessary in the development of the theory below.
 
-This paper presents a numerically efficient approach to solving the {\em source subproblem}
+This paper presents a numerically efficient approach to solving the
+{\em source subproblem} of problem \ref{eqn:esi}:
 \begin{equation}
 \label{eqn:esis}
-\mbox{given } \bf{c}, \mbox{ choose } \bff \mbox{ to minimize } \|PL[\bf{c}]^{-1}\bff -d \|^2 + \alpha \|A\bff\|^2 
+\mbox{given } {\bf c}, \mbox{ choose } \bff \mbox{ to minimize }
+\|PL[{\bf c}]^{-1}\bff -d \|^2 + \alpha \|A\bff\|^2 
 \end{equation}
 Solution of this subproblem is an essential component of {\em variable
   projection} algorithms for solution of the nonlinear inverse problem
@@ -96,7 +102,39 @@ accelerate Krylov space methods for the solution of the source
 subproblem \ref{eqn:esis}. Numerical examples suggest the
 effectiveness of this acceleration.
 
-\section{Operators and Adjoints}
+I will fully describe the preconditioner construction for a special
+case of the source subproblem \ref{eqn:esis}, in which ${\bf u}$ is an
+acoustic field, $L[{\bf c}]$ is the wave operator of linear
+acoustodynamics, the spatial positions of traces extracted by $P$ lie
+on a plane, and the positions at which the extended
+source $\bff$ is nonzero lie on another, parallel, plane. The data and
+sources are further limited to pressure traces and constitutive law
+defects (``pressure sources''). While this
+``crosswell'' configuration simplifies the analysis underlying the
+construction of approximate solutions for the source subproblem
+\ref{eqn:esis}, it is only one of many transmission configurations for
+which similar developments are possible. Perhaps the most important
+alternative example is the diving wave configuration, which plays a
+central role in contemporary FWI. I will discuss the generalization of
+surface source extention to diving wave inversion at the end of the
+paper.
+
+The preconditioner construction is very similar to the time-reversal
+method in photoacoustic tomography
+\cite[]{StefanovUhlmannIP:09}. Preconditioning amounts to a change of
+norm in the domain and range spaces of the modeling operator. In this
+case, the modfied norms are weighted $L^2$, and the weight operators
+map pressure to corresponding surface source on the source and
+receiver planes. These are essentially the same as the ``hyperbolic
+Dirichlet-to-Neumann'' map that plays a prominent role in
+thermoacoustic tomography and other wave inverse problems
+\cite[]{Rachele:00,StefUhl:05}. The obvious computation of these maps
+- prescribe the pressure, solve the wave equation with this boundary
+condition, read off the equivalent source - suffers from intrinsic
+numerical inaccuracy. I suggest an alternative computationally
+feasible approach.
+
+\section{Operators}
 
 For acoustic wave physics, the coefficient vector is
 $\bf{c}=(\kappa,\rho)^T$, with components bulk modulus $\kappa$ and
@@ -116,13 +154,15 @@ L[\bf{c}]\bf{u} =
 That is,
 \begin{equation}
   \label{eqn:awemat}
-  L[\bf{c}] = \left(
+  L[{\bf c}] = \left(
     \begin{array}{cc}
       \frac{1}{\kappa}\frac{\partial}{\partial t} & \nabla \cdot \\
       \nabla & \rho \frac{\partial}{\partial t}
     \end{array}
   \right)
 \end{equation}
+$L[{\bf c}]$ has a well-defined inverse if it is restricted to either
+causal or anti-causal vector wavefields.
 
 Most of what follows is valid for any space dimension $n >0$. The
 coefficient vector $\bf{c}=(\kappa,\rho)$ is defined throughout space
@@ -178,24 +218,52 @@ Extended forward modeling consists in solving \ref{eqn:awepm} and
 sampling the solution components at receiver locations. For
 simplicity, throughout this paper I will assume that the receivers are
 located on another spatial hyperplane $\{(x,y,z,t): z=z_r\}$ at
-receiver depth $z_r>z_s$.
+receiver depth $z_r>z_s$. The constructions to follow involve interchange
+of the roles of $z_s$ and $z_r$ (that is, locating sources on $z=z_r$
+and receivers at $z=z_s$), so rather than the sampling operator $P$ of
+the introduction, I will denote by $P_s,P_r$ the sampling 
+operators on $z=z_s$, $z=z_r$ respectively. In practice, sampling
+occurs at a discrete array of points (trace locations) on these
+surfaces, and over a zone of finite extent. In this theoretical
+discussion, I will neglect both finite sample rate and extent, and
+regard the data, for example $P_rp^+$, as continuously sampled and
+extending over the entire plane $z=z_r$.
 
-Denote by $P_s,P_r$ the trace (sampling)
-operators on $z=z_s$, $z=z_r$ respectively.
-Under the standing assumptions to be made on
-the solutions of system \ref{eqn:awepm}, the key components of the
-solution ($p^{\pm}$ and $v^{\pm}_z$) are continuous functions of $z$
-in the open slab $z_s<z<z_r$, but may be discontinuous at the source
-plane $z=z_s$. Similarly, the roles of $z_s$ and $z_r$ will be
-interchanged in some of the constructions to come, and the
-corresponding solutions may be discontinuous at $z=z_r$. Accordingly,
-interpret $P_s$, $P_r$ as the limit from right and left respectively:
-for $u=p^{\pm}$ or $v^{\pm}_z$,
+A technical difficulty with spatial sampling must be
+addressed. Acoustic field energy is defined in terms of the mean
+squares of the pressure and particle velocity fields. However fields
+with finite mean square do not in general have well-defined
+restrictions to lower-dimensional sets: for example, the pressure
+field of a finite-energy acoustic vector field may not have a
+well-defined restriction to the space-time plane $z=z_r$. This
+phenomenon is related to the ill-posedness of wave equations as
+evolution equations in spatial variables, an observation attributed to
+Hadamard (see \cite{CourHil:62}, Chapter 6, section 17, also
+\cite{Payn:75,Symes:83}). Some constraint on the acoustic field,
+beyond finite energy, is mandatory in formulating the inverse problems
+\ref{eqn:esi} and \ref{eqn:esis}. In fact, the natural constraint in
+the ``crosswell'' geometry of this paper is that high-frequency energy
+{\em not} travel along rays parallel or nearly parallel to the
+surfaces $z=z_s, z=z_r$. I will call fields with this property {\em
+  downgoing} (even though the concept also encompasses {\em upcoming}
+fields). \cite{BaoSy:91b} give a mathematically complete discussion of
+downgoing wave field properties.
+
+For downgoing solutions of system \ref{eqn:awepm}, the key
+components ($p^{\pm}$ and $v^{\pm}_z$) are continuous functions of $z$
+in the open slab $z_s<z<z_r$ with well-defined limits at the boundary
+planes, but may be discontinuous at the source plane
+$z=z_s$. Similarly, the roles of $z_s$ and $z_r$ will be interchanged
+in some of the constructions to come, and the corresponding solutions
+may be discontinuous at $z=z_r$. Accordingly, interpret $P_s$, $P_r$
+as the limit from right and left respectively: for $u=p^{\pm}$ or
+$v^{\pm}_z$,
 \begin{eqnarray}
   \label{eqn:defsamp}
   P_su(x,y,t) &=& \lim_{z \rightarrow z_s^+} u(x,y,z,t),\nonumber \\
   P_ru(x,y,t) &=& \lim_{z \rightarrow z_r^-} u(x,y,z,t).                  
 \end{eqnarray}
+
 
 The causal/anti-causal vector
 modeling operators ${\cal S}^{\pm}_{z_s,z_r}$ are defined in terms of
@@ -209,9 +277,27 @@ receivers on $z=z_r$. It is necessary to include this information in
 the notation, as versions of ${\cal S}^{\pm}$ with sources and receivers in
 several locations will be needed in the discussion below.
 
-As will be shown later, ${\cal S}^{\pm}$ is not stably invertible, in fact
-having rank 1 (in an approximate sense). The diagonal components of
-${\cal S}^{\pm}$ thus carry essentially all of its information.
+\noindent {\bf Remark:} To connect with the formulation presented in
+the introduction, note that for continuous $u$,
+$P_su(x,y,t)=u(x,y,z_s,t)$, and therefore the adjoint of $P_s$ (in the
+sense of distributions) is $P_s^Th(x,y,z,t) =
+h(x,y,t)\delta(z-z_s)$. Write ${\cal P}_s = \mbox{diag }(P_s,P_s)$ and
+similarly for ${\cal P}_r$. Then
+\[
+  {\cal S}^{+}_{z_s,z_r} = {\cal P}_r L^{-1}({\cal P}_s)^T,
+\]
+in which $L^{-1}$ is interpreted in the causal sense, and similarly
+for ${\cal S}^{-}$. Sources confined to $z=z_s$ are precisely those
+functions (distributions, really) output by ${\cal P}_s^T$, so the
+problem statements \ref{eqn:esi} and \ref{eqn:esis} can be rewritten
+in terms of ${\cal S}^+_{z_s,z_r}$, with $P$ identified with ${\cal P}_r$.
+
+${\cal S}^{\pm}$ is not stably invertible, in fact having rank 1 (in
+an approximate sense - see the identity \ref{eqn:lamnull}). The
+diagonal components of ${\cal S}^{\pm}$ thus carry essentially all of
+its information, and it is in terms of these that a sensible inverse problem
+is defined.
+
 Denote by $\Pi_i, i=0,1$ the projection on the first,
 respectively second, component of a vector in $\bR^2$. The 
 forward modeling operator from pressure source to pressure trace is
@@ -226,6 +312,81 @@ to velocity trace is
   V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
 \end{equation}
 
+With these conventions, we can write the version of the source
+subproblem studied in this paper as
+\begin{equation}
+  \label{eqn:esisp}
+  \mbox{find }h_s\mbox{ to minimize }\|S^{+}_{z_s,z_r}h_s- d\|^2 +
+  \alpha^2\|Ah_s\|^2.
+\end{equation}
+
+\section{2D Examples}
+
+\inputdir{project}
+
+To illustrate the structure described in the preceding section, I
+introduce two 2D acoustic models, one spatially homogeneous, the other
+with highly refractive. The first, homogenous model has $\kappa = 4$
+GPa and $\rho = 1$ g/cm$^3$ throughout a rectangular domain of size 8 km ($x$) $\times$ 4 km
+($z$). The second, refractive, model is a perturbation of the first by
+a low-velocity acoustic lens positioned in the center of the
+rectangle. To produce this structure, the density is chosen
+homogeneous as in the first model, while the bulk modulus decreases to
+from 4 GPa outside the lens to 1.6 GPA in its center, as shown in Figure \ref{fig:bml0}.
+
+Discretization is conventional, with a rectangular grid and staggered
+finite difference scheme \cite[]{Virieux:84} of order 2 in time and
+2$k$ in space; for most of the experiments reported below, $k=4$.
+Sampling operators such as $P_r$ are implemented via linear
+interpolation, and source insertion via adjoint linear interpolation
+(as noted above, in the continuum limit, sources are represented via
+adjoint sampling). Steps in $x$ and $z$ are the same. Most results use
+$\Delta x = 20$ m, and limit the temporal frequency of the computed
+traces to 12.5 Hz. We also explore the dependence of a few results on frequency, using
+$\Delta x = 10$ m and $5$ m, to accomodate 25 and 50 Hz respectively,
+maintaining 8 samples per wavelength.
+
+The horizontal line of receivers sits at depth $z_r = $ 1000 m, as
+shown in Figure \ref{fig:bml0}. Receiver $x$ ranges from $2000$ to
+$6000$ m. A single point (physical) source appears in these
+experiments, located at $x_s=3500$ m, $z_s=3000$ m, as also indicated
+in the figure. The source time function is a bandpass filter with
+corner frequencies $1, 2.5, 7.5, 12.5$ Hz for the lowest frequency
+source, and scaled as appropriate for examples with higher frequency
+and finer sampling.  Extended sources are confined to the horizontal
+line through the physical source position, that is $z_s = 3000$ m,
+over a 4 km interval starting at $x_r=$ 2000 m. Note that we have
+reversed the order relation between $z_s$ and $z_r$ described in the
+text ($z_s<z_r$). This difference is immaterial.
+
+\plot{bml0}{width=\textwidth}{Bulk modulus, lens model. Color scale is
+in GPa. Positions of point source and receiver line indicated.}
+
+The point source pressure data generated by this configuration for the
+homogeneous model is displayed in Figure \ref{fig:recphh0}, for the
+lens model in \ref{fig:recplh0}. Triplication of arrivals is evident in the latter.
+
+\plot{recphh0}{width=\textwidth}{Output pressure gather for point source in 
+  homogeneous medium, configuration as described in Figure \ref{fig:bml0} and in
+  the text.}
+
+\plot{recplh0}{width=\textwidth}{Output pressure gather for point source in 
+  refractive (lens) medium, configuration as described in Figure \ref{fig:bml0} and in
+  the text.}
+
+While inversion of pressure data is the main object of this exercise,
+normal velocity ($v_z$) data will play an important role, so I display
+the corresponding gathers in Figures \ref{fig:recvzhh0} and \ref{fig:recvzlh0}.
+
+\plot{recvzhh0}{width=\textwidth}{Output vertical velocity gather for point source in 
+  homogeneous medium, configuration as described in Figure \ref{fig:bml0} and in
+  the text.}
+
+\plot{recvzlh0}{width=\textwidth}{Output vertical velocity gather for point source in 
+  refractive (lens) medium, configuration as described in Figure \ref{fig:bml0} and in
+  the text.}
+
+\section{Adjoints}
 
 It follows from the adjoint state method (see Derivations section
 below for details) that
@@ -264,7 +425,6 @@ Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn
  ({\cal S}^{\pm}_{z_s,z_r})^T = {\cal R}{\cal S}_{z_r,z_s}^{\pm}{\cal R}=
  -{\cal S}^{\mp}_{z_r,z_s}.
 \end{equation}
-
 
 The relation \ref{eqn:trtr} implies that
 \begin{eqnarray}
