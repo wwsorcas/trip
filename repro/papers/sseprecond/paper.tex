@@ -344,7 +344,11 @@ adjoint sampling). Steps in $x$ and $z$ are the same. Most results use
 $\Delta x = 20$ m, and limit the temporal frequency of the computed
 traces to 12.5 Hz. We also explore the dependence of a few results on frequency, using
 $\Delta x = 10$ m and $5$ m, to accomodate 25 and 50 Hz respectively,
-maintaining 8 samples per wavelength.
+maintaining 8 samples per wavelength. All computations are carried out
+in single precision.
+
+\cite{GeoPros:11} gives a description of the code
+implementation, out-of-date in a few respects but overall accurate.
 
 The horizontal line of receivers sits at depth $z_r = $ 1000 m, as
 shown in Figure \ref{fig:bml0}. Receiver $x$ ranges from $2000$ to
@@ -434,7 +438,37 @@ The relation \ref{eqn:trtr} implies that
                         &=& R V^{\pm}_{z_r,z_s}R.
                             \label{eqn:trtrcomp}
 \end{eqnarray}
-  
+
+The implemented code uses the adjoint state method on the discrete
+level, to assure that the computed adjoint operators are adjoint at
+the level of machine precision to the computed operators. The issue of
+reverse-time storage is resolved through the optimal checkpointing
+technique \cite[]{Griewank:book,Symes:06a-pub}, again without loss of
+precision.
+
+Typical results with pseudorandom input traces $d_r, h_z, w_r, f_s$ are:
+\begin{itemize}
+\item computed $\langle d_r, S^+_{z_s,z_r}h_s\rangle = -2.41069174,
+  \langle (S^+_{z_s,z_r})^Td_r, h_s \rangle = -2.41069388.$
+\item  computed $\langle w_r, V^+_{z_s,z_r}f_s\rangle = -2.73362470,
+  \langle (V^+_{z_s,z_r})^Tw_r, f_s \rangle = -2.73362136.$
+\end{itemize}
+Ideally, the differences of these inner products should be at most a
+relatively small multiple of machine precision, {\em relative} to the
+products $\|d_r\|\| S^+_{z_s,z_r}\|\|h_s\|$ and
+$\|w_r\|\|V^+_{z_s,z_r}\|\|f_s\|$ (thus making the result
+dimensionless). The operator norm $\| S^+_{z_s,z_r}\|$ is
+computationally inaccessible, so instead I used the smaller quantities
+$\|d_r\|\| S^+_{z_s,z_r}h_s\|$ etc. as stand-ins - thereby
+overestimating the relative error between the inner products. In all
+cases, over a very large number of random inputs, the largest observed
+relative error estimate was $O(10^{-9}$, well under the appropriate limit for
+single precision.
+
+\section{Approximate Inversion}
+
+\section{Iterative Inversion}
+
 \section{Fields, Traces and Sources}
 In this section, $(p^{\pm}_0,\bv^{\pm}_0)$ denotes an acoustic field,
 continuous in the region $z_s \le z $, obeying the homogeneous wave
