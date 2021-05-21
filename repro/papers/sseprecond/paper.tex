@@ -193,7 +193,8 @@ takes the form
 \label{eqn:awepm}
 \frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} & = & - \nabla \cdot \bv^{\pm} +
 h_s \delta(z-z_s), \nonumber \\
-\rho\frac{\partial \bv^{\pm}}{\partial t} & = & - \nabla p^{\pm} + f_s\bf{e}_z \delta(z-z_s),\nonumber \\
+\rho\frac{\partial \bv^{\pm}}{\partial t} & = & - \nabla p^{\pm} +
+                                                f_s{\bf e} \delta(z-z_s),\nonumber \\
 p^{\pm} & =& 0 \mbox{ for } \pm t \ll 0,\nonumber\\ 
 \bv^{\pm} & = & 0 \mbox{ for } \pm t \ll 0.
 \end{eqnarray}
@@ -292,8 +293,7 @@ functions (distributions, really) output by ${\cal P}_s^T$, so the
 problem statements \ref{eqn:esi} and \ref{eqn:esis} can be rewritten
 in terms of ${\cal S}^+_{z_s,z_r}$, with $P$ identified with ${\cal P}_r$.
 
-${\cal S}^{\pm}$ is not stably invertible, in fact having rank 1 (in
-an approximate sense - see the identity \ref{eqn:lamnull}). The
+${\cal S}^{\pm}$ is not stably invertible (equation \ref{eqn:lamnull}). The
 diagonal components of ${\cal S}^{\pm}$ thus carry essentially all of
 its information, and it is in terms of these that a sensible inverse problem
 is defined.
@@ -335,7 +335,7 @@ homogeneous as in the first model, while the bulk modulus decreases to
 from 4 GPa outside the lens to 1.6 GPA in its center, as shown in Figure \ref{fig:bml0}.
 
 Discretization is conventional, with a rectangular grid and staggered
-finite difference scheme \cite[]{Virieux:84} of order 2 in time and
+finite difference scheme \cite[]{Vir:84} of order 2 in time and
 2$k$ in space; for most of the experiments reported below, $k=4$.
 Sampling operators such as $P_r$ are implemented via linear
 interpolation, and source insertion via adjoint linear interpolation
@@ -439,12 +439,11 @@ The relation \ref{eqn:trtr} implies that
                             \label{eqn:trtrcomp}
 \end{eqnarray}
 
-The implemented code uses the adjoint state method on the discrete
-level, to assure that the computed adjoint operators are adjoint at
-the level of machine precision to the computed operators. The issue of
-reverse-time storage is resolved through the optimal checkpointing
-technique \cite[]{Griewank:book,Symes:06a-pub}, again without loss of
-precision.
+The implemented code uses the discrete adjoint state method and auto-generated code \cite[]{TapenadeRef13}, to
+assure that the computed adjoint operators are adjoint at the level of
+machine precision to the computed operators. The reverse-time storage
+issue is resolved through the optimal checkpointing technique
+\cite[]{Griewank:book,Symes:06a-pub}, again without loss of precision.
 
 Typical results with pseudorandom input traces $d_r, h_z, w_r, f_s$ are:
 \begin{itemize}
@@ -456,18 +455,291 @@ Typical results with pseudorandom input traces $d_r, h_z, w_r, f_s$ are:
 Ideally, the differences of these inner products should be at most a
 relatively small multiple of machine precision, {\em relative} to the
 products $\|d_r\|\| S^+_{z_s,z_r}\|\|h_s\|$ and
-$\|w_r\|\|V^+_{z_s,z_r}\|\|f_s\|$ (thus making the result
-dimensionless). The operator norm $\| S^+_{z_s,z_r}\|$ is
+$\|w_r\|\|V^+_{z_s,z_r}\|\|f_s\|$ (division by these quantities makes the result
+dimensionless and scale-independent). The operator norm $\| S^+_{z_s,z_r}\|$ is
 computationally inaccessible, so instead I used the smaller quantities
 $\|d_r\|\| S^+_{z_s,z_r}h_s\|$ etc. as stand-ins - thereby
 overestimating the relative error between the inner products. In all
 cases, over a very large number of random inputs, the largest observed
-relative error estimate was $O(10^{-9}$, well under the appropriate limit for
+relative error estimate was $O(10^{-9})$, well under the appropriate limit for
 single precision.
 
+\section{Pressure-to-Source}
+
+Since the system \ref{eqn:awepm} has a unique solution by standard
+theory \cite[]{Lax:PDENotes}, the source vector field $(h_s,f_s)$
+determines the acoustic field $(p^{\pm},\bv^{\pm})$ in space time, and
+in particular the limits from the right at $z=z_s$, $P_sp^{\pm}$ and
+$P_sv_z^{\pm}$. This relation is not invertible: it is not possible to
+prescribe both pressure and normal velocity on a surface such as
+$z=z_s$. So the columns of the matrix operator
+${\cal S}^{\pm}_{z_s,z_r}$ must satisfy a linear relation. In this
+section I will explain this relation; it involves the {\em
+  pressure-to-source} map. This operator also turns out to be the
+principle component of a preconditioning strategy for iterative
+solution of the optimization problem \ref{eqn:esis}, so I will devote
+some effort to its proper definition. It is closely related to the
+Dirichlet-to-Neumann operator mentioned in the introduction.
+
+While it is not possible to prescribe both pressure and velocity on
+$z=z_s$ in solutions of \ref{eqn:awepm}, it is possible to
+prescribe pressure only, for instance: if the function $\phi$ on
+the surface $z=z_s$ satisfies suitable conditions, for
+example the downgoing constraint mentioned earlier, a unique solution
+exists for the acoustic system in both half-spaces $\pm z > z_s$:
+\begin{eqnarray}
+\label{eqn:awe0}
+  \frac{1}{\kappa}\frac{\partial p_{\pm}}{\partial t} & = & - \nabla \cdot \bv_{\pm}, \nonumber \\
+  \rho\frac{\partial \bv_{\pm}}{\partial t} & = & - \nabla
+                                                    p_{\pm}, \nonumber \\
+  p_{\pm} & =& 0,  \mbox{ for } t \ll 0, \nonumber\\ 
+  \bv_{\pm} & = & 0 \mbox{ for } t \ll 0, \nonumber\\
+  \lim_{z \rightarrow z_s^{\pm}}p_{\pm}(x,y,t,z)& =& \phi(x,y,t).
+\end{eqnarray}
+Note that the subscript $\pm$ here refers to the sign of $z-z_s$, as opposed
+to the superscript ${\pm}$, which refers to the sign of $t$ throughout
+this paper.
+
+From the boundary condition (last equation in \ref{eqn:awe0}), one
+sees that the pressures $p_{\pm}$ in the two half-spaces have the same
+limit at the boundary $z=z_s$. Stick the two half-space
+solutions together to form an acoustic field $(p^+,\bv^+)$ in all of
+space-time, that is,
+\begin{equation}
+  \label{eqn:awealt}
+  p^+(x,y,z,t) =
+  \left\{
+    \begin{array}{c}
+      p_+(x,y,z,t) \mbox{ if } z>0,\\
+      p_-(x,y,z,t) \mbox{ if } z<0,
+    \end{array}
+  \right.
+\end{equation}
+and a similar definition for $\bv^+$. Then $p^+$ is continuous across
+$z=z_s$, and the boundary condition in system \ref{eqn:awe0} may be
+written as $P_sp^+=\phi$.
+
+The same construction can be carried out in the anti-causal sense,
+with anti-causal half-space solutions glued together to form a
+full-space distribution solution $(p^-,\bv^-)$, with the property that
+$p^-$ is continuous across $z=z_s$ and $P_sp^-=\phi$.
+
+The reader may object that the notation $(p^\pm,\bv^\pm)$ is already in
+use, for the solution of \ref{eqn:awepm}. This objection is
+valid. However, {\em in the sense
+  of distributions}, $(p^{\pm},\bv^{\pm})$ as defined in display
+\ref{eqn:awealt}, is {\em exactly} the causal solution of \ref{eqn:awepm}
+for the choice $h_s = -[v^{\pm}_{z}]|_{z=z_s}, f_s=0$, as follows from a
+simple integration-by-parts calculation. So the notation is consistent!
+
+The negative jump $-[v^{\pm}_{z}]|_{z=z_s}$ is thus a function of $\phi$. Define
+the {\em pressure-to-source} operator $\Lambda^{\pm}_{z_s}$ by
+\begin{equation}
+  \label{eqn:deflam}
+  \Lambda^{\pm}_{z_s}\phi = -[v^{\pm}_{1,z}]|_{z=z_s}
+\end{equation}
+The conclusion: if $h_s = \Lambda^{\pm}_{z_s}\phi$ and $f_s=0$ in the
+system \ref{eqn:awepm}, then $\phi=P_sp^{\pm}$.
+
+Otherwise put, $S^{\pm}_{z_s,z_s}\Lambda^{\pm}_{z_s} \phi = \phi$, so
+$\Lambda^{\pm}_{z_s}$ is inverse to $S^{\pm}_{z_s,z_s}$. The relation
+\ref{eqn:trtrcomp} implies in turn that
+\begin{equation}
+  \label{eqn:lamadj}
+  (\Lambda^{\pm}_{z_s})^T = - \Lambda^{\mp}_{z_s}
+\end{equation}
+
+There is also a {\em velocity-to-source} operator. For the solution
+$(p^{\pm},\bv^{\pm})$ of system \ref{eqn:awepm} with $h_s=0$, the
+normal component of velocity, $v^{\pm}_z$, is continuous across
+$z=z_s$, and the velocity source (vertical load)
+$f_s=-[p^{\pm}]_{z=z_s}$. I will not name the velocity-to-source
+operator, as it does not appear explicitly in the developments to
+follow. As will be seen, it is essentially the inverse of the
+pressure-to-source operator.
+
+The quadratic form defined by $\Lambda^{\pm}_{z_s}$ has fundamental
+physical significance. Define the total acoustic energy $E^{\pm}(t)$ of the
+field $(p^{\pm},\bv^{\pm})$, at time $t$ by
+\begin{equation}
+  \label{eqn:defae0}
+  E^{\pm}(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^{\pm})^2}{\kappa} + \rho |\bv^{\pm}|^2\right)
+\end{equation}
+Then
+\begin{equation}
+  \label{eqn:elim}
+  \pm \lim_{\pm t \rightarrow \infty} E^{\pm}(t) =  \langle P_sp^{\pm},
+  (\Lambda^{\pm}_{z_s} P_sp^{\pm}) \rangle_{L^2(z=z_s)}.
+\end{equation}
+That is, the value of the quadratic form defined by
+$\Lambda^{\pm}_{z_s}$, evaluated at the pressure trace on $z=z_s$,
+gives the total energy transferred from the source to the
+acoustic field over time. Since $E$ is itself a positive definite
+quadratic form in the acoustic field, it follows that $\pm
+\Lambda^{\pm}_{z_s}$ is positive semi-definite. 
+
+While $\Lambda^{\pm}_{z_s}$ is positive semi-definite, it is not
+symmetric. However, it is {\em approximately symmetric} in the
+high-frequency sense. This fact follows from a
+geometric optics analysis of the half-space solution,
+assuming (as always) downgoing data:
+\begin{equation}
+  \label{eqn:lamappsim}
+  (\Lambda^{\pm}_{z_s})^T \approx \Lambda^{\pm}_{z_s}.
+\end{equation}
+
+The analysis also reveals that the solution components not continuous
+at $z=z_s$ are odd there:
+\begin{equation}
+  \label{eqn:odd1}
+  \lim_{z\rightarrow z_s^+} v^{\pm}_{z} \approx - \lim_{z\rightarrow z_s^-}
+  v^{\pm}_{z}
+\end{equation}
+for the solution of \ref{eqn:awepm} with $f_s=0$.
+Similarly, 
+\begin{equation}
+  \label{eqn:odd2}
+  \lim_{z\rightarrow z_s^+} p^{\pm}\approx - \lim_{z\rightarrow z_s^-}
+  p^{\pm}
+\end{equation}
+for the solution of \ref{eqn:awepm} with $h_s=0$. Here ``$\approx$''
+means in the sense of high frequency asymptotics, that is, that the
+difference between the two sides is relatively smooth, hence small if
+the data is highly oscillatory. Therefore if $f_s=0$ in system \ref{eqn:awepm},
+\begin{equation}
+  h_s = \Lambda^{\pm}_{z_s}P_sp^{\pm} = -[v^{\pm}_{z}]|_{z=z_s} \approx -2
+  P_sv^{\pm}_{z}
+  \label{eqn:tracejump10}
+\end{equation}
+Similarly, if $h_s=0$ in system \ref{eqn:awepm}, then
+\begin{equation}
+  \label{eqn:tracejump20}
+  f_s = -[p^{\pm}]|_{z=z_s} \approx -2 P_s p^{\pm}.
+\end{equation}
+Thus $f_s$ determines approximately the boundary value of $p^{\pm}$,
+as a solution of the acoustic wave system in the half-space
+$z>z_s$. However, as repeated in equation \ref{eqn:tracejump10}, a
+solution with this boundary value is also the restriction to $z>z_s$
+of a solution to \ref{eqn:awepm} with $f_s=0$ and $h_s=
+\Lambda^{\pm}_{z_s}P_sp^{\pm}$. Therefore if
+\begin{equation}
+  \label{eqn:hfcondn}
+  h_s =\Lambda^{\pm}_{z_s}f_s,
+\end{equation}
+then the pressure boundary value $P_sp^{\pm}$ is the
+same for the solutions of \ref{eqn:awepm} for source vectors $(h_s,0)$
+and $(0,f_s)$. Since the pressure boundary values are the same, the solutions
+in $z>z_s$ are the same. In particular, since $z_r>z_s$ and ${\cal
+  S}^{\pm}_{z_s,z_r}(h_s,f_s)^T = (P_rp^{\pm},P_rv^{\pm}_z)^T$, it follows
+that
+\begin{equation}
+  \label{eqn:snull}
+  {\cal S}^{\pm}_{z_s,z_r}(-\Lambda^{\pm}_{z_s}f_s,f_s)^T \approx 0.
+\end{equation}
+
+Equation \ref{eqn:snull} states the relation between the columns of $
+{\cal S}^{\pm}_{z_s,z_r}$ mentioned in the introduction to this
+section.
+
+To give an example of \ref{eqn:snull} in action, it is necessary to
+create downgoing data and the action of the operator $\Lambda^{\pm}$
+on a downdoing field data $f_s$ on $z=z_s$. Note that a point source
+on $z=z_s$ creates high frequency energy traveling on rays parallel
+and nearly parallel to $z=z_s$, so that won't do. One simple approach
+is to create pressure and normal velocity data on $z=z_s$ by placing a
+point source at a depth $z_d<z_s$. Since the examples used here are
+homogeneous in $z<z_s$, the traces extracted from the resulting
+causal pressure and velocity data on $z=z_s$ are {\em a priori}
+downgoing, hence related by the operator $\Lambda^+_{z_s}$.
+
+For a point source at $z_d=3500$ m, $x_d=3500$ m, same bandpass filter
+wavelet as used for prior examples, causal data on $z=z_s=3000$ m are
+shown in Figures \ref{fig:dsrcphh0} and \ref{fig:dsrcvzhh0}. Since the
+mechanical parameters in the homogeneous and lens models are the same
+for $z<z_s$, and no rays return to this zone in either model, these
+data are asymptotically the same for both models, and I show only the
+homogenous medium results. Regard these gathers as the trace
+$(P_sp^+,P_sv^+_z)$ on $z=z_s$ of a downgoing acoustic field in $z>z_s$.
+Equations \ref{eqn:tracejump10} and
+\ref{eqn:tracejump20} show that these differ by a factor of -2 from
+source functions $f_s$ and $h_s$ as in the system \ref{eqn:awepm},
+with $h_s=0$ and $f_s=0$ respectively.
+
+These source functions satisfy
+the relation \ref{eqn:hfcondn}, therefore source vectors $(h_s,0)$ and
+$(0, f_s)$ generate {\em the same acoustic field} $(p^+,\bv^+)$ in $z>z_s$. Figures
+\ref{fig:drecphh0}, \ref{fig:dfwdphh0}, \ref{fig:daltphh0} (homogeneous model) and
+\ref{fig:drecplh0}, \ref{fig:dfwdplh0}, \ref{fig:daltplh0} (lens model) show the pressure
+gathers extracted at $z_r=1000$ m for the point source at $z=z_d$ and
+for the two choices of extended source at $z=z_s$, on the same color
+scale. The obvious similarity between the fields generated by the two
+extended sources,
+predicted by equation \ref{eqn:snull}, is confirmed by trace
+comparisons in figures \ref{fig:drecphh0tr21}-\ref{fig:daltplh0tr81}.
+
+\plot{dsrcphh0}{width=\textwidth}{Trace $P_sp^+$ on $z=z_s=3000$ m of
+  pressure field from point source at $z_d=3500$ m, $x_d=3500$ m,
+  bandpass filter source.}
+
+\plot{dsrcvzhh0}{width=\textwidth}{Trace $P_sv_z^+$ on $z=z_s=3000$ m of
+  vertical velocity field from point source at $z_d=3500$ m, $x_d=3500$ m,
+  bandpass filter source.}
+
+\plot{drecphh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the homogeneous model described in the 
+  text, with point pressure source (constitutive defect) at $z_d=3500$
+  m, $x_d=3500$ m.}
+  
+\plot{dfwdphh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the homogeneous model described in the 
+  text, with extended pressure source (constitutive defect) on $z=z_s=3000$ m given by $-2$
+  times the field depicted in Figure \ref{fig:dsrcvzhh0}
+  ($h_s=-2P_sv_z^+$) and zero velocity source (vertical load) 
+  ($f_s=0$).}
+
+\plot{daltphh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the homogeneous model described in the 
+  text, with extended velocity source (vertical load) on $z=z_s=3000$ m given by $-2$
+  times the field depicted in Figure \ref{fig:dsrcphh0}
+  ($f_s=-2P_sp^+$) and zero pressure source (constitutive defect)
+  ($h_s=0$).}
+
+\plot{drecplh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the lens model described in the 
+  text, with point pressure source (constitutive defect) at $z_d=3500$
+  m, $x_d=3500$ m.}
+  
+\plot{dfwdplh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the lens model described in the 
+  text, with extended pressure source (constitutive defect) on $z=z_s=3000$ m given by $-2$
+  times the field depicted in Figure \ref{fig:dsrcvzhh0}
+  ($h_s=-2P_sv_z^+$) and zero velocity source (vertical load) 
+  ($f_s=0$).}
+
+\plot{daltplh0}{width=\textwidth}{Pressure gather at receiver depth 
+  $z_r=1000$ m from field generated by causal solution of acoustic 
+  system \ref{eqn:awepm} in the lens model described in the 
+  text, with extended velocity source (vertical load) on $z=z_s=3000$ m given by $-2$
+  times the field depicted in Figure \ref{fig:dsrcphh0}
+  ($f_s=-2P_sp^+$) and zero pressure source (constitutive defect)
+  ($h_s=0$).}
+
+\plot{drecphh0tr21}{width=\textwidth}{Overplot of traces 21 ($x=2400$)
+  from gathers shown in \ref{fig:drecphh0} (blue), \ref{fig:dfwdphh0}
+  (red).}
+
+\plot{daltplh0tr81}{width=\textwidth}{Overplot of traces 81 ($x=3600$)
+  from gathers shown in \ref{fig:drecplh0} (blue), \ref{fig:daltplh0}
+  (red).}
 \section{Approximate Inversion}
 
-\section{Iterative Inversion}
+
+\section{Accelerated Iterative Inversion}
 
 \section{Fields, Traces and Sources}
 In this section, $(p^{\pm}_0,\bv^{\pm}_0)$ denotes an acoustic field,
@@ -557,26 +829,6 @@ the source in the velocity equation, having units of force/volume,
 similar to $\Lambda^{\pm}_{z_s}$. As it's not needed in the sequel, I
 won't name this map.
 
-The quadratic form defined by $\Lambda^{\pm}_{z_s}$ has fundamental
-physical significance. Define the total acoustic energy $E^{\pm}(t)$ of the
-field $(p^{\pm},\bv^{\pm})$, at time $t$ by
-\begin{equation}
-  \label{eqn:defae0}
-  E^{\pm}(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^{\pm})^2}{\kappa} + \rho |\bv^{\pm}|^2\right)
-\end{equation}
-Then
-\begin{equation}
-  \label{eqn:elim}
-  \pm \lim_{\pm t \rightarrow \infty} E^{\pm}(t) =  \langle P_sp^{\pm},
-  (\Lambda^{\pm}_{z_s} P_sp^{\pm}) \rangle_{L^2(z=z_s)}.
-\end{equation}
-That is, the value of the quadratic form defined by
-$\Lambda^{\pm}_{z_s}$, evaluated at the pressure trace on $z=z_s$,
-gives the total energy transferred from the source to the
-acoustic field over time. Since $E$ is itself a positive definite
-quadratic form in the acoustic field, it follows that $\pm
-\Lambda^{\pm}_{z_s}$ is positive semi-definite.
-
 A closer relation between traces and sources follows from the
 geometric optics analysis of the half-space solution, presented
 below. I will show that, for propagating wave data,
@@ -604,6 +856,7 @@ or \ref{eqn:sawe2}, the jump at $z=z_s$ is twice the limiting value
   [p^{\pm}_2]|_{z=z_s} &\approx& 2 \lim_{z\rightarrow z_s^+}p^{\pm}_{2},\\  \label{eqn:tracejump2}
 \end{eqnarray}
 
+%%%%%%%%%%%%%%%%%%%
 These apparently harmless relations have a profound consequence,
 because of a final step: identify the boundary data $\phi$ and $\psi$,
 so far arbitrary, as the traces of $p^{\pm}_0$ and $v^{\pm}_{0,z}$ on $z=z_s$,
