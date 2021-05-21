@@ -60,6 +60,7 @@ SCLIP= [20.0,80.0,320.0]
 DF   = 0.248
 RZ   = -1000
 SZ   = -3000
+DSZ  = -3500
 RXMIN=  2000
 SX   =  3500
 TMIN = 1.0
@@ -90,7 +91,6 @@ for i in [0]:
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 	 
-
     Flow('srchdr' + str(i) + '.su', None,
          sunull + ' nt=' + str(NTS[i]) +
 	 ' ntr=' + str(NTR[i]) +
@@ -102,6 +102,8 @@ for i in [0]:
 	 ' a=' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
+
+# elevated source line
 
 # near receiver lines, gelev=selev +/- delta z
 
@@ -129,7 +131,7 @@ for i in [0]:
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
-### src file point source at x=3500 = left end of line + 1500 m,
+### src point source at z=3000, x=3500 = left end of line + 1500 m,
 ### scale by 500 for time delta (dt=0.002) and
 ### dx for dx integration
 
@@ -141,6 +143,22 @@ for i in [0]:
          sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
          sushw + ' key=delrt,gelev,selev,sx' +
 	 ' a=0,' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' + 
+         sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
+         suchw + ' key1=offset key2=gx key3=sx c=-1',         
+         stdin=0)
+
+### deeper src point source at z=3500, x=3500 = left end of line + 1500 m,
+### scale by 500 for time delta (dt=0.002) and
+### dx for dx integration
+
+    Flow('dptsrc'+str(i)+'.su', None, suspike +
+         ' nt=' + str(NTS[i]) + ' ntr=' + str(NTR[i]) + ' offset=0 ix1=' + str(FTR[i]) + ' nspk=1 it1=' + str(NTS[i]/2) + ' dt=' + str(DT[i]) + ' | ' +
+         sufilter + ' f=' +
+         str(F1[i]) + ',' + str(F2[i]) + ',' +
+         str(F3[i]) + ',' + str(F4[i]) + ' | ' +
+         sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
+         sushw + ' key=delrt,gelev,selev,sx' +
+	 ' a=-500,' + str(DSZ) + ',' + str(DSZ) + ',' + str(SX) + ' | ' + 
          sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',         
          stdin=0)
@@ -321,6 +339,94 @@ for i in [0]:
         Flow('recpg'+exp+'.su','recp'+exp+'.su',
              sugain + ' scale=' + str(VSCALE))
 
+### simulate deep point source data p, vz traces, record at
+### source datum
+
+        Flow(['dsrcp' + exp + '.su', 'dsrcvz' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+	      'byh' + str(i),
+	      'dptsrc' + str(i) + '.su',
+              'srchdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### go all the way
+
+        Flow(['drecp' + exp + '.su', 'drecvz' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+	      'byh' + str(i),
+	      'dptsrc' + str(i) + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### scale vz for p source trace
+
+        Flow('dsrcvzg'+exp+'.su','dsrcvz'+exp+'.su',
+             sugain + ' scale=-' + str(PSCALE))
+
+### scale p for vz source trace
+
+        Flow('dsrcpg'+exp+'.su','dsrcp'+exp+'.su',
+             sugain + ' scale=-' + str(VSCALE))
+
+### simulate filtered source data p, vz traces using
+### p src 
+### fwdp = S srcvzg,
+
+        Flow(['dfwdp' + exp + '.su', 'dfwdvz' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+	      'byh' + str(i),
+	      'dsrcvzg' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1) 
+
+### simulate filtered source data p, vz traces using
+### vz src 
+### fwdp = V srcpg, should = S srcvzg
+
+        Flow(['daltp' + exp + '.su', 'daltvz' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+	      'byh' + str(i),
+	      'dsrcpg' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1) 
+
+
 ### backwards propagate scaled vz receiver traces *** as p source data ***,
 ### read off vz and p at source traces - at this point, by definition,
 ### srcp = Lambda^T srcvz
@@ -349,10 +455,15 @@ for i in [0]:
 ### srcvzg = Lam^+srcp
 
         Flow('srcvzg'+exp+'.su','srcvz'+exp+'.su',
-             sugain + ' scale=' + str(PSCALE) + ' | ' +
-	     sutxtaper + ' tr1=15 taper=3')
+             sugain + ' scale=-' + str(PSCALE))
+#	     + ' | ' +   sutxtaper + ' tr1=15 taper=3')
 
-### simulate filtered source data p, vz traces
+        Flow('srcpg'+exp+'.su','srcp'+exp+'.su',
+             sugain + ' scale=' + str(VSCALE))
+#	     + ' | ' +	     sutxtaper + ' tr1=15 taper=3')
+
+### simulate filtered source data p, vz traces using
+### p src 
 ### fwdp = S srcvzg,
 
         Flow(['fwdp' + exp + '.su', 'fwdvz' + exp + '.su'],
@@ -370,6 +481,7 @@ for i in [0]:
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1) 
+
 
 ### scale p for backpropagation vz source trace - NOT with minus sign
 
@@ -399,11 +511,22 @@ for i in [0]:
              ''' + TP, stdin=0, stdout=-1)
 
 ########################## graphics ###########################
-
-        for id in ['recp', 'fwdp', 'srcp', 'invp',
-	           'recvz', 'fwdvz', 'srcvz', 'invvz']:
-
-            gid = id + exp
+        tmin = [1.2, 1.2, 0.0, 0.0,
+	        1.2, 1.2, 0.0, 0.0,
+		0.0, 0.0,
+		1.2, 1.2, 1.2]
+        tmax = [3.0, 3.0, 2.0, 2.0,
+	        3.0, 3.0, 2.0, 2.0,
+		2.0, 2.0,
+		3.0, 3.0, 3.0]		
+        id   = ['recp', 'fwdp', 'srcp', 'invp',
+	        'recvz', 'fwdvz', 'srcvz', 'invvz',
+		'dsrcp', 'dsrcvz',
+		'drecp', 'dfwdp', 'daltp']
+		   
+        for j in range(len(id)):
+	
+            gid = id[j] + exp
 	    
 ### convert gathers to rsf
 
@@ -428,21 +551,31 @@ for i in [0]:
 ### plot gathers
 
             Result(gid,
-	          '''
+		  'window min1=' + str(tmin[j]) + ' max1=' +
+		  str(tmax[j]) + ' | ' +
+		  '''
 		  grey color=j clip=0.08 scalebar=y
-		  minval=-0.08 maxval=0.08
+		  minval=-0.08 maxval=0.08 wanttitle=n
 		  ''')
 
 ### plot traces
 
         for k in [21, 51, 81]:
 
-            Result('recp' + exp + 'tr' + str(k),
-	          ['recp' + exp + 'tr' + str(k),
-		   'fwdp' + exp + 'tr' + str(k)],
+            Result('drecp' + exp + 'tr' + str(k),
+	          ['drecp' + exp + 'tr' + str(k),
+		   'dfwdp' + exp + 'tr' + str(k)],
 		  '''
                   cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
-                  graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+                  graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
+                  ''')
+
+            Result('daltp' + exp + 'tr' + str(k),
+	          ['drecp' + exp + 'tr' + str(k),
+		   'daltp' + exp + 'tr' + str(k)],
+		  '''
+                  cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
+                  graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 		  
             Result('srcp' + exp + 'tr' + str(k),
@@ -450,7 +583,7 @@ for i in [0]:
 		   'invp' + exp + 'tr' + str(k)],
 		  '''
                   cat axis=2 ${SOURCES[1:2]} |
-                  graph plotcol=4,2 wanttitle=n label2=Pressure unit2=GPa
+                  graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 
 Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=z label2=x unit1=m unit2=m barunit=GPa xinch=10 yinch=5')
