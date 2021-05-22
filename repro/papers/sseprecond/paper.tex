@@ -736,7 +736,208 @@ comparisons in figures \ref{fig:drecphh0tr21}-\ref{fig:daltplh0tr81}.
 \plot{daltplh0tr81}{width=\textwidth}{Overplot of traces 81 ($x=3600$)
   from gathers shown in \ref{fig:drecplh0} (blue), \ref{fig:daltplh0}
   (red).}
+
 \section{Approximate Inversion}
+
+Computation of $\Lambda^{\pm}_{z_s}$ will prove a critical step in an
+efficient iterative solution of the linear subproblem
+\ref{eqn:esis}. Direct computation, for instance by solving
+\ref{eqn:sawe2} and reading off $P_sv^{\pm}_{2,z}$, turns out to be
+numerically ill-behaved. The relation \ref{eqn:snull} provides and
+alternative approach, {\em provided} that an accurate approximate
+inverse to $S^+_{z_s,z_r}$ is available. For instance, the first row
+of the vector equation \ref{eqn:snull} reads (slightly rearranged):
+\[
+\Pi_0{\cal S}^+_{z_s,z_r}\Pi_1 f_s \approx \Pi_0{\cal
+  S}^+_{z_s,z_r}Pi_0\Lambda^+_{z_s}f_s
+\]
+\begin{equation}
+  \label{eqn:lamidea}
+  = S^++_{z_s,z_r}\Lambda^+_{z_s}f_s.
+\end{equation}
+An approximate inverse for $S^++_{z_s,z_r}$ would permit solution of
+this equation for $\Lambda^+_{z_s}f_s$.
+
+In this section I will explain how to build the approximate inverse.
+The key ingredient in this {\em time reversal} construction is a
+{\em local energy decay} assumption. Define the local energy in the
+acoustic field $(p,\bv)$ at
+time $t$ in a region $\Omega \subset \bR^3$ by limiting the integration
+in the definition of total energy \ref{eqn:defae0} to $\Omega$:
+\begin{equation}
+  \label{eqn:defaeloc}
+  E_{\Omega}[(p,\bv)](t) = \frac{1}{2} \int_{\Omega} \,d\bx \, \left(\frac{p(\bx,t)^2}{\kappa(\bx)} + \rho(\bx) |\bv(\bx,t)|^2\right)
+\end{equation}
+The necessary assumption is: local energy decay in the half-space
+$\Omega = \{(x,y,z): z \le z_r\}$. The local energy in $\Omega$ of the
+causal solution $(p^+,\bv^+)$ of system \ref{eqn:awepm} cannot decay,
+since the source on $z=z_s<z_r$ radiates in both positive and negative
+$z$ in forward time. That obstacle is resolved by a redefinition of
+the ``downgoing'' concept. I will call  downgoing if there is a
+source-free acoustic field $(\tilde{p}^+,\tilde{\bv}^+)$ in all of space-time for which
+\begin{itemize}
+\item[1. ] $p^+ \approx \tilde{p}^+, \bv^+ \approx \tilde{\bv}^+$ in
+  the slab $\{(x,y,z,t): z_s \le z \le z_r\}$, and
+\item[2. ] The energy in $(\tilde{p}^+,\tilde{\bv}^+)$ decays in
+  forward time, in the half-space $\Omega$:  $E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](t) \rightarrow 0$
+  as $t \rightarrow \infty$.
+\end{itemize}
+Conditions for local energy decay have been widely studied in various
+settings, for instance obstacle scattering
+\cite[]{MorawetzPhillipsLax:05}. \cite{Pauen2000NonTr-6079 gives a
+comprehensive overview of this subject. For smooth (non-scattering)
+acoustic parameters, as is assumed in this paper, the crux of the
+matter is that rays carrying high-frequence energy exit the half-space
+$\Omega$ in finite time. For the half-space
+geometries considered here, local energy does not decay in general,
+because of the existence of ``trapped'' rays traveling parallel to the
+boundary and remaining interior to $\Omega$ for all time. If an
+acoustic field is downgoing in the usual sense, that is, its
+high-frequency energy is concentrated on rays that exit $\Omega$
+within some common maxiumum time, then the results cited above show
+that local energy in $\Omega$ decays (exponentially for $n=3$).
+
+Starting from this observation, it is possible to show that if the
+source vector $(h_s,f_s)^T$ has the property termed ``downgoing'' in
+preceding sections, that is, emanates high-frequency energy only along
+rays that leave $\Omega$ within a common maximum time, then the
+solution $(p^+,\bv^+)$ of \ref{eqn:awepm} is downgoing in the sense
+defined here. All of our numerical examples behave as one would expect
+for downgoing fields.
+
+An immediate consequence of the downgoing assumption stated above is that in the
+slab $z_s<z<z_r$, the field $(p^+,\bv^+)$ approximates the solution of an
+anti-causal evolution equation. For any choice of $T$, define
+$(\tilde{p}^-,\tilde{\bv}^-)$ to be the solution in the half-space
+$\Omega$ of
+\begin{eqnarray}
+\label{eqn:revawe}
+  \frac{1}{\kappa}\frac{\partial \tilde{p}^-}{\partial t} & = & - \nabla \cdot \tilde{\bv}^-, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}^-}{\partial t} & = & - \nabla \tilde{p}^-,\nonumber \\
+  \tilde{p}^- & =& 0,  \mbox{ for } t=T,\nonumber\\ 
+  \tilde{\bv}^- & = & 0 \mbox{ for } t=T,\nonumber\\
+  P_r\tilde{p}^- &=& P_rp^+ \mbox { for } t \le T . 
+\end{eqnarray}
+As will be shown later, under the downgoing assumption, $P_r p^+
+\approx P_r \tilde{p}^+$.
+Therefore $(\delta p,\delta \bv)=(\tilde{p}^+-\tilde{p}^-,\tilde{\bv}^+-\tilde{\bv}^-)$
+differs negligibly from the solution of
+\begin{eqnarray}
+\label{eqn:deltaawe}
+  \frac{1}{\kappa}\frac{\partial \delta p}{\partial t} & = & -
+                                                               \nabla
+                                                               \cdot
+                                                               \delta \bv, \nonumber \\
+  \rho\frac{\partial \delta \bv}{\partial t} & = & - \nabla \delta p,\nonumber \\
+  \delta p & =& \tilde{p}^+,  \mbox{ for } t=T,\nonumber\\ 
+  \delta \bv & = & \tilde{\bv}^+ \mbox{ for } t=T,\nonumber\\
+  P_r\delta p & = & 0,
+\end{eqnarray}
+in $\Omega \times \bR$. Since
+$E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](T) \rightarrow 0$ as $T
+\rightarrow \infty$, the usual energy estimate implies that the energy $\delta
+E$ in this field,
+\[
+  \delta E_{\Omega}(t) = \frac{1}{2} \int_{\Omega} \,d\bx \,
+ \left(\frac{(\delta p)^2}{\kappa} + \rho |\delta \bv|^2\right)
+\]
+satisfies $\delta E_{\Omega}(t) \rightarrow 0$ as $T \rightarrow
+\infty$. This decay does not generally imply that $P_s\delta p, P_s \delta \bv)
+\rightarrow 0$ (for instance) as $T \rightarrow \infty$, since the trace operator
+$P_s$ is not continuous, but it does so imply for purely downgoing
+fields, as will be demonstrated later, so
+\begin{equation}
+  \label{eqn:approxinv0}
+  \lim_{T \rightarrow \infty} P_s\tilde{v}_z^- \approx \lim_{z \rightarrow
+    0^+}\tilde{v}_z^+ \approx \lim_{z \rightarrow 0^+}v^+_z
+\end{equation}
+  
+Recall (equations \ref{eqn:deflam}, \ref{eqn:jump0}) that
+\[
+  \Lambda^+_{z_s} P_s p^+ \approx 2 \lim_{z \rightarrow z_s^+}v^+_z 
+\]
+and that with $h_s= \Lambda^+_{z_s}P_sp^+$,
+\[
+  S^+_{z_s,z_r}h_s = P_r p^+
+\]
+Together with the last two equations, the relation
+\ref{eqn:approxinv0} implies that
+\begin{equation}
+  \label{eqn:approxinv1}
+  S^+_{z_s,z_r}(2 P_s \tilde{v}_z^-) \approx P_rp^+.
+\end{equation}
+As shown in the last section, the solution of the system
+\ref{eqn:revawe} differs negligibly from the anti-causal solution $(p^-_2,\bv^-_2)$
+of the system \ref{eqn:sawe2} with (i) $z_s$ replaced by $z_r$, and
+(ii) $\psi = [p^-_2]|_{z=z_r} = -2 \lim_{z \rightarrow z_r^-} p^-_2
+\approx -2 P_rp^+$. Therefore (definitions \ref{eqn:sdef}, \ref{eqn:vdef})
+\begin{equation}
+  \label{eqn:approxinv2}
+  P_s \tilde{v}_z^- \approx V^-_{z_r,z_s}(-2 P_rp^+).
+\end{equation}
+Taken together, relations \ref{eqn:approxinv1} and
+\ref{eqn:approxinv2} yield the first equation in the first main result of this section:
+\begin{eqnarray}
+  \label{eqn:approxinv}
+  V^-_{z_r,z_s} S^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
+  S^-_{z_r,z_s} V^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
+  V^+_{z_s,z_r} S^-_{z_r,z_s} & \approx & -\frac{1}{4}I, \nonumber\\
+  S^+_{z_s,z_r} V^-_{z_r,z_s} & \approx & -\frac{1}{4}I.\\
+\end{eqnarray}.
+The second equation follows by an exactly analogous argument, and the
+last two by time reversal and interchange of the roles of $z_s$ and
+$z_r$.
+
+Having identified approximate two-sided inverses for $S^{\pm},
+V^{\pm}$, the approximate null space identity \ref{eqn:lamnull} leads
+to a relation between $\Lambda^{\pm}$ and ${\cal S}^{\pm}$ that
+provides the foundation for practical computations. Applying $\Pi_0$
+to both sides of \ref{eqn:lamnull} gives
+\[
+ \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_0^T
+ \Lambda^+_{z_s} = S^+_{z_s,z_r} \Lambda^+_{z_s}.
+\]
+From the first approximate identity in \ref{eqn:approxinv},
+\begin{equation}
+  \label{eqn:lamident}
+  V^{-}_{z_r,z_s}\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx -\frac{1}{4}\Lambda^+_{z_s}.
+\end{equation}
+This identity is the second major result of this section: it shows how
+to compute that action of $\Lambda^+_{z_s}$ by propagating the input
+pressure trace, identified as a source for the velocity evolution,
+forward in time from $z_s$ to $z_r$
+reading off the pressure trace on $z=z_r$, identifying it once more as
+a source for velocity, propagating it backwards in time from $z_r$ to
+$z_s$, and finally reading off the velocity trace, interpreted as a
+pressure evolution source on $z_s$. I will give a detailed description
+of this computation in the section on numerical results.
+
+The importance of this result lies in the failure of the obvious
+method for computing the action of $\Lambda^{\pm}_{z_s}$, namely to
+employ the pressure trace as a source in the velocity equation ($f_s$,
+in the notation used above) at $z=z_s$, and read off the velocity
+field also at $z=z_s$. This difficulty is related to the existence of
+tangentially propagating waves and the lack of continuity of the trace
+operator. The method implicit in equation \ref{eqn:lamident} avoids
+this difficulty by propagating the fields a positive distance in $z$:
+assuming as always that the causal fields are downgoing, this step
+eliminates any tangentially propagating fields from consideration.
+
+Computation of the transpose of $\Lambda^+$ (exact, not approximate in
+the high frequency sense) will be important in the
+construction of a preconditioner. The relation \ref{eqn:lamident} also
+provides an computation for this operator. The idea is to treat the
+left-hand side of equation \ref{eqn:lamident} as an approximation to
+$\Lambda$, and compute its exact transposes via the adjoint state
+method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
+\begin{equation}
+  \label{eqn:lamtransp}
+   \Pi_1 {\cal S}^-_{z_r,z_s}\Pi_0^T V^{+}_{z_s,z_r} \approx -\frac{1}{4}(\Lambda^+_{z_s})^T.
+\end{equation} 
+The left-hand sides of \ref{eqn:lamident} and \ref{eqn:lamtransp} will
+simply be substituted for $\Lambda$ and its transpose in the
+preconditioner construction: preconditioners must be (precisely)
+self-adjoint, but need only be approximated to perform well.
 
 
 \section{Accelerated Iterative Inversion}
@@ -927,192 +1128,6 @@ $(\Lambda^{\pm}_{z_s},-I)^T$ is asymptotically negligible.
 
 \section{Parametrix via Time Reversal}
 
-Computation of $\Lambda^{\pm}_{z_s}$ will prove a critical step in an
-efficient iterative solution of the linear subproblem
-\ref{eqn:esis}. Direct computation, for instance by solving
-\ref{eqn:sawe2} and reading off $P_sv^{\pm}_{2,z}$, turns out to be
-numerically ill-behaved. An accurate computation is available via the
-computation of a {\em parametrix} (high frequency approximate inverse)
-for $S^{\pm}_{z_s,z_r}$. This parametrix also justifies the use of the
-symmetric part of $\Lambda^{\pm}_{z_s}$ as a preconditioner. In this
-section I will explain the parametrix construction, and also show how
-to extract the symmetric part of $\Lambda^{\pm}_{z_s}$.
-
-The key ingredient in this {\em time reversal} construction is a
-{\em local energy decay} assumption. Define the local energy in the
-acoustic field $(p,\bv)$ at
-time $t$ in a region $\Omega \subset \bR^3$ by imiting the integration
-in the definition of total energy \ref{eqn:defae0} to $\Omega$:
-\begin{equation}
-  \label{eqn:defaeloc}
-  E_{\Omega}[(p,\bv)](t) = \frac{1}{2} \int_{\Omega} \,d\bx \, \left(\frac{p(\bx,t)^2}{\kappa(\bx)} + \rho(\bx) |\bv(\bx,t)|^2\right)
-\end{equation}
-
-We assume that $(p^+,\bv^+)$ is {\em downgoing} in the half-space
-$\Omega = \{(x,y,z): z \le z_r\}$: that is, there exists a solution of
-the acoustic system $(\tilde{p}^+,\tilde{\bv}^+)$ in space-time $\bR^4$
-for which
-\begin{itemize}
-\item[1. ] $p^+ \approx \tilde{p}^+, \bv^+ \approx \tilde{\bv}^+$ in
-  the slab $\Gamma = \{(x,y,z): z_s \le z \le z_r\}$, and
-\item[2. ] The energy in $(\tilde{p}^+,\tilde{\bv}^+)$ decays in
-  forward time, in the half-space $\Omega$:  $E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](t) \rightarrow 0$
-  as $t \rightarrow \infty$.
-\end{itemize}
-
-Conditions for local energy decay have been widely studied in various
-settings \cite[]{MorawetzPhillipsLax:05,Hristova:09}. For the half-space
-geometries considered here, local energy does not decay in general,
-because of the existence of ``trapped'' rays traveling parallel to the
-boundary. Instead, high frequency data associated with rays crossing
-the boundary $\{z=z_r\}$ transversally, and never returning to the slab, have
-the local energy decay property.
-
-The downgoing constraint has mostly been studied in relation to
-seismology, mostly as a ray-theoretic concept: downgoing fields are
-concentrated in phase space along rays for which depth $z$ is
-increasing with $t$. The version above is stated without reference to
-ray theory, but the setting of this paper allows its use and in a
-later section I will explicitly construct the downgoing approximation
-under appropriate ray-theoretic conditions. The numerical examples will
-illustrate the necessary assumptions. When ray-theory is appropriate,
-the downgoing constraint can be {\em ex post facto} enforced via dip
-filtering. For example, the application of the ideas developed here to
-diving wave inversion will require such a filtering step.
-
-An immediate consequence of the energy decay assumption is that in the
-slab $\Gamma$, the field $(p^+,\bv^+)$ approximates the solution of an
-anti-causal evolution equation. For any choice of $T$, define
-$(\tilde{p}^-,\tilde{\bv}^-)$ to be the solution in the half-space
-$\Omega$ of
-\begin{eqnarray}
-\label{eqn:revawe}
-  \frac{1}{\kappa}\frac{\partial \tilde{p}^-}{\partial t} & = & - \nabla \cdot \tilde{\bv}^-, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}^-}{\partial t} & = & - \nabla \tilde{p}^-,\nonumber \\
-  \tilde{p}^- & =& 0,  \mbox{ for } t=T,\nonumber\\ 
-  \tilde{\bv}^- & = & 0 \mbox{ for } t=T,\nonumber\\
-  P_r\tilde{p}^- &=& P_rp^+ \mbox { for } t \le T . 
-\end{eqnarray}
-As will be shown later, under the downgoing assumtion, $P_r p^+
-\approx P_r \tilde{p}^+$.
-Therefore $(\delta p,\delta \bv)=(\tilde{p}^+-\tilde{p}^-,\tilde{\bv}^+-\tilde{\bv}^-)$
-differs negligibly from the solution of
-\begin{eqnarray}
-\label{eqn:deltaawe}
-  \frac{1}{\kappa}\frac{\partial \delta p}{\partial t} & = & -
-                                                               \nabla
-                                                               \cdot
-                                                               \delta \bv, \nonumber \\
-  \rho\frac{\partial \delta \bv}{\partial t} & = & - \nabla \delta p,\nonumber \\
-  \delta p & =& \tilde{p}^+,  \mbox{ for } t=T,\nonumber\\ 
-  \delta \bv & = & \tilde{\bv}^+ \mbox{ for } t=T,\nonumber\\
-  P_r\delta p & = & 0,
-\end{eqnarray}
-in $\Omega \times \bR$. Since
-$E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](T) \rightarrow 0$ as $T
-\rightarrow \infty$, the usual energy estimate implies that the energy $\delta
-E$ in this field,
-\[
-  \delta E_{\Omega}(t) = \frac{1}{2} \int_{\Omega} \,d\bx \,
- \left(\frac{(\delta p)^2}{\kappa} + \rho |\delta \bv|^2\right)
-\]
-satisfies $\delta E_{\Omega}(t) \rightarrow 0$ as $T \rightarrow
-\infty$. This decay does not generally imply that $P_s\delta p, P_s \delta \bv)
-\rightarrow 0$ (for instance) as $T \rightarrow \infty$, since the trace operator
-$P_s$ is not continuous, but it does so imply for purely downgoing
-fields, as will be demonstrated later, so
-\begin{equation}
-  \label{eqn:approxinv0}
-  \lim_{T \rightarrow \infty} P_s\tilde{v}_z^- \approx \lim_{z \rightarrow
-    0^+}\tilde{v}_z^+ \approx \lim_{z \rightarrow 0^+}v^+_z
-\end{equation}
-  
-Recall (equations \ref{eqn:deflam}, \ref{eqn:jump0}) that
-\[
-  \Lambda^+_{z_s} P_s p^+ \approx 2 \lim_{z \rightarrow z_s^+}v^+_z 
-\]
-and that with $h_s= \Lambda^+_{z_s}P_sp^+$,
-\[
-  S^+_{z_s,z_r}h_s = P_r p^+
-\]
-Together with the last two equations, the relation
-\ref{eqn:approxinv0} implies that
-\begin{equation}
-  \label{eqn:approxinv1}
-  S^+_{z_s,z_r}(2 P_s \tilde{v}_z^-) \approx P_rp^+.
-\end{equation}
-As shown in the last section, the solution of the system
-\ref{eqn:revawe} differs negligibly from the anti-causal solution $(p^-_2,\bv^-_2)$
-of the system \ref{eqn:sawe2} with (i) $z_s$ replaced by $z_r$, and
-(ii) $\psi = [p^-_2]|_{z=z_r} = -2 \lim_{z \rightarrow z_r^-} p^-_2
-\approx -2 P_rp^+$. Therefore (definitions \ref{eqn:sdef}, \ref{eqn:vdef})
-\begin{equation}
-  \label{eqn:approxinv2}
-  P_s \tilde{v}_z^- \approx V^-_{z_r,z_s}(-2 P_rp^+).
-\end{equation}
-Taken together, relations \ref{eqn:approxinv1} and
-\ref{eqn:approxinv2} yield the first equation in the first main result of this section:
-\begin{eqnarray}
-  \label{eqn:approxinv}
-  V^-_{z_r,z_s} S^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
-  S^-_{z_r,z_s} V^+_{z_s,z_r} & \approx & -\frac{1}{4}I, \nonumber\\
-  V^+_{z_s,z_r} S^-_{z_r,z_s} & \approx & -\frac{1}{4}I, \nonumber\\
-  S^+_{z_s,z_r} V^-_{z_r,z_s} & \approx & -\frac{1}{4}I.\\
-\end{eqnarray}.
-The second equation follows by an exactly analogous argument, and the
-last two by time reversal and interchange of the roles of $z_s$ and
-$z_r$.
-
-Having identified approximate two-sided inverses for $S^{\pm},
-V^{\pm}$, the approximate null space identity \ref{eqn:lamnull} leads
-to a relation between $\Lambda^{\pm}$ and ${\cal S}^{\pm}$ that
-provides the foundation for practical computations. Applying $\Pi_0$
-to both sides of \ref{eqn:lamnull} gives
-\[
- \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx \Pi_0 {\cal S}^+_{z_s,z_r}\Pi_0^T
- \Lambda^+_{z_s} = S^+_{z_s,z_r} \Lambda^+_{z_s}.
-\]
-From the first approximate identity in \ref{eqn:approxinv},
-\begin{equation}
-  \label{eqn:lamident}
-  V^{-}_{z_r,z_s}\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T \approx -\frac{1}{4}\Lambda^+_{z_s}.
-\end{equation}
-This identity is the second major result of this section: it shows how
-to compute that action of $\Lambda^+_{z_s}$ by propagating the input
-pressure trace, identified as a source for the velocity evolution,
-forward in time from $z_s$ to $z_r$
-reading off the pressure trace on $z=z_r$, identifying it once more as
-a source for velocity, propagating it backwards in time from $z_r$ to
-$z_s$, and finally reading off the velocity trace, interpreted as a
-pressure evolution source on $z_s$. I will give a detailed description
-of this computation in the section on numerical results.
-
-The importance of this result lies in the failure of the obvious
-method for computing the action of $\Lambda^{\pm}_{z_s}$, namely to
-employ the pressure trace as a source in the velocity equation ($f_s$,
-in the notation used above) at $z=z_s$, and read off the velocity
-field also at $z=z_s$. This difficulty is related to the existence of
-tangentially propagating waves and the lack of continuity of the trace
-operator. The method implicit in equation \ref{eqn:lamident} avoids
-this difficulty by propagating the fields a positive distance in $z$:
-assuming as always that the causal fields are downgoing, this step
-eliminates any tangentially propagating fields from consideration.
-
-Computation of the transpose of $\Lambda^+$ (exact, not approximate in
-the high frequency sense) will be important in the
-construction of a preconditioner. The relation \ref{eqn:lamident} also
-provides an computation for this operator. The idea is to treat the
-left-hand side of equation \ref{eqn:lamident} as an approximation to
-$\Lambda$, and compute its exact transposes via the adjoint state
-method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
-\begin{equation}
-  \label{eqn:lamtransp}
-   \Pi_1 {\cal S}^-_{z_r,z_s}\Pi_0^T V^{+}_{z_s,z_r} \approx -\frac{1}{4}(\Lambda^+_{z_s})^T.
-\end{equation} 
-The left-hand sides of \ref{eqn:lamident} and \ref{eqn:lamtransp} will
-simply be substituted for $\Lambda$ and its transpose in the
-preconditioner construction: preconditioners must be (precisely)
-self-adjoint, but need only be approximated to perform well.
 
 \section{Approximate Unitarity}
 Recall that the fields $(p^{\pm},\bv^{\pm})$ in $z>z_s$ can be viewed
