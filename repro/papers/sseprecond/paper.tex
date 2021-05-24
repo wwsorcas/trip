@@ -102,7 +102,7 @@ accelerate Krylov space methods for the solution of the source
 subproblem \ref{eqn:esis}. Numerical examples suggest the
 effectiveness of this acceleration.
 
-I will fully describe the preconditioner construction for a special
+I will fully describe a preconditioner for a special
 case of the source subproblem \ref{eqn:esis}, in which ${\bf u}$ is an
 acoustic field, $L[{\bf c}]$ is the wave operator of linear
 acoustodynamics, the spatial positions of traces extracted by $P$ lie
@@ -128,7 +128,17 @@ map pressure to corresponding surface source on the source and
 receiver planes. These are essentially the same as the ``hyperbolic
 Dirichlet-to-Neumann'' map that plays a prominent role in
 thermoacoustic tomography and other wave inverse problems
-\cite[]{Rachele:00,StefUhl:05}. The obvious computation of these maps
+\cite[]{Rachele:00,StefUhl:05}. \cite{HouSymes:EAGE16} demonstrated a
+very similar preconditioner for Least Squares Migration, also for its
+subsurface offset extension \cite[]{HouSymes:16}, motivated by
+\cite{tenKroode:12}. These constructions also involve the
+Dirichlet-to-Neumann operator. This concept also turns up in hidden
+form in the work of Yu Zhang and collaborators on true amplitude
+migration
+\cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09,Zhang
+  YuSun:08,ZhangSunGray:07,ZhangBleistein:05,Bleisteinetal:05}.
+
+The obvious computation of the pressure-to-source map
 - prescribe the pressure, solve the wave equation with this boundary
 condition, read off the equivalent source - suffers from intrinsic
 numerical inaccuracy. I suggest an alternative computationally
@@ -677,11 +687,11 @@ extended sources,
 predicted by equation \ref{eqn:snull}, is confirmed by trace
 comparisons in figures \ref{fig:drecphh0tr21}-\ref{fig:daltplh0tr81}.
 
-\plot{dsrcphh0}{width=\textwidth}{Trace $P_sp^+$ on $z=z_s=3000$ m of
+\plot{dsrcpghh0}{width=\textwidth}{Trace $P_sp^+$ on $z=z_s=3000$ m of
   pressure field from point source at $z_d=3500$ m, $x_d=3500$ m,
   bandpass filter source.}
 
-\plot{dsrcvzhh0}{width=\textwidth}{Trace $P_sv_z^+$ on $z=z_s=3000$ m of
+\plot{dsrcvzghh0}{width=\textwidth}{Trace $P_sv_z^+$ on $z=z_s=3000$ m of
   vertical velocity field from point source at $z_d=3500$ m, $x_d=3500$ m,
   bandpass filter source.}
 
@@ -755,61 +765,19 @@ of the vector equation \ref{eqn:snull} reads (slightly rearranged):
   \label{eqn:lamidea}
   = S^++_{z_s,z_r}\Lambda^+_{z_s}f_s.
 \end{equation}
-An approximate inverse for $S^++_{z_s,z_r}$ would permit solution of
-this equation for $\Lambda^+_{z_s}f_s$.
+An approximate inverse for $S^++_{z_s,z_r}$ would permit (approximate)
+solution of this equation for $\Lambda^+_{z_s}f_s$.
 
-In this section I will explain how to build the approximate inverse.
-The key ingredient in this {\em time reversal} construction is a
-{\em local energy decay} assumption. Define the local energy in the
-acoustic field $(p,\bv)$ at
-time $t$ in a region $\Omega \subset \bR^3$ by limiting the integration
-in the definition of total energy \ref{eqn:defae0} to $\Omega$:
-\begin{equation}
-  \label{eqn:defaeloc}
-  E_{\Omega}[(p,\bv)](t) = \frac{1}{2} \int_{\Omega} \,d\bx \, \left(\frac{p(\bx,t)^2}{\kappa(\bx)} + \rho(\bx) |\bv(\bx,t)|^2\right)
-\end{equation}
-The necessary assumption is: local energy decay in the half-space
-$\Omega = \{(x,y,z): z \le z_r\}$. The local energy in $\Omega$ of the
-causal solution $(p^+,\bv^+)$ of system \ref{eqn:awepm} cannot decay,
-since the source on $z=z_s<z_r$ radiates in both positive and negative
-$z$ in forward time. That obstacle is resolved by a redefinition of
-the ``downgoing'' concept. I will call  downgoing if there is a
-source-free acoustic field $(\tilde{p}^+,\tilde{\bv}^+)$ in all of space-time for which
-\begin{itemize}
-\item[1. ] $p^+ \approx \tilde{p}^+, \bv^+ \approx \tilde{\bv}^+$ in
-  the slab $\{(x,y,z,t): z_s \le z \le z_r\}$, and
-\item[2. ] The energy in $(\tilde{p}^+,\tilde{\bv}^+)$ decays in
-  forward time, in the half-space $\Omega$:  $E_{\Omega}[(\tilde{p}^+,\tilde{\bv}^+)](t) \rightarrow 0$
-  as $t \rightarrow \infty$.
-\end{itemize}
-Conditions for local energy decay have been widely studied in various
-settings, for instance obstacle scattering
-\cite[]{MorawetzPhillipsLax:05}. \cite{Pauen2000NonTr-6079 gives a
-comprehensive overview of this subject. For smooth (non-scattering)
-acoustic parameters, as is assumed in this paper, the crux of the
-matter is that rays carrying high-frequence energy exit the half-space
-$\Omega$ in finite time. For the half-space
-geometries considered here, local energy does not decay in general,
-because of the existence of ``trapped'' rays traveling parallel to the
-boundary and remaining interior to $\Omega$ for all time. If an
-acoustic field is downgoing in the usual sense, that is, its
-high-frequency energy is concentrated on rays that exit $\Omega$
-within some common maxiumum time, then the results cited above show
-that local energy in $\Omega$ decays (exponentially for $n=3$).
-
-Starting from this observation, it is possible to show that if the
-source vector $(h_s,f_s)^T$ has the property termed ``downgoing'' in
-preceding sections, that is, emanates high-frequency energy only along
-rays that leave $\Omega$ within a common maximum time, then the
-solution $(p^+,\bv^+)$ of \ref{eqn:awepm} is downgoing in the sense
-defined here. All of our numerical examples behave as one would expect
-for downgoing fields.
+Recall that the source vector $(h_s,f_s)$ is assumed to produce a
+downgoing field $(p^+,\bv^+)$, that is, emanates high-frequency energy only along
+rays that make an angle with the vertical bounded below by a common
+minimum angle. Such rays leave $\Omega$ within a common maximum time. 
 
 An immediate consequence of the downgoing assumption stated above is that in the
 slab $z_s<z<z_r$, the field $(p^+,\bv^+)$ approximates the solution of an
-anti-causal evolution equation. For any choice of $T$, define
+anti-causal evolution equation. Indeed, for any choice of $T$, define
 $(\tilde{p}^-,\tilde{\bv}^-)$ to be the solution in the half-space
-$\Omega$ of
+$\Omega \times (-\infty,T]$ of
 \begin{eqnarray}
 \label{eqn:revawe}
   \frac{1}{\kappa}\frac{\partial \tilde{p}^-}{\partial t} & = & - \nabla \cdot \tilde{\bv}^-, \nonumber \\
@@ -818,6 +786,12 @@ $\Omega$ of
   \tilde{\bv}^- & = & 0 \mbox{ for } t=T,\nonumber\\
   P_r\tilde{p}^- &=& P_rp^+ \mbox { for } t \le T . 
 \end{eqnarray}
+That is, $\tilde{p}^-$ has the same boundary value as
+$p^+$ for $t<T$, but $(\tilde{p}^-,\tilde{\bv}^-)$ vanishes at
+$t=T$. Suppose that $T$ is chosen so that the rays carrying
+significant energy in $(p^+,\bv^+)$ have left the half-space $\Omega$
+at time $T$. Then
+
 As will be shown later, under the downgoing assumption, $P_r p^+
 \approx P_r \tilde{p}^+$.
 Therefore $(\delta p,\delta \bv)=(\tilde{p}^+-\tilde{p}^-,\tilde{\bv}^+-\tilde{\bv}^-)$
@@ -939,645 +913,7 @@ simply be substituted for $\Lambda$ and its transpose in the
 preconditioner construction: preconditioners must be (precisely)
 self-adjoint, but need only be approximated to perform well.
 
-
 \section{Accelerated Iterative Inversion}
-
-\section{Fields, Traces and Sources}
-In this section, $(p^{\pm}_0,\bv^{\pm}_0)$ denotes an acoustic field,
-continuous in the region $z_s \le z $, obeying the homogeneous wave
-equation in the interior $z_s < z $:
-\begin{eqnarray}
-\label{eqn:awe1}
-  \frac{1}{\kappa}\frac{\partial p^{\pm}_0}{\partial t} & = & - \nabla \cdot \bv^{\pm}_0, \nonumber \\
-  \rho\frac{\partial \bv^{\pm}_0}{\partial t} & = & - \nabla
-                                                    p^{\pm}_0, \nonumber \\
-  p^{\pm}_0 & =& 0,  \mbox{ for } t \ll 0, \nonumber\\ 
-  \bv^{\pm}_0 & = & 0 \mbox{ for } t \ll 0.
-\end{eqnarray}
-I will show how to view $(p^{\pm}_0,\bv^{\pm}_0)$ as the $z>z_s$ part
-of a solution of the system \ref{eqn:awepm} in two different ways,
-corresponding to two different extensions to the whole space. An
-important relation between the components of the operator
-${\cal S}^{\pm}_{z_s,z_r}$ follows (equation \ref{eqn:lamnull} below).
-
-Given a function $\phi$ on $z=z_s$, define $(p^{\pm}_1,\bv^{\pm}_1)$
-as the solution in the two half-spaces $z <z_s, z>z_s$ of
-\begin{eqnarray}
-\label{eqn:awe1}
-  \frac{1}{\kappa}\frac{\partial p_1}{\partial t} & = & - \nabla \cdot \bv_1, \nonumber \\
-  \rho\frac{\partial \bv_1}{\partial t} & = & - \nabla p_1,\nonumber \\
-  p^{\pm}_1 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
-  \bv^{\pm}_1 & = & 0 \mbox{ for } \pm t \ll 0,\nonumber\\
-  \lim_{z \rightarrow z_s} P_sp^{\pm}_1& =& \phi.
-\end{eqnarray}
-By construction, $p^{\pm}_1$ is continuous across $z=z_s$. The
-discontinuity $[v^{\pm}_{1,z}]|_{z=z_s}$ is a linear function of
-$\phi$. Define the {\em pressure-to-source map} $\Lambda^{\pm}_{z_s}$ by
-\begin{equation}
-  \label{eqn:deflam}
-  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]|_{z=z_s}
-\end{equation}
-Then as a distribution on all of $\bR^4$, $(p^{\pm}_1,\bv^{\pm}_1)$ solves the
-inhomogeneous system
-\begin{eqnarray}
-\label{eqn:sawe1}
-  \frac{1}{\kappa}\frac{\partial p^{\pm}_1}{\partial t} & = &
-                                                        (\Lambda^{\pm}_{z_s}\phi)\delta(z-z_s) - \nabla \cdot \bv^{\pm}_1, \nonumber \\
-  \rho\frac{\partial \bv^{\pm}_1}{\partial t} & = & - \nabla p^{\pm}_1,\nonumber \\
-  p^{\pm}_1 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
-  \bv^{\pm}_1 & = & 0 \mbox{ for } \pm t \ll 0.
-\end{eqnarray}
-
-This is precisely the causal option of system \ref{eqn:awepm} for
-$f_s=0$ and $h_s=\Lambda^{\pm}_{z_s}\phi$. From \ref{eqn:awe1} and the definition
-\ref{eqn:fwd},
-\begin{equation}
-  \label{eqn:lamfwd}
-  \phi = S^{\pm}_{z_s,z_s}\Lambda^{\pm}_{z_s}\phi,
-\end{equation}
-that is,
-\begin{equation}
-  \label{eqn:lamfwd1}
-  S^{\pm}_{z_s,z_s} = (\Lambda^{\pm}_{z_s})^{-1}.
-\end{equation}
-
-Similarly, suppose $\psi$ is a function on $z=z_s$, and that
-$(p^{\pm}_2,\bv^{\pm}_2)$ solves
-\begin{eqnarray}
-\label{eqn:awe2}
-  \frac{1}{\kappa}\frac{\partial p^{\pm}_2}{\partial t} & = & - \nabla \cdot \bv^{\pm}_2, \nonumber \\
-  \rho\frac{\partial \bv^{\pm}_2}{\partial t} & = & - \nabla p^{\pm}_2,\nonumber \\
-  p^{\pm}_2 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
-  \bv^{\pm}_2 & = & 0 \mbox{ for } \pm t \ll 0,\nonumber\\
-  \lim_{z \rightarrow z_s} P_sv^{\pm}_{2,z} &=& \psi.
-\end{eqnarray}
-in the two half-spaces $z<z_s, z > z_s$. In this case, $v^{\pm}_{2,z}$
-is continuous at $z=z_s$ by construction. Viewed as a
-distribution on all of $\bR^4$, $(p^{\pm}_2,\bv^{\pm}_2)$ solve the
-system \ref{eqn:awepm} with $h_s=0$, and the discontinuity in pressure
-across $z=z_s$ as the inhomogeneous term in Newton's law:
-\begin{eqnarray}
-\label{eqn:sawe2}
-  \frac{1}{\kappa}\frac{\partial p^{\pm}_2}{\partial t} & = &
-                                                        - \nabla \cdot \bv^{\pm}_2, \nonumber \\
-  \rho\frac{\partial \bv^{\pm}_2}{\partial t} & = & 
-                                                    [p^{\pm}_2]|_{z=z_s}{\bf e_z}\delta(z-z_s) - \nabla p^{\pm}_2,\nonumber \\
-  p^{\pm}_2 & =& 0,  \mbox{ for } \pm t \ll 0,\nonumber\\ 
-  \bv^{\pm}_2 & = & 0 \mbox{ for } \pm t \ll 0.
-\end{eqnarray}
-This relation defines a map from the velocity boundary data $\psi$ to
-the source in the velocity equation, having units of force/volume,
-similar to $\Lambda^{\pm}_{z_s}$. As it's not needed in the sequel, I
-won't name this map.
-
-A closer relation between traces and sources follows from the
-geometric optics analysis of the half-space solution, presented
-below. I will show that, for propagating wave data,
-\begin{equation}
-  \label{eqn:odd1}
-  \lim_{z\rightarrow z_s^+} v_{1,z} \approx - \lim_{z\rightarrow z_s^-}
-  v_{1,z}
-\end{equation}
-Similarly,
-\begin{equation}
-  \label{eqn:odd2}
-  \lim_{z\rightarrow z_s^+} p_{2} \approx - \lim_{z\rightarrow z_s^-}
-  p_{2}
-\end{equation}
-for the velocity field solving \ref{eqn:awe1}, or equivalently
-\ref{eqn:awe1}. Here ``$\approx$'' means in the sense of high
-frequency asymptotics, that is, that the difference between the two
-sides is relatively smooth, hence small if the data is highly
-oscillatory. Similarly, for the pressure field solving \ref{eqn:awe2}
-or \ref{eqn:sawe2}, the jump at $z=z_s$ is twice the limiting value
-(trace) from above, up to a smooth error. Therefore
-\begin{eqnarray}
-  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]|_{z=z_s} &\approx& 2
-                              \lim_{z\rightarrow z_s}v^{\pm}_{1,z},\\  \label{eqn:tracejump1}
-  [p^{\pm}_2]|_{z=z_s} &\approx& 2 \lim_{z\rightarrow z_s^+}p^{\pm}_{2},\\  \label{eqn:tracejump2}
-\end{eqnarray}
-
-%%%%%%%%%%%%%%%%%%%
-These apparently harmless relations have a profound consequence,
-because of a final step: identify the boundary data $\phi$ and $\psi$,
-so far arbitrary, as the traces of $p^{\pm}_0$ and $v^{\pm}_{0,z}$ on $z=z_s$,
-that is, set
-\begin{eqnarray}
-  \phi & = & P_s p^{\pm}_0, \nonumber \\
-  \psi & = & P_s v^{\pm}_{0,z}.
-             \label{eqn:bv0}
-\end{eqnarray}
-Since the traces on $z=z_s$ of the pressure fields $p^{\pm}_0$ and $p^{\pm}_1$ are
-the same, and both are pressure components of solutions of the same homogeneous
-acoustic system in $z>z_s$, the standard energy identity implies that
-$(p^{\pm}_0,\bv^{\pm}_0) = (p^{\pm}_1,\bv^{\pm}_1)$ in
-$z > z_s$. Similarly, $P_sv^{\pm}_{0,z}$ and $P_sv^{\pm}_{2,z}$ are
-the same, whence $(p^{\pm}_0,\bv^{\pm}_0) = (p^{\pm}_2,\bv^{\pm}_2)$ in
-$z>z_s$.
-
-Therefore the assumption \ref{eqn:bv0} implies that
-\begin{equation}
-  \label{eqn:jump0}
-  \Lambda^{\pm}_{z_s}\phi = [v^{\pm}_{1,z}]_{z=z_s} \approx 2P_s v^{\pm}_{0,z}  = 2\psi,
-\end{equation}
-and
-\begin{equation}
-  \label{eqn:jump1}
-[p_2^{\pm}]_{z=z_s} \approx  2P_s p^{\pm}_{0}= 2 \phi.           
-\end{equation}
-In the notation of the last section, set $2 \phi = 2P_sp^{\pm}_0= f_s,
-2\psi = 2P_s v^{\pm}_{0,z}= h_s$. Then relation \ref{eqn:jump0}
-implies that
-\begin{equation}
-  \label{eqn:lamfh}
-  \Lambda^{\pm}_{z_s}f_s \approx h_s.
-\end{equation}
-
-From the definitions in the last section and the system \ref{eqn:sawe1},
-\begin{equation}
-  \label{eqn:pident0}
-P_r p^{\pm}_0 = \Pi_0{\cal S}^{\pm}(h_s,0)^T = \Pi_0{\cal
-  S}^{\pm}\Pi_0^Th_s,
-\end{equation}
-and
-\begin{equation}
-  \label{eqn:pident1}
-P_r p^{\pm}_0 \approx \Pi_0{\cal S}^{\pm}_{z_s,z_r} (0,f_s)^T = \Pi_0{\cal
-  S}^{\pm}_{z_s,z_r} \Pi_1^Tf_s,
-\end{equation}
-Similarly, from the relations above and \ref{eqn:sawe2},
-\begin{equation}
-  \label{eqn:vident0}
-  P_r  v^{\pm}_{0,z}  \approx \Pi_1{\cal S}^{\pm}_{z_s,z_r}(h_s,0)^T  =
-  \Pi_1{\cal S}^{\pm}_{z_s,z_r} \Pi_0^Th_s 
-\end{equation}
-and
-\begin{equation}
-  \label{eqn:vident1}
-  P_r  v^{\pm}_{0,z}  = \Pi_1{\cal S}^{\pm}_{z_s,z_r}(0,f_s)^T  =
-  \Pi_1{\cal S}^{\pm}_{z_s,z_r} \Pi_1^Tf_s 
-\end{equation}
-Together with \ref{eqn:lamfh}, these equations imply that
-\begin{equation}
-  \label{eqn:lamnull}
-{\cal  S}_{z_s,z_r}^{\pm}\Pi_0^T\Lambda^{\pm}_{z_s} \approx {\cal S}^{\pm}_{z_s,z_r}\Pi_1^T.
-\end{equation}
-Consequently, ${\cal S}_{z_s,z_r}$ has an ``approximate null space'',
-in the sense that its composition with the block operator
-$(\Lambda^{\pm}_{z_s},-I)^T$ is asymptotically negligible.
-
-\section{Parametrix via Time Reversal}
-
-
-\section{Approximate Unitarity}
-Recall that the fields $(p^{\pm},\bv^{\pm})$ in $z>z_s$ can be viewed
-as either the solution of the system \ref{eqn:awepm} with pressure source $h_s=0$ and
-a suitable choice of velocity source $f_s$, or of the same system with
-suitable choice of $h_s$ and $f_s=0$, and that these choices are
-related by equation \ref{eqn:lamfh}: $\Lambda^{\pm}f_s = h_s$. The
-pressure traces at $z=z_r>z_s$ are the same: from the definitions
-\ref{eqn:sdef}, \ref{eqn:vdef},
-\begin{eqnarray}
-  \label{eqn:sandv}
-  S^{\pm}_{z_s,z_r}h_s& =& P_rp^{\pm},\nonumber \\
-  V^{\pm}_{z_s,z_r}f_s &=& P_rv_z^{\pm}.
-\end{eqnarray}
-Applying the same reasoning to traces on $z=z_r$: create pressure and
-velocity sources $h_r$ and $f_r$ at $z=z_r$ by odd extension of the
-velocity, respectively pressure, fields, and using the jumps as source
-coefficients. Then as before
-$\Lambda^{\pm}_{z_r}f_r=h_r=-P_rv^{\pm}_z$ (the sign change is due to
-$Lambda$ producing the jump, whereas $P_rv^{\pm}_z$ is the limit from
-the left of the field $v^{\pm}_{1,z}$ of system \ref{eqn:awe1}), hence
-$\Lambda^{\pm}_{z_r}P_rp^{\pm} = P_rv_z^{\pm}$. Combining this
-observation with equations
-\ref{eqn:lamfh}, \ref{eqn:sandv}, obtain (with roles of $z_s,z_r$ interchanged)
-\[
-V^{\pm}_{z_r,z_w}(-2P_rp^{\pm}) =
-  \Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}(-2P_rv_z^{\pm})  =
-  \Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}(-2\Lambda^{\pm}_{z_r}P_rp^{\pm})
-\]
-whence
-\begin{equation}
-  \label{eqn:preunit}
- V^{\pm}_{z_r,z_w}
- =\Lambda^{\pm}_{z_s}S^{\pm}_{z_r,z_s}\Lambda^{\pm}_{z_r}.
-\end{equation}
-
-In view of the relations \ref{eqn:trtrcomp}, equation
-\ref{eqn:preunit} implies that
-\[
-  V^-_{z_r,z_s}=-(V^+_{z_s,z_r})^T = -\Lambda^{-}_{z_s}(S^+_{z_s,z_r})^T\Lambda^{-}_{z_r}.
-\]
-\[
-  =-(\Lambda^{+}_{z_s})^T(S^+_{z_s,z_r})^T(\Lambda^{+}_{z_r})^T.
-\]
-Therefore the first equation in display \ref{eqn:approxinv} can be re-written
-\[
-  -4V^-_{z_r,z_s}S^+_{z_s,z_r} =
-\]
-\begin{equation}
-  \label{eqn:baseunit}
- 4 (\Lambda^{+}_{z_s})^T(S^+_{z_s,z_r})^T(\Lambda^{+}_{z_r})^T
-  S^+_{z_s,z_r} \approx I
-\end{equation}
-
-\section{Derivations}
-\subsection{Extension to whole space}
-If $\phi$ is smooth and vanishes for large negative $t$, then
-$(p_1,\bv_1)$ can be constructed by pasting together the smooth
-solutions of the inhomogeneous Dirichlet problems in the half-spaces
-$\pm z > z_s$. Construct these by extending $\phi$ smoothly to
-$\pm z>z_s$, and solve systems similar to \ref{eqn:awe1} for the
-difference with $(p_1,\bv_1)$ by quoting the main results from
-\cite{BlazekStolkSymes:13}. Since the right hand side in this
-difference system is smooth, and the system is causal, the solution is
-smooth and vanishes on $z=z_s$. Adding back the extension of $\phi$
-produces smooth solutions in $\pm z > z_s$; define $(p_1,\bv)_1$ to be
-these smooth functions in $z \ne z_s$. Since the boundary values for
-pressure are the same, $p_1$ extends continuously to $z=z_s$. 
-The pressure boundary value $\phi$ uniquely determines the solutions
-in the two half-spaces, by standard energy estimates,
-
-\subsection{Adjoint Computation}
-The adjoint of ${\cal S}^+_{z_s,z_r}$ can be computed by a variant of
-the adjoint state method, in this case a by-product of the
-conservation of energy. Suppose that $p^-,\bv^-$ solve \ref{eqn:awem}
-with $(h_s,f_s\bf{e}_z)\delta(z-z_s)$ replaced by
-$ (h_r,f_r\bf{e}_z) \delta(z-z_r)$. Then
-\[
-0 = 
-\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  
-\rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow \infty}
--
-\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow -\infty}
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p^+}{\partial t} p^- +  p^+ \frac{1}{\kappa}\frac{\partial p^-}{\partial t} \right.
-\]
-\[
-+
-\left. \rho \frac{\partial \bv^+}{\partial t} \cdot \bv^- + \rho \bv^+ \cdot \frac{\partial \bv^-}{\partial t} \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
- h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
- h_r \delta(z-z_r)\right) \right.
-\]
-\[
-+
-\left.  (- \nabla p^++f_s\bf{e}_z) \cdot \bv^- + \bv^+ \cdot (-\nabla
-  p^- + f_r \bf{e_z}) \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
- h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
- h_r \delta(z-z_r)\right) \right.
-\]
-\[
-+
-\left.  p^+ (\nabla \cdot \bv^-) + (\nabla \cdot \bv^+) p^- 
-  +f_s \delta(z-z_s) v_z^- + v_z^+f_r \delta(z-z_r) \right)
-\]
-after integration by parts in the last two terms. Most of what is left cancels, leaving 
-\[
-0 = \int_{-\infty}^{\infty}\,dt\,dx\,dy\, (h_sP_sp^-+f_zP_sv_z^-) +
-( h_rP_rp^++f_rP_rv_z^+) = \langle (h_s,f_s), {\cal S}^-(h_r,f_r) \rangle+ \langle (h_r,f_r), {\cal S}^+_{z_s,z_r}(h_s,f_s) \rangle
-\]
-whence
-\begin{equation}
-\label{eqn:sadj}
- ({\cal S}^+_{z_s,z_r})^T = -{\cal S}^{-}_{z_r,z_s}.
-\end{equation}
-
-The systems \ref{eqn:awep} and \ref{eqn:awem} differ only in the direction of time evolution (causal vs. anti-causal). Define $R$ to be the {\em time-reversal operator} on functions of space-time,
-$Rf(\bx,t) = f(\bx,-t)$, and ${\cal R}$ to be the {\em acoustic field time-reversal operator} 
-\begin{equation}
-  \label{eqn:trdef}
-  {\cal R} \left(
-    \begin{array}{c}
-      p\\
-      \bv
-    \end{array}
-  \right) =
-  \left(
-    \begin{array}{c}
-      Rp\\
-      -R\bv
-    \end{array}
-  \right)
-\end{equation}
-Then ${\cal R}(p^-,\bv^-)$ solves \ref{eqn:awep} with
-$(h_s\delta(z-z_s),f_s\bf{e_z}\delta(z-z_s))$ replaced by
-$(-Rh_r\delta(z-z_r), Rf_r\bf{e_z}\delta(z-z_r))$. That is,
-\begin{equation}
-  \label{eqn:trsadj}
-  {\cal R}{\cal S}^- = -{\cal S}^+_{z_r,z_s}{\cal R}
-\end{equation}
-Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj} and \ref{eqn:trsadj} imply that
-
-\section{Surface source-to-pressure operator}
-
-A particular case of the relation \ref{eqn:trtr} is important in its own right, when $z_r=z_s$. Define surface source-to-pressure operator $\Lambda_{z_s}$ by
-\begin{equation}
-  \label{eqn:ntoddef}
-  \Lambda^{\pm}_{z_s} = S^{\pm}_{z_s,z_s}.
-\end{equation}
-Then \ref{eqn:trtr} reads
-\begin{equation}
-  \label{eqn:ntodtr}
-  (\Lambda^+_{z_s})^T = R\Lambda_{z_s}^+R = -\Lambda^-_{z_s}
-\end{equation}
-This operator is closely related to the operator mapping $\lim_{z\rightarrow z_s^{\pm}} \bv_z^+$ to $\lim_{z\rightarrow z_s^{\pm}}  p^+$, often called the {\em Neumann-to-Dirichlet} operator. The connection is explained below.
-
-The quadratic form defined by $\Lambda^{\pm}_{z_s}$ has fundamental physical
-significance. Define the total acoustic energy $E^{\pm}(t)$ of the field $(p^{\pm},\bv^{\pm})$, at time $t$ by
-\begin{equation}
-  \label{eqn:defae}
-  E^{\pm}(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^{\pm})^2}{\kappa} + \rho |\bv^{\pm}|^2\right)
-\end{equation}
-Then for $t_{\min}<t_{\max}$,
-\[
-  E^{\pm}(t_{\rm max})-E^{\pm}(t_{\rm min}) = \int_{t_{\rm min}}^{t_{\rm max}} \frac{dE^{\pm}}{dt}
-\]
-\[
-  = \int_{t_{\rm min}}^{t_{\rm max}} \int\,d\bx\, \left(p^{\pm} \frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} + \bv^{\pm} \cdot \rho \frac{\partial \bv^{\pm}}{\partial t}\right)
-\]
-\[
-  =\int_{t_{\rm min}}^{t_{\rm max}} \int\,d\bx\,\left(p^{\pm}(-\nabla \cdot \bv^{+} + h_s\delta(z-z_s)) + \bv^{\pm} \cdot \rho \frac{\partial \bv^{\pm}}{\partial t}\right)
-\]
-\[
-=  \int_{t_{\rm min}}^{t_{\rm max}}\int\,d\bx\, \left(\left(\nabla p^{\pm}+\rho \frac{\partial \bv^{\pm}}{\partial t}\right) + p^{\pm}h_s\delta(z-z_s)\right)
-\]
-\begin{equation}
-  \label{eqn:eident}
-  =  \int_{t_{\rm min}}^{t_{\rm max}}\int\,dxdy h_s p^{\pm}|_{z=z_s} = \int_{t_{\min}}^{t_{\max}}\langle h_s(t), (\Lambda^{\pm}_{z_s} h_s)(t) \rangle_{L^2(\bR^2)}.
-\end{equation}
-That is, $\langle h_s(t), (\Lambda^{\pm}_{z_s} h_s)(t)
-\rangle_{L^2(\bR^2)}$ is the rate of energy transfer from source to
-the fluid at time $t$.
-
-Assume that $h_s$ has compact support in time. Then $E^{\pm}
-\rightarrow 0$ as $t \rightarrow \mp \infty$, and is eventually
-constant as $t \rightarrow \pm \infty$. Then the energy identity
-\ref{eqn:eident} implies that
-\begin{equation}
-  \label{eqn:etot}
-  \pm \lim_{t \rightarrow \pm \infty} E^{\pm}(t) = \int \,dt\, \langle
-  h_s(t), (\Lambda^{\pm}_{z_s} h_s)(t)\rangle_{L^2(\bR^2)} = \langle
-  h_s,\Lambda^{\pm}_{z_s} h_s\rangle
-\end{equation}
-By virtue of identity \ref{eqn:ntodtr},
-\[
-  \lim_{t \rightarrow -\infty}E^{-}(t) =-\langle
-  h_s,\Lambda^{-}_{z_s} h_s\rangle
-\]
-\[
-  =  \langle  h_s,(\Lambda^{^+})^T_{z_s} h_s\rangle
-\]
-\[
-  =  \langle  h_s,\Lambda^{^+}_{z_s} h_s\rangle
-\]
-so
-\begin{equation}
-  \label{eqn:surfenergy}
-  = \lim_{t \rightarrow \infty}E^{+}(t)
-\end{equation}
-That is, the energy total energy transferred from the source to the
-causal acoustic field as it evolves forward in time is the same as the
-total energy transferred to the anti-causal acoustic field as it
-evolves backwards in time.
-
-Also onclude from identity \ref{eqn:etot} that the symmetric part of $\Lambda^+_{z_s}$ is positive semidefinite:
-\begin{equation}
-  \label{eqn:lamsd}
-  \frac{1}{2}((\Lambda_{z_s}^+)^T + \Lambda^+_{z_s}) \ge 0.
-\end{equation}
-
-%Observe that the causal acoustic system \ref{eqn:awep} implies directly that
-%\begin{equation}
-%  \label{eqn:sourcevjump}
-%  h_s= [v_z]|_{z=z_s}.
-%\end{equation}
-
-%######################################
-\section{Propagating Waves}
-Define $H$ to be the subspace $\{\bu \in (L^2(\bR^3))^4: \bu=0,z\ge
-z_s\}$, by analogy with \cite{Lax:PDENotes}, p. 122.
-%Note: must add microlocal $H^1$ constraint per
-%\cite[]{BaoSy:91b} so that trace operator is well-defined - postpone
-%this.
-
-Given $u=(\bar{p}_0,\bar{\bv}_0) \in H$, extend in $t$ by solving the
-acoustic initial value problem
-\begin{eqnarray}
-\label{eqn:awe0}
-  \frac{1}{\kappa}\frac{\partial p_0}{\partial t} & = & - \nabla \cdot \bv_0, \nonumber \\
-  \rho\frac{\partial \bv_0}{\partial t} & = & - \nabla p_0,\nonumber \\
-  p_0 & =& \bar{p}_0, t=0,\nonumber\\ 
-  \bv_0 & = & \bar{\bv}_0, t=0,\nonumber\\
-\end{eqnarray}
-Standard results on hyperbolic systems assure existence of a unique
-square-integrable (weak) solution, which is smooth if $(p_0,\bv_0)$ is
-smooth at $t=0$ \cite[]{CourHil:62,LaxPDENotes}.
-
-Note that $(p_0,\bv_0)=0$ near $t=0$ in the half-space $z>z_s$.
-
-For any suitable space-time function $u$, define
-\begin{equation}
-  \label{eqn:postrace}
-  P^+_{z_s}u(x,y,t) =
-  \left\{
-    \begin{array}{c}
-      u(x,y,z_s,t), t>0,\\
-      0, t\le 0.
-    \end{array}
-  \right\}
-\end{equation}
-(Here, ``suitable'' means: the trace on $z=z_s$ makes sense. More on
-this later.)
-
-
-Since $p_0$ also solves the acoustic system \ref{eqn:awe1} in $z>z_s$
-and has the same data at $t=0, z>z_s$ and trace on $z=z_s$, standard
-uniqueness theorem shows that $(p_1,\bv_1) = (p_0, \bv_0)$ in $z>z_s$.
-
-
-
-\section{Progressing Waves and Symbols}
-
-The symbol $\sigma(L[c])$ of a matrix operator $L[c]$ is a complex scalar-valued matrix of the same size. In terms of its product with an arbitrary vector $\bu \in \bR^{d+1}$, it is
-\[
-  \sigma(L[c]) \bu = e^{-i(\omega t + \bk \cdot \bx)} (L[c]e^{i(\omega t + \bk \cdot \bx)}\bu).
-\]
-For $L[c]$ given by the definition \ref{eqn:awemat}, obtain
-\begin{equation}
-  \sigma(L[c])(t,\bx,\omega,\bk) = i\left(
-    \begin{array}{cc}
-      \frac{\omega}{\kappa(\bx)} & \bk^T \\
-      \bk & \rho(\bx) \omega)
-    \end{array}
-  \right)
-\end{equation}
-
-The characteristic equation of $L[c]$ is $\det \sigma(L[c]) = 0$. The significance of the characteristic equation is its role in constraining the phase $\psi(\bx)$ in the progressing wave ansatz,
-\begin{equation}
-  \label{eqn:go}
-  \bu(\bx,t) = e^{i\omega (t-\psi(\bx))} \ba (\bx).
-\end{equation}
-Applying $L[c]$ to this ansatz, obtain
-\[
-  L[c]\bu(\bx,t)=i \omega
-  \left(
-    \begin{array}{c}
-      \frac{1}{\kappa}a_p -  \nabla \psi \cdot \ba_v \\
-      -a_p \nabla \psi + \rho \ba_v
-    \end{array}
-  \right) + ...
-\]
-\[
-  = i \omega \sigma(L[c])(t,\bx,1,- \nabla \psi(\bx))ba + ...
-\]
-where ``$...$'' denotes terms of lower order in $\omega$. Thus $\bu$ as defined in equation \ref{eqn:go} is a high-frequency asymptotic solution, $L[c]\bu \approx 0$, if
-\begin{itemize}
-\item
-  \begin{equation}
-    \label{eqn:eik}
-    \det(\sigma(L[c])(t,\bx,1,-\nabla \psi(\bx))) = 0,
-  \end{equation}
-  (eikonal equation), and
-\item
-  $\ba$ is a null vector of $\sigma(L[c])(t,\bx,1,-\nabla \psi)$.
-\end{itemize}
-Explicitly, the eikonal equation reads
-\[
-  0 = \rho^2\left(\frac{\rho}{\kappa}-|\nabla \psi|^2\right),
-\]
-equivalent to the familar form
-\begin{equation}
-  \label{eqn:usualeik}
-  c|\nabla \psi| = 1,
-\end{equation}
-in which $c = \rho/\kappa$ is the wave velocity. Solution via the method of characteristics gives
-\[
-  \psi(\bx(t)) = \psi(\bx(0)) + t
-\]
-for a ray $t \mapsto \bx(t)$ satisfying
-\[
-  \frac{d\bx}{dt}(t) = -c(\bx)^2\nabla \psi(\bx(t))
-\]
-Finally, $\ba$ is a null vector of $\sigma(L[c])(\cdot,\cdot,1,-\nabla \psi)$ iff
-\begin{equation}
-  \label{eqn:godton}
-  \ba_v = \frac{a_p}{\rho}\nabla \psi
-\end{equation}
-The scalar $a_p$ evolves along the ray according to the transport equation, which I will not derive here; suffice it to say that $a_p(t) = a_p(0) \gamma(t)$, where $\gamma > 0$ is smooth and $\gamma(0)=1$.
-
-Suppose that $\bx_0 = (x,y,z_s)^T$ and $(\xi_x,\xi_y) \in \bR^2$ satisfies $c(\bx_0)|(\xi_x,\xi_y)|<1$. Then there is a neighborhood $\Omega$ of $\bx_0$ and $\xi_z \in C^{\infty}(\Omega), \xi_z>0$, so that $\bxi^{\pm}(\bx)=(\xi_x,\xi_y,\pm \xi_z(\bx))$ satisfy $c(\bx)|\bxi^{\pm}(\bx)|=1$ for $\bx \in \Omega$.
-
-A standard argument shows that there exists $\epsilon > 0$ for which a solution $\psi^{\pm}$ of the eikonal equation exists in $\Omega \cap \{\bx: |z-z_s|<\epsilon\}$ with
-\begin{equation}
-  \label{eqn:eikic}
-  \psi^{\pm}(x,y,z_s,t) = t -x \xi_x - y \xi_y, \, \frac{\partial \psi}{\partial z}(x,y,z_s,t) = \pm \xi_z(x,y,z_s).
-\end{equation}
-Let $\chi \in C_0^{\infty}, \chi(\bx_0)=1$, and set $p_0^{\pm}(x,y,t) = \chi(x,y,z_s)e^{i\omega(t-x\xi_x - y\xi_y)}$. Define $p_{\rm go}^{\pm} \in C^{\infty}(\Omega \cap \{\bx: |z-z_s|<\epsilon\})$ by
-\[
-  p_{\rm go}^{\pm}(\bx,t) = a^{\pm}_p(\bx) e^{i\omega (t-\psi^{\pm}(\bx))}.
-\]
-where $a^{\pm}_p$ solves the transport equation with $a^{\pm}_p|_{z=z_s} = \chi$. Set
-\[
-  \bv^{\pm}_{\rm go}(\bx,t) = \frac{a^{\pm}_p(\bx)}{\rho(\bx)}\nabla \psi^{\pm}(\bx) e^{i\omega (t-\psi^{\pm}(\bx))}
-\]
-Then $\bu^{\pm}_{\rm go} = (p^{\pm}_{\rm go}, \bv^{\pm}_{\rm go})$ is an asymptotic solution of $L[c]\bu = 0$ with $p^{\pm}_{\rm go}|_{z=z_s} = \chi e^{i\omega(t-x\xi_x - y\xi_y)}$.
-
-From equations \ref{eqn:godton} and \ref{eqn:eikic},
-\[
-  v_{z,{\rm go}}^{\pm}(x,y,z_s,t) = \pm \frac{\chi(x,y,t)}{\rho(x,y,z_s)}\xi_z  e^{i\omega(t-x\xi_x - y\xi_y)}
-\]
-\begin{equation}
-  \label{eqn:asymdton}
-= \pm \frac{\chi(x,y,t)}{\rho(x,y,z_s)c(x,y,z_s)}\sqrt{1-c(x,y,z_s)^2(\xi_x^2+\xi_y^2)}
-\end{equation}
-
-Integration over frequency produces a progressing wave traveling (at least near $z=z_s$) downwards, that is, increasing $z$ with increasing $t$, for the choice of sight $\pm = +$, and upwards, that is, decreasing $z$ with increasing $t$, for the other sign. Therefore a causal progressing wave with $p$ given on $z=z_s$ is obtained by synthesizing distorted plane waves as just described with $\pm = +$ in $z>z_s$, $\pm=-$ in $z<z_s$. From equation \ref{eqn:asymdton}, the normal components of $\bv$ have limits equal in magnitude but of opposite sign as $z\rightarrow 0^{\pm}$, up to a lower frequency error. That is, the jump in $\bv$ satisfies
-\begin{equation}
-  \label{eqn:asymjump}
-  [v_z]\approx 2\lim_{z\rightarrow 0^+} v_{z}
-\end{equation}
-where $\approx$ denotes ``up to a low frequency error'', from here on.
-
-This construction also implies an approximation of the source-to-pressure operator as a pseudodifferential operator. Choose a partition of unity in $z=z_s$, for which the support of every member is a domain $\Omega$ for which the construction above can be carried out: this implies that there be a uniform $\delta > 0$ so that
-\begin{equation}
-  \label{eqn:nongraze}
-  1>\delta + c(x,y,z_s)\sqrt{\xi_x^2+\xi_y^2}
-\end{equation}
-for all $(x,y,t,1,\xi_x,\xi_y) \in WF(p_0)$. Denote by $\Gamma$ the subset of $(x,y,t,k_x,k_y,\omega) \in T^*(\bR^3)$ for which $x,y,\xi_{xy}=k_{xy}/\omega$ satisfy the inequality \ref{eqn:nongraze}.
-
-Then near $z=z_s$, $p$ is approximately a sum of geometric optics solutions of the type displayed above, integrated over $\omega,k_x,k_y$, with $k_{x,y} = \omega \xi_{x,y}$.  Thus
-\[
-  p(x,y,z_s,t) \approx \frac{1}{2}\int_{\Gamma(x,y)} \,d\omega\,dk_x\,dk_y \hat{[v_z]}\rho(x,y,z_s)c(x,y,z_s)
-\]
-\[
-   \times \left(1-c^2(x,y,z_s)\left(\left(\frac{k_x}{\omega}\right)^2 + \left(\frac{k_y}{\omega}\right) ^2\right)\right)^{-1/2}e^{\i(\omega t + k_x x+ k_y y)}
-\]
-Since $p$ is the pressure component of a solution of \ref{eqn:awep}, equation \ref{eqn:sourcevjump} implies that
-\begin{equation}
-  \label{eqn:psidodton}
-  \Lambda^+_{z_s} h_s(x,y,t) \approx \frac{1}{2}\int_{\Gamma(x,y)} \,d\omega\,dk_x\,dk_y
-  \lambda_s(x,y,t,k_x,k_y,\omega) \hat{h_s}(k_x,k_y,\omega) e^{\i(\omega t + k_x x+ k_y y)}
-\end{equation}
-with
-\begin{equation}
-  \label{eqn:symboldton}
-  \lambda^+_{z_s}(x,y,t,k_x,k_y,\omega) =\frac{1}{2}\rho(x,y,z_s)c(x,y,z_s)\left(1-c^2(x,y,z_s)\left(\left(\frac{k_x}{\omega}\right)^2 + \left(\frac{k_y}{\omega}\right) ^2\right)\right)^{-1/2}
-\end{equation}
-
-Restricted to $\Gamma$, $\lambda^+_{z_s} \in S^0_{0,1}(\bR^2)$ is real-valued, hence defines an essentially symmetric operator. That is,
-\begin{equation}
-  \label{eqn:approxsymm}
-  (\Lambda^+_{z_s})^T \approx \Lambda^{+}_{z_s}.
-\end{equation}
-
-Note that the defintion \ref{eqn:appinv} of $ (S^+_{z_s,z_r})^{\dagger} $ is that of
-the transpose of $S^+_{z_s,z_r}$ in the sense of weighted norms, as
-follows. Define trace spaces $W=L^2(\bR^2 \times [0,T])$, with inner product
-\[
-  \langle h_1,h_2\rangle_s = \langle
-  h_1,\frac{1}{2}(\Lambda^+_{z_s}+(\Lambda^+_{z_s})^T)h_2\rangle
-\]
-and $D=L^2(\bR^2 \times [0,T])$ with inner product
-\[
-  \langle d_1,d_2\rangle_r = \langle
-  d_1,\left(\frac{1}{2}(\Lambda^+_{z_s}+(\Lambda^+_{z_s})^T)\right)^{-1}d_2\rangle
-\]
-(These definitions must be supplemented with constraints on
-out-of-aperture smoothness). Then the adjoint of $S^+_{z_s,z_r}: W
-\rightarrow D$ is
-\[
- \left(\frac{1}{2}
-   (\Lambda^+_{z_s}+(\Lambda^+_{z_s})^T)\right)^{-1}(S^+_{z_s,z_r})^T
- \left(\frac{1}{2}(\Lambda^+_{z_r}+(\Lambda^+_{z_r})^T)\right)^{-1}
-\]
- By virtue of the approximation \ref{eqn:approxsymm}, this is
-\[
-   \approx
-   (\Lambda^{+}_{z_s})^{-1}(S^{+}_{z_r,z_s})^T((\Lambda^{+}_{z_r})^{-1})^T
-   = (S^+_{z_s,z_r})^{\dagger}.
-\]
-which from the last section is approximately inverse to
-$S^+_{z_s,z_r}$. That is, with the domain and range described above,
-$S^+_{z_s,z_r}$ is approximately unitary.
-
-\section{Efficient Preconditioned CG}
-
-\cite{HouSymes:EAGE16} demonstrated a very similar preconditioner for Least Squares Migration, also for its subsurface offset extension \cite[]{HouSymes:16}, motivated by \cite{tenKroode:12}. These constructions all involve the Dirichlet-to-Neumann operator. This concept also turns up in hidden form in the work of Yu Zhang and collaborators on true amplitude migration \cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09,Zhang YuSun:08,ZhangSunGray:07,ZhangBleistein:05,Bleisteinetal:05}. 
 
 The discussion so far can be summarized as follows: an efficient pseudoinverse for $S[c]$ is the weighted adjoint operator
 \begin{equation}
