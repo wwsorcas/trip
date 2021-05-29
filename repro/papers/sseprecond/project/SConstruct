@@ -73,33 +73,33 @@ TP = 'gx:2000,2500,5500,6000'
 for i in [0]:
 
 # scale for DtoN map
-    PSCALE = 2.0*DX[i]*BULK
-    VSCALE = 2.0*DX[i]*BUOY
+    PSCALE = DX[i]*BULK
+    VSCALE = DX[i]*BUOY
     
 # compute header files for receiver (rechdr) and source (srchdr) lines, at gelev
 # = -1000 and -3000 resp.
 
     Flow('rechdr' + str(i) + '.su', None,
          sunull + ' nt=' + str(NT[i]) +
-	 ' ntr=' + str(NTR[i]) +
-	 ' dt=' + str(DT[i]) + ' | ' + 
+         ' ntr=' + str(NTR[i]) +
+         ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-	 ' b=' + str(DX[i]) +
-	 ' j=' + str(NTR[i]) + ' | ' +
+         ' b=' + str(DX[i]) +
+         ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-	 ' a=' + str(RZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(RZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
-	 
+         
     Flow('srchdr' + str(i) + '.su', None,
          sunull + ' nt=' + str(NTS[i]) +
-	 ' ntr=' + str(NTR[i]) +
-	 ' dt=' + str(DT[i]) + ' | ' + 
+         ' ntr=' + str(NTR[i]) +
+         ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-	 ' b=' + str(DX[i]) +
-	 ' j=' + str(NTR[i]) + ' | ' +
+         ' b=' + str(DX[i]) +
+         ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-	 ' a=' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
@@ -109,25 +109,25 @@ for i in [0]:
 
     Flow('nrphdr' + str(i) + '.su', None,
          sunull + ' nt=' + str(NTS[i]) +
-	 ' ntr=' + str(NTR[i]) +
-	 ' dt=' + str(DT[i]) + ' | ' + 
+         ' ntr=' + str(NTR[i]) +
+         ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-	 ' b=' + str(DX[i]) +
-	 ' j=' + str(NTR[i]) + ' | ' +
+         ' b=' + str(DX[i]) +
+         ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-	 ' a=' + str(SZ+DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(SZ+DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
     Flow('nrmhdr' + str(i) + '.su', None,
          sunull + ' nt=' + str(NTS[i]) +
-	 ' ntr=' + str(NTR[i]) +
-	 ' dt=' + str(DT[i]) + ' | ' + 
+         ' ntr=' + str(NTR[i]) +
+         ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-	 ' b=' + str(DX[i]) +
-	 ' j=' + str(NTR[i]) + ' | ' +
+         ' b=' + str(DX[i]) +
+         ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-	 ' a=' + str(SZ-DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(SZ-DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
@@ -142,7 +142,7 @@ for i in [0]:
          str(F3[i]) + ',' + str(F4[i]) + ' | ' +
          sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
          sushw + ' key=delrt,gelev,selev,sx' +
-	 ' a=0,' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' + 
+         ' a=0,' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' + 
          sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',         
          stdin=0)
@@ -158,7 +158,7 @@ for i in [0]:
          str(F3[i]) + ',' + str(F4[i]) + ' | ' +
          sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
          sushw + ' key=delrt,gelev,selev,sx' +
-	 ' a=-500,' + str(DSZ) + ',' + str(DSZ) + ',' + str(SX) + ' | ' + 
+         ' a=-500,' + str(DSZ) + ',' + str(DSZ) + ',' + str(SX) + ' | ' + 
          sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',         
          stdin=0)
@@ -215,7 +215,7 @@ for i in [0]:
     Flow('bmhth'+str(i), None, 
          'makevel n1=' + str(NZTH[i]) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) +
-	 ' o1=' + str(ZMTH[i]) +
+         ' o1=' + str(ZMTH[i]) +
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -226,7 +226,7 @@ for i in [0]:
     Flow('byhth'+str(i), None, 
          'makevel n1=' + str(NZTH[i]) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) +
-	 ' o1=' + str(ZMTH[i]) +
+         ' o1=' + str(ZMTH[i]) +
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Buoyancy unit=cc/g' +
@@ -240,9 +240,9 @@ for i in [0]:
 
     Flow('adjtestp' + str(i) + '.txt',
         ['bmh' + str(i),
-	 'byh' + str(i),
+         'byh' + str(i),
          'rechdr' + str(i) + '.su',
-	 'ptsrc' + str(i) + '.su'],
+         'ptsrc' + str(i) + '.su'],
          asg + 
          '''
          bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
@@ -256,9 +256,9 @@ for i in [0]:
 
     Flow('adjtestvz' + str(i) + '.txt',
         ['bmh' + str(i),
-	 'byh' + str(i),
+         'byh' + str(i),
          'rechdr' + str(i) + '.su',
-	 'ptsrc' + str(i) + '.su'],
+         'ptsrc' + str(i) + '.su'],
          asg + 
          '''
          bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
@@ -272,9 +272,9 @@ for i in [0]:
 
     Flow('nradjtestp' + str(i) + '.txt',
         ['bmhth' + str(i),
-	 'byhth' + str(i),
+         'byhth' + str(i),
          'nrphdr' + str(i) + '.su',
-	 'ptsrc' + str(i) + '.su'],
+         'ptsrc' + str(i) + '.su'],
          asg + 
          '''
          bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
@@ -288,9 +288,9 @@ for i in [0]:
 
     Flow('nradjtestvz' + str(i) + '.txt',
         ['bmhth' + str(i),
-	 'byhth' + str(i),
+         'byhth' + str(i),
          'nrphdr' + str(i) + '.su',
-	 'ptsrc' + str(i) + '.su'],
+         'ptsrc' + str(i) + '.su'],
          asg + 
          '''
          bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
@@ -311,41 +311,13 @@ for i in [0]:
 
         exp = med + str(i)
 
-### simulate point source data p, vz traces
-
-        Flow(['recp' + exp + '.su', 'recvz' + exp + '.su'],
-             ['bm' + exp[0] + str(i),
-	      'byh' + str(i),
-	      'ptsrc' + str(i) + '.su',
-              'rechdr' + str(i) + '.su'],
-             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
-             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
-             asg + 
-             '''
-             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
-             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
-             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
-             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1) 
-
-### scale vz for p source trace
-
-        Flow('recvzg'+exp+'.su','recvz'+exp+'.su',
-             sugain + ' scale=-' + str(PSCALE))
-
-### scale p for vz source trace
-
-        Flow('recpg'+exp+'.su','recp'+exp+'.su',
-             sugain + ' scale=' + str(VSCALE))
-
 ### simulate deep point source data p, vz traces, record at
 ### source datum
 
         Flow(['dsrcp' + exp + '.su', 'dsrcvz' + exp + '.su'],
              ['bm' + exp[0] + str(i),
-	      'byh' + str(i),
-	      'dptsrc' + str(i) + '.su',
+              'byh' + str(i),
+              'dptsrc' + str(i) + '.su',
               'srchdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -362,8 +334,8 @@ for i in [0]:
 
         Flow(['drecp' + exp + '.su', 'drecvz' + exp + '.su'],
              ['bm' + exp[0] + str(i),
-	      'byh' + str(i),
-	      'dptsrc' + str(i) + '.su',
+              'byh' + str(i),
+              'dptsrc' + str(i) + '.su',
               'rechdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -376,24 +348,34 @@ for i in [0]:
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
 
-### scale vz for p source trace
+### scale vz for coefficient of p source
 
-        Flow('dsrcvzg'+exp+'.su','dsrcvz'+exp+'.su',
-             sugain + ' scale=-' + str(PSCALE))
+        Flow('dhs'+exp+'.su','dsrcvz'+exp+'.su',
+             sugain + ' scale=' + str(-2.0))
 
-### scale p for vz source trace
+### scale coefficient to source
 
-        Flow('dsrcpg'+exp+'.su','dsrcp'+exp+'.su',
-             sugain + ' scale=-' + str(VSCALE))
+        Flow('dhsdeltaz'+exp+'.su','dhs'+exp+'.su',
+	     sugain + ' scale=' + str(PSCALE))
+	     
+### scale p for vz source coeffcient
 
+        Flow('dfs'+exp+'.su','dsrcp'+exp+'.su',
+             sugain + ' scale=' + str(-2.0))
+
+### *VSCALE))
+
+        Flow('dfsdeltaz'+exp+'.su','dfs'+exp+'.su',
+	     sugain + ' scale=' + str(VSCALE))
+	     
 ### simulate filtered source data p, vz traces using
 ### p src 
 ### fwdp = S srcvzg,
 
         Flow(['dfwdp' + exp + '.su', 'dfwdvz' + exp + '.su'],
              ['bm' + exp[0] + str(i),
-	      'byh' + str(i),
-	      'dsrcvzg' + exp + '.su',
+              'byh' + str(i),
+              'dhsdeltaz' + exp + '.su',
               'rechdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -406,14 +388,14 @@ for i in [0]:
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1) 
 
-### simulate filtered source data p, vz traces using
-### vz src 
-### fwdp = V srcpg, should = S srcvzg
+### simulate filtered source data p, vz traces using p traces as
+### vz src. From snull identity, 
+### daltp = Pi_0 {\cal S} Pi_1^T srcpg, should = S Lambda srcpg = S srcvzg
 
         Flow(['daltp' + exp + '.su', 'daltvz' + exp + '.su'],
              ['bm' + exp[0] + str(i),
-	      'byh' + str(i),
-	      'dsrcpg' + exp + '.su',
+              'byh' + str(i),
+              'dfsdeltaz' + exp + '.su',
               'rechdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -428,40 +410,41 @@ for i in [0]:
 
 ################## APPROXIMATE INVERSION ###################
 
-        Flow('drecpg'+exp+'.su','drecp'+exp+'.su',
-             sugain + ' scale=-' + str(VSCALE))
-
-### backwards propagate scaled p receiver traces *** as vz source data ***,
-### read off vz and p at source traces - at this point, by definition,
-### srcp = Lambda^T srcvz
+### apply transpose of computed V operator. V operator = computed V operator x
+### V scale. So transpose of Voperator = V scale x transpose of computed V
+### operator. Need 4 x transpose of V operator
+### 
 
         Flow(['dinvp' + exp + '.su',
               'dinvvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
-	      'byh' + str(i),
-	      'srchdr' + str(i) + '.su',
-              'drecpg' + exp + '.su'],
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'daltp' + exp + '.su'],
              '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
              asg + 
              '''
              bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
              source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
-	     data_v0=${SOURCES[3]}
+             data_v0=${SOURCES[3]}
              deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
 
-        Flow('dinvvzg'+exp+'.su','dinvvz'+exp+'.su',
-             sugain + ' scale=-' + str(PSCALE))
+        Flow('dinvhs'+exp+'.su','dinvvz'+exp+'.su',
+             sugain + ' scale=' + str(4*VSCALE))
 
 #### resimulate USING SAME MODEL AS INVERSION
 
+        Flow('dinvhsdeltaz'+exp+'.su','dinvhs'+exp+'.su',
+	     sugain + ' scale=' + str(PSCALE))
+
         Flow(['drerecp' + exp + '.su', 'drerecvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
-	      'byh' + str(i),
-	      'dinvvzg' + exp + '.su',
+              'byh' + str(i),
+              'dinvhsdeltaz' + exp + '.su',
               'rechdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -472,50 +455,77 @@ for i in [0]:
              deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1) 
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow(['dreinvp' + exp + '.su',
+              'dreinvvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'drerecp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
+             data_v0=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('dreinvhs'+exp+'.su','dreinvvz'+exp+'.su',
+             sugain + ' scale=' + str(4.0*VSCALE))
+
+        Flow('dreinvhsdeltaz'+exp+'.su','dreinvhs'+exp+'.su',
+	     sugain + ' scale=' + str(PSCALE))
+
+        Flow(['drererecp' + exp + '.su', 'drererecvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'dreinvhsdeltaz' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow(['drereinvp' + exp + '.su',
+              'drereinvvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'drererecp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
+             data_v0=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('drereinvhs'+exp+'.su','drereinvvz'+exp+'.su',
+             sugain + ' scale=' + str(4.0*VSCALE))
 
 ########################### old stuff
 
-### backwards propagate scaled vz receiver traces *** as p source data ***,
-### read off vz and p at source traces - at this point, by definition,
-### srcp = Lambda^T srcvz
+### simulate point source data p, vz traces
 
-        Flow(['srcp' + exp + '.su',
-              'srcvz' + exp + '.su'],
-             ['bm' + exp[1] + str(i),
-	      'byh' + str(i),
-	      'ptsrc' + str(i) + '.su',
-              'recpg' + exp + '.su'],
-             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
-             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
-             asg + 
-             '''
-             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
-	     data_v0=${SOURCES[3]}
-             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
-             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
-             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1)
-### scale backprop = filtered vz for p source trace
-### srcvzg = Lam^+srcp
-
-        Flow('srcvzg'+exp+'.su','srcvz'+exp+'.su',
-             sugain + ' scale=-' + str(PSCALE))
-#	     + ' | ' +   sutxtaper + ' tr1=15 taper=3')
-
-        Flow('srcpg'+exp+'.su','srcp'+exp+'.su',
-             sugain + ' scale=' + str(VSCALE))
-#	     + ' | ' +	     sutxtaper + ' tr1=15 taper=3')
-
-### simulate filtered source data p, vz traces using
-### p src 
-### fwdp = S srcvzg,
-
-        Flow(['fwdp' + exp + '.su', 'fwdvz' + exp + '.su'],
-             ['bm' + exp[1] + str(i),
-	      'byh' + str(i),
-	      'srcvzg' + exp + '.su',
+        Flow(['recp' + exp + '.su', 'recvz' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+              'byh' + str(i),
+              'ptsrc' + str(i) + '.su',
               'rechdr' + str(i) + '.su'],
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
@@ -528,57 +538,160 @@ for i in [0]:
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1) 
 
+### apply transpose of \cal S. What is computed: R \cal S R. However this is not \cal S^T: that has wrong sign in off-diagonals. SO srcp gets a minus sign.
 
-### scale p for backpropagation vz source trace - NOT with minus sign
-
-        Flow('fwdpg'+exp+'.su', 'fwdp'+exp+'.su',
-             sugain + ' scale=' + str(VSCALE))
-
-### backwards propagate scaled p receiver traces *** as vz source data ***,
-### read off vz and p at source traces - at this point, by definition,
-### srcp = Lambda^T srcvz
-
-        Flow(['invp' + exp + '.su',
-              'invvz' + exp + '.su'],
+        Flow(['srcptmp' + exp + '.su',
+              'srcvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
-	      'byh' + str(i),
-	      'ptsrc' + str(i) + '.su',
-              'fwdpg' + exp + '.su'],
+              'byh' + str(i),
+              'ptsrc' + str(i) + '.su',
+              'recp' + exp + '.su'],
              '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
              asg + 
              '''
              bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
              source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
-	     data_v0=${SOURCES[3]}
+             data_v0=${SOURCES[3]}
              deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
 
+### apply minus sign
+
+        Flow('srcp' + exp + '.su', 'srcptmp' + exp + '.su',
+	     sugain + ' scale=' + str(-1.0))
+	     
+### scale for V operator - output = source coefficient gather
+
+        Flow('invhs'+exp+'.su','srcvz'+exp+'.su',
+             sugain + ' scale=' + str(4*VSCALE))
+
+### scale for extended source on z=z_s
+
+        Flow('invhsdeltaz'+exp+'.su','invhs'+exp+'.su',
+             sugain + ' scale=' + str(PSCALE))
+	     
+### resimulate USING SAME MODEL AS INVERSION
+
+        Flow(['fwdp' + exp + '.su', 'fwdvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'invhsdeltaz' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### difference plot
+
+        Flow('diffrecp'+exp+'.su',
+	     ['recp'+exp+'.su','fwdp'+exp+'.su'],
+	     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+	     stdin=0)
+
+###################### Lambda computation
+
+### forward propagate scaled srcp gather as vz source, read out p
+### gather at receivers - this is Pi_0 {\cal S} Pi_1^T srcp
+#### Note from the defining relation eqn:tracejump10 that the input
+#### to lambda is P_s p, that is, the pressure gather, NOT scaled by
+#### minus-2. The output is -2 times the P_s v_z.  
+
+        Flow('invfs'+exp+'.su','srcp'+exp+'.su',
+             sugain + ' scale=' + str(4*VSCALE))
+
+        Flow('invfsdeltaz' + exp + '.su',
+	     'invfs' + exp + '.su',
+	     sugain + ' scale=' + str(VSCALE));
+	     
+        Flow(['altp' + exp + '.su', 'altvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'invfsdeltaz' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### V transpose
+
+        Flow(['resrcp' + exp + '.su',
+              'resrcvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'ptsrc' + str(i) + '.su',
+              'altp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
+             data_v0=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### lambda invfs
+
+        Flow('laminvfs'+exp+'.su','resrcvz'+exp+'.su',
+             sugain + ' scale=' + str(-8.0*VSCALE))
+
+
+### equivalent hs - should approximate invhs
+
+        Flow('predinvhs'+exp+'.su','laminvfs'+exp+'.su',
+	     sugain + ' scale=' + str(-0.5))
+	     
 ########################## graphics ###########################
-        tmin = [1.2, 1.2, 0.0, 0.0,
-	        1.2, 1.2, 0.0, 0.0,
-		0.0, 0.0,
-		1.2, 1.2, 1.2]
-        tmax = [3.0, 3.0, 2.0, 2.0,
-	        3.0, 3.0, 2.0, 2.0,
-		2.0, 2.0,
-		3.0, 3.0, 3.0]		
-        id   = ['recp', 'fwdp', 'srcp', 'invp',
-	        'recvz', 'fwdvz', 'srcvz', 'invvz',
-		'dsrcp', 'dsrcvz',
-		'drecp', 'dfwdp', 'daltp']
-		   
+
+        tmin = [1.2, 1.2, 1.2,
+	        0.0, 0.0, 0.0,
+		1.2,
+                0.0, 0.0, 0.0,
+                1.2, 1.2, 1.2]
+        tmax = [3.0, 3.0, 3.0,
+	        2.0, 2.0, 2.0,
+		3.0,
+                2.0, 2.0, 2.0,
+                3.0, 3.0, 3.0]
+        clip = [0.08, 0.08, 0.08,
+                5.0, 5.0, 5.0,
+		0.08,
+                5.0, 5.0, 5.0,
+                0.08, 0.08, 0.08]
+        id   = ['recp', 'fwdp', 'altp',
+                'srcpg', 'srcvzg', 'invvzg',
+		'diffrecp',
+                'dsrcpg', 'dsrcvzg', 'dinvvzg',
+                'drecp', 'dfwdp', 'daltp']
+                
         for j in range(len(id)):
-	
+        
             gid = id[j] + exp
-	    
+            
 ### convert gathers to rsf
 
             Flow(gid, gid + '.su',
                  'suread read=data endian=0')
-	     
+             
 ### pull out traces
 
             for k in [21, 51, 81]:
@@ -586,7 +699,7 @@ for i in [0]:
                 tid = gid + 'tr' + str(k)
         
                 Flow(tid + '.su',
-	             gid + '.su',
+                     gid + '.su',
                      suwind + ' key=tracl min=' + str(k) + ' max=' + str(k))
 
 ### convert traces to rsf
@@ -597,38 +710,45 @@ for i in [0]:
 ### plot gathers
 
             Result(gid,
-		  'window min1=' + str(tmin[j]) + ' max1=' +
-		  str(tmax[j]) + ' | ' +
-		  '''
-		  grey color=j clip=0.08 scalebar=y
-		  minval=-0.08 maxval=0.08 wanttitle=n
-		  ''')
+                  'window min1=' + str(tmin[j]) +
+                  ' max1=' + str(tmax[j]) + ' | ' 
+                  'grey color=j clip=' + str(clip[j]) +
+                  'scalebar=y minval=-' + str(clip[j]) +
+                  ' maxval=' + str(clip[j]) + ' wanttitle=n')
 
 ### plot traces
 
         for k in [21, 51, 81]:
 
             Result('drecp' + exp + 'tr' + str(k),
-	          ['drecp' + exp + 'tr' + str(k),
-		   'dfwdp' + exp + 'tr' + str(k)],
-		  '''
+                  ['drecp' + exp + 'tr' + str(k),
+                   'dfwdp' + exp + 'tr' + str(k)],
+                  '''
                   cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 
             Result('daltp' + exp + 'tr' + str(k),
-	          ['drecp' + exp + 'tr' + str(k),
-		   'daltp' + exp + 'tr' + str(k)],
-		  '''
+                  ['drecp' + exp + 'tr' + str(k),
+                   'daltp' + exp + 'tr' + str(k)],
+                  '''
                   cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
-		  
-            Result('srcp' + exp + 'tr' + str(k),
-	          ['srcp' + exp + 'tr' + str(k),
-		   'invp' + exp + 'tr' + str(k)],
-		  '''
+                  
+            Result('srcvzg' + exp + 'tr' + str(k),
+                  ['srcvzg' + exp + 'tr' + str(k),
+                   'invvzg' + exp + 'tr' + str(k)],
+                  '''
                   cat axis=2 ${SOURCES[1:2]} |
+                  graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
+                  ''')
+
+            Result('recp' + exp + 'tr' + str(k),
+                  ['recp' + exp + 'tr' + str(k),
+                   'fwdp' + exp + 'tr' + str(k)],
+                  '''
+                  cat axis=2 ${SOURCES[1:2]} | window min1=1.2 max1=3.0 |
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 
