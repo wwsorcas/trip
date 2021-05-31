@@ -356,8 +356,8 @@ for i in [0]:
 ### scale coefficient to source
 
         Flow('dhsdeltaz'+exp+'.su','dhs'+exp+'.su',
-	     sugain + ' scale=' + str(PSCALE))
-	     
+             sugain + ' scale=' + str(PSCALE))
+             
 ### scale p for vz source coeffcient
 
         Flow('dfs'+exp+'.su','dsrcp'+exp+'.su',
@@ -366,8 +366,8 @@ for i in [0]:
 ### *VSCALE))
 
         Flow('dfsdeltaz'+exp+'.su','dfs'+exp+'.su',
-	     sugain + ' scale=' + str(VSCALE))
-	     
+             sugain + ' scale=' + str(VSCALE))
+             
 ### simulate filtered source data p, vz traces using
 ### p src 
 ### fwdp = S srcvzg,
@@ -390,7 +390,7 @@ for i in [0]:
 
 ### simulate filtered source data p, vz traces using p traces as
 ### vz src. From snull identity, 
-### daltp = Pi_0 {\cal S} Pi_1^T srcpg, should = S Lambda srcpg = S srcvzg
+### daltp = Pi_0 {\cal S} Pi_1^T dfs, should = S Lambda dfs = S srcvzg
 
         Flow(['daltp' + exp + '.su', 'daltvz' + exp + '.su'],
              ['bm' + exp[0] + str(i),
@@ -420,7 +420,7 @@ for i in [0]:
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'srchdr' + str(i) + '.su',
-              'daltp' + exp + '.su'],
+              'dfwdp' + exp + '.su'],
              '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
              '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
              asg + 
@@ -439,7 +439,7 @@ for i in [0]:
 #### resimulate USING SAME MODEL AS INVERSION
 
         Flow('dinvhsdeltaz'+exp+'.su','dinvhs'+exp+'.su',
-	     sugain + ' scale=' + str(PSCALE))
+             sugain + ' scale=' + str(PSCALE))
 
         Flow(['drerecp' + exp + '.su', 'drerecvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
@@ -457,6 +457,11 @@ for i in [0]:
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
 
+        Flow('ddiffrecp'+exp+'.su',
+            ['drecp'+exp+'.su','drerecp'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+            stdin=0)
+ 
         Flow(['dreinvp' + exp + '.su',
               'dreinvvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
@@ -479,7 +484,7 @@ for i in [0]:
              sugain + ' scale=' + str(4.0*VSCALE))
 
         Flow('dreinvhsdeltaz'+exp+'.su','dreinvhs'+exp+'.su',
-	     sugain + ' scale=' + str(PSCALE))
+             sugain + ' scale=' + str(PSCALE))
 
         Flow(['drererecp' + exp + '.su', 'drererecvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
@@ -518,7 +523,47 @@ for i in [0]:
         Flow('drereinvhs'+exp+'.su','drereinvvz'+exp+'.su',
              sugain + ' scale=' + str(4.0*VSCALE))
 
-########################### old stuff
+################## Lambda
+
+### forward propagate scaled srcp gather as vz source, read out p
+### gather at receivers - note that this needs  Pi_0 {\cal S} Pi_1^T srcp,
+### not daltp as defined above, which is -2 times this, so compensate with -0.5
+
+### V transpose
+
+        Flow(['dresrcp' + exp + '.su',
+              'dresrcvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'daltp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
+             data_v0=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+### lambda invfs
+
+        Flow('dlamfs'+exp+'.su','dresrcvz'+exp+'.su',
+             sugain + ' scale=' + str(-8.0*VSCALE))
+             
+### equivalent hs - should approximate dhs and dinvhs
+
+        Flow('preddinvhs'+exp+'.su','dlamfs'+exp+'.su',
+             sugain + ' scale=' + str(-0.5))
+
+        Flow('ddiffinvhs'+exp+'.su',
+            ['dinvhs'+exp+'.su','preddinvhs'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+
+########################### point source at z_s=3 km
 
 ### simulate point source data p, vz traces
 
@@ -558,11 +603,11 @@ for i in [0]:
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
 
-### apply minus sign
+### apply minus sign to p trace
 
         Flow('srcp' + exp + '.su', 'srcptmp' + exp + '.su',
-	     sugain + ' scale=' + str(-1.0))
-	     
+             sugain + ' scale=' + str(-1.0))
+             
 ### scale for V operator - output = source coefficient gather
 
         Flow('invhs'+exp+'.su','srcvz'+exp+'.su',
@@ -572,7 +617,7 @@ for i in [0]:
 
         Flow('invhsdeltaz'+exp+'.su','invhs'+exp+'.su',
              sugain + ' scale=' + str(PSCALE))
-	     
+             
 ### resimulate USING SAME MODEL AS INVERSION
 
         Flow(['fwdp' + exp + '.su', 'fwdvz' + exp + '.su'],
@@ -594,9 +639,9 @@ for i in [0]:
 ### difference plot
 
         Flow('diffrecp'+exp+'.su',
-	     ['recp'+exp+'.su','fwdp'+exp+'.su'],
-	     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
-	     stdin=0)
+             ['recp'+exp+'.su','fwdp'+exp+'.su'],
+             suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+             stdin=0)
 
 ###################### Lambda computation
 
@@ -604,15 +649,15 @@ for i in [0]:
 ### gather at receivers - this is Pi_0 {\cal S} Pi_1^T srcp
 #### Note from the defining relation eqn:tracejump10 that the input
 #### to lambda is P_s p, that is, the pressure gather, NOT scaled by
-#### minus-2. The output is -2 times the P_s v_z.  
+#### minus-2.
 
         Flow('invfs'+exp+'.su','srcp'+exp+'.su',
              sugain + ' scale=' + str(4*VSCALE))
 
         Flow('invfsdeltaz' + exp + '.su',
-	     'invfs' + exp + '.su',
-	     sugain + ' scale=' + str(VSCALE));
-	     
+             'invfs' + exp + '.su',
+             sugain + ' scale=' + str(VSCALE));
+             
         Flow(['altp' + exp + '.su', 'altvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
@@ -658,29 +703,45 @@ for i in [0]:
 ### equivalent hs - should approximate invhs
 
         Flow('predinvhs'+exp+'.su','laminvfs'+exp+'.su',
-	     sugain + ' scale=' + str(-0.5))
-	     
+             sugain + ' scale=' + str(-0.5))
+             
 ########################## graphics ###########################
 
         tmin = [1.2, 1.2, 1.2,
-	        0.0, 0.0, 0.0,
-		1.2,
                 0.0, 0.0, 0.0,
+                1.2,
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0,
+                1.2, 1.2,
+		0.0, 0.0,
                 1.2, 1.2, 1.2]
         tmax = [3.0, 3.0, 3.0,
-	        2.0, 2.0, 2.0,
-		3.0,
                 2.0, 2.0, 2.0,
+                3.0,
+                2.0, 2.0,
+                2.0, 2.0,
+                2.0,
+                3.0, 3.0,
+		2.0, 2.0,
                 3.0, 3.0, 3.0]
         clip = [0.08, 0.08, 0.08,
                 5.0, 5.0, 5.0,
-		0.08,
-                5.0, 5.0, 5.0,
+                0.08,
+                0.2, 0.2,
+                0.2, 0.2,
+                0.2,
+                0.08, 0.08,
+		0.2, 0.2,
                 0.08, 0.08, 0.08]
         id   = ['recp', 'fwdp', 'altp',
-                'srcpg', 'srcvzg', 'invvzg',
-		'diffrecp',
-                'dsrcpg', 'dsrcvzg', 'dinvvzg',
+                'invfs', 'invhs', 'predinvhs',
+                'diffrecp',
+                'dsrcp', 'dsrcvz',
+                'dhs', 'dfs',
+                'dinvhs',
+                'drerecp', 'ddiffrecp',
+		'preddinvhs', 'ddiffinvhs',
                 'drecp', 'dfwdp', 'daltp']
                 
         for j in range(len(id)):
@@ -736,9 +797,9 @@ for i in [0]:
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
                   
-            Result('srcvzg' + exp + 'tr' + str(k),
-                  ['srcvzg' + exp + 'tr' + str(k),
-                   'invvzg' + exp + 'tr' + str(k)],
+            Result('invhs' + exp + 'tr' + str(k),
+                  ['invhs' + exp + 'tr' + str(k),
+                   'predinvhs' + exp + 'tr' + str(k)],
                   '''
                   cat axis=2 ${SOURCES[1:2]} |
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
