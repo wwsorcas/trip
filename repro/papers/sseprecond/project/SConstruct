@@ -69,13 +69,16 @@ TMAX = 3.0
 # taper parameters - taper in gx only
 TP = 'gx:2000,2500,5500,6000'
 
+
+################ discretization loop
+
 #for i in range(0,3):
 for i in [0]:
 
 # scale for DtoN map
     PSCALE = DX[i]*BULK
     VSCALE = DX[i]*BUOY
-    
+
 # compute header files for receiver (rechdr) and source (srchdr) lines, at gelev
 # = -1000 and -3000 resp.
 
@@ -258,7 +261,59 @@ for i in [0]:
          ' label=Buoyancy unit=cc/g' +
          ' v000=' + str(BUOY) + ' | ' +
          ' sfput dim=2 gdim=2 id1=0 id2=1',
-         stdin=0) 
+         stdin=0)
+
+# simulation commands
+
+# usage:
+#    Flow([outp, outvz],
+#         [inbmod, inbuoy, inhdr, inp, invz],
+#         cmd, stdin=0, stdout=-1)
+
+    fwdcmd ='''
+    /bin/cp ${SOURCES[2]} ${TARGETS[0]} &&
+    /bin/cp ${SOURCES[2]} ${TARGETS[1]} &&
+    ''' + \
+    sugain + '< ${SOURCES[3]} > ${SOURCES[3]}' + \
+    '.deltaz.su scale=' + str(PSCALE) + ' && ' + \
+    sugain + '< ${SOURCES[4]} > ${SOURCES[4]}' + \
+    '.deltaz.su scale=' + str(VSCALE) + ' && ' + \
+    asg + ' ' + \
+    'source_p=${SOURCES[3]}' + '.deltaz.su ' + \
+    'source_v0=${SOURCES[4]}' + '.deltaz.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+    deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 adjtest=0
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP
+
+    adjcmd = '/bin/cp ${SOURCES[2]} ${TARGETS[0]}' + '.undeltaz.su && ' + \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[1]}' + '.undeltaz.su && ' + \
+    asg + ' ' + \
+    'source_p=${TARGETS[0]}' + '.undeltaz.su ' + \
+    'source_v0=${TARGETS[1]}' + '.undeltaz.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    data_p=${SOURCES[3]} data_v0=${SOURCES[4]}
+    deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 adjtest=0
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP + ' && ' + \
+    sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
+    ' scale=' + str(PSCALE) + ' && ' + \
+    sugain + '< ${TARGETS[1]}' + '.undeltaz.su > ${TARGETS[1]}' + \
+    ' scale=' + str(VSCALE)	 
+
+### test case - compare output to dfwdphh0.su, dfwdvzhh0.su
+
+    Flow(['dfwdphh' + str(i) + 'test.su',
+          'dfwdvzhh' + str(i) + 'test.su'],
+         ['bmh' + str(i) + '.rsf', 'byh' + str(i) + '.rsf',
+          'rechdr' + str(i) + '.su',
+	  'dhshh' + str(i) + '.su', 'srchdr' + str(i) + '.su'],
+          fwdcmd, stdin=0, stdout=-1)
 
 ############### ADJOINT TESTS ##################
 
@@ -546,7 +601,6 @@ for i in [0]:
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
              ''' + TP, stdin=0, stdout=-1)
-
         Flow('drereinvhs'+exp+'.su','drereinvvz'+exp+'.su',
              sugain + ' scale=' + str(4.0*VSCALE))
 
@@ -556,38 +610,98 @@ for i in [0]:
 ### gather at receivers - note that this needs  Pi_0 {\cal S} Pi_1^T srcp,
 ### = daltp as defined above
 
-### V transpose
+### Pi_0 {cal S}^+ Pi_1^T dsrcp
+
+        Flow(['dsrcprecp' + exp + '.su',
+	      'dsrcprecvz' + exp + '.su'],
+	      ['bm' + exp[1] + str(i),
+	       'byh' + str(i),
+	       'rechdr' + str(i) + '.su',
+	       'srchdr' + str(i) + '.su',
+	       'dsrcp' + exp + '.su'],
+	       fwdcmd, stdin=0, stdout=-1)
+	       
+### V transpose applied to output
 
         Flow(['dresrcp' + exp + '.su',
               'dresrcvz' + exp + '.su'],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'srchdr' + str(i) + '.su',
-              'daltp' + exp + '.su'],
-             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
-             '/bin/cp ${SOURCES[2]} ${TARGETS[1]}; ' +
-             asg + 
-             '''
-             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_v0=${TARGETS[1]} source_p=${TARGETS[0]}
-             data_v0=${SOURCES[3]}
-             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
-             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
-             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1)
+              'rechdr' + str(i) + '.su',
+	      'dsrcprecp' + exp + '.su'],
+             adjcmd, stdin=0, stdout=-1)
 
-### lambda dfs
+### Lambda output hs - should approximate dhs and dinvhs
 
-        Flow('dlamfs'+exp+'.su','dresrcvz'+exp+'.su',
-             sugain + ' scale=' + str(-8.0*VSCALE))
-             
-### equivalent hs - should approximate dhs and dinvhs
-
-        Flow('preddinvhs'+exp+'.su','dlamfs'+exp+'.su',
-             sugain + ' scale=' + str(-0.5))
+        Flow('preddinvhs'+exp+'.su','dresrcvz'+exp+'.su',
+             sugain + ' scale=' + str(-8.0))
 
         Flow('ddiffinvhs'+exp+'.su',
             ['dinvhs'+exp+'.su','preddinvhs'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+
+### resimulate drecp and compare
+
+        Flow(['dpredhsrecp' + exp + '.su',
+	      'dpredhsrecvz' + exp + '.su'],
+	      ['bm' + exp[1] + str(i),
+	       'byh' + str(i),
+	       'rechdr' + str(i) + '.su',
+	       'preddinvhs' + exp + '.su',
+	       'srchdr' + str(i) + '.su'],
+	       fwdcmd, stdin=0, stdout=-1)
+
+        Flow('ddiffpredhsrecp'+exp+'.su',
+            ['drecp'+exp+'.su','dpredhsrecp'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+
+################## use near traces
+
+### Pi_0 {cal S}^+ Pi_1^T dsrcp
+
+        Flow(['dsrcpnsp' + exp + '.su',
+	      'dsrcpnsvz' + exp + '.su'],
+	      ['bm' + exp[1] + str(i),
+	       'byh' + str(i),
+	       'nsphdr' + str(i) + '.su',
+	       'srchdr' + str(i) + '.su',
+	       'dsrcp' + exp + '.su'],
+	       fwdcmd, stdin=0, stdout=-1)
+	       
+### V transpose applied to output
+
+        Flow(['dnssrcp' + exp + '.su',
+              'dnssrcvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'nsphdr' + str(i) + '.su',
+	      'dsrcpnsp' + exp + '.su'],
+             adjcmd, stdin=0, stdout=-1)
+
+### Lambda output hs - should approximate dhs and dinvhs
+
+        Flow('preddnshs'+exp+'.su','dnssrcvz'+exp+'.su',
+             sugain + ' scale=' + str(-8.0))
+
+        Flow('ddiffnshs'+exp+'.su',
+            ['dhs'+exp+'.su','preddnshs'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+
+### resimulate drecp and compare
+
+        Flow(['dprednshsrecp' + exp + '.su',
+	      'dprednshsrecvz' + exp + '.su'],
+	      ['bm' + exp[1] + str(i),
+	       'byh' + str(i),
+	       'rechdr' + str(i) + '.su',
+	       'preddnshs' + exp + '.su',
+	       'srchdr' + str(i) + '.su'],
+	       fwdcmd, stdin=0, stdout=-1)
+
+        Flow('ddiffprednshsrecp'+exp+'.su',
+            ['drecp'+exp+'.su','dprednshsrecp'+exp+'.su'],
             suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
 
 ### Lambda^T
@@ -709,17 +823,17 @@ for i in [0]:
 ### compute LSL, (SL = dfwdp, LSL = -2 dfwdvz) with V = altvz
 
         Flow('dsvcomp' + exp + '.su',
-	     ['daltvz' + exp + '.su',
-	      'dfwdvz' + exp + '.su'],
-	      suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
-	      stdin=0)
-	      
+             ['daltvz' + exp + '.su',
+              'dfwdvz' + exp + '.su'],
+              suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+              stdin=0)
+              
 ### apply S^T to Lambda_r P_r p = 2 P_r v_z
 # note change of sign because of orientation: (-jump) is +2 P_r v_z
 
         Flow('drerecvzdeltaz' + exp + '.su',
-	     'drerecvz' + exp + '.su',
-	     sugain + ' scale=' + str(2.0))
+             'drerecvz' + exp + '.su',
+             sugain + ' scale=' + str(2.0))
 
         Flow(['dreunp' + exp + '.su',
               'dreunvz' + exp + '.su'],
@@ -893,8 +1007,9 @@ for i in [0]:
                 0.0, 0.0,
                 0.0,
                 1.2, 1.2,
-		0.0, 0.0,
-		1.2, 1.2, 1.2,
+                0.0, 0.0, 1.2, 1.2,
+                0.0, 0.0, 1.2, 1.2,
+                1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
         tmax = [3.0, 3.0, 3.0,
                 2.0, 2.0, 2.0,
@@ -903,8 +1018,9 @@ for i in [0]:
                 2.0, 2.0,
                 2.0,
                 3.0, 3.0,
-		2.0, 2.0,
-		3.0, 3.0, 3.0,
+                2.0, 2.0, 3.0, 3.0,
+                2.0, 2.0, 3.0, 3.0,
+                3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
         clip = [0.08, 0.08, 0.08,
                 5.0, 5.0, 5.0,
@@ -913,7 +1029,8 @@ for i in [0]:
                 0.2, 0.2,
                 0.2,
                 0.08, 0.08,
-		0.2, 0.2,
+                0.2, 0.2, 0.08, 0.08,
+                0.2, 0.2, 0.08, 0.08,
                 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
         id   = ['recp', 'fwdp', 'altp',
@@ -923,9 +1040,10 @@ for i in [0]:
                 'dhs', 'dfs',
                 'dinvhs',
                 'drerecp', 'ddiffrecp',
-		'preddinvhs', 'ddiffinvhs',
+                'preddinvhs', 'ddiffinvhs', 'dpredhsrecp', 'ddiffpredhsrecp',
+                'preddnshs', 'ddiffnshs', 'dprednshsrecp', 'ddiffprednshsrecp',
                 'drecp', 'dfwdp', 'daltp',
-		'dfwdvz', 'daltvz', 'dsvcomp']
+                'dfwdvz', 'daltvz', 'dsvcomp']
                 
         for j in range(len(id)):
         
