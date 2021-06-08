@@ -1103,7 +1103,7 @@ scalar pseudodifferential hence commute, it is equivalent to use of
             &=&(I+\alpha^2A^TA)^{-1/2}W_m^{-1}(I+\alpha^2A^TA)^{-1/2}.
                 \label{eqn:defprecond}
 \end{eqnarray}
- With this choice, \ref{eqn:normapprox} implies that
+With this choice, \ref{eqn:normapprox} implies that
 $M^{-1}N \approx I$, also $M$ is symmetric. As already mentioned,
 powers of $I + \alpha^2A^TA$ are trivial to compute, given the choice
 of $A$ made here. We will examine fast algorithms for computing
@@ -1115,13 +1115,13 @@ Algorithm 1.
 
 \section{Computing and Symmetrizing $\Lambda$}
 
-Computation of $\Lambda^{\pm}_{z_s}$ will prove a critical step in an
-efficient iterative solution of the linear subproblem
-\ref{eqn:esis}. Direct computation of the pressure-to-source operator $\Lambda^{\pm}_{z_s}$, for instance by solving
+Computations of $\Lambda^{\pm}_{z_s}$ and its transpose are clearly critical steps in an
+implementation of the PCG algorithm outlined in the preceding section.
+Direct computation of the pressure-to-source operator $\Lambda^{\pm}_{z_s}$, for instance by solving
 \ref{eqn:awepm} and reading off $P_sv^{\pm}_{z}$, turns out to be
 numerically ill-behaved. The relation \ref{eqn:snull} provides and
 alternative approach, taking advantage of the accurate approximate
-inverse to $S^+_{z_s,z_r}$ is available. The first row of
+inverse to $S^+_{z_s,z_r}$ constructed above. The first row of
 \ref{eqn:snull} is given explicitly in \ref{eqn:snull1}, which I
 repeat for the reader's convenience:
 \begin{equation}
@@ -1157,22 +1157,87 @@ this difficulty by propagating the fields a positive distance in $z$:
 assuming as always that the causal fields are downgoing, this step
 eliminates any tangentially propagating fields from consideration.
 
-Figure \ref{fig:preddinvhshh0} shows the pressure source gather produced
-from the pressure data gather in Figure \ref{drecphh0} by application
-of the operator on the right-hand side of
-formula \ref{eqn:lamident}. The scale is the same as for Figures
-\ref{fig:dinvhshh0} and \ref{fig:dhshh0}. In fact the former
-appears nearly identical, and both appear to be dip-filtered versions
-of the latter. The difference plot (Figure \ref{fig:ddiffinvhshh0},
-using the same color scale, shows that the similarity is quantitative.
+Figure \ref{fig:preddinvhshh0} shows the pressure source gather
+produced from the pressure data gather in Figure \ref{dsrcphh0} by
+application of the operator on the right-hand side of formula
+\ref{eqn:lamident} to the source surface pressure gather depicted in
+\ref{fig:dsrcphh0}. The homogeneous model is used in all propagations
+implicit in the prescription \ref{eqn:lamident}. The scale is the same
+as for Figures \ref{fig:dinvhshh0} and \ref{fig:dhshh0}. In fact
+Figure \ref{fig:preddinvhshh0} appears to be nearly identical to
+Figure \ref{fig:dinvhshh0}, and both appear to be dip-filtered
+versions of Figure \ref{fig:dhshh0. The difference plot (Figure
+  \ref{fig:ddiffinvhshh0}, using the same color scale, shows that the
+  similarity is quantitative. The recovered source gather (Figure
+  \ref{fig:preddinvhshh0}) also generates the same acoustic fields as
+  the point source at $z=z_d$: the pressure gather at $z=z_r=1000$ m
+  depth is shown in Figure \ref{fig:dpredhsrecphh0}, and its
+  difference with the point source gather (Figure \ref{fig:drecphh0})
+  plotted on the same color scale in Figure
+  \ref{fig:ddiffpredhsrecphh0}.
 
-Figures \ref{fig:preddinvhsll0} and \ref{fig:ddiffinvhsll0} accomplish
+Figures \ref{fig:preddinvhsll0}, \ref{fig:ddiffinvhsll0},
+\ref{fig:dpredhsrecpll0}, and \ref{fig:ddiffpredhsrecpll0} accomplish
 the same comparison for the $\Lambda^+_{z_s}$ approximation in
-equation \ref{eqn:lamident}. A deeper study of the pressure-to-source
-operator shows that it is approximately dependent only on the model
+equation \ref{eqn:lamident}, with all propagation taking place in the
+lens model.
+
+A deeper study of the pressure-to-source
+operator (Appendix B) shows that it is approximately dependent only on the model
 coefficients near the source surface ($z=z_s$ in this case). Since the
 homogeneous and lens models are identical near this surface, it is
 unsurprising that these figures are very close to the previous two.
+However an even more useful observation is that the calculations in
+the approximation \ref{eqn:lamident} could just as well be carried out
+in a much smaller region around the source surface, and produce a
+result that is functionally identical in that it will serve as a
+source for the same acoustic fields globally, with small error. In
+effect, equation \ref{eqn:lamident} involving propagation from source
+($z=z_s$) to receiver ($z=z_r$) surfaces is altered by replacing $z_r$
+with a receiver datum $z_s+\Delta z$ considerably closers to $z_s$:
+\begin{equation}
+  \label{eqn:lamnear}
+  \Lambda^+_{z_s} \approx -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
+    S}^+_{z_s,z_z_s+\Delta z}\Pi_1^T.
+\end{equation}
+Using a receiver datum closer to the source surface has two favorable consequences:
+\begin{itemize}
+\item The computational domain can be smaller than is necessary to
+  simulate the target data, as it need only contain the source
+  surface and the receiver datum implicit in
+  equation \ref{eqn:lamident}. This shrinkage of the computational
+  domain can lead to substantial improvements in computational
+  efficiency.
+\item Since the receiver data may be chosen much closer to the
+  source surface that is the case for the target data, the effective
+  aperture active in the relation \ref{eqn:lamident} can be much
+  larger, producing an estimated source gather much less affected by
+  aperture limitation.
+\end{itemize}
+
+To illustrate these points, I have re-computed the source gather
+estimates shown in Figures \ref{fig:preddinvhshh0} and
+\ref{fig:preddinvhsll0}. In place of the receiver geometry in the
+target data (Figures \ref{fig:drecphh0} and \ref{fig:drecpll0}, I
+place the receiver array at $z_s+\Delta z=2900$ m depth, just 100 m above the
+source surface at $z_s=3000$ m. For the discretization used to create
+the examples shown so far, that is just a 5 gridpoint difference in
+depth, as opposed to 100 gridpoints between the source and receiver
+depths for examples such as shown in Figure \ref{fig:recphh0} or
+\ref{fig:drecphh0}. The resulting approximation to $\Lambda_{z_s}^+$
+via equation \ref{eqn:lamident} for this configuration is evaluated in
+the same way as before in Figures \ref{fig:preddnshshh0}, \ref{fig:ddiffnshshh0},
+\ref{fig:dprednshsrecphh0}, and \ref{fig:ddiffprednshsrecphh0}
+(homogeneous model) and Figures \ref{fig:preddnshsll0}, \ref{fig:ddiffnshsll0},
+\ref{fig:dprednshsrecpll0}, and \ref{fig:ddiffprednshsrecpll0} (lens
+model). The effect of aperture limitation is clearly diminished: the
+second figure in each series compares the full-aperture pressure source
+gathers (Figures \ref{fig:dhshh0.su} and \ref{fig:dhsll0.su} with the
+approximated image of the corresponding pressure gather (Figure
+\ref{fig:dsrcphh0}) under the approximation to $\Lambda_{z_s}^+$, and
+the last figures show that the approximated source gathers accurately
+predict the point-source pressure gather at the receiver datum
+$z_r=1000$ m.
 
 Computation of the transpose of $\Lambda^+$ (exact, not approximate in
 the high frequency sense) is critical to the successful
@@ -1180,9 +1245,10 @@ construction of the preconditioner. The relation \ref{eqn:lamident}
 does not provide a computation for this operator. However set
 \begin{equation}
   \label{eqn:lamtilde}
-  \tilde{\Lambda}^+_{z_s} = -8(V^{+}_{z_s,z_r})^T\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T.
+  \tilde{\Lambda}^+_{z_s} = -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
+    S}^+_{z_s,z_s+\Delta z}\Pi_1^T.
 \end{equation}
-Then \ref{eqn:lamident} can be rewritten
+Then \ref{eqn:lamnear} can be rewritten
 \[
   \Lambda^+_{z_s} \approx \tilde{\Lambda}^+_{z_s}.
 \]
@@ -1193,8 +1259,28 @@ to machine precision via the definition \ref{eqn:lamtilde} and the adjoint state
 method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
 \begin{equation}
   \label{eqn:lamtransp}
-   (\tilde{\Lambda}^+_{z_s})^T = -8 \Pi_1 ({\cal S}^+_{z_r,z_s})^T\Pi_0^T V^{+}_{z_s,z_r}
+   (\tilde{\Lambda}^+_{z_s})^T = -8 \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
+     z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}
  \end{equation}
+Thus the model space weight operator introduced in the last section is
+replaced by
+\[
+  \tilde{W}_m = \frac{1}{2}(\tilde{\Lambda}^+_{z_s} +
+  (\tilde{\Lambda}^+_{z_s})^T)
+\]
+\[
+  = -8 \left((V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
+    S}^+_{z_s,z_s+\Delta z}\Pi_1^T \right.+
+\]
+\[
+  \left. \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
+      z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}\right)
+\]
+\begin{equation}
+  \label{eqn:wcomp}
+  = -4(\Pi_1 ({\cal S}^+_{z_s,z_s+\Delta z})^T(\Pi_0^T\Pi_1 + \Pi_1^T\Pi_0) {\cal S}^+_{z_s,z_s+\Delta z}\Pi_1^T)
+\end{equation}
+
 
  \newpage
  
