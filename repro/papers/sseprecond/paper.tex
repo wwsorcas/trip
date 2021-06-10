@@ -1166,7 +1166,7 @@ implicit in the prescription \ref{eqn:lamident}. The scale is the same
 as for Figures \ref{fig:dinvhshh0} and \ref{fig:dhshh0}. In fact
 Figure \ref{fig:preddinvhshh0} appears to be nearly identical to
 Figure \ref{fig:dinvhshh0}, and both appear to be dip-filtered
-versions of Figure \ref{fig:dhshh0. The difference plot (Figure
+versions of Figure \ref{fig:dhshh0}. The difference plot (Figure
   \ref{fig:ddiffinvhshh0}, using the same color scale, shows that the
   similarity is quantitative. The recovered source gather (Figure
   \ref{fig:preddinvhshh0}) also generates the same acoustic fields as
@@ -1198,7 +1198,7 @@ with a receiver datum $z_s+\Delta z$ considerably closers to $z_s$:
 \begin{equation}
   \label{eqn:lamnear}
   \Lambda^+_{z_s} \approx -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
-    S}^+_{z_s,z_z_s+\Delta z}\Pi_1^T.
+    S}^+_{z_s,z_s+\Delta z}\Pi_1^T.
 \end{equation}
 Using a receiver datum closer to the source surface has two favorable consequences:
 \begin{itemize}
@@ -1280,6 +1280,14 @@ replaced by
   \label{eqn:wcomp}
   = -4(\Pi_1 ({\cal S}^+_{z_s,z_s+\Delta z})^T(\Pi_0^T\Pi_1 + \Pi_1^T\Pi_0) {\cal S}^+_{z_s,z_s+\Delta z}\Pi_1^T)
 \end{equation}
+with a similar definition for the replacement $\tilde{W}_d$ of $W_d$.
+
+This identity shows that only one forward and one adjoint simulation
+are necessary to compute the action of $\tilde{W}_{m,d}$. The operator
+in the center of the expression on the right-hand side, $\Pi_0^T\Pi_1
++ \Pi_1^T\Pi_0$, simply exchanges the components of the acoustic
+fields, passing the velocity field as a pressure source and the
+pressure field as a velocity source.
 
 
  \newpage
