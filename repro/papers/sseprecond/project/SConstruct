@@ -289,14 +289,20 @@ for i in [0]:
     taperpars=
     ''' + TP
 
-    adjcmd = '/bin/cp ${SOURCES[2]} ${TARGETS[0]}' + '.undeltaz.su && ' + \
+    adjcmd = \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[0]}' + '.undeltaz.su && ' + \
     '/bin/cp ${SOURCES[2]} ${TARGETS[1]}' + '.undeltaz.su && ' + \
+    sugain + '< ${SOURCES[3]} > ${SOURCES[3]}' + '.scaled.su' + \
+    ' scale=1.0 && ' + \
+    sugain + '< ${SOURCES[4]} > ${SOURCES[4]}' + '.scaled.su ' + \
+    ' scale=' +  str(-BUOY/BULK) + ' && ' + \
     asg + ' ' + \
     'source_p=${TARGETS[0]}' + '.undeltaz.su ' + \
     'source_v0=${TARGETS[1]}' + '.undeltaz.su ' + \
+    'data_p=${SOURCES[3]}' + '.scaled.su ' + \
+    'data_v0=${SOURCES[4]}' + '.scaled.su ' + \
     '''
     bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-    data_p=${SOURCES[3]} data_v0=${SOURCES[4]}
     deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
     taperpars=
@@ -304,7 +310,59 @@ for i in [0]:
     sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
     ' scale=' + str(PSCALE) + ' && ' + \
     sugain + '< ${TARGETS[1]}' + '.undeltaz.su > ${TARGETS[1]}' + \
-    ' scale=' + str(VSCALE)	 
+    ' scale=' + str(-PSCALE)
+
+### symmetric lambda command, from equation \ref{wcomp}
+### list of sources:
+### 0: bulkmod
+### 1: buoyancy
+### 2: null receiver gather to generate workspace
+### 3: pressure gather on source manifold, input as source_v0 
+
+### list of targets:
+### 0: output pressure source gather
+### 1: receiver p gather (intermediate)
+### 2: receiver v0 gather (intermediate)
+
+### note that fwd output p is used as vz source and fwd
+### fwd output vz is used as p source - this is the operator
+### Pi_0 Pi_1^T + Pi_1 Pi_0^T in equation wcomp.
+
+### scales are from analysis of relation between iwave operators
+### and theoretical counterparts
+
+    lamcmd = \
+    sugain + '< ${SOURCES[3]} > ${TARGETS[0]}.undeltaz.su ' + \
+    ' scale=0.0 && ' + \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[2]} && ' + \
+    sugain + '< ${SOURCES[3]} > ${SOURCES[3]}' + \
+    '.deltaz.su scale=' + str(VSCALE) + ' && ' + \
+    asg + ' ' + \
+    'source_v0=${SOURCES[3]}' + '.deltaz.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    data_p=${TARGETS[1]} data_v0=${TARGETS[2]}
+    deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP + ' && ' + \
+    sugain + '< ${TARGETS[1]} > ${TARGETS[1]}' + '.scaled.su' + \
+    ' scale=' + str(-BUOY/BULK) + ' && ' + \
+    sugain + '< ${TARGETS[2]} > ${TARGETS[2]}' + '.scaled.su ' + \
+    ' scale=' + str(1.0) + ' && ' + \
+    asg + ' ' + \
+    'source_v0=${TARGETS[0]}' + '.undeltaz.su ' + \
+    'data_p=${TARGETS[2]}' + '.scaled.su ' + \
+    'data_v0=${TARGETS[1]}' + '.scaled.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP + ' && ' + \
+    sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
+    ' scale=' + str(4*PSCALE)
 
 ### test case - compare output to dfwdphh0.su, dfwdvzhh0.su
 
@@ -360,6 +418,22 @@ for i in [0]:
          '''
          bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
          source_v0=${SOURCES[3]} data_p=${SOURCES[2]} 
+         deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+         adjtest=1 taperpars=
+         ''' + TP, stdin=0)
+
+# adjoint test - p sources to v0 receivers
+
+    Flow('adjtestpvz' + str(i) + '.txt',
+        ['bmh' + str(i),
+         'byh' + str(i),
+         'rechdr' + str(i) + '.su',
+         'srchdr' + str(i) + '.su'],
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[3]} data_v0=${SOURCES[2]} 
          deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
          dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
          adjtest=1 taperpars=
@@ -789,56 +863,43 @@ for i in [0]:
 	       
 ### Pi_1 ({cal S}^+)^T Pi_0^T applied to output
 
-        Flow('dsrcpnsvztr' + exp + '.su', 'dsrcpnsvzbis' + exp + '.su',
-	     sugain + ' scale=-' + str(BULK))
-
         Flow(['dnssrcptr' + exp + '.su',
               'dnssrcvztr' + exp + '.su'],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'srchdr' + str(i) + '.su',
-	      'dsrcpnsvztr' + exp + '.su',
+	      'dsrcpnsvzbis' + exp + '.su',
               'nsphdr' + str(i) + '.su'],
              adjcmd, stdin=0, stdout=-1)
 
-### Lambda^T output hs - should approximate dhs and dinvhs
+### Lambda^T output hs - should approximate dhs and dinvhs, and
+### be very close to Lambda output
 
         Flow('preddnshstr'+exp+'.su','dnssrcvztr'+exp+'.su',
              sugain + ' scale=' + str(-8.0))
 
-##########################
+        Flow('ddiffnslamtr' + exp + '.su',
+            ['preddnshs'+exp+'.su','preddnshstr'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+	
+### symmetrized Lambda output
 
-### daltvz = Pi_1 {\cal S} Pi_1^T dfs = V dfs - already computed
-### now compute P_0 {\cal S}^T P_1^T daltvz
-
-        Flow(['dtrsrcp' + exp + '.su',
-	      'dtrsrcvz' + exp + '.su'],
-             ['bm' + exp[1] + str(i),
+        Flow(['symmdnshs' + exp + '.su',
+	      'symmdnsintp' + exp + '.su',
+	      'symmdnsintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
               'byh' + str(i),
-              'srchdr' + str(i) + '.su',
-	      'rechdr' + str(i) + '.su',
-              'daltvz' + exp + '.su'],
-             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
-             asg + 
-             '''
-             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_p=${TARGETS[0]}
-	     data_p=${SOURCES[3]}
-             data_v0=${SOURCES[4]}
-             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
-             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
-             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1)
+              'nsphdr' + str(i) + '.su',
+	      'dsrcp' + exp + '.su'],
+             lamcmd, stdin=0, stdout=-1)
 
-### lambda^T dfs
-### NOTE: sign change becase iwave computes R {\cal S} R  instead of
-### {\cal R} {\cal S} {\cal R} for transpose, so off-diagonals have wrong
-### sign
-
-        Flow('dlamtfs'+exp+'.su','dtrsrcvz'+exp+'.su',
-             sugain + ' scale=' + str(8.0*VSCALE))
-
-
+### comparison with average
+        Flow('avgdnshs' + exp + '.su',
+	       ['preddnshs' + exp + '.su',
+	        'preddnshstr' + exp + '.su'],
+             suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum | ' + \
+	     sugain + ' scale=0.5', stdin=0)
+	     
 ####################### lambda comp with near traces #########
 
 ### simulate filtered source data p, vz traces using p traces as
@@ -963,6 +1024,9 @@ for i in [0]:
 
         Flow('dreunhs'+exp+'.su','dreunvz'+exp+'.su',
              sugain + ' scale=' + str(-2.0*PSCALE))
+
+### now do same thing with symmetrized lambda
+
 
 ##############################################################
 ########################### point source at z_s=3 km
@@ -1115,6 +1179,7 @@ for i in [0]:
                 1.2, 1.2,
                 0.0, 0.0, 1.2, 1.2,
                 0.0, 0.0, 1.2, 1.2,
+		0.0, 0.0, 0.0, 0.0, 
                 1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
         tmax = [3.0, 3.0, 3.0,
@@ -1126,6 +1191,7 @@ for i in [0]:
                 3.0, 3.0,
                 2.0, 2.0, 3.0, 3.0,
                 2.0, 2.0, 3.0, 3.0,
+		2.0, 2.0, 2.0, 2.0,
                 3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
         clip = [0.08, 0.08, 0.08,
@@ -1137,6 +1203,7 @@ for i in [0]:
                 0.08, 0.08,
                 0.2, 0.2, 0.08, 0.08,
                 0.2, 0.2, 0.08, 0.08,
+		0.2, 0.2, 0.2, 0.2,
                 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
         id   = ['recp', 'fwdp', 'altp',
@@ -1148,6 +1215,7 @@ for i in [0]:
                 'drerecp', 'ddiffrecp',
                 'preddinvhs', 'ddiffinvhs', 'dpredhsrecp', 'ddiffpredhsrecp',
                 'preddnshs', 'ddiffnshs', 'dprednshsrecp', 'ddiffprednshsrecp',
+		'preddnshstr', 'ddiffnslamtr', 'symmdnshs', 'avgdnshs',
                 'drecp', 'dfwdp', 'daltp',
                 'dfwdvz', 'daltvz', 'dsvcomp']
                 
