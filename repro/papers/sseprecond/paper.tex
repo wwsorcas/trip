@@ -1238,8 +1238,7 @@ approximated image of the corresponding pressure gather (Figure
 the last figures show that the approximated source gathers accurately
 predict the point-source pressure gather at the receiver datum
 $z_r=1000$ m.
-
-Computation of the transpose of $\Lambda^+$ (exact, not approximate in
+As mentioned in the last section, computation of the transpose of $\Lambda^+$ (exact, not approximate in
 the high frequency sense) is critical to the successful
 construction of the preconditioner. The relation \ref{eqn:lamident}
 does not provide a computation for this operator. However set
@@ -1252,6 +1251,9 @@ Then \ref{eqn:lamnear} can be rewritten
 \[
   \Lambda^+_{z_s} \approx \tilde{\Lambda}^+_{z_s}.
 \]
+Of course, all of the examples so far show images of
+$\tilde{\Lambda}^+_{z_s}$.
+
 Since successful preconditioning requires only approximate inversion,
 use of $\tilde{\Lambda}^+_{z_s} $ in place of $\Lambda^+_{z_s}$ will
 still yield a working preconditioner, and the former can be transposed
@@ -1259,11 +1261,25 @@ to machine precision via the definition \ref{eqn:lamtilde} and the adjoint state
 method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
 \begin{equation}
   \label{eqn:lamtransp}
-   (\tilde{\Lambda}^+_{z_s})^T = -8 \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
-     z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}
- \end{equation}
-Thus the model space weight operator introduced in the last section is
-replaced by
+  (\tilde{\Lambda}^+_{z_s})^T = -8 \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
+    z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}
+\end{equation}
+
+Figure \ref{fig:preddnshstrhh0} shows the image of the pressure gather
+in Figure \ref{fig:dsrcphh0} under $(\tilde{\Lambda}^+_{z_s})^T$,
+using the ``near'' traces at $z=2900$, that is, $\Delta z = 100$ m in
+expression \ref{eqn:lamtransp}, and propagation in the
+homogeneous model. Note
+the close resemblance to the image of the same pressure gather under
+$\tilde{\Lambda}^+_{z_s}$ displayed in Figure
+\ref{fig:preddnshshh0}. The difference of these two images is
+displayed in \ref{fig:ddiffnslamtrhh0}, on the same color scale as the
+images themselves. Since the propagation takes place entirely in a
+region where all of the mechanical parameters are homogenous, I do not
+offer a similar comparison for the lens model.
+
+The model space weight operator $W_m$ introduced in the last section is
+replaced by its asymptotic approximation
 \[
   \tilde{W}_m = \frac{1}{2}(\tilde{\Lambda}^+_{z_s} +
   (\tilde{\Lambda}^+_{z_s})^T)
@@ -1289,6 +1305,12 @@ in the center of the expression on the right-hand side, $\Pi_0^T\Pi_1
 fields, passing the velocity field as a pressure source and the
 pressure field as a velocity source.
 
+Figure \ref{fig:symmdnshshh0} shows the output of the symmetrized
+approximate source-to-pressure operator per equation \ref{eqn:wcomp},
+applied once again to the pressure data in Figure
+\ref{fig:dsrcp}. Note the resemblance to Figures
+\ref{fig:preddnshshh0} and \ref{fig:preddnshstrhh0}. These are all
+asymptotic approximations of each other.
 
  \newpage
  
@@ -1502,6 +1524,42 @@ in GPa. Positions of point source and receiver line indicated.}
   (Figure \ref{fig:dinvhsll0}) inverted from receiver pressure gather
   (Figure \ref{fig:drecplh0}). Lens model used in all propagations.
   Same color scale as in Figure \ref{fig:preddinvhsll0}.}
+
+\plot{preddnshshh0}{width=\textwidth}{Pressure source gather = image
+  under pressure-to-source operator $\Lambda^+_{z_s}$ of pressure gather
+  shown in Figure \ref{fig:dsrcphh0}, homogeneous model, using
+  ``near'' receiver traces at $z=2900$ m. Compare Figure
+  \ref{fig:dhshh0} and \ref{fig:dinvhshh0}: because the sources and
+  receivers are close, little aperture is lost in this case.}
+
+\plot{ddiffnshshh0}{width=\textwidth}{Difference between (a) image
+  (Figure \ref{fig:preddnshshh0}) of $\Lambda^+_{z_s}$ applied to
+  pressure gather (Figure \ref{fig:dsrcphh0}) using a near receiver
+  array to implement formulat \ref{eqn:lamident}, and (b) source gather
+  (Figure \ref{fig:dhshh0}) inferred from vertical velocity.
+  Homogeneous model used in all
+  propagations. Same color scale as in Figure \ref{fig:preddnshshh0}. }
+
+\plot{preddnshstrhh0}{width=\textwidth}{Pressure source gather = image
+  under {\em transpose} of pressure-to-source operator
+  $\Lambda^+_{z_s}$ of pressure gather shown in Figure
+  \ref{fig:dsrcphh0}, homogeneous model, using ``near'' receiver
+  traces at $z=2900$ m. Compare Figure \ref{fig:dhshh0} and
+  \ref{fig:preddnshshh0}: as noted in the text, $\Lambda^+_{z_s}$ is
+  asymptotically symmetric, so the resemblance is not a surprise.}
+
+\plot{ddiffnslamtrhh0}{width=\textwidth}{Difference between data in
+  Figures \ref{fig:preddnshshh0} and \ref{fig:preddnshstrhh0}, plotted
+  on the same scale as these figures, showing that the asymptotic
+  symmetry of $\Lambda^+_{z_s}$ is actually quantitative for the
+  length, time and frequency scales of these examples.}
+
+\plot{symmdnshshh0}{width=\textwidth}{Pressure source gather = image
+    under {\em symmetrized} pressure-to-source operator
+    $\frac{1}{2}\left(\Lambda^+_{z_s}+(\Lambda^+_{z_s})^T\right)$ of
+    pressure gather shown in Figure \ref{fig:dsrcphh0}, homogeneous
+    model, using ``near'' receiver traces at $z=2900$ m. Compare
+    Figure \ref{fig:preddnshshh0}.}
 
 \newpage
 
