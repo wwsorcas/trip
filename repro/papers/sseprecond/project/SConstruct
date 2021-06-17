@@ -34,6 +34,11 @@ asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/sse.x')
 asgfwi          = os.path.join(MYAPPS,'trip/iwave/asg/main/fwi.x')
 deriv           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDeriv.x')
 tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
+taper           = os.path.join(MYAPPS,'trip/iwave/trace/main/taper.x')
+dot             = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDot.x')
+norm            = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYNorm.x')
+cg8to10         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL8to10.x')
+cg12to13         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL12to13.x')
 #######################################################################
 
 # dummy target
@@ -67,7 +72,8 @@ TMIN = 1.0
 TMAX = 3.0
 
 # taper parameters - taper in gx only
-TP = 'gx:2000,2500,5500,6000'
+TPIN = 'gx:2000,2500,5500,6000'
+TP = 'gx:1000,1500,6000,6500'
 
 
 ################ discretization loop
@@ -137,26 +143,26 @@ for i in [0]:
 # near receiver lines
 
     Flow('nrphdr' + str(i) + '.su', None,
-         sunull + ' nt=' + str(NTS[i]) +
+         sunull + ' nt=' + str(NT[i]) +
          ' ntr=' + str(NTR[i]) +
          ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
          ' b=' + str(DX[i]) +
          ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-         ' a=' + str(RZ+DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(RZ+5*DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
     Flow('nrmhdr' + str(i) + '.su', None,
-         sunull + ' nt=' + str(NTS[i]) +
+         sunull + ' nt=' + str(NT[i]) +
          ' ntr=' + str(NTR[i]) +
          ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
          ' b=' + str(DX[i]) +
          ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
-         ' a=' + str(RZ-DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
+         ' a=' + str(RZ-5*DX[i]) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
 
@@ -274,9 +280,13 @@ for i in [0]:
     /bin/cp ${SOURCES[2]} ${TARGETS[0]} &&
     /bin/cp ${SOURCES[2]} ${TARGETS[1]} &&
     ''' + \
-    sugain + '< ${SOURCES[3]} > ${SOURCES[3]}' + \
+    taper + ' input=${SOURCES[3]} output=${SOURCES[3]}.taper.su ' + \
+    'taperpars=' + TPIN + ' && ' + \
+    sugain + '< ${SOURCES[3]}.taper.su > ${SOURCES[3]}' + \
     '.deltaz.su scale=' + str(PSCALE) + ' && ' + \
-    sugain + '< ${SOURCES[4]} > ${SOURCES[4]}' + \
+    taper + ' input=${SOURCES[4]} output=${SOURCES[4]}.taper.su ' + \
+    'taperpars=' + TPIN + ' && ' + \
+    sugain + '< ${SOURCES[4]}.taper.su > ${SOURCES[4]}' + \
     '.deltaz.su scale=' + str(VSCALE) + ' && ' + \
     asg + ' ' + \
     'source_p=${SOURCES[3]}' + '.deltaz.su ' + \
@@ -307,10 +317,14 @@ for i in [0]:
     dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
     taperpars=
     ''' + TP + ' && ' + \
-    sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
+    sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}.taper.su' + \
     ' scale=' + str(PSCALE) + ' && ' + \
-    sugain + '< ${TARGETS[1]}' + '.undeltaz.su > ${TARGETS[1]}' + \
-    ' scale=' + str(-PSCALE)
+    taper + ' input=${TARGETS[0]}.taper.su output=${TARGETS[0]} ' + \
+    'taperpars=' + TPIN + ' && ' + \
+    sugain + '< ${TARGETS[1]}' + '.undeltaz.su > ${TARGETS[1]}.taper.su' + \
+    ' scale=' + str(-PSCALE) + ' && ' + \
+    taper + ' input=${TARGETS[1]}.taper.su output=${TARGETS[1]} ' + \
+    'taperpars=' + TPIN
 
 ### symmetric lambda command, from equation \ref{wcomp}
 ### list of sources:
@@ -478,7 +492,7 @@ for i in [0]:
 ### lh = lens data inverted in homog medium
 ### ll = lens data inverted in lens medium
 
-    for med in ['hh', 'wh', 'lh', 'll']:
+    for med in ['hh', 'lh', 'll']:
 
         exp = med + str(i)
 
@@ -1027,7 +1041,44 @@ for i in [0]:
 
 ### now do same thing with symmetrized lambda
 
+### apply symm Lambda_r to drecp
 
+        Flow(['lamrdrecp' + exp + '.su',
+	      'lamrdintp' + exp + '.su',
+	      'lamrdintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nrphdr' + str(i) + '.su',
+	      'drecp' + exp + '.su'],
+             lamcmd, stdin=0, stdout=-1)
+        
+### apply S^T
+
+        Flow(['stlamrdrecp' + exp + '.su',
+              'stlamrdrecpvz' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+	      'lamrdrecp' + exp + '.su',
+              'rechdr' + str(i) + '.su'],
+             adjcmd, stdin=0, stdout=-1)
+
+### apply symm Lambda_s
+
+        Flow(['lamsstlamrdrecp' + exp + '.su',
+	      'lamsstlamrdintp' + exp + '.su',
+	      'lamsstlamrdintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+	      'stlamrdrecp' + exp + '.su'],
+             lamcmd, stdin=0, stdout=-1)
+
+        Flow('difflamsstlamrdrecp' + exp + '.su',
+	     ['lamsstlamrdrecp' + exp + '.su',
+	      'dinvhs' + exp + '.su'],
+	     suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+	     
 ##############################################################
 ########################### point source at z_s=3 km
 
@@ -1167,6 +1218,247 @@ for i in [0]:
         Flow('predinvhs'+exp+'.su','laminvfs'+exp+'.su',
              sugain + ' scale=' + str(-0.5))
 
+########################## CG ############################
+
+### define number of its
+
+        precond = False
+
+        if (precond==True):
+            resname='pcgres'
+            nresname='pcgnres'
+        else:
+            resname='cgres'
+            nresname='cgnres'
+
+        itmax = 21
+	
+        expsu = exp + '.su'
+
+### data residual - 0th residual = input data
+
+        Flow('d0'+expsu, 'recp'+expsu,
+	     '/bin/cp ${SOURCE} ${TARGET}',
+	     stdin=0, stdout=-1)
+	
+### initialize
+
+##### h0
+
+        Flow('h0'+expsu, 'srchdr' + str(i) + '.su',
+	     '/bin/cp ${SOURCE} ${TARGET}',
+	     stdin=0,stdout=-1)
+
+##### r0
+
+        if (precond==True):
+            Flow(['lamrecp'+expsu, 'dnrp0'+expsu, 'dnrvz0'+expsu],
+	         ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nrphdr' + str(i) + '.su',
+	          'd0'+expsu],
+                 lamcmd, stdin=0, stdout=-1)		
+        else: 
+            Flow('lamrecp'+expsu,'d0'+expsu,
+                '/bin/cp ${SOURCE} ${TARGET}',
+                stdin=0, stdout=-1)
+
+        Flow(['r0'+expsu,'r0vz'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'lamrecp'+expsu,
+              'rechdr' + str(i) + '.su'],
+             adjcmd, stdin=0, stdout=-1)
+
+        
+        Flow(nresname + '0' + exp + '.txt', 'r0'+expsu,
+             norm + ' in=${SOURCE} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+        Flow(resname + '0' + exp + '.txt', 'd0'+expsu,
+             norm + ' in=${SOURCE} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+##### p0
+
+        if (precond==True):
+            Flow(['p0'+expsu, 'nsp0'+expsu, 'nsvz0'+expsu],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nsphdr' + str(i) + '.su',
+                  'r0'+expsu],
+                  lamcmd, stdin=0, stdout=-1)		  
+        else: 
+            Flow('p0'+expsu,'r0'+expsu,
+                 '/bin/cp ${SOURCE} ${TARGET}',
+                 stdin=0, stdout=-1)
+
+##### g0
+
+        Flow('g0'+expsu,'p0'+expsu,
+             '/bin/cp ${SOURCE} ${TARGET}',
+             stdin=0, stdout=-1)
+
+##### q0 = N p0
+	     
+        Flow(['s0'+expsu,'svz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'rechdr' + str(i) + '.su',
+              'p0'+expsu,
+              'srchdr' + str(i) + '.su'],
+              fwdcmd, stdin=0, stdout=-1)
+
+        if (precond==True):
+            Flow(['lams0'+expsu, 'nrp0'+expsu, 'nrvz0'+expsu],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nrphdr' + str(i) + '.su',
+                  's0'+expsu],
+                  lamcmd, stdin=0, stdout=-1)		
+        else:
+            Flow('lams0'+expsu,'s0'+expsu,
+                 '/bin/cp ${SOURCE} ${TARGET}',
+                 stdin=0, stdout=-1)
+	    
+        Flow(['q0'+expsu,'q0vz'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'lams0'+expsu,
+              'rechdr' + str(i) + '.su'],
+              adjcmd, stdin=0, stdout=-1)
+
+# Iteration loop
+
+        for it in range(itmax):
+
+
+### define filename tails
+            ctail = str(it) + expsu
+            ptail = str(it+1) + expsu
+
+### lines 8-10
+	    
+            Flow(['h'+ptail,'r'+ptail, 'd'+ptail],
+	         ['h'+ctail,'r'+ctail, 'd'+ctail,
+		  'g'+ctail, 'p'+ctail, 'q'+ctail],
+		 cg8to10 + \
+		 ' hc=h' + ctail +\
+		 ' hp=h' + ptail +\
+		 ' rc=r' + ctail +\
+		 ' rp=r' + ptail +\
+		 ' dc=d' + ctail +\
+		 ' dp=d' + ptail +\
+                 ' g=g' + ctail +\
+                 ' p=p' + ctail +\
+		 ' s=s' + ctail +\
+                 ' q=q' + ctail,
+		 stdin=0, stdout=-1)
+
+### line 11
+
+            if (precond==True):
+                Flow(['g'+ptail, 'nsp'+ptail, 'nsvz'+ptail],
+                     ['bm' + exp[1] + str(i),
+                      'byh' + str(i),
+                      'nsphdr' + str(i) + '.su',
+                      'r'+ptail],
+                     lamcmd, stdin=0, stdout=-1)		  
+            else:
+                Flow('g'+ptail,'r'+ptail,
+                     '/bin/cp ${SOURCE} ${TARGET}',
+                     stdin=0, stdout=-1)
+		 
+### lines 12-13
+            Flow('p'+ptail,
+                ['r'+ctail,'r'+ptail,'g'+ctail,'g'+ptail,'p'+ctail],
+                cg12to13 + \
+                 ' pp=p'+ptail +\
+	         ' pc=p'+ctail +\
+	         ' gp=g'+ptail +\
+	         ' gc=g'+ctail +\
+                 ' rp=r'+ptail +\
+	         ' rc=r'+ctail,
+	        stdin=0,stdout=-1)
+
+### line 14
+
+            Flow(['s'+ptail,'svz'+ptail],
+	         ['bm' + exp[1] + str(i),
+	          'byh' + str(i),
+	          'rechdr' + str(i) + '.su',
+	          'p'+ptail,
+	          'srchdr' + str(i) + '.su'],
+	          fwdcmd, stdin=0, stdout=-1)
+
+            if (precond==True):
+                Flow(['lams'+ptail, 'nrp'+ptail, 'nrvz'+ptail],
+                     ['bm' + exp[1] + str(i),
+                      'byh' + str(i),
+                      'nrphdr' + str(i) + '.su',
+                      's'+ptail],
+                     lamcmd, stdin=0, stdout=-1)		
+            else:
+                Flow('lams'+ptail,'s'+ptail,
+                     '/bin/cp ${SOURCE} ${TARGET}',
+                     stdin=0, stdout=-1)
+	    
+            Flow(['q'+ptail,'qvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'srchdr' + str(i) + '.su',
+                  'lams'+ptail,
+                  'rechdr' + str(i) + '.su'],
+                 adjcmd, stdin=0, stdout=-1)
+
+            Flow(nresname + str(it+1) + exp+'.txt',
+		['r'+ptail, nresname + str(it) + exp+'.txt'],
+		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
+                 norm + ' in=${SOURCES[0]} >> ${TARGET}',
+                 stdin=0, stdout=-1)
+
+            Flow(resname + str(it+1) + exp+'.txt',
+		['d'+ptail, resname + str(it) + exp+'.txt'],
+		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
+                 norm + ' in=${SOURCES[0]} >> ${TARGET}',
+                 stdin=0, stdout=-1)
+
+### compute final residual directly
+
+            Flow(['cgsim'+ptail,'jnk'+ptail],
+	         ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'rechdr' + str(i) + '.su',
+                  'h'+ptail,
+                  'srchdr' + str(i) + '.su'],
+                  fwdcmd, stdin=0, stdout=-1)
+
+            Flow('cgresid'+ptail,
+	         ['d0'+exp+'.su','pcgsim'+ptail],
+		 suop2 + ' ${SOURCES[0]} ${SOURCES[1]}',
+		 stdin=0)
+
+        Flow(['compres'+exp+'.rsf', 'compres'+exp+'.dat'],
+	     'cgres20'+exp+'.txt',
+	     'echo n1=21 o1=0 d1=1 >  ${TARGETS[0]} && ' + \
+	     'echo n2=2  o2=0 d2=1 >> ${TARGETS[0]} && ' + \
+	     'echo data_format=ascii_float >> ${TARGETS[0]} && ' + \
+             'echo in=${TARGETS[1]} >> ${TARGETS[0]} && ' + \
+	     '/bin/cat ${SOURCE} >  ${TARGETS[1]} && ' + \
+	     '/bin/cat ../pcg/p${SOURCE} >> ${TARGETS[1]}',
+	     stdin=0, stdout=-1)
+
+        Flow(['compnres'+exp+'.rsf', 'compnres'+exp+'.dat'],
+	     'cgnres20'+exp+'.txt',
+	     'echo n1=21 o1=0 d1=1 >  ${TARGETS[0]} && ' + \
+	     'echo n2=2  o2=0 d2=1 >> ${TARGETS[0]} && ' + \
+	     'echo data_format=ascii_float >> ${TARGETS[0]} && ' + \
+             'echo in=${TARGETS[1]} >> ${TARGETS[0]} && ' + \
+	     '/bin/cat ${SOURCE} >  ${TARGETS[1]} && ' + \
+	     '/bin/cat ../pcg/p${SOURCE} >> ${TARGETS[1]}',
+	     stdin=0, stdout=-1)
 
 ########################## graphics ###########################
 
@@ -1179,7 +1471,8 @@ for i in [0]:
                 1.2, 1.2,
                 0.0, 0.0, 1.2, 1.2,
                 0.0, 0.0, 1.2, 1.2,
-		0.0, 0.0, 0.0, 0.0, 
+		0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0,
                 1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
         tmax = [3.0, 3.0, 3.0,
@@ -1192,6 +1485,7 @@ for i in [0]:
                 2.0, 2.0, 3.0, 3.0,
                 2.0, 2.0, 3.0, 3.0,
 		2.0, 2.0, 2.0, 2.0,
+                2.0, 2.0,		
                 3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
         clip = [0.08, 0.08, 0.08,
@@ -1204,6 +1498,7 @@ for i in [0]:
                 0.2, 0.2, 0.08, 0.08,
                 0.2, 0.2, 0.08, 0.08,
 		0.2, 0.2, 0.2, 0.2,
+		0.2, 0.2,
                 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
         id   = ['recp', 'fwdp', 'altp',
@@ -1216,6 +1511,7 @@ for i in [0]:
                 'preddinvhs', 'ddiffinvhs', 'dpredhsrecp', 'ddiffpredhsrecp',
                 'preddnshs', 'ddiffnshs', 'dprednshsrecp', 'ddiffprednshsrecp',
 		'preddnshstr', 'ddiffnslamtr', 'symmdnshs', 'avgdnshs',
+		'lamsstlamrdrecp', 'difflamsstlamrdrecp',
                 'drecp', 'dfwdp', 'daltp',
                 'dfwdvz', 'daltvz', 'dsvcomp']
                 
@@ -1288,6 +1584,14 @@ for i in [0]:
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 
+        Result('compres'+exp,
+	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
+
+        Result('compnres'+exp,
+	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
+	       
 Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=z label2=x unit1=m unit2=m barunit=GPa xinch=10 yinch=5')
+
+
     
 End()
