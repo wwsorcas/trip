@@ -753,7 +753,7 @@ yield the first main result of this section:
   (V^+_{z_s,z_r})^T S^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
   (S^+_{z_s,z_r})^T V^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
   V^+_{z_s,z_r} (S^+_{z_s,z_r})^T & \approx & \frac{1}{4}I, \nonumber\\
-  S^+_{z_s,z_r} (V^+_{z_s,z_r})^T & \approx & \frac{1}{4}I.\\
+  S^+_{z_s,z_r} (V^+_{z_s,z_r})^T & \approx & \frac{1}{4}I.
 \end{eqnarray}.
 The second equation is simply the transpose of the first, and the
 last two follow by by an exactly analogous argument using time
@@ -787,7 +787,7 @@ used to generate the data. The result is a scaled, dip-filtered
 version of the pressure source shown in Figure \ref{fig:dhshh0}.
 The dip filter effect is unavoidable and is caused by the aperture
 limitation of the acquisition geometry: the steeper dips in the source
-gather \ref{fig:dhshh0} do not contribute to the data, and are not
+gather (Figure \ref{fig:dhshh0}) do not contribute to the data, and are not
 recovered in the inversion.
 
 To see that this is indeed an inversion, I apply $S^{+}_{z_s,z_r}$ to
@@ -833,7 +833,7 @@ same (wrong) model. For example, inversion of the data of the previous
 example (Figure \ref{fig:drecplh0}) {\em in the homogeneous model}
 results in an inverted source gather at $z=z_s$ (Figure \ref{fig:dinvhslh0}
 that is very far from a dip-filtered version of the source used
-generate the data \ref{fig:dhshh0}. However, this result is an
+generate the data (Figure \ref{fig:dhshh0}). However, this result is an
 accurate inversion: re-simulation {\em using the same (homogeneous)
   model as used in the inversion} results in accurate recovery of the
 input pressure gather (Figure \ref{fig:drecplh0}). The difference is
@@ -908,7 +908,7 @@ $S^+_{z_s,z_r}$. The corresponding vertical velocity gather
 (Figure \ref{fig:dfwdvzhh0}) is $-1/2$ times $\Lambda^+_{z_r}P_r
 p$. Therefore scaling the data in Figure \ref{fig:dfwdvzhh0} by
 $-2$ produces
-$Lambda^+_{z_r}S^+_{z_s,z_r}\Lambda^{+}_{z_s}P_s p^+$. On the other
+$\Lambda^+_{z_r}S^+_{z_s,z_r}\Lambda^{+}_{z_s}P_s p^+$. On the other
 hand, figure \ref{fig:daltvzhh0} shows the result of applying
 $V^+_{z_s,z_r}$ to $f_s=-2P_s p^+$. Therefore scaling the gather in
 Figure \ref{fig:daltvzhh0} by $-\frac{1}{2}$ produces $V^+_{z_s,z_r}P_zp^+$.
@@ -921,8 +921,8 @@ inverse to $S^{+}_{z_s,z_r}$. Therefore, transposing both sides of
 equation \ref{eqn:sv} and using \ref{eqn:approxinv}, obtain
 \begin{equation}
   \label{eqn:almostunitary}
-  4(V_{z_s,z_r}^+)^TS^+_{z_s,z_r} = [ (\Lambda^+_{z_r})^T
-  (S^{+}_{z_s,z_r})^T(\Lambda^+_{z_s})^T]S^{+}_{z_s,z_r} \approx I.
+  4(V_{z_s,z_r}^+)^TS^+_{z_s,z_r} = [ (\Lambda^+_{z_s})^T
+  (S^{+}_{z_s,z_r})^T(\Lambda^+_{z_r})^T]S^{+}_{z_s,z_r} \approx I.
 \end{equation}
 
 The remarkable feature of the identity \ref{eqn:almostunitary} is that
@@ -935,18 +935,42 @@ symmetrizing them in the obvious way commits a negligible error, of
 the sort that this paper already neglects wholesale. That is,
 \begin{equation}
   \label{eqn:unitary}
-  [ \frac{1}{2}((\Lambda^+_{z_r})^T+ \Lambda^+_{z_r})
-  (S^{+}_{z_s,z_r})^T \frac{1}{2}((\Lambda^+_{z_s})^T+
-  \Lambda^+_{z_s})]S^{+}_{z_s,z_r} \approx I.
+  [ \frac{1}{2}((\Lambda^+_{z_s})^T+ \Lambda^+_{z_s})
+  (S^{+}_{z_s,z_r})^T \frac{1}{2}((\Lambda^+_{z_r})^T+
+  \Lambda^+_{z_r})]S^{+}_{z_s,z_r} \approx I.
 \end{equation}
+
+To illustrate this unitary property of $S^+_{z_s,z_r}$, I apply the
+operator
+\[
+  \frac{1}{2}((\Lambda^+_{z_s})^T+ \Lambda^+_{z_s})
+  (S^{+}_{z_s,z_r})^T \frac{1}{2}((\Lambda^+_{z_r})^T+
+  \Lambda^+_{z_r})
+\]
+to the data $S^+_{z_s,z_r}h_s$ (Figure \ref{fig:drerecphh0}), in which
+$h_s$ is the dip-filtered version (Figure \ref{fig:dinvhshh0}) of the
+downgoing source created earlier (Figure \ref{fig:dhshh0}), produced
+by inversion of the data in Figure \ref{fig:drecphh0} via the first
+equation in display \ref{eqn:approxinv}, propagation in the homogenous
+model.  The operator above is computed via the technique explained in
+the section ``Computing and Symmetrizing $\Lambda$'', below, using
+auxiliary receiver arrays 100 m above the data source and receiver arrays.
+
+The output is shown in Figure
+\ref{fig:lamsstlamrdrecphh0}. The difference with the actual source is
+shown in Figure \ref{fig:difflamsstlamrdrecphh0}. A similar exercise
+using the lens data \ref{fig:drecplh0} but inversion in the homogenous
+model produces the extended source depicted in
+\ref{fig:lamsstlamrdrecplh0}, which differs from the inversion result
+via equation \ref{eqn:approxinv} by the gather displayed in Figure
+\ref{fig:difflamsstlamrdrecplh0}.
+
 The symmetrized $\Lambda$ operators are at least positive
 semi-definite, hence define (at least) semi-norms.
-
 Similar relations have been derived for other scattering operators,
 and have been used to accelerate iterative solutions of inverse
 scatering problems: \cite{DafniSymes:SEG18b} review some of this
-literature. 
-
+literature.
 
 \section{Accelerated Iterative Inversion}
 
@@ -963,9 +987,9 @@ operators in model and data spaces:
 The identification of the symmetrized $\Lambda^+_{z_s}$ as the inverse
 of another operator $W_m$ is formal, since the former operator is
 likely to have null (or nearly-null) vectors due to aperture-related
-amplitude loss. I will proceed as if this were sensible, since the
-mathematical issues can be defused and the only the application of
-$W_m^{-1}$ is required in the algorithms described here.
+amplitude loss. Since some version of $W_m$ is essential in the
+formulation for effective preconditioning, I will derive a usable
+candidate to stand in for it below.
 
 Adopting Hilbert norms defined by the operators $W_m$ and $W_d$ in its
 domain and range respectively, the adjoint of $S$ is given by
@@ -1033,9 +1057,9 @@ the physical source point $\bx_s$: $A u (\bx) = |\bx-\bx_s|u(\bx),
 A^TAu(\bx) = |\bx-\bx_s|^2u(\bx)$. So the equation $(I+\alpha^2
 A^TA)u=b$ is trivial to solve, and this is a key characteristic of a
 good preconditioner. However this observation must be combined with
-the wegithed norm structure.
+the weighted norm structure.
 
-Rewrite the normal equation \ref{eqn:norm} as
+Rewrite the normal equation \ref{eqn:norm0} as
 \begin{equation}
   \label{eqn:norm1}
   W_m^{-1}(S^TW_dS + \alpha^2 A^TW_mA)h = W_m^{-1}S^TW_md 
@@ -1122,13 +1146,11 @@ Direct computation of the pressure-to-source operator $\Lambda^{\pm}_{z_s}$, for
 numerically ill-behaved. The relation \ref{eqn:snull} provides and
 alternative approach, taking advantage of the accurate approximate
 inverse to $S^+_{z_s,z_r}$ constructed above. The first row of
-\ref{eqn:snull} is given explicitly in \ref{eqn:snull1}, which I
-repeat for the reader's convenience:
+\ref{eqn:snull}, slightly rearranged, is
 \begin{equation}
   \label{eqn:lamidea}
   \Pi_0{\cal S}^+_{z_s,z_r}\Pi_1^T f_s \approx  -\frac{1}{2} S^+_{z_s,z_r}\Lambda^+_{z_s}f_s.
 \end{equation}
-
 The approximate inverse construction for $S^++_{z_s,z_r}$ permits (approximate)
 solution of this equation for $\Lambda^+_{z_s}f_s$: apply
 $4(V^{+}_{z_s,z_r})^T$ to both sides of equation \ref{eqn:lamidea} and
@@ -1137,7 +1159,7 @@ use the first equation in the list \ref{eqn:approxinv} to get
   \label{eqn:lamident}
   \Lambda^+_{z_s} \approx -8(V^{+}_{z_s,z_r})^T\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T.
 \end{equation}
-This identity is the second major result of this section: it shows how
+This identity is the major result of this section: it shows how
 to compute that action of $\Lambda^+_{z_s}$ by propagating the input
 pressure trace, identified as a source for the velocity evolution,
 forward in time from $z_s$ to $z_r$
@@ -1158,7 +1180,7 @@ assuming as always that the causal fields are downgoing, this step
 eliminates any tangentially propagating fields from consideration.
 
 Figure \ref{fig:preddinvhshh0} shows the pressure source gather
-produced from the pressure data gather in Figure \ref{dsrcphh0} by
+produced from the pressure data gather in Figure \ref{fig:dsrcphh0} by
 application of the operator on the right-hand side of formula
 \ref{eqn:lamident} to the source surface pressure gather depicted in
 \ref{fig:dsrcphh0}. The homogeneous model is used in all propagations
@@ -1167,7 +1189,7 @@ as for Figures \ref{fig:dinvhshh0} and \ref{fig:dhshh0}. In fact
 Figure \ref{fig:preddinvhshh0} appears to be nearly identical to
 Figure \ref{fig:dinvhshh0}, and both appear to be dip-filtered
 versions of Figure \ref{fig:dhshh0}. The difference plot (Figure
-  \ref{fig:ddiffinvhshh0}, using the same color scale, shows that the
+  \ref{fig:ddiffinvhshh0}), using the same color scale, shows that the
   similarity is quantitative. The recovered source gather (Figure
   \ref{fig:preddinvhshh0}) also generates the same acoustic fields as
   the point source at $z=z_d$: the pressure gather at $z=z_r=1000$ m
@@ -1216,32 +1238,37 @@ Using a receiver datum closer to the source surface has two favorable consequenc
 \end{itemize}
 
 To illustrate these points, I have re-computed the source gather
-estimates shown in Figures \ref{fig:preddinvhshh0} and
-\ref{fig:preddinvhsll0}. In place of the receiver geometry in the
-target data (Figures \ref{fig:drecphh0} and \ref{fig:drecpll0}, I
-place the receiver array at $z_s+\Delta z=2900$ m depth, just 100 m above the
+estimates shown in Figure \ref{fig:preddinvhshh0}. In place of the receiver geometry in the
+target data (Figure \ref{fig:drecphh0}), I
+place a receiver array at $z_s+\Delta z=2900$ m depth, just 100 m above the
 source surface at $z_s=3000$ m. For the discretization used to create
 the examples shown so far, that is just a 5 gridpoint difference in
 depth, as opposed to 100 gridpoints between the source and receiver
 depths for examples such as shown in Figure \ref{fig:recphh0} or
-\ref{fig:drecphh0}. The resulting approximation to $\Lambda_{z_s}^+$
-via equation \ref{eqn:lamident} for this configuration is evaluated in
-the same way as before in Figures \ref{fig:preddnshshh0}, \ref{fig:ddiffnshshh0},
-\ref{fig:dprednshsrecphh0}, and \ref{fig:ddiffprednshsrecphh0}
-(homogeneous model) and Figures \ref{fig:preddnshsll0}, \ref{fig:ddiffnshsll0},
-\ref{fig:dprednshsrecpll0}, and \ref{fig:ddiffprednshsrecpll0} (lens
-model). The effect of aperture limitation is clearly diminished: the
-second figure in each series compares the full-aperture pressure source
-gathers (Figures \ref{fig:dhshh0.su} and \ref{fig:dhsll0.su} with the
-approximated image of the corresponding pressure gather (Figure
-\ref{fig:dsrcphh0}) under the approximation to $\Lambda_{z_s}^+$, and
-the last figures show that the approximated source gathers accurately
-predict the point-source pressure gather at the receiver datum
-$z_r=1000$ m.
-As mentioned in the last section, computation of the transpose of $\Lambda^+$ (exact, not approximate in
-the high frequency sense) is critical to the successful
-construction of the preconditioner. The relation \ref{eqn:lamident}
-does not provide a computation for this operator. However set
+\ref{fig:drecphh0}.
+
+Note that the homogeneous and lens models are identical in the depth
+range $2900 < z < 3000$ m, so the computed $\Lambda^+_{z_s}$ operators
+will be the same for both models. Hence I show only results for the
+homogenous model.
+
+The approximation to $\Lambda_{z_s}^+$ via equation \ref{eqn:lamident}
+for this configuration is evaluated in the same way as before in
+Figures \ref{fig:preddnshshh0}, \ref{fig:ddiffnshshh0},
+\ref{fig:dprednshsrecphh0}, and \ref{fig:ddiffprednshsrecphh0}. The effect of aperture
+limitation is clearly diminished: the second figure in this series
+compares the full-aperture pressure source gather (Figure
+\ref{fig:dhshh0}) with the 
+image of the corresponding pressure gather (Figure \ref{fig:dsrcphh0})
+under the approximation to $\Lambda_{z_s}^+$, and the last figures
+show that the approximated source gathers accurately predict the
+point-source pressure gather at the receiver datum $z_r=1000$ m.
+
+As mentioned in the last section, computation of the transpose of
+$\Lambda^+$ (exact, not approximate in the high frequency sense) is
+critical to the successful construction of the preconditioner. The
+relation \ref{eqn:lamident} does not provide a computation for this
+operator. However set
 \begin{equation}
   \label{eqn:lamtilde}
   \tilde{\Lambda}^+_{z_s} = -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
@@ -1308,7 +1335,7 @@ pressure field as a velocity source.
 Figure \ref{fig:symmdnshshh0} shows the output of the symmetrized
 approximate source-to-pressure operator per equation \ref{eqn:wcomp},
 applied once again to the pressure data in Figure
-\ref{fig:dsrcp}. Note the resemblance to Figures
+\ref{fig:dsrcphh0}. Note the resemblance to Figures
 \ref{fig:preddnshshh0} and \ref{fig:preddnshstrhh0}. These are all
 asymptotic approximations of each other.
 
@@ -1501,6 +1528,24 @@ in GPa. Positions of point source and receiver line indicated.}
   shown in Figures \ref{fig:dfwdvzhh0} and \ref{fig:daltvzhh0},
   plotted on the same color scale as these figures.}
 
+\plot{lamsstlamrdrecphh0}{width=\textwidth}{Inversion of data shown in
+  Figure \ref{fig:drecphh0}, simulated in homogeneous model, using the
+  approximate unitarity relation \ref{eqn:unitary} and propagation in
+  homogenous model.}
+
+\plot{difflamsstlamrdrecphh0}{width=\textwidth}{Difference between
+  data displayed in Figures \ref{fig:dinvhshh0} and
+  \ref{fig:lamsstlamrdrecphh0}, plotted on the same color scale.}
+  
+\plot{lamsstlamrdrecplh0}{width=\textwidth}{Inversion of data shown in
+  Figure \ref{fig:drecplh0}, simulated in lens model, using the
+  approximate unitarity relation \ref{eqn:unitary} and propagation in
+  homogenous model.}
+
+\plot{difflamsstlamrdrecplh0}{width=\textwidth}{Difference between
+  data displayed in Figures \ref{fig:dinvhslh0} and
+  \ref{fig:lamsstlamrdrecplh0}, plotted on the same color scale.}
+
 \plot{preddinvhshh0}{width=\textwidth}{Pressure source gather = image
   of pressure-to-source operator $\Lambda^+_{z_s}$ applied to pressure gather
   shown in Figure \ref{fig:dsrcphh0}, homogeneous model. Compare Figure
@@ -1511,7 +1556,21 @@ in GPa. Positions of point source and receiver line indicated.}
   pressure gather (Figure \ref{fig:dsrcphh0}), and (b) source gather
   (Figure \ref{fig:dinvhshh0}) inverted from receiver pressure gather
   (Figure \ref{fig:drecphh0}). Homogeneous model used in all
-  propagations. Same color scale as in Figure \ref{fig:preddinvhshh0}. }
+  propagations. Same color scale as in Figure
+  \ref{fig:preddinvhshh0}. }
+
+\plot{dpredhsrecphh0}{width=\textwidth}{Pressure gather at receiver 
+  datum $z=z_r=1000$ m simulated in homogeneous model from source 
+  gather shown in Figure \ref{fig:preddinvhshh0}, also based on the 
+  homogeneous model. Compare with point source pressure gather (Figure 
+  \ref{fig:drecphh0}).}
+
+\clearpage
+
+\plot{ddiffpredhsrecphh0}{width=\textwidth}{Plot of difference 
+  between data shown in Figures \ref{fig:drecphh0} and 
+  \ref{fig:dpredhsrecphh0}, plotted on same color scale as the latter 
+  two figures.}
 
 \plot{preddinvhsll0}{width=\textwidth}{Pressure source gather = image
   of pressure-to-source operator $\Lambda^+_{z_s}$ applied to pressure gather
@@ -1525,6 +1584,19 @@ in GPa. Positions of point source and receiver line indicated.}
   (Figure \ref{fig:drecplh0}). Lens model used in all propagations.
   Same color scale as in Figure \ref{fig:preddinvhsll0}.}
 
+\plot{dpredhsrecpll0}{width=\textwidth}{Pressure gather at receiver 
+  datum $z=z_r=1000$ m simulated in lens model from source 
+  gather shown in Figure \ref{fig:preddinvhsll0}, also based on the 
+  homogeneous model. Compare with point source pressure gather (Figure 
+  \ref{fig:drecplh0}).}
+
+\plot{ddiffpredhsrecpll0}{width=\textwidth}{Plot of difference 
+  between data shown in Figures \ref{fig:drecplh0} and 
+  \ref{fig:dpredhsrecpll0}, plotted on same color scale as the latter 
+  two figures.}
+
+\clearpage
+
 \plot{preddnshshh0}{width=\textwidth}{Pressure source gather = image
   under pressure-to-source operator $\Lambda^+_{z_s}$ of pressure gather
   shown in Figure \ref{fig:dsrcphh0}, homogeneous model, using
@@ -1535,10 +1607,23 @@ in GPa. Positions of point source and receiver line indicated.}
 \plot{ddiffnshshh0}{width=\textwidth}{Difference between (a) image
   (Figure \ref{fig:preddnshshh0}) of $\Lambda^+_{z_s}$ applied to
   pressure gather (Figure \ref{fig:dsrcphh0}) using a near receiver
-  array to implement formulat \ref{eqn:lamident}, and (b) source gather
-  (Figure \ref{fig:dhshh0}) inferred from vertical velocity.
+  array to implement formula \ref{eqn:lamident}, and (b) source gather
+1650  (Figure \ref{fig:dhshh0}) inferred from vertical velocity.
   Homogeneous model used in all
-  propagations. Same color scale as in Figure \ref{fig:preddnshshh0}. }
+  propagations. Same color scale as in Figure
+  \ref{fig:preddnshshh0}. }
+
+\plot{dprednshsrecphh0}{width=\textwidth}{Pressure gather at receiver
+  datum $z=z_r=1000$ m simulated from source gather shown in Figure
+  \ref{fig:preddnshshh0}. Compare with point source pressure gather
+  (Figure \ref{fig:drecplh0}).}
+
+\clearpage
+
+\plot{ddiffprednshsrecphh0}{width=\textwidth}{Plot of difference 
+  between data shown in Figures \ref{fig:drecphh0} and 
+  \ref{fig:dpredhsrecphh0}, plotted on same color scale as the latter 
+  two figures.}
 
 \plot{preddnshstrhh0}{width=\textwidth}{Pressure source gather = image
   under {\em transpose} of pressure-to-source operator
@@ -1560,6 +1645,36 @@ in GPa. Positions of point source and receiver line indicated.}
     pressure gather shown in Figure \ref{fig:dsrcphh0}, homogeneous
     model, using ``near'' receiver traces at $z=2900$ m. Compare
     Figure \ref{fig:preddnshshh0}.}
+
+\plot{compreshh0}{width=\textwidth}{Comparison of residual Euclidean 
+  norms: CG (blue), PCG (red), plotted vs. iteration. Data =
+  homogeneous model, point source (Figure \ref{fig:recphh0}), inversion 
+  in homogeneous model.}
+
+\plot{compreslh0}{width=\textwidth}{Comparison of residual Euclidean 
+  norms: CG (blue), PCG (red), plotted vs. iteration. Data =
+  lens model, point source (Figure \ref{fig:recplh0}), inversion 
+  in homogenous model.}
+
+\plot{compresll0}{width=\textwidth}{Comparison of residual Euclidean 
+  norms: CG (blue), PCG (red), plotted vs. iteration. Data =
+  lens model, point source (Figure \ref{fig:recplh0}), inversion 
+  in lens model.}
+
+\plot{compnreshh0}{width=\textwidth}{Comparison of normal residual
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted
+  vs. iteration. Data = homogeneous model, point source (Figure
+  \ref{fig:recphh0}), inversion in homogenous model.}
+
+\plot{compnreslh0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in homogenous model.}
+
+\plot{compnresll0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in lens model.}
 
 \newpage
 
