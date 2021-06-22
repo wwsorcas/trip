@@ -37,6 +37,7 @@ tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
 taper           = os.path.join(MYAPPS,'trip/iwave/trace/main/taper.x')
 dot             = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDot.x')
 norm            = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYNorm.x')
+offsc           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYScalebyOffset.x')
 cg8to10         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL8to10.x')
 cg12to13         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL12to13.x')
 #######################################################################
@@ -281,11 +282,11 @@ for i in [0]:
     /bin/cp ${SOURCES[2]} ${TARGETS[1]} &&
     ''' + \
     taper + ' input=${SOURCES[3]} output=${SOURCES[3]}.taper.su ' + \
-    'taperpars=' + TPIN + ' && ' + \
+    'taperpars=' + TP + ' && ' + \
     sugain + '< ${SOURCES[3]}.taper.su > ${SOURCES[3]}' + \
     '.deltaz.su scale=' + str(PSCALE) + ' && ' + \
     taper + ' input=${SOURCES[4]} output=${SOURCES[4]}.taper.su ' + \
-    'taperpars=' + TPIN + ' && ' + \
+    'taperpars=' + TP + ' && ' + \
     sugain + '< ${SOURCES[4]}.taper.su > ${SOURCES[4]}' + \
     '.deltaz.su scale=' + str(VSCALE) + ' && ' + \
     asg + ' ' + \
@@ -320,13 +321,13 @@ for i in [0]:
     sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}.taper.su' + \
     ' scale=' + str(PSCALE) + ' && ' + \
     taper + ' input=${TARGETS[0]}.taper.su output=${TARGETS[0]} ' + \
-    'taperpars=' + TPIN + ' && ' + \
+    'taperpars=' + TP + ' && ' + \
     sugain + '< ${TARGETS[1]}' + '.undeltaz.su > ${TARGETS[1]}.taper.su' + \
     ' scale=' + str(-PSCALE) + ' && ' + \
     taper + ' input=${TARGETS[1]}.taper.su output=${TARGETS[1]} ' + \
-    'taperpars=' + TPIN
+    'taperpars=' + TP
 
-### symmetric lambda command, from equation \ref{wcomp}
+### symmetric lambda command, from equation \ref{winvcomp}
 ### list of sources:
 ### 0: bulkmod
 ### 1: buoyancy
@@ -377,6 +378,58 @@ for i in [0]:
     ''' + TP + ' && ' + \
     sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
     ' scale=' + str(4*PSCALE)
+
+### symmetric lambda inverse command, from equation \ref{wcomp}
+### list of sources:
+### 0: bulkmod
+### 1: buoyancy
+### 2: null receiver gather to generate workspace
+### 3: pressure source gather, input as source_p 
+
+### list of targets:
+### 0: output pressure gather
+### 1: receiver p gather (intermediate)
+### 2: receiver v0 gather (intermediate)
+
+### note that fwd output p is used as vz source and fwd
+### fwd output vz is used as p source - this is the operator
+### Pi_0 Pi_1^T + Pi_1 Pi_0^T in equation wcomp.
+
+### scales are from analysis of relation between iwave operators
+### and theoretical counterparts
+
+    laminvcmd = \
+    sugain + '< ${SOURCES[3]} > ${TARGETS[0]}.undeltaz.su ' + \
+    ' scale=0.0 && ' + \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
+    '/bin/cp ${SOURCES[2]} ${TARGETS[2]} && ' + \
+    sugain + '< ${SOURCES[3]} > ${SOURCES[3]}' + \
+    '.deltaz.su scale=' + str(PSCALE) + ' && ' + \
+    asg + ' ' + \
+    'source_p=${SOURCES[3]}' + '.deltaz.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    data_p=${TARGETS[1]} data_v0=${TARGETS[2]}
+    deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP + ' && ' + \
+    sugain + '< ${TARGETS[1]} > ${TARGETS[1]}' + '.scaled.su' + \
+    ' scale=' + str(-BUOY/BULK) + ' && ' + \
+    sugain + '< ${TARGETS[2]} > ${TARGETS[2]}' + '.scaled.su ' + \
+    ' scale=' + str(1.0) + ' && ' + \
+    asg + ' ' + \
+    'source_p=${TARGETS[0]}' + '.undeltaz.su ' + \
+    'data_p=${TARGETS[2]}' + '.scaled.su ' + \
+    'data_v0=${TARGETS[1]}' + '.scaled.su ' + \
+    '''
+    bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+    deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+    dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+    taperpars=
+    ''' + TP + ' && ' + \
+    sugain + '< ${TARGETS[0]}' + '.undeltaz.su > ${TARGETS[0]}' + \
+    ' scale=' + str(-4*VSCALE)
 
 ### test case - compare output to dfwdphh0.su, dfwdvzhh0.su
 
@@ -907,7 +960,25 @@ for i in [0]:
 	      'dsrcp' + exp + '.su'],
              lamcmd, stdin=0, stdout=-1)
 
+### resimulate
+
+        Flow(['dfwdpsymmdnshs' + exp + '.su',
+	      'dfwdvzsymmdnshs' + exp + '.su'],
+	      ['bm' + exp[1] + str(i),
+	       'byh' + str(i),
+	       'rechdr' + str(i) + '.su',
+	       'symmdnshs' + exp + '.su',
+	       'srchdr' + str(i) + '.su'],
+	       fwdcmd, stdin=0, stdout=-1)
+
+### compare with direct simulation
+
+        Flow('ddiffsymmdnshs' + exp + '.su',
+            ['dfwdp'+exp+'.su','dfwdpsymmdnshs'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff')
+
 ### comparison with average
+
         Flow('avgdnshs' + exp + '.su',
 	       ['preddnshs' + exp + '.su',
 	        'preddnshstr' + exp + '.su'],
@@ -1218,26 +1289,80 @@ for i in [0]:
         Flow('predinvhs'+exp+'.su','laminvfs'+exp+'.su',
              sugain + ' scale=' + str(-0.5))
 
-########################## CG ############################
+########################## LAM INVERSE ###################
 
-### define number of its
+        Flow(['laminvsymmdnshs' + exp + '.su',
+	      'laminvsymmdnsintp' + exp + '.su',
+	      'laminvsymmdnsintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+	      'symmdnshs' + exp + '.su'],
+             laminvcmd, stdin=0, stdout=-1)
 
-        precond = False
+## commute test
+# scale by offset factor
 
-        if (precond==True):
-            resname='pcgres'
-            nresname='pcgnres'
-        else:
-            resname='cgres'
-            nresname='cgnres'
+        Flow('adinvhs' + exp + '.su',
+	     'dinvhs' + exp + '.su',
+	     offsc + ' input=${SOURCE} output=${TARGET} shift=0.0 ' + \
+	     'alpha=1.0 p=0.5', stdin=0, stdout=-1)
+	     
+# apply laminv to dinvhs
+
+        Flow(['laminvadinvhs' + exp + '.su',
+	      'laminvadinvhsintp' + exp + '.su',
+	      'laminvadinvhsintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+	      'adinvhs' + exp + '.su'],
+             laminvcmd, stdin=0, stdout=-1)
+
+# scale by offset factor
+
+        Flow('alaminvadinvhs' + exp + '.su',
+	     'laminvadinvhs' + exp + '.su',
+	     offsc + ' input=${SOURCE} output=${TARGET} shift=0.0 ' + \
+	     'alpha=1.0 p=0.5', stdin=0, stdout=-1)
+	     
+# apply lam to result
+
+        Flow(['lamalaminvadinvhs' + exp + '.su',
+	      'lamalaminvadinvhsintp' + exp + '.su',
+	      'lamalaminvadinvhsintvz' + exp + '.su'],
+	     ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+	      'alaminvadinvhs' + exp + '.su'],
+             lamcmd, stdin=0, stdout=-1)
+
+# scale dinvhs directly
+
+        Flow('atadinvhs' + exp + '.su',
+	     'dinvhs' + exp + '.su',
+	     offsc + ' input=${SOURCE} output=${TARGET} shift=0.0 ' + \
+	     'alpha=1.0 p=1.0', stdin=0, stdout=-1)
+	     
+########################## CG & PCG ############################
+
+### define number of its, alpha
+
+        alphalist = [0.0, 1.e-3]
 
         itmax = 21
+
+        ch = 1
+
+        alpha = alphalist[ch]
 	
         expsu = exp + '.su'
 
+######################### PCG ####################################
+
 ### data residual - 0th residual = input data
 
-        Flow('d0'+expsu, 'recp'+expsu,
+        Flow('pcgd0'+expsu, 'recp'+expsu,
 	     '/bin/cp ${SOURCE} ${TARGET}',
 	     stdin=0, stdout=-1)
 	
@@ -1245,91 +1370,122 @@ for i in [0]:
 
 ##### h0
 
-        Flow('h0'+expsu, 'srchdr' + str(i) + '.su',
+        Flow('pcgh0'+expsu, 'srchdr' + str(i) + '.su',
 	     '/bin/cp ${SOURCE} ${TARGET}',
 	     stdin=0,stdout=-1)
 
-##### r0
+##### r0 = S^T Lam_r d0
 
-        if (precond==True):
-            Flow(['lamrecp'+expsu, 'dnrp0'+expsu, 'dnrvz0'+expsu],
-	         ['bm' + exp[1] + str(i),
-                  'byh' + str(i),
-                  'nrphdr' + str(i) + '.su',
-	          'd0'+expsu],
-                 lamcmd, stdin=0, stdout=-1)		
-        else: 
-            Flow('lamrecp'+expsu,'d0'+expsu,
-                '/bin/cp ${SOURCE} ${TARGET}',
-                stdin=0, stdout=-1)
+        Flow(['pcglamrecp'+expsu, 'pcgdnrp0'+expsu, 'pcgdnrvz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nrphdr' + str(i) + '.su',
+              'pcgd0'+expsu],
+             lamcmd, stdin=0, stdout=-1)		
 
-        Flow(['r0'+expsu,'r0vz'+expsu],
+        Flow(['pcgr0'+expsu,'pcgr0vz'+expsu],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'srchdr' + str(i) + '.su',
-              'lamrecp'+expsu,
+              'pcglamrecp'+expsu,
               'rechdr' + str(i) + '.su'],
              adjcmd, stdin=0, stdout=-1)
 
-        
-        Flow(nresname + '0' + exp + '.txt', 'r0'+expsu,
+#### start report files
+
+        Flow('pcg' + str(ch) + 'nres0' + exp + '.txt', 'pcgr0'+expsu,
              norm + ' in=${SOURCE} >> ${TARGET}',
 	     stdin=0, stdout=-1)
 
-        Flow(resname + '0' + exp + '.txt', 'd0'+expsu,
+        Flow('pcg' + str(ch) + 'res0' + exp + '.txt', 'pcgd0'+expsu,
              norm + ' in=${SOURCE} >> ${TARGET}',
 	     stdin=0, stdout=-1)
 
-##### p0
+##### p0 = M^-1 r0
 
-        if (precond==True):
-            Flow(['p0'+expsu, 'nsp0'+expsu, 'nsvz0'+expsu],
-                 ['bm' + exp[1] + str(i),
-                  'byh' + str(i),
-                  'nsphdr' + str(i) + '.su',
-                  'r0'+expsu],
-                  lamcmd, stdin=0, stdout=-1)		  
-        else: 
-            Flow('p0'+expsu,'r0'+expsu,
-                 '/bin/cp ${SOURCE} ${TARGET}',
-                 stdin=0, stdout=-1)
+# tp0 = (1+alpha^2 x^2)^-1/2 r0
+        Flow('pcgtp0'+expsu,
+	     'pcgr0'+expsu,
+	     offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	     'shift=1.0 alpha=' + str(alpha) + ' p=-0.5',
+	     stdin=0, stdout=-1)
 
+# lamtp0 = Lam_s tp0
+
+        Flow(['pcglamtp0'+expsu, 'pcgnsp0'+expsu, 'pcgnsvz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+              'pcgtp0'+expsu],
+             lamcmd, stdin=0, stdout=-1)	
+
+# p0 = (1+alpha^2 x^2)^-1/2 lamtp0
+
+        Flow('pcgp0'+expsu,
+	     'pcglamtp0'+expsu,
+	     offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	     'shift=1.0 alpha=' + str(alpha) + ' p=-0.5',
+	     stdin=0, stdout=-1)
+	     
 ##### g0
 
-        Flow('g0'+expsu,'p0'+expsu,
+        Flow('pcgg0'+expsu,'pcgp0'+expsu,
              '/bin/cp ${SOURCE} ${TARGET}',
              stdin=0, stdout=-1)
 
 ##### q0 = N p0
-	     
-        Flow(['s0'+expsu,'svz0'+expsu],
+
+# S^T Lam_r S p0
+
+        Flow(['pcgs0'+expsu,'pcgsvz0'+expsu],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'rechdr' + str(i) + '.su',
-              'p0'+expsu,
+              'pcgp0'+expsu,
               'srchdr' + str(i) + '.su'],
               fwdcmd, stdin=0, stdout=-1)
 
-        if (precond==True):
-            Flow(['lams0'+expsu, 'nrp0'+expsu, 'nrvz0'+expsu],
-                 ['bm' + exp[1] + str(i),
-                  'byh' + str(i),
-                  'nrphdr' + str(i) + '.su',
-                  's0'+expsu],
-                  lamcmd, stdin=0, stdout=-1)		
-        else:
-            Flow('lams0'+expsu,'s0'+expsu,
-                 '/bin/cp ${SOURCE} ${TARGET}',
-                 stdin=0, stdout=-1)
+        Flow(['pcglams0'+expsu, 'pcgnrp0'+expsu, 'pcgnrvz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nrphdr' + str(i) + '.su',
+              'pcgs0'+expsu],
+             lamcmd, stdin=0, stdout=-1)	
 	    
-        Flow(['q0'+expsu,'q0vz'+expsu],
+        Flow(['pcgq1t0'+expsu,'pcgq0vz'+expsu],
              ['bm' + exp[1] + str(i),
               'byh' + str(i),
               'srchdr' + str(i) + '.su',
-              'lams0'+expsu,
+              'pcglams0'+expsu,
               'rechdr' + str(i) + '.su'],
               adjcmd, stdin=0, stdout=-1)
 
+# alpha^2 A^T Lam_s^-1 A p0
+
+        Flow('pcgqap0'+expsu,'pcgp0'+expsu,
+	     offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	     'shift=0.0 alpha=' + str(alpha) + ' p=0.5',
+	     stdin=0, stdout=-1)
+
+        Flow(['pcglaminvap0'+expsu, 'pcgnsapp0'+expsu, 'pcgnsapvz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'nsphdr' + str(i) + '.su',
+              'pcgqap0'+expsu],
+             laminvcmd, stdin=0, stdout=-1)	
+
+        Flow('pcgq2t0'+expsu,'pcglaminvap0'+expsu,
+	     offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	     'shift=0.0 alpha=' + str(alpha) + ' p=0.5',
+	     stdin=0, stdout=-1)
+	     
+# N p0
+
+        Flow('pcgq0'+expsu,
+	    ['pcgq1t0'+expsu, 'pcgq2t0'+expsu],
+	    suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+	    stdin=0)
+	    
 # Iteration loop
 
         for it in range(itmax):
@@ -1341,123 +1497,391 @@ for i in [0]:
 
 ### lines 8-10
 	    
-            Flow(['h'+ptail,'r'+ptail, 'd'+ptail],
-	         ['h'+ctail,'r'+ctail, 'd'+ctail,
-		  'g'+ctail, 'p'+ctail, 'q'+ctail],
+            Flow(['pcgh'+ptail, 'pcgr'+ptail, 'pcgd'+ptail],
+	         ['pcgh'+ctail, 'pcgr'+ctail, 'pcgd'+ctail,
+		  'pcgg'+ctail, 'pcgp'+ctail, 'pcgq'+ctail],
 		 cg8to10 + \
-		 ' hc=h' + ctail +\
-		 ' hp=h' + ptail +\
-		 ' rc=r' + ctail +\
-		 ' rp=r' + ptail +\
-		 ' dc=d' + ctail +\
-		 ' dp=d' + ptail +\
-                 ' g=g' + ctail +\
-                 ' p=p' + ctail +\
-		 ' s=s' + ctail +\
-                 ' q=q' + ctail,
+		 ' hc=pcgh' + ctail +\
+		 ' hp=pcgh' + ptail +\
+		 ' rc=pcgr' + ctail +\
+		 ' rp=pcgr' + ptail +\
+		 ' dc=pcgd' + ctail +\
+		 ' dp=pcgd' + ptail +\
+                 ' g=pcgg' + ctail +\
+                 ' p=pcgp' + ctail +\
+		 ' s=pcgs' + ctail +\
+                 ' q=pcgq' + ctail,
 		 stdin=0, stdout=-1)
 
 ### line 11
 
-            if (precond==True):
-                Flow(['g'+ptail, 'nsp'+ptail, 'nsvz'+ptail],
-                     ['bm' + exp[1] + str(i),
-                      'byh' + str(i),
-                      'nsphdr' + str(i) + '.su',
-                      'r'+ptail],
-                     lamcmd, stdin=0, stdout=-1)		  
-            else:
-                Flow('g'+ptail,'r'+ptail,
-                     '/bin/cp ${SOURCE} ${TARGET}',
-                     stdin=0, stdout=-1)
-		 
+##### g_it+1 = M^-1 r_it+1
+
+# tr_it+1 = (1+alpha^2 x^2)^-1/2 r_it+1
+
+            Flow('pcgtr'+ptail,
+	         'pcgr'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=1.0 alpha=' + str(alpha) + ' p=-0.5',
+	         stdin=0, stdout=-1)
+
+# lamtr_it+1 = lam_s tr_it+1
+
+            Flow(['pcglamtr'+ptail, 'pcgnsp'+ptail, 'pcgnsvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nsphdr' + str(i) + '.su',
+                  'pcgtr'+ptail],
+                 lamcmd, stdin=0, stdout=-1)	
+
+# g_it+1 = (1+alpha^2 x^2)^-1/2 lamtr_it+1
+
+            Flow('pcgg'+ptail,
+	         'pcglamtr'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=1.0 alpha=' + str(alpha) + ' p=-0.5',
+	         stdin=0, stdout=-1)
+
 ### lines 12-13
-            Flow('p'+ptail,
-                ['r'+ctail,'r'+ptail,'g'+ctail,'g'+ptail,'p'+ctail],
+            Flow('pcgp'+ptail,
+                ['pcgr'+ctail,'pcgr'+ptail,'pcgg'+ctail,
+		'pcgg'+ptail,'pcgp'+ctail],
                 cg12to13 + \
-                 ' pp=p'+ptail +\
-	         ' pc=p'+ctail +\
-	         ' gp=g'+ptail +\
-	         ' gc=g'+ctail +\
-                 ' rp=r'+ptail +\
-	         ' rc=r'+ctail,
+                 ' pp=pcgp'+ptail +\
+	         ' pc=pcgp'+ctail +\
+	         ' gp=pcgg'+ptail +\
+	         ' gc=pcgg'+ctail +\
+                 ' rp=pcgr'+ptail +\
+	         ' rc=pcgr'+ctail,
 	        stdin=0,stdout=-1)
 
-### line 14
+### line 14 : S p_it+1
 
-            Flow(['s'+ptail,'svz'+ptail],
+            Flow(['pcgs'+ptail,'pcgsvz'+ptail],
 	         ['bm' + exp[1] + str(i),
 	          'byh' + str(i),
 	          'rechdr' + str(i) + '.su',
-	          'p'+ptail,
+	          'pcgp'+ptail,
 	          'srchdr' + str(i) + '.su'],
 	          fwdcmd, stdin=0, stdout=-1)
 
-            if (precond==True):
-                Flow(['lams'+ptail, 'nrp'+ptail, 'nrvz'+ptail],
-                     ['bm' + exp[1] + str(i),
-                      'byh' + str(i),
-                      'nrphdr' + str(i) + '.su',
-                      's'+ptail],
-                     lamcmd, stdin=0, stdout=-1)		
-            else:
-                Flow('lams'+ptail,'s'+ptail,
-                     '/bin/cp ${SOURCE} ${TARGET}',
-                     stdin=0, stdout=-1)
-	    
-            Flow(['q'+ptail,'qvz'+ptail],
+### Lam_r S p_it+1
+
+            Flow(['pcglams'+ptail, 'pcgnlamsp'+ptail, 'pcgnlamsvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nrphdr' + str(i) + '.su',
+                  'pcgs'+ptail],
+                 lamcmd, stdin=0, stdout=-1)	
+
+# S^T Lam_r S p_it+1
+
+            Flow(['pcgq1t'+ptail,'pcgqvz'+ptail],
                  ['bm' + exp[1] + str(i),
                   'byh' + str(i),
                   'srchdr' + str(i) + '.su',
-                  'lams'+ptail,
+                  'pcglams'+ptail,
                   'rechdr' + str(i) + '.su'],
                  adjcmd, stdin=0, stdout=-1)
 
-            Flow(nresname + str(it+1) + exp+'.txt',
-		['r'+ptail, nresname + str(it) + exp+'.txt'],
+# alpha^2 A^T lamsinv A p_it+1
+
+            Flow('pcgap'+ptail,'pcgp'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=0.0 alpha=' + str(alpha) + ' p=0.5',
+	         stdin=0, stdout=-1)
+
+            Flow(['pcglaminvap'+ptail, 'pcgnsapp'+ptail, 'pcgnsapvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nsphdr' + str(i) + '.su',
+                  'pcgap'+ptail],
+                 laminvcmd, stdin=0, stdout=-1)	
+
+            Flow('pcgq2t'+ptail,'pcglaminvap'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=0.0 alpha=' + str(alpha) + ' p=0.5',
+	         stdin=0, stdout=-1)
+		 
+# N p_it+1
+
+            Flow('pcgq'+ptail,
+	        ['pcgq1t'+ptail, 'pcgq2t'+ptail],
+	        suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+	        stdin=0)
+
+#### reports
+	    
+            Flow('pcg' + str(ch) + 'nres' + str(it+1) + exp+'.txt',
+		['pcgr'+ptail, 'pcg'+str(ch) + 'nres' + str(it) + exp+'.txt'],
 		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
                  norm + ' in=${SOURCES[0]} >> ${TARGET}',
                  stdin=0, stdout=-1)
 
-            Flow(resname + str(it+1) + exp+'.txt',
-		['d'+ptail, resname + str(it) + exp+'.txt'],
+            Flow('pcg' + str(ch) + 'res' + str(it+1) + exp+'.txt',
+		['pcgd'+ptail, 'pcg' + str(ch) + 'res' + str(it) + exp+'.txt'],
 		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
                  norm + ' in=${SOURCES[0]} >> ${TARGET}',
                  stdin=0, stdout=-1)
 
 ### compute final residual directly
 
-            Flow(['cgsim'+ptail,'jnk'+ptail],
+            Flow(['pcg' + str(ch) + 'sim'+ptail,'pcgsimvz'+ptail],
 	         ['bm' + exp[1] + str(i),
                   'byh' + str(i),
                   'rechdr' + str(i) + '.su',
-                  'h'+ptail,
+                  'pcgh'+ptail,
                   'srchdr' + str(i) + '.su'],
                   fwdcmd, stdin=0, stdout=-1)
 
-            Flow('cgresid'+ptail,
-	         ['d0'+exp+'.su','pcgsim'+ptail],
+            Flow('pcg'+str(ch)+'resid'+ptail,
+	         ['pcgd0'+exp+'.su','pcg'+str(ch)+'sim'+ptail],
 		 suop2 + ' ${SOURCES[0]} ${SOURCES[1]}',
 		 stdin=0)
 
-        Flow(['compres'+exp+'.rsf', 'compres'+exp+'.dat'],
-	     'cgres20'+exp+'.txt',
-	     'echo n1=21 o1=0 d1=1 >  ${TARGETS[0]} && ' + \
-	     'echo n2=2  o2=0 d2=1 >> ${TARGETS[0]} && ' + \
-	     'echo data_format=ascii_float >> ${TARGETS[0]} && ' + \
-             'echo in=${TARGETS[1]} >> ${TARGETS[0]} && ' + \
-	     '/bin/cat ${SOURCE} >  ${TARGETS[1]} && ' + \
-	     '/bin/cat ../pcg/p${SOURCE} >> ${TARGETS[1]}',
+            Flow('pcg'+str(ch)+'h'+ptail,
+	         'pcgh'+ptail,
+                 '/bin/cp ${SOURCE} ${TARGET}',
+		 stdin=0, stdout=-1)
+		 
+######################### CG ####################################
+
+### data residual - 0th residual = input data
+
+        Flow('cgd0'+expsu, 'recp'+expsu,
+	     '/bin/cp ${SOURCE} ${TARGET}',
+	     stdin=0, stdout=-1)
+	
+### initialize
+
+##### h0
+
+        Flow('cgh0'+expsu, 'srchdr' + str(i) + '.su',
+	     '/bin/cp ${SOURCE} ${TARGET}',
+	     stdin=0,stdout=-1)
+
+##### r0 = S^T d0
+
+        Flow(['cgr0'+expsu,'cgr0vz'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'cgd0'+expsu,
+              'rechdr' + str(i) + '.su'],
+             adjcmd, stdin=0, stdout=-1)
+
+#### start report files
+
+        Flow('cg' + str(ch) + 'nres0' + exp + '.txt', 'cgr0'+expsu,
+             norm + ' in=${SOURCE} >> ${TARGET}',
 	     stdin=0, stdout=-1)
 
-        Flow(['compnres'+exp+'.rsf', 'compnres'+exp+'.dat'],
-	     'cgnres20'+exp+'.txt',
+        Flow('cg' + str(ch) + 'res0' + exp + '.txt', 'cgd0'+expsu,
+             norm + ' in=${SOURCE} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+##### p0 = r0
+
+        Flow('cgp0'+expsu, 'cgr0'+expsu,
+	     '/bin/cp ${SOURCE} ${TARGET}',
+	     stdin=0,stdout=1)
+	     
+##### g0 = p0
+
+        Flow('cgg0'+expsu,'cgp0'+expsu,
+             '/bin/cp ${SOURCE} ${TARGET}',
+             stdin=0, stdout=-1)
+
+##### q0 = N p0
+
+# S^T S p0
+
+        Flow(['cgs0'+expsu,'cgsvz0'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'rechdr' + str(i) + '.su',
+              'cgp0'+expsu,
+              'srchdr' + str(i) + '.su'],
+              fwdcmd, stdin=0, stdout=-1)
+
+        Flow(['cgq1t0'+expsu,'cgq0vz'+expsu],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'cgs0'+expsu,
+              'rechdr' + str(i) + '.su'],
+              adjcmd, stdin=0, stdout=-1)
+
+# alpha^2 A^T A p0
+
+        Flow('cgq2t0'+expsu,'cgp0'+expsu,
+	     offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	     'shift=0.0 alpha=' + str(alpha) + ' p=1.0',
+	     stdin=0, stdout=-1)
+	     
+# N p0
+
+        Flow('cgq0'+expsu,
+	    ['cgq1t0'+expsu, 'cgq2t0'+expsu],
+	    suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+	    stdin=0)
+	    
+# Iteration loop
+
+        for it in range(itmax):
+
+### define filename tails
+            ctail = str(it) + expsu
+            ptail = str(it+1) + expsu
+
+### lines 8-10
+	    
+            Flow(['cgh'+ptail, 'cgr'+ptail, 'cgd'+ptail],
+	         ['cgh'+ctail, 'cgr'+ctail, 'cgd'+ctail,
+		  'cgg'+ctail, 'cgp'+ctail, 'cgq'+ctail],
+		 cg8to10 + \
+		 ' hc=cgh' + ctail +\
+		 ' hp=cgh' + ptail +\
+		 ' rc=cgr' + ctail +\
+		 ' rp=cgr' + ptail +\
+		 ' dc=cgd' + ctail +\
+		 ' dp=cgd' + ptail +\
+                 ' g=cgg' + ctail +\
+                 ' p=cgp' + ctail +\
+		 ' s=cgs' + ctail +\
+                 ' q=cgq' + ctail,
+		 stdin=0, stdout=-1)
+
+### line 11
+
+##### g_it+1 = M^-1 r_it+1
+
+# tr_it+1 = (1+alpha^2 x^2)^-1/2 r_it+1
+
+            Flow('cgtr'+ptail,
+	         'cgr'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=1.0 alpha=' + str(alpha) + ' p=-0.5',
+	         stdin=0, stdout=-1)
+
+# lamtr_it+1 = lam_s tr_it+1
+
+            Flow(['cglamtr'+ptail, 'cgnsp'+ptail, 'cgnsvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'nsphdr' + str(i) + '.su',
+                  'cgtr'+ptail],
+                 lamcmd, stdin=0, stdout=-1)	
+
+# g_it+1 = r_it+1
+
+            Flow('cgg'+ptail,'cgr'+ptail,
+                 '/bin/cp ${SOURCE} ${TARGET}',
+		 stdin=0, stdout=-1)
+
+### lines 12-13
+            Flow('cgp'+ptail,
+                ['cgr'+ctail,'cgr'+ptail,'cgg'+ctail,
+		'cgg'+ptail,'cgp'+ctail],
+                cg12to13 + \
+                 ' pp=cgp'+ptail +\
+	         ' pc=cgp'+ctail +\
+	         ' gp=cgg'+ptail +\
+	         ' gc=cgg'+ctail +\
+                 ' rp=cgr'+ptail +\
+	         ' rc=cgr'+ctail,
+	        stdin=0,stdout=-1)
+
+### line 14 : S p_it+1
+
+            Flow(['cgs'+ptail,'cgsvz'+ptail],
+	         ['bm' + exp[1] + str(i),
+	          'byh' + str(i),
+	          'rechdr' + str(i) + '.su',
+	          'cgp'+ptail,
+	          'srchdr' + str(i) + '.su'],
+	          fwdcmd, stdin=0, stdout=-1)
+
+# S^T S p_it+1
+
+            Flow(['cgq1t'+ptail,'cgqvz'+ptail],
+                 ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'srchdr' + str(i) + '.su',
+                  'cgs'+ptail,
+                  'rechdr' + str(i) + '.su'],
+                 adjcmd, stdin=0, stdout=-1)
+
+# alpha^2 A^T A p_it+1
+
+            Flow('cgq2t'+ptail,'cgp'+ptail,
+	         offsc + ' input=${SOURCE} output=${TARGET} ' + \
+	         'shift=0.0 alpha=' + str(alpha) + ' p=1.0',
+	         stdin=0, stdout=-1)
+		 
+# N p_it+1
+
+            Flow('cgq'+ptail,
+	        ['cgq1t'+ptail, 'cgq2t'+ptail],
+	        suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=sum',
+	        stdin=0)
+
+#### reports
+	    
+            Flow('cg' + str(ch) + 'nres' + str(it+1) + exp+'.txt',
+		['cgr'+ptail, 'cg'+str(ch) + 'nres' + str(it) + exp+'.txt'],
+		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
+                 norm + ' in=${SOURCES[0]} >> ${TARGET}',
+                 stdin=0, stdout=-1)
+
+            Flow('cg' + str(ch) + 'res' + str(it+1) + exp+'.txt',
+		['cgd'+ptail, 'cg' + str(ch) + 'res' + str(it) + exp+'.txt'],
+		 '/bin/cp ${SOURCES[1]} ${TARGET} && ' + \
+                 norm + ' in=${SOURCES[0]} >> ${TARGET}',
+                 stdin=0, stdout=-1)
+
+### compute final residual directly
+
+            Flow(['cg'+str(ch)+'sim'+ptail,'jnk'+ptail],
+	         ['bm' + exp[1] + str(i),
+                  'byh' + str(i),
+                  'rechdr' + str(i) + '.su',
+                  'cgh'+ptail,
+                  'srchdr' + str(i) + '.su'],
+                  fwdcmd, stdin=0, stdout=-1)
+
+            Flow('cg'+str(ch)+'resid'+ptail,
+	         ['cgd0'+exp+'.su','cg'+str(ch)+'sim'+ptail],
+		 suop2 + ' ${SOURCES[0]} ${SOURCES[1]}',
+		 stdin=0)
+
+            Flow('cg'+str(ch)+'h'+ptail,
+	         'cgh'+ptail,
+		 '/bin/cp ${SOURCE} ${TARGET}',
+		 stdin=0, stdout=-1)
+
+######################### compare cg, pcg #####################
+
+        Flow(['compres'+str(ch)+exp+'.rsf', 'compres'+str(ch)+exp+'.dat'],
+	     ['cg'+str(ch)+'res20'+exp+'.txt',
+	      'pcg'+str(ch)+'res20'+exp+'.txt'],
 	     'echo n1=21 o1=0 d1=1 >  ${TARGETS[0]} && ' + \
 	     'echo n2=2  o2=0 d2=1 >> ${TARGETS[0]} && ' + \
 	     'echo data_format=ascii_float >> ${TARGETS[0]} && ' + \
              'echo in=${TARGETS[1]} >> ${TARGETS[0]} && ' + \
 	     '/bin/cat ${SOURCE} >  ${TARGETS[1]} && ' + \
-	     '/bin/cat ../pcg/p${SOURCE} >> ${TARGETS[1]}',
+	     '/bin/cat p${SOURCE} >> ${TARGETS[1]}',
+	     stdin=0, stdout=-1)
+
+        Flow(['compnres'+str(ch)+exp+'.rsf', 'compnres'+str(ch)+exp+'.dat'],
+	     ['cg'+str(ch)+'nres20'+exp+'.txt',
+	      'pcg'+str(ch)+'nres20'+exp+'.txt'],
+	     'echo n1=21 o1=0 d1=1 >  ${TARGETS[0]} && ' + \
+	     'echo n2=2  o2=0 d2=1 >> ${TARGETS[0]} && ' + \
+	     'echo data_format=ascii_float >> ${TARGETS[0]} && ' + \
+             'echo in=${TARGETS[1]} >> ${TARGETS[0]} && ' + \
+	     '/bin/cat ${SOURCE} >  ${TARGETS[1]} && ' + \
+	     '/bin/cat p${SOURCE} >> ${TARGETS[1]}',
 	     stdin=0, stdout=-1)
 
 ########################## graphics ###########################
@@ -1472,6 +1896,7 @@ for i in [0]:
                 0.0, 0.0, 1.2, 1.2,
                 0.0, 0.0, 1.2, 1.2,
 		0.0, 0.0, 0.0, 0.0,
+		1.2,
 		0.0, 0.0,
                 1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
@@ -1485,6 +1910,7 @@ for i in [0]:
                 2.0, 2.0, 3.0, 3.0,
                 2.0, 2.0, 3.0, 3.0,
 		2.0, 2.0, 2.0, 2.0,
+		3.0,
                 2.0, 2.0,		
                 3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
@@ -1498,6 +1924,7 @@ for i in [0]:
                 0.2, 0.2, 0.08, 0.08,
                 0.2, 0.2, 0.08, 0.08,
 		0.2, 0.2, 0.2, 0.2,
+		0.08,
 		0.2, 0.2,
                 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
@@ -1511,6 +1938,7 @@ for i in [0]:
                 'preddinvhs', 'ddiffinvhs', 'dpredhsrecp', 'ddiffpredhsrecp',
                 'preddnshs', 'ddiffnshs', 'dprednshsrecp', 'ddiffprednshsrecp',
 		'preddnshstr', 'ddiffnslamtr', 'symmdnshs', 'avgdnshs',
+		'ddiffsymmdnshs',
 		'lamsstlamrdrecp', 'difflamsstlamrdrecp',
                 'drecp', 'dfwdp', 'daltp',
                 'dfwdvz', 'daltvz', 'dsvcomp']
@@ -1584,10 +2012,10 @@ for i in [0]:
                   graph plotcol=5,6 plotfat=4,4 wanttitle=n label2=Pressure unit2=GPa
                   ''')
 
-        Result('compres'+exp,
+        Result('compres'+str(ch)+exp,
 	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
 
-        Result('compnres'+exp,
+        Result('compnres'+str(ch)+exp,
 	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
 	       
 Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=z label2=x unit1=m unit2=m barunit=GPa xinch=10 yinch=5')
