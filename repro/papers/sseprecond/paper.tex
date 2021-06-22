@@ -1305,14 +1305,14 @@ images themselves. Since the propagation takes place entirely in a
 region where all of the mechanical parameters are homogenous, I do not
 offer a similar comparison for the lens model.
 
-The model space weight operator $W_m$ introduced in the last section is
+The model space weight operator $W_m^{-1}$ introduced in the last section is
 replaced by its asymptotic approximation
 \[
-  \tilde{W}_m = \frac{1}{2}(\tilde{\Lambda}^+_{z_s} +
+\frac{1}{2}(\tilde{\Lambda}^+_{z_s} +
   (\tilde{\Lambda}^+_{z_s})^T)
 \]
 \[
-  = -8 \left((V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
+  \approx -8 \left((V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
     S}^+_{z_s,z_s+\Delta z}\Pi_1^T \right.+
 \]
 \[
@@ -1320,8 +1320,9 @@ replaced by its asymptotic approximation
       z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}\right)
 \]
 \begin{equation}
-  \label{eqn:wcomp}
-  = -4(\Pi_1 ({\cal S}^+_{z_s,z_s+\Delta z})^T(\Pi_0^T\Pi_1 + \Pi_1^T\Pi_0) {\cal S}^+_{z_s,z_s+\Delta z}\Pi_1^T)
+  \label{eqn:winvcomp}
+  = -4(\Pi_1 ({\cal S}^+_{z_s,z_s+\Delta z})^T(\Pi_0^T\Pi_1 +
+  \Pi_1^T\Pi_0) {\cal S}^+_{z_s,z_s+\Delta z}\Pi_1^T) = \tilde{W}_m^{-1} .
 \end{equation}
 with a similar definition for the replacement $\tilde{W}_d$ of $W_d$.
 
@@ -1333,14 +1334,59 @@ fields, passing the velocity field as a pressure source and the
 pressure field as a velocity source.
 
 Figure \ref{fig:symmdnshshh0} shows the output of the symmetrized
-approximate source-to-pressure operator per equation \ref{eqn:wcomp},
+approximate source-to-pressure operator per equation \ref{eqn:winvcomp},
 applied once again to the pressure data in Figure
 \ref{fig:dsrcphh0}. Note the resemblance to Figures
 \ref{fig:preddnshshh0} and \ref{fig:preddnshstrhh0}. These are all
-asymptotic approximations of each other.
+asymptotic approximations of each other. Figure
+\ref{fig:ddiffsymmdxnshsll0} shows the
+ the difference between the pressure gather at $z=z_r$ produced from
+ the pressure source output by the symmetrized $\Lambda$, and the point source
+simulation (Figure \ref{fig:dfwdplh0}), plotted on the same scale as
+the latter, in both cases with all propagations in the lens model.
 
- \newpage
- 
+One more computation is required for the full implementation of the
+preconditioning strategy explained in the last section: $W_m$ is
+required, not just $W_m^{-1}$. Note that $W_m$ plays two roles in the
+second term in equation \ref{eqn:norm1}: it is the weight matrix for
+both the domain and range norms for $A$. It is perfectly OK for one of
+these to be replaced by an asymptotic approximation, so long as it is
+symmetric and computable (and at least semi-definite). The second row
+in equation \ref{eqn:snull} appears as \ref{eqn:snull2} above:
+introducing (formally) the inverse of $\Lambda^+$,
+\begin{equation}
+  \label{eqn:snull2mod}
+-\frac{1}{2}\Pi_1{\cal S}^{+}_{z_s,z_r}\Pi_0^T  \approx
+V^{+}_{z_s,z_r}(\Lambda^{+}_{z_s})^{-1}
+\end{equation}
+whence from the second line in display \ref{eqn:approxinv}
+\begin{equation}
+  \label{eqn:laminv}
+-\frac{1}{8}(S^+_{z_s,z_r})^T\Pi_1{\cal S}^{+}_{z_s,z_r}\Pi_0^T  
+\approx (\Lambda^{+}_{z_s})^{-1}
+\end{equation} 
+and
+\begin{equation}
+  \label{eqn:laminvtr}
+-\frac{1}{8}\Pi_0({\cal S}^{+}_{z_s,z_r})^T\Pi_1^T S^+_{z_s,z_r}
+\approx ((\Lambda^{+}_{z_s})^{-1})^T.
+\end{equation}
+Using the definition \ref{eqn:sdef} of $S^+_{z_s,z_r}$, the
+symmetrized $\Lambda^{-1}$ is
+\begin{equation}
+  \label{wcomp}
+ \tilde{W}_m = -\frac{1}{16}\left(\Pi_0 ({\cal S}^{+}_{z_s,z_r})^T
+   (\Pi_1^T \Pi_0 + \Pi_0^T \Pi_1) {\cal S}^{+}_{z_s,z_r} \Pi_0^T\right)
+   \approx \frac{1}{2}((\Lambda^{+}_{z_s})^{-1}
+   +((\Lambda^{+}_{z_s})^{-1})^T) .
+\end{equation}
+Comparison with the definition \ref{eqn:winvcomp} shows that
+$\tilde{W}_m$ and $\tilde{W}_m^{-1}$ differ only in the initial and
+final projection factors (and overall scale), and in particular either
+can be computed for the cost of a forward/adjoint operator pair. Note
+that $\tilde{W}_m^{-1}$ is inverse to $\tilde{W}_m$ only in an
+approximate (asymptotic, aperture-limited) sense. 
+
 \section{Figures}
 
 
@@ -1646,35 +1692,59 @@ in GPa. Positions of point source and receiver line indicated.}
     model, using ``near'' receiver traces at $z=2900$ m. Compare
     Figure \ref{fig:preddnshshh0}.}
 
+\plot{ddiffsymmdnshsll0}{width=\textwidth}{Difference between point
+  source simulation (Figure \ref{fig:dfwdplh0}) and pressure gather at
+  $z=z_r=1000$ m produced by simulation with the source shown in
+  Figure \ref{fig:symmdnshshh0},
+  propagation in the lens model.}
+
 \plot{compreshh0}{width=\textwidth}{Comparison of residual Euclidean 
   norms: CG (blue), PCG (red), plotted vs. iteration. Data =
   homogeneous model, point source (Figure \ref{fig:recphh0}), inversion 
-  in homogeneous model.}
+  in homogeneous model. Penalty weight
+  $\alpha=0$.}
 
-\plot{compreslh0}{width=\textwidth}{Comparison of residual Euclidean 
+\plot{compres0lh0}{width=\textwidth}{Comparison of residual Euclidean 
   norms: CG (blue), PCG (red), plotted vs. iteration. Data =
   lens model, point source (Figure \ref{fig:recplh0}), inversion 
-  in homogenous model.}
+  in homogenous model. Penalty weight 
+  $\alpha=0$.}
+
+\plot{compres1lh0}{width=\textwidth}{Comparison of residual Euclidean 
+  norms: CG (blue), PCG (red), plotted vs. iteration. Data =
+  lens model, point source (Figure \ref{fig:recplh0}), inversion 
+  in homogenous model. Penalty weight 
+  $\alpha=10^{-3}$.}
 
 \plot{compresll0}{width=\textwidth}{Comparison of residual Euclidean 
   norms: CG (blue), PCG (red), plotted vs. iteration. Data =
   lens model, point source (Figure \ref{fig:recplh0}), inversion 
-  in lens model.}
+  in lens model. Penalty weight
+  $\alpha=0$.}
 
 \plot{compnreshh0}{width=\textwidth}{Comparison of normal residual
   (gradient) Euclidean norms: CG (blue), PCG (red), plotted
   vs. iteration. Data = homogeneous model, point source (Figure
-  \ref{fig:recphh0}), inversion in homogenous model.}
+  \ref{fig:recphh0}), inversion in homogenous model. Penalty weight $\alpha=0$.}
 
-\plot{compnreslh0}{width=\textwidth}{Comparison of normal residual 
+\plot{compnres0lh0}{width=\textwidth}{Comparison of normal residual 
   (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
   vs. iteration. Data = lens model, point source (Figure 
-  \ref{fig:recplh0}), inversion in homogenous model.}
+  \ref{fig:recplh0}), inversion in homogenous model. Penalty weight
+  $\alpha=0$.}
+
+\plot{compnres1lh0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in homogenous model. Penalty weight
+  $\alpha=10^{-3}$.}
 
 \plot{compnresll0}{width=\textwidth}{Comparison of normal residual 
   (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
   vs. iteration. Data = lens model, point source (Figure 
-  \ref{fig:recplh0}), inversion in lens model.}
+  \ref{fig:recplh0}), inversion in lens model. Penalty weight
+  $\alpha=0$.}
+
 
 \newpage
 
