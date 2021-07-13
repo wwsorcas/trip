@@ -1,5 +1,4 @@
 from rsf.proj import *
-from trip.proj import getnum
 import os
 
 ################################# DEFNS ##################################
@@ -45,6 +44,8 @@ cg12to13         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL12to13.x')
 # dummy target
 Flow('cout0.txt',None,'/usr/bin/touch $TARGET')
 
+### parameters - three discretization levels
+
 BULK = 4.0
 BUOY = 1.0
 DX   = [20,10,5]
@@ -72,7 +73,7 @@ SX   =  3500
 TMIN = 1.0
 TMAX = 3.0
 
-# taper parameters - taper in gx only
+# trapezoidal taper parameters - taper in gx only
 TPIN = 'gx:2000,2500,5500,6000'
 TP = 'gx:1000,1500,6000,6500'
 
@@ -82,7 +83,9 @@ TP = 'gx:1000,1500,6000,6500'
 #for i in range(0,3):
 for i in [0]:
 
-# scale for DtoN map
+# scale for SSE maps: multiply by bulk/buoy because IWAVE does not scale RHS
+# functions, dx because surface source implicitly integrates over surface
+
     PSCALE = DX[i]*BULK
     VSCALE = DX[i]*BUOY
 
@@ -112,8 +115,6 @@ for i in [0]:
          ' a=' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',
          stdin=0)
-
-# elevated source line
 
 # near source lines, gelev=selev +/- delta z
 
@@ -206,6 +207,7 @@ for i in [0]:
     DXL=DX[i]
     DTL=DT[i]
 
+# homog bulk
     Flow('bmh'+str(i), None, 
          'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
@@ -216,6 +218,7 @@ for i in [0]:
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0)
 
+# homog buoy
     Flow('byh'+str(i), None, 
          'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
@@ -226,6 +229,7 @@ for i in [0]:
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0) 
 
+# lens bulk
     Flow('bml'+str(i), None, 
          'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
@@ -237,6 +241,7 @@ for i in [0]:
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0)
 
+# weak lens
     Flow('bmw'+str(i), None, 
          'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
          ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
@@ -247,6 +252,8 @@ for i in [0]:
          ' x1lens=2000 x2lens=4000 dlens=700 tlens=1500 vlens=-0.4| ' +
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0)
+
+# thin models
 
     Flow('bmhth'+str(i), None, 
          'makevel n1=' + str(NZTH[i]) + ' n2=' + str(NXL) +
@@ -270,7 +277,7 @@ for i in [0]:
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0)
 
-# simulation commands
+# simulation commands - hard-wire common options
 
 # usage:
 #    Flow([outp, outvz],
@@ -675,6 +682,8 @@ for i in [0]:
 
         Flow('dinvhs'+exp+'.su','dinvvz'+exp+'.su',
              sugain + ' scale=' + str(4*VSCALE))
+
+# check that adjcmd gives same result with less pain
 
         Flow(['dinvpnew' + exp + '.su',
               'dinvvznew' + exp + '.su'],
@@ -1352,7 +1361,7 @@ for i in [0]:
 
         itmax = 21
 
-        ch = 1
+        ch = 0
 
         alpha = alphalist[ch]
 	
@@ -1495,7 +1504,7 @@ for i in [0]:
             ctail = str(it) + expsu
             ptail = str(it+1) + expsu
 
-### lines 8-10
+### lines 8-10 
 	    
             Flow(['pcgh'+ptail, 'pcgr'+ptail, 'pcgd'+ptail],
 	         ['pcgh'+ctail, 'pcgr'+ctail, 'pcgd'+ctail,
@@ -1886,7 +1895,7 @@ for i in [0]:
 
 ########################## graphics ###########################
 
-        tmin = [1.2, 1.2, 1.2,
+        tmin = [1.2, 1.2, 1.2, 1.2,
                 0.0, 0.0, 0.0,
                 1.2,
                 0.0, 0.0,
@@ -1900,7 +1909,7 @@ for i in [0]:
 		0.0, 0.0,
                 1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
-        tmax = [3.0, 3.0, 3.0,
+        tmax = [3.0, 3.0, 3.0, 3.0,
                 2.0, 2.0, 2.0,
                 3.0,
                 2.0, 2.0,
@@ -1914,7 +1923,7 @@ for i in [0]:
                 2.0, 2.0,		
                 3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
-        clip = [0.08, 0.08, 0.08,
+        clip = [0.08, 0.08, 0.08, 0.08,
                 5.0, 5.0, 5.0,
                 0.08,
                 0.2, 0.2,
@@ -1928,7 +1937,7 @@ for i in [0]:
 		0.2, 0.2,
                 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
-        id   = ['recp', 'fwdp', 'altp',
+        id   = ['recp', 'recvz', 'fwdp', 'altp',
                 'invfs', 'invhs', 'predinvhs',
                 'diffrecp',
                 'dsrcp', 'dsrcvz',
@@ -2019,7 +2028,5 @@ for i in [0]:
 	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
 	       
 Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=z label2=x unit1=m unit2=m barunit=GPa xinch=10 yinch=5')
-
-
     
 End()
