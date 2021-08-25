@@ -1,0 +1,81 @@
+\documentclass[xcolor=dvipsnames,12pt,aspectratio=43]{beamer}
+\usecolortheme[named=violet]{structure} 
+
+%\usetheme{umbc2} 
+\usepackage{pgf}
+%\usepackage[pdftex]{graphicx}
+\usepackage{color}
+\usepackage{amssymb,amsmath}
+\usepackage[english]{babel}
+\mode<presentation>
+
+ \usepackage{multimedia}
+\usefonttheme{structurebold}
+
+%\useinnertheme{umbcboxes}
+
+%\setbeamercolor{umbcboxes}{bg=violet!15,fg=black}  
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}
+\input{./math-macros}
+\setlength{\parskip}{2ex}   % place a blank line between paragraphs
+\def\Logo{\@ifnextchar(\beamer@Logo\logo}
+\def\beamer@Logo(#1,#2){\logo}
+
+\AtBeginSection[]{
+{\setbeamertemplate{logo}{}
+ \begin{frame}<beamer>
+    \frametitle{Agenda}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+}
+% Images
+% Macros
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\bm}{\bar{m}}
+\newcommand{\dm}{\delta m}
+\newcommand{\dom}{\delta \bar{m}}
+\newcommand{\doma}{\delta \bar{m}_{\alpha}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bcF}{{\bar{\cal F}}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\of}{\bar{f}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\oS}{\bar{S}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\Ja}{J_{\alpha}}
+\newcommand{\Na}{N_{\alpha}}
+\newcommand{\dd}{\delta d}
+\newcommand{\ddl}{\delta d_{\alpha}}
+\title[]{Dimension Reduction for Extended Space Approaches to Seismic Velocity Inversion}
+\author[]{William W. Symes}
+\institute[]{The Rice Inversion Project\\Computational and Applied Mathematics\\Rice University}
+\date{March 2019}
+
+\begin{document}
+
+\begin{frame}
+reduced penalty objective:
+\[
+J_{\alpha}[v] = \min_w \frac{1}{2}(\|F[v]w-d\|_d^2 + \alpha^2\|Aw\|_m^2)
+\]
+
+= value of RHS for $w$ = solution of {\em normal equation}
+
+\[
+(F[v]^{\dagger}F[v] + \alpha^2 A^{\dagger}A) w = F[v]^{\dagger}d
+\]
+
+$(\cdot)^{\dagger}$ = weighted adjoint, weight operators TBD - define model, data space norms $\|\cdot\|_d, \|\cdot\|_m$
+
+\end{frame}
+
+
+\end{document}
+
+
