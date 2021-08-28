@@ -1,0 +1,1 @@
+g++ cartoon.cc; ./a.out; sfgraph wanttitle=n label1="v_p (km/s)" plotfat=6,6,6,4 plotcol=5,6,3,4<cartoon.rsf > cartoon.vpl; pspen<cartoon.vpl color=y label= >cartoon.eps
