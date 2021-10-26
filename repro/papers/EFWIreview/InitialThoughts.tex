@@ -1,0 +1,80 @@
+\documentclass[10pt]{article}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[all]{xy}
+\usepackage{hyperref}
+\hypersetup{ colorlinks = true, linkcolor = blue, citecolor = blue}
+
+\parindent=0cm
+\parskip=.25cm
+\def\accskip{\hskip.25em\relax}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{result}{Result}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{assumption}{Assumption}
+\newcommand{\qed}{\hfill \ensuremath{\Box}}
+
+
+
+\begin{document}
+Hi Bill,
+
+I have started thinking about the possible content of a joined review paper on extension concepts for velocity inversion. Here are some initial thoughts for discussion. Feel free to disagree of course -- everything below is very rough and you may have completely different ideas about content of the paper. Shall we set up a zoom meeting again to discuss?
+
+One of the first questions I have is whether you are thinking about a pure review, or would consider including (partially) new material. For example, you mentioned you have a proof for the asymptotic vanishing of the gradient with respect to velocity of the SSE-functional on reflection data. Have you published that proof already? I will also mention some rough ideas below that we may want to work out as part of this paper.
+
+Assuming that Frontiers of Earth Science will come up with financial support for the cost related to open access publication, we will need to prepare an abstract, so we better agree on the central theme of the paper. The tentative title is telling a lot -- the infamous cycle skipping problem in standard FWI may be overcome by non-physical extensions of the inverse problem. The true physical model is enforced in a soft manner through a penalization term, annihilating non-physical behaviour. Another important common denominator in extended inverse problems is the requirement that first order perturbations of extended forward modeling can be written as the product of that operator and a 1st order skew symmetric pseudo-differential operator, something we have both established for the subsurface offset extended Born operator in 2014.
+
+As far as I can see, there are two classes of extended inversion schemes, one for reflection data (data misfit+DSO term), the other for transmission data (data misfit+SSE term). This dichotomy is at the forefront of attention again with the advent of long offset nodal surveys like Amendment. Such surveys are obviously motivated by the desire to measure transmission data, but vendors typically try to make their FWI schemes work for both reflections and transmissions in these data. Since everybody starts at the lowest possible frequency (typically 1.6-1.7 Hz), their is not much of a discussion initially, as the earth is not very reflective at such low frequencies. The debate starts when vendors push up the maximum frequency in the inversion, sometimes up to 12 Hz, where one would certainly have a mix between the two data types. Sofar, the difference between  FWI on diving/refracted waves only and on the full data has been small by the way.
+
+I would be in favour of connecting the mathematical insights to the new data becoming available in the industry, maybe already in the abstract. In the paper itself we could review the two classes mentioned above and possibly speculate on schemes working on both reflection and transmission data simultaneously. I very much realize this may require a next review paper in 10 years time;).
+
+Below are some more concrete thoughts around the two classes with lots of questions.
+
+You have formulated extended inversion schemes for reflection data of the form
+\begin{align}\label{ExtendedReflectionInversion}
+  J[c,i] & = \frac{1}{2}\left\Vert Fi-d \right\Vert^2 + \frac{1}{2}\alpha^2\left\Vert Ai\right\Vert^2,
+\end{align}
+with $F=F[c]$ a subsurface offset extended Born operator, $i=i(x,h)$ a subsurface offset extended image and $A$ an annihilator. I first saw this extension in your work from many years ago and recall you making comments on the number of iterations required by early pactitioners. Where did this topic go since then? I presume this will feature in our review?
+
+I fiddled a bit with this inverse problem by using the variable projection method described in your WRI and SSE papers and the relation
+\begin{align}\label{PerturbationExtendedBornOperator}
+  \delta F[c] & = F[c]P[c,\delta c],
+\end{align}
+which we both discovered and found these to be the essential ingredients for asymptotic local convexity of $J_{VPM}[c]$. Up to second order in $\delta c=c-c_0$ one has the asymptotic result
+\begin{align}\label{ExtendedReflectionInversion_AsymptoticConvexity}
+  J_{VPM}[c] & = \frac{1}{2}\Vert F[c_0]B[c_0,\delta c]i_0\Vert^2+
+  \frac{1}{2}\alpha^2\Vert[A,P[c_0,\delta c]]i_0\Vert^2,
+\end{align}
+ where $i_0(x,h)=i[c_0]=r(x)\delta(h)$ is a focused image gather and $B[c_0,\delta c]$ is a symmetric order $0$ pseudo-differential operator, linear in $\delta c$. I presume you have done similar/better calculations?
+ 
+For transmission data one should use the surface source extended inverse problem, which takes the form
+\begin{align}\label{ExtendedTransmissionInversion}
+  J[c,f] & = \frac{1}{2}\left\Vert Sf-d \right\Vert^2 + \frac{1}{2}\alpha^2\left\Vert Af\right\Vert^2,
+\end{align}
+with $S=S[c]$ the solution operator for the full wave equation, $f=f(x_s,y_s,x,y,t)\break\times\delta(z-z_s)$ a surface extended source, $A$ an annihilator trying to focus the source in $x=x_s, y=y_s)$. Your analysis of this problem for the 1D constant velocity case is very instructive. Could we consider the more general situation of diving waves in an arbitrary smooth velocity model? Clearly, we would need a relation of the form (\ref{PerturbationExtendedBornOperator}) again, which would look like
+\begin{align}\label{PerturbationExtendedTransmissionOperator}
+  \delta S[c] & = S[c]Q[c,\delta c].
+\end{align}
+I have not done the precise math, but it seems to me that such a relation ought to hold. $S[c]$ is an FIO mapping source functions to data and equation (\ref{PerturbationExtendedTransmissionOperator}) should be true for
+\begin{align}\label{symbolQ}
+{\rm sym}\, Q=i\omega(x,k)\delta T(x,k)
+\end{align} 
+with $\delta T(x,k)$ the traveltime perturbation due to a velocity perturbation $\delta c(y)$ along a diving ray starting in $x$ with take-off direction determined by the horizontal slowness $k$. We should have access to $k$ in the case of dense source (or receiver) sampling. If this can be demonstrated properly, would the same reasoning as above lead to asymptotic local convexity of the functional (\ref{ExtendedTransmissionInversion})?
+
+In practice, data will of course be a mix of reflections and diving waves in a ratio depending on frequency and on acquisition type. For very low frequencies, diving/refracted waves start to dominate. The new long offset nodal data are obviously also much richer in diving/refracted wave content. Is there anything that can be said about this situation, if only in a forward looking manner? A pedestrian approach may be to try to separate reflections and transmissions in processing. This may suffer for large angle reflections, which are hard to distinguish from diving waves. Maybe your analysis of the vanishing of the gradient of the SSE functional with respect to velocity when applied to reflection data would show that there is no need to separate reflection and transmission data, i.e.\, that the SSE functional (\ref{PerturbationExtendedTransmissionOperator}) is essentially only sensitive to the diving waves in the data? If so, we could apply the surface source extended FWI first and follow up by differential semblance velocity analysis on the reflections. This would be a better version of current practice, which consists of finding the large scale deep velocity updates by standard FWI on transmission data and following up by reflection tomography (either standard ray based TTI, or wave equation based RMO updating as in Shell's Wave Path Tomography).
+
+
+
+
+
+
+
+
+
+
+\end{document} 
