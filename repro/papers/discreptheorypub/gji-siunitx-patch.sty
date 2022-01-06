@@ -1,0 +1,35 @@
+%%%%% created on 19-02-2019
+%% for avoid the clashing with siunitx.sty 
+%
+\def\@maketitle{\newpage 
+ \vspace*{7pt} 
+ {\raggedright \sloppy 
+  {\reset@font\huge \bf \@title \par} 
+  \vskip 23pt 
+  {\reset@font\LARGE 
+\@author 
+\par} 
+  \vskip 23.75pt 
+ } 
+ \par\noindent 
+ \ifGJ@mreferee
+ \else
+  {\reset@font\small \@date \par} 
+   \vskip 22pt
+ \fi 
+} 
+
+
+\mark{{}{}}
+\gdef\@author{\mbox{}}
+\renewcommand\author{\@ifnextchar [{\@authortwo}{\@authorone}}
+\def\@authortwo[#1]#2{\gdef\@author{#2}\gdef\@shortauthor{#1}}
+\def\@authorone#1{\gdef\@author{#1}\gdef\@shortauthor{#1}}
+\newcommand\shortauthor[1]{\gdef\@shortauthor{#1}}
+\gdef\@shortauthor{}
+
+\newcommand\affilsize{\@setfontsize\affilsize\@viiipt\@xpt}
+\def\affil#1{{\vskip2pt\reset@font\affilsize\itshape#1\par}}
+\def\and{\reset@font\LARGE\vskip4pt} 
+
+\endinput
