@@ -1,6 +1,11 @@
+%\input{title}
 \title{Error Bounds for Extended Source Inversion applied to an Acoustic Transmission Inverse Problem}
-\author[Symes]{William W. Symes$^1$\\
-$^1$ PO Box 43, Orcas, WA 98280 USA, {\tt symes@rice.edu}}
+\author{William W. Symes\\
+PO Box 43, Orcas, WA 98280 USA, {\tt symes@rice.edu}}
+
+\lefthead{Symes}
+
+\righthead{1D Acoustic Inversion: Theory}
 
 \maketitle
 \begin{abstract}
@@ -421,7 +426,7 @@ equation \ref{eqn:norm}. This condition is an hypothesis of
   \ref{eqn:annmult}. Also assume that $\lambda \in (0,\lambda_{\rm
     max}], \alpha > 0,$ and that  $C>0$ exists so that $a \in L^{\infty}(\bR)$
   mentioned in equation \ref{eqn:annmult} satisfies the condition
-\begin{equation}
+  \begin{equation}
     \label{eqn:abnd} 
     a \ge 0; \, a(t) \ge C\mbox{ for }|t| \ge \lambda_{\rm max}.
   \end{equation}
@@ -456,7 +461,9 @@ equation \ref{eqn:norm}. This condition is an hypothesis of
   \end{itemize}
 \end{proposition}
 
-\begin{proof} 
+\begin{proof}
+  The idea here is that $F$ fails to be coercive just where $A$ is
+  coercive, and vis-versa.
   \begin{itemize}
   \item[1. ]Note that thanks to \ref{eqn:zeroinc}, if $|t|\le
     \lambda \le \lambda_{\rm max}$, then ${\bf 1}_{[t_{\rm min}-mr,  
