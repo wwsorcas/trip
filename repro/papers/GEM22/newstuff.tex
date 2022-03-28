@@ -1,0 +1,613 @@
+\title{Efficient Computation of Extended Sources}
+\author{William. W. Symes \thanks{The Rice Inversion Project,
+Department of Computational and Applied Mathematics, Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+
+\lefthead{Symes}
+
+\righthead{Approximate Source Inversion}
+
+\maketitle
+\begin{abstract}
+Source extension is a reformulation of inverse problems in wave propagation, that at least in some cases leads to computationally tractable iterative solution methods. The core subproblem in all source extension methods is the solution of a linear inverse problem for a source (right hand side in a system of wave equations) through minimization of data error in the least squares sense with soft imposition of physical constraints on the source via an additive quadratic penalty. A variant of the time reversal method from photoacoustic tomography provides an approximate solution that can be used to precondition Krylov space iteration for rapid convergence to the solution of this subproblem. An acoustic 2D example for sources supported on a surface, with a soft contraint enforcing point support, illustrates the effectiveness of this preconditioner.
+\end{abstract}
+
+\section{Introduction}
+Full Waveform Inversion (FWI) can be described in terms of 
+\begin{enumerate}
+\item a linear wave operator $L[{\bf c}]$, depending on a vector of
+  space-dependent coefficients ${\bf c}$ and acting on causal vector wavefields $\bu$ vanishing in negative time:
+\begin{equation}
+\label{eqn:init}
+\bu \equiv 0, t \ll 0; 
+\end{equation}
+\item a trace sampling operator $P$ acting on wavefields and producing data traces;
+\item and a (vector) source function (of space and time) $\bff$ representing energy input to the system. 
+\end{enumerate}
+The basic FWI problem is: given data $d$, find ${\bf c}$ so that 
+\begin{equation}
+\label{eqn:fwi}
+P\bu \approx d \mbox{ and } L[\bf{c}]\bu = \bff.
+\end{equation}
+In this formulation, the source function $\bff$ may be given, or
+to be determined subject to some constraints.
+
+A simple nonlinear least squares formulation, including estimation of the source, is:
+\begin{equation}
+\label{eqn:ols}
+\mbox{choose } {\bf c}, \bff \mbox{ to minimize } \|PL[{\bf c}]^{-1}\bff -d \|^2.
+\end{equation}
+Practical optimization formulations typically augment the objective in
+\ref{eqn:ols} by additive penalties or other constraints.
+
+As is well-known, local optimization methods are the only feasible
+approach given the dimensions of a typical instance of \ref{eqn:fwi},
+and those have a tendency to stall due to ``cycle-skipping''. See for
+example \cite{VirieuxOperto:09} and many references cited there. Source
+extension is one approach to avoiding this problem. It consists in
+imposing the wave equation as a soft as opposed to hard constraint, by
+allowing the source field $\bff$ to have more degrees of freedom than
+is permitted by a faithful model model of the seismic experiment, and
+constraining these additional degrees of freedom by means of an
+additive penalty modifying the probem \ref{eqn:ols}:
+\begin{equation}
+\label{eqn:esi}
+\mbox{choose } {\bf c}, \bff \mbox{ to minimize } \|PL[{\bf c}]^{-1}\bff -d \|^2 + \alpha^2 \|A\bff\|^2 
+\end{equation}
+The operator $A$ penalizes deviation from known (or assumed)
+characteristics of the source function - its null space consists of
+feasible (or ``physical'') source models.
+
+\cite{HuangNammourSymesDollizal:SEG19} present an overview of the
+literature on source extension, describing a variety of
+methods to add degrees of freedom to physical source model. The present paper
+concerns {\em surface source extension}: physical sources are
+presumed to be concentrated at points $\bx_s$ in space, whereas their extended
+counterparts are permitted to spread energy over surfaces containing
+the physical source locations. A simple choice for the penalty
+operator $A$ is then multiplication by the distance $|\bx-\bx_s|$ to the physical
+source location:
+\begin{equation}
+  \label{eqn:penop}
+  (A\bff)(\bx,t) = |\bx-\bx_s|\bff(\bx,t)
+\end{equation}
+I shall use this choice of penalty operator whenever a specific choice
+is necessary in the development of the theory below.
+
+This paper presents a numerically efficient approach to solving the
+{\em source subproblem} of problem \ref{eqn:esi}:
+\begin{equation}
+\label{eqn:esis}
+\mbox{given } {\bf c}, \mbox{ choose } \bff \mbox{ to minimize }
+\|PL[{\bf c}]^{-1}\bff -d \|^2 + \alpha \|A\bff\|^2 
+\end{equation}
+Solution of this subproblem is an essential component of {\em variable
+  projection} algorithms for solution of the nonlinear inverse problem
+\ref{eqn:esi}. Variable projection is not merely a convenient choice
+of algorithm for this purpose: it is in some sense essential, see for
+example \cite{Symes:SEG20}. It replaces the nonlinear
+least squares problem \ref{eqn:esi} with a {\em reduced} problem, namely the function of ${\bf c}$ defined by the minimum of the subproblem objective \ref{eqn:esis}. Evaluation of this reduced objective requires solution of the
+subproblem \ref{eqn:esis}. Therefore efficient solution of this
+subproblem is essential to efficient solution of the nonlinear problem
+via variable projection.
+
+The penalty operator $A$ defined in \ref{eqn:penop} is linear, so the source
+subproblem is a linear least squares problem. Under some additional
+assumptions to be described below, I shall show how to construct an
+accurate approximate solution operator for problem
+\ref{eqn:esis}. This approximate solution operator may be used to
+accelerate (``precondition'') Krylov space methods for the solution of the source
+subproblem \ref{eqn:esis}. Numerical examples suggest the
+effectiveness of this acceleration.
+
+Beyond accelerated Krylov iteration for solution of problem \ref{eqn:esis}, the structure of the preconditioner is key to understanding the relation of the extended problem \ref{eqn:esi} to traveltime tomography, which in turn explains its ability to avoid cycle-skipping \cite[]{Symes:22b}. The same structure enables efficient and accurate evaluation of the reduced objective gradient, another essential task in the computation solution of the extended inverse problem \cite[]{Symes:22c}.
+
+I will fully describe a preconditioner for a special
+case of the source subproblem \ref{eqn:esis}, in which ${\bf u}$ is an
+acoustic field, $L[{\bf c}]$ is the wave operator of linear
+acoustodynamics, the spatial positions of traces extracted by $P$ lie
+on a plane, and the positions at which the extended
+source $\bff$ is nonzero lie on another, parallel, plane. The data and
+sources are further limited to pressure traces and constitutive law
+defects (``pressure sources''). While this
+``crosswell'' configuration simplifies the analysis underlying the
+construction of approximate solutions for the source subproblem
+\ref{eqn:esis}, it is only one of many transmission configurations for
+which similar developments are possible. Perhaps the most important
+alternative example is the diving wave configuration, which plays a
+central role in contemporary FWI. I will discuss the generalization of
+surface source extention to diving wave inversion at the end of the
+paper.
+
+The preconditioner construction is very similar to the time-reversal
+method in photoacoustic tomography
+\cite[]{StefanovUhlmannIP:09}. Preconditioning amounts to a change of
+norm in the domain and range spaces of the modeling operator. In this
+case, the modfied norms are weighted $L^2$, and the weight operators
+map pressure to corresponding surface source on the source and
+receiver planes. These are essentially the same as the ``hyperbolic
+Dirichlet-to-Neumann'' map that plays a prominent role in
+thermoacoustic tomography and other wave inverse problems
+\cite[]{Rachele:00,StefUhl:05}. \cite{HouSymes:EAGE16} demonstrated a
+very similar preconditioner for Least Squares Migration, also for its
+subsurface offset extension \cite[]{HouSymes:16}, motivated by
+\cite{tenKroode:12}. These constructions also involve the
+Dirichlet-to-Neumann operator. This concept also turns up in hidden
+form in the work of Yu Zhang and collaborators on true amplitude
+migration
+\cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09}.
+
+%The obvious computation of the pressure-to-source map
+%- prescribe the pressure, solve the wave equation with this boundary
+%condition, read off the equivalent source - suffers from intrinsic
+%numerical inaccuracy. I suggest an alternative computationally
+%feasible approach.
+
+\section{Operators}
+
+For acoustic wave physics, the coefficient vector is
+$\bf{c}=(\kappa,\rho)^T$, with components bulk modulus $\kappa$ and
+density $\rho$, and the state vector $\bu=(p,\bv)^T$ consists of
+pressure $p$ (a scalar space-time field) and particle velocity $\bv$
+(a vector space-time field). The wave operator $L[\bf{c}]$ is:
+\begin{equation}
+\label{eqn:aweop}
+L[\bf{c}]\bf{u} = 
+\left(
+\begin{array}{c}
+\frac{1}{\kappa}\frac{\partial p}{\partial t}  + \nabla \cdot \bv, \\
+\rho\frac{\partial \bv}{\partial t} + \nabla p.
+\end{array}
+\right) 
+\end{equation}
+That is,
+\begin{equation}
+  \label{eqn:awemat}
+  L[{\bf c}] = \left(
+    \begin{array}{cc}
+      \frac{1}{\kappa}\frac{\partial}{\partial t} & \nabla \cdot \\
+      \nabla & \rho \frac{\partial}{\partial t}
+    \end{array}
+  \right)
+\end{equation}
+$L[{\bf c}]$ has a well-defined inverse if it is restricted to either
+causal or anti-causal vector wavefields.
+
+Most of what follows is valid for any space dimension $n >0$. The
+coefficient vector $\bf{c}=(\kappa,\rho)$ is defined throughout space
+$\bR^n$, and are assumed to be smooth, in fact $\log \kappa, \log \rho \in C^{\infty}(\bR^d)$ and uniformly bounded. The same is true of the wave velocity $c = \sqrt{\kappa/\rho}$. The state vector $\bu$ is a vector-valued distribution on space-time
+$\bR^{n+1}$: $\bu = (p,\bv)$, in which the pressure field $p$ is scalar and the (particle) velocity field $\bv$ is an $n$-vector field. Whenever convenient for mathematical manipulations,
+$n=3$: for instance, I will write $\bx=(x,y,z)^T$ for the spatial
+coordinate vector, or $(\bx,t) = (x,y,z,t)$ for the space-time coordinate vector, and refer to the third (vertical) coordinate of
+particle velocity as $v_z$. Examples
+later in this paper will use $n=2$ for computational convenience.
+
+Since all of the operators in the discussion that follows depend on
+the coefficient vector 
+$\bf{c}$, I will suppress it from the notation, for example, $L=L[\bf{c}]$. 
+
+\noindent {\bf Remark:} I will use the shorthand
+\[
+  \bu  = 0 \mbox{ for } t \ll 0 
+\]
+to mean that $\bu$ is {\em causal}, that is,
+\[
+  \mbox{For some } T \in \bR, \bu(\cdot,t) = 0 \mbox{ for all } t <
+  T.
+\]
+Similarly,
+\[
+  \bu = 0 \mbox{ for } t \gg 0 
+\]
+signifies that $\bu$ is anti-causal.
+
+It has been understood for decades that initial/boundary value problems for the system $L\bu=\bff$ have well-behaved solutions. In particular, \cite{BlazekStolkSymes:13} state results which imply the following
+
+\begin{theorem}
+  \label{thm:basicp}
+  Denote by $\Omega \subset \bR^n$ a bounded domain with smoothly embedded oriented boundary $\partial \Omega$, and $V=H^1_0(\Omega) \times H^1_{\rm div}(\Omega)$. 
+  \begin{itemize}
+  \item[i. ] Suppose that $\bff = (f,{\bf g}) \in (L^2_{\rm comp}(\Omega \times {\bf R}))^{n+1}$. Then the system $L\bu=\bff$ has a unique causal weak solution $\bu = (p,\bv) \in (L_{\rm loc}^2(\Omega \times \bR))^{n+1}$: for any ${\bf \phi} = (\phi, {\bf \psi}) \in (C_0^{\infty}(V))^{n+1}$,
+    \begin{equation}
+      \label{eqn:weak}
+      \int \left(\frac{1}{\kappa} p \frac{\partial \phi}{\partial t} + \rho \bv \cdot \frac{\partial{\bf \psi}}{\partial t} + \bv \cdot \nabla \phi + p \nabla \cdot {\bf \psi} \right) = \int (f\phi + {\bf g} \cdot {\bf \psi}).
+    \end{equation}
+  \item[ii. ] If in addition $1 \le k \in {\bf N}$ and
+    $\partial^k_t\bff \in (L^2(\Omega \times \bR))^{n+1}$, then $\bu
+    \in C^k(\bR, (L^2(\Omega))^{n+1}) \cap C^{k-1}(\bR,V)$: that is,
+    $\bu$ is a strong solution, satisfying $L\bu=\bff$ almost everywhere..
+  \item[iii. ] 
+    Suppose that $R>0$ and $\mbox{supp }\bff \subset [T_0, T_1] \times B_R(\bx_0)$. Then $\bu(\cdot,t)=0$ for $t<T_0$, and for each $t \in [T_0,\infty)$, $\mbox{supp }\bu \subset B_R(\bx_0) + B_{c_{\rm max}(t-T_0)}({\bf 0})$.
+  \end{itemize}
+\end{theorem}
+
+\begin{cor}
+  \label{thm:weakcor}
+  Let $\alpha_{\epsilon}$ be a Dirac family in $C_0^{\infty}(\bR)$,
+  and $\bu$ be a causal weak solution of $L\bu=\bff \in (L^2_{\rm
+    comp}(\Omega \times \bR))^{n+1}$. Then for all $\epsilon > 0$,
+  $\alpha_{\epsilon} *_t \bu$ is a strong solution with well-defined and vanishing restriction
+  to $\partial \Omega \times \bR$.
+\end{cor}
+
+Denote by ${\bf \nu}(\bx)$ the outward unit normal (co)vector at $ \bx
+\in \partial \Omega$.
+
+\begin{theorem}
+  \label{thm:basicv}
+  Let  $H^1_{{\rm div},0}(\Omega)$ denote the subspace of $H^1_{\rm
+    div}(\Omega)$ consisting of vector fields $\bv$ satisfying $\bv
+  \cdot {\bf \nu} = 0$ on $\partial \Omega$. Define
+  $W = H^1(\Omega) \times H^1_{{\rm div},0}(\Omega)$.
+Then the same conclusions as listed in Theorem \ref{thm:basicp} hold,
+with $V$ replaced by $W$.
+\end{theorem}
+\begin{proof}
+  This result follows directly from Theorem 1 in
+  \cite[]{BlazekStolkSymes:13}, once it is shown that the spatial part
+  of $L$ is skew-adjoint on $W$. The analogous statement for
+  $V$ is proven in \cite[]{BlazekStolkSymes:13}, Appendix A, and a
+  similar proof establishes the same property of $W$.
+\end{proof}
+
+\begin{remark} The cited reference \cite[]{BlazekStolkSymes:13} requires only that the coefficients ${\bf c}$ be bounded and measureable. The arguments developed here, however, depend on approximation of solutions by means of geometric optics, hence the additional requirement of coefficient smoothness.
+\end{remark}
+  
+The surface source extension replaces point sources on or near a
+surface in $\bR^3$ with distributions supported on the same
+surface. The simplest example of this extended geometry specifies a
+plane $\{(x,y,z,t): z=z_s\}$ at source depth $z_s$ as the surface. For
+acoustic modeling, surface sources are combinations of constitutive law
+defects and loads normal to the surface, localized on $z=z_s$. That
+is, right-hand sides in the system $L\bu=\bff$ take the form
+$\bff(\bx,t) = (h_s(x,y,t)\delta(z-z_s),
+f_s(x,y,t)\bf{e}_z\delta(z-z_s))^T$ for scalar defect $h_s$ and normal
+force $f_s$ ($\bf{e}_z=(0,0,1)$). With the choice $L$ given in
+\ref{eqn:awemat}, the causal/anti-causal wave system $L\bu^{\pm}=\bff$
+takes the form
+\begin{eqnarray}
+\label{eqn:awepm}
+\frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} & = & - \nabla \cdot \bv^{\pm} +
+h_s \delta(z-z_s), \nonumber \\
+\rho\frac{\partial \bv^{\pm}}{\partial t} & = & - \nabla p^{\pm} +
+                                                f_s{\bf e}_z \delta(z-z_s),\nonumber \\
+p^{\pm} & =& 0 \mbox{ for } \pm t \ll 0,\nonumber\\ 
+\bv^{\pm} & = & 0 \mbox{ for } \pm t \ll 0.
+\end{eqnarray}
+
+The singular right-hand sides appearing in the systems \ref{eqn:awepm} do not conform to the conditions of the basic well-posedness statement \ref{thm:basicp}, so the first task is to formulate conditions under which well-behaved solutions exist. This is most conveniently done by first developing conditions under which an inhomogeneous boundary value problem has well-behaved solutions. The pressure field on the surface $\partial \Omega \times \bR$ uniquely determines the finite energy ($L^2$) causal acoustic field in the interior, as follows from simple energy estimates, but cannot be specified arbitrarily. A finite energy solution exists if the pressure field on the boundary is {\em incoming} (corresponding to {\em downgoing} in seismic parlance), in the sense that its Fourier components decrease rapidly with increasing frequency except at initial conditions for rays entering $\Omega$ at a positive angle, with distance to the boundary increasing with increasing time. A precise statement depends on a parameter $\delta >0$, essentially a bound on the direction cosine relative to the tangent plane of the boundary. 
+
+\begin{definition}
+  \label{thm:definc}
+  Given $\delta >0$, $d \in L^2_{\rm comp}(\partial \Omega \times \bR)$ is $\delta-${\em incoming} if there exists a conic subset $\Gamma \subset T^*(\partial \Omega \times \bR)$ and $H \in OPS^0(\partial \Omega \times \bR)$ satsifying the conditions:
+  \begin{itemize}
+  \item[1. ] $H$ is elliptic in $\Gamma$;
+  \item[2. ] for every $(\bx,t,\xi,\omega) \in \Gamma$, there is a
+    unique $z \in \bR$ and $\psi(\bx,{\bf \xi},\omega) = \frac{{\bf \xi}}{\omega} + z {\bf \nu}(\bx)  \in
+    \bR^n$ so that $(\bx,t,\psi(\bx,{\bf \xi},\omega),\omega)$ is
+    characteristic for $L$, $|z| > \delta$, and $z\omega < 0$; and
+  \item[3. ] $(I-H)d \in H^2(\partial \Omega \times \bR)$.
+  \end{itemize}
+\end{definition}
+
+For $\epsilon > 0$, denote by $\Omega_{\epsilon}$ the collar neigborhood of $\partial \Omega$ defined by
+\begin{equation}
+  \label{eqn:collar}
+  \Omega_{\epsilon} = \{\bx + z {\bf \nu}(\bx): 0 \ge z \ge  -\epsilon\}.
+\end{equation}
+For $\epsilon$ sufficiently small, $\Omega_{\epsilon}$ is a smoothly bounded submanifold of $\Omega$.
+
+\begin{theorem}
+  \label{thm:dirprob}
+  Suppose that $\delta>0$ and $d \in L^2_{\rm comp}(\partial \Omega
+  \times \bR)$ is $\delta-${\em incoming}. Then there exists a unique
+  causal weak solution $\bu = (p,\bv) \in (L^2_{\rm loc}(\Omega \times
+  \bR)^{n+1}$ of $L\bu=0$ in $\Omega$, for which $p$ assumes the boundary value $d$, in the sense that for every $\phi \in C_0^{\infty}(\bR^{n+1})$,
+  \begin{equation}
+    \label{eqn:weakbdry}
+    \lim_{\epsilon \rightarrow 0}(\alpha_{\epsilon} *_t p)|_{\partial
+      \Omega \times \bR}  = d.
+  \end{equation}
+\end{theorem}
+
+\begin{proof}
+  Choosing $\epsilon$ sufficiently small, construct an extension $d_1\in H^2(\Omega_{\epsilon}\times \bR)$ of $(I-H)d$, and cut it off smoothly to produce an extension, also denoted $d_1$, to all of $\Omega \times \bR$. Define $(p_1,\bv_1)$ to be the weak solution of
+\begin{eqnarray}
+\label{eqn:awepm1}
+\frac{1}{\kappa}\frac{\partial p_1}{\partial t} & = & - \nabla \cdot \bv_1 -
+\frac{1}{\kappa}\frac{\partial d_1}{\partial t}, \nonumber \\
+\rho\frac{\partial \bv_1}{\partial t} & = & - \nabla p_1 \\
+p_1& =& 0 \mbox{ for } t \ll 0,\nonumber\\ 
+\bv_1 & = & 0 \mbox{ for } t \ll 0.
+\end{eqnarray}
+From Theorem \ref{thm:basicp} with $k=1$, conclude that $(p_1,\bv_1)
+\in H^1_0(\Omega \times \bR) \times H^1_{\rm div}(\Omega \times \bR)$
+is a strong solution and in particular that the trace of
+$p_1|_{\partial \Omega \times \bR} \in L^2_{\rm loc}(\partial \Omega \times \bR)$ is
+well-defined, and in fact
+\begin{equation}
+  \label{eqn:smparttrace}
+  p_1|_{\partial \Omega \times \bR} = (I-H)d.
+\end{equation}
+
+Let $\{({\cal U}_i, \chi_i): i=1,...,N\}$ be a coordinate atlas for
+the oriented submanifold $\partial \Omega \subset \bR^n$. That is,
+$\{{\cal U}_i: i=1,...N\}$ is a locally finite open cover of $\partial \Omega$, 
+$\chi_i:{\cal U}_i \rightarrow \bR^{n-1}$ is a diffeomorphism for each $i$, and
+$\partial \Omega \cap {\cal U}_i = \chi_i^{-1}\{\bx \in \bR^n:
+x_n=0\}$. Define $\tilde{\chi}_i: {\cal U}_i \times \bR \rightarrow
+\bR^{n+1}$ by $\tilde{\chi}_i(\bx,t) = (\chi_i(\bx),t)$. Then $\{({\cal U}_i \times \bR, \tilde{\chi_i}):
+i=1,...,N\}$ is a coordinate atlas for $\partial \Omega \times \bR \subset \bR^n$.
+% From \cite{Tay:81}, Ch. II, Theorem 5.1, for $u \in
+%C_0^{\infty}({\cal U}_i)$,
+%\begin{equation}
+ % \label{eqn:pullback}
+ % (H(u \circ \chi_i))\circ \chi_i^{-1} = \tilde{H}_i u,
+%\end{equation}
+%with $\tilde{H}_i \in OPS^0({\cal U}_i)$ with principal symbol
+%\begin{equation}
+ % \sigma(\tilde{H}_i)_0(\bx,{\bf \xi}) =
+  %\sigma(H)_0(\chi_i^{-1}(\bx),D\chi_i(\chi_i^{-1}(\bx))^T{\bf \xi})
+%\end{equation}
+%Also $\tilde{H}_i$ is essentially supported in $\chi_i^*\Gamma_1$
+
+Every point $\bx \in \overline{\cal U}_i \cap \partial \Omega$ has a
+neighborhoods $\bx \in {\cal U}\subset \overline{\cal U} \subset {\cal
+  V}$ in which the
+restrictions of $(\tilde{\chi}_i^{-1})^*\Gamma$ to $\chi_i({\cal V}) \times \bR$ are submanifolds of product conic
+submanifolds $(\chi_i({\cal V}) \times \bR) \times \gamma_i
+\subset T^*(\bR^{n+1})$, so that the pull-backs
+$\tilde{\chi}_i^*((\chi_i({\cal V}) \times \bR) \times \gamma_i)
+\supset \Gamma|_{{\cal V} \times \bR}$ 
+satisfy condition 2 in Definition \ref{thm:definc} with $\delta$
+replaced by $\delta/2$. 
+Taking a finite subcover and intersections, identify the base open sets ${\cal U}$ with
+the coordinate neigborhoods ${\cal U}_i$, with corresponding ${\cal
+  V}_i \supset \overline{\cal U}_i$.
+Choose a partition of unity $\{\phi_i: i=1,...,N\}$ subordinate to
+$\{{\cal U}_i:i=1,...,N\}$, and for each $i=1,...N$, a cutoff function
+$\psi_i\in C_0^{\infty}({\cal V}_i)$ that is $\equiv 1$ on ${\cal U}_i$. 
+
+The local product structure means that for each $i=1,...,N$, $({\bf \xi,}\omega) \in \gamma_{i}$,  condition 2 in
+Definition \ref{thm:definc} is satisfied at $\tilde{\chi}_i^*(\bx,t,{\bf \xi},\omega)$ for all $(\bx,t) \in
+(\chi_i({\cal V}_i) \times \bR)$  (with $\delta$ replaced by
+$\delta/2$).
+A standard local geometric asysmptotics construction implies the existence of a 
+neighborhood of the closure of $(\partial \Omega \cap {\cal
+  V}_i)\times \bR$,  in which for each $({\bf \xi,}\omega) \in
+\gamma_{1,i}$, there exists a unique smooth solution of the eikonal
+equation $\tau(\bx,t,{\bf \xi}/\omega)$ with $\tau_i(\bx,t {\bf \xi}/\omega) = t+\chi_i(\bx) \cdot {\bf
+  \xi}/\omega$, for $\bx \in \partial \Omega \cap {\cal  V}_i$, $t \in
+\bR$.
+
+Choose $b \in C_0^{\infty}(\bR)$ so that $b(t)d(\bx,t)=d(\bx,t)$ for
+$\bx \in \partial \Omega, t \in \bR$. Denote by $a_i$ the solution to order 2 of
+the transport system  corresponding to $\tau_i$, with $a_i=b\psi_i$ on $(\partial \Omega \cap
+{\cal  V}_i) \times \bR$. Because of
+the smooth cut-off of $a_i$ at the lateral boundary of a ray tube, and
+because of the uniformity of condition 2 in Definition
+\ref{thm:definc} mentioned above,  the pair
+$(\tilde{p}_i,\tilde{\bv}_i)$ given by
+\begin{eqnarray}
+  \label{eqn:pgo}
+  \tilde{p}(\bx,t,{\bf \xi},\omega) &=& a_i(\bx,t,{\bf
+                                        \xi}/\omega)e^{i\omega\tau(\bx,t,{\bf
+                                        \xi}/\omega)},\\
+  \label{eqn:vgo}
+  \tilde{\bv}(\bx,t,{\bf \xi},\omega) & = & -\frac{1}{\rho(\bx)}\int_{-infty}^t dt \nabla \tilde{p}(\bx,t,{\bf \xi},\omega)
+\end{eqnarray}
+are well-defined and smooth in a neighborhood of $\partial \Omega
+\times \bR$, and satisfy
+\begin{eqnarray}
+\label{eqn:aweloc}
+\frac{1}{\kappa}\frac{\partial \tilde{p}_i}{\partial t} & = & - \nabla \cdot \tilde{\bv}_i +
+\frac{1}{\omega^2}\tilde{r}_i, \nonumber \\
+\rho\frac{\partial \tilde{\bv}_i}{\partial t} & = & - \nabla \tilde{p}_i
+                                               \nonumber \\
+\tilde{p}_i & =& 0 \mbox{ for }  t \ll 0,\nonumber\\ 
+\tilde{bv}_i & = & 0 \mbox{ for } t \ll 0.
+\end{eqnarray}
+The remainder $\tilde{r}_i(\cdot,\cdot,{\bf \xi},\omega)$ is locally
+$L^2$-bounded in a neighborhood of $\partial \Omega \times \bR$,
+uniformly over $({\bf \xi},\omega) \in \gamma_{i}$.
+
+Denote by $\tilde{\gamma}_i$ the complement of the n-dimensional unit
+ball in $\gamma_i$. Let
+\[
+  \tilde{d}_i = (\phi_iHd) \circ \chi_i^{-1}
+\]
+The essential support of $H$ is strictly contained in
+$\Gamma$, and $(\chi_i^{-1})^*\Gamma|_{{\cal U}_i} \subset
+\chi_i({\cal U}_i) \times \gamma_i$, so the Fourier transform of
+$\tilde{d}_i$ decreases rapidly outside of $\gamma_i$: that is,
+\begin{equation}
+  \label{eqn:smpart}
+  \tilde{e}_i(\by,t) = \int_{\tilde{\gamma}_i^c} d\xi d\omega
+  \hat{\tilde{d}_i}(\xi,\omega)e^{i(\by \cdot {\bf \xi} + \omega t)}
+\end{equation}
+is smooth. Recall that $a_i=b\psi_i=1$ on $\mbox{supp
+}\phi_i Hd = \mbox{supp }\tilde{d}_i\circ \tilde{\chi}_i$, so for $\bx \in {\cal U}_i$
+\[
+(\tilde{d_i}- \tilde{e}_i) (\chi_i(\bx),t)  = \int_{\tilde{\gamma}_i} d\xi d\omega
+\hat{\tilde{d}_i}(\xi,\omega)e^{i(\chi_i(\bx) \cdot {\bf \xi} + \omega  t)}
+\]
+\[
+  = \int_{\tilde{\gamma}_i} d\xi d\omega
+\hat{\tilde{d}_i}(\xi,\omega)(a_i(\bx,t,{\bf
+  \xi},\omega)e^{i\tau_i(\bx,t,{\bf \xi}/\omega)} - \tilde{e}_i(\chi_i(\bx),t)
+\]
+\begin{equation}
+  \label{eqn:prepsynth}
+  = \int_{\tilde{\gamma}_i} d\xi d\omega \hat{\tilde{d}_i}({\bf
+    \xi},\omega)\tilde{p}_i(\bx,t,{\bf \xi}, \omega) - \tilde{e}_i(\chi_i(\bx),t).
+\end{equation}
+Define 
+\begin{equation}
+  \label{eqn:psynth}
+  \bar{p}_i(\bx,t) = \int_{\tilde{\gamma}_i} d\xi d\omega \hat{\tilde{d}_i}({\bf
+    \xi},\omega)\tilde{p}_i(\bx,t,{\bf \xi}, \omega)
+\end{equation}
+for $\bx \in \partial \Omega \cap {\cal U}_i$. Extend the definition
+of $\bar{p}_i$ to a neighborhood of $\partial \Omega$ in $\Omega$ by
+imposing the condition \ref{eqn:psynth}, and
+define $\bar{\bf{v}}_i$ in the same neighborhood by
+\begin{equation}
+  label{eqn:vsynth}
+  \bar{\bf{v}}_i(\bx,t) = -\frac{1}{\rho(\bx)}\int_{-infty}^t dt \nabla \bar{p}_i(\bx,t)
+\end{equation}
+Then $(\bar{p}_i,{\bar{\bf v}}_i)$ solves the acoustic system with the right hand side
+\begin{equation}
+\label{eqn:rhs}
+\bar{r}_i(\bx,t) = \int_{\tilde{\gamma}_i} d\xi d\omega
+\frac{1}{\omega}^2\tilde{r}_i(\bx,t,{\bf \xi},\omega) -
+\kappa(\bx)\frac{\partial}{\partial t}\tilde{e}_i(\chi_i(\bx),t) .
+\end{equation}
+On the boundary, for $\bx \in \partial \Omega$, the definition
+\ref{eqn:psynth} implies that
+\begin{equation}
+  \label{eqn:locbc}
+  \bar{p}_i(\bx,t) = \tilde{d}_i(\chi(\bx),t)
+  =(\phi_iHd)(\bx,t)
+\end{equation}
+The sums
+\begin{equation}
+  \label{eqn:psynth2}
+  p_2 = \sum_{i=1}^N\bar{p}_i, \bv_2 = \sum_{i=1}^N\bar{\bf v}_i
+\end{equation}
+solve the acoustic system with right-hand side
+\begin{equation}
+  \label{eqn:rsynth}
+  r_2 = \sum_{i=1}^N\bar{r}_i
+\end{equation}
+in a neighborhood of the boundary $\partial \Omega \times \bR$, which
+may be taken to be a collar neighborhood $\Omega_{\epsilon}$ for
+sufficiently small $\epsilon$. Since $\{\phi_i: i=1,...,N\}$ is a
+partition of unity, equation \ref{eqn:locbc} implies that
+\begin{equation}
+  \label{eqn:bc2}
+  p_2|_{\partial \Omega \times \bR} = Hd.
+\end{equation}
+
+Since $\tilde{r}_i$ is uniformly $L^2$-bounded over $\gamma_i$ and
+$\tilde{e}$ is smooth, $\partial_t^2\bar{r}_i$ is
+locally square-integrable in $\Omega_{\epsilon}
+\times \bR$. Denote by $\bu_3=(p_3,\bv_3) \in C^1(\bR,(L^2(\Omega))^{n+1})
+\cap C^0(\bR,V)$ the strong causal solution of the system
+$L\bu=(r_2,0)$. Since the restriction of
+$p_3$ to $\partial \Omega \times \bR$ is well-defined and vanishes,
+$\bu_4 = (p_4,\bv_4) = (p_2-p_3,\bv_2-\bv_3)$ is a causal weak
+solution of $L\bu=0$ in $\Omega \times \bR$ with $p_4|_{\partial \Omega \times \bR}=Hd$.
+
+ Let $\mu \in C_0^{\infty}(\bR^n)$ so that
+$\mu=0$ in $\Omega_{\epsilon/2}$, $\mu=1$ in $\Omega - \Omega_{\epsilon}$. 
+
+\end{proof}
+
+Extended forward modeling consists in solving \ref{eqn:awepm} and
+sampling the solution components at receiver locations. For
+simplicity, throughout this paper I will assume that the receivers are
+located on another spatial hyperplane $\{(x,y,z,t): z=z_r\}$ at
+receiver depth $z_r>z_s$. The constructions to follow involve interchange
+of the roles of $z_s$ and $z_r$ (that is, locating sources on $z=z_r$
+and receivers at $z=z_s$), so rather than the sampling operator $P$ of
+the introduction, I will denote by $P_s,P_r$ the sampling 
+operators on $z=z_s$, $z=z_r$ respectively. In practice, sampling
+occurs at a discrete array of points (trace locations) on these
+surfaces, and over a zone of finite extent. In this theoretical
+discussion, I will neglect both finite sample rate and extent, and
+regard the data, for example $P_rp^+$, as continuously sampled and
+extending over the entire plane $z=z_r$.
+
+A technical difficulty with spatial sampling must be
+addressed. Acoustic field energy is defined in terms of the mean
+squares of the pressure and particle velocity fields. However fields
+with finite mean square do not in general have well-defined
+restrictions to lower-dimensional sets: for example, the pressure
+field of a finite-energy acoustic vector field may not have a
+well-defined restriction to the space-time plane $z=z_r$. This
+phenomenon is related to the ill-posedness of wave equations as
+evolution equations in spatial variables, an observation attributed to
+Hadamard (see \cite{CourHil:62}, Chapter 6, section 17, also
+\cite{Payn:75,Symes:83}). Some constraint on the acoustic field,
+beyond finite energy, is mandatory in formulating the inverse problems
+\ref{eqn:esi} and \ref{eqn:esis}. In fact, the natural constraint in
+the ``crosswell'' geometry of this paper is that high-frequency energy
+{\em not} travel along rays parallel or nearly parallel to the
+surfaces $z=z_s, z=z_r$. I will call fields with this property {\em
+  downgoing} (even though the concept also encompasses {\em upcoming}
+fields). \cite{BaoSy:91b} give a mathematically complete discussion of
+downgoing wave field properties.
+
+For downgoing solutions of system \ref{eqn:awepm}, the key
+components ($p^{\pm}$ and $v^{\pm}_z$) are continuous functions of $z$
+in the open slab $z_s<z<z_r$ with well-defined limits at the boundary
+planes, but may be discontinuous at the source plane
+$z=z_s$. Similarly, the roles of $z_s$ and $z_r$ will be interchanged
+in some of the constructions to come, and the corresponding solutions
+may be discontinuous at $z=z_r$. Accordingly, interpret $P_s$, $P_r$
+as the limit from right and left respectively: for $u=p^{\pm}$ or
+$v^{\pm}_z$,
+\begin{eqnarray}
+  \label{eqn:defsamp}
+  P_su(x,y,t) &=& \lim_{z \rightarrow z_s^+} u(x,y,z,t),\nonumber \\
+  P_ru(x,y,t) &=& \lim_{z \rightarrow z_r^-} u(x,y,z,t).                  
+\end{eqnarray}
+
+
+The causal/anti-causal vector
+modeling operators ${\cal S}^{\pm}_{z_s,z_r}$ are defined in terms of
+the solutions $(p^{\pm},\bv^{\pm})$ of the systems \ref{eqn:awepm} by
+\begin{equation}
+  {\cal S}^{\pm}_{z_s,z_r}(h_s,f_s)^T  = (P_rp^{\pm},P_r v_z^{\pm})^T,
+  \label{eqn:fwd}
+\end{equation}
+The subscript signifies that sources are located on $z=z_s$, the
+receivers on $z=z_r$. It is necessary to include this information in
+the notation, as versions of ${\cal S}^{\pm}$ with sources and receivers in
+several locations will be needed in the discussion below.
+
+\noindent {\bf Remark:} To connect with the formulation presented in
+the introduction, note that for continuous $u$,
+$P_su(x,y,t)=u(x,y,z_s,t)$, and therefore the adjoint of $P_s$ (in the
+sense of distributions) is $P_s^Th(x,y,z,t) =
+h(x,y,t)\delta(z-z_s)$. Write ${\cal P}_s = \mbox{diag }(P_s,P_s)$ and
+similarly for ${\cal P}_r$. Then
+\[
+  {\cal S}^{+}_{z_s,z_r} = {\cal P}_r L^{-1}({\cal P}_s)^T,
+\]
+in which $L^{-1}$ is interpreted in the causal sense, and similarly
+for ${\cal S}^{-}$. Sources confined to $z=z_s$ are precisely those
+functions (distributions, really) output by ${\cal P}_s^T$, so the
+problem statements \ref{eqn:esi} and \ref{eqn:esis} can be rewritten
+in terms of ${\cal S}^+_{z_s,z_r}$, with $P$ identified with ${\cal P}_r$.
+
+${\cal S}^{\pm}$ is not stably invertible: its columns are
+approximately linearly dependent, as will be verified below. The
+diagonal components of ${\cal S}^{\pm}$ thus carry essentially all of
+its information, and it is in terms of these that a sensible inverse problem
+is defined.
+
+Denote by $\Pi_i, i=0,1$ the projection on the first,
+respectively second, component of a vector in $\bR^2$. The 
+forward modeling operator from pressure source to pressure trace is
+\begin{equation}
+  \label{eqn:sdef}
+  S^{\pm}_{z_s,z_r} = \Pi_0 {\cal S}^{\pm}_{z_s,z_r} \Pi_0^T 
+\end{equation}
+and the forward modeling operator from velocity source (normal force)
+to velocity trace is
+\begin{equation}
+  \label{eqn:vdef}
+  V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
+\end{equation}
+
+With these conventions, we can write the version of the source
+subproblem \ref{eqn:esis} studied in this paper as
+\begin{equation}
+  \label{eqn:esisp}
+  \mbox{find }h_s\mbox{ to minimize }\|S^{+}_{z_s,z_r}h_s- d\|^2 +
+  \alpha^2\|Ah_s\|^2.
+\end{equation}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
