@@ -469,7 +469,7 @@ $z=z_s$. So the columns of the matrix operator
 ${\cal S}^{\pm}_{z_s,z_r}$ must satisfy a linear relation. In this
 section I will explain this relation; it involves the {\em
   pressure-to-source} map. This operator also turns out to be the
-principle component of a preconditioning strategy for iterative
+principal component of a preconditioning strategy for iterative
 solution of the optimization problem \ref{eqn:esis}, so I will devote
 some effort to its proper definition. It is closely related to the
 Dirichlet-to-Neumann operator mentioned in the introduction.
@@ -1562,16 +1562,28 @@ in GPa. Positions of point source and receiver line indicated.}
   displayed in Figures \ref{fig:drecplh0} and \ref{fig:drerecplh0},
   plotted on same color scale.}
 
-\plot{dfwdvzhh0}{width=\textwidth}{Vertical velocity gather, generated
+\plot{dfwdvzhh0}{width=\textwidth}{Vertical velocity gather, generated 
   with a pressure source in the homogeneous model, 
   corresponding to pressure gather \ref{fig:dfwdphh0}.}
 
-\plot{daltvzhh0}{width=\textwidth}{Vertical velocity gather, generated
-  with a velocity source in the homogenous model, corresponding to
+\plot{dfwdvzlh0}{width=\textwidth}{Vertical velocity gather, generated 
+  with a pressure source in the lens model, 
+  corresponding to pressure gather \ref{fig:dfwdphh0}.}
+
+\plot{daltvzhh0}{width=\textwidth}{Vertical velocity gather, generated 
+  with a velocity source in the homogenous model, corresponding to 
+  pressure gather \ref{fig:daltphh0}.}
+
+\plot{daltvzlh0}{width=\textwidth}{Vertical velocity gather, generated 
+  with a velocity source in the lens model, corresponding to 
   pressure gather \ref{fig:daltphh0}.}
 
 \plot{dsvcomphh0}{width=\textwidth}{Difference between velocity gathers
   shown in Figures \ref{fig:dfwdvzhh0} and \ref{fig:daltvzhh0},
+  plotted on the same color scale as these figures.}
+
+\plot{dsvcomplh0}{width=\textwidth}{Difference between velocity gathers
+  shown in Figures \ref{fig:dfwdvzlh0} and \ref{fig:daltvzlh0},
   plotted on the same color scale as these figures.}
 
 \plot{lamsstlamrdrecphh0}{width=\textwidth}{Inversion of data shown in
@@ -1664,11 +1676,21 @@ in GPa. Positions of point source and receiver line indicated.}
   \ref{fig:preddnshshh0}. Compare with point source pressure gather
   (Figure \ref{fig:drecplh0}).}
 
-\clearpage
+\clearpage 
+
+\plot{dprednshsrecpll0}{width=\textwidth}{Pressure gather at receiver
+  datum $z=z_r=1000$ m simulated from source gather shown in Figure
+  \ref{fig:preddnshshh0}. Compare with point source pressure gather
+  (Figure \ref{fig:drecplh0}).}
 
 \plot{ddiffprednshsrecphh0}{width=\textwidth}{Plot of difference 
   between data shown in Figures \ref{fig:drecphh0} and 
-  \ref{fig:dpredhsrecphh0}, plotted on same color scale as the latter 
+  \ref{fig:dprednshsrecphh0}, plotted on same color scale as the latter 
+  two figures.}
+
+\plot{ddiffprednshsrecpll0}{width=\textwidth}{Plot of difference 
+  between data shown in Figures \ref{fig:drecplh0} and 
+  \ref{fig:dprednshsrecplh0}, plotted on same color scale as the latter 
   two figures.}
 
 \plot{preddnshstrhh0}{width=\textwidth}{Pressure source gather = image
