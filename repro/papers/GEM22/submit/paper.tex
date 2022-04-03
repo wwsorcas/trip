@@ -1,3 +1,42 @@
+
+\documentclass[georeport,12pt]{geophysics}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amscd}
+\usepackage{setspace}
+\usepackage{wasysym}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+\newcommand{\mb}{\mathbf}
+\newcommand{\ba}{\mathbf{a}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bxi}{\mathbf{\xi}}
+\newcommand{\bk}{\mathbf{k}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bff}{\mathbf{f}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bR}{\mathbf{R}}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{remark}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{example}{Example}
+\newtheorem{definition}{Defenition}
+
+
+
+\setfigdir{.}
+
+\begin{document}
 \title{Efficient Computation of Extended Surface Sources}
 \author{William W. Symes\\
  %\thanks{The Rice Inversion Project,
@@ -1782,16 +1821,6 @@ motion, and so on. A truly satisfactory understanding of inverse wave
 problems will eventually need to accommodate heterogenity and
 anelasticity beyond the current capabilities of the ray-based theory.
 
-
-\section{Declarations}
-The author received no funding from any source in the performance of
-the wo rk reported here, nor does he have any financial or
-non-financial interests relevant to the content of this article. The
-computations described were developed in the Madagascar reproducible
-research framework (www.reproducibility.org). The software source is
-available on request from the author. 
-
-
 \append{Adjoint Computation}
 
 The adjoint of ${\cal S}^+_{z_s,z_r}$ can be computed by a variant of
@@ -1847,11 +1876,32 @@ $ (h_r,f_r\bf{e}_z) \delta(z-z_r)$. Then
 after integration by parts in the last two terms. Most of what is left cancels, leaving 
 \[
 0 = \int_{-\infty}^{\infty}\,dt\,dx\,dy\, (h_sP_sp^-+f_zP_sv_z^-) +
-( h_rP_rp^++f_rP_rv_z^+) = \langle (h_s,f_s), {\cal S}^-(h_r,f_r) \rangle+ \langle (h_r,f_r), {\cal S}^+_{z_s,z_r}(h_s,f_s) \rangle
+( h_rP_rp^++f_rP_rv_z^+)
+\]
+\[
+  = \langle (h_s,f_s), {\cal S}^-(h_r,f_r) \rangle+ \langle (h_r,f_r), {\cal S}^+_{z_s,z_r}(h_s,f_s) \rangle
 \]
 whence \ref{eqn:sadj1} follows immediately.
+
+
+\section{Declarations}
+\subsection{Funding}
+The author did not receive support from any organization for the
+submitted work.
+\subsection{Competing Interests}
+The author certifies that he has no affiliations with or involvement
+in any organization or entity with any financial interest or
+non-financial interest in the subject matter or materials discussed in
+this manuscript.
+\subsection{Data, Material, and Code Availability}
+The computational examples reported in this work were written in the
+Madacascar reproducible research framework ({\tt
+  http:www.reproducibility.org}). Code and data source is available
+from the author on request.
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
 
 
+\end{document}
