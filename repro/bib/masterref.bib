@@ -15836,11 +15836,16 @@ address="Princeton",
 year="1994"}
 
 @book{Schuster:17,
-author="Schuster, G.",
-title="Seismic Inversion",
-publisher="Society of Exploration Geophysicists",
-address="Tulsa",
-year="2017"}
+  title={Seismic Inversion},
+  author={Schuster, G.T.},
+  isbn={9781560803416},
+  lccn={2017938778},
+  series={Investigations in Geophysics},
+  url={https://books.google.com/books?id=isAtDwAAQBAJ},
+  year={2017},
+  address={Tulsa},
+  publisher={Society of Exploration Geophysicists}
+}
 
 @article{Symes:2020,
 author={Symes, W.},
@@ -15962,7 +15967,8 @@ title={Nonlinear Waveform Inversion with Surface-Oriented Extended Modeling},
 author={Terentyev, I.},
 school = "Rice University",
 month = "May",
-year = "2017"
+year = "2017",
+note={https://scholarship.rice.edu/handle/1911/102274}
 }
 
 @misc{SymesChenMinkoff:21,
@@ -16082,7 +16088,29 @@ author={Lax, P. D. and Phillips, R. S.},
 journal={Communications on Pure and Applied Mathematics},
 volume={13},
 pages={427-455},
-year={1960}}
+year={1960}
+
+@article{CocherChaurisPlessix:COMG17,
+title={Seismic iterative migration velocity analysis: two strategies to update the velocity model},
+author={Cocher, E. and Chauris, H. and Plessix, R-E.},
+journal={Computational Geosciences},
+volume={21},
+number={4},
+pages={759-780},
+year={2017},
+doi={10.1007/s10596-017-9656-x},
+abstract={The objective of seismic imaging is to recover properties of the Earth from surface measurements recorded during active seismic surveys. Migration Velocity Analysis techniques aim at determining a background velocity model (smooth part of the pressure wave velocity model) using the redundancy of seismic data and consist of solving a nested optimisation problem. In the inner loop, an extended reflectivity model (detailed part of the model) is determined from recorded primary reflections through a data-fitting procedure depending on a given background model. In the outer loop, a coherency criterion defined on the extended reflectivity assesses the quality of the background model. The inner problem is usually solved with a single iteration of gradient optimisation, leading to artefacts in the velocity updates. We study the benefits of further iterating on the reflectivity in the inner loop, which also allows the introduction of multiple reflections in the procedure. We propose two strategies for the computation of the gradient of the outer objective function. In the first case, we compute the exact numerical gradient by taking care of the background dependency of all inner iterations. In the second case, we derive an approximate gradient by assuming the optimal reflectivity has been obtained. Both methods are compared on their computational merits and through simple numerical examples on 2D synthetic data sets. The examples illustrate that regularisation of the inner problem is essential to obtain coherent velocity updates. The second approach displays a smaller sensitivity to regularisation and is simpler to implement.}
+}
+
+@article{CocherChaurisPlessix:GEO18,
+title={Towards a stable iterative migration velocity analysis scheme},
+author={Cocher, E. and Chauris, H. and Plessix, R-E.},
+journal={Geophysics},
+volume={83},
+number={5},
+pages={R475-R495},
+year={2018}
+}
 
 
 
