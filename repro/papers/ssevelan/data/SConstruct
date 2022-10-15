@@ -1,6 +1,7 @@
 from rsf.proj import *
 from trip.proj import getnum
 import os
+import math
 
 ####################### EDIT TO CHOOSE BETWEEN ########################
 ################ MADAGASCAR AND STANDALONE INSTALLS ###################
@@ -38,22 +39,29 @@ asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/sse.x')
 asgfwi          = os.path.join(MYAPPS,'trip/iwave/asg/main/fwi.x')
 deriv           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDeriv.x')
 tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
+mute            = os.path.join(MYAPPS,'trip/iwave/trace/main/linmute.x')
 #######################################################################
 
 # dummy target
-Flow('cout0.txt',None,'touch $TARGET')
+Flow('cout0.txt',None,'/usr/bin/touch $TARGET')
 
 BULK = 4.0
 BULK1= BULK
 BULK2= 1.5625*BULK
 BULK3= BULK
+BULK4= 9*BULK
 BUOY = 1.0
 DX   = [20,10,5]
 DT   = [0.008,0.004,0.002]
 NX   = [401,801,1601]
+DWNX = [1001,2001,4001]
 NTR  = [201,401,801]
+DWNTR= [1001,2001,4001]
+#DWSTR= [101,201,401]
+DWSTR= [1001,2001,4001]
 FTR  = [75,150,300]
 FGR  = 2000
+DWFGR= 0
 FGS  = [1500,2500,3000,3250]
 FSTR = [100,200,400]
 NZ   = [201,401,801]
@@ -66,14 +74,20 @@ SCLIP= [20.0,80.0,320.0]
 DF   = 0.248
 RZ   = -1000
 SZ   = -3000
-SZL  = -100
+DWSZ = -500
+DWGZ = -500
+NDWGZ= -100
+SZL  = -500
 SX   = 3500
+DWSX = 10000
+DWGX = 0
 TMIN = 0.8
 TMAX = 1.8
 
 # taper parameters - taper in gx only
 TP = 'gx:2000,2500,5500,6000'
 TPL= 'gx:1500,2000,5000,5500'
+DWTPL = 'gx:0,500,19500,20000'
 
 #for i in range(0,3):
 for i in [0]:
@@ -82,7 +96,7 @@ for i in [0]:
     FSCALE = 2.0*DX[i]*BULK
 
 # compute header files for receiver (pthdr) and source (srchdr) lines, at gelev
-# = -1000 and -3000 resp.
+#x = -1000 and -3000 resp.
 
     Flow('pthdr' + str(i) + '.su', None,
          sunull + ' nt=2501 ntr=' + str(NTR[i]) + ' dt=0.002 | ' + 
@@ -143,20 +157,73 @@ for i in [0]:
 	 ' b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
 	 suchw + ' key1=offset key2=gx key3=sx c=-1',	 
 	 stdin=0)
+
+### rec, src for diving wave sim - source 10% along line
+
+    Flow('dwhdr' + str(i) + '.su', None,
+          sunull + ' nt=3001 ntr=' + str(DWNTR[i]) + ' dt=0.002 | ' + 
+          sushw + ' key=delrt,gelev,selev,sx a=0,' +
+          str(DWGZ) + ',' + str(DWSZ) + ',' + str(DWSX) + ' | ' +
+          sushw + ' key=gx a=' + str(DWFGR) +
+          ' b=' + str(DX[i]) + ' j=' + str(DWNTR[i]) + ' | ' +
+          suchw + ' key1=offset key2=gx key3=sx c=-1',
+          stdin=0)
+
+# node gathers
+
+    Flow('ndwhdr' + str(i) + '.su', None,
+          sunull + ' nt=3001 ntr=' + str(DWNTR[i]) + ' dt=0.002 | ' + 
+          sushw + ' key=delrt,gelev,selev,sx a=0,' +
+          str(NDWGZ) + ',' + str(DWSZ) + ',' + str(DWSX) + ' | ' +
+          sushw + ' key=gx a=' + str(DWFGR) +
+          ' b=' + str(DX[i]) + ' j=' + str(DWNTR[i]) + ' | ' +
+          suchw + ' key1=offset key2=gx key3=sx c=-1',
+          stdin=0)
+
+    Flow('dwxhdr' + str(i) + '.su', None,
+          sunull + ' nt=3001 ntr=' + str(DWNX[i]) + ' dt=0.002 | ' + 
+          sushw + ' key=delrt,gelev,selev,sx a=0,' +
+          str(-(NZ[i]-1)*DX[i]/2) + ',' + str(DWSZ) + ',' + str(DWSX) + ' | ' +
+          sushw + ' key=gx a=' + str(0.0) +
+          ' b=' + str(DX[i]) + ' j=' + str(DWNX[i]) + ' | ' +
+          suchw + ' key1=offset key2=gx key3=sx c=-1',
+          stdin=0)
+
+    Flow('dwyhdr' + str(i) + '.su', None,
+          sunull + ' nt=3001 ntr=' + str(DWNX[i]) + ' dt=0.002 | ' + 
+          sushw + ' key=delrt,gelev,selev,sx a=0,' +
+          str(-(NZ[i]-1)*DX[i]/2) + ',' + str(DWSZ) + ',' + str(DWSX) + ' | ' +
+          sushw + ' key=gx a=' + str(0.0) +
+          ' b=' + str(DX[i]) + ' j=' + str(DWNX[i]) + ' | ' +
+          suchw + ' key1=offset key2=gx key3=sx c=-1',
+          stdin=0)    
+	 
+    Flow('dwsrc' + str(i)+'.su', None, suspike +
+         ' nt=1501 ntr=' + str(DWNTR[i]) +
+         ' offset=0 ix1=' + str((DWSX-DWGX)/DX[i]) + ' nspk=1 it1=700 dt=0.002 | ' +
+           sufilter + ' f=' +
+	   str(F1[i]) + ',' + str(F2[i]) + ',' +
+	   str(F3[i]) + ',' + str(F4[i]) + ' | ' +
+           sugain + ' scale=' + str(500.0*DX[i]) + ' | ' + 
+           sushw + ' key=delrt,gelev,selev,sx a=-1000,' +
+	   str(DWSZ) + ',' + str(DWSZ) + ',' + str(DWSX) + ' | ' +
+           sushw + ' key=gx a=' + str(DWGX) + 
+	   ' b=' + str(DX[i]) + ' j=' + str(DWNTR[i]) + ' | ' +
+	   suchw + ' key1=offset key2=gx key3=sx c=-1',	 
+	   stdin=0)
 	 
 ### create bulk modulus and buoyancy files
 
-    NXL=NX[i]
-    NZL=NZ[i]
     NZL1=NZ[i]/3
     NZL2=NZ[i]/2
     NZL3=NZ[i]-NZL1-NZL2
-    DXL=DX[i]
-    DTL=DT[i]
+    NLL1=NZ[i]/6
+    NLL2=2*NZ[i]/3
+    NLL3=NZ[i]-NLL1-NLL2
 
     Flow('bmh'+str(i), None, 
-         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -165,8 +232,8 @@ for i in [0]:
          stdin=0) 
 
     Flow('byh'+str(i), None, 
-         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -174,9 +241,22 @@ for i in [0]:
          ' sfput dim=2 gdim=2 id1=0 id2=1',
          stdin=0) 
 
+    Flow('plbuoy'+str(i), None, 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Bulk_modulus unit=GPa' +
+         ' v000=' + str(BUOY) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('plbuoytrunc' + str(i), 'plbuoy' + str(i),
+         'window max1=2300')
+
     Flow('bml'+str(i), None, 
-         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -186,8 +266,8 @@ for i in [0]:
          stdin=0)
 
     Flow('bmw'+str(i), None, 
-         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -197,8 +277,8 @@ for i in [0]:
          stdin=0)
 
     Flow('bmt'+str(i), None, 
-         'makevel n1=' + str(NZL) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZ[i]) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -208,8 +288,8 @@ for i in [0]:
          stdin=0)
 
     Flow('layer1' + str(i), None, 
-         'makevel n1=' + str(NZL1) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZL1) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -218,8 +298,8 @@ for i in [0]:
          stdin=0) 
 
     Flow('layer2' + str(i), None, 
-         'makevel n1=' + str(NZL2) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZL2) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -228,8 +308,8 @@ for i in [0]:
          stdin=0) 
 
     Flow('layer3' + str(i), None, 
-         'makevel n1=' + str(NZL3+1) + ' n2=' + str(NXL) +
-         ' d1=' + str(DXL) + ' d2=' + str(DXL) + 
+         'makevel n1=' + str(NZL3+1) + ' n2=' + str(NX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
          ' label1=Depth label2=Distance' + 
          ' unit1=m unit2=m' + 
          ' label=Bulk_modulus unit=GPa' +
@@ -238,7 +318,118 @@ for i in [0]:
          stdin=0)
 
     Flow('layers' + str(i),['layer1' + str(i), 'layer2' + str(i), 'layer3' + str(i)],
-         'cat axis=1 d=' + str(DXL) + ' o=0.0 ${SOURCES[1]} ${SOURCES[2]}') 
+         'cat axis=1 d=' + str(DX[i]) + ' o=0.0 ${SOURCES[1]} ${SOURCES[2]}') 
+
+# linear middle layer - for diving wave sims
+
+    Flow('linvel1' + str(i), None, 
+         'makevel n1=' + str(NLL1) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK1)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('linvel2' + str(i), None, 
+         'makevel n1=' + str(NLL2) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK1)) +
+	 ' dvdx1=' + str((math.sqrt(BULK4)-math.sqrt(BULK1))/(2*NZ[i]*DX[i]/3)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('linvel3' + str(i), None, 
+         'makevel n1=' + str(NLL3+1) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK4)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('plvel' + str(i),['linvel1' + str(i), 'linvel2' + str(i), 'linvel3' + str(i)],
+         'cat axis=1 d=' + str(DX[i]) + ' o=0.0 ${SOURCES[1]} ${SOURCES[2]}')
+
+    Flow('plbulk' + str(i), 'plvel' + str(i),
+         'add mode=p ${SOURCES[0]} | put label=Bulk_modulus unit=GPa')
+
+    Flow('plbulksm' + str(i), 'plbulk' + str(i),
+         'smooth repeat=2 adj=n rect1=10 rect2=1')
+
+    Flow('plbulksmtrunc' + str(i), 'plbulksm' + str(i),
+         'window max1=2300')
+	 
+    Flow('plvellog' + str(i), 'plvel' + str(i),
+         'window f2=100 n2=1')
+
+    Flow('plbulksmlog' + str(i), 'plbulksm' + str(i),
+         'window f2=100 n2=1')
+
+# pw const for basement sim
+
+# linear middle layer - for diving wave sims
+
+    Flow('bsm1' + str(i), None, 
+         'makevel n1=' + str(NLL1) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK1)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('bsm2' + str(i), None, 
+         'makevel n1=' + str(NLL2) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt((BULK1+BULK4)/2)) +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('bsm3' + str(i), None, 
+         'makevel n1=' + str(NLL3+1) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK4)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0)
+
+    Flow('bsmvel' + str(i),['bsm1' + str(i), 'bsm2' + str(i), 'bsm3' + str(i)],
+         'cat axis=1 d=' + str(DX[i]) + ' o=0.0 ${SOURCES[1]} ${SOURCES[2]}')
+
+    Flow('bsmbulk' + str(i), 'bsmvel' + str(i),
+         'add mode=p ${SOURCES[0]} | put label=Bulk_modulus unit=GPa')
+
+    Flow('bsmbulksm' + str(i), 'bsmbulk' + str(i),
+         'smooth repeat=2 adj=n rect1=10 rect2=1')
+
+# homog diving wave geom
+
+    Flow('dwhomv' + str(i), None, 
+         'makevel n1=' + str(NLL1+NLL2+NLL3) + ' n2=' + str(DWNX[i]) +
+         ' d1=' + str(DX[i]) + ' d2=' + str(DX[i]) + 
+         ' label1=Depth label2=Distance' + 
+         ' unit1=m unit2=m' + 
+         ' label=Velocity unit=km/s' +
+         ' v000=' + str(math.sqrt(BULK1)) + ' | ' +
+         ' sfput dim=2 gdim=2 id1=0 id2=1',
+         stdin=0) 
+
+    Flow('dwhomk' + str(i), 'dwhomv' + str(i),
+         'add mode=p ${SOURCES[0]} | put label=Bulk_modulus unit=GPa')
+
+# simulations
 
     Flow('layerdata' + str(i) + '.su',
          'layers' + str(i) + ' byh' + str(i) + ' layersrc' + str(i) + '.su ' +
@@ -271,7 +462,180 @@ for i in [0]:
          'layerhom' + str(i) + '.su'],
          suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
 	 stdin=0)
-	     
+
+# diving rays
+
+    Flow('plvelsm' + str(i), 'plbulksm' + str(i),
+         'add sqrt=y')
+    
+    Flow('plrays' + str(i), 'plvelsm' + str(i),
+         'rays2 nt=1000 dt=5 zshot=500 yshot=10000 nr=1 a0=q0 amax=175 nr=61')
+
+# diving waves
+
+    Flow(['dwdata' + str(i) + '.su', 'dwdatavz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''' +
+	 ' mute_slope=' + str(1.0/math.sqrt(BULK1))  +
+	 ' mute_zotime=0 mute_width=400 mute_mode=1' +
+	 ' taperpars='+DWTPL, stdin=0, stdout=-1)
+
+# same without mute
+
+    Flow(['dwraw' + str(i) + '.su', 'dwrawvz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''', stdin=0, stdout=-1)
+
+# node data sim
+
+    Flow(['ndwdata' + str(i) + '.su', 'ndwdatavz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'ndwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''' +
+	 ' mute_slope=' + str(1.0/math.sqrt(BULK1))  +
+	 ' mute_zotime=0 mute_width=400 mute_mode=1' +
+	 ' taperpars='+DWTPL, stdin=0, stdout=-1)
+
+# same without mute
+
+    Flow(['ndwraw' + str(i) + '.su', 'ndwrawvz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'ndwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''', stdin=0, stdout=-1)
+
+# homog medium node data
+
+    Flow(['ndwhom' + str(i) + '.su', 'ndwhomvz' + str(i) + '.su'],
+         'dwhomk' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'ndwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''', stdin=0, stdout=-1)
+	 
+    Flow(['dwxdata' + str(i) + '.su', 'dwxdatavz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwxhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1 
+         ''', stdin=0, stdout=-1)
+
+    Flow(['dwxtdata' + str(i) + '.su', 'dwxtdatavz' + str(i) + '.su'],
+         'plbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwxhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	 
+         asg + 
+         '''
+	 adjtest=0
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1 
+         ''' +
+	 ' taperpars='+DWTPL,
+	 stdin=0, stdout=-1)
+
+    Flow('dwdatam' + str(i) + '.su', 'dwdata' + str(i) + '.su',
+         '/bin/cp ${SOURCE} ${TARGET} && ' + 
+         mute + ' input=${SOURCE} output=${TARGET}' +
+	 ' mute_slope=' + str(1.0/math.sqrt(BULK1))  +
+	 ' mute_zotime=0.0 mute_width=400 mode=1',
+	 stdin=0,stdout=-1)
+
+    Flow('dwhomdata' + str(i) + '.su',
+         'dwhomk' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+	 taperpars='''+DWTPL, stdin=0, stdout=-1)
+
+
+    Flow('bsmdata' + str(i) + '.su',
+         'bsmbulksm' + str(i) + ' plbuoy' + str(i) + ' dwsrc' + str(i) + '.su ' +
+	 'dwhdr' + str(i) + '.su',
+         '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+         asg + 
+         '''
+         bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+         source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+         deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=7.0 
+         dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+	 dump_lda=0 dump_ldc=0 dump_term=0 sampord=1
+         ''' + ' taperpars='+DWTPL, stdin=0, stdout=-1)
+
+    Flow('bsmdatam' + str(i) + '.su', 'bsmdata' + str(i) + '.su',
+         '/bin/cp ${SOURCE} ${TARGET} && ' + 
+         mute + ' input=${SOURCE} output=${TARGET}' +
+	 ' mute_slope=' + str(1.0/math.sqrt(BULK1))  +
+	 ' mute_zotime=0 mute_width=100 mode=1',
+	 stdin=0,stdout=-1)
+
+	 
 ### medium loop:
 ### hh = homog data inverted in homog medium
 ### lh = lens data inverted in homog medium
@@ -282,16 +646,17 @@ for i in [0]:
         exp = med + str(i)
     
 ### simulate data - read both p, vz traces
+# 
 
         Flow('ptp' + exp + '.su ptvz' + exp + '.su',
     	     'bm' + exp  + ' byh' + str(i) + ' ptsrc0' + str(i) + '.su ' +
 	     'pthdr' + str(i) + '.su',
              '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
-             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +
+             '/bin/cp ${SOURCES[3]} ${TARGETS[1]}; ' +	     
              asg + 
              '''
              bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_v0=${TARGETS[1]}
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} data_vz=${TARGETS[1]}
              deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
 	     dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 
@@ -317,7 +682,7 @@ for i in [0]:
              asg + 
              '''
              bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]} 
              deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=0 nr1=250 nl2=250 nr2=250 pmlampl=1.0
 	     dump_lda=0 dump_ldc=0 dump_term=0 sampord=1 taperpars=
@@ -328,8 +693,8 @@ for i in [0]:
 	     '/bin/cp ${SOURCE} ${TARGET} && ' +
 	     deriv + ' in=${TARGET} order=-1',
 	     stdin=0, stdout=-1)
-	Flow('ptvzfs'+exp+'.su', 'ptpfsint'+exp+'.su',
-	     sugain + ' scale=' + str(-1.0/(2.0*DX[i])))
+        Flow('ptvzfs'+exp+'.su', 'ptpfsint'+exp+'.su',
+             sugain + ' scale=' + str(-1.0/(2.0*DX[i])))
 	     
 ### scale for vz
         Flow('ptvzfsg'+exp+'.su','ptvzfs'+exp+'.su',
