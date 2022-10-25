@@ -113,18 +113,22 @@ means of an additive quadratic penalty modifying the problem
 The linear operator $A$ penalizes deviation from known (or assumed)
 characteristics of the source function - its null space consists of
 feasible (or ``physical'') source models.
-\cite{HuangNammourSymesDollizal:SEG19} present an overview of the
-literature on source extension methods, describing a variety of
-methods to add degrees of freedom to physical source model.
+
+Well-studied examples of extended source approaches to FWI include
+Wavefield Reconstruction Inversion (WRI)  \cite[]{LeeuwenHerrmannWRI:13,LeeuwenHerrmann:16,Lietal:18,Aghmiryetal:20,Louboutinetal:20} and Adaptive Waveform
+Inversion (AWI)
+\cite[]{Warner:16,GuachWarnerRavaut:GEO19,Guaschetal:NPJDM20,Yongetal:EAGE21,Warneretal:SEG21}. \cite{HuangNammourSymesDollizal:SEG19}
+present an overview of the recent
+literature on source extension methods.
 
 The present paper concerns {\em surface source extension}: physical
-sources are presumed to be concentrated spatially at points $\bx_s$
-in space, whereas their extended counterparts are permitted to spread
-energy over a {\em source surface} containing the physical source spatial
-locations. Similarly, the receiver spatial locations are confined to a
-{\em receiver surface}. A simple choice for the penalty operator $A$ is then
-multiplication by the distance $|\bx-\bx_s|$ to the physical source
-location:
+sources are presumed to be concentrated at points in space, whereas
+their extended counterparts are permitted to spread energy over a {\em
+  source surface}. Similarly, receivers are located on a {\em receiver
+  surface}. Assuming that the presumed point source is at location
+$\bx_s$, a simple (though certainluy not the only) choice for the
+penalty operator $A$ is then multiplication by the distance
+$|\bx-\bx_s|$ to the physical source location:
 \begin{equation}
   \label{eqn:penop}
   (A\bff)(\bx,t) = |\bx-\bx_s|\bff(\bx,t)
@@ -136,7 +140,7 @@ This paper presents a numerically efficient approach to solving the
 {\em source subproblem} of problem \ref{eqn:esi}:
 \begin{equation}
 \label{eqn:esis}
-\mbox{given } {\bf c}, \mbox{ choose } \bff \mbox{ to minimize }
+\mbox{given } {\bf c}, \mbox{ choose surface source } \bff \mbox{ to minimize }
 \|PL[{\bf c}]^{-1}\bff -d \|^2 + \alpha \|A\bff\|^2 
 \end{equation}
 Solution of this subproblem is an essential component of {\em variable
@@ -165,8 +169,8 @@ effectiveness of this acceleration.
 
 I will use two 2D numerical models 
 throughout to illustrate the theory. In both, horizontal lines serve as
-source and receiver surfaces. The first is a ``crosswell'' or slab
-configuration with an acoustic lens positioned between a deeps source
+source and receiver surfaces. The first is a ``horizontal crosswell'' or slab
+configuration with an acoustic lens positioned between a deep source
 and a shallower line of 
 receivers, resulting in markedly triplicated arrivals. The goal in
 this first example is to construct a surface source that explains the data in a
@@ -180,12 +184,14 @@ this second example, the diving wave arrivals are isolated (by an
 appropriate mute operator) and a
 source constructed that explains them alone.
 
-The next section defines the modeling operator $PL[{\bf c}]$, its
-adjoint, and important specializations (pressure vs. normal velocity
+Since the constructions described here involve a significant number of
+components and ideas, I begin the paper with an overview, mapping out
+the key steps and their relation to other work.
+The next section defines the modeling operator $PL[{\bf c}]^{-1}$ and important specializations (pressure vs. normal velocity
 sources and data). It also introduces the two 2D examples mentioned
 above.  The following section constructs an approximate inverse of the
 modeling operator by time reversal (as suggested by work in
-photoacoustic tomography), and illustrates its efficacy in the two
+photoacoustic tomography), and illustrates its efficacy via the two
 examples. This construction requires extraction of
 velocity data, or equivalently a surface source, from pressure data.
 The subsequent sections describe this pressure-to-source operator,
@@ -226,16 +232,19 @@ accomplished and listing a few of the many questions left open.
 
 \section{Overview}
 
-The preconditioner construction is closely related to the time
+The preconditioner construction is partly inspired by the time
 reversal method in photoacoustic tomography
-\cite[]{StefanovUhlmannIP:09,Hristova:09}. A simplified mathematical
+\cite[]{StefanovUhlmannIP:09,Hristova:09}. This problem
+clearly has strong similarities to, but also differences from, the
+problem studied here.
+
+A simplified mathematical
 translation of this medical imaging task is to infer the initial
 excess pressure distribution over a fluid-containing region at time
 $t=0$ from measurements of the pressure on a surface enclosing the
-fluid over a time interval $0 \le t \le t_{\rm max}$. This problem
-clearly has strong similarities to, but also differences from, the
-problem studied here. The time reversal method presumes that the
-pressure field has returned to equilibrium (zero excess pressure), or close to it, at the
+fluid over a time interval $0 \le t \le t_{\rm max}$. The time reversal method presumes that the
+pressure field has returned to equilibrium (zero excess pressure), or
+close to it, in the fluid-containing region at the
 final time $t=t_{\rm max}$ Then the field can be (at least
 approximately) viewed as the backwards-in-time initial boundary value
 problem with zero final conditions at $t=t_{\rm max}$, and boundary
@@ -249,23 +258,27 @@ several obvious ways from the photoacoustic setting. The measurement
 or receiver surface does not surround the region of wave
 propagation. It is not the initial pressure time-slice at $t=0$ that
 is to be determined, but a time-extended source $\bff$ confined to a
-surface. The penalty operator has no analogue in the basic
+surface. The penalty operator $A$ has no analogue in the basic
 photoacoustic problem description. Finally, once these obstacles are
 overcome, using the approximate solution operator to accelerate Krylov
 iteration for solution of the optimization problem \ref{eqn:esis}
 requires that the operator be identified as the adjoint of the
-modeling operator with respect to suitable inner products in its domain
-and range. In the pages to follow, I will address each of these issues.
+modeling operator with respect to suitable inner products in its
+domain and range. The next few paragraphs sketch resolutions of each
+of these issues.
 
 First, reverse-time propagation can be localized via ray theory,
 within high-frequency asymptotic approximation. This step requires
-some assumptions about the ray fields: all rays responsible for significant
-energy in the receiver data must arrive from the source surface, and must cross the source and receiver
-surfaces transversally, that is, making non-zero angles. Also, the
-rays must approach source and receiver surfaces from one side or the
-other (``the inside''), so that locally the surfaces can be treated as boundaries of
-propagation domains. With these assumptions, reverse-time propagation
-of the receiver data
+some assumptions about the ray fields: all rays responsible for
+significant energy in the receiver data must arrive from the source
+surface, and must cross the source and receiver surfaces
+transversally, that is, making non-zero angles. Also, the rays must
+approach source and receiver surfaces from one side or the other
+(``the inside''), so that locally the surfaces can be treated as
+boundaries of propagation domains. Specifically, rays must emanate
+from the source surface towards the inside (``incoming'' rays), and
+arrive at the receiver surface from the inside (``outgoing'' rays).
+With these assumptions, reverse-time propagation of the receiver data
 closely approximates the acoustic fields near the source surface. Next
 observe that for a causal field with a surface pressure source (with a
 continuous pressure field across the surface), the source is
@@ -273,8 +286,8 @@ proportional to the jump in the (particle) velocity field. Moreover,
 to leading order in frequency, the velocity field switches sign at the
 surface, so the jump is just twice the sampled value on the
 surface. Thus reverse-time propagation and reading off the velocity
-field on the source surface yields
-a source that reproduces the pressure data, within an asymptotically small error.
+field on the source surface yields a source that reproduces the
+pressure data, within an asymptotically small error.
 %Preconditioning amounts to a change of
 %norm in the domain and range spaces of the modeling operator. In this
 %case, the modfied norms are weighted $L^2$, and the weight operators
@@ -290,7 +303,7 @@ field at the receiver surface. Moreover, the reverse-time
 source-to-pressure propagation is the transpose (adjoint) of the
 forward-time source-to-pressure propagation - this is a very simple
 version of the adjoint state construction \cite[]{Plessix:06}. So the
-approximate inverse is: conversion of pressure to source at the
+approximate inverse may be described as: conversion of pressure to source at the
 receiver surface, followed by the adjoint of the modeling operator,
 followed by the conversion of pressure to source at the source
 surface. This sequence precisely describes the adjoint of the modeling
@@ -299,7 +312,15 @@ receiver data, with the weight operators being the
 pressure-to-source operators. That this construction results in an
 approximate inverse means that the modeling operator is approximately
 unitary with respect to these weighted norms, which in turn implies
-that the preconditioned conjugate gradient algorithm should converge rapidly.
+that a properly constructed preconditioned conjugate gradient algorithm should converge
+rapidly.
+
+FInally, the $\alpha=0$ case is not sufficient: the penalty operator
+$A$ is an essential component of the nonlinear inverse propblem
+\ref{eqn:esi}. As it turns out, $A$ commutes with the other operators
+involved - approximately, but that is enough. Therefore the effect of
+$A$ can be compensated with an easily-computed factor, whence the
+preconditioned acceleration extended to the case $\alpha > 0$. 
 
 This pressure-to-source map is closely related to the ``hyperbolic
 Dirichlet-to-Neumann'' operator that plays a prominent role in
@@ -313,12 +334,7 @@ form in the work of Yu Zhang and collaborators on true amplitude
 migration
 \cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09}.
 
-FInally, the $\alpha=0$ case is not sufficient: the penalty operator
-$A$ is an essential component of the nonlinear inverse propblem
-\ref{eqn:esi}. As it turns out, $A$ commutes with the other operators
-involved - approximately, but that is enough. Therefore the effect of
-$A$ can be compensated with an easily-computed factor, whence the
-preconditioned acceleration extended to the case $\alpha > 0$. 
+
 
 %The obvious computation of the pressure-to-source map - prescribe the
 %pressure, solve the wave equation with this boundary condition, read
@@ -413,7 +429,7 @@ That is,
     \end{array}
   \right)
 \end{equation}
-$L[{\bf c}]$ has a well-defined inverse in the sense of distributions
+$L[{\bf c}]$ has a well-defined inverse %in the sense of distributions
 if it is restricted to either causal or anti-causal vector wavefields.
 
 Since all of the operators in the discussion that follows depend on
@@ -422,111 +438,111 @@ for example, $L=L[\bf{c}]$.
 
 Most of what follows is valid for any space dimension $n >0$. I will
 describe the theory for $n=3$, write $\bx=(x,y,z)^T$ for the spatial
-coordinate vector, and refer to the third (vertical) coordinate of
-particle velocity $\bv$ as $v_z$. For computational convenience, the
+coordinate vector, and similarly for the 
+particle velocity $\bv = (v_x,v_y,v_z)$. For computational convenience, the
 examples are two-dimensional.
 
 The surface source extension replaces point sources on or near a
-surface in $\bR^3$ with source functions confined to the 
-surface. The simplest example of this extended geometry specifies a
-plane $\{(x,y,z,t): z=z_s\}$ at source depth $z_s$ as the surface. For
+surface $\Sigma_s$ in $\bR^3$ with source functions confined to the
+surface . The surface should be supplied with a choice of unit normal
+vector field ${\bf n}_s$. Since the surface separates space into two
+non-overlapping parts, at least locally, designate the part into which
+the normal vector points as the ``outside'', so that ${\bf n}_s$ is
+the outward normal.
+
+For
 acoustic modeling, surface sources are combinations of constitutive law
-defects and loads normal to the surface, localized on $z=z_s$. That
+defects and loads normal to the surface, localized on $\Sigma_s$. That
 is, right-hand sides in the system $L\bu=\bff$ take the form
-$\bff(\bx,t) = (h_s(x,y,t)\delta(z-z_s),
-f_s(x,y,t)\bf{e}_z\delta(z-z_s))^T$ for scalar defect $h_s$ and normal
-force $f_s$ ($\bf{e}_z=(0,0,1)$). With the choice $L$ given in
-\ref{eqn:awemat}, the causal/anti-causal wave system $L\bu^{\pm}=\bff$
+$\bff(\bx,t) = (h_s\delta_{\Sigma_s},
+f_s{\bf n}_s\delta_{\Sigma_s})^T$ for scalar defect $h_s$ and normal
+load $f_s$. With the choice $L$ given in
+\ref{eqn:awemat}, the causal system $L\bu=\bff$
 takes the form
 \begin{eqnarray}
 \label{eqn:awepm}
-\frac{1}{\kappa}\frac{\partial p^{\pm}}{\partial t} & = & - \nabla \cdot \bv^{\pm} +
-h_s \delta(z-z_s), \nonumber \\
-\rho\frac{\partial \bv^{\pm}}{\partial t} & = & - \nabla p^{\pm} +
-                                                f_s{\bf e} \delta(z-z_s),\nonumber \\
-p^{\pm} & =& 0 \mbox{ for } \pm t \ll 0,\nonumber\\ 
-\bv^{\pm} & = & 0 \mbox{ for } \pm t \ll 0.
+\frac{1}{\kappa}\frac{\partial p}{\partial t} & = & - \nabla \cdot \bv +
+h_s \delta_{\Sigma_s}, \nonumber \\
+\rho\frac{\partial \bv}{\partial t} & = & - \nabla p +
+                                                f_s{\bf n}_s \delta_{\Sigma_s},\nonumber \\
+p & =& 0 \mbox{ for }  t \ll 0,\nonumber\\ 
+\bv & = & 0 \mbox{ for } t \ll 0.
 \end{eqnarray}
 
 \noindent {\bf Remark:} In system \ref{eqn:awepm} and many similar
-systems to follow, I will use the shorthand
+systems to follow, I will use the shorthand such as
 \[
-  p^+ = 0 \mbox{ for } t \ll 0 
+  p = 0 \mbox{ for } t \ll 0 
 \]
-to mean that $p^+$ is {\em causal}, that is,
+to mean that $p$ is {\em causal}, that is,
 \[
-  \mbox{For some } T \in \bR, p^+(\cdot,t) = 0 \mbox{ for all } t <
+  \mbox{For some } T \in \bR, p(\cdot,t) = 0 \mbox{ for all } t <
   T.
 \]
 Similarly,
 \[
-  p^- = 0 \mbox{ for } t \gg 0 
+  p = 0 \mbox{ for } t \gg 0 
 \]
-signifies that $p^-$ is anti-causal.
+signifies that $p$ is anti-causal.
 
 Extended forward modeling consists in solving \ref{eqn:awepm} and
-sampling the solution components at receiver locations. For
-simplicity, throughout this paper I will assume that the receivers are
-located on another spatial plane $\{(x,y,z,t): z=z_r\}$ at receiver
-depth $z_r$. The constructions to follow involve interchange of the
-roles of $z_s$ and $z_r$ (that is, locating sources on $z=z_r$ and
-receivers at $z=z_s$), so both require sampling operators: $P_s,P_r$
-are the sampling operators on $z=z_s$, $z=z_r$ respectively. In
+sampling the solution components at a receiver surface $\Sigma_r$ with
+(``outward'') unit normal field ${\bf n}_r$.
+$P_s$ and $P_r$ are the sampling operators on $\Sigma_s$ and
+$\Sigma_r$ respectively. In
 practice, sampling necessarily occurs at a discrete array of points
 (trace locations), and over a zone of finite extent. In this
 theoretical discussion, I will neglect the finite sample rate, and
-regard the data, for example $P_rp^+$, as continuously sampled. The
+regard the data, for example $P_rp$, as continuously sampled. The
 output samples are necessarily muted, that is, non-zero only over a space-time domain
 of finite extent. This mute, and any tapering applied to the data
 traces, are regarded as part of the sampling operators $P_s,P_r$.
 
-The causal/anti-causal vector
-modeling operators ${\cal S}^{\pm}_{z_s,z_r}$ are defined in terms of
-the solutions $(p^{\pm},\bv^{\pm})$ of the systems \ref{eqn:awepm} by
+The vector modeling operator ${\cal S}$ relates the source amplitudes
+$h_s,f_s$ on $\Sigma_s$ to the sampled pressure and normal velocity
+$p$, $\bv \cdot {\bf n}_r$ for 
+the solution $(p,\bv)$ of the systems \ref{eqn:awepm} by
 \begin{equation}
-  {\cal S}^{\pm}_{z_s,z_r}(h_s,f_s)^T  = (P_rp^{\pm},P_r v_z^{\pm})^T,
+  {\cal S}(h_s,f_s)^T  = (P_rp,P_r(\bv \cdot {\bf n}_r) )^T,
   \label{eqn:fwd}
 \end{equation}
-The subscript signifies that sources are located on $z=z_s$,
-receivers on $z=z_r$. It is necessary to include this information in
-the notation, as versions of ${\cal S}^{\pm}$ with sources and receivers in
-several locations will be needed later in the discussion.
 
-Denote by $\Pi_i, i=0,1$ the projection on the first,
-respectively second, component of a vector in $\bR^2$. The 
-forward modeling operator from pressure source to pressure trace is
+Denote by $\Pi_i, i=0,1$ the projection on the first,respectively
+second, component of a vector in $\bR^2$. The forward modeling
+operator from pressure source to pressure trace is
 \begin{equation}
   \label{eqn:sdef}
-  S^{\pm}_{z_s,z_r} = \Pi_0 {\cal S}^{\pm}_{z_s,z_r} \Pi_0^T 
+  S = \Pi_0 {\cal S}\Pi_0^T 
 \end{equation}
-and the forward modeling operator from velocity source (normal force)
-to velocity trace is
-\begin{equation}
-  \label{eqn:vdef}
-  V^{\pm}_{z_s,z_r} = \Pi_1 {\cal S}^{\pm}_{z_s,z_r} \Pi_1^T 
-\end{equation}
+%and the forward modeling operator from velocity source (normal force)
+%to velocity trace is
+%\begin{equation}
+%  \label{eqn:vdef}
+%  V_{z_s,z_r} = \Pi_1 {\cal S}_{z_s,z_r} \Pi_1^T 
+%\end{equation}
 
 With these conventions, we can write the version of the source
-subproblem \ref{eqn:esis} studied in this paper as
+subproblem \ref{eqn:esis} studied in this paper as: given a pressure
+gather $d$ on $\Sigma_r$,
 \begin{equation}
   \label{eqn:esisp}
-  \mbox{find }h_s\mbox{ to minimize }\|S^{+}_{z_s,z_r}h_s- d\|^2 +
+  \mbox{find }h_s\mbox{ to minimize }\|Sh_s- d\|^2 +
   \alpha^2\|Ah_s\|^2.
 \end{equation}
 
 The two examples mentioned in the introduction illustrate the setting
 just described. The first example (Figure \ref{fig:olensrays0}) embeds
-an acoustic (low-velocity) lens between a source surface at $z_s=3000$
-(orange horizontal line) 
-m and a receiver surface at $z_r=1000$ m (yellow horizontal line).  The data to be used in this
-example results from a point source at $z_s=3500, x_s=3500$ m (orange
-star). I have overlain the rays connecting this source point with the
-data portion of the receiver surface: evidently all of the rays
-involved cross the source and receiver surfaces transversally. Also,
-regarding ``inwards'' as being ``upwards'' at the source surface,
-``downwards'' at the receiver surface, it is clear that the data is
-incoming at the source surface, outgoing at the receiver
-surface.
+an acoustic (low-velocity) lens between a source surface
+$\Sigma_s= \{z = z_s=3000 \mbox{ m}\}$ (orange horizontal line) m and
+a receiver surface $\Sigma_r= \{z=z_r=1000 \mbox{ m}\}$ (yellow
+horizontal line).  The data to be used in this example results from a
+point source at $(3500, 3500)$ m (orange star). I have overlain
+the rays connecting this source point with the data portion of the
+receiver surface: evidently all of the rays involved cross the source
+and receiver surfaces transversally. Also, regarding ``inwards'' as
+being ``upwards'' at the source surface, ``downwards'' at the receiver
+surface, it is clear that the data is incoming at the source surface,
+outgoing at the receiver surface.
 
 \begin{figure}
   \includegraphics[width=\textwidth]{olensrays0.pdf}
@@ -540,8 +556,8 @@ surface.
 \end{figure}
 
 %\ref{fig:drecplh0}, \ref{fig:dfwdplh0}
-Figure \ref{fig:drecplh0} shows the gather $P_rp_{\rm pt}^{+}$, where
-$p_{\rm pt}^{+}$ is causal field generated by the point source at
+Figure \ref{fig:drecplh0} shows the gather $P_rp_{\rm pt}$, where
+$p_{\rm pt}$ is causal field generated by the point source at
 $(3500,3500)$ m with a trapezoidal bandpass filter wavelet having
 significant energy between 1 and 12.5 Hz. The mute embedded in $P_r$
 limits trace positions to 2000 m $ \le x_r \le $ 6000 m, and times to
@@ -549,16 +565,16 @@ limits trace positions to 2000 m $ \le x_r \le $ 6000 m, and times to
 
 Figure \ref{fig:dsrcphh0} displays an extended (pressure) source $h_s$, in the form of
 traces in the spatial range 2000 m $ \le x_r \le $ 6000 m and time
-range 0 s $\le t \le $ 2 s. The modeling operator output $S_{z_s,z_r}^+h_s$,
-obtained from the causal solution $(p^+, \bv^+)$ of \ref{eqn:awepm}
+range 0 s $\le t \le $ 2 s. The modeling operator output $Sh_s$,
+obtained from the causal solution $(p, \bv)$ of \ref{eqn:awepm}
 with this choice of $h_s$ and $f_s=0,$ by application of the sampling
-operator $P_r$ to $p^+$, are shown in Figure \ref{fig:dfwdplh0}.
+operator $P_r$ to $p$, is shown in Figure \ref{fig:dfwdplh0}.
 
 \noindent {\bf Remark:} The close resemblance between Figures
 \ref{fig:drecplh0} and \ref{fig:dfwdplh0} is not accidental  - the
 extended source $h_ s$ shown in Figure \ref{fig:dsrcphh0} is constructed
-so that $S^++_{z_s,z_r}h_s$ (Figure \ref{fig:dfwdplh0}) closely
-approximates the point source gather $P_r p^+_{\rm pt}$ (Figure
+so that $Sh_s$ (Figure \ref{fig:dfwdplh0}) closely
+approximates the point source gather $P_r p_{\rm pt}$ (Figure
 \ref{fig:drecplh0}). This construction will be explained in the next section.
 
 \begin{figure}
@@ -606,7 +622,7 @@ example, while they are outgoing at
 the receiver surface if it is oriented so that inwards = down also.
 
 This geometry permits inversion of the diving wave data alone, which
-is isolated via a mute, depicted in (Figure \ref{fig:ndwmute0}. The
+is isolated via a mute, depicted in Figure \ref{fig:ndwmute0}. The
 mute includes time truncation at 6 s, and offsets between -10000 and
 10000 m. The isolated
 diving wave (window between offsets 4000 and 10000) is shown in
@@ -625,193 +641,450 @@ Figure \ref{fig:ndwdata0}.
     incorporated in the sampling operator $P_r$. (c) Diving wave
     gather. Color scale is same for (a) and (c).}
 \end{figure}
-%As explained in the Introduction, the downgoing constraint on the square-integrable
-%source functions $h_s, f_s$ is
-%essential both for finite energy solutions of the system
-%\ref{eqn:awepm} to exist, and for these solutions to have well-defined
-%traces on the receiver surface $z=z_r$. This constraint will be
-%assumed throughout, often tacitly.
-%For downgoing solutions of system \ref{eqn:awepm}, the key
-%components ($p^{\pm}$ and $v^{\pm}_z$) are continuous functions of $z$
-%in the open slab $z_s<z<z_r$ with well-defined limits at the boundary
-%planes, but may be discontinuous at the source plane
-%$z=z_s$. Similarly, the roles of $z_s$ and $z_r$ will be interchanged
-%in some of the constructions to come, and the corresponding solutions
-%may be discontinuous at $z=z_r$. Accordingly, interpret $P_s$, $P_r$
-%as the limit from right and left respectively: for $u=p^{\pm}$ or
-%$v^{\pm}_z$,
-%\begin{eqnarray}
- % \label{eqn:defsamp}
- % P_su(x,y,t) &=& \lim_{z \rightarrow z_s^+} u(x,y,z,t),\nonumber \\
- % P_ru(x,y,t) &=& \lim_{z \rightarrow z_r^-} u(x,y,z,t).                  
-%\end{eqnarray}
-
-
-
-%\noindent {\bf Remark:} To connect with the formulation presented in
-%the introduction, note that for continuous $u$,
-%$P_su(x,y,t)=u(x,y,z_s,t)$, and therefore the adjoint of $P_s$ (in the
-%sense of distributions) is $P_s^Th(x,y,z,t) =
-%h(x,y,t)\delta(z-z_s)$. Write ${\cal P}_s = \mbox{diag }(P_s,P_s)$ and
-%similarly for ${\cal P}_r$. Then
-%\[
- % {\cal S}^{+}_{z_s,z_r} = {\cal P}_r L^{-1}({\cal P}_s)^T,
-%\]
-%in which $L^{-1}$ is interpreted in the causal sense, and similarly
-%for ${\cal S}^{-}$. Sources confined to $z=z_s$ are precisely those
-%functions (distributions, really) output by ${\cal P}_s^T$, so the
-%problem statements \ref{eqn:esi} and \ref{eqn:esis} can be rewritten
-%in terms of ${\cal S}^+_{z_s,z_r}$, with $P$ identified with ${\cal P}_r$.
-
-%${\cal S}^{\pm}$ is not stably invertible: its columns are
-%approximately linearly dependent, as will be verified below. The
-%diagonal components of ${\cal S}^{\pm}$ thus carry essentially all of
-%its information, and it is in terms of these that a sensible inverse problem
-%is defined.
 
 \section{Time Reversal}
 
-Recall that the source vector $(h_s,f_s)$ is assumed to produce a
-downgoing field $(p^+,\bv^+)$, that is, emanates high-frequency energy only along
-rays that make an angle with the vertical bounded below by a common
-minimum angle. Such rays leave $\Omega$ within a common maximum
-time. Consequently (Appendix B), in the
-slab $z_s<z<z_r$, the field $(p^+,\bv^+)$ approximates the solution of an
-anti-causal evolution equation. Choose $\chi(t)$ to be a smooth function
-that is $= 0$ for $t \gg 0$ and $=1$ at times when near rays carrying
-high-frequency energy in $(p^+,\bv^+)$ cross $z=z_r$. Define 
-$(\tilde{p}^-,\tilde{\bv}^-)$ to be the solution in the half-space
-$\Omega \times \bR$ of
+Time reversal as found in the literature on photoacoustic tomography
+must be localized to apply to the surface source inversion problem,
+since there is no measurement surface surrounding the region of
+propagation. It must also be modified to produce a source, rather than
+a restriction of the pressure field. The assumption of incoming rays at the source surface and
+outgoing rays at the receiver surface makes both modifications  
+possible.
+
+The construction takes place in three stages: first, an
+acoustic field with high-frequency energy propagating along an
+incoming ray family is identified as the causal solution of an inhomogeneous boundary value problem {\em locally and on
+  the inside}. The boundary value is simply the restriction of the
+acoustic field to the surface. Second, the same causal solution is
+identified as the causal solution of an acoustic problem with source,
+singular on the surface in the fashion of equation
+\ref{eqn:awepm}. The source amplitude is proportional to 
+the velocity field sampled on the surface. Third, this identification is used twice, first to
+propagate the receiver data backwards in time as the solution of an
+anti-causal problem,  the velocity field of which is sampled on the
+source surface; then the causal problem is solved with the
+source built from the velocity samples. This solution must be
+identical to the field generating the data, along the ray fields
+carrying all of the high-frequency energy. Therefore the reconstructed
+source is an approximate solution of the problem \ref{eqn:esis} for
+$\alpha=0$.
+
+%For the bulk of this section, the source and receiver surfaces are
+%arbitrary smooth surfaces, as there is no conceptual penalty in
+%dropping the assumption that they are coordinate surfaces.
+
+\subsection{Field localization}
+The first task is to view an acoustic field locally as a solution of a
+boundary value problem with prescribed pressure on the boundary of a
+domain, as is the case in the photoacoustic tomography configuration.
+
+In this subsection $(p,\bv)$ is a solution of the homogeneous acoustic system
 \begin{eqnarray}
-\label{eqn:revawe}
-  \frac{1}{\kappa}\frac{\partial \tilde{p}^-}{\partial t} & = & - \nabla \cdot \tilde{\bv}^-, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}^-}{\partial t} & = & - \nabla \tilde{p}^-,\nonumber \\
-  \tilde{p}^- & =& 0,  \mbox{ for } t \gg 0\\ 
-  \tilde{\bv}^- & = & 0 \mbox{ for } t \gg 0\\
-  P_r\tilde{p}^- &=& \chi P_rp^+ . 
+\label{eqn:awebase}
+  \frac{1}{\kappa}\frac{\partial p}{\partial t} & = & - \nabla \cdot \bv, \nonumber \\
+  \rho\frac{\partial \bv}{\partial t} & = & - \nabla p,
 \end{eqnarray}
-That is, $\tilde{p}^-$ has the same boundary value on $z=z_r$ as
-$p^+$, except for low-frequency residue that is muted by
-$\chi$. Therefore
-$p^+ \approx \tilde{p}^-, \bv^+ \approx \tilde{\bv}^-$ near
-$z=z_r$. Since the right-hand sides in the system \ref{eqn:awepm} are
-singular only on $z=z_s$, and the high-frequency components of
-$(p^+,\bv^+)$ are carried by downgoing rays, these differ negligibly
-from the the high-frequency components of
-$(\tilde{p}^-,\tilde{\bv}^-)$ in the space-time slab $z_s<z<z_r$, and
-the approximation holds throughout this region. In particular
-$P_sv^+_z \approx P_s \tilde{v}^-_z$. In view of the relation
-\ref{eqn:tracejump10},
-\begin{equation}
-  \label{eqn:tildevtohsubs}
-  -2P_s\tilde{v}^-_z \approx h_s,
-\end{equation}
-so solution
-of the system \ref{eqn:revawe} followed by restriction to $z=z_s$ and
-multiplication by $-2$ 
-approximately inverts the map $S^+_{z_s,z_r}: h_s \mapsto P_rp^+$.
+The source surface $\Sigma$ is given a choice of unit normal field ${\bf
+  n}$. Rays carrying
+high-frequency energy in $(p,\bv)$ pass through $\Sigma$, and
+intersect $\Sigma$ only at times
+$>0$. Also, the velocity
+vectors of all such rays have a negative ${\bf n}$ component where
+they cross $\Sigma$. Construct a time interval $[0,\tau]$ and
+a region in space $\Omega^+$ containing $\Sigma$ so that $\Sigma$ forms
+part of the boundary $\partial \Omega^+$ of $\Omega^+$, ${\bf n}$ is the
+outward unit normal to $\Omega^+$ on $\Sigma$, and the energetic
+rays cross $\partial \Omega^+$ {\em only} at
+points of $\Sigma$ in the time interval $[0,\tau]$ - that is, in time
+less than $\tau$ the rays do not reach other parts of $\partial
+\Omega^+$. Note that the rays are {\em incoming} to $\Omega^+$ in the terminology
+introduced earlier. See Figure \ref{fig:omegarays}.
 
-Next observe that in view of the relation \ref{eqn:tracejump20}, and
-the downgoing nature of the ray system carrying the high frequency
-energy in $(p^+,\bv^+)$, the field $(\tilde{p}^-,\tilde{\bv}^-)$ is
-actually the restriction to $z<z_r$ of the anti-causal solution of \ref{eqn:awepm}
-with $z_s$ replaced by $z_r$, zero constitutive defect, and vertical
-load given by the jump in pressure at $z=z_r$ - for this field, use
-the same notation. Continuity of vertical
-velocity $\tilde{v}^-_z$ at $z=z_r$ implies that the vertical load is
-\[
-  f_r = -[\tilde{p}^-]|_{z=z_r} =-(\lim_{z\rightarrow
-    z_r^+}\tilde{p}^- - \lim_{z\rightarrow
-    z_r^-}\tilde{p}^-)
-\]
-\[
-  \approx 2 P_r \tilde{p}^- = 2 P_r p^+
-\]
-(from the definition \ref{eqn:defsamp}, $P_r$ is the limit from the
-left). Thus
-\[
-  P_s \tilde{v^-_z} \approx V^-_{z_r,z_s}(2 P_rp^+) \approx
-  2V^-_{z_r,z_s}S^+_{z_r,z_s}h_s.
-\]
-so
-\[
-  h_s \approx -2 P_s v^+_z \approx -2 P_s \tilde{v}^-_z \approx
-  -4V^-_{z_r,z_s}S^+_{z_r,z_s}h_s
-\]
-Combine this observation with \ref{eqn:tildevtohsubs} to obtain
-\[
- -4  V^-_{z_r,z_s} S^+_{z_s,z_r}  \approx  I,
-\]
-This relation combines with the identity \ref{eqn:trtrcomp} to
-yield the first main result of this section:
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{omegarays.pdf}
+  \caption{Localization near crossing points of rays. $\Sigma$ is
+    source surface.  Dashed line is part of a ray carrying high
+    frequency energy. Ray velocity vector has negative component in
+    direction of unit normal ${\bf n}$ (outward, in chosen
+    orientation). $\Omega^+$ contains all ray segments for times
+    $0 \le t \le \tau$ (green arrow). Rays intersect boundary
+    $\partial \Omega^+$ only in $\Sigma$ for this time
+    range. $\Omega^-$ lies on outward side of $\Sigma$, which is part
+    of its boundary. The domain $\Omega$ is the union of $\Omega^+$
+    and $\Omega^-$.}
+  \label{fig:omegarays}
+\end{figure}
+
+Consequent to this ray geometry, conclude that the field $(p,\bv)$  is asymptotically negligible both
+throughout $\Omega^+$ at $t=0$ and at all points of 
+$\partial \Omega^+$ except for $\Sigma$, for $0\le t \le \tau$. So $(p,\bv)$ differs
+negligibly from the solution of the boundary value problem 
 \begin{eqnarray}
-  \label{eqn:approxinv}
-  (V^+_{z_s,z_r})^T S^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
-  (S^+_{z_s,z_r})^T V^+_{z_s,z_r} & \approx & \frac{1}{4}I, \nonumber\\
-  V^+_{z_s,z_r} (S^+_{z_s,z_r})^T & \approx & \frac{1}{4}I, \nonumber\\
-  S^+_{z_s,z_r} (V^+_{z_s,z_r})^T & \approx & \frac{1}{4}I.
-\end{eqnarray}.
-The second equation is simply the transpose of the first, and the
-last two follow by by an exactly analogous argument using time
-reversal and interchange of the roles of $z_s$ and$z_r$.
-
-The conclusion is significant enough to merit restating in English:
-provided that high-frequency energy in the various fields is carried
-along downgoing ray fields, the transpose of $V^+$ is an approximate
-inverse to $S^+$, modulo a factor of 4. To recover the pressure source
-$h_s$ generating a pressure gather $P_rp$ at $z=z_r$, multiply the
-latter by -2, then apply the transpose of $V^+_{z_s,z_r}$ to this
-gather, reading out a vertical velocity field at $z=z_s$. Multiply
-again by -2 and you have a high-frequency approximation to $h_s$.
-
-
-
-It follows from the adjoint state method (see Appendix A for details) that
-\begin{equation}
-  \label{eqn:sadj1}
-  ({\cal S}^{\pm}_{z_s, z_r})^T = -{\cal S}^{\mp}_{z_r,z_s}
-\end{equation}
-
-Define $R$ to be the {\em time-reversal operator} on functions of
-space-time, $Rf(\bx,t) = f(\bx,-t)$, and ${\cal R}$ to be the {\em
-  acoustic field time-reversal operator}
-\begin{equation}
-  \label{eqn:trdef}
-  {\cal R} \left(
-    \begin{array}{c}
-      p\\
-      \bv
-    \end{array}
-  \right) =
-  \left(
-    \begin{array}{c}
-      Rp\\
-      -R\bv
-    \end{array}
-  \right)
-\end{equation}
-Then 
-\begin{equation}
-  \label{eqn:trsadj}
-  {\cal R}{\cal S}^{\mp} = -{\cal S}^{\pm}_{z_r,z_s}{\cal R}
-\end{equation}
-Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj1} and \ref{eqn:trsadj} imply that
-\begin{equation} 
-  \label{eqn:trtr}
- ({\cal S}^{\pm}_{z_s,z_r})^T = {\cal R}{\cal S}_{z_r,z_s}^{\pm}{\cal R}=
- -{\cal S}^{\mp}_{z_r,z_s}.
-\end{equation}
-The relation \ref{eqn:trtr} implies that
-\begin{eqnarray}
-  (S^{\pm}_{z_s,z_r})^T &=& -S^{\mp}_{z_r,z_s} \nonumber\\
-                        &=& R S^{\pm}_{z_r,z_s}R, \nonumber\\
-    (V^{\pm}_{z_s,z_r})^T &=& -V^{\mp}_{z_r,z_s} \nonumber\\
-                        &=& R V^{\pm}_{z_r,z_s}R.
-                            \label{eqn:trtrcomp}
+\label{eqn:aweloc}
+  \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} & = & - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla
+                                                    \tilde{p}, \\
+  \tilde{p}(\bx,t) & = & p(\bx,t) \mbox{ for } \bx \in \Sigma, 0 \le t \le 
+  \tau,\\
+  \tilde{p}(\bx,t) & = & 0 \mbox{ for } \bx \in \partial \Omega^+ \setminus \Sigma, 0 \le t \le
+ \tau.
 \end{eqnarray}
 
+\subsection{Source representation}
 
+The fields involved in the surface source extension are causal and
+source-generated, rather than solutions of boundary value problems
+such as the system \ref{eqn:aweloc}. To transition to a source
+representation, begin by extending the domain $\Omega^+$, lying on the
+incoming side of the surface $\Sigma$, to a full neighborhood $\Omega$
+of sigma
+by adding a domain $\Omega^-$ on the outside (see Figure
+\ref{fig:omegarays}). Once again, construct $\Omega^-$ so that none of
+the rays carrying high-frequency energy cross the boundary of
+$\Omega^-$ except at $\Sigma$. Extend the field $(\tilde{p},\tilde{\bv})$ to the
+full neigborhood $\Omega$ by solving the system \ref{eqn:aweloc} with
+$\Omega^+$ replaced by $\Omega^-$. Thus the extended
+field is pieced together out of causal fields solving the boundary value
+problem on either side of the boudary, with {\em the same} boundary
+condition, that is, the trace of $p$ on $\Sigma$. Thus the extended
+field is continuous in $p$. it is not however continuous in
+$\bv$, as will be seen shortly. More precisely, the normal component
+$\bv\cdot {\bf n}$
+has a discontinuity, while the tangential components are continuous.
+The jump in
+$\bv\cdot {\bf n}$ contributes a delta function to the gradient: as a
+field in the whole neigborhood $\Omega$, $(\tilde{p},\tilde{\bv})$
+solves
+\begin{eqnarray}
+\label{eqn:awebase}
+  \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} & = & [\bv \cdot {\bf n}]_{\Sigma}\delta_{\Sigma}
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
+  \tilde{p}(\bx,t) & = & 0 \mbox{ for } \bx \in \partial \Omega, 0 \le t \le 
+  \tau,\\
+  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega^+, t , \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for } \bx \in \Omega^+, t = 0.       
+\end{eqnarray}
+in which $\delta_{\Sigma}$ is the delta function on $\Sigma$. The
+square bracket denotes the jump in the quantity enclosed across
+$\Sigma$, from the outside to the inside. Since ${\bf n}$ points from
+the inside to the outside, this convention contributes another minus
+sign.
 
+This representation is even better than it looks: since the ray
+families in $\Omega^{\pm}$ cross the boundary only at $\Sigma$ within
+the prescribed time interval, the
+solution changes only by an asymptotically negligible amount in
+$\Omega$ for $0 \le t \le \tau$ if the boundary condition is removed
+and the system is solved for all of space-time.
+
+There is a downside, namely the apparent necessity of constructing the
+solution in $\Omega^-$ so that the jump of $\bv \cdot {\bf n}$ may be
+computed. That is actually not necessary, however.
+This is best seen by analyzing a generic geometric optics
+component associated to the phase function $\psi^+$ in $\Omega^+$ and its family of
+rays. The acoustic field is assembled by a sum (in the continuum, an
+integral) over such solutions. A particular summand looks like
+\begin{equation}
+  \label{eqn:go}
+   a(\bx)e^{i\omega (t - \psi(\bx))}.
+\end{equation}
+for $\bx \in \Omega^+$.
+The phase $\psi$ solves the eikonal equation, the amplitude $a$ the
+related transport equation. The restriction of $p$
+to $\Sigma$ determines $\psi$ (and $a$) restricted to $\Sigma$, essentially by
+Fourier synthesis. Since the eikonal
+equation is even in $\nabla \psi$,  and $\psi$ restricted to $\Sigma$
+determines the tangential derivatives of $\psi$, the normal component
+of $\nabla \psi$ is determined up to sign by the boundary values of
+$p$. The spatial component of a ray $X(t)$ associated to $\psi$ solves
+the ordinary differential equation
+\begin{equation}
+  \label{eqn:ray}
+  \frac{dX}{dt} = \nabla \psi(X).
+\end{equation}
+The normal component of this ray must be negative (in
+$\Omega^+$) - this is the incoming condition, and guarantees that the
+ray does not intersect $t=0$ in $\Omega^+$ near $\Sigma$, justifying the initial
+condition in \ref{eqn:aweloc}. Similarly, the normal component must be
+positive in $\Omega^-$ near $\Sigma$. But both must have the same magnitude, since
+$\psi$ solves the eikonal equation - so they are negatives of each
+other. For causal solutions such as $(\tilde{p},\tilde{\bv})$, the
+Newton's law equation in \ref{eqn:aweloc} is equivalent to
+\begin{equation}\label{eqn:newt}
+  \tilde{\bv}(\bx,t) = -\frac{1}{\rho}\int_{-\infty}^t ds \nabla \tilde{p}(\bx,s),
+\end{equation}
+except at $\Sigma$.
+it follows that the normal components of $\tilde{\bv}$ have limits at
+point of $\Sigma$ 
+that are opposite in sign: for $\bx \in \Sigma$,
+\[
+  \lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf
+    n}(\bx+\zeta {\bf n})) = 
+-\lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf
+  n}(\bx -\zeta {\bf n}))
+\]
+whence
+\begin{equation}
+[\tilde{\bv} \cdot {\bf n}] = 2  \label{eqn:vjump} \lim_{\zeta
+  \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf n}(\bx -\zeta {\bf
+  n}))
+\approx 2 \bv \cdot {\bf n}
+\end{equation}
+That is, at least over the short time interval $0 \le t \le \tau$,
+$(p,\bv)$ is asymptotically approximated in $\Omega^+$ by
+$(\tilde{p},\tilde{\bv})$, which solves
+\begin{eqnarray}
+\label{eqn:awesrc}
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & f \delta_{\Sigma}
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
+  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega, t=0, \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for } \bx \in \Omega, t = 0.       
+\end{eqnarray}
+with $f = 2 \bv \cdot {\bf n}$ on $\Sigma$.
+
+This result appears limited by the short time assumption (on $\tau$)
+and the corresponding spatial localization to $\Omega^+$. However
+neither of these apparent limitations is real. The short time
+assumption may be relaxed by windowing the fields to short time
+windows then adding up the results. The approximating fields
+$(\tilde{p}, \tilde{\bv})$ are themselves approximated by ray
+theory solutions. The assumptions on rays crossing source and receiver
+surfaces are global, and extend the approximation \ref{eqn:awesrc}
+globally. Thus the last two conditions may be replaced by the basic
+causality condition
+\begin{eqnarray}
+  \label{eqn:awesrcmod}
+  ... & = & ...\\
+  \tilde{p} & = & 0 \mbox{ for }  t \ll 0, \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for } t \ll 0.       
+\end{eqnarray}
+The effect of this change on the receiver surface traces of $\tilde{p}$ and
+$\tilde{\bv}$ is negligible.
+
+An example has already appeared in Figure \ref{fig:dsrcphh0}. In this
+example, the field $(p, \bv)$ is the point source solution with the
+point source depicted in Figure \ref{fig:olensrays0}, located at
+$(3500, 3500)$ m. The role of $\Sigma$ is played by the source surface
+$z=z_s=3000$ m, and near this surface the field solves the source-free
+system \ref{eqn:awebase}. The ``inside'' in this example is the region
+$z > z_s$, and the outward unit normal is therefore ${\bf n}=(0,0,-1)$.
+Thus $(p,\bv)$ should be asymptotically close to the solution
+$(\tilde{p},\tilde{\bv})$ of the
+system \ref{eqn:awesrc} in the region $z< z_s$, at least at locations
+connected by the ray field shown in Figure \ref{fig:olenrays0} to the
+source surface, provided that the source amplitude $f$ is chosen $=
+-2v_z$ on $\Sigma=\{z=z_s\}$. Figure \ref{fig:dsrcphh0} displays exactly this $f$, and
+\ref{fig:dfwdplh0} the traces of $\tilde{p}$ on the
+  receiver surface $z=z_r=1000$ m, which satisfies the ray condition. The extremely
+close match between Figures \ref{fig:drecplh0} (traces of $p$) and
+\ref{fig:dfwdplh0} is consistent with the conclusion reached here.
+
+\subsection{Approximate Inversion}
+
+The time-reversal construction can now be translated into the context
+of seismic surface source inversion. Assume that $(p,\bv)$ is a
+solution of the free-space acoustic system \ref{eqn:awebase}, with
+high-frequency energy carried by a ray family that satisfies the
+criteria described earlier: incoming at the source surface $\Sigma_s$
+with normal field ${\bf n}_s$, outging at the receiver surface
+$\Sigma_r$ with normal field ${\bf n}_r$, and every ray crossing
+$\Sigma_r$ meets $\Sigma_s$. The goal of this subsection is to
+describe a procedure that constructs a source field $h_s$ on
+$\Sigma_s$ so that $Sh_s \approx P_rp$, thus approximately inverting
+the modeling operator $S$.
+
+The sampled fields $(P_rp,P_r\bv)$ on $\Sigma_r$
+is negligible for large $t$. Due the outgoing assumption,
+$(p,\bv)$ are negligible for large $t$ near $\Sigma_r$. The
+integrated Newton's law \ref{eqn:newt} acquires a minus sign if the
+integration from $-\infty$ to $t$ is replaced by integration from $t$
+to $\infty$. Apply the construction of the last subsection in reverse
+time, to conclude
+that $(p,\bv)$ is approximated by $(\tilde{p},\tilde{\bv})$, where the
+latter solves the time-reversed problem
+\begin{eqnarray}
+\label{eqn:awerec}
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & h_r \delta_{\Sigma_r}
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
+  \tilde{p} & = & 0 \mbox{ for } t\gg 0, \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for } t \gg 0.       
+\end{eqnarray}
+with $h_r = -2P_r(\bv \cdot {\bf n}_r)$.
+
+By construction, high-frequency energy in $(\tilde{p},\tilde{\bv})$ is
+carried by the same ray family as for $(p,\bv)$. Every ray passes over
+$\Sigma_s$ and is incoming there. Since $(p,\bv)$ vanishes for $t \ll
+0$ near $\Sigma_s$, $(\tilde{p},\tilde{\bv})$ is negligible there,  So
+the construction detailed in the last two sections is applicable
+again, and $(\tilde{p},\tilde{\bv})$ is approximated by the solution
+of 
+\begin{eqnarray}
+\label{eqn:awesrc}
+  \frac{1}{\kappa}\frac{\partial\hat{p}}{\partial t} & = & h_s \delta_{\Sigma_s}
+                                                      - \nabla \cdot \hat{\bv}, \nonumber \\
+  \rho\frac{\partial \hat{\bv}}{\partial t} & = & - \nabla \hat{p},\\
+  \hat{p} & = & 0 \mbox{ for } t\ll 0, \\
+  \hat{\bv} & = & {\bf 0} \mbox{ for } t \ll 0.       
+\end{eqnarray}
+with $h_s = 2P_s(\tilde{\bv} \cdot {\bf n}_r) \approx 2P_s(\bv \cdot
+{\bf n}_r)$.
+
+\subsection{Summary}
+The surface source version of the time reversal construction involves three steps: given
+pressure data $P_rp$ on the receiver surface $\Sigma_r$ for a solution
+$(p,\bv)$ of the system \ref{eqn:awebase} satisfying the ray conditions,
+\begin{itemize}
+\item[1. ] create a source $h_r$ on $\Sigma_r$
+  by multiplying the corresponding normal velocity trace by $-2$: $h_r = -2P_r(\bv
+  \cdot {\bf n}_r)$;
+\item[2. ] propagate $h_r$ backwards in time by solving the system
+  \ref{eqn:awerec} for the acoustic field $(\tilde{p},\tilde{\bv})$;
+\item[3. ] create a source $h_s$ on $\Sigma_s$ by  multiplying tne
+  normal velocity trace of $(\tilde{p},\tilde{\bv})$ by 2: $h_s = 2P_s(\tilde{\bv}
+  \cdot {\bf n}_s)$.
+\end{itemize}
+Then $P_r p \approx Sh_s$.
+
+The surface source representaion part of the construction shows that
+under the assumed ray conditions, a solution of \ref{eqn:awebase} is
+asymptotically the same near the receive surface $\Sigma_r$ as the
+solution of the system \ref{eqn:awepm} with a suitable source
+$\tilde{f}_s$ (and zero velocity source, $h_s=0$. Therefore this
+construction also inverts the modeling operator $S$ in the sense that
+$Sh_s\approx S\tilde{h_s}$ if $P_rp \approx S\tilde{h_s}$. That is,
+this construction produces an asymptotic rightt inverse of $S$: it
+does not necessily (approximately) recover the source that generates
+the data, but recovers some source that generates the data.
+
+\subsection{Example: Lens}
+The first example uses the acoustic lens model (Figure
+\ref{fig:olensrays0}, with $\Sigma_s$ = horizontal line at depth 
+3000 m, and $\Sigma_r$ = horizontal line at depth 1000 m. The pressure
+data to be inverted is the sampling of the pressure field on
+$\Sigma_r$, generated by the point source shown in the figure, at
+$(3500, 3500)$ m (Figure \ref{fig:drecplh0}. However, I will invert
+this data in a homogeneous medium with $\kappa \equiv 4$ GPa. These
+choice illustrate two facts about surface source inversion and the
+approximate inversion based on time reversal. First, the success of the inversion demostrates the
+insensitivity of the time reversal method to ray multipathing
+(triplication), evident in the data (Figure \ref{fig:drecplh0}).
+%s respectively
+Second, it is entirely possible to invert data in a material model
+other than the one in which it was produced (in the case of synthetic
+data, of course). This
+capability is critically important in the application of the
+approximate inversion in nonlinear inversion, where the early iterations
+involve solution of the source estimation problem \ref{eqn:esis} at
+(possibly very) wrong material models ${\bf c}$. Successful extension
+methods maintain data fit throughout the course of the inversion.
+%The source time dependence is again a [1, 2.5,
+%10, 12.5] Hz trapezoidal bandpass filter.
+
+As noted earlier (and visible in Figure \ref{fig:olensrays0}), the acoustic field in this example satisfies the ray
+conditions on which the time reversal construction is based: The rays
+are incoming at $\Sigma_s$, outgoing at $\Sigma_r$ and all rays
+carrying significant energy at points of $\Sigma_r$ pass over
+$\Sigma_s$. The outward unit normal at $\Sigma_s$ is ${\bf n}_s ={\bf
+  e}_z=(0,1)$; at $\Sigma_r$, it's ${\bf n}_r =-{\bf
+  e}_z=(0,-1)$. So the source on the receiver surface $\Sigma_r$, input to reverse time propagation
+(system \ref{eqn:awerec}, generating the fields $(\tilde{p},\tilde{\bv})$) is
+$h_r=2P_rv_z$ (the field $P_rv_z$ is depicted in Figure \ref{fig:dfwdvzlh0}). After reverse time propagation , the approximate
+inversion $\tilde{h}_s=2P_s\tilde{v}_z$ is shown in Figure
+\ref{dinvhslh0}. It differs considerably from the source field used to
+generate the data (Figure \ref{fig:dsrcphh0}, however when used as the
+source in forward modeling (system \ref{eqn:awesrc}) {\em with the
+  same material parameters used in the inversion}, it generates a
+pressure gather on $\Sigma_r$ (Figure \ref{fig:drerecplh0}) very
+closely 
+approximating the input gather (Figure \ref{fig:dfwdplh0}). The
+difference is plotted on the same color scale in Figure
+\ref{fig:ddiffrecplh0}.
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:dfwdvzlh0}]{\includegraphics[width=0.45\textwidth]{dfwdvzlh0.pdf}}
+  \subfloat[\label{fig:dinvhslh0}]{\includegraphics[width=0.45\textwidth]{dinvhslh0.pdf}}
+  \caption{(a) Normal velocity data corresponding to pressure data in
+    Figure \ref{fig:dfwdplh0}. (b) Source function resulting from time-reversal inversion
+    of pressure data in Figure \ref{fig:dfwdplh0}. Propagation in homogeneous
+    bulk modulus model (different from the model used to generate the
+    data!). Plotted with same color scale as Figure \ref{fig:dsrcphh0}.}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:drerecplh0}]{\includegraphics[width=0.45\textwidth]{drerecplh0.pdf}}
+  \subfloat[\label{fig:ddiffrecplh0}]{\includegraphics[width=0.45\textwidth]{ddiffrecplh0.pdf}}
+  \caption{(a) Resimulated data: pressure gather generated from
+    inverted source (Figure \ref{fig:dinvhslh0}, using same
+    homogeneous bulk modulus as used in inversion. (b) Difference
+    between data depicted in Figure \ref{fig:drerecplh0} and in Figure \ref{fig:dfwdplh0}.
+    Both (a) and (b) plotted with same color scale as Figure \ref{fig:dfwdplh0}.}
+\end{figure}
+  
+
+\subsection{Example: Diving Wave}
+
+The second example is based on the diving wave model (Figure
+\ref{fig:ooplrays0}). In this example, unlike the previous one, the source
+and receiver surfaces do not bound the propagating region, even in the
+vertical direction. Thus this exercise differs even more than the
+first from time reversal in photoacoustic tomography. Inspection of
+the blue part of the ray field in Figure \ref{fig:ooplrays0} reveals that
+the rays are incoming at the source surface, and outgoing at the receiver surface, if the
+outward normal is chosen as $-{\bf e}_z$. The mute shown in Figure
+\ref{fig:ndwmute0} eliminates the rest of the ray field. What remains
+satisfies the condition that every ray passing the receiver surface
+originates in the source surface.
+
+In this example, the inversion is performed with the same model as
+used to generate the data. Note that sufficiently small changes in the model would
+result in similar ray configurations, so time reversal inversion could
+proceed as is shown here. However sufficiently large changes in the
+bulk modulus model could result in fundamental changes in the ray
+field: for instance, change to a homogenous model would completely
+eliminate the diving rays and the corresponding data component, thus
+making an inversion of the type presented here impossible. 
+
+The inversion proceeds otherwise as before. The source $h_r=-2 P_rv_z$
+on $\Sigma_r$ is built from the normal component of velocity, shown in
+Figure \ref{fig:ndwdatavz0}. Reverse time propagation to create the
+fields $(\tilde{p},\tilde{\bv})$, extraction of
+the normal component of velocity (note the sign difference with the
+previous example!) and scaling by the factor 2 produces the inverted
+source shown in Figure \ref{fig:ndwdataresrcplbulksm0}. Forward
+propagation yields the pressure gather shown in Figure
+\ref{fig:ndwdataresimplbulksm0}, which closely matches the original
+diving wave pressure data (Figure \ref{fig:ndwdata0}). The difference
+is displayed on the same color scale in Figure
+\ref{fig:ndwdatarediffplbulksm0}.
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:ndwdatavz0}]{\includegraphics[width=0.45\textwidth]{ndwdatavz0.pdf}}
+  \subfloat[\label{fig:ndwdataresrcplbulksm0}]{\includegraphics[width=0.45\textwidth]{ndwdataresrcplbulksm0.pdf}}
+  \caption{(a) Normal velocity data corresponding to pressure data in
+    Figure \ref{fig:ndwdata0}. (b) Source function resulting from time-reversal inversion
+    of pressure data in Figure \ref{fig:ndwdata0}. Propagation in
+    same model (Figure \ref{fig:ooplrays0}) as used to generate the data.}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:ndwdataresimplbulksm0}]{\includegraphics[width=0.45\textwidth]{ndwdataresimplbulksm0.pdf}}
+  \subfloat[\label{fig:ndwdatarediffplbulksm0}]{\includegraphics[width=0.45\textwidth]{ndwdatarediffplbulksm0.pdf}}
+  \caption{(a) Resimulated data: pressure gather generated from
+    inverted source (Figure \ref{fig: ndwdataresrcplbulksm0}, using same
+    bulk modulus (Figure \ref{fig:ooplrays0}) as used in data
+    generation and inversion. (b) Difference
+    between data depicted in Figure \ref{fig:ndwdataresimplbulksm0} and in Figure \ref{fig:ndwdata0}.
+    Both (a) and (b) plotted with same color scale as Figure \ref{fig:ndwdata0}.}
+\end{figure}
 
 \section{Pressure-to-Source}
 
