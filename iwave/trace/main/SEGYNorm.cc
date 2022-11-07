@@ -4,6 +4,7 @@
 #else
 #include "segypp.hh"
 #endif
+#include "par.h"
 
 using RVL::valparse;
 using RVL::RVLException;
@@ -21,6 +22,12 @@ typedef TSOpt::SEGYSpace gsp;
 int xargc;
 char **xargv;
 
+const char * sdoc[] = {
+  "usage: SEGYNorm.x in=<string>",
+  "string is name of SU file. Returns L2 norm (l2 norm ",
+  "scaled by dt).",
+  NULL};
+
 int main(int argc, char ** argv) {
 
   try {
@@ -30,6 +37,11 @@ int main(int argc, char ** argv) {
     storeGlobalComm(MPI_COMM_WORLD);
 #endif
 
+    if (retrieveGlobalRank()==0 && argc<2) {
+      pagedoc();
+      exit(0);
+    }    
+    
     PARARRAY * pars = ps_new();
     
     if (ps_createargs(pars,argc-1,&(argv[1]))) {

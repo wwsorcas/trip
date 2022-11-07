@@ -9,20 +9,18 @@ using RVL::Vector;
 using RVL::Components;
 using RVL::LinearOpFO;
 using RVL::AssignFilename;
-
-using TSOpt::SEGYLinMute;
+using TSOpt::SSEScaleFO;
 using TSOpt::SEGYSpace;
 typedef TSOpt::SEGYSpace tsp;
 
 const char * sdoc[] = {
-  " IWAVE linear mute command",
+  " Trace scaling by (shift+alpha^2*offset^2)^p",
   " arguments:",
-  "   input      = filename of input SEGY data",
-  "  output      = filename of output SEGY data",
-  " mute_slope   = dtime/d|offset| in ms/m - typical value = 0.67 corresponds to H2O Vp",
-  " mute_zotime  = mute onset time at zero offset",
-  " mute_width   = width of linear taper zone",
-  " mode         = (0,1) zero for (t<,t>) mute onset time",
+  "   input      = filename of input SEGY data (string)",
+  "  output      = filename of output SEGY data (string)",
+  "   shift      = shift (float)",
+  "   alpha      = weight (float)",
+  "       p      = exponent (float)",
   NULL};
 
 int xargc;
@@ -48,11 +46,12 @@ int main(int argc, char ** argv) {
 	e<<"  argv["<<i<<"] = "<<argv[i+1]<<"\n";
       throw e;
     }
-    // since the product of grid spaces is not really an 
-    // out-of-core structure, this driver operates on single
-    // grid spaces
+
     string inp = valparse<string>(*pars,"input");
     string outp = valparse<string>(*pars,"output");
+    float shift = valparse<float>(*pars,"shift");
+    float alpha = valparse<float>(*pars,"alpha");
+    float p = valparse<float>(*pars,"p");
 
     tsp dom(inp,"data");
         
@@ -67,13 +66,9 @@ int main(int argc, char ** argv) {
     Components<ireal> cddout(ddout);
     cddout[0].eval(ddoutfn);
 
-    SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-		     valparse<float>(*pars,"mute_zotime",0.0f),
-		     valparse<float>(*pars,"mute_width",0.0f),
-		     valparse<int>(*pars,"mode",0));
-
-    LinearOpFO<float> muteop(dom,dom,mute,mute);
-    muteop.applyOp(ddin,ddout);
+    SSEScaleFO fo(shift,alpha,p);
+    LinearOpFO<float> tsop(dom,dom,fo,fo);
+    tsop.applyOp(ddin,ddout);
   }
   catch (RVLException & e) {
     e.write(cerr);
