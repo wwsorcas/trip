@@ -26,10 +26,10 @@ int xargc;
 char **xargv;
 
 const char * sdoc[] = {
-  "usage: GridDot.x in1=<string> in2=<string>",
+  "usage: GridLinComb.x a=<float> in1=<string> b=<float> in2=<string>",
   "strings are names of RSF file pairs. The grid geometries defined",
-  "defined by the header files must be the same. The command returns",
-  "the L2 dot product (= l2 dot product scaled by grid element volume).",
+  "defined by the header files must be the same. The command modifies",
+  "the second vector argument: in2 = a*in1 + b*in2.",
   NULL};
 
 int main(int argc, char ** argv) {
@@ -50,7 +50,7 @@ int main(int argc, char ** argv) {
     
     if (ps_createargs(pars,argc-1,&(argv[1]))) {
       RVLException e;
-      e<<"ERROR: GridDot from ps_creatargs \n";
+      e<<"ERROR: GridLinComb from ps_creatargs \n";
       e<<"  called with args:\n";
       e<<"  argc = "<<argc-1<<"\n";
       for (int i=0;i<argc-1;i++) 
@@ -60,7 +60,9 @@ int main(int argc, char ** argv) {
     // since the product of grid spaces is not really an 
     // out-of-core structure, this driver operates on single
     // grid spaces
+    float a = valparse<float>(*pars,"a");
     string in1 = valparse<string>(*pars,"in1");
+    float b = valparse<float>(*pars,"b",1.0f);
     string in2 = valparse<string>(*pars,"in2");
 
     gsp sp(in1,"notype",true
@@ -74,7 +76,7 @@ int main(int argc, char ** argv) {
     AssignFilename af2(in2);
     vec1.eval(af1);
     vec2.eval(af2);
-    cout<<vec1.inner(vec2)<<endl;
+    vec2.linComb(a, vec1, b);
     ps_delete(&pars);
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();

@@ -26,10 +26,11 @@ int xargc;
 char **xargv;
 
 const char * sdoc[] = {
-  "usage: GridDot.x in1=<string> in2=<string>",
-  "strings are names of RSF file pairs. The grid geometries defined",
-  "defined by the header files must be the same. The command returns",
-  "the L2 dot product (= l2 dot product scaled by grid element volume).",
+  "usage: GridCopy.x in=<string> out=<string>",
+  "strings are names of RSF file pairs. The 'in' file pair is copied over ",
+  "the 'out' file pair. The 'in' file pair must exist on call. The 'out'",
+  "file pair may not exist, in which case it is created. If the 'out' file",
+  "pair does exist, it must define the same grid geometry as the 'in' pair.",
   NULL};
 
 int main(int argc, char ** argv) {
@@ -41,13 +42,13 @@ int main(int argc, char ** argv) {
     storeGlobalComm(MPI_COMM_WORLD);
 #endif
 
-    PARARRAY * pars = ps_new();
-
     if (retrieveGlobalRank()==0 && argc<2) {
       pagedoc();
       exit(0);
     }
-    
+
+    PARARRAY * pars = ps_new();
+
     if (ps_createargs(pars,argc-1,&(argv[1]))) {
       RVLException e;
       e<<"ERROR: GridDot from ps_creatargs \n";
@@ -74,7 +75,7 @@ int main(int argc, char ** argv) {
     AssignFilename af2(in2);
     vec1.eval(af1);
     vec2.eval(af2);
-    cout<<vec1.inner(vec2)<<endl;
+    vec2.copy(vec1);
     ps_delete(&pars);
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
