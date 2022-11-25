@@ -23,8 +23,8 @@ int xargc;
 char **xargv;
 
 const char * sdoc[] = {
-  "usage: SEGYRand.x in=<string> out=<string>",
-  "in defines SEGYSpace, out is random vector created in it",
+  "usage: SEGYRand.x in=<string>",
+  "in = SU file, randomized on return",
   ".",
   NULL};
 
@@ -55,7 +55,6 @@ int main(int argc, char ** argv) {
     }
 
     string in = valparse<string>(*pars,"in");
-    string out = valparse<string>(*pars,"out");
 
     gsp sp(in,"notype"
 #ifdef IWAVE_USE_MPI 
@@ -63,7 +62,7 @@ int main(int argc, char ** argv) {
 #endif
 	   );
     Vector<float> vec(sp);
-    AssignFilename af(out);
+    AssignFilename af(in);
     vec.eval(af);
     RVL::RVLRandomize<float> rnd(getpid(),-1.0f,1.0f);
     vec.eval(rnd);
