@@ -26,9 +26,8 @@ int xargc;
 char **xargv;
 
 const char * sdoc[] = {
-  "usage: GridRand.x in=<string> out=<string>",
-  "in is name of RSF file pair defining GridSpace. out is name of  ",
-  "RSF file pair storing random vector in this space.",
+  "usage: GridRand.x in=<string>",
+  "in is name of RSF file pair, data randomized on return  ",
   NULL};
 
 int main(int argc, char ** argv) {
@@ -60,7 +59,6 @@ int main(int argc, char ** argv) {
     // out-of-core structure, this driver operates on single
     // grid spaces
     string in = valparse<string>(*pars,"in");
-    string out = valparse<string>(*pars,"out");
 
     gsp sp(in,"notype",true
 #ifdef IWAVE_USE_MPI 
@@ -68,7 +66,7 @@ int main(int argc, char ** argv) {
 #endif
 	   );
     Vector<float> vec(sp);
-    AssignFilename af(out);
+    AssignFilename af(in);
     vec.eval(af);
     RVL::RVLRandomize<float> rnd(getpid(),-1.0f,1.0f);
     vec.eval(rnd);
