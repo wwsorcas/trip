@@ -258,6 +258,109 @@ def rand(vec):
         print(vec + ' not name of legal su or rsf file')
         return False
 
+def hdrcomp(vec1, vec2):
+    
+    if not isinstance(TRIP,str):
+        print('path to TRIP package not defined')
+        return False
+
+    if not os.path.exists(TRIP):
+        print('TRIP package = ' + TRIP + ' not found')
+        return False
+    
+    # if file is SU, call trace/main/SEGYDot.x
+    if sanity(vec1,'su') and sanity(vec2,'su'):
+        cmd = os.path.join(TRIP,'iwave/trace/main/SEGYCmpHdrs.x')
+        ret = os.system(cmd + ' in1=' + vec1 + ' in2=' + vec2)
+        if ret != 0:
+#            print('command:')
+#            print(cmd + ' in1=' + vec1 + ' in2=' + vec2)
+#            print('failed with return value ' + str(ret))
+            return False
+    else:
+        return False
+    return True
+
+def m8rint(x,y):
+    if str(x) != "b''":
+#        print('x = ' + str(x))
+        return int(x)
+    else:
+        return y
+
+def m8rfloat(x,y):
+    if str(x) != "b''":
+        return float(x)
+    else:
+        return y
+    
+def rsfcomp(vec1, vec2):
+
+    import m8r
+
+    if sanity(vec1,'rsf') and sanity(vec2,'rsf'):
+
+        dtol=0.001
+
+        n1=[1,1,1]
+        d1=[1.0,1.0,1.0]
+        o1=[0.0,0.0,0.0]
+        unit1=['','','']
+        n2=[1,1,1]
+        d2=[1.0,1.0,1.0]
+        o2=[0.0,0.0,0.0]
+        unit2=['','','']
+        
+
+        inp1=m8r.Input(vec1)
+        inp2=m8r.Input(vec2)
+        
+        n1[0]=m8rint(inp1.get('n1'),1)
+        n1[1]=m8rint(inp1.get('n2'),1)
+        n1[2]=m8rint(inp1.get('n3'),1)
+        n2[0]=m8rint(inp2.get('n1'),1)
+        n2[1]=m8rint(inp2.get('n2'),1)
+        n2[2]=m8rint(inp2.get('n3'),1)
+
+        d1[0]=m8rfloat(inp1.get('d1'),1.0)
+        d1[1]=m8rfloat(inp1.get('d2'),1.0)
+        d1[2]=m8rfloat(inp1.get('d3'),1.0)
+        d2[0]=m8rfloat(inp2.get('d1'),1.0)
+        d2[1]=m8rfloat(inp2.get('d2'),1.0)
+        d2[2]=m8rfloat(inp2.get('d3'),1.0)
+ 
+        o1[0]=m8rfloat(inp1.get('o1'),0.0)
+        o1[1]=m8rfloat(inp1.get('o2'),0.0)
+        o1[2]=m8rfloat(inp1.get('o3'),0.0)
+        o2[0]=m8rfloat(inp2.get('o1'),0.0)
+        o2[1]=m8rfloat(inp2.get('o2'),0.0)
+        o2[2]=m8rfloat(inp2.get('o3'),0.0)
+
+        unit1[0]=str(inp1.get('unit1'))
+        unit1[1]=str(inp1.get('unit2'))
+        unit1[2]=str(inp1.get('unit3'))
+        unit2[0]=str(inp2.get('unit1'))
+        unit2[1]=str(inp2.get('unit2'))
+        unit2[2]=str(inp2.get('unit3'))
+        
+        for i in range(0,3):
+#            print('n1[' + str(i) + '] = ' + str(n1[i]))
+#            print('n2[' + str(i) + '] = ' + str(n2[i]))            
+            if n1[i] != n2[i] or abs(d1[i]-d2[i])>dtol*d1[i] or abs(o1[i]-o2[i])>dtol*d1[i] or unit1[i] != unit2[i]:
+                return False
+
+        dataunit1=str(inp1.get('unit'))
+        dataunit2=str(inp2.get('unit'))
+
+        if dataunit1 != dataunit2:
+            return False
+
+        return True
+
+    else:
+
+        return False
+    
 def simplot(f, addcb=False, width=7, asprat=-1):
 
     RSFROOT = os.getenv('RSFROOT')
