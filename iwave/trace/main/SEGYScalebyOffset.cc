@@ -69,6 +69,10 @@ int main(int argc, char ** argv) {
     SSEScaleFO fo(shift,alpha,p);
     LinearOpFO<float> tsop(dom,dom,fo,fo);
     tsop.applyOp(ddin,ddout);
+
+    ps_delete(&pars);
+    iwave_fdestroy();
+    
   }
   catch (RVLException & e) {
     e.write(cerr);

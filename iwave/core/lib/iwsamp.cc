@@ -754,6 +754,10 @@ namespace TSOpt {
 
 	      }
 
+#ifdef IWAVE_VERBOSE
+	      fprintf(stream,"IWaveSampler::sample: step=%d tracestart=%d tracestop=%d\n",step[g.dim],tracestart,tracestop);
+#endif
+
 	      // sample if in axis range
 	      if ((step[g.dim] >= tracestart) &&
 		  (step[g.dim] <= tracestop)) {

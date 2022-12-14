@@ -61,7 +61,114 @@ namespace TSOpt {
     string getName() const { string tmp = "SEGYConvolve"; return tmp; }
   };
 
-  //
+  /*
+  class SEGYConvolveOp: public RVL::LinearOp<float> {
+  private:
+    RVL::Space<float> const & dom;
+    RVL::Space<float> const & rng;
+    TSOpt::SEGYSpace const & ker;
+    RVL::Vector<float> const & k;
+    
+  protected:
+    
+    void apply(RVL::Vector<float> const & x,
+	       RVL::Vector<float> & y) const {
+      try {
+	SEGYConvolve f();
+	RVL::MPISerialFunctionObject<float> mpif(f);	
+	y.eval(mpif,x,k);
+      }
+      catch (RVL::RVLException & e) {
+	e<<"\ncalled from SEGYConvolveOp::apply\n";
+	throw e;
+      }
+    }
+    
+    void applyAdj(RVL::Vector<float> const & x,
+		  RVL::Vector<float> & y) const {
+      try {
+	SEGYConvolve f();
+	f.setadj(1);
+	RVL::MPISerialFunctionObject<float> mpif(f);		
+	y.eval(mpif,x,k);
+      }
+      catch (RVL::RVLException & e) {
+	e<<"\ncalled from SEGYConvolveOp::applyAdj\n";
+	throw e;
+      }
+    }
+
+    RVL::Operator<float> * clone() const { return new SEGYConvolveOp(*this); }
+    
+  public:
+    
+    SEGYConvolveOp(RVL::Space<float> const & _dom,
+	           RVL::Space<float> const & _rng,
+		   std::string kname)
+      : dom(_dom), rng(_rng), ker(kname,"none"), k(ker) {
+      try {
+	segy tr;
+	ker.initialize(tr);
+	FILE * fp = NULL;
+	if (!(fp=iwave_const_fopen(kname.c_str(),"r+",NULL,stderr))) {
+	  RVL::RVLException e;
+	  e<<"Error: SEGYTraceConvolveOp constructor\n";
+	  e<<"  failed to open file = "<<kname<<"\n";
+	  throw e;
+	}
+	if (!fgettr(fp,&(ker.getMetadata()))) {
+	  RVL::RVLException e;
+	  e<<"Error: SEGYTraceConvolveOp constructor\n";
+	  e<<"  failed to read trace from file = "<<kname<<"\n";
+	  throw e;
+	}
+	iwave_fclose(fp);
+	
+	gsp const & gdom = dynamic_cast<gsp const &>(dom);
+	gsp const & grng = dynamic_cast<gsp const &>(rng);
+	
+	Value val;
+	float dt;
+	string dtstr="dt";
+	
+	gethdval(&(ker.getMetadata()),  (char*)(dtstr.c_str()), &val);
+	dt=vtof(hdtype((char*)(dtstr.c_str())), val);
+	dt*=0.001;
+	
+	if((fabs(dt-gdom.getDt()) > 0.0001*dt) ||
+	   (fabs(dt-grng.getDt()) > 0.0001*dt)) {
+	  RVLException e;
+	  e<<"Error: SEGYTraceConvolveOp constructor\n";
+	  e<<"  input, output, and kernel do not share same time step\n";
+	  throw e;
+	}
+      }
+      catch (bad_cast) {
+	RVLException e;
+	e<<"Error SEGYTraceConvolveOp constructor\n";
+	e<<"  either domain or range is not SEGY space\n";
+	throw e;
+      }
+
+    }
+    
+  
+    SEGYTraceConvolveOp(SEGYTraceConvolveOp const & op)
+      : dom(op.dom), rng(op.rng), ker(op.ker) {}
+    
+    ~SEGYTraceConvolveOp() {}
+    
+    RVL::Space<float> const & getDomain() const { return dom; }
+    RVL::Space<float> const & getRange() const { return rng; }
+
+    ostream & write(ostream & str) const {
+      str<<"SEGYTraceConvolveOp\n";
+      return str;
+    }
+  };	
+  
+  */
+  
   class SEGYTraceConvolve: public BinaryLocalFunctionObject<float> {
   private:
     mutable int adj;
@@ -208,16 +315,18 @@ namespace TSOpt {
     float w;   // width of mute zone
         
     int mute_type; // muting type: 0, conic-like (point source); 1, rectangle (plane-wave src)
+
+    int mode; // 0, zero for t<mute; 1, zero for t>mute
         
     float gxbeg;
     float gxend;
   public:
         
-    SEGYLinMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0)
-      : s(_s),tm(_tm),w(_w),mute_type(_type) {}
+    SEGYLinMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _mode=0, int _type = 0)
+      : s(_s),tm(_tm),w(_w),mode(_mode),mute_type(_type) {}
         
     SEGYLinMute(SEGYLinMute const & m)
-      : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),gxbeg(m.gxbeg),gxend(m.gxend) {}
+      : s(m.s),tm(m.tm),w(m.w),mode(m.mode),mute_type(m.mute_type),gxbeg(m.gxbeg),gxend(m.gxend) {}
     void set(float _s, float _tm, float _w, int _type = 0){
       mute_type = _type;
       if (!mute_type) {
@@ -613,7 +722,25 @@ namespace TSOpt {
     void operator()(LocalDataContainer<float> & x);
     std::string getName() const { std::string tmp = "SEGYTFTScaleFO"; return tmp; }
   };
+
+  class SSEScaleFO: public RVL::BinaryLocalFunctionObject<float> {
+  private:
+    float shift;
+    float alpha;
+    float p;
     
+  public:
+    SSEScaleFO(float _shift, float _alpha, float _p)
+      : shift(_shift), alpha(_alpha), p(_p)  {}
+    SSEScaleFO(SSEScaleFO const & fo)
+      : shift(fo.shift), alpha(fo.alpha), p(fo.p) {}
+    using RVL::BinaryLocalEvaluation<float>::operator();
+    void operator()(RVL::LocalDataContainer<float> & xout,
+		    RVL::LocalDataContainer<float> const & xin);
+    std::string getName() const {
+      std::string tmp = "SSEScaleFO"; return tmp;
+    }
+  };
 }
 
 #endif

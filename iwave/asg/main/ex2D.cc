@@ -11,12 +11,35 @@ extern void exact(int nt, float dt, float r,
 int xargc;
 char **xargv;
 
+const char * sdoc[] = {
+  "ex2D.x: computes one trace of a 2D point source acoustic field in homogeneous",
+  "fluid. Field equations are ",
+  " D_t p + k (D_x v_x + D_z v_z) = w(t) delta(x) delta(z)",
+  " D_t v_x + b (D_x p) = 0",
+  " D_t v_z + b (D_z p) = 0",
+  "Usage:",
+  " ex2D.x bulk=<float> buoy=<float> distance=<float> source=<string> pressure=<string>",
+  "where",
+  " bulk = bulk modulus",
+  " buoy = buoyancy = 1/density",
+  " distance = source-receiver distance",
+  " source = w(t) = input source wavelet",
+  " pressure = output pressure trace at given distance from source point",
+  " ",
+  "Notes:",
+  " 1. pressure trace is created, same nt and dt as source",
+  " 2. scaling as above, i.e. source is NOT scaled by bulk modulus.",
+  "This choice of scale is consistent with the asg modeling code sim.x,",
+  "that is, if the wavelet trace is input as source_p to sim.x, should",
+  "obtain a close approximation to the output of this utility.",
+  NULL};
+  
 int main(int argc, char ** argv) {
 
   try {
 
     xargc=argc; xargv=argv;
-    //requestdoc(1);
+    requestdoc(1);
 
     PARARRAY * pars = ps_new();
     if (ps_createargs(pars,argc-1,&(argv[1]))) {
@@ -90,7 +113,8 @@ int main(int argc, char ** argv) {
     // compute trace, copy to trace data buffer
     exact(nt, dt, distance, bulk, buoy,
 	  tr.data, pbuf);
-    for (int i=0; i<nt; i++) (tr.data)[i] = pbuf[i];
+    // scale by 1/bulk to remove assumed scaling in function
+    for (int i=0; i<nt; i++) (tr.data)[i] = pbuf[i]/bulk;
     //cerr<<"4\n";
     // write trace to file
     fputtr(fptrc,&tr);

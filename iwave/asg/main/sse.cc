@@ -114,7 +114,8 @@ int main(int argc, char ** argv) {
       // mute
       TSOpt::SEGYLinMute mute(RVL::valparse<float>(*pars,"mute_slope",0.0f),
 			      RVL::valparse<float>(*pars,"mute_zotime",0.0f),
-			      RVL::valparse<float>(*pars,"mute_width",0.0f));
+			      RVL::valparse<float>(*pars,"mute_width",0.0f),
+			      RVL::valparse<int>(*pars,"mute_mode",0));
       
       RVL::LinearOpFO<float> muteop(iwop.getIWaveRange(),iwop.getIWaveRange(),mute,mute);
 
@@ -157,6 +158,8 @@ int main(int argc, char ** argv) {
       int maxcount=RVL::valparse<int>(*pars,"MaxIter",10);
       float maxstep=RVL::valparse<float>(*pars,"MaxStep",
 					 numeric_limits<float>::max());
+
+
 
       // discrepancy principle params
       float alphatol=RVL::valparse<float>(*pars,"AlphaUpdateTol",0.01);
@@ -207,8 +210,6 @@ int main(int argc, char ** argv) {
       }
             
       // initialize alpha
-      //      float alpha=RVL::valparse<float>(*pars,"weight",0.0f);
-      
       float alpha =0.0f;
       std::string iwnm = RVL::valparse<std::string>(*pars, "weightin","");
       if (iwnm.size() > 0) {
@@ -219,6 +220,8 @@ int main(int argc, char ** argv) {
       else {
 	alpha = RVL::valparse<float>(*pars, "weight", 0.0);
       }
+      // if set, precondition by (1 + alpha^2 offset^2)^{-1}
+      int precond=RVL::valparse<int>(*pars,"precond",0);
 
       // return of resid, normal resid - must persist
       float rnorm;
@@ -245,16 +248,24 @@ int main(int argc, char ** argv) {
 	res<<"* normal res tolerance = "<<nrtol<<endl;
 	res<<"* trust radius         = "<<maxstep<<endl;
 	res<<"*******************************************************"<<endl;
-    
-	/* create CGNE object */
-	RVLUmin::CGNEAlg<float> alg(x,top,ldd,
-				    rnorm, nrnorm, rtol, nrtol,
-				    maxcount, maxstep, res);
-	//    float nrnorm0=nrnorm;
-	//    float rnorm0=rnorm;
 
-	// run CG
-	alg.run();
+	if (precond) {
+	  float shift=1.0f;
+	  float pwr=-1.0f;
+	  TSOpt::SSEScaleFO pfo(shift,alpha,pwr);
+	  RVL::LinearOpFO<float> prec(top.getDomain(),top.getDomain(),pfo,pfo);
+	  RVLUmin::CGNEAlg<float> alg(x,top,prec,ldd,
+	  			      rnorm, nrnorm, rtol, nrtol,
+				      maxcount, maxstep, res);
+	  alg.run();
+	}
+	else {
+	  RVLUmin::CGNEAlg<float> alg(x,top,ldd,
+	  			      rnorm, nrnorm, rtol, nrtol,
+				      maxcount, maxstep, res);
+	  alg.run();
+	}
+
 
 	// post-optimization computations
 	// compute estimated data

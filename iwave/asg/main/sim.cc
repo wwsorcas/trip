@@ -116,7 +116,8 @@ int main(int argc, char ** argv) {
       // mute
       TSOpt::SEGYLinMute mute(RVL::valparse<float>(*pars,"mute_slope",0.0f),
 			      RVL::valparse<float>(*pars,"mute_zotime",0.0f),
-			      RVL::valparse<float>(*pars,"mute_width",0.0f));
+			      RVL::valparse<float>(*pars,"mute_width",0.0f),
+			      RVL::valparse<int>(*pars,"mute_mode",0));
       
       RVL::LinearOpFO<float> muteop(iwop.getIWaveRange(),
 				    iwop.getIWaveRange(),

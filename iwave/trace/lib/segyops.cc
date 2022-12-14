@@ -120,6 +120,7 @@ namespace TSOpt {
       gethdval(&trout,  (char*)(dtstr.c_str()), &val);
       dt=vtof(hdtype((char*)(dtstr.c_str())), val);
       dt*=0.001;
+      cerr<<"conv: dt="<<dt<<endl;
 
       gethdval(&trin,  (char*)(nsstr.c_str()), &val);
       nin=vtoi(hdtype(nsstr.c_str()), val);
@@ -144,13 +145,15 @@ namespace TSOpt {
 
       if (adj==0) {
 	int ishift=outbeg-inbeg-kerbeg;
+	cerr<<"SEGYConvolve: ishift="<<ishift<<endl;
 	conv(ishift,nout,nin,nker,
 	     trout.data,trin.data,trker.data,dt);
+	
 	//	const float * in     = &(trin.data[-inbeg]);
 	//	float * out    = &(trout.data[-outbeg]);
 	//	const float * ker    = &(trker.data[-kerbeg]);
 
-	//	cerr<<"inbeg="<<inbeg<<" outbeg="<<outbeg<<" kerbeg="<<kerbeg<<"\n";
+	cerr<<"inbeg="<<inbeg<<" outbeg="<<outbeg<<" kerbeg="<<kerbeg<<"\n";
 	//	cerr<<"nin="<<nin<<" nout="<<nout<<" nker="<<nker<<"\n";
 	
 	//	uconv(outbeg,outbeg+nout-1,out,
@@ -282,10 +285,16 @@ namespace TSOpt {
       else {
 	wm=MAX(dt,w);
 	//	cerr<<"mute at offset="<<x<<" slope="<<s<<" zotime="<<tm<<" width="<<wm<<endl;
-	for (int i=0;i<nt;i++)
+	for (int i=0;i<nt;i++) {
 	  //	trout.data[i] = trin.data[i]*mutefun((t0+i*dt-s*fabs(x)-tm)/wm);
 	  // this version: tm = time AFTER first sample
-	  trout.data[i] = trin.data[i]*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+	  if (mode==0) {
+	    trout.data[i] = trin.data[i]*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+	  }
+	  else {
+	    trout.data[i] = trin.data[i]*(1.0f-mutefun((i*dt+t0-s*fabs(x)-tm)/wm));
+	  }
+	}
       }
     }
     catch (bad_cast) {
@@ -957,6 +966,55 @@ namespace TSOpt {
       e<<"\ncalled from SEGYTFTScaleFO::operator()\n";
       throw e;
     }    
+  }
+
+  void SSEScaleFO::operator()(LocalDataContainer<float> & xout,
+			      LocalDataContainer<float> const & xin) {
+    try {
+      segytrace const & cpin = dynamic_cast<segytrace const &>(xin);
+      segy const & trin = cpin.getMetadata();
+      segytrace & cpout = dynamic_cast<segytrace &>(xout);
+      segy & trout = cpout.getMetadata();
+
+      float offset;
+      Value val;
+      int nin;
+      int nout;
+      string nsstr="ns";      
+	
+      gethdval(&trin,  (char*)(nsstr.c_str()), &val);
+      nin=vtoi(hdtype(nsstr.c_str()), val);
+      gethdval(&trout,  (char*)(nsstr.c_str()), &val);
+      nout=vtoi(hdtype(nsstr.c_str()), val);
+      
+      if (nin != nout) {
+	RVL::RVLException e;
+	e<<"ERROR: TraceScaleFO::operator()\n";
+	e<<"  input length = "<<nin<<" != output length = "<<nout<<"\n";
+	throw e;
+      }
+
+      std::string key="offset";
+      
+      gethdval(&trout, (char*)(key.c_str()), &val);
+      offset=vtof(hdtype(key.c_str()),val);
+
+#pragma ivdep
+      for (int i=0; i<nout; i++) {
+	(trout.data)[i]
+	  = powf((shift+alpha*alpha*offset*offset),p)*(trin.data)[i];
+      }
+    }
+    catch (bad_cast) {
+      RVL::RVLException e;
+      e<<"ERROR: TraceScaleFO::operator()\n";
+      e<<"  at least one input not segytrace type\n";
+      throw e;
+    }
+    catch (RVL::RVLException & e) {
+      e<<"\ncalled from TraceScaleFO::operator()\n";
+      throw e;
+    }
   }
 }
 

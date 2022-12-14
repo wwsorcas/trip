@@ -430,6 +430,7 @@ int main(int argc, char ** argv) {
       buf=NULL;
     }
     ps_delete(&par);
+    iwave_fdestroy();
     
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();

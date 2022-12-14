@@ -841,7 +841,8 @@ namespace TSOpt {
 	  clock_t t_step = 0.0;
 	  clock_t t_samp = 0.0;
 #endif
-	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
+	  //	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
+	  for (int it=0; it<stop[g.dim]-start[g.dim]; it++) {
 
 	    float dt = g.axes[g.dim].d;
 	    float ot = g.axes[g.dim].o;
@@ -855,7 +856,7 @@ namespace TSOpt {
 	      fprintf(stream,"    it=%d t=%12.4e\n",it,ot+it*dt);
 	  
 	    if (dryrun) drystr<<"\n";
-	    step[g.dim]=it;
+	    step[g.dim]=it+start[g.dim];
 
 #ifdef IWAVE_SIM_TIME
 	    clock_t dt_samp=clock();
@@ -863,7 +864,7 @@ namespace TSOpt {
 	    for (size_t i=0; i<t.size(); i++) {
 	      if (s[i]) {
 #ifdef IWAVE_VERBOSE
-		cstr<<"IWaveSim::run - rk="<<retrieveGlobalRank()<<" -> sampler["<<i<<"]\n";
+		cstr<<"IWaveSim::run - rk="<<retrieveGlobalRank()<<" -> sampler["<<i<<"]"<<"g.dim="<<g.dim<<" step="<<step[g.dim]<<"\n";
 		cstr.flush();		
 #endif
 		s[i]->sample(g,step,ic.get_iwave_fields()[t[i]->rarrindex].gtype,fwd,
@@ -896,7 +897,8 @@ namespace TSOpt {
 	    cstr.flush();	    
 #endif
             if (!dryrun) {
-	      if (it==start[g.dim]) {
+	      //	      if (it==start[g.dim]) {
+	      if (it==0) {
 		ic.get_check()(w->getRDOMArray()[0],fdm,stream);
 	      }
             }
@@ -1002,6 +1004,7 @@ namespace TSOpt {
 	    float ot = g.axes[g.dim].o;
 
 #ifdef IWAVE_VERBOSE
+	    cstr<<"IWaveSim::run - dt="<<dt<<" ot="<<ot<<"\n";
 	    cstr<<"IWaveSim::run - it="<<it<<" t="<<ot+it*dt<<"\n";
 	    cstr.flush();
 #endif

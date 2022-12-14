@@ -5,7 +5,7 @@ float lininterp(int nt, float dt, float t, float * f) {
   float s = t/dt;
   int it = int(s);
   if (it < 0 || it > nt-2) return 0.0f;
-  else return (s-float(it))*f[it]+(float(it)+1.0f-s)*f[it+1];
+  else return (s-float(it))*f[it+1]+(float(it)+1.0f-s)*f[it];
 }
 
 /* Poisson's formula for point trace of 2D point source pressure

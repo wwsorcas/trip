@@ -76,6 +76,7 @@ int main(int argc, char ** argv) {
     vec2.eval(af2);
     vec2.linComb(a,vec1,b);
     ps_delete(&pars);
+    iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif
