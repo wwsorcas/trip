@@ -3,7 +3,7 @@ import os
 import linalg
 import tempfile
 
-class RSFSpace(vcl.Space):
+class Space(vcl.Space):
 
     def __init__(self,f):
         self.filename = f
@@ -19,41 +19,31 @@ class RSFSpace(vcl.Space):
         return linalg.rsfcomp(self.filename,x)
     
     # operates on data = filenames
-    def linComb(self,a,x,y,b=1.0):
-        if self.isData(x) and self.isData(y):
-            linalg.lincomb(a,x,y,b)
-            return True
-        return False
+    def raw_linComb(self,a,x,y,b=1.0):
+        linalg.lincomb(a,x,y,b)
 
     # operates on data = filenames        
-    def dot(self,x,y):
-        if self.isData(x) and self.isData(y):
-            return linalg.dot(x,y)
-        return False
+    def raw_dot(self,x,y):
+        return linalg.dot(x,y)
     
     # operates on data = filenames            
-    def zero(self,x):
-        if self.isData(x):
-            linalg.scale(x,0.0)
+    def raw_zero(self,x):
+        linalg.scale(x,0.0)
 
     # convenience functions
-    def copy(self,x,y):
-        if self.isData(x) and self.isData(y):        
-            linalg.copy(x,y)
-            return True
-        return False
+    def raw_copy(self,x,y)
+        linalg.copy(x,y)
 
     # for use in vector destructor - x is data 
-    def cleanup(self,x):
+    def raw_cleanup(self,x):
         if self.isData(x) and self.filename != x:
             os.unlink(x)
 
-    def printData(self,x):
-        if self.isData(x):        
-            print('file with name = ' + x)
+    def raw_printData(self,x):
+            print('RSF file with name = ' + x)
        
     def myNameIs(self):
-        print('RSFSpace based on file ' + self.filename)
+        print('RSF Space based on file ' + self.filename)
         
     
     
