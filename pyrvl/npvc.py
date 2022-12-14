@@ -104,7 +104,7 @@ class OpExpl1(vcl.Function):
         mat[1,1] = -1.0
         mat[2,0] = 0.0
         mat[2,1] = 2*x.data[1]
-        return npvc.MatrixOperator(self.dom,self.rng,mat)
+        return MatrixOperator(self.dom,self.rng,mat)
 
     def myNameIs(self):
         print('OpExpl1: npvc example of vcl.Function class')

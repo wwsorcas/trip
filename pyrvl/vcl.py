@@ -112,12 +112,78 @@ class Space(ABC):
             print(ex)
             raise Exception('from vcl.Space.printData')
         else:            
-            self.raw_printdata(x)
+            self.raw_printData(x)
             
     @abstractmethod
     def myNameIs(self):
         pass
 
+class ProductSpace(Space):
+
+    def __init__(self,SpaceList):
+        if not isinstance(SpaceList,list):
+            raise Exception('constructor arg not list')
+        self.spl=[]
+        for i in range(0,len(SpaceList)):
+            sp = SpaceList[i]
+            if not isinstance(sp,Space):
+                raise Exception('arglist[' + str(i) + ' not Space')
+            self.spl.append(sp)
+
+    def getData(self):
+        dl=[]
+        for i in range(0,len(self.spl)):
+            print(str(i))
+            dl.append(self.spl[i].getData())
+        return dl
+
+    def isData(self,x):
+        try:
+            if not isinstance(x,list):
+                raise Exception('isData arg not list')
+            if len(x) < len(self.spl):
+                raise Exception('isData arg is list but too short')
+            ret = True
+            for i in range(0,len(self.spl)):
+                ret = ret and self.spl[i].isData(x[i])
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.ProductSpace.isData')
+        else:
+            return ret
+
+    def raw_linComb(self,a,x,y,b=1.0):
+        for i in range(0,len(self.spl)):
+            spl[i].linComb(a,x[i],y[i],b)
+
+    def raw_dot(self,x,y):
+        ret = 0.0
+        for i in range(0,len(self.spl)):
+            ret += spl[i].dot(x[i],y[i])
+        return ret
+
+    def raw_zero(self,x):
+        for i in range(0,len(self.spl)):
+            self.spl[i].zero(x[i])
+
+    def raw_copy(self,x,y):
+        for i in range(0,len(self.spl)):
+            self.spl[i].copy(x[i],y[i])
+        
+    def raw_cleanup(self,x):
+        for i in range(0,len(self.spl)):
+            self.spl[i].cleanup(x[i])
+    
+    def raw_printData(self,x):
+        for i in range(0,len(self.spl)):
+            self.spl[i].printData(x[i])
+            
+    def myNameIs(self):
+        print('vcl.ProductSpace')
+        for i in range(0,len(self.spl)):
+            print('*** compontent ' + str(i))
+            self.spl[i].myNameIs()
+        
 # implemented vector class
 
 class Vector:
@@ -135,44 +201,14 @@ class Vector:
     # assignment semantics
     def link(self,x):
         try:
-    def zero(self,x):
-        try:
-            if not self.isData(x):
-                raise Exception('Error: arg has wrong type or dimension')
+            if not self.space.isData(x):
+                raise Exception('Error: attempt to wrap non-data object')
+            if not self.own:
+                raise Exception('Error: already managing external data')
         except Exception as ex:
             print(ex)
-            raise Exception('called from npvc.Space.zero')
-        else:            
-            zip=0.0
-            x=zip*x
-
-    # convenience functions
-    def copy(self,x,y):
-        try:
-            if not self.isData(x):
-                raise Exception('Error: 1st arg has wrong type or dimension')
-            if not self.isData(y):
-                raise Exception('Error: 2nd arg has wrong type or dimension')
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from npvc.Space.copy')
-        else:        
-            y=x.copy()
-
-    # for use in vector destructor - x is data 
-    def cleanup(self,x):
-        pass
-
-    def printData(self,x):
-        try:
-            if not self.isData(x):
-                raise Exception('Error: arg has wrong type or dimension')
-        except Exception as ex:
-            print(ex)
-            raise Exception('from npvc.Space.printData')
-        else:            
-            print(x)
-          else:
+            raise Exception("called from vcl.Vector.link")
+        else:
             self.space.cleanup(self.data)            
             self.data=x
             self.own = False
@@ -186,10 +222,12 @@ class Vector:
         
     def dot(self,x):
         try:
-            self.space.dot(self.data,x.data)
+            dotp = self.space.dot(self.data,x.data)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.dot')
+        else:
+            return dotp
         
     def zero(self):
         self.space.zero(self.data)
@@ -252,8 +290,28 @@ class Function(ABC):
             self.MyNameIs()
             raise Exception('called from vcl.Function.deriv')
         else:        
-            return self.raw_deriv(x,y)
-    
+            return self.raw_deriv(x)
+
+    def raw_partialDeriv(self,x,i):
+        pass
+
+    def partialDeriv(self,x,i):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')            
+            if not isinstance(self.getDomain(),ProductSpace):
+                raise Exception('Error: domain not product space')
+            if not isinstance(i,int):
+                raise Exception('Error: index arg not integer')
+            if i<0 or i>len(self.getDomain().spl)-1:
+                raise Exception('Error: index ' + str(i) + ' out of range')
+        except Exception as ex:
+            print(ex)
+            self.myNameIs()
+            raise Exception('called from vcl.Function.partialDeriv')
+        else:
+            return self.raw_partialDeriv(self,x,i)
+        
     @abstractmethod
     def myNameIs(self):
         pass
@@ -333,7 +391,69 @@ class Jet:
         self.value.myNameIs()
         print('derivative')
         self.deriv.myNameIs()
+
+# simple nonlinear function class
+class ScalarFunction(ABC):
+
+    @abstractmethod
+    def getDomain(self):
+        pass
+    
+    @abstractmethod
+    def raw_apply(self,x):
+        pass
+
+    def apply(self,x):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')
+        except Exception as ex:
+            print(ex)
+            self.MyNameIs()
+            raise Exception('called from vcl.ScalarFunction.apply')
+        else:        
+            return self.raw_apply(x)
+
+    # should return vector
+    @abstractmethod
+    def raw_grad(self,x):
+        pass
+    
+    def grad(self,x):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')
+        except Exception as ex:
+            print(ex)
+            self.MyNameIs()
+            raise Exception('called from vcl.Function.deriv')
+        else:        
+            return self.raw_grad(x)
+
+    def raw_partialGrad(self,x,i):
+        pass
+
+    def partialGrad(self,x,i):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')            
+            if not isinstance(self.getDomain(),ProductSpace):
+                raise Exception('Error: domain not product space')
+            if not isinstance(i,int):
+                raise Exception('Error: index arg not integer')
+            if i<0 or i>len(self.getDomain().spl)-1:
+                raise Exception('Error: index ' + str(i) + ' out of range')
+        except Exception as ex:
+            print(ex)
+            self.myNameIs()
+            raise Exception('called from vcl.ScalarFunction.partialGrad')
+        else:
+            return self.raw_partialGrad(self,x,i)
         
-        
+    @abstractmethod
+    def myNameIs(self):
+        pass
+
+    
 
 
