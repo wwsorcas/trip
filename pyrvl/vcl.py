@@ -34,7 +34,7 @@ class Space(ABC):
             print(ex)
             raise Exception('called from vcl.Space.linComb')
         else:
-            self.raw_linComb(a,x,y,b)
+            return self.raw_linComb(a,x,y ,b)
 
     # x, y are data objects
     @abstractmethod    
@@ -55,10 +55,10 @@ class Space(ABC):
         
     # x is data object
     @abstractmethod    
-    def raw_zero(self,x):
+    def raw_scale(self,x,c):
         pass
 
-    def zero(self,x):
+    def scale(self,x,c):
         try:
             if not self.isData(x):
                 raise Exception('Error: arg not space data object')
@@ -66,7 +66,7 @@ class Space(ABC):
             print(ex)
             raise Exception('called from vcl.Space.zero')
         else:            
-            self.raw_zero(x)
+            return self.raw_scale(x,c)
 
     # convenience functions
     @abstractmethod        
@@ -83,7 +83,7 @@ class Space(ABC):
             print(ex)
             raise Exception('called from vcl.Space.copy')
         else:        
-            self.raw_copy(x,y)
+            return self.raw_copy(x,y)
 
     # for use in vector destructor - x is data
     @abstractmethod        
@@ -133,7 +133,7 @@ class ProductSpace(Space):
     def getData(self):
         dl=[]
         for i in range(0,len(self.spl)):
-            print(str(i))
+#            print(str(i))
             dl.append(self.spl[i].getData())
         return dl
 
@@ -154,7 +154,8 @@ class ProductSpace(Space):
 
     def raw_linComb(self,a,x,y,b=1.0):
         for i in range(0,len(self.spl)):
-            spl[i].linComb(a,x[i],y[i],b)
+            y[i]=spl[i].linComb(a,x[i],y[i],b)
+        return y
 
     def raw_dot(self,x,y):
         ret = 0.0
@@ -162,14 +163,16 @@ class ProductSpace(Space):
             ret += spl[i].dot(x[i],y[i])
         return ret
 
-    def raw_zero(self,x):
+    def raw_scale(self,x,c):
         for i in range(0,len(self.spl)):
-            self.spl[i].zero(x[i])
-
+            x[i]-self.spl[i].scale(x[i],c)
+        return x
+    
     def raw_copy(self,x,y):
         for i in range(0,len(self.spl)):
-            self.spl[i].copy(x[i],y[i])
-        
+            y[i]=self.spl[i].copy(x[i],y[i])
+        return y
+    
     def raw_cleanup(self,x):
         for i in range(0,len(self.spl)):
             self.spl[i].cleanup(x[i])
@@ -215,7 +218,7 @@ class Vector:
         
     def linComb(self,a,x,b=1.0):
         try:
-            self.space.linComb(a,x.data,self.data,b)
+            self.data=self.space.linComb(a,x.data,self.data,b)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.linComb')
@@ -229,19 +232,44 @@ class Vector:
         else:
             return dotp
         
-    def zero(self):
-        self.space.zero(self.data)
+    def scale(self,c):
+        try:
+            self.data = self.space.scale(self.data,c)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector.zero')            
 
     def copy(self,x):
         try:
-            self.space.copy(x.data,self.data)
+            self.data = self.space.copy(x.data,self.data)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.copy')            
 
     def norm(self):
         return math.sqrt(self.dot(self))
-
+    
+    # if not in ProdSp, 0th component is self
+    # else data is list, so wrap ith component via link
+    def component(self,i):
+        try:
+            if not isinstance(i,int):
+                raise Exception('Error: input not int')
+            if not isinstance(self.space,ProductSpace) and i>0:
+                raise Exception('Error: not product and i>0')
+            if i<0 or i>len(self.space.spl)-1:
+                raise Exception('Error: index out of range')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector.component')
+        else:
+            if not isinstance(self.space,ProductSpace):
+                return self
+            else:
+                c = Vector(self.space.spl[i])
+                c.link(self.data[i])
+                return c
+            
     def myNameIs(self):
         print('Vector in space:')
         self.space.myNameIs()
@@ -292,8 +320,8 @@ class Function(ABC):
         else:        
             return self.raw_deriv(x)
 
-    def raw_partialDeriv(self,x,i):
-        pass
+#    def raw_partialDeriv(self,x,i):
+#        pass
 
     def partialDeriv(self,x,i):
         try:
@@ -305,12 +333,15 @@ class Function(ABC):
                 raise Exception('Error: index arg not integer')
             if i<0 or i>len(self.getDomain().spl)-1:
                 raise Exception('Error: index ' + str(i) + ' out of range')
+            dfx = self.deriv(x)
+            if not isinstance(dfx,RowLinearOperator):
+                raise Exception('Error: derivative not implemented as RowLinOp')
         except Exception as ex:
             print(ex)
             self.myNameIs()
             raise Exception('called from vcl.Function.partialDeriv')
         else:
-            return self.raw_partialDeriv(self,x,i)
+            return dfx.oplist[i]
         
     @abstractmethod
     def myNameIs(self):
@@ -324,7 +355,7 @@ class LinearOperator(Function):
     @abstractmethod
     def raw_applyFwd(self,x,y):
         pass
-    
+
     def applyFwd(self,x, y):
         try:
             if x.space != self.getDomain():
@@ -358,6 +389,69 @@ class LinearOperator(Function):
     def raw_deriv(self,x):
         return self
 
+# makes a list of linear ops with same range act like a linear op on product
+# space
+# row of linear ops, acts on a column of vectors (vector in product space)
+# to-do: make 1x1 case transparent
+class RowLinearOperator(LinearOperator):
+
+    def __init__(self,dom,rng,oplist):
+        try:
+            self.prod = True
+            if not isinstance(dom,ProductSpace):
+                self.prod = False
+                if len(oplist) > 1:
+                    raise Exception('Error: dom, oplist not both len=1')
+            if len(dom.spl) != len(oplist):
+                raise Exception('Error: dom, oplist diff lens')
+            for i in range(0,len(oplist)):
+                if dom.spl[i] != oplist[i].getDomain():
+                    raise Exception('Error: op[' + str(i) + '] has wrong domain')
+                if rng != oplist[i].getRange():
+                    raise Exception('Error: op[' + str(i) + '] has wrong range')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from RowLinearOp constructor') 
+        else:
+            self.dom = dom
+            self.rng = rng
+            if self.prod:
+                self.oplist = oplist
+            else:
+                self.oplist = []
+                self.oplist.append(oplist[0])
+
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.rng
+
+    def raw_applyFwd(self,x,y):
+        y.scale(0.0)
+        yy = Vector(self.rng)
+        for i in range(0,len(self.oplist)):
+            if self.prod:
+                xx = x.component(i)
+                self.oplist[i].applyFwd(xx,yy)
+                y.linComb(1.0,yy)
+            else:
+                self.oplist[0].applyFwd(x,y)
+    
+    def raw_applyAdj(self,x,y):
+        for i in range(0,len(self.oplist)):
+            if self.prod:
+                yy = y.component(i)
+                self.oplist[i].applyAdj(x,yy)
+            else:
+                self.oplist[0].applyAdj(x,y)
+
+    def myNameIs(self):
+        print('RowLinearOperator length = ' + str(len(self.oplist)))
+        for i in range(0,len(self.oplist)):
+            print('*** Component ' + str(i) + ':')
+            self.oplist[i].myNameIs()
+    
 class Jet:
 
     def __init__(self,f,x):
@@ -400,10 +494,10 @@ class ScalarFunction(ABC):
         pass
     
     @abstractmethod
-    def raw_apply(self,x):
+    def raw_value(self,x):
         pass
 
-    def apply(self,x):
+    def value(self,x):
         try:
             if x.space != self.getDomain():
                 raise Exception('Error: input vec not in domain')
@@ -412,48 +506,81 @@ class ScalarFunction(ABC):
             self.MyNameIs()
             raise Exception('called from vcl.ScalarFunction.apply')
         else:        
-            return self.raw_apply(x)
+            return self.raw_value(x)
 
     # should return vector
     @abstractmethod
-    def raw_grad(self,x):
+    def raw_gradient(self,x,g):
         pass
     
-    def grad(self,x):
+    def gradient(self,x,g):
         try:
             if x.space != self.getDomain():
                 raise Exception('Error: input vec not in domain')
+            if g.space != self.getDomain():
+                raise Exception('Error: output vec not in domain')
         except Exception as ex:
             print(ex)
             self.MyNameIs()
             raise Exception('called from vcl.Function.deriv')
         else:        
-            return self.raw_grad(x)
-
-    def raw_partialGrad(self,x,i):
-        pass
-
-    def partialGrad(self,x,i):
-        try:
-            if x.space != self.getDomain():
-                raise Exception('Error: input vec not in domain')            
-            if not isinstance(self.getDomain(),ProductSpace):
-                raise Exception('Error: domain not product space')
-            if not isinstance(i,int):
-                raise Exception('Error: index arg not integer')
-            if i<0 or i>len(self.getDomain().spl)-1:
-                raise Exception('Error: index ' + str(i) + ' out of range')
-        except Exception as ex:
-            print(ex)
-            self.myNameIs()
-            raise Exception('called from vcl.ScalarFunction.partialGrad')
-        else:
-            return self.raw_partialGrad(self,x,i)
+            self.raw_gradient(x,g)
         
     @abstractmethod
     def myNameIs(self):
         pass
 
-    
+# function x -> 0.5*|f(x)-b|^2
+class LeastSquares(ScalarFunction):
+
+    def __init__(self,f,b):
+        self.f = f
+        self.b = b
+
+    def getDomain(self):
+        return self.f.getDomain()
+
+    def raw_value(self,x):
+        res=Vector(self.f.getRange())
+        self.f.apply(x,res)
+        res.linComb(-1.0,self.b)
+        return 0.5*res.dot(res)
+
+    def raw_gradient(self,x,g):
+        res=Vector(self.f.getRange())
+        self.f.apply(x,res)
+        res.linComb(-1.0,self.b)
+        df=self.f.deriv(x)
+        df.applyAdj(res,g)
+
+    def myNameIs(self):
+        print('Least Squares Function')
+        print('*** operator:')
+        self.f.myNameIs()
+        print('*** rhs vector')
+        self.b.myNameIs()
+
+class NormalOp(LinearOperator):
+
+    def __init__(self,op):
+        self.op = op
+
+    def getDomain(self):
+        return self.op.getDomain()
+
+    def getRange(self):
+        return self.op.getDomain()
+
+    def raw_applyFwd(self,x,y):
+        z = Vector(self.op.getRange())
+        self.op.applyFwd(x,z)
+        self.op.applyAdj(z,y)
+
+    def raw_applyAdj(self,x,y):
+        self.applyFwd(x,y)
+
+    def myNameIs(self):
+        print('normal operator of')
+        self.op.myNameIs()
 
 

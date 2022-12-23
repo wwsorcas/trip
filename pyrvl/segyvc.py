@@ -22,19 +22,22 @@ class Space(vcl.Space):
     # operates on data = filenames
     def raw_linComb(self,a,x,y,b=1.0):
         linalg.lincomb(a,x,y,b)
+        return y
 
     # operates on data = filenames        
     def raw_dot(self,x,y):
         return linalg.dot(x,y)
      
     # operates on data = filenames            
-    def raw_zero(self,x):
-        linalg.scale(x,0.0)
+    def raw_scale(self,x,c):
+        linalg.scale(x,c)
+        return x
 
     # convenience functions
     def raw_copy(self,x,y):
         linalg.copy(x,y)
-
+        return y
+    
     # for use in vector destructor - x is data 
     def raw_cleanup(self,x):
         if self.filename != x:
