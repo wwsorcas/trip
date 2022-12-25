@@ -1,5 +1,7 @@
 import vcl
 import math
+from vcl import Vector
+from vcl import transp
 
 ###################### CONJUGATE GRADIENT ITERATION ######################
 
@@ -25,9 +27,9 @@ def conjgrad(x, b, A, kmax, eps, rho, e, r, verbose=0):
 
     try:
 
-        p = vcl.Vector(A.getDomain())
-        s = vcl.Vector(A.getDomain())
-        q = vcl.Vector(A.getRange()) 
+        # p = Vector(A.getDomain())
+        # s = Vector(A.getDomain())
+        # q = Vector(A.getRange()) 
         
         #Initialize:
         # print('#1. $x = 0$')
@@ -37,11 +39,14 @@ def conjgrad(x, b, A, kmax, eps, rho, e, r, verbose=0):
         e.copy(b)
         
         # print('#3. $r = A^Tb$')
-        A.applyAdj(b,r)
-    
+        # A.applyAdj(b,r)
+        # r.copy(transp(A)*b)
+        p = transp(A)*b
+        
         # print('#4. $p = r$')
-        p.copy(r)
-
+        #p.copy(r)
+        r.copy(p)
+        
         # print('#7. $\gamma_0 = \langle r, r \rangle$')
         gamma0 = r.dot(r)
         
@@ -65,11 +70,15 @@ def conjgrad(x, b, A, kmax, eps, rho, e, r, verbose=0):
             # print('k='+str(k))
 
             # print('#1. $q = Ap$')
-            A.applyFwd(p,q)
-
+            # A.applyFwd(p,q)
+            # q.copy(A*p)
+            q = A*p
+            
             # print('#2. $s = A^Tq$')
-            A.applyAdj(q,s)
-
+            # A.applyAdj(q,s)
+            # s.copy(transp(A)*q)
+            s=transp(A)*q
+            
             # print('#3. $\alpha = gamma / \langle q, q\rangle$')
             # write it this way, as quotient of norms, to avoid
             # possible precision issues at sqrt(macheps) level

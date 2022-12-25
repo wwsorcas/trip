@@ -200,8 +200,6 @@ class Vector:
         if self.own:
             self.space.cleanup(self.data)
 
-    # for this to work the data object type must have
-    # assignment semantics
     def link(self,x):
         try:
             if not self.space.isData(x):
@@ -237,8 +235,10 @@ class Vector:
             self.data = self.space.scale(self.data,c)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vcl.Vector.zero')            
+            raise Exception('called from vcl.Vector.scale')
 
+    # this is assignment, but assignment "=" has fixed meaning
+    # in Python, so this requires a function.
     def copy(self,x):
         try:
             self.data = self.space.copy(x.data,self.data)
@@ -304,6 +304,19 @@ class Function(ABC):
         else:        
             self.raw_apply(x,y)
 
+    #### first attempt at overloaded evaluation
+    def __call__(self,x):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')
+            y = Vector(self.getRange())
+            self.raw_apply(x,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from Function()')
+        else:
+            return y
+
     # should return linear op
     @abstractmethod
     def raw_deriv(self,x):
@@ -367,8 +380,12 @@ class LinearOperator(Function):
             self.MyNameIs()
             raise Exception('called from vcl.LinearOperator.applyFwd')
         else:        
-            self.raw_applyFwd(x,y)        
-        
+            self.raw_applyFwd(x,y)
+
+    # alternate evaluation syntax
+    def __mul__(self,x):
+        return self(x)
+
     @abstractmethod
     def raw_applyAdj(self,x,y):
         pass
@@ -388,6 +405,30 @@ class LinearOperator(Function):
 
     def raw_deriv(self,x):
         return self
+
+class transp(LinearOperator):
+
+    def __init__(self,op):
+        self.op = op
+
+    def getDomain(self):
+        return self.op.getRange()
+
+    def getRange(self):
+        return self.op.getDomain()
+
+    def raw_applyFwd(self,x,y):
+        self.op.applyAdj(x,y)
+        return y
+
+    def raw_applyAdj(self,x,y):
+        self.op.applyFwd(x,y)
+        return y
+
+    def myNameIs(self):
+        print('adjoint operator of:')
+        self.op.myNameIs()
+    
 
 # makes a list of linear ops with same range act like a linear op on product
 # space

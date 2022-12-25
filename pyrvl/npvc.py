@@ -150,6 +150,7 @@ class OpExpl2(vcl.Function):
         y.data[0] = x.data[0][0]*x.data[1][0]
         y.data[1] = -x.data[1][0]+x.data[0][0]*x.data[0][0]
         y.data[2] = x.data[1][0]*x.data[1][0]
+        return y
 
     def raw_deriv(self,x):
         oplist = []
@@ -191,7 +192,8 @@ class DoubleRosie(vcl.Function):
         y.data[0]=10*(x.data[1]-x.data[0]*x.data[0]);
         y.data[1]=-x.data[0];
         y.data[2]=2*(x.data[3]-x.data[2]*x.data[2]);
-        y.data[3]=-x.data[2];        
+        y.data[3]=-x.data[2];
+        return y
         
     def raw_deriv(self,x):
         mat = np.zeros((4,4))
@@ -204,15 +206,6 @@ class DoubleRosie(vcl.Function):
         mat[3,2] = -1.0
         mat[3,3] = 0.0
         return MatrixOperator(self.dom,self.dom,mat)
-
-    def grad(self,x):
-        g=vcl.Vector(self.dom)
-        g.data[0]=x.data[0]-1 - 200*(x.data[1]-x.data[0]*x.data[0])*x.data[0]
-        g.data[1]=100*(x.data[1]-x.data[0]*x.data[0])
-        g.data[2]=x.data[2]-1 - 8*(x.data[3]-x.data[2]*x.data[2])*x.data[2]
-        g.data[3]=4*(x.data[3]-x.data[2]*x.data[2])
-        g.myNameIs()
-        
 
     def myNameIs(self):
         print('DoubleRosie: npvc example of vcl.Function class')
