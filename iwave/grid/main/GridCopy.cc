@@ -61,8 +61,8 @@ int main(int argc, char ** argv) {
     // since the product of grid spaces is not really an 
     // out-of-core structure, this driver operates on single
     // grid spaces
-    string in1 = valparse<string>(*pars,"in1");
-    string in2 = valparse<string>(*pars,"in2");
+    string in1 = valparse<string>(*pars,"in");
+    string in2 = valparse<string>(*pars,"out");
 
     gsp sp(in1,"notype",true
 #ifdef IWAVE_USE_MPI 
@@ -77,6 +77,7 @@ int main(int argc, char ** argv) {
     vec2.eval(af2);
     vec2.copy(vec1);
     ps_delete(&pars);
+    iwave_fdestroy();    
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif

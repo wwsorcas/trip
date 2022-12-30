@@ -108,6 +108,7 @@ int main(int argc, char ** argv) {
       a[dim+i]=1.0f;
     }
     ps_delete(&pars);
+    iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif

@@ -76,6 +76,7 @@ int main(int argc, char ** argv) {
       op.applyOp(invec,outvec);
     }
     ps_delete(&pars);
+    iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif

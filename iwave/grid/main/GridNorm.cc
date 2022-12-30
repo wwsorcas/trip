@@ -71,6 +71,7 @@ int main(int argc, char ** argv) {
     vec.eval(af);
     cout<<vec.norm()<<endl;
     ps_delete(&pars);
+    iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif
