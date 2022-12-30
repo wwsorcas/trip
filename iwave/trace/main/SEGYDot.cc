@@ -82,6 +82,7 @@ int main(int argc, char ** argv) {
       cout<<vec1.inner(vec2)<<endl;
     }
     ps_delete(&pars);
+    iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif

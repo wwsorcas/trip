@@ -15,13 +15,15 @@ using TSOpt::SEGYSpace;
 typedef TSOpt::SEGYSpace tsp;
 
 const char * sdoc[] = {
-  " Trace scaling by uniform factor and optional header word",
+  " Trace scaling by time",
   " arguments:",
-  "   input      = filename of input SEGY data (string)",
-  "  output      = filename of output SEGY data (string)",
-  "     fac      = uniform factor (float)",
-  "     key      = header key (string)",
-  " NOTE: applies scaling ONLY to first factor of product data set",
+  "      in      = filename of input SEGY data (string)",
+  "     out      = filename of output SEGY data (string)",
+  "     fac      = filename of uniform factor (string), optional",
+  " NOTE: scales each trace by time, also by factor read from aux",
+  " file, if filename is given. Aux file must contain one float per",
+  " line, with at least as many lines as there are traces in the ",
+  " input file.",
   NULL};
 
 int xargc;
