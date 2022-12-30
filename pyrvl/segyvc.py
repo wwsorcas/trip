@@ -39,7 +39,7 @@ class Space(vcl.Space):
         return y
     
     # for use in vector destructor - x is data 
-    def raw_cleanup(self,x):
+    def cleanup(self,x):
         if self.filename != x:
             os.unlink(x)
 

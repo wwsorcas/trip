@@ -77,13 +77,15 @@ def conjgrad(x, b, A, kmax, eps, rho, e, r, verbose=0):
             # print('#2. $s = A^Tq$')
             # A.applyAdj(q,s)
             # s.copy(transp(A)*q)
-            s=transp(A)*q
+            s = transp(A)*q
             
             # print('#3. $\alpha = gamma / \langle q, q\rangle$')
             # write it this way, as quotient of norms, to avoid
             # possible precision issues at sqrt(macheps) level
-            alpha = math.sqrt(gamma)/q.norm()
-            alpha = alpha*alpha
+            # alpha = math.sqrt(gamma)/q.norm()
+            # alpha = alpha*alpha
+            # this is equivalent:
+            alpha = gamma/p.dot(s)
 
             # print('#4. $x \leftarrow x+\alpha p$')
             x.linComb(alpha,p)
@@ -148,24 +150,22 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
 
     try:
 
-        p = vcl.Vector(A.getDomain())
-        r = vcl.Vector(A.getDomain())
-        s = vcl.Vector(A.getDomain())
-        e = vcl.Vector(A.getRange())
-        q = vcl.Vector(A.getRange()) 
         
         #Initialize:
         # print('#1. $x = 0$')
         x.scale(0.0)
         
-        # print('#2. $e = b$')
-        e.copy(b)
-        
         # print('#3. $r = A^Tb$')
-        A.applyAdj(b,r)
-    
+        # A.applyAdj(b,r)
+        # r.copy(transp(A)*b)
+        # p = transp(A)*b
+        r = b.dup()
+        
         # print('#4. $p = r$')
-        p.copy(r)
+        #p.copy(r)
+        # r = vcl.Vector(A.getDomain())
+        # r.copy(p)
+        p = r.dup()
 
         # print('#5. $\gamma_0 = \langle r, r \rangle$')
         gamma0 = r.dot(r)
@@ -189,16 +189,15 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
             # print('k='+str(k))
 
             # print('#1. $q = Ap$')
-            A.applyFwd(p,q)
+            # A.applyFwd(p,q)
+            q = A*p
 
             # print('#2. $s = A^Tq$')
-            A.applyAdj(q,s)
+            # A.applyAdj(q,s)
+            s = transp(A)*q
 
-            # print('#3. $\alpha = gamma / \langle q, q\rangle$')
-            # write it this way, as quotient of norms, to avoid
-            # possible precision issues at sqrt(macheps) level
-            alpha = math.sqrt(gamma)/q.norm()
-            alpha = alpha*alpha
+            # print('#3. $\alpha = gamma / \langle p, s\rangle$')
+            alpha = gamma/p.dot(s)
 
             # print('#4. $x \leftarrow x+\alpha p$')
             x.linComb(alpha,p)
@@ -212,9 +211,6 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
                               'soln of length ' + str(Delta))
 
             else:
-                # print('#5. $e \leftarrow e-\alpha q$')
-                e.linComb(-alpha,q)
-                enorm = e.norm()
                 
                 # print('#6. $r \leftarrow r-\alpha s$')
                 r.linComb(-alpha,s)
@@ -274,17 +270,18 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
 
         # initialize gradient
         
-        res=vcl.Vector(F.getRange())
-        grad=vcl.Vector(F.getDomain())
+        #res=vcl.Vector(F.getRange())
+        #grad=vcl.Vector(F.getDomain())
 
         # negative residual b - F(x)
-        F.apply(x,res)
+        #F.apply(x,res)
+        res=F(x)
         res.linComb(1.0,b,-1.0)
         
         # negative gradient
         DFx=F.deriv(x)
-        DFx.applyAdj(res,grad)
-
+        #DFx.applyAdj(res,grad)
+        grad = transp(DFx)*res
         gnorm = grad.norm()
         gnorm0 = gnorm
 
@@ -292,8 +289,8 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         s=vcl.Vector(F.getDomain())
 
         # storage for trial update, residual
-        xp = vcl.Vector(F.getDomain())
-        resp = vcl.Vector(F.getRange())
+        # xp = vcl.Vector(F.getDomain())
+        # resp = vcl.Vector(F.getRange())
 
         # current value
         Jc=0.5*res.dot(res)
@@ -310,9 +307,11 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             trconjgrad(s, res, DFx, kmax, rho, Delta, cgverbose)
 
             # trial update, actred, predred
-            xp.copy(x)
+            # xp.copy(x)
+            xp = x.dup()
             xp.linComb(1.0,s)
-            F.apply(xp,resp)
+            # F.apply(xp,resp)
+            resp = F(xp)
             resp.linComb(1.0,b,-1.0)
             Jp=0.5*resp.dot(resp)
             actred=Jc-Jp
@@ -327,15 +326,17 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             # update
             else:
                 x.copy(xp)
-                res.copy(resp)
-                Jc=Jp
+                # res.copy(resp)
+                res = resp
+                Jc = Jp
                 # delete in case significant memory
                 # is involved 
-                del DFx
-                DFx=F.deriv(x)
-                DFx.applyAdj(res,grad)
-
-                gnorm=grad.norm()
+                # del DFx
+                DFx = F.deriv(x)
+                # del grad
+                #grad = DFx.applyAdj(res,grad)
+                grad = transp(DFx)*res
+                gnorm = grad.norm()
                 # trust radius increase
                 if actred > gammainc*predred:
                     Delta *= muinc

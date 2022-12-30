@@ -1,4 +1,5 @@
 import os
+import m8r
 
 TRIP = os.getenv('TRIP')
     
@@ -52,8 +53,10 @@ def copy(vec1,vec2):
         return True
     # if file is RSF, call grid/main/GridDot.x
     elif sanity(vec1,'rsf') and sanity(vec2,'rsf'):
-        cmd = os.path.join(TRIP,'iwave/grid/main/GridCopy.x')
-        ret = os.system(cmd + ' in=' + vec1 + ' out=' + vec2)
+        rsfroot = os.getenv('RSFROOT')
+        # cmd = os.path.join(TRIP,'iwave/grid/main/GridCopy.x')
+        cmd = os.path.join(rsfroot,'bin/sfcp')
+        ret = os.system(cmd + ' ' + vec1 + ' ' + vec2)
         if ret != 0:
             print('RSF copy failed with return value ' + str(ret))
             return False
@@ -293,10 +296,11 @@ def m8rfloat(x,y):
         return float(x)
     else:
         return y
-    
-def rsfcomp(vec1, vec2):
 
-    import m8r
+def rsfcomp1(vec1, vec2):
+    return True
+
+def rsfcomp(vec1, vec2):
 
     if sanity(vec1,'rsf') and sanity(vec2,'rsf'):
 
@@ -314,7 +318,7 @@ def rsfcomp(vec1, vec2):
 
         inp1=m8r.Input(vec1)
         inp2=m8r.Input(vec2)
-        
+
         n1[0]=m8rint(inp1.get('n1'),1)
         n1[1]=m8rint(inp1.get('n2'),1)
         n1[2]=m8rint(inp1.get('n3'),1)
@@ -402,6 +406,8 @@ def simplot(f, addcb=False, width=7, asprat=-1):
     n2=int(inp.get('n2'))
     o2=float(inp.get('o2'))
     d2=float(inp.get('d2'))
+    datafile=str(inp.get('in'))
+    # print('datafile=' + datafile[2:len(datafile)-3])
     data=inp.read()
 
     # line plot
@@ -445,4 +451,12 @@ def simplot(f, addcb=False, width=7, asprat=-1):
         plt.ylim(max(plt.ylim()), min(plt.ylim()))
         plt.show()
         print('simplot: data min = %10.4e, data max = %10.4e' % (np.min(data), np.max(data)))
+
+    # cleanup - remove temp rsf file if necessary
+        # print('ff=' + ff)
+        if sanity(f,'su'):
+            os.unlink(ff)
+            os.unlink(datafile[2:len(datafile)-3])
+
+        
 

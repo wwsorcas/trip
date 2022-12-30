@@ -30,8 +30,8 @@ class Space(vcl.Space):
         y=np.copy(x)
         return y
 
-    # for use in vector destructor - x is data 
-    def raw_cleanup(self,x):
+    # nothing to see here
+    def cleanup(self,x):
         pass
 
     def raw_printData(self,x):

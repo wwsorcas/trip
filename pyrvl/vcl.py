@@ -86,20 +86,13 @@ class Space(ABC):
             return self.raw_copy(x,y)
 
     # for use in vector destructor - x is data
+    # there is no "raw_cleanup" because this should be
+    # called only by Vector destructor therefore only
+    # on space data objects - so no error checking necessary.
     @abstractmethod        
-    def raw_cleanup(self,x):
+    def cleanup(self,x):
         pass
     
-    def cleanup(self,x):
-        try:
-            if not self.isData(x):
-                raise Exception('Error: arg not space data object')
-        except Exception as ex:
-            print(ex)
-            raise Exception('from vcl.Space.printData')
-        else:
-            self.raw_cleanup(x)        
-
     @abstractmethod                
     def raw_printData(self,x):
         pass
@@ -173,7 +166,7 @@ class ProductSpace(Space):
             y[i]=self.spl[i].copy(x[i],y[i])
         return y
     
-    def raw_cleanup(self,x):
+    def cleanup(self,x):
         for i in range(0,len(self.spl)):
             self.spl[i].cleanup(x[i])
     
@@ -197,9 +190,13 @@ class Vector:
         self.own = True
 
     def __del__(self):
-        if self.own:
-            self.space.cleanup(self.data)
-
+        try:
+            if self.own:
+                self.space.cleanup(self.data)
+        except Exception as ex:
+            print(str(ex))
+            raise Exception('called from vcl.Vector destructor')
+        
     def link(self,x):
         try:
             if not self.space.isData(x):
@@ -211,7 +208,7 @@ class Vector:
             raise Exception("called from vcl.Vector.link")
         else:
             self.space.cleanup(self.data)            
-            self.data=x
+            self.data = x
             self.own = False
         
     def linComb(self,a,x,b=1.0):
@@ -237,14 +234,24 @@ class Vector:
             print(ex)
             raise Exception('called from vcl.Vector.scale')
 
-    # this is assignment, but assignment "=" has fixed meaning
-    # in Python, so this requires a function.
+    # copy data of argument onto self data
     def copy(self,x):
         try:
             self.data = self.space.copy(x.data,self.data)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vcl.Vector.copy')            
+            raise Exception('called from vcl.Vector.copy')
+
+    # instantiate new vector, copy self data, return
+    def dup(self):
+        try:
+            x = Vector(self.space)
+            x.data = self.space.copy(self.data,x.data)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector.dup')
+        else:
+            return x
 
     def norm(self):
         return math.sqrt(self.dot(self))
@@ -304,7 +311,7 @@ class Function(ABC):
         else:        
             self.raw_apply(x,y)
 
-    #### first attempt at overloaded evaluation
+    #### overloaded evaluation
     def __call__(self,x):
         try:
             if x.space != self.getDomain():
