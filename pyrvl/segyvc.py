@@ -8,6 +8,7 @@ class Space(vcl.Space):
 
     def __init__(self,f):
         self.filename = f
+        self._unlink = os.unlink
 
     def getData(self):
         temp = tempfile.NamedTemporaryFile(delete=False,dir='/var/tmp',suffix='.su')
@@ -41,7 +42,8 @@ class Space(vcl.Space):
     # for use in vector destructor - x is data 
     def cleanup(self,x):
         if self.filename != x:
-            os.unlink(x)
+            print('SEGY CLEANUP file = ' + x)
+            self._unlink(x)
 
     def raw_printData(self,x):
         print('file with name = ' + x)

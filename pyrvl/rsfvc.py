@@ -1,6 +1,6 @@
 import vcl
 import os
-from os import system as sys
+#from os import system as sys
 import linalg
 import tempfile
 
@@ -10,17 +10,21 @@ class Space(vcl.Space):
         self.filename = f
         self.rsfroot = os.getenv('RSFROOT')
         self.rmcmd = os.path.join(self.rsfroot,'bin/sfrm')
+        self._unlink = os.unlink
 
     def getData(self):
         datapath = os.getenv('DATAPATH')
         temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.rsf')
         temp.close()
-        linalg.copy(self.filename,temp.name)
-        linalg.scale(temp.name, 0.0)
-        return temp.name
+        filename = temp.name
+        # unlink because copy tries to use data from existing target file
+        os.unlink(temp.name)
+        linalg.copy(self.filename,filename)
+        linalg.scale(filename, 0.0)
+        return filename
 
     def isData(self,x):
-        return linalg.rsfcomp(self.filename,x)
+        return ((self.filename == x) or linalg.rsfcomp(self.filename,x))
     
     # operates on data = filenames
     def raw_linComb(self,a,x,y,b=1.0):
@@ -43,24 +47,25 @@ class Space(vcl.Space):
     
     # for use in vector destructor - x is data 
     def cleanup(self,x):
+        print('RSF CLEANUP file = ' + x)
         try:
-            # print('cleanup')
             notme = (x != self.filename)
             if not notme:
                 raise Exception('cleanup called on space-defining object')
-            #rrr = os.getenv('RSFROOT')
+            #rsfroot = os.getenv('RSFROOT')
             #cmd = os.path.join(rsfroot,'bin/sfrm')
-            ret = sys(self.rmcmd + ' ' + x)
-            #ret = os.system(self.rmcmd + ' ' + x)
-            if ret != 0:
-                raise Exception('rsfvc.Space.cleanup: sfrm failed code=' \
-                                    + str(ret))
+            #ret = os.system(cmd + ' ' + x)
+            #if ret != 0:
+            #    raise Exception('rsfvc.Space.cleanup: sfrm failed code=' \
+            #                        + str(ret))
+            self._unlink(x)
+            self._unlink(x + '@')
         except Exception as ex:
             print(ex)
-            raise Exception('called from rsfvc.Space.raw_cleanup')
+            raise Exception('called from rsfvc.Space.cleanup')
 
     def raw_printData(self,x):
-        print('Header file = ' + x)
+        print('RSF Header file = ' + x)
         cmd = os.path.join(self.rsfroot,'bin/sfin')
         os.system(cmd + ' < ' + x)        
         # cmd = os.path.join(self.rsfroot,'bin/sfattr')
@@ -68,8 +73,8 @@ class Space(vcl.Space):
         
     def myNameIs(self):
         print('RSF Space based on file ' + self.filename)
-        cmd = os.path.join(self.rsfroot,'bin/sfin')
-        os.system(cmd + ' < ' + self.filename)
+        #cmd = os.path.join(self.rsfroot,'bin/sfin')
+        #os.system(cmd + ' < ' + self.filename)
 
         
     

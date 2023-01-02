@@ -52,11 +52,12 @@ def copy(vec1,vec2):
             return False
         return True
     # if file is RSF, call grid/main/GridDot.x
-    elif sanity(vec1,'rsf') and sanity(vec2,'rsf'):
-        rsfroot = os.getenv('RSFROOT')
-        # cmd = os.path.join(TRIP,'iwave/grid/main/GridCopy.x')
-        cmd = os.path.join(rsfroot,'bin/sfcp')
-        ret = os.system(cmd + ' ' + vec1 + ' ' + vec2)
+    elif sanity(vec1,'rsf'): # and sanity(vec2,'rsf'):
+        #rsfroot = os.getenv('RSFROOT')
+        cmd = os.path.join(TRIP,'iwave/grid/main/GridCopy.x')
+        ret = os.system(cmd + ' in=' + vec1 + ' out=' + vec2)
+        #cmd = os.path.join(rsfroot,'bin/sfcp')
+        #ret = os.system(cmd + ' ' + vec1 + ' ' + vec2)
         if ret != 0:
             print('RSF copy failed with return value ' + str(ret))
             return False
@@ -178,7 +179,7 @@ def lincomb(a, vec1, vec2, b=1.0):
     # if files are RSF, call grid/main/GridDot.x
     elif sanity(vec1,'rsf') and sanity(vec2,'rsf'):
         cmd = os.path.join(TRIP,'iwave/grid/main/GridLinComb.x')
-        ret = os.system(cmd + 'a=' + str(a) + ' in1=' + vec1 + \
+        ret = os.system(cmd + ' a=' + str(a) + ' in1=' + vec1 + \
                         ' b=' + str(b) + ' in2=' + vec2)
         if ret != 0:
             print('command:')

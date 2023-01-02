@@ -158,14 +158,14 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
         # print('#3. $r = A^Tb$')
         # A.applyAdj(b,r)
         # r.copy(transp(A)*b)
-        # p = transp(A)*b
-        r = b.dup()
+        r = transp(A)*b
+        # r = b.dup()
         
         # print('#4. $p = r$')
         #p.copy(r)
-        # r = vcl.Vector(A.getDomain())
-        # r.copy(p)
-        p = r.dup()
+        p = vcl.Vector(A.getDomain())
+        p.copy(r)
+        # p = r.dup()
 
         # print('#5. $\gamma_0 = \langle r, r \rangle$')
         gamma0 = r.dot(r)
@@ -270,17 +270,17 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
 
         # initialize gradient
         
-        #res=vcl.Vector(F.getRange())
-        #grad=vcl.Vector(F.getDomain())
+        # res=vcl.Vector(F.getRange())
+        # grad=vcl.Vector(F.getDomain())
 
         # negative residual b - F(x)
-        #F.apply(x,res)
+        # F.apply(x,res)
         res=F(x)
         res.linComb(1.0,b,-1.0)
         
         # negative gradient
         DFx=F.deriv(x)
-        #DFx.applyAdj(res,grad)
+        # DFx.applyAdj(res,grad)
         grad = transp(DFx)*res
         gnorm = grad.norm()
         gnorm0 = gnorm
@@ -289,8 +289,8 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         s=vcl.Vector(F.getDomain())
 
         # storage for trial update, residual
-        # xp = vcl.Vector(F.getDomain())
-        # resp = vcl.Vector(F.getRange())
+        #xp = vcl.Vector(F.getDomain())
+        #resp = vcl.Vector(F.getRange())
 
         # current value
         Jc=0.5*res.dot(res)
@@ -310,7 +310,7 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             # xp.copy(x)
             xp = x.dup()
             xp.linComb(1.0,s)
-            # F.apply(xp,resp)
+            #F.apply(xp,resp)
             resp = F(xp)
             resp.linComb(1.0,b,-1.0)
             Jp=0.5*resp.dot(resp)
@@ -326,16 +326,16 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             # update
             else:
                 x.copy(xp)
-                # res.copy(resp)
-                res = resp
+                res.copy(resp)
+                # res = resp
                 Jc = Jp
                 # delete in case significant memory
                 # is involved 
                 # del DFx
                 DFx = F.deriv(x)
                 # del grad
-                #grad = DFx.applyAdj(res,grad)
-                grad = transp(DFx)*res
+                DFx.applyAdj(res,grad)
+                # grad = transp(DFx)*res
                 gnorm = grad.norm()
                 # trust radius increase
                 if actred > gammainc*predred:

@@ -85,5 +85,5 @@ def cleanup():
             os.system('/bin/rm ' + file)
         if file[len(file)-4:len(file)]=='.rsf':
             os.system(sfrm + ' ' + file)
-    os.system
+ 
 

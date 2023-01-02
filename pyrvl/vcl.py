@@ -1,10 +1,8 @@
 # abstract space class
 
 import math
+import os
 from abc import ABC, abstractmethod
-
-class VCLExcept(Exception):
-    pass
 
 class Space(ABC):
 
@@ -184,14 +182,35 @@ class ProductSpace(Space):
 
 class Vector:
 
-    def __init__(self, sp):
-        self.space = sp
-        self.data = sp.getData()
-        self.own = True
-
+    def __init__(self, sp, data=None):
+        try:
+            self.space = sp
+            if data is None:
+                self.data = sp.getData()
+                self.own = True
+            else:
+                if self.space.isData(data):
+                    self.data = data
+                    self.own = False
+                else:
+                    raise Exception('Error: data is not compatible with Space')
+            self.comp = []
+            if isinstance(self.space,ProductSpace):
+                for i in range(0,len(self.space.spl)):
+                    self.comp.append(Vector(self.space.spl[i],self.data[i]))
+            else:
+                self.comp.append(self)
+                
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector constructor')
+            
     def __del__(self):
         try:
             if self.own:
+                # print('call self.space.cleanup')
+                # print('os=')
+                # print(os)
                 self.space.cleanup(self.data)
         except Exception as ex:
             print(str(ex))
@@ -201,18 +220,22 @@ class Vector:
         try:
             if not self.space.isData(x):
                 raise Exception('Error: attempt to wrap non-data object')
-            if not self.own:
-                raise Exception('Error: already managing external data')
+#            if not self.own:
+#                raise Exception('Error: already managing external data')
         except Exception as ex:
             print(ex)
             raise Exception("called from vcl.Vector.link")
         else:
-            self.space.cleanup(self.data)            
+            print('in link: x = ' + x)
+            if self.own:
+                self.space.cleanup(self.data)            
             self.data = x
             self.own = False
         
     def linComb(self,a,x,b=1.0):
         try:
+            if x.space != self.space:
+                raise Exception('Error: vector summand not in same space')
             self.data=self.space.linComb(a,x.data,self.data,b)
         except Exception as ex:
             print(ex)
@@ -220,6 +243,8 @@ class Vector:
         
     def dot(self,x):
         try:
+            if x.space != self.space:
+                raise Exception('Error: vector factor not in same space')
             dotp = self.space.dot(self.data,x.data)
         except Exception as ex:
             print(ex)
@@ -237,6 +262,8 @@ class Vector:
     # copy data of argument onto self data
     def copy(self,x):
         try:
+            if x.space != self.space:
+                raise Exception('Error: vector source not in same space')
             self.data = self.space.copy(x.data,self.data)
         except Exception as ex:
             print(ex)
@@ -261,27 +288,32 @@ class Vector:
     def component(self,i):
         try:
             if not isinstance(i,int):
-                raise Exception('Error: input not int')
+                raise Exception('Error: index not int')
             if not isinstance(self.space,ProductSpace) and i>0:
                 raise Exception('Error: not product and i>0')
             if i<0 or i>len(self.space.spl)-1:
-                raise Exception('Error: index out of range')
+                raise Exception('Error: index out of range [0,' + \
+                                    str(len(self.space.spl)-1) + ']')
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.component')
         else:
-            if not isinstance(self.space,ProductSpace):
-                return self
-            else:
-                c = Vector(self.space.spl[i])
-                c.link(self.data[i])
-                return c
+            return self.comp[i]
+
+    # magic version
+    def __getitem__(self,i):
+        try:
+            return self.component(i)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector operator[]')
             
     def myNameIs(self):
         print('Vector in space:')
         self.space.myNameIs()
         print('Data object:')
         self.space.printData(self.data)
+        print('Owned by vector = ' + str(self.own))
 
 # simple nonlinear op class
 class Function(ABC):
@@ -314,13 +346,11 @@ class Function(ABC):
     #### overloaded evaluation
     def __call__(self,x):
         try:
-            if x.space != self.getDomain():
-                raise Exception('Error: input vec not in domain')
             y = Vector(self.getRange())
             self.raw_apply(x,y)
         except Exception as ex:
             print(ex)
-            raise Exception('called from Function()')
+            raise Exception('called from vcl.Vector operator()')
         else:
             return y
 
@@ -339,9 +369,6 @@ class Function(ABC):
             raise Exception('called from vcl.Function.deriv')
         else:        
             return self.raw_deriv(x)
-
-#    def raw_partialDeriv(self,x,i):
-#        pass
 
     def partialDeriv(self,x,i):
         try:
@@ -391,7 +418,11 @@ class LinearOperator(Function):
 
     # alternate evaluation syntax
     def __mul__(self,x):
-        return self(x)
+        try:
+            return self(x)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.LinearOperator operator*')
 
     @abstractmethod
     def raw_applyAdj(self,x,y):
@@ -425,12 +456,22 @@ class transp(LinearOperator):
         return self.op.getDomain()
 
     def raw_applyFwd(self,x,y):
-        self.op.applyAdj(x,y)
-        return y
+        try:
+            self.op.applyAdj(x,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from transp:raw_applyFwd')
+        else:
+            return y
 
     def raw_applyAdj(self,x,y):
-        self.op.applyFwd(x,y)
-        return y
+        try:
+            self.op.applyFwd(x,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from transp:raw_applyFwd')
+        else:
+            return y
 
     def myNameIs(self):
         print('adjoint operator of:')
@@ -494,6 +535,18 @@ class RowLinearOperator(LinearOperator):
             else:
                 self.oplist[0].applyAdj(x,y)
 
+    # magic component access
+    def __getitem__(self,i):
+        try:
+            if i<0 or i>len(self.oplist)-1:
+                raise Exception('Error: index out of range [0, ' + \
+                                    str(len(self.oplist)-1) + ']')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.RowLinearOperator operator[]')
+        else:
+            return self.oplist[i]
+        
     def myNameIs(self):
         print('RowLinearOperator length = ' + str(len(self.oplist)))
         for i in range(0,len(self.oplist)):
