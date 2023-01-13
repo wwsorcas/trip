@@ -44,16 +44,18 @@ class MatrixOperator(vcl.LinearOperator):
 
     def __init__(self,dom,rng,mat):
 
-        self.dom = dom
-        self.rng = rng
-        matuple  = mat.shape
-        if matuple[0] != rng.dim:
-            print('MatrixOperator constructor: num rows ne rng dim')
-            return False
-        if matuple[1] != dom.dim:
-            print('MatrixOperator constructor: num cols ne dom dim')
-            return False
-        self.mat = np.copy(mat)
+        try: 
+            self.dom = dom
+            self.rng = rng
+            matuple  = mat.shape
+            if matuple[0] != rng.dim:
+                raise Exception('num rows ne rng dim')
+            if matuple[1] != dom.dim:
+                raise Exception(' num cols ne dom dim')
+            self.mat = np.copy(mat)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from MatrixOperator constructor')
     
     def getDomain(self):
         return self.dom
@@ -61,11 +63,13 @@ class MatrixOperator(vcl.LinearOperator):
     def getRange(self):
         return self.rng
     
-    def raw_applyFwd(self,x, y):
+    def applyFwd(self,x, y):
         y.data = self.mat@x.data
+        return y
 
-    def raw_applyAdj(self,x, y):
+    def applyAdj(self,x, y):
         y.data = self.mat.T@x.data
+        return y
 
     def myNameIs(self):
         print('NUMPY Matrix Operator with matrix:')
@@ -93,7 +97,7 @@ class OpExpl1(vcl.Function):
     def getRange(self):
         return self.rng
 
-    def raw_apply(self,x,y):
+    def apply(self,x,y):
         y.data[0] = x.data[0]*x.data[1]
         y.data[1] = -x.data[1]+x.data[0]*x.data[0]
         y.data[2] = x.data[1]*x.data[1]
@@ -146,7 +150,7 @@ class OpExpl2(vcl.Function):
     def getRange(self):
         return self.rng
 
-    def raw_apply(self,x,y):
+    def apply(self,x,y):
         y.data[0] = x.data[0][0]*x.data[1][0]
         y.data[1] = -x.data[1][0]+x.data[0][0]*x.data[0][0]
         y.data[2] = x.data[1][0]*x.data[1][0]
@@ -188,7 +192,7 @@ class DoubleRosie(vcl.Function):
     def getRange(self):
         return self.dom
 
-    def raw_apply(self,x,y):
+    def apply(self,x,y):
         y.data[0]=10*(x.data[1]-x.data[0]*x.data[0]);
         y.data[1]=-x.data[0];
         y.data[2]=2*(x.data[3]-x.data[2]*x.data[2]);

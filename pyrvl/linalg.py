@@ -229,6 +229,7 @@ def scale(vec, a):
     else:
         print(vec + ' not name of legal su or rsf file')
         return False
+    return True
 
 def rand(vec):
 

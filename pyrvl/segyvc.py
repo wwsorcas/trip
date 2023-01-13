@@ -11,11 +11,21 @@ class Space(vcl.Space):
         self._unlink = os.unlink
 
     def getData(self):
-        temp = tempfile.NamedTemporaryFile(delete=False,dir='/var/tmp',suffix='.su')
-        temp.close()
-        linalg.copy(self.filename,temp.name)
-        linalg.scale(temp.name, 0.0)
-        return temp.name
+        try: 
+            datapath = os.getenv('DATAPATH')
+            if not os.path.exists(datapath):
+                raise Exception('Error: datapath = ' + datapath + ' not valid path')
+            temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
+            temp.close()
+            if not linalg.copy(self.filename,temp.name):
+                raise Exception('Error: linalg.copy')
+            if not linalg.scale(temp.name, 0.0):
+                raise Exception('Error: linalg.scale')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.Space.getData')
+        else:
+            return temp.name
 
     def isData(self,x):
         return linalg.hdrcomp(self.filename,x)
@@ -42,7 +52,7 @@ class Space(vcl.Space):
     # for use in vector destructor - x is data 
     def cleanup(self,x):
         if self.filename != x:
-            print('SEGY CLEANUP file = ' + x)
+            # print('SEGY CLEANUP file = ' + x)
             self._unlink(x)
 
     def raw_printData(self,x):
@@ -65,16 +75,79 @@ class ConvolutionOperator(vcl.LinearOperator):
     def getRange(self):
         return self.rng
     
-    def raw_applyFwd(self,x, y):
-        op.convop(self.g,x.data,y.data,adj=0)
+    def applyFwd(self,x, y):
+        try:
+            if not op.convop(self.g,x.data,y.data,adj=0):
+                raise Exception('Error: op.convop call failed')
+        except Exception as ex:
+            print(ex)
+            print('\nkernel = ' + self.g)
+            print('\nInput vector =')
+            x.myNameIs()
+            print('\nOutput vector =')
+            y.myNameIs()
+            raise Exception('called from segyvc.OperatorConvolution.applyFwd')
             
-    def raw_applyAdj(self,x, y):
-        op.convop(self.g,y.data,x.data,adj=1)
-
+    def applyAdj(self,x, y):
+        try:
+            if not op.convop(self.g,y.data,x.data,adj=1):
+                raise Exception('Error: op.convop call failed')
+        except Exception as ex:
+            print(ex)
+            print('\nkernel = ' + self.g)
+            print('\nInput vector =')
+            x.myNameIs()
+            print('\nOutput vector =')
+            y.myNameIs()
+            raise Exception('called from segyvc.OperatorConvolution.applyAdj')
+        
     def myNameIs(self):
         print('Convolution operator with kernel ' + self.g)
         print('domain:')
         self.dom.myNameIs()
         print('range:')
         self.rng.myNameIs()
+
+class TScaleOperator(vcl.LinearOperator):
+
+    def __init__(dom,scale):
+        self.dom = dom
+        self.scale = scale
+
+    def getDomain(self):
+        return self.dom
+    
+    def getRange(self):
+        return self.dom   
+
+    def applyFwd(self,x, y):
+        try:
+            cwproot = os.getenv('CWPROOT')
+            if not isinstance(cwproot,str):
+                raise Exception('Error: path CWPROOT not defined')
+            if not os.path.exists(cwproot):
+                raise Exception('Error: CWPROOT = ' + cwproot + ' not found')
+            cmd = os.path.join(cwproot,'bin/sugain')
+            ret = os.system(cmd + ' scale=' + str(self.scale) + ' tpow=1.0 ' +
+                                '< ' + x.data + ' > '  + y.data)
+            if ret != 0:
+                raise Exception('Error: call to sugain failed')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.TScaleOperator.applyFwd')
+        
+    def applyAdj(self,x,y):
+        try:
+            self.applyFwd(x,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.TScaleOperator.applyAdj')
+
+    def myNameIs(self):
+        print('segyvc.TScaleOperator')
+        print('  uses sugain to multiply traces by scale*t')
+        ptinr('  scale = ' + str(self.xcale))
+        print('  domain = rainge = ')
+        self.dom.myNameIs()
+                    
 

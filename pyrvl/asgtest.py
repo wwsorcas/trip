@@ -31,17 +31,14 @@ def runtests():
     ################## domain, range spaces ###################
 
     bulksp = rsfvc.Space('m.rsf')
-    buoysp = rsfvc.Space('bym.rsf')
     srcsp = segyvc.Space('wstar.su')
     domlist = [bulksp,srcsp]
     dom = vcl.ProductSpace(domlist)
     rng = segyvc.Space('g.su')
 
-    buoyancy = vcl.Vector(buoysp,'bym.rsf')
+    ################## construct FB operator ###################
 
-    ################## construct operator ###################
-
-    F = asg.fdop(dom,rng,buoyancy, order=2, sampord=1, nsnaps=20, cfl=0.5, cmin=1.0, cmax=3.0,dmin=0.8, dmax=3.0, nl1=250, nr1=250, nl2=250, nr2=250, pmlampl=1.0)
+    F = asg.fbop(dom,rng,buoyancy='bym.rsf', order=2, sampord=1, nsnaps=20, cfl=0.5, cmin=1.0, cmax=3.0,dmin=0.8, dmax=3.0, nl1=250, nr1=250, nl2=250, nr2=250, pmlampl=1.0)
 
     print('\n*** operator')
     F.myNameIs()
@@ -77,23 +74,56 @@ def runtests():
 
     ##################### dot product test #################
 
+    print('\n*** DOT PRODUCT TEST - FIXED BUOYANCY')
+
     dm = vcl.Vector(dom.spl[0],'dm.rsf')
 
     DFx = F.deriv(xx)
 
     dy = DFx[0]*dm
+    dydotdy =  dy.dot(dy)
+    dmdotdfstardy = dm.dot(vcl.transp(DFx[0])*dy)
+    relerr = abs(dydotdy - dmdotdfstardy)/dydotdy
 
-    print('dy dot dy = ' + str(dy.dot(dy)))
-    print('dm dot normop dm = ' + str(dm.dot(vcl.transp(DFx[0])*dy)))
+    print('\n***********************************************')
+    print('DFx*dm dot DFx*dm         = %12.6e' % (dydotdy))
+    print('dm dot transp(DFx)*DFx*dm = %12.6e' % (dmdotdfstardy))
+    print('relative error            = %12.6e' % (relerr))
 
-    ####################### clean up globals ########################
+    print('\n*** DOT PRODUCT TEST - FIXED SOURCE AND BUOYANCY')
 
-    del dm
-    del ndm
-    del bym
-              
+    G = asg.fsbop(dom[0],rng,buoyancy='bym.rsf', source_p='wstar.su', order=2, sampord=1, nsnaps=20, cfl=0.5, cmin=1.0, cmax=3.0,dmin=0.8, dmax=3.0, nl1=250, nr1=250, nl2=250, nr2=250, pmlampl=1.0)
+
+    print('\n*** operator')
+    G.myNameIs()    
+
+    DGx = G.deriv(xx[0])
+
+    dy = DGx*dm
+
+    dydotdy =  dy.dot(dy)
+    dmdotdfstardy = dm.dot(vcl.transp(DGx)*dy)
+    relerr = abs(dydotdy - dmdotdfstardy)/dydotdy
+
+    print('\n***********************************************')
+    print('DFx*dm dot DFx*dm         = %12.6e' % (dydotdy))
+    print('dm dot transp(DFx)*DFx*dm = %12.6e' % (dmdotdfstardy))
+    print('relative error            = %12.6e' % (relerr))    
+    
 runtests()
-del m
+
+####################### clean up globals ########################
+
+cmd1 = sfrm + ' m.rsf dm.rsf ndm.rsf bym.rsf'
+os.system(cmd1)
+os.unlink('g.su')
+os.unlink('wstar.su')
+os.unlink('cout0.txt')
+os.unlink('jnk')
+
+
+
+
 
 
 

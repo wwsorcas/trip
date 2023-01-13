@@ -13,15 +13,25 @@ class Space(vcl.Space):
         self._unlink = os.unlink
 
     def getData(self):
-        datapath = os.getenv('DATAPATH')
-        temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.rsf')
-        temp.close()
-        filename = temp.name
-        # unlink because copy tries to use data from existing target file
-        os.unlink(temp.name)
-        linalg.copy(self.filename,filename)
-        linalg.scale(filename, 0.0)
-        return filename
+        try:
+            datapath = os.getenv('DATAPATH')
+            print('datapath=' + datapath)
+            if not os.path.exists(datapath):
+                raise Exception('Error: datapath = ' + datapath + ' not valid path')
+            temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.rsf')
+            temp.close()
+            filename = temp.name
+            # unlink because copy tries to use data from existing target file
+            os.unlink(temp.name)
+            if not linalg.copy(self.filename,filename):
+                raise Exception('Error: linalg.copy')
+            if not linalg.scale(filename, 0.0):
+                raise Exception('Error: linalg.scale')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from rsfvc.Space.getData')
+        else:
+            return filename
 
     def isData(self,x):
         return ((self.filename == x) or linalg.rsfcomp(self.filename,x))
@@ -47,7 +57,7 @@ class Space(vcl.Space):
     
     # for use in vector destructor - x is data 
     def cleanup(self,x):
-        print('RSF CLEANUP file = ' + x)
+        # print('RSF CLEANUP file = ' + x)
         try:
             notme = (x != self.filename)
             if not notme:
