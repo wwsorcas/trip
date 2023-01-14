@@ -29,7 +29,7 @@ int main(int argc, char ** argv) {
   segy tr2;        /* input 2 trace workspace */
   int nb1;         /* number of bytes read on trace 1 */
   int nb2;         /* number of bytes read on trace 2 */
-  int itr;         /* trace counter */
+  int itr;
 
   xargc=argc; xargv=argv;
   requestdoc(1);
@@ -78,7 +78,7 @@ int main(int argc, char ** argv) {
 
   itr=0;
   /* read loop */
-  while ((nb1=fgettr(fp1,&tr1))*(nb2=fgettr(fp2,&tr2))) {
+  while ((nb1=fgettr(fp1,&tr1)) && (nb2=fgettr(fp2,&tr2))) {
     // traces read - compare headers byte-wise using
     // code borrowed from sucmp.c
     if (memcmp( &tr1, &tr2, HDRBYTES)) {
@@ -88,15 +88,9 @@ int main(int argc, char ** argv) {
     }
     itr++;
   } 
-  if (((nb1 == 0) && (nb2 != 0)) ||
-      ((nb1 != 0) && (nb2 == 0))) {
-    // not same number of traces - in principle can't happen
-    printf("COMP: number of traces differs\n");
-    exit(1);
-  }
   fclose(fp1);
   fclose(fp2);
-  iwave_fdestroy();
+  //iwave_fdestroy();
   ps_delete(&par);
 
   exit(0);
