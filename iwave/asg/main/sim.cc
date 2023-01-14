@@ -62,7 +62,7 @@ int main(int argc, char ** argv) {
     }
 #endif
     
-    fprintf(stream,"stat %d",1);
+    fprintf(stream,"stat %d\n",1);
     fflush(stream);
     
 #ifdef IWAVE_USE_MPI
@@ -114,7 +114,7 @@ int main(int argc, char ** argv) {
       }
 
           
-      fprintf(stream,"stat %d",2);
+      fprintf(stream,"stat %d\n",2);
       fflush(stream);
     
       int deriv = RVL::valparse<int>(*pars,"deriv",0);
@@ -180,7 +180,7 @@ int main(int argc, char ** argv) {
       else if (deriv==1) {
 
 	    
-	fprintf(stream,"stat %d",3);
+	fprintf(stream,"stat %d\n",3);
 	fflush(stream);
     
 	// extract perturbational input/output
@@ -242,7 +242,7 @@ int main(int argc, char ** argv) {
 	  }
 	}
 	    
-	fprintf(stream,"stat %d",4);
+	fprintf(stream,"stat %d\n",4);
 	fflush(stream);
     
       }
@@ -257,18 +257,18 @@ int main(int argc, char ** argv) {
     }
 #endif
         
-    fprintf(stream,"stat %d",5);
+    fprintf(stream,"stat %d\n",5);
     fflush(stream);
     
     ps_delete(&pars);
         
-    fprintf(stream,"stat %d",6);
+    fprintf(stream,"stat %d\n",6);
     fflush(stream);
     
     iwave_fdestroy();
 
         
-    fprintf(stream,"stat %d",7);
+    fprintf(stream,"stat %d\n",7);
     fflush(stream);
     
 #ifdef IWAVE_USE_MPI    
