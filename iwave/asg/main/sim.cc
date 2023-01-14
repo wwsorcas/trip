@@ -278,9 +278,6 @@ int main(int argc, char ** argv) {
   }
   catch (RVL::RVLException & e) {
         
-    fprintf(stream,"stat %d",8);
-    fflush(stream);
-    
     e.write(cerr);
 #ifdef IWAVE_USE_MPI
     MPI_Abort(MPI_COMM_WORLD,0);
