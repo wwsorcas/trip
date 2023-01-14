@@ -90,6 +90,7 @@ int main(int argc, char ** argv) {
   } 
   fclose(fp1);
   fclose(fp2);
+  // do not call - leads to seg fault
   //iwave_fdestroy();
   ps_delete(&par);
 
