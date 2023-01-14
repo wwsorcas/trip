@@ -60,7 +60,10 @@ int main(int argc, char ** argv) {
       fprintf(stream,"Number of OMP threads in use: %d\n",omp_get_max_threads());
       fflush(stream);
     }
-#endif    
+#endif
+    
+    fprintf(stream,"stat %d",1);
+    fflush(stream);
     
 #ifdef IWAVE_USE_MPI
     fprintf(stream,"rk=%d groupID=%d\n",retrieveGlobalRank(),retrieveGroupID());
@@ -110,6 +113,10 @@ int main(int argc, char ** argv) {
 	if (TSOpt::findsuf(fn)=="su") issu[j]=1;
       }
 
+          
+      fprintf(stream,"stat %d",2);
+      fflush(stream);
+    
       int deriv = RVL::valparse<int>(*pars,"deriv",0);
       int adjoint = RVL::valparse<int>(*pars,"adjoint",0);
 
@@ -171,6 +178,11 @@ int main(int argc, char ** argv) {
 	}
       }
       else if (deriv==1) {
+
+	    
+	fprintf(stream,"stat %d",3);
+	fflush(stream);
+    
 	// extract perturbational input/output
 	std::string psymb="";
 	if (adjoint==0) psymb = "_d1";
@@ -228,7 +240,11 @@ int main(int argc, char ** argv) {
 	    }
 	    ropeval.getDeriv().applyAdjOp(d1,pm);
 	  }
-	}	
+	}
+	    
+	fprintf(stream,"stat %d",4);
+	fflush(stream);
+    
       }
       else {
 	RVL::RVLException e;
@@ -240,14 +256,31 @@ int main(int argc, char ** argv) {
       MPI_Barrier(MPI_COMM_WORLD);
     }
 #endif
+        
+    fprintf(stream,"stat %d",5);
+    fflush(stream);
+    
     ps_delete(&pars);
+        
+    fprintf(stream,"stat %d",6);
+    fflush(stream);
+    
     iwave_fdestroy();
+
+        
+    fprintf(stream,"stat %d",7);
+    fflush(stream);
+    
 #ifdef IWAVE_USE_MPI    
     MPI_Finalize();
 #endif
     exit(0);
   }
   catch (RVL::RVLException & e) {
+        
+    fprintf(stream,"stat %d",8);
+    fflush(stream);
+    
     e.write(cerr);
 #ifdef IWAVE_USE_MPI
     MPI_Abort(MPI_COMM_WORLD,0);
