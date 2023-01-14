@@ -15,7 +15,6 @@ class Space(vcl.Space):
     def getData(self):
         try:
             datapath = os.getenv('DATAPATH')
-            print('datapath=' + datapath)
             if not os.path.exists(datapath):
                 raise Exception('Error: datapath = ' + datapath + ' not valid path')
             temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.rsf')
