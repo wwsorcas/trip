@@ -14,10 +14,10 @@ class fsbop(vcl.Function):
             if not isinstance(dom, rsfvc.Space):
                 raise Exception('Error: input domain not rsf space')
             if not isinstance(rng, segyvc.Space):
-                raise Exception('Error: input domain comp 1 not segy space')
+                raise Exception('Error: input range not segy space')
         except Exception as ex:
             print(ex)
-            raise Exception('called from asg constructor')
+            raise Exception('called from asg.fsbop constructor')
         else:
             self.dom = dom
             self.rng = rng
@@ -70,14 +70,18 @@ class fsbop(vcl.Function):
                    
             ret = os.system(cmd + args)
             if ret != 0:
-                raise Exception('Error: failure return from sim.x')
+                raise Exception('Error: return ' + str(ret) + ' from sim.x')
             #os.system('ls /var/tmp')
         except Exception as ex:
             print(ex)
-            raise Exception('called from asg.raw_apply')
+            raise Exception('called from asg.apply')
 
     def raw_deriv(self,x):
-        return fsbderiv(self.dom,self.rng,x,self.buoyancy,self.source_p,self.therest)
+        try:
+            return fsbderiv(self.dom,self.rng,x,self.buoyancy,self.source_p,self.therest)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from asg.fsbop.raw_deriv')
 
     def myNameIs(self):
         print('2D acoustic simulator: iwave/asg/main/sim.x')
@@ -87,12 +91,23 @@ class fsbop(vcl.Function):
 class fsbderiv(vcl.LinearOperator):
 
     def __init__(self,dom,rng,x,buoyancy,source_p,therest):
-        self.dom = dom
-        self.rng = rng
-        self.x = x
-        self.buoyancy = buoyancy
-        self.source_p = source_p
-        self.therest = therest
+        try:
+            if not isinstance(dom, rsfvc.Space):
+                raise Exception('Error: input domain not rsf space')
+            if not isinstance(rng, segyvc.Space):
+                raise Exception('Error: input range not segy space')
+            if x.space != dom:
+                raise Exception('Error: input vector not in damain')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from asg.fsbderiv constructor')
+        else:
+            self.dom = dom
+            self.rng = rng
+            self.x = x
+            self.buoyancy = buoyancy
+            self.source_p = source_p
+            self.therest = therest
 
     def getDomain(self):
         return self.dom
@@ -137,15 +152,15 @@ class fsbderiv(vcl.LinearOperator):
             ret = os.system(cmd + args)
             if ret != 0:
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
+            #print('asg.fsbderiv.applyAdj ret=' + str(ret))
         except Exception as ex:
             print(ex)
             raise Exception('called from fdderiv.raw_applyAdj')
 
     def myNameIs(self):
-        print('fdpartial: partial derivative ' + str(self.i))
-        print('  of asg simulator')
-        
+        print('asg.fsbderiv: derivative of asg.fsbop simulator')
 
+#############################
     
 # Fixed buoyancy op
 # example of therest:
