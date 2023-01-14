@@ -111,6 +111,7 @@ int main(int argc, char ** argv) {
     iwave_fdestroy();
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
+    exit(0);
 #endif
   }
   catch (RVLException & e) {
