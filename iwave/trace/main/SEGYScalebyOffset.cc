@@ -72,7 +72,7 @@ int main(int argc, char ** argv) {
 
     ps_delete(&pars);
     iwave_fdestroy();
-    
+    exit(0);    
   }
   catch (RVLException & e) {
     e.write(cerr);

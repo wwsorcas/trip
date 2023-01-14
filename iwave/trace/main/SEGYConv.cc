@@ -435,6 +435,7 @@ int main(int argc, char ** argv) {
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
 #endif
+    exit(0);
   }
     
   catch (RVL::RVLException & e) {
