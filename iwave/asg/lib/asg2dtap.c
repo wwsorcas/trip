@@ -335,4 +335,7 @@ void asg2dtap(float *** restrict  bulk, float ** restrict  buoy,
   }
   //  fprintf(stderr,"end fd\n");
 
+  free(eh);
+  free(sh);
+
 }

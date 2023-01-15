@@ -718,6 +718,8 @@ void asg_timestep(std::vector<RDOM *> dom,
       userfree_(sdivb_alloc);
       userfree_(gradp0);
       userfree_(gradp1);
+
+      userfree_(bulk3);
       
 #ifdef VERBOSE
       fprintf(asgpars->stream,"asg_timestep <- asg2d\n");
@@ -904,6 +906,9 @@ void asg_timestep(std::vector<RDOM *> dom,
       userfree_(sdivbd_alloc);
       userfree_(gradp0d);
       userfree_(gradp1d);
+
+      userfree_(bulk3);
+      userfree_(bulk3d);
       
    }
 
