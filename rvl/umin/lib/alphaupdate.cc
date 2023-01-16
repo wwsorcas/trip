@@ -36,7 +36,9 @@ namespace RVLUmin {
       float en = e.normsq();
       float pn = p.normsq();
       float rn=0.0f;
-      if (RVL::ProtectedDivision<float>(en,dn,rn)) {
+      float sn=0.0f;
+      if (RVL::ProtectedDivision<float>(en,dn,rn) ||
+	  RVL::ProtectedDivision<float>(pn,dn,sn)) {
 	RVL::RVLException e;
 	e<<"Error: RVLUmin::alphaupdate\n";
 	e<<"  input reference vector effectively zero! cannot proceed\n";
@@ -61,7 +63,9 @@ namespace RVLUmin {
 	}
 	return decr*alphacurr;
       }
-      else if (lbnd > rn) {
+      // on first step, with alpha=0, always update
+      else if ((lbnd > rn) ||
+	       (alphacurr*sn < numeric_limits<float>::epsilon())) {
 	return (alphacurr + 0.5*(ubnd*dn - en)/pn);
       }
       else {

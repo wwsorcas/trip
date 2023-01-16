@@ -114,8 +114,8 @@ namespace RVL {
     size_t getSize() const { return getDataSize<D>(meta); }
     std::shared_ptr<T> operator[](size_t i) const {
       try {
-	shared_ptr<T> spt;
-	if (spt = (data.at(i)).lock()) {
+	shared_ptr<T> spt = (data.at(i)).lock();
+	if (spt) {
 	  if (verbose) {
 	    cerr<<"DynProd: component "<<i<<" exists ref count = "
 		<<(data.at(i)).use_count()<<"\n";
