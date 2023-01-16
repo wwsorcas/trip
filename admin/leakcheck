@@ -1,0 +1,12 @@
+memory leak finder for macOS
+
+1. Set MallocStackLogging=1 in .bashrc, source
+2. if not already done,
+
+sudo ln -s /Applications/Xcode.app/Contents/Developer/usr/lib/libLeaksAtExit.dylib /usr/local/lib
+
+2. force code to stop just before exit by asking for user input
+3. execute to stop
+4. get its pid
+5. leaks -outputGraph=g pid
+6. leaks g.memgraph
