@@ -142,10 +142,10 @@ int main(int argc, char ** argv) {
     string dtstr="dt";
     string nsstr="ns";
     string rtstr="delrt";
-    float tmpinp;
-    float tmpout;
-    float tmpker;
-    float tmpacc;
+    //float tmpinp;
+    //float tmpout;
+    //float tmpker;
+    //float tmpacc;
     float tmp;
     
     // workspace for accumulation of adjoint in single trace case
@@ -394,20 +394,20 @@ int main(int argc, char ** argv) {
 	  TSOpt::corr(ishift,nsout,nsinp,nsker,
 		      buf,trinp.data,trker.data,dt);
 	  // add accumulated trace back in
-	  tmpacc=0.0f;
-	  tmpinp=0.0f;
-	  tmpker=0.0f;
+	  //tmpacc=0.0f;
+	  //tmpinp=0.0f;
+	  //tmpker=0.0f;
 	  for (int i=0; i<nsout; i++) {
 	    trout.data[i] += buf[i];
-	    tmpacc+=buf[i]*buf[i];
-	    tmpout+=trout.data[i]*trout.data[i];
+	  //  tmpacc+=buf[i]*buf[i];
+	  //  tmpout+=trout.data[i]*trout.data[i];
 	  }
-	  for (int i=0; i<nsinp; i++) {
-	    tmpinp+=trinp.data[i]*trinp.data[i];
-	  }
-	  for (int i=0; i<nsker; i++) {
-	    tmpker+=trker.data[i]*trker.data[i];
-	  }
+	  //for (int i=0; i<nsinp; i++) {
+	  //  tmpinp+=trinp.data[i]*trinp.data[i];
+	  //}
+	  //for (int i=0; i<nsker; i++) {
+	  //  tmpker+=trker.data[i]*trker.data[i];
+	  //}
 	  // cerr<<"SEGYConv single adj sq acc = "<<tmpacc<<endl;
 	  // cerr<<"SEGYConv single adj sq inp = "<<tmpinp<<endl;
 	  // cerr<<"SEGYConv single adj sq ker = "<<tmpker<<endl;
@@ -430,7 +430,7 @@ int main(int argc, char ** argv) {
       buf=NULL;
     }
     ps_delete(&par);
-    iwave_fdestroy();
+    //iwave_fdestroy();
     
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
