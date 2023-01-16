@@ -169,13 +169,13 @@ def getCommand(jobdict, locdict):
         # else try standard choice            
             MPIROOT = os.getenv('MPIROOT')
             MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
-        print 'MPIRUN=' + MPIRUN
+        # print 'MPIRUN=' + MPIRUN
         # this should be checked for existence
         workcmd = jobdict['pre'] + '; ' + \
             'export OMP_NUM_THREADS=' + str(OMP_NUM_THREADS) + '; ' + \
             MPIRUN + ' -np ' + str(jobdict['exe']['ppn']) + \
             ' ' + jobdict['cmd']
-        print workcmd
+        # print workcmd
     else:      
 
         workcmd = jobdict['pre'] + '; ' + \
@@ -209,7 +209,7 @@ def hasMPIRUN(jobdict):
     if MPIROOT and os.path.exists(os.path.join(MPIROOT,'bin/mpirun')):
         return os.path.join(MPIROOT,'bin/mpirun')
     else:
-        print 'command line MPI via mpirun not available'
+        print('command line MPI via mpirun not available')
         return ''
 
 def isMPI(jobdict):
@@ -238,16 +238,17 @@ def getThreads(lenv):
     return nthread
 
 def getPlatform(penv):
-    HOSTNAME = os.getenv('HOSTNAME')
+    HOSTNAME = str(os.getenv('HOSTNAME'))
 #    print HOSTNAME
     hna = HOSTNAME.split(".")
+#    hna = Split(HOSTNAME,".")
     for host in penv.keys():
         if (host in hna):
             return host
     return ''
 
 def printPlatform(penv):
-    print getPlatform(penv)
+    print(getPlatform(penv))
 
 def getXenv(penv,lenv):
     platf = getPlatform(penv);
@@ -277,7 +278,7 @@ def tripExec(jobs, lenv):
     for i in range(len(jobs)):
         cmd = getCommand(jobs[i], lenv)
         if cmd == None:
-            print 'Error return from newbatch.tripExec - cannot set up jobs['+str(i)+']'
+            print('Error return from newbatch.tripExec - cannot set up jobs['+str(i)+']')
         else:
             Flow(jobs[i]['tgt'], jobs[i]['src'], cmd,
                  stdin=0, stdout=-1, workdir=jobs[i]['job']+'.work')
@@ -286,20 +287,27 @@ def printJobs(jobs, lenv):
     for i in range(len(jobs)):
         cmd = getCommand(jobs[i], lenv)
         if cmd == None:
-            print 'Note: jobs['+str(i)+' not defined]'
+            print('Note: jobs['+str(i)+' not defined]')
         else:
-            print 'cmd = ' + cmd + '\n'
-            print 'src = ' + ' '.join(jobs[i]['src']) + '\n'
-            print 'tgt = ' + ' '.join(jobs[i]['tgt']) + '\n'
+            print('cmd = ' + cmd + '\n')
+            print('src = ' + ' '.join(jobs[i]['src']) + '\n')
+            print('tgt = ' + ' '.join(jobs[i]['tgt']) + '\n')
 
 def getnum(filename, key):
+#    print('enter getnum')
+#    print(filename)
+#    print(key)
     val=0.0
     pathfile=os.path.join(os.getcwd(),filename)
     if os.path.exists(pathfile):
         f = open(pathfile,'r')
         for line in f:
-            alist = (line.strip('\n')).split(' = ')
+#            print(line)
+            alist = (line.strip('\n')).split('=')
+#            print(alist)
             if alist[0] == key:
                 val = float(alist[1])
         f.close()
+#        print('val='+str(val))
+#        print('exit getnum')
     return val            
