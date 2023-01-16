@@ -14,7 +14,7 @@
 #include <par.h>
 #include "segyops.hh"
 #include "adjtest.hh"
-#include <omp.h>
+//#include <omp.h>
 
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]

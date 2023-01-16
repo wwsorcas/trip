@@ -6,57 +6,57 @@ thispath = os.getcwd()
 thisname = os.path.basename(thispath)
 
 AddOption('--install',
-	  dest='install',
-	  type='string',
-	  default='',
-	  nargs=1,
-	  help="""install=[dir for scons files] to instrument project and/or subprojects with SConstruct, SConscript files""")
+          dest='install',
+          type='string',
+          default='',
+          nargs=1,
+          help="""install=[dir for scons files] to instrument project and/or subprojects with SConstruct, SConscript files""")
 installdir = GetOption('install')
 
 AddOption('--uninstall',
           dest='uninstall',
-	  type='string',
-	  default='no',
-	  const='yes',
-	  nargs='?',
-	  help="""use scons --uninstall to remove all SConstruct, SConscript, and config*.py files in project and/or subproject directories""")
+          type='string',
+          default='no',
+          const='yes',
+          nargs='?',
+          help="""use scons --uninstall to remove all SConstruct, SConscript, and config*.py files in project and/or subproject directories""")
 douninstall = GetOption('uninstall')
 
 scrublist = """core a.out mon.out paper.log *.o *.x *.ps *~ "\#"*"\#" *.trace fort.* *.sep *.sep@ *.sep_dat *.su *.dat *.segy *.segyb *.pig *.par *.rsf *.rsf@ *.txt *.pbs *.debug tmp.* *.bin jnk junk crud *.aux *.log *.dvi *.rpt"""
 
 AddOption('--scrub',
           dest='scrub',
-	  type='string',
-	  default='no',
-	  const='yes',
-	  nargs='?',
-	  help="""use scons --scrub to remove all execution debris files in project and/or subproject root directories. Current scrub list (passed to /bin/rm): """ + scrublist)
+          type='string',
+          default='no',
+          const='yes',
+          nargs='?',
+          help="""use scons --scrub to remove all execution debris files in project and/or subproject root directories. Current scrub list (passed to /bin/rm): """ + scrublist)
 doscrub = GetOption('scrub')
 
 AddOption('--test',
           dest='test',
-	  type='string',
-	  default='no',
-	  const='yes',
-	  nargs='?',
-	  help="""use scons --test to execute unit and functional tests in subdir test or testsrc """)
+          type='string',
+          default='no',
+          const='yes',
+          nargs='?',
+          help="""use scons --test to execute unit and functional tests in subdir test or testsrc """)
 testflag = GetOption('test')
 
 AddOption('--doc',
           dest='doc',
-	  type='string',
-	  default='no',
-	  const='yes',
-	  nargs='?',
-	  help="""use scons --doc to create html documentation. requires doxygen command in path""")
+          type='string',
+          default='no',
+          const='yes',
+          nargs='?',
+          help="""use scons --doc to create html documentation. requires doxygen command in path""")
 docflag = GetOption('doc')
 
 AddOption('--ccopts',
-	  dest='ccopts',
-	  type='string',
-	  default='',
-	  nargs=1,
-	  help="""scons --ccopts=[path] installs compiler configuration file [path] in lib, main, testsrc directories of project and/or subprojects. path may be relative or absolute, and env vars are expanded""")
+          dest='ccopts',
+          type='string',
+          default='',
+          nargs=1,
+          help="""scons --ccopts=[path] installs compiler configuration file [path] in lib, main, testsrc directories of project and/or subprojects. path may be relative or absolute, and env vars are expanded""")
 configopt = GetOption('ccopts')
 
 #print 'install = '+ doinstall
@@ -67,7 +67,7 @@ configfile = os.path.abspath(os.path.expandvars(configopt))
 
 addconfig = len(configopt) > 0 and os.path.exists(configfile)
 if len(configopt) > 0 and not addconfig:
-    print '>>> WARNING: config file '+ configfile + ' not found'
+    print('>>> WARNING: config file '+ configfile + ' not found')
 
 # determine subpackages
 sublist=[]
@@ -98,24 +98,24 @@ vars.Add('AR','static library (object archive) creation','ar')
 # initialize build environment
 env = Environment(variables = vars,
                   CC={'CC' : '${CC}'},
-		  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CFLAGS={'CFLAGS' : '${CFLAGS}'},
                   CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
                   CXX={'CXX' : '${CXX}'},
-	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
-		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
-		  AR={'AR' : '${AR}'})
+                  CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+                  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+                  AR={'AR' : '${AR}'})
 Help(vars.GenerateHelpText(env))
 
 # main options:
 # if configuring, do it in root in any case, but only if it's not already here!
 if addconfig:
    if configfile != thispath + '/config.py':
-       print '>>> installing config file in ' + thispath
+       print('>>> installing config file in ' + thispath)
        shutil.copyfile(configfile, thispath+'/config.py')
 
 # scrub option - only here
 if doscrub == 'yes':
-    print scrublist
+    print(scrublist)
     os.system('/bin/rm -f '+ scrublist)
 
 else: 
@@ -128,8 +128,8 @@ else:
 
         if os.path.exists(installdir):
             # install root SCONSTRUCT if subproject   
-	    if os.path.exists(subpath):
-                print '>>> installing SConstruct files in ' + subpath
+            if os.path.exists(subpath):
+                print('>>> installing SConstruct files in ' + subpath)
                 if n != 'root':
                     shutil.copyfile(installdir+'/SConstruct', subpath+'/SConstruct')
                 # install SConscript in any case
@@ -146,8 +146,8 @@ else:
 
         elif douninstall == 'yes':
             if os.path.exists(subpath):
-	        print '>>> removing SConstruct files in ' + subpath
-    	        if n != 'root' and os.path.exists(subpath+'/SConstruct'):
+                print('>>> removing SConstruct files in ' + subpath)
+                if n != 'root' and os.path.exists(subpath+'/SConstruct'):
                     os.remove(subpath+'/SConstruct')
                 if os.path.exists(subpath+'/SConscript'):
                     os.remove(subpath+'/SConscript')
@@ -161,10 +161,10 @@ else:
                     os.remove(subpath+'/test/SConscript')      
 
         elif addconfig:
-	    if os.path.exists(subpath):
-	        if thispath != subpath:
-                    print '>>> installing config file in ' + subpath
-	            shutil.copyfile(configfile, subpath+'/config.py')
+            if os.path.exists(subpath):
+                if thispath != subpath:
+                    print('>>> installing config file in ' + subpath)
+                    shutil.copyfile(configfile, subpath+'/config.py')
 
         else:
             Export('vars', 'testflag', 'docflag')

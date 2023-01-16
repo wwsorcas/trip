@@ -8,7 +8,7 @@
 #include "asg_defn.hh"
 #include "sim_selfdoc.h"
 #include "parser.h"
-#include <omp.h>
+//#include <omp.h>
 
 enum{
   D_BULK=0,
@@ -62,9 +62,6 @@ int main(int argc, char ** argv) {
     }
 #endif
     
-    fprintf(stream,"stat %d\n",1);
-    fflush(stream);
-    
 #ifdef IWAVE_USE_MPI
     fprintf(stream,"rk=%d groupID=%d\n",retrieveGlobalRank(),retrieveGroupID());
     if (retrieveGroupID() == MPI_UNDEFINED) {
@@ -113,10 +110,6 @@ int main(int argc, char ** argv) {
 	if (TSOpt::findsuf(fn)=="su") issu[j]=1;
       }
 
-          
-      fprintf(stream,"stat %d\n",2);
-      fflush(stream);
-    
       int deriv = RVL::valparse<int>(*pars,"deriv",0);
       int adjoint = RVL::valparse<int>(*pars,"adjoint",0);
 
@@ -179,10 +172,6 @@ int main(int argc, char ** argv) {
       }
       else if (deriv==1) {
 
-	    
-	fprintf(stream,"stat %d\n",3);
-	fflush(stream);
-    
 	// extract perturbational input/output
 	std::string psymb="";
 	if (adjoint==0) psymb = "_d1";
@@ -206,7 +195,7 @@ int main(int argc, char ** argv) {
 	  RVL::RVLRandomize<float> rnd(getpid(),-1.0f,1.0f);
 	  std::stringstream stuff;
 	  RVL::AdjointTest(ropeval.getDeriv(),rnd,stuff);
-	  fprintf(stream,stuff.str().c_str());	  
+	  fprintf(stream,"%s",stuff.str().c_str());	  
 	}
 	// application of derivative
 	else {
@@ -242,9 +231,6 @@ int main(int argc, char ** argv) {
 	  }
 	}
 	    
-	fprintf(stream,"stat %d\n",4);
-	fflush(stream);
-    
       }
       else {
 	RVL::RVLException e;
@@ -256,24 +242,15 @@ int main(int argc, char ** argv) {
       MPI_Barrier(MPI_COMM_WORLD);
     }
 #endif
-        
-    fprintf(stream,"stat %d\n",5);
-    fflush(stream);
     
     ps_delete(&pars);
         
-    fprintf(stream,"stat %d\n",6);
-    fflush(stream);
-    
     iwave_fdestroy();
-
-        
-    fprintf(stream,"stat %d\n",7);
-    fflush(stream);
     
 #ifdef IWAVE_USE_MPI    
     MPI_Finalize();
 #endif
+
     exit(0);
   }
   catch (RVL::RVLException & e) {

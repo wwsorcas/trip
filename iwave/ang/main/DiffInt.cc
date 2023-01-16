@@ -30,7 +30,8 @@ int main() {
 	power = -1;
 
 	//Number of samples for FFT (base 2)
-    for(i = 0 ;pow (2, i) < Nt ;i++);
+    for(i = 0 ;pow (2, i) < Nt ;i++)
+      ;
     	nfft = (int)pow (2, i);
 	nfft *= 2;
 

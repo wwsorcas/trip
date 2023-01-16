@@ -11,7 +11,7 @@
 #include "blockop.hh"
 #include "cgnealg.hh"
 #include "alphaupdate.hh"
-#include <omp.h>
+//#include <omp.h>
 
 enum{
   D_BULK=0,

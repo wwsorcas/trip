@@ -70,7 +70,8 @@ void DerivIntegral(float *IN , float *OUT , int n3, int n2, int n1, float dt, in
 	float complex *a, *b, *trigs;
 	
 	//Find nfft
-    for(i = 0 ;pow(2, i) < n1 ;i++);
+    for(i = 0 ;pow(2, i) < n1 ;i++)
+      ;
     	nfft = (int)pow(2, i);
 	nfft *= 2;
 	

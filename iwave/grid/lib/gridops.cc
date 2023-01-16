@@ -2739,7 +2739,7 @@ namespace TSOpt {
     try {
       RPNT d;
       RVL::ProductSpace<float> const * pdom = NULL;
-      if (pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom)) {;
+      if ((pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom))) {;
 	myGridSpace const & gdom = dynamic_cast<myGridSpace const &>((*pdom)[0]);
 	if (retrieveGlobalRank()==0) {
 	  get_d(d,gdom.getGrid());
@@ -2893,7 +2893,7 @@ namespace TSOpt {
     : dom(_dom), a(_a), b(_b) {
     try {
       RVL::ProductSpace<float> const * pdom = NULL;
-      if (pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom)) {;
+      if ((pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom))) {;
 	myGridSpace const & gdom = dynamic_cast<myGridSpace const &>((*pdom)[0]);
 	if (retrieveGlobalRank()==0) {
 	  get_d(d,gdom.getGrid());
@@ -3006,7 +3006,7 @@ namespace TSOpt {
     : dom(_dom), alpha(_alpha) {
     try {
       RVL::ProductSpace<float> const * pdom = NULL;
-      if (pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom)) {;
+      if ((pdom = dynamic_cast<RVL::ProductSpace<float> const *>(&dom))) {;
 	myGridSpace const & gdom = dynamic_cast<myGridSpace const &>((*pdom)[0]);
 	if (retrieveGlobalRank()==0) {
 	  get_d(d,gdom.getGrid());

@@ -21,8 +21,8 @@ except: # autonomous version
 #print 'thisname = '+thisname
 
 def getlist(filename):
-    alist=[]
     pathfile=os.path.join(thispath,filename)
+    alist=[]
     if os.path.exists(pathfile):
         f = open(pathfile,'r')
         alist = (f.read().strip('\n')).split(':')
@@ -87,7 +87,7 @@ for n in deplist:
     if os.path.exists(testlibdir):
         liblist.append(testlib)
         # Madagascar branch
-	if root:
+        if root:
             libdirlist.append(testbuildpath + '/lib')
         # Standalone branch
         else:

@@ -1,5 +1,5 @@
 #include "cstd.h"
-#include <omp.h>
+//#include <omp.h>
 
 void foo(float * u, float * v, float ** c, int s, int e, int hmax) {
 

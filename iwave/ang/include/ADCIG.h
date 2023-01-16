@@ -57,115 +57,116 @@ void HO2ADscat (stADCIG *pADCIG, int nthread, int taperFact) {
 	float complex *trigs1, *trigs2;
 
 	//Find nfft
-    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++);
-    	nfft = (int)pow(2, i);
-	nfft *= 2;
+    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++)
+      ;
+    nfft = (int)pow(2, i);
+    nfft *= 2;
 
-	//Memory allocation
-	taper      = alloc_array          (pADCIG->nh);
-	phaseShift = alloc_complex_cube   (nfft/2, pADCIG->np, pADCIG->nh);
-	M		   = alloc_complex_cube   (pADCIG->nx, (int)fmax(pADCIG->np, pADCIG->nh), nfft);
-	Maux       = alloc_complex_matrix (nthread, pADCIG->np);
-	a 		   = alloc_complex_array  (nfft);
-	b          = alloc_complex_array  (nfft);
-	trigs1     = alloc_complex_array  (nfft);
-	trigs2     = alloc_complex_array  (nfft/2);
-
-	printf("Internal Memory allocated\n");
-
-	//Build the phase shift table
-	for(n = 0; n < nfft/2; n++) {
-		float Kz = n * PI/pADCIG->dz/(0.5*nfft);
-		for(m = 0; m < pADCIG->np; m++) {
-			float Slope = (m - pADCIG->np/2) * pADCIG->dp;
-			for(j = 0; j < pADCIG->nh; j++)
-				phaseShift[n][m][j] = cexp(I*Kz*Slope*(j-pADCIG->nh/2)*pADCIG->dh) * pADCIG->dh;
-		}
-	}
-
-	//Build the taper table
-	for(j = 0; j < pADCIG->nh; j++) {
-		float arg = (float) (j-pADCIG->nh/2)/(pADCIG->nh/2) * PI/2;
-		taper[j] = pow(cosf(arg),taperFact);
-	}
-
-	//Copy into a complex array
-	for(k = 0; k < pADCIG->nx; k++)
-		for(j = 0; j < pADCIG->nh; j++)
-	   		for(n = 0, i = 0; n < pADCIG->nz/2; n++, i+=2)
-				M[k][j][n] = pADCIG->HOCIG[k][j][i] + pADCIG->HOCIG[k][j][i+1]*I;
-
-   	//1D Real FFT (z->Kz)	
+    //Memory allocation
+    taper      = alloc_array          (pADCIG->nh);
+    phaseShift = alloc_complex_cube   (nfft/2, pADCIG->np, pADCIG->nh);
+    M		   = alloc_complex_cube   (pADCIG->nx, (int)fmax(pADCIG->np, pADCIG->nh), nfft);
+    Maux       = alloc_complex_matrix (nthread, pADCIG->np);
+    a 		   = alloc_complex_array  (nfft);
+    b          = alloc_complex_array  (nfft);
+    trigs1     = alloc_complex_array  (nfft);
+    trigs2     = alloc_complex_array  (nfft/2);
+    
+    printf("Internal Memory allocated\n");
+    
+    //Build the phase shift table
+    for(n = 0; n < nfft/2; n++) {
+      float Kz = n * PI/pADCIG->dz/(0.5*nfft);
+      for(m = 0; m < pADCIG->np; m++) {
+	float Slope = (m - pADCIG->np/2) * pADCIG->dp;
+	for(j = 0; j < pADCIG->nh; j++)
+	  phaseShift[n][m][j] = cexp(I*Kz*Slope*(j-pADCIG->nh/2)*pADCIG->dh) * pADCIG->dh;
+      }
+    }
+    
+    //Build the taper table
+    for(j = 0; j < pADCIG->nh; j++) {
+      float arg = (float) (j-pADCIG->nh/2)/(pADCIG->nh/2) * PI/2;
+      taper[j] = pow(cosf(arg),taperFact);
+    }
+    
+    //Copy into a complex array
+    for(k = 0; k < pADCIG->nx; k++)
+      for(j = 0; j < pADCIG->nh; j++)
+	for(n = 0, i = 0; n < pADCIG->nz/2; n++, i+=2)
+	  M[k][j][n] = pADCIG->HOCIG[k][j][i] + pADCIG->HOCIG[k][j][i+1]*I;
+    
+    //1D Real FFT (z->Kz)	
     ffttrig(nfft,   trigs1);
     ffttrig(nfft/2, trigs2);
-	for(k = 0; k < pADCIG->nx; k++) {
-    	for(j = 0; j < pADCIG->nh; j++) {
-			for(n = 0; n < nfft/2; n++)
-				a[n] = M[k][j][n];
-			rfftrc(a, b, trigs2, trigs1, nfft);
-			for(n = 0; n < nfft/2; n++)
-				M[k][j][n] = a[n];
-		}
-	}
-
-	int count = 0;
+    for(k = 0; k < pADCIG->nx; k++) {
+      for(j = 0; j < pADCIG->nh; j++) {
+	for(n = 0; n < nfft/2; n++)
+	  a[n] = M[k][j][n];
+	rfftrc(a, b, trigs2, trigs1, nfft);
+	for(n = 0; n < nfft/2; n++)
+	  M[k][j][n] = a[n];
+      }
+    }
+    
+    int count = 0;
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(thread_id, n, k, m, j)
 #endif
-{
+    {
 #ifdef _OPENMP
-	thread_id = omp_get_thread_num();
+      thread_id = omp_get_thread_num();
 #pragma omp for
 #endif
-	//Phase shift to angles
-	for(k = 0; k < pADCIG->nx; k++) {
-		for(n = 0; n < nfft/2; n++) {
-		
-			memset (Maux[thread_id], 0.f, pADCIG->np * sizeof(float complex));
-			
-			for(m = 0; m < pADCIG->np; m++)	
-				for(j = 0; j < pADCIG->nh; j++)
-					Maux[thread_id][m] += M[k][j][n] * phaseShift[n][m][j] * taper[j];
-
-			for(m = 0; m < pADCIG->np; m++)
-				M[k][m][n] = Maux[thread_id][m];
-		}
-		count++;
-//		printf ("thread %d did step %d\n", thread_id, count);
+      //Phase shift to angles
+      for(k = 0; k < pADCIG->nx; k++) {
+	for(n = 0; n < nfft/2; n++) {
+	  
+	  memset (Maux[thread_id], 0.f, pADCIG->np * sizeof(float complex));
+	  
+	  for(m = 0; m < pADCIG->np; m++)	
+	    for(j = 0; j < pADCIG->nh; j++)
+	      Maux[thread_id][m] += M[k][j][n] * phaseShift[n][m][j] * taper[j];
+	  
+	  for(m = 0; m < pADCIG->np; m++)
+	    M[k][m][n] = Maux[thread_id][m];
 	}
-} // End of parallel region
-
-	//Inverse 1D Real FFT (Kz->z)
-	for(k = 0; k < pADCIG->nx; k++) {
-    	for(m = 0; m < pADCIG->np; m++) {
-			for(n = 0; n < nfft/2; n++)
-				a[n] = M[k][m][n];
-			rfftcr(a, b, trigs2, trigs1, nfft);
-			for(n = 0, i = 0; n < nfft/2; n++, i+=2) {
-				M[k][m][i]   = creal(a[n]);
-				M[k][m][i+1] = cimag(a[n]);
-			}
-		}
+	count++;
+	//		printf ("thread %d did step %d\n", thread_id, count);
+      }
+    } // End of parallel region
+    
+    //Inverse 1D Real FFT (Kz->z)
+    for(k = 0; k < pADCIG->nx; k++) {
+      for(m = 0; m < pADCIG->np; m++) {
+	for(n = 0; n < nfft/2; n++)
+	  a[n] = M[k][m][n];
+	rfftcr(a, b, trigs2, trigs1, nfft);
+	for(n = 0, i = 0; n < nfft/2; n++, i+=2) {
+	  M[k][m][i]   = creal(a[n]);
+	  M[k][m][i+1] = cimag(a[n]);
 	}
-
-	//Copy to ADCIG
-	for(k = 0; k < pADCIG->nx ; k++)
-		for(m = 0; m < pADCIG->np; m++)
-			for(i = 0; i < pADCIG->nz; i++)
-				pADCIG->ADCIG[k][m][i] = creal(M[k][m][i]);
-				
-	printf("ADCIG calculated\n");
-		
-
-	free(taper);
-	free(phaseShift);
-	free(M);
-	free(Maux);
-	free(a);
-	free(b);
-	free(trigs1);
-	free(trigs2);
-
+      }
+    }
+    
+    //Copy to ADCIG
+    for(k = 0; k < pADCIG->nx ; k++)
+      for(m = 0; m < pADCIG->np; m++)
+	for(i = 0; i < pADCIG->nz; i++)
+	  pADCIG->ADCIG[k][m][i] = creal(M[k][m][i]);
+    
+    printf("ADCIG calculated\n");
+    
+    
+    free(taper);
+    free(phaseShift);
+    free(M);
+    free(Maux);
+    free(a);
+    free(b);
+    free(trigs1);
+    free(trigs2);
+    
 }
 
 
@@ -185,128 +186,129 @@ void HO2ADdip (stADCIG *pADCIG, int nthread, int taperFact, int hfst, int hlst) 
 	float complex *trigs1, *trigs2;
 
 	//Find nfft
-    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++);
-    	nfft = (int)pow(2, i);
-	nfft *= 2;
-
-	//Memory allocation
-	taper      = alloc_array          (pADCIG->nxWin);
-	phaseShift = alloc_complex_cube   (nfft/2, pADCIG->nq, pADCIG->nxWin);
-	M		   = alloc_complex_cube   (pADCIG->nh, pADCIG->nx, nfft);
-	Maux       = alloc_complex_cube   (pADCIG->nx, nfft, pADCIG->nq);
-	a 		   = alloc_complex_array  (nfft);
-	b          = alloc_complex_array  (nfft);
-	trigs1     = alloc_complex_array  (nfft);
-	trigs2     = alloc_complex_array  (nfft/2);
-
-	printf("Internal Memory allocated\n");
-
-	//Build the phase shift table
-	for(n = 0; n < nfft/2; n++) {
-		float Kz = n * PI/pADCIG->dz/(0.5*nfft);
-		for(m = 0; m < pADCIG->nq; m++) {
-			float Slope = (m - pADCIG->nq/2) * pADCIG->dq;
-			for(k = 0; k < pADCIG->nxWin; k++)
-				phaseShift[n][m][k] = cexp(I*Kz*Slope*(k-pADCIG->nxWin/2)*pADCIG->dx) * pADCIG->dx;
-		}
-	}
-
-	//Build the taper table
-	for(k = 0; k < pADCIG->nxWin; k++) {
-		float arg = (float) (k-pADCIG->nxWin/2)/(pADCIG->nxWin/2) * PI/2;
-		taper[k] = pow(cosf(arg),taperFact);
-	}
-
-	//Copy into a complex array
-	for(j = 0; j < pADCIG->nh; j++)
-		for(k = 0; k < pADCIG->nx; k++)
-	   		for(n = 0, i = 0; n < pADCIG->nz/2; n++, i+=2)
-				M[j][k][n] = pADCIG->HOCIG[k][j][i] + pADCIG->HOCIG[k][j][i+1]*I;
-
-   	//1D Real FFT (z->Kz)	
+    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++)
+      ;
+    nfft = (int)pow(2, i);
+    nfft *= 2;
+    
+    //Memory allocation
+    taper      = alloc_array          (pADCIG->nxWin);
+    phaseShift = alloc_complex_cube   (nfft/2, pADCIG->nq, pADCIG->nxWin);
+    M		   = alloc_complex_cube   (pADCIG->nh, pADCIG->nx, nfft);
+    Maux       = alloc_complex_cube   (pADCIG->nx, nfft, pADCIG->nq);
+    a 		   = alloc_complex_array  (nfft);
+    b          = alloc_complex_array  (nfft);
+    trigs1     = alloc_complex_array  (nfft);
+    trigs2     = alloc_complex_array  (nfft/2);
+    
+    printf("Internal Memory allocated\n");
+    
+    //Build the phase shift table
+    for(n = 0; n < nfft/2; n++) {
+      float Kz = n * PI/pADCIG->dz/(0.5*nfft);
+      for(m = 0; m < pADCIG->nq; m++) {
+	float Slope = (m - pADCIG->nq/2) * pADCIG->dq;
+	for(k = 0; k < pADCIG->nxWin; k++)
+	  phaseShift[n][m][k] = cexp(I*Kz*Slope*(k-pADCIG->nxWin/2)*pADCIG->dx) * pADCIG->dx;
+      }
+    }
+    
+    //Build the taper table
+    for(k = 0; k < pADCIG->nxWin; k++) {
+      float arg = (float) (k-pADCIG->nxWin/2)/(pADCIG->nxWin/2) * PI/2;
+      taper[k] = pow(cosf(arg),taperFact);
+    }
+    
+    //Copy into a complex array
+    for(j = 0; j < pADCIG->nh; j++)
+      for(k = 0; k < pADCIG->nx; k++)
+	for(n = 0, i = 0; n < pADCIG->nz/2; n++, i+=2)
+	  M[j][k][n] = pADCIG->HOCIG[k][j][i] + pADCIG->HOCIG[k][j][i+1]*I;
+    
+    //1D Real FFT (z->Kz)	
     ffttrig(nfft,   trigs1);
     ffttrig(nfft/2, trigs2);
-   	for(j = 0; j < pADCIG->nh; j++) {
-   		for(k = 0; k < pADCIG->nx; k++) {
-			for(n = 0; n < nfft/2; n++)
-				a[n] = M[j][k][n];
-			rfftrc(a, b, trigs2, trigs1, nfft);
-			for(n = 0; n < nfft/2; n++)
-				M[j][k][n] = a[n];
-		}
-	}
-
-	//Loop over subsurface offsets
-	for(j = hfst; j <= hlst; j++) {
-
+    for(j = 0; j < pADCIG->nh; j++) {
+      for(k = 0; k < pADCIG->nx; k++) {
+	for(n = 0; n < nfft/2; n++)
+	  a[n] = M[j][k][n];
+	rfftrc(a, b, trigs2, trigs1, nfft);
+	for(n = 0; n < nfft/2; n++)
+	  M[j][k][n] = a[n];
+      }
+    }
+    
+    //Loop over subsurface offsets
+    for(j = hfst; j <= hlst; j++) {
+      
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(thread_id, i, k, m, n)
 #endif
-{
+      {
 #ifdef _OPENMP
-		thread_id = omp_get_thread_num();
+	thread_id = omp_get_thread_num();
 #pragma omp for
 #endif
-		//Phase shift to angles
-		for(k = 0; k < pADCIG->nx; k++) {
-			for(i = 0; i < nfft/2; i++) {
-		
-				memset (Maux[k][i], 0.f, pADCIG->nq * sizeof(float complex));
-			
-				for(m = 0; m < pADCIG->nq; m++) {
-					for(n = 0; n < pADCIG->nxWin; n++) {
-						int xi = k + (n-pADCIG->nxWin/2);
-						if (xi >=0 && xi < pADCIG->nx)
-							Maux[k][i][m] += M[j][xi][i] * phaseShift[i][m][n] * taper[n];
-					}
-				//Scaling Factor!!
-				Maux[k][i][m] /= pADCIG->nxWin;
-				}
-			}
-		}
-} // End of parallel region
-
-		//Inverse 1D Real FFT (Kz->z)
-		for(k = 0 ; k < pADCIG->nx ; k++) {
-    		for(m = 0 ; m < pADCIG->nq ; m++) {
-				for(i = 0 ; i < nfft/2 ; i++)
-					a[i] = Maux[k][i][m];
-				rfftcr(a , b , trigs2 , trigs1 , nfft);
-				for(i = 0 , n = 0 ; i < nfft/2 ; i++, n+=2) {
-					Maux[k][n][m]   = creal(a[i]);
-					Maux[k][n+1][m] = cimag(a[i]);
-				}
-			}
-		}
-
-		//Copy to ADCIG (sum over all h)
-		for(k = 0; k < pADCIG->nx ; k++)
-			for(m = 0; m < pADCIG->nq; m++)
-				for(i = 0; i < pADCIG->nz; i++)
-					pADCIG->ADCIG[k][m][i] += creal(Maux[k][i][m]);
-		
-		printf ("End of step %d\n", j);
-
-	} //End of subsurface offset loop
-
-	//Scaling factor!!
-	for(k = 0; k < pADCIG->nx ; k++)
-		for(m = 0; m < pADCIG->nq; m++)
-			for(i = 0; i < pADCIG->nz; i++)
-				pADCIG->ADCIG[k][m][i] /= (hlst-hfst+1);//pADCIG->nh;
-
-	printf("ADCIG calculated\n");
-
-
-	free(taper);
-	free(phaseShift);
-	free(M);
-	free(Maux);
-	free(a);
-	free(b);
-	free(trigs1);
-	free(trigs2);
-
+	//Phase shift to angles
+	for(k = 0; k < pADCIG->nx; k++) {
+	  for(i = 0; i < nfft/2; i++) {
+	    
+	    memset (Maux[k][i], 0.f, pADCIG->nq * sizeof(float complex));
+	    
+	    for(m = 0; m < pADCIG->nq; m++) {
+	      for(n = 0; n < pADCIG->nxWin; n++) {
+		int xi = k + (n-pADCIG->nxWin/2);
+		if (xi >=0 && xi < pADCIG->nx)
+		  Maux[k][i][m] += M[j][xi][i] * phaseShift[i][m][n] * taper[n];
+	      }
+	      //Scaling Factor!!
+	      Maux[k][i][m] /= pADCIG->nxWin;
+	    }
+	  }
+	}
+      } // End of parallel region
+      
+      //Inverse 1D Real FFT (Kz->z)
+      for(k = 0 ; k < pADCIG->nx ; k++) {
+	for(m = 0 ; m < pADCIG->nq ; m++) {
+	  for(i = 0 ; i < nfft/2 ; i++)
+	    a[i] = Maux[k][i][m];
+	  rfftcr(a , b , trigs2 , trigs1 , nfft);
+	  for(i = 0 , n = 0 ; i < nfft/2 ; i++, n+=2) {
+	    Maux[k][n][m]   = creal(a[i]);
+	    Maux[k][n+1][m] = cimag(a[i]);
+	  }
+	}
+      }
+      
+      //Copy to ADCIG (sum over all h)
+      for(k = 0; k < pADCIG->nx ; k++)
+	for(m = 0; m < pADCIG->nq; m++)
+	  for(i = 0; i < pADCIG->nz; i++)
+	    pADCIG->ADCIG[k][m][i] += creal(Maux[k][i][m]);
+      
+      printf ("End of step %d\n", j);
+      
+    } //End of subsurface offset loop
+    
+    //Scaling factor!!
+    for(k = 0; k < pADCIG->nx ; k++)
+      for(m = 0; m < pADCIG->nq; m++)
+	for(i = 0; i < pADCIG->nz; i++)
+	  pADCIG->ADCIG[k][m][i] /= (hlst-hfst+1);//pADCIG->nh;
+    
+    printf("ADCIG calculated\n");
+    
+    
+    free(taper);
+    free(phaseShift);
+    free(M);
+    free(Maux);
+    free(a);
+    free(b);
+    free(trigs1);
+    free(trigs2);
+    
 }
 
 
@@ -326,7 +328,8 @@ void HO2ADMP (stADCIG *pADCIG, int nthread, int fsth, int lsth, int xCIG) {
 	float complex *trigs1, *trigs2;
 
 	//Find nfft
-    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++);
+    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++)
+      ;
     	nfft = (int)pow(2, i);
 	nfft *= 2;
 
@@ -625,7 +628,8 @@ void ADscat2HO (stADCIG *pADCIG, int nthread, int taperFact) {
 	float complex *trigs1, *trigs2;
 
 	//Find nfft
-    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++);
+    for(i = 0 ;pow(2, i) < pADCIG->nz ;i++)
+      ;
     	nfft = (int)pow(2, i);
 	nfft *= 2;
 

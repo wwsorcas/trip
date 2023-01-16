@@ -1496,13 +1496,13 @@ int init_tracegeom(tracegeom * tg,
     mygethdval(&(otr.tr),"tracf",&val);
     tg->tracf[tg->ntraces]=vtoi(hdtype("tracf"),val);
 
-    if ((tg->tracl[tg->ntraces]==0)) 
+    if (tg->tracl[tg->ntraces]==0) 
       tg->tracl[tg->ntraces]=itracl+itr;
-    if ((tg->tracr[tg->ntraces]==0))
+    if (tg->tracr[tg->ntraces]==0)
       tg->tracr[tg->ntraces]=tg->tracl[tg->ntraces];
-    if ((tg->tracf[tg->ntraces]==0))
+    if (tg->tracf[tg->ntraces]==0)
       tg->tracf[tg->ntraces]=itr+1;
-    if ((tg->fldr[tg->ntraces]==0))
+    if (tg->fldr[tg->ntraces]==0)
       tg->fldr[tg->ntraces]=tg->irec+1;
 
 #ifdef IWAVE_VERBOSE

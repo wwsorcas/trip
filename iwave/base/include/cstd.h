@@ -10,8 +10,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <omp.h>
+//#include <omp.h>
 
 //--- omp ---
-#define OMP_CHUNK_SIZE 32
+//#define OMP_CHUNK_SIZE 32
 

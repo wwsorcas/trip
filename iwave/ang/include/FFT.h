@@ -156,28 +156,30 @@ void AllocAuxFFT(stFFT *pFFT , int n3 , int n2 , int n1)
 	int i;
 
 	//Calculate n1_nfft and n2_nfft size (power of 2)
-    for(i = 0 ; pow(2, i) < n1 ; i++);
-    	pFFT->n1_nfft = (int)pow(2, i);
-    for(i = 0 ; pow(2 , i) < n2 ; i++);
-    	pFFT->n2_nfft=(int)pow(2, i);
-	//Double the model size by zero-padding - avoid rap-around effect 
-	pFFT->n1_nfft *= 2;
-	pFFT->n2_nfft *= 2;
-
-	//Memory allocation
+    for(i = 0 ; pow(2, i) < n1 ; i++)
+      ;
+    pFFT->n1_nfft = (int)pow(2, i);
+    for(i = 0 ; pow(2 , i) < n2 ; i++)
+      ;
+    pFFT->n2_nfft=(int)pow(2, i);
+    //Double the model size by zero-padding - avoid rap-around effect 
+    pFFT->n1_nfft *= 2;
+    pFFT->n2_nfft *= 2;
+    
+    //Memory allocation
     pFFT->M = alloc_complex_cube (n3, pFFT->n2_nfft, pFFT->n1_nfft);
-	pFFT->a = alloc_complex_array(pFFT->n1_nfft);
-	pFFT->b = alloc_complex_array(pFFT->n1_nfft);
-	pFFT->c = alloc_complex_array(pFFT->n2_nfft);
-	pFFT->d = alloc_complex_array(pFFT->n2_nfft);
-	pFFT->trigs1 = alloc_complex_array(pFFT->n1_nfft);
-	pFFT->trigs2 = alloc_complex_array(pFFT->n1_nfft/2);
-	pFFT->trigs3 = alloc_complex_array(pFFT->n2_nfft);
+    pFFT->a = alloc_complex_array(pFFT->n1_nfft);
+    pFFT->b = alloc_complex_array(pFFT->n1_nfft);
+    pFFT->c = alloc_complex_array(pFFT->n2_nfft);
+    pFFT->d = alloc_complex_array(pFFT->n2_nfft);
+    pFFT->trigs1 = alloc_complex_array(pFFT->n1_nfft);
+    pFFT->trigs2 = alloc_complex_array(pFFT->n1_nfft/2);
+    pFFT->trigs3 = alloc_complex_array(pFFT->n2_nfft);
 	
-	//frequency allocation
-	pFFT->k1 = alloc_array(pFFT->n1_nfft/2);
-	pFFT->k2 = alloc_array(pFFT->n2_nfft);
-	
+    //frequency allocation
+    pFFT->k1 = alloc_array(pFFT->n1_nfft/2);
+    pFFT->k2 = alloc_array(pFFT->n2_nfft);
+    
 }
 
 

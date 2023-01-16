@@ -938,7 +938,7 @@ namespace TSOpt {
 #endif
 		for (size_t k=0; k<w->getStateArray().size(); k++) {
 		  if (w->getStateArray()[k]->printact > 5) {
-		    fprintf(stream,"iwsim::run: before synch k=%d it=%d iv=%d\n"
+		    fprintf(stream,"iwsim::run: before synch k=%lu it=%d iv=%d\n"
 			    ,k,it,iv);
 		    fflush(stream);
 		  }
@@ -948,7 +948,7 @@ namespace TSOpt {
 #endif
 		  synch(w->getStateArray()[k],fwd,it,iv,ic,stream);
 		  if (printact>5) {
-		    fprintf(stream,"iwsim::run: after synch k=%d it=%d iv=%d\n",
+		    fprintf(stream,"iwsim::run: after synch k=%lu it=%d iv=%d\n",
 			    k,it,iv);
 		    fflush(stream);
 		  }

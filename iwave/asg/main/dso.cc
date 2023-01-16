@@ -147,7 +147,7 @@ int main(int argc, char ** argv) {
 	std::stringstream stuff;
 	RVL::AdjointTest(lrop,rnd,stuff);
 	if (retrieveGlobalRank()==0) {
-	  fprintf(stream,stuff.str().c_str());
+	  fprintf(stream,"%s",stuff.str().c_str());
 	}
       }
 
@@ -321,7 +321,7 @@ int main(int argc, char ** argv) {
 	  (*optr)<<"alpha_+^2     = "<<alphaplussq<<"\n";
 	  if ((outfile.size()==0) && (retrieveGlobalRank()==0)) {
 	    std::shared_ptr<std::stringstream> fish = dynamic_pointer_cast<std::stringstream>(optr);
-	    fprintf(stream,fish->str().c_str());
+	    fprintf(stream,"%s",fish->str().c_str());
 	  }
 	}
       }
@@ -351,7 +351,7 @@ int main(int argc, char ** argv) {
 	    alg.run();
 	    if ((outfile.size()==0) && (retrieveGlobalRank()==0)) {
 	      std::shared_ptr<std::stringstream> fish = dynamic_pointer_cast<std::stringstream>(optr);
-	      fprintf(stream,fish->str().c_str());
+	      fprintf(stream,"%s",fish->str().c_str());
 	    }	  
 	  }
 	}

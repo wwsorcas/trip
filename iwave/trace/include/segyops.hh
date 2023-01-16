@@ -666,9 +666,9 @@ namespace TSOpt {
 
   class OpZFwdFO: public RVL::BinaryLocalFunctionObject<float> {
 
-  private:
+    //  private:
 
-    float fac;
+    //float fac;
     
   public:
         
