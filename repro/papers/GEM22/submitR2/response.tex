@@ -1,0 +1,189 @@
+COMMENTS FOR THE AUTHOR:
+
+Dear Author, 
+Thanks for this revised version of your  study. Both reviewers acknowledge the significant improvement of this new version. They still point some typos, and comments/questions I think would be beneficial to consider in a further revised version of your study before we accept it for publication. See these comments appended below. 
+Thanks a lot for your work and this interesting study, 
+Best regards,
+Ludovic Métivier. 
+
+=============================================================================================================================================================================================================================
+
+Reviewer #1: The manuscript has been considerably revised. The revised version is much better. The early introduction of the examples and the overview of the time reversal method significantly improve the readability. I would like to recommend the manuscript for publication. 
+I have, however, two questions and I have detected typos (I am afraid that there are many more).
+
+Comment 1. what are the blue and red rays in Figure 3 ?
+the blue rays start from the source, the red rays start from a point located just below the source. As a result, some red and blue rays are very close to each other.
+
+Response: I have created a clearer ray diagram overlain on the bulk modulus color scale plot (Figure 3) and added another figure and some discussion to explain the ray geometry. The red and blue rays start at the same source point and are simply different parts of the same point source ray field. The diving wave example is similar to that depicted in Figure 4.20a in Sheriff and Geldart, {\em Exploration Seismology}. It features a homogeneous upper layer, a middle layer in which the velocity increases rapidly, and a homogeneous lower layer, with smooth transitions between the layers. As Sheriff and Geldart say, ``A velocity gradient in a layer that is substantially higher than the velocity gradient above the bed, as in fig. 4.20a, causes a very sharp increase in ray path curvature and a folding back of the time-distance curve. Such a triplication of branches of the time-distance curve (fig. 4.20c) is usually difficult to see because the later branches become lost in the later cycles of the earlier arrivals.'' To show clearly how this triplication happens, I've included a plot of arrival times in my introduction of this example (new Figure 4b). The part of the arrival time curve in red corresponds to the those red rays in the ray plot (Figure 3) that refract back to the receiver surface, and similarly for the blue rays. Note that the red branch is close enough to the direct arrival time that its chief effect is an apparent wavelet change in the direct arrival. Both red and blue branches are really diving wave arrival times, but only the waveform arrival corresponding to the blue branch can be isolated by a simple mute.
+
+Comment: on page 23, I do not understand the following sentence:
+The function a_0 is a frequency-independent envelope, equal to 1 where h is non-zero.
+
+Response: This section skipped over a number of steps, which I have included in the revision. I believe that I have explained this idea.
+
+typos:
+
+page 2
+certainluy
+->
+certainly
+
+page 5
+veloity
+->
+velocity
+
+propblem
+->
+problem
+
+tahnks 
+->
+thanks to
+
+is proportion to 
+->
+is proportional to
+
+page 6
+
+slowiy
+->
+slowly
+
+page 8
+increasting
+->
+increasing
+
+page 10
+
+to generate a data traces
+
+page 13
+
+of sigma 
+-> 
+of $\Sigma$
+
+page 16
+representaion 
+->
+representation 
+
+page 21
+too many s in Psshat{p} 
+
+page 22
+Speclializing
+->
+Specializing
+
+last equation: confusion between s and t
+partial v partial t
+the use of s is very confusing (it is the symbol of surface !)
+
+page 23
+first equation: confusion between s and t
+
+SInce 
+->
+Since
+
+check the sentence:
+is asymptotic the pressure field of to an incoming solution
+
+last equation: confusion between s and t
+
+page 24
+parenthesis in lambda(...
+
+page 26
+parenthesis in (tilde{p},tilde{v}
+
+negligbly -> negligibly
+
+defintiion -> definition
+
+page 29
+as it need  
+->
+as it needs
+
+to ne discussed
+->
+to be discussed
+
+page 31
+parenthesis in (equations 28,29
+
+page 33
+typo in: and equation 48, .
+
+page 34
+computationa
+->
+computational
+
+page 36
+ismeasured 
+->
+is measured 
+
+page 37
+parenthesis in (Figure 15b
+
+page 39
+Madacascar
+->
+Madagascar
+
+
+=============================================================================================================================================================================================================================
+
+Reviewer #2: Overall the paper is much improved and I now found it relatively easy to follow and understand.  I particularly liked the 'steps' introduced as a way to summarize what you've done so far and to give the reader further help in actually implementing these ideas.  (I also liked the roadmap section at the beginning.)  I also found the new figures much easier to compare and understand.
+
+There are a few areas where I think things could still be somewhat clearer, which are: 
+
+Comment 1. In the introduction p 3 line 44: Perhaps say in a few words why you isolate the diving rays.  Also later when you show your ray picture (Figure 3) with the diving waves, first I think I see red rays beside the blue ones, and second just out of curiosity, what is your definition of diving wave, because I see things that turn back to the surface that you do not deem diving rays.  
+
+Response: You are of course correct that the ``things that turn back'' are another diving wave branch. I've considerably revised the figure, its caption, and the discussion in the text, intending to answer all of these concerns.
+
+Comment 2. You relate what you are doing to photo-acoustic tomography, which is neat and certainly was the motivation.  As I read the paper though, I can't help thinking that what you are doing is a lot like running RTM back to the source.  I expect that other readers may also wonder what is really fundamentally different between RTM and this approach, so I think that adding something to make this comparison explicit would be helpful.
+
+Response: this is a very good question. I have added a paragraph describing the role of the D-to-N map in ``true amplitude RTM'', aka approximate Born inversion. In fact it's quite similar to the role described in this paper for the inverse surface source problem. In both cases the core idea is to backpropagate the actual data field. In the present case, that is a transmitted field; in true-amplitude migration, it's the scatterered field. Reconstructing these from the data is the key to inversion in both cases, and the D-to-N map is the key to reconstruction.
+ 
+Comment 3. In figure 2 and the lens example in general, why is the source you used not on the source surface?  Perhaps I have misunderstood the meaning of the source surface, and that could be clarified.  I guess that the source should be below that surface so the rays come into it from below and then leave it 'from above' and enter the receiver surface from below?   I am sure that one could phrase that much better than I have here, but as I was reading it was odd to see the source below what's called the source surface.
+
+Response: I could have placed the source on the source surface. I created a parallel sequence of experiments for the lens example using that configuration. However a point source cannot be reconstructed, at least not with the simple transmission geometry used in this paper, since a lot of energy propagates away ``to China'' and is not available in the inversion. You can reconstruct a source that generates the data, but it isn't a point source - if the velocity is right, it is more or less a dip-filtered version of the point source. Instead, I chose to somewhat artificially create a source that can actually be reconstructed fairly accurately in this example: the rays carrying significant energy actually make it to the receiver surface within the time limit.
+
+The diving wave example uses a point source on the source surface. You will notice that the reconstructed source (Figure 9b) appears to be a dip-filtered point source, regarded as a function on the source surface.
+
+Comment 4, In Figure 3, there are some rays that look weird to me, at around (8000,1000) and (12000,1000) This is just a gradient so I am expecting more-or-less circular wavefronts.  I don't know that this really requires a comment or anything, but maybe a mention as to what is going on there.  
+
+Response: Figure 3 and surrounding discussion needed some tuning up. Note that the gradient-to-constant transition is smoothed, and the gradient is large enough to generate a triplication. Having homogeneous layers top and bottom really messes things up. Sheriff and Geldart, {\em Exploration Geophysics}, discussion of fig. 4.20a, have a nice discussion of this behaviour. There are segments of circles in there, but overall these rays are not close to circles. I think the description now in the text, and the inclusion of the arrival time plot, will make things clear enough.
+
+Comment 5. p 11 line 32, what do you mean by 'must be localized' in which variables?
+
+Response: The PAT construction does not apply to the surface source inversion problem, since there is no bounding surface on all of which the pressure field is measured/known. I get around this by localizing in space-time. For short-time propagation, the signal does not propagate far from the source surface, so an artificial bounding surface can be added on which the field is automatically zero. So the field can be viewed as the solution of a local pressure boundary value problem, for a little while. Then it can be converted to a local solution of a problem with surface source, as described. Since the field vanishes near the artificial boundary, you can simply get rid of it, and if the pressure field on the boundary is only non-zero for a short time, that's it - just let it propagate in space time. Finally, any pressure distribution on the source surface can be broken up in to a sum of terms, each only non-zero for a short interval. Apply the short-time-window construction to each summand, and add them up.
+
+Comment 6. Figure 6b has quite a different source than that shown in Figure 2b.  I think that when you talk about Figure 6 it would be good to re-iterate why you are getting a different source here (I think velocity vs pressure, but remembering that many people only look at the pictures this will be confusing).
+
+Response: I think this is actually explained in the caption of Figure 7 (formerly Figure 6), also in the text discussion. This is the result of inversion {\em in the wrong velocity}. The data (Figure 2a or 2c) is inverted here in a homogeneous model - so the source does not look at all like that (2b) used to generate the data in the lens model.
+
+Typos: I am {\em very} grateful to both referees for taking the trouble to list many of the embarassingly extensive typos. I believe that I have fixed all of these, and some others which we won't mention. I only hope I have not created yet more...
+
+
+A very-incomplete typo list (I do suggest getting out your grammatical fine-toothed comb and checking for more of these): 
+
+-Spelling of constraint in the abstract
+-p 6 line 23 "is not be well-defined"
+-p 13 line 24 there is a sigma without a \
+-p 16 line 59 spelling of representation
+-P 21 line 40 The sentence beginning "Differentiate" is missing some important part-of-speech for which I should have a name but don't, perhaps a subject?
+-p26 line 28 missing )
+-p26 line 48 sentence fragment beginning "To illustrate"
+-p26 line 62 missing space in is measured
+
+
+
