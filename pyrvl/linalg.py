@@ -278,9 +278,9 @@ def hdrcomp(vec1, vec2):
         cmd = os.path.join(TRIP,'iwave/trace/main/SEGYCmpHdrs.x')
         ret = os.system(cmd + ' in1=' + vec1 + ' in2=' + vec2)
         if ret != 0:
-#            print('command:')
-#            print(cmd + ' in1=' + vec1 + ' in2=' + vec2)
-#            print('failed with return value ' + str(ret))
+            #print('command:')
+            #print(cmd + ' in1=' + vec1 + ' in2=' + vec2)
+            #print('failed with return value ' + str(ret))
             return False
     else:
         return False
@@ -367,7 +367,7 @@ def rsfcomp(vec1, vec2):
 
         return False
     
-def simplot(f, addcb=False, width=7, asprat=-1):
+def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
 
     RSFROOT = os.getenv('RSFROOT')
     if not os.path.exists(RSFROOT):
@@ -411,6 +411,10 @@ def simplot(f, addcb=False, width=7, asprat=-1):
     datafile=str(inp.get('in'))
     # print('datafile=' + datafile[2:len(datafile)-3])
     data=inp.read()
+
+    # start with the clip
+    if clip is not None:
+        np.clip(a=data, a_min=-clip, a_max=clip, out=data)
 
     # line plot
     if n2==1:
