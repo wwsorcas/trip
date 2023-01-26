@@ -115,7 +115,7 @@ example \cite{GauTarVir:86,VirieuxOperto:09,PladysBrossierLiMetivier:GEO21}.
 Source extension is one approach to avoiding this``cycle-skipping''
 obstacle. It consists in imposing the wave equation as a soft
 constraint, allowing the source field $\bff$ to have more degrees of
-freedom than is permitted by a faithful model model of the seismic
+freedom than is permitted by a faithful model of the seismic
 experiment, and constraining these additional degrees of freedom by
 means of an additive quadratic penalty modifying the problem
 \ref{eqn:ols}:
@@ -1090,7 +1090,7 @@ $\Sigma_s$. The outward unit normal at $\Sigma_s$ is ${\bf n}_s ={\bf
 $h_r=2P_rv_z$ (the field $P_rv_z$ is depicted in Figure \ref{fig:dfwdvzlh0}). After reverse time propagation , the approximate
 inversion $\hat{h}_s=2P_s\hat{v}_z$ is shown in Figure
 \ref{fig:dinvhslh0}. It differs considerably from the source field used to
-generate the data (Figure \ref{fig:dsrcphh0}), however when used as the
+generate the data (Figure \ref{fig:dhshh0}), however when used as the
 source in forward modeling (system \ref{eqn:awesrcglob}) {\em with the
   same material parameters used in the inversion}, it generates a
 pressure gather on $\Sigma_r$ (Figure \ref{fig:drerecplh0}) very
@@ -1107,7 +1107,7 @@ difference is plotted on the same color scale in Figure
     Figure \ref{fig:dfwdplh0}. (b) Source function resulting from time-reversal inversion
     of pressure data in Figure \ref{fig:dfwdplh0}. Propagation in homogeneous
     bulk modulus model (different from the model used to generate the
-    data!). Plotted with same color scale as Figure \ref{fig:dsrcphh0}.}
+    data!). Plotted with same color scale as Figure \ref{fig:dhshh0}.}
 \end{figure}
 
 \begin{figure}
@@ -1197,7 +1197,7 @@ $\Sigma$ as the application of an operator.
 
 Observe that in principle it's not necessary to
 supply the normal velocity at the source (or receiver) surface, since
-it's determined locally by the pressure on the surface, or causal (or
+it's determined locally by the pressure on the surface, for causal (or
 anti-causal) fields. This follows from the observation that the system
 \ref{eqn:aweloc} has a unique solution, a by-product of the
 conservation of energy (see for example \cite{Lax:PDENotes}, section
@@ -1299,7 +1299,7 @@ Specializing to the pressure modeling operator $S$ (equation
 so to calculate the adjoint of $S$ applied to $h_r$, solve system
 \ref{eqn:awerecglob} (with $f_r=0$) and extract the pressure at $\Sigma_s$:
 \[
-  S^T(h_r) = -P_s \hat{p}.
+  S^Th_r = -P_s \hat{p}.
 \]
 
 Combined with the definitions of the pressure-to-source operators
@@ -1373,7 +1373,7 @@ symmetric. However, it is {\em approximately symmetric} in the
 high-frequency sense. This fact follows from a high-frequency
 asymptotic analysis, a sketch of which follows for the special case of
 a planar source surface
-$\Lambda_s=\{z=z_s\}$, as in the two examples. Since the same reasoning
+$\Sigma_s=\{z=z_s\}$, as in the two examples. Since the same reasoning
 applies to $\Lambda_r$, I will omit the subscript for the remainder of
 this subsection.
 
@@ -1469,7 +1469,7 @@ defined by the asymptotic series in $\omega$ developed above. Its dominant term,
 $O(1)$ (order 0) in $\omega$, is
 \[
   \lambda^0(x,y,t,\xi,\eta,\omega) = 2\frac{( c^{-2}(x,y,z)-
-    \xi^2+\eta^2)^{1/2}}{\rho} + O(1/\omega)
+    (\xi^2+\eta^2))^{1/2}}{\rho} + O(1/\omega)
 \]
 \begin{equation}
   \label{eqn:lamsymb}
@@ -1477,7 +1477,7 @@ $O(1)$ (order 0) in $\omega$, is
 \rho)^{-1/2}\left(1-\frac{\kappa(k_x^2+k_y^2)}{\rho \omega^2}\right)^{1/2} + O(1/\omega).
 \end{equation}
 In the final expression, the slownesses $\xi,\eta$ have been replaced
-by the Fourier variables $k_x=x\xi, k_y=y\eta$. Note that as a
+by the Fourier variables $k_x=\omega\xi, k_y=\omega\eta$. Note that as a
 function of $k_x,k_y,\omega$, $\lambda^0$ is homogeneous of order
 0. It is easy to see that the $N$th term of the asymptotic series
 defining $\lambda$ is of homogeneous order $-N$.
@@ -1556,7 +1556,7 @@ same name in the earlier discussion, solving
 \label{eqn:awesrcvzmod}
   \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & 
                                                       - \nabla \cdot \tilde{\bv}, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & f_s {\bf n}\delta_{\Sigma}- \nabla \tilde{p}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & f_s {\bf n}\delta_{\Sigma_s}- \nabla \tilde{p}, \nonumber \\
   \tilde{p} & = & 0 \mbox{ for }  t \ll 0, \nonumber \\
   \tilde{\bv} & = & {\bf 0} \mbox{ for }  t \ll  0.       
 \end{eqnarray}
@@ -1609,9 +1609,9 @@ Figure \ref{fig:daltplh0} shows $\Pi_0{\cal S}\Pi_1^Tf_s$, Figure
   \subfloat[\label{fig:dsrcphh0}]{\includegraphics[width=0.45\textwidth]{dsrcphh0.pdf}}
   \subfloat[\label{fig:dsrcvzhh0}]{\includegraphics[width=0.45\textwidth]{dsrcvzhh0.pdf}}
   \caption{(a) Pressure gather for Lens example on source surface
-    $\Sigma_s=\{z=1000\mbox{ m}\}$, generated by point source at
+    $\Sigma_s=\{z=3000\mbox{ m}\}$, generated by point source at
     $(3500,3500)$ m. (b) Normal velocity gather for Lens example on source surface
-    $\Sigma_s=\{z=1000\mbox{ m}\}$, generated by point source at
+    $\Sigma_s=\{z=3000\mbox{ m}\}$, generated by point source at
     $(3500,3500)$ m.}
 \end{figure}
 
@@ -1629,7 +1629,7 @@ Figure \ref{fig:daltplh0} shows $\Pi_0{\cal S}\Pi_1^Tf_s$, Figure
     (b) Pressure gather on receiver surface
     $\Sigma_r=\{z=1000\mbox{ m}\}$ due to extended velocity source = 2
     $\times$ pressure gather shown in Figure
-    \ref{fig:dsrcvzhh0}. (c) Difference (b)-(a), plotted on same color
+    \ref{fig:dsrcphh0}. (c) Difference (b)-(a), plotted on same color
     scale.}
 \end{figure}
 
@@ -1671,14 +1671,27 @@ The first row of
   \label{eqn:lamidea}
   \Pi_0{\cal S}\Pi_1^T f_s \approx  \frac{1}{2} S\Lambda_sf_s.
 \end{equation}
-Apply the approximate inverse construction in the form
-\ref{eqn:altinv} to solve \ref{eqn:lamidea} for $\Lambda_s$:
+Apply $S^{\dagger}$ in the form \ref{eqn:altinv} to both sides to obtain
 \begin{equation}
   \label{eqn:lamident}
-  \Lambda_s \approx -8\Pi_1{\cal S}^T\Pi_1^T\Pi_0 {\cal S}\Pi_1^T.
+ S^{\dagger} S \Lambda_s \approx -8\Pi_1{\cal S}^T\Pi_1^T\Pi_0 {\cal S}\Pi_1^T.
 \end{equation}
+As earlier noted, $S^{\dagger}$ is an approximate right inverse to
+$S$, not an approximate left inverse, so the right-hand side of
+\ref{eqn:lamident} is not (necessarily) an approximation to
+$\Lambda_s$. However, apply $S$ to both sides and use the relation
+\ref{eqn:rightinv}:
+\begin{equation}
+  \label{eqn:goodenuf}
+ S \Lambda_s \approx SS^{\dagger} S \Lambda_s \approx S(-8\Pi_1{\cal S}^T\Pi_1^T\Pi_0 {\cal S}\Pi_1^T).
+\end{equation}
+That is, the right-hand side of equation \ref{eqn:lamident} differs
+from $\Lambda_s$ by an operator approximately annihilated by $S$.
+
 This identity is the major result of this section: it shows how
-to compute that action of $\Lambda_s$ by propagating the input
+to compute that action of $\Lambda_s$, up to an error with negligible
+effect on the subsequent
+action of $S$, by propagating the input
 pressure trace, identified as a source for the velocity evolution,
 forward in time 
 reading off the pressure trace on $\Sigma_r$, identifying it once more as
@@ -1714,6 +1727,12 @@ than $\Sigma_r$. Thus obtain an approximation for $\Lambda_s$
   \label{eqn:lamnear}
  \Lambda_s \approx -8\Pi_1{\cal S}_a^T\Pi_1^T\Pi_0 {\cal S}_a\Pi_1^T. 
 \end{equation}
+In view of the result \ref{eqn:goodenuf}, the meaning of this
+approximation is that the difference of the outputs of $S$, applied to
+the two sides, is negligible. Since $\Lambda_s$ is used only in
+combination with $S$, it is tempting to take the right-hand side of
+equation \ref{eqn:lamnear} as the {\em definition} of $\Lambda_s$. This
+apparently dramatic step will be fully justified in the next section.
 
 Using an auxiliary receiver datum closer to the source surface to
 compute that pressure-to-source maps (only!) has two favorable consequences:
@@ -1758,12 +1777,12 @@ this construction.
 In the iterative methods to be discussed in the next section, it will
 be important to be able to compute the transpose of the
 pressure-to-source operator - not approximately, but to machine
-precision. The prescription \ref{eqn:lamnear} only
-defines an approximation. However simply substituting the right-hand
-side of equation \ref{eqn:lamnear} - in effect, substituting the
-approximation for the operator that it approximates - gives an
-operator variant of $\Lambda_s$ with an accessible
-machine-precision adjoint:
+precision. The prescription \ref{eqn:lamnear} only defines an
+approximation. However simply substituting the right-hand side of
+equation \ref{eqn:lamnear} for $\Lambda_s$, as suggested above - in
+effect, substituting the approximation for the operator that it
+approximates - gives an operator variant of $\Lambda_s$ with an
+accessible machine-precision adjoint:
 \begin{equation}
   \label{eqn:lamneartr}
  \Lambda_s^T \approx -8\Pi_1{\cal S}_a^T\Pi_0^T\Pi_1 {\cal S}_a\Pi_1^T. 
