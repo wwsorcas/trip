@@ -375,7 +375,49 @@ class Function(ABC):
     @abstractmethod
     def myNameIs(self):
         pass
+
+# function composition f after g
+class comp(Function):
+
+    def __init__(self,f,g):
+        try:
+            if f.getDomain() != g.getRange():
+                raise Exception('Error: domain of output fcn ne range of input fcn')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.comp constructor')
+        else:
+            self.f = f
+            self.g = g
     
+    def getDomain(self):
+        return self.g.getDomain()
+
+    def getRange(self):
+        return self.f.getRange()
+
+    def apply(self,x,y):
+        try:
+            z = self.g(x)
+            self.f.apply(z,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.comp.apply')
+
+    def raw_deriv(self,x):
+        try:
+            return lopcomp(self.f.deriv(self.g(x)), self.g.deriv(x)) 
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.comp.raw_deriv')
+
+    def myNameIs(self):
+        print('vcl.comp object: f composed with (after) g')
+        print('composition of input function (g)')
+        self.g.myNameIs()
+        print('and output function (f)')
+        self.f.myNameIs()
+       
 class LinearOperator(Function):
 
     def apply(self,x,y):
@@ -434,7 +476,48 @@ class transp(LinearOperator):
         print('adjoint operator of:')
         self.op.myNameIs()
     
+class lopcomp(LinearOperator):
 
+    def __init__(self,a,b):
+        try:
+            if a.getDomain() != b.getRange():
+                raise Exception('Error: domain of output fcn ne range of input fcn')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.lopcomp constructor')
+        else:
+            self.a = a
+            self.b = b
+    
+    def getDomain(self):
+        return self.b.getDomain()
+
+    def getRange(self):
+        return self.a.getRange()
+
+    def applyFwd(self,x,y):
+        try:
+            z = self.b*x
+            self.a.applyFwd(z,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.lopcomp.applyFwd')
+
+    def applyAdj(self,x,y):
+        try:
+            z=transp(self.a)*x
+            self.b.applyAdj(z,y);
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.lopcomp.applyAdj')
+
+    def myNameIs(self):
+        print('vcl.lopcomp object: a composed with (after) b')
+        print('composition of input lin op (b)')
+        self.b.myNameIs()
+        print('and output lin op (a)')
+        self.a.myNameIs()
+           
 # makes a list of linear ops with same range act like a linear op on product
 # space
 # row of linear ops, acts on a column of vectors (vector in product space)
@@ -509,6 +592,8 @@ class RowLinearOperator(LinearOperator):
         for i in range(0,len(self.oplist)):
             print('*** Component ' + str(i) + ':')
             self.oplist[i].myNameIs()
+
+
     
 class Jet:
 

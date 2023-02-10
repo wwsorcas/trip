@@ -215,6 +215,184 @@ class DoubleRosie(vcl.Function):
         print('DoubleRosie: npvc example of vcl.Function class')
         print('Rosenbrock 2x2, twice, scale factors 10 and 2')
         print('domain = R^4, range = R^4')
+
+# test bounds
+
+def testbounds(u, l, x):
+    if not np.min(u.data-l.data) > 0:
+        return False
+    if not np.min(u.data-x.data) > 0:
+        return False
+    if not np.min(x.data-l.data) > 0:
+        return False
+    return True
+
+# double rosie with bounds test
+
+class DoubleRosieWithBounds(vcl.Function):
+
+    def __init__(self,dom,u,l):
+        try:
+            if dom.dim != 4:
+                raise Exception('Error: input dims wrong')
+            if u.space != dom:
+                raise Exception('Error: input dims wrong')
+            if l.space != dom:
+                raise Exception('Error: input dims wrong')            
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc:DoubleRosie')
+        else:
+            self.dom = dom
+            self.u = u
+            self.l = l
+            self.myrosie = DoubleRosie(dom)
+        
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.dom
+
+    def apply(self,x,y):
+        try:
+            if not testbounds(self.u,self.l,x):
+                raise Exception('bounds violated')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.DoubleRosieWithBounds.apply')
+        else:
+            self.myrosie.apply(x,y)
+            return y
+
+    def raw_deriv(self,x):
+        try:
+            if not testbounds(self.u,self.l,x):
+                raise Exception('bounds violated')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.DoubleRosieWithBounds.raw_deriv')
+        else:
+            return self.myrosie.raw_deriv(x)
+
+    def myNameIs(self):
+        print('DoubleRosieWithBounds')
+        
+# mapping from R^n to cube defined by bounds
+class ulbounds(vcl.Function):
+
+    def __init__(self, dom, u, l):
+        try:
+            if u.space != l.space:
+                raise Exception('Error: upper and lower bound arrays incompatible')
+            if u.space != dom:
+                raise Exception('Error: upper and lower bound arrays incompatible with domain npvc space')
+            if not np.min(u.data-l.data) > 0:
+                raise Exception('Error: lower bounds not all greater than upper bounds')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.ulbounds')
+        else:
+            self.dom = dom
+            self.u = u
+            self.l = l
+            
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.dom
+
+    def apply(self, x, y):
+        y.data = np.copy(0.5*(self.u.data+self.l.data) + 0.5*(self.u.data-self.l.data)*x.data*(np.power(np.ones_like(x.data) + x.data*x.data, -0.5)))
+        return y
+
+    def raw_deriv(self,x):
+        return dulbounds(self.dom, self.u, self.l, x)
+
+    def myNameIs(self):
+        print('ulbounds function')
+
+class dulbounds(vcl.LinearOperator):
+        
+    def __init__(self, dom, u, l, x):
+        try:
+            if u.space != l.space:
+                raise Exception('Error: upper and lower bound arrays incompatible')
+            if u.space != dom:
+                raise Exception('Error: upper and lower bound arrays incompatible with domain npvc space')
+            if not np.min(u.data-l.data) > 0:
+                raise Exception('Error: lower bounds not all greater than upper bounds')            
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.dulbounds')
+        else:
+            self.dom = dom
+            self.u = u
+            self.l = l
+            self.x = x
+
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.dom
+
+    def applyFwd(self, dx, dy):
+        dy.data = np.copy(0.5*dx.data*(self.u.data-self.l.data)*(np.power(np.ones_like(self.x.data) + self.x.data*self.x.data, -1.5)))
+        return dy
+
+    def applyAdj(self, dx, dy):
+        self.applyFwd(dx, dy)
+
+    def myNameIs(self):
+        print('dulbounds')
+
+class invulbounds(vcl.Function):
+        
+    def __init__(self, dom, u, l):
+        try:
+            if u.space != l.space:
+                raise Exception('Error: upper and lower bound arrays incompatible')
+            if u.space != dom:
+                raise Exception('Error: upper and lower bound arrays incompatible with domain npvc space')
+            if not np.min(u.data-l.data) > 0:
+                raise Exception('Error: lower bounds not all greater than upper bounds')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.invulbounds')
+        else:
+            self.dom = dom
+            self.u = u
+            self.l = l
+
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.dom
+
+    def apply(self, x, y):
+        try:
+            if not testbounds(self.u, self.l, x):
+                raise Exception('Error: bounds violated')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.invulbounds.apply')
+        else:
+            num = x.data - 0.5*(self.u.data+self.l.data)
+            den = 0.5*(self.u.data-self.l.data)
+            z=np.divide(num,den)
+            y.data = np.copy(z*np.power(np.ones_like(x.data)-z*z,-0.5))
+            return y
+            
+    def raw_deriv(self,x):
+        raise Exception('Error: npvc.invulbounds.raw_deriv not implemented')
+
+    def myNameIs(self):
+        print('invulbounds function')
+
+
     
 
         
