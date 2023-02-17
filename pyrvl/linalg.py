@@ -299,10 +299,18 @@ def m8rfloat(x,y):
     else:
         return y
 
+def m8rstr(x):
+    return str(x)[2:len(str(x))-3]
+
 def rsfcomp1(vec1, vec2):
     return True
 
-def rsfcomp(vec1, vec2):
+def rsfcomp(vec1, vec2, checkunit=True):
+    ''' 
+    returns true if headers of two rsf files are compatible
+    else false. If checkunit=False, ignores data unit and label,
+    so tests only grid geometry.
+    '''
 
     if sanity(vec1,'rsf') and sanity(vec2,'rsf'):
 
@@ -357,8 +365,10 @@ def rsfcomp(vec1, vec2):
 
         dataunit1=str(inp1.get('unit'))
         dataunit2=str(inp2.get('unit'))
-
-        if dataunit1 != dataunit2:
+        datalabel1=str(inp1.get('label'))
+        datalabel2=str(inp2.get('label'))
+        
+        if checkunit and (dataunit1 != dataunit2 or datalabel1 != datalabel2):
             return False
 
         return True
@@ -366,7 +376,28 @@ def rsfcomp(vec1, vec2):
     else:
 
         return False
+
+def rsfboundstest(vec, u, l):
+
+    if not sanity(vec,'rsf'):
+        raise Exception('Error: rsfboundstest - input not rsf')
+
+    inp=m8r.Input(vec)
+
+    arr=inp.read()
+
+    if np.min(arr) <= l:
+        print('rsfboundstest: file = ' + vec.data)
+        print('  lower bound violated')
+        return False
     
+    if np.max(arr) >= u:
+        print('rsfboundstest: file = ' + vec.data)
+        print('  upper bound violated')
+        return False
+
+    return True
+
 def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
 
     RSFROOT = os.getenv('RSFROOT')

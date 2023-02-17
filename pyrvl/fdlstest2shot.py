@@ -4,6 +4,7 @@ import rsfvc
 import segyvc
 import asg
 import linalg
+import os
 # bulk modulus with lens
 data.model(bulkfile='mstar.rsf', bulk=4.0, nx=401, nz=201,\
                dx=20, dz=20, lensfac=0.7)
@@ -14,11 +15,12 @@ data.model(bulkfile='m0.rsf', bulk=4.0, nx=401, nz=201,\
 data.model(bulkfile='g.rsf', bulk=4.0, nx=401, nz=201,\
                dx=20, dz=20, lensfac=1.0)
 # bandpass filter source at sx=4200, sz=3000 (single trace)
-data.bpfilt(file='wstar.su',nt=251,dt=8.0,s=1.0,\
-                f1=1.0,f2=2.5,f3=7.5,f4=12,sx=4200,sz=3000)
+data.bpfiltgather(file='wstar.su',nt=251,dt=8.0,s=1.0,\
+                    f1=1.0,f2=2.5,f3=7.5,f4=12,\
+                    ntr=1,sxstart=4200,szstart=3000,dsx=1000,dsz=0)
 # create zero data file with same source position, rz=500, rx=[2000,6000]
 data.rechdr(file='data.su',nt=626,dt=8.0,rxmin=2000,rxmax=6000,\
-                ntr=201,rz=1000,sx=4200,sz=3000)
+                ntr=201,rz=1000,sx=4200,sz=3000,delrt=0,nshot=1,dsx=1000)
 # domain and range spaces
 bulksp = rsfvc.Space('mstar.rsf')
 datasp = segyvc.Space('data.su')
@@ -32,6 +34,8 @@ F = asg.fsbop(dom=bulksp, rng=datasp, \
                   nl1=250, nr1=250, nl2=250, nr2=250, pmlampl=1.0)
 # evaluate F[mstar], create noise-free data
 dstar = F(mstar)
+data = vcl.Vector(datasp,'data.su')
+data.copy(dstar)
 #dstar.myNameIs()
 # least-squares function
 JFWI = vcl.LeastSquares(F,dstar)
@@ -43,9 +47,9 @@ t=0.7
 m = vcl.Vector(bulksp)
 m.copy(m0)
 m.linComb(t,mstar,1-t)
-print('J_FWI((1-' + str(t) + ')m_0 + ' + str(t) + ' m_*) = ' + str(JFWI(m)))
+# wrap gradient file in Vector
+g = vcl.Vector(bulksp,'g.rsf')
 # compute gradient, copy to non-transient storage
-print('plot of grad J_FWI((1-' + str(t) + ')m_0 + ' + str(t) + ' m_*):')
-g=JFWI.gradient(m)
-linalg.simplot(g.data, addcb=True, clip=1.e-12)
-
+gtmp=JFWI.gradient(m)
+g.copy(gtmp)
+linalg.simplot(gtmp.data,addcb=True,clip=1e-12)

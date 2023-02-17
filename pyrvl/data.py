@@ -75,7 +75,7 @@ def bpfiltgather(file,nt,dt,s,f1,f2,f3,f4,ntr,sxstart,szstart,dsx,dsz):
 # compute header files for receiver (rechdr) and source (srchdr) lines, at gelev
 # = -1000 and -3000 resp.
 
-def rechdr(file,nt,dt,rxmin,rxmax,ntr,rz,sx,sz,delrt=0):
+def rechdr(file,nt,dt,rxmin,rxmax,ntr,rz,sx,sz,delrt=0,nshot=1,dsx=0):
 
     CWPROOT = os.getenv('CWPROOT')
     sunull = os.path.join(CWPROOT,'bin/sunull')
@@ -87,10 +87,13 @@ def rechdr(file,nt,dt,rxmin,rxmax,ntr,rz,sx,sz,delrt=0):
          ' ntr=' + str(ntr) + \
          ' dt=' + str(0.001*dt) + ' | ' + \
          sushw + ' key=gx a=' + str(rxmin) + \
-         ' b=' + str((rxmax-rxmin)/(ntr-1)) + \
-         ' j=' + str(ntr) + ' | ' + \
-         sushw + ' key=gelev,selev,sx,delrt' + \
-         ' a=' + str(-rz) + ',' + str(-sz) + ',' + str(sx) + ',' + str(delrt) + ' | ' + \
+         ' b=' + str((rxmax-rxmin)/((ntr/nshot)-1)) + \
+         ' j=' + str(ntr/nshot) + ' | ' + \
+         sushw + ' key=sx a=' + str(sx) + \
+         ' c=' + str(dsx) + \
+         ' j=' + str(ntr/nshot) + ' | ' + \
+         sushw + ' key=gelev,selev,delrt' + \
+         ' a=' + str(-rz) + ',' + str(-sz) + ',' + str(delrt) + ' | ' + \
          suchw + ' key1=offset key2=gx key3=sx c=-1 > ' + file         
 
 #    print(cmd)
