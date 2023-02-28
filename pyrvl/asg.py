@@ -30,6 +30,10 @@ class rntobulkfb(vcl.Function):
                 raise Exception('Error: input range not segy space')
             if not linalg.rsfcomp(dom.filename, rng.filename, checkunit=False):
                 raise Exception('Error: grid geometries of dom, rng differ')
+            if cmax <= cmin:
+                raise Exception('Error: cmax le cmin')
+            if dmax <= dmin:
+                raise Exception('Error: dmax le dmin')            
             # ignore unit of domain - should be None
             inprng = m8r.Input(rng.filename)
             if linalg.m8rstr(inprng.get('label')) != 'Bulk_modulus':
@@ -108,6 +112,10 @@ class invrntobulkfb(vcl.Function):
                 raise Exception('Error: input range not segy space')
             if not linalg.rsfcomp(dom.filename, rng.filename, checkunit=False):
                 raise Exception('Error: grid geometries of dom, rng differ')
+            if cmax <= cmin:
+                raise Exception('Error: cmax le cmin')
+            if dmax <= dmin:
+                raise Exception('Error: dmax le dmin')            
             # ignore unit of range - should be None
             inpdom = m8r.Input(dom.filename)
             if linalg.m8rstr(inpdom.get('label')) != 'Bulk_modulus':
@@ -116,10 +124,8 @@ class invrntobulkfb(vcl.Function):
             if linalg.m8rstr(inpdom.get('unit')) != 'GPa':
                 raise Exception('Error: incorrect unit for dom rsf header\n \
                 should be "GPa"')
-
             self.dom=dom
             self.rng=rng
-            
             inpbuoy = m8r.Input(buoyancy)
             if linalg.m8rstr(inpbuoy.get('label')) != 'Buoyancy':
                 raise Exception('Error: incorrect label for buoyancy header\n \
@@ -129,9 +135,8 @@ class invrntobulkfb(vcl.Function):
                 should be "cc/g"')            
             # cmax, cmin interpreted as m/ms or km/s
             # dmax, dmin interpreted as g/cc
-            
             self.buoydata = inpbuoy.read()
-            
+
             if np.min(self.buoydata)<=1.0/dmax or np.max(self.buoydata)>=1.0/dmin:
                 raise Exception('Error: buoyancy exceeds stated bounds')
         except Exception as ex:
@@ -154,9 +159,11 @@ class invrntobulkfb(vcl.Function):
             inx = m8r.Input(x.data)
             xdata = inx.read()
             cdata = np.power(xdata*self.buoydata,0.5)
+            # print('min = ' + str(np.min(cdata)) + ' max = ' + str(np.max(cdata)))
+            # print('cmin = ' + str(self.cmin) + ' cmax = ' + str(self.cmax))
             if np.min(cdata) <= self.cmin or np.max(cdata) >= self.cmax:
                 raise Exception('Error: vel from bulk and buoy exceeds bounds')
-            zdata = (cdata -    import linalg
+            zdata = (cdata - 
                 0.5*(self.cmax+self.cmin))/(0.5*(self.cmax-self.cmin))
             ydata = zdata*np.power(1.0-zdata*zdata,-0.5)
             iny = m8r.Input(y.data)
@@ -173,19 +180,127 @@ class invrntobulkfb(vcl.Function):
     def myNameIs(self):
         print('invulbounds function')
 
+class drntobulkfb(vcl.LinearOperator):
+
+    '''
+    derivative of rntobulkfb
+    '''
+        
+    def __init__(self, dom, rng, crn,\
+                 buoyancy, cmin, cmax, dmin, dmax):
+        ''' args:
+        dom = domain (dimless velo repn)
+        rng = range (bulk modulus space, same geometry)
+        crn = vel in dimless repn
+        buoyancy = rsf filename for buoyancy
+        cmin, cmax = vel bounds
+        dmin, dmax = den bounds
+        '''
+
+        try:
+            if not isinstance(dom, rsfvc.Space):
+                raise Exception('Error: input domain not rsf space')
+            if not isinstance(rng, rsfvc.Space):
+                raise Exception('Error: input range not segy space')
+            if not linalg.rsfcomp(dom.filename, rng.filename, checkunit=False):
+                raise Exception('Error: grid geometries of dom, rng differ')
+            if cmax <= cmin:
+                raise Exception('Error: cmax le cmin')
+            if dmax <= dmin:
+                raise Exception('Error: dmax le dmin')            
+            # ignore unit of domain - should be None
+            inprng = m8r.Input(rng.filename)
+            if linalg.m8rstr(inprng.get('label')) != 'Bulk_modulus':
+                raise Exception('Error: incorrect label for range rsf header\n \
+                should be "Bulk_modulus"')
+            if linalg.m8rstr(inprng.get('unit')) != 'GPa':
+                raise Exception('Error: incorrect unit for range rsf header\n \
+                should be "GPa"')
+                
+            self.dom=dom
+            self.rng=rng
+
+            # compute dcrn -> dbulk multiplier from crn, buoy
+            inpcrn = m8r.Input(crn.data)
+            crndata = inpcrn.read()
+            cdata = 0.5*(cmax+cmin) + 0.5*(cmax-cmin)*crndata\
+          *(np.power(1.0 + crndata*crndata, -0.5))
+            
+            inpbuoy = m8r.Input(buoyancy)
+            if linalg.m8rstr(inpbuoy.get('label')) != 'Buoyancy':
+                raise Exception('Error: incorrect label for buoyancy header\n \
+                should be "Buoyancy"')
+            if linalg.m8rstr(inpbuoy.get('unit')) != 'cc/g':
+                raise Exception('Error: incorrect unit for buoyancy header\n \
+                should be "cc/g"')            
+            bdata = inpbuoy.read()
+            if np.min(bdata)<=1.0/dmax or np.max(bdata)>=1.0/dmin:
+                raise Exception('Error: buoyancy exceeds stated bounds')
+            self.multdata = np.copy((2.0*cdata/bdata)*np.power(1.0 + crndata*crndata, -1.5))
+            
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from drntobulkfb constructor')
+
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.rng
+
+    def applyFwd(self, dx, dy):
+        try:
+            inpdx = m8r.Input(dx.data)
+            dxdata = inpdx.read()
+            dydata = self.multdata*dxdata
+            inpdy = m8r.Input(dy.data)
+            dyfile = linalg.m8rstr(inpdy.get('in'))
+            dydata.tofile(dyfile)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from drntobulkfb.applyFwd')
+        else:
+            return dy
+
+    def applyAdj(self, dx, dy):
+        try:
+            self.applyFwd(dx, dy)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from drntobulkfb.applyAdj')
+        else:
+            return dy
+        
+    def myNameIs(self):
+        print('drntobulkfb')
+
 # Fixed source and buoyancy op
 class fsbop(vcl.Function):
     
     def __init__(self, dom, rng, \
                      buoyancy, source_p, order, sampord, nsnaps,\
                      cfl, cmin, cmax, dmin, dmax, \
-                     nl1, nr1, nl2, nr2, pmlampl):
+                     nl1, nr1, nl2, nr2, pmlampl, boundstest=True):
                      
         try:
             if not isinstance(dom, rsfvc.Space):
                 raise Exception('Error: input domain not rsf space')
             if not isinstance(rng, segyvc.Space):
                 raise Exception('Error: input range not segy space')
+            if (boundstest):
+                # buoyancy
+                inpbuoy = m8r.Input(buoyancy)
+                if linalg.m8rstr(inpbuoy.get('label')) != 'Buoyancy':
+                    raise Exception('Error: incorrect label for buoyancy header\n \
+                    should be "Buoyancy" instead of ' + m8rstr(inpbuoy.get('label')))
+                if linalg.m8rstr(inpbuoy.get('unit')) != 'cc/g':
+                    raise Exception('Error: incorrect unit for buoyancy header\n \
+                    should be "cc/g"')            
+                # cmax, cmin interpreted as m/ms or km/s
+                # dmax, dmin interpreted as g/cc
+                self.bdata = inpbuoy.read()
+                if np.min(self.bdata)<=1.0/dmax or np.max(self.bdata)>=1.0/dmin:
+                    raise Exception('Error: buoyancy exceeds stated bounds')
         except Exception as ex:
             print(ex)
             raise Exception('called from asg.fsbop constructor')
@@ -208,6 +323,7 @@ class fsbop(vcl.Function):
             self.nl2 = nl2
             self.nr2 = nr2
             self.pmlampl = pmlampl
+            self.boundstest = boundstest
             self.therest = ' order=' + str(self.order) + \
               ' sampord=' + str(self.sampord) + \
               ' nsnaps=' + str(self.nsnaps) + \
@@ -220,7 +336,7 @@ class fsbop(vcl.Function):
               ' nr1=' + str(self.nr1) + \
               ' nl2=' + str(self.nl2) + \
               ' nr2=' + str(self.nr2) + \
-              ' pmlampl=' + str(self.pmlampl) 
+              ' pmlampl=' + str(self.pmlampl)
 
     def getDomain(self):
         return self.dom
@@ -230,6 +346,18 @@ class fsbop(vcl.Function):
 
     def apply(self,x,y):
         try:
+            # test bounds
+            if self.boundstest:
+                inx = m8r.Input(x.data)
+                xdata = inx.read()
+                if np.min(xdata) <= self.dmin*self.cmin*self.cmin:
+                    raise Exception('Error: min bulk mod smaller than extreme bound dmin*cmin^2')
+                cdata = np.power(xdata*self.bdata,0.5)
+                # print('min = ' + str(np.min(cdata)) + ' max = ' + str(np.max(cdata)))
+                # print('cmin = ' + str(self.cmin) + ' cmax = ' + str(self.cmax))
+                if np.min(cdata) <= self.cmin or np.max(cdata) >= self.cmax:
+                    raise Exception('Error: vel from bulk and buoy exceeds bounds')                
+            
             #os.system('ls /var/tmp')
             TRIP = os.getenv('TRIP')
             cmd = os.path.join(TRIP,'iwave/asg/main/sim.x')
@@ -249,7 +377,9 @@ class fsbop(vcl.Function):
 
     def raw_deriv(self,x):
         try:
-            return fsbderiv(self.dom,self.rng,x,self.buoyancy,self.source_p,self.therest)
+            return fsbderiv(self.dom,self.rng,x,self.buoyancy,self.source_p,
+                                self.cmin, self.cmax, self.dmin, self.dmax,
+                                self.therest,self.boundstest)
         except Exception as ex:
             print(ex)
             raise Exception('called from asg.fsbop.raw_deriv')
@@ -258,10 +388,14 @@ class fsbop(vcl.Function):
         print('2D acoustic simulator: iwave/asg/main/sim.x')
         print('parameters:')
         print(self.therest)
+        if self.boundstest:
+            print('parameter bounds tested')
         
 class fsbderiv(vcl.LinearOperator):
 
-    def __init__(self,dom,rng,x,buoyancy,source_p,therest):
+    def __init__(self,dom,rng,x,buoyancy,source_p,
+                     cmin,cmax,dmin,dmax,
+                     therest,boundstest=True):
         try:
             if not isinstance(dom, rsfvc.Space):
                 raise Exception('Error: input domain not rsf space')
@@ -269,6 +403,7 @@ class fsbderiv(vcl.LinearOperator):
                 raise Exception('Error: input range not segy space')
             if x.space != dom:
                 raise Exception('Error: input vector not in damain')
+            # don't need buoyancy bounds test - already done
         except Exception as ex:
             print(ex)
             raise Exception('called from asg.fsbderiv constructor')
@@ -278,6 +413,12 @@ class fsbderiv(vcl.LinearOperator):
             self.x = x
             self.buoyancy = buoyancy
             self.source_p = source_p
+            self.cmin = cmin
+            self.cmax = cmax
+            self.dmin = dmin
+            self.dmax = dmax
+            self.boundstest = boundstest
+            self.boundstested = False
             self.therest = therest
 
     def getDomain(self):
@@ -293,6 +434,21 @@ class fsbderiv(vcl.LinearOperator):
             bsp = rsfvc.Space(self.buoyancy)
             dbuoyancy = vcl.Vector(bsp)
             dbuoyancy.scale(0.0)
+            
+            if self.boundstest and not self.boundstested:
+                inpbuoy = m8r.Input(self.buoyancy)
+                bdata = inpbuoy.read()
+                inx = m8r.Input(self.x.data)
+                xdata = inx.read()
+                if np.min(xdata) <= self.dmin*self.cmin*self.cmin:
+                    raise Exception('Error: min bulk mod smaller than extreme bound dmin*cmin^2')
+                cdata = np.power(xdata*bdata,0.5)
+                # print('min = ' + str(np.min(cdata)) + ' max = ' + str(np.max(cdata)))
+                # print('cmin = ' + str(self.cmin) + ' cmax = ' + str(self.cmax))
+                if np.min(cdata) <= self.cmin or np.max(cdata) >= self.cmax:
+                    raise Exception('Error: vel from bulk and buoy exceeds bounds')
+                self.boundstested = True
+            
             args = ' bulkmod=' + self.x.data + \
               ' bulkmod_d1=' + dx.data + \
               ' buoyancy=' + self.buoyancy + \
@@ -305,7 +461,7 @@ class fsbderiv(vcl.LinearOperator):
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
         except Exception as ex:
             print(ex)
-            raise Exception('called from fdderiv.raw_applyFwd')
+            raise Exception('called from fdderiv.applyFwd')
 
     def applyAdj(self,dx,dy):
         try:
@@ -313,6 +469,21 @@ class fsbderiv(vcl.LinearOperator):
             cmd = os.path.join(TRIP,'iwave/asg/main/sim.x')
             bsp = rsfvc.Space(self.buoyancy)
             dbuoyancy = vcl.Vector(bsp)
+
+            if self.boundstest and not self.boundstested:
+                inpbuoy = m8r.Input(self.buoyancy)
+                bdata = inpbuoy.read()
+                inx = m8r.Input(self.x.data)
+                xdata = inx.read()
+                if np.min(xdata) <= self.dmin*self.cmin*self.cmin:
+                    raise Exception('Error: min bulk mod smaller than extreme bound dmin*cmin^2')
+                cdata = np.power(xdata*bdata,0.5)
+                # print('min = ' + str(np.min(cdata)) + ' max = ' + str(np.max(cdata)))
+                # print('cmin = ' + str(self.cmin) + ' cmax = ' + str(self.cmax))
+                if np.min(cdata) <= self.cmin or np.max(cdata) >= self.cmax:
+                    raise Exception('Error: vel from bulk and buoy exceeds bounds')
+                self.boundstested = True
+                
             args = ' bulkmod=' + self.x.data + \
               ' bulkmod_b1=' + dy.data + \
               ' buoyancy=' + self.buoyancy + \

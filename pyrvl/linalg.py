@@ -398,7 +398,16 @@ def rsfboundstest(vec, u, l):
 
     return True
 
-def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
+def simplot(f, addcb=False, clip=None, minval=None, maxval=None, width=7, asprat=-1):
+
+    '''
+    simple plotting tool using matplotlib to plot su and rsf data.
+    color scale controls use syntax from SU (ximage, psimage) and M8R (sfgrey)
+    f = data filename
+    addcb = colorbar switch
+    clip = abs max color scale value for oscillatory data
+    minval, maxval = min and max color scale values for signed data 
+    '''
 
     RSFROOT = os.getenv('RSFROOT')
     if not os.path.exists(RSFROOT):
@@ -444,8 +453,8 @@ def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
     data=inp.read()
 
     # start with the clip
-    if clip is not None:
-        np.clip(a=data, a_min=-clip, a_max=clip, out=data)
+    #if clip is not None:
+    #    np.clip(a=data, a_min=-clip, a_max=clip, out=data)
 
     # line plot
     if n2==1:
@@ -472,11 +481,22 @@ def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
         # use symmetric interval about zero
 
         if np.min(data) < 0 and np.max(data) > 0:
-            colmax = max(abs(np.min(data)),np.max(data))
+            if clip is not None:
+                colmax = clip
+            else:
+                colmax = max(abs(np.min(data)),np.max(data))
             colmin = -colmax
         else:
-            colmax = np.max(data)
-            colmin = np.min(data)
+            if minval is not None:
+                colmin = minval
+            else:
+                colmin = np.min(data)
+            if maxval is not None:
+                colmax = maxval
+            else:
+                colmax = np.max(data)
+
+        print('colmax=' + str(colmax) + ' colmin=' + str(colmin))
             
         pc = ax.pcolormesh(X, Y, (data.T)[0:n1-1,0:n2-1], vmin=colmin, vmax=colmax, cmap='RdBu_r')
         if addcb:
@@ -488,6 +508,8 @@ def simplot(f, addcb=False, clip=None, width=7, asprat=-1):
         plt.ylim(max(plt.ylim()), min(plt.ylim()))
         plt.show()
         print('simplot: data min = %10.4e, data max = %10.4e' % (np.min(data), np.max(data)))
+        if clip is not None:
+            print('simplot: clip = %10.4e' %(clip))
 
     # cleanup - remove temp rsf file if necessary
         # print('ff=' + ff)

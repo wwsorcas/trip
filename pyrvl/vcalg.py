@@ -265,10 +265,12 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
             [x, k, p, r, rnorm, gamma, cgend] = trcgstep(x, A, k, p, r, rnorm, rnorm0, rho, gamma, Delta, cgend, verbose)
             
         if verbose > 0:
-            print('----------------------------------------------------')
+            print('-------------------->>> CG >>>------------------------')
             print('  k       |r|        |r|/r0|')
             print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
+            print('--------------------<<< CG <<<------------------------')
 
+        return k
 
     except Exception as ex:
         print(ex)
@@ -291,10 +293,18 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
 #  gammainc = G-A increse threshhold
 
 def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
-             gammared=0.1, gammainc=0.9, gnverbose=0, cgverbose=0):
+             gammared=0.1, gammainc=0.9, gnverbose=0, cgverbose=0, \
+             maxback=0, gnorm0=None):
 
     try:
 
+        # total CG steps
+        ktot = 0
+        # total function evals
+        jtot = 0
+        # total gradient evals
+        gtot = 0
+            
         # initialize gradient
         
         # res=vcl.Vector(F.getRange())
@@ -303,14 +313,17 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         # negative residual b - F(x)
         # F.apply(x,res)
         res=F(x)
+        jtot+= 1
         res.linComb(1.0,b,-1.0)
         
         # negative gradient
         DFx=F.deriv(x)
         # DFx.applyAdj(res,grad)
         grad = transp(DFx)*res
+        gtot+= 1
         gnorm = grad.norm()
-        gnorm0 = gnorm
+        if gnorm0 is None:
+            gnorm0 = gnorm
 
         # storage for step
         s=Vector(F.getDomain())
@@ -327,11 +340,15 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         if gnverbose>0:
             print('  i      J        |grad J|      Delta')
             print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
-            
+
         while i<imax and gnorm>eps*gnorm0:
 
             # compute step
-            trconjgrad(s, res, DFx, kmax, rho, Delta, cgverbose)
+            k = trconjgrad(s, res, DFx, kmax, rho, Delta, cgverbose)
+            ktot += k
+            
+            actred = 0.0
+            predred=0.5*s.dot(grad)
 
             # trial update, actred, predred
             # xp.copy(x)
@@ -339,17 +356,40 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             xp.linComb(1.0,s)
             #F.apply(xp,resp)
             resp = F(xp)
+            jtot+= 1
             resp.linComb(1.0,b,-1.0)
             Jp=0.5*resp.dot(resp)
             actred=Jc-Jp
             # remember grad is NEGATIVE grad
-            predred=0.5*s.dot(grad)
             if gnverbose>1:
                 print('actred=' + str(actred) + ' predred=' + str(predred))
-                
-            # trust radius reduction
+
+            # backtracking loop
+            j = 0
+            while actred < gammared*predred and j < maxback:
+                # trust radius reduction
+                Delta *= mured
+                # scale step
+                s.scale(mured)
+                # scale predred
+                predred *= mured
+                # recompute
+                xp.copy(x)
+                xp.linComb(1.0,s)
+                resp = F(xp)
+                jtot+= 1
+                resp.linComb(1.0,b,-1.0)
+                Jp=0.5*resp.dot(resp)
+                actred=Jc-Jp
+                if gnverbose>1:
+                    print('backtrack step ' + str(j) + ':')
+                    print('actred=' + str(actred) + ' predred=' + str(predred))
+                j += 1
+
+            # if still not there, reduce Delta and re-run CG
             if actred < gammared*predred:
                 Delta *= mured
+
             # update
             else:
                 x.copy(xp)
@@ -362,6 +402,7 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
                 DFx = F.deriv(x)
                 # del grad
                 DFx.applyAdj(res,grad)
+                gtot+= 1
                 # grad = transp(DFx)*res
                 gnorm = grad.norm()
                 # trust radius increase
@@ -370,7 +411,13 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
                 i=i+1
             if gnverbose > 0:
                 print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
-            
+                
+        print('total function evals     = ' + str(jtot))
+        print('total gradient evals     = ' + str(gtot))
+        print('total CG steps           = ' + str(gtot))
+
+        return [Delta, gnorm0]
+        
     except Exception as ex:
         print(ex)
         raise Exception('called from trgn')
