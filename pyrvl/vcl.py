@@ -406,7 +406,19 @@ class comp(Function):
 
     def raw_deriv(self,x):
         try:
-            return lopcomp(self.f.deriv(self.g(x)), self.g.deriv(x)) 
+#            print('vcl.comp.raw_deriv')
+            gx = self.g(x)
+#            print('gx')
+#            gx.myNameIs()
+            dfgx = self.f.deriv(gx)
+#            print('dfgx')
+#            dfgx.myNameIs()
+            dg=self.g.deriv(x)
+#            print('g')
+#            self.g.myNameIs()
+#            print('dg')
+#            dg.myNameIs()
+            return lopcomp(dfgx, dg) 
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.comp.raw_deriv')
@@ -480,6 +492,11 @@ class lopcomp(LinearOperator):
 
     def __init__(self,a,b):
         try:
+#            print('lopcomp constructor')
+#            print('first arg')
+#            a.myNameIs()
+#            print('second arg')
+#            b.myNameIs()
             if a.getDomain() != b.getRange():
                 raise Exception('Error: domain of output fcn ne range of input fcn')
         except Exception as ex:

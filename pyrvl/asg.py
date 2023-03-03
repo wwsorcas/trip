@@ -55,7 +55,8 @@ class rntobulkfb(vcl.Function):
                 should be "cc/g"')            
             # cmax, cmin interpreted as m/ms or km/s
             # dmax, dmin interpreted as g/cc
-            
+
+            self.buoyancy = buoyancy
             self.buoydata = inpbuoy.read()
             
             if np.min(self.buoydata)<=1.0/dmax or np.max(self.buoydata)>=1.0/dmin:
@@ -88,11 +89,15 @@ class rntobulkfb(vcl.Function):
         return y
 
     def raw_deriv(self,x):
-        pass
-#        return drntobulkfb(self.dom, self.rng, self.cmax, self.cmin, x)
+        return drntobulkfb(self.dom, self.rng, x, self.buoyancy,
+                        self.cmin, self.cmax, self.dmin, self.dmax)
 
     def myNameIs(self):
         print('ulbounds function')
+        print('domain:')
+        self.getDomain().myNameIs()
+        print('range:')
+        self.getRange().myNameIs()
 
 
 class invrntobulkfb(vcl.Function):
@@ -179,6 +184,10 @@ class invrntobulkfb(vcl.Function):
 
     def myNameIs(self):
         print('invulbounds function')
+        print('domain:')
+        self.getDomain().myNameIs()
+        print('range:')
+        self.getRange().myNameIs()
 
 class drntobulkfb(vcl.LinearOperator):
 
@@ -273,6 +282,10 @@ class drntobulkfb(vcl.LinearOperator):
         
     def myNameIs(self):
         print('drntobulkfb')
+        print('domain:')
+        self.getDomain().myNameIs()
+        print('range:')
+        self.getRange().myNameIs()
 
 # Fixed source and buoyancy op
 class fsbop(vcl.Function):

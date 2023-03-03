@@ -270,11 +270,13 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
             print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
             print('--------------------<<< CG <<<------------------------')
 
-        return k
-
     except Exception as ex:
         print(ex)
         raise Exception("called from cg.conjgrad")
+
+    else:
+        return k
+
 
 ########################## TRUST REGION GAUSS-NEWTON #######################
 
@@ -346,6 +348,7 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             # compute step
             k = trconjgrad(s, res, DFx, kmax, rho, Delta, cgverbose)
             ktot += k
+            print('executed ' + str(k) + ' CG steps, total so far = ' + str(ktot))
             
             actred = 0.0
             predred=0.5*s.dot(grad)
@@ -414,7 +417,7 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
                 
         print('total function evals     = ' + str(jtot))
         print('total gradient evals     = ' + str(gtot))
-        print('total CG steps           = ' + str(gtot))
+        print('total CG steps           = ' + str(ktot))
 
         return [Delta, gnorm0]
         
