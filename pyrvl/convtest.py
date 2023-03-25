@@ -14,7 +14,7 @@ def runtest():
     data.bpfilt(file='wstar.su',nt=251,dt=8.0,s=1.0,f1=1.0,f2=2.5,f3=7.5,f4=12,sx=4200,sz=3000)
     
     # create zero data file with same source position, rz=500, rx=[2000,6000]
-    data.rechdr(file='g.su',nt=626,dt=8.0,rxmin=2000,rxmax=6000,ntr=201,rz=1000,sx=4200,sz=3000)
+    data.rechdr(file='g.su',nt=626,dt=8.0,ntr=201,rx=2000,rz=1000,sx=4200,sz=3000,drx=20)
     
     bulksp = rsfvc.Space('m.rsf')
     datasp = segyvc.Space('g.su')
@@ -32,14 +32,12 @@ def runtest():
     # evaluate F[m]
     Fm = F(m)
 
-    data.rechdr(file='baru.su',nt=251,dt=8.0,rxmin=2000,rxmax=6000,\
-            ntr=201,rz=1000,sx=4200,sz=3000,delrt=-1000)
+    data.rechdr(file='baru.su',nt=251,dt=8.0,\
+            ntr=201,rx=2000,rz=1000,sx=4200,sz=3000,drx=20,delrt=-1000)
     usp=segyvc.Space('baru.su')
     baru=vcl.Vector(usp,'baru.su')
 
     barSm = segyvc.ConvolutionOperator(dom=usp, rng=datasp, green=Fm.data)
-
-    os.system('ls /var/tmp')
 
     # max allowed iterations
     kmax = 50

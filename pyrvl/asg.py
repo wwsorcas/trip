@@ -134,7 +134,7 @@ class invrntobulkfb(vcl.Function):
             inpbuoy = m8r.Input(buoyancy)
             if linalg.m8rstr(inpbuoy.get('label')) != 'Buoyancy':
                 raise Exception('Error: incorrect label for buoyancy header\n \
-                should be "Buoyancy" instead of ' + m8rstr(inpbuoy.get('label')))
+                should be "Buoyancy" instead of ' + linalg.m8rstr(inpbuoy.get('label')))
             if linalg.m8rstr(inpbuoy.get('unit')) != 'cc/g':
                 raise Exception('Error: incorrect unit for buoyancy header\n \
                 should be "cc/g"')            
@@ -305,7 +305,7 @@ class fsbop(vcl.Function):
                 inpbuoy = m8r.Input(buoyancy)
                 if linalg.m8rstr(inpbuoy.get('label')) != 'Buoyancy':
                     raise Exception('Error: incorrect label for buoyancy header\n \
-                    should be "Buoyancy" instead of ' + m8rstr(inpbuoy.get('label')))
+                    should be "Buoyancy" instead of ' + linalg.m8rstr(inpbuoy.get('label')))
                 if linalg.m8rstr(inpbuoy.get('unit')) != 'cc/g':
                     raise Exception('Error: incorrect unit for buoyancy header\n \
                     should be "cc/g"')            

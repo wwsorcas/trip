@@ -70,39 +70,153 @@ def bpfiltgather(file,nt,dt,s,f1,f2,f3,f4,ntr,sxstart,szstart,dsx,dsz):
                       
     temp.close()
     os.unlink(temp.name)
+    
+def rechdr(file,nt,dt,ntr,rx,rz,sx,sz,drx,
+               delrt=0,nshot=1,dsx=0,fixed=True):
+    '''
+    Creates a SU (SEGY without reel header) file with zero 
+    data values and correct header (metadata) values describing 
+    the geometry of a 2D seismic survey. Produces headers for either 
+    fixed spread (same receiver positions for every shot) or towed
+    streamer (same receiver offsets for every shot) geometry. Geometry
+    is regular, that is, same step between each pair of adjacent 
+    reeivers and each pair of adjacent shot locations. All shot 
+    records are assumed to have the same number of receivers. Also, all 
+    receivers, respectively all sources, are assumed to have the same
+    depth (z), and differ only in horizontal position (x). These 
+    properties are idealizations, suitable for synthetic data, and
+    unlikely to hold for field data.
 
-# trace header
-# compute header files for receiver (rechdr) and source (srchdr) lines, at gelev
-# = -1000 and -3000 resp.
+    Parameter units are m for distances/lengths and ms for times.
 
-def rechdr(file,nt,dt,rxmin,rxmax,ntr,rz,sx,sz,delrt=0,nshot=1,dsx=0):
-
+    Parameters:
+        file (str): filename for output, typically with suffix '.su'
+        nt (int): number if time samples in each receiver trace
+        dt (float): time sample interval
+        ntr (int): number of receivers per shot
+        rx (float): first receiver horizontal position (fixed spread)
+            or offset (towed streamer)
+        rz (float): receiver depth
+b        sx (float): first shot horizontal position
+        sz (float): shot depth
+        drx (float): interval between receiver positions within
+            shot record (all belonging to same shot)
+        delrt (float): time of first sample
+        nshot (int): number of shots in survey
+        dsx (float): interval between shot positions
+        fixed (boolean): fixed spread if True, else towed streamer
+        return value (int): 0 if successful
+    '''
+        
     CWPROOT = os.getenv('CWPROOT')
     sunull = os.path.join(CWPROOT,'bin/sunull')
     sugain = os.path.join(CWPROOT,'bin/suscale')
     sushw = os.path.join(CWPROOT,'bin/sushw')
     suchw = os.path.join(CWPROOT,'bin/suchw')
 
-    cmd = sunull + ' nt=' + str(nt) + \
-         ' ntr=' + str(ntr) + \
-         ' dt=' + str(0.001*dt) + ' | ' + \
-         sushw + ' key=gx a=' + str(rxmin) + \
-         ' b=' + str((rxmax-rxmin)/((ntr/nshot)-1)) + \
-         ' j=' + str(ntr/nshot) + ' | ' + \
-         sushw + ' key=sx a=' + str(sx) + \
-         ' c=' + str(dsx) + \
-         ' j=' + str(ntr/nshot) + ' | ' + \
-         sushw + ' key=gelev,selev,delrt' + \
-         ' a=' + str(-rz) + ',' + str(-sz) + ',' + str(delrt) + ' | ' + \
-         suchw + ' key1=offset key2=gx key3=sx c=-1 > ' + file         
+    if fixed:
+        cmd = sunull + ' nt=' + str(nt) + \
+          ' ntr=' + str(ntr*nshot) + \
+          ' dt=' + str(0.001*dt) + ' | ' + \
+          sushw + ' key=gx a=' + str(rx) + \
+          ' b=' + str(drx) + \
+          ' j=' + str(ntr) + ' | ' + \
+          sushw + ' key=sx a=' + str(sx) + \
+          ' c=' + str(dsx) + \
+          ' j=' + str(ntr) + ' | ' + \
+          sushw + ' key=gelev,selev,delrt' + \
+          ' a=' + str(-rz) + ',' + str(-sz) + ',' + str(delrt) + ' | ' + \
+          suchw + ' key1=offset key2=gx key3=sx c=-1 > ' + file         
+    else:
+        cmd = sunull + ' nt=' + str(nt) + \
+          ' ntr=' + str(ntr*nshot) + \
+          ' dt=' + str(0.001*dt) + ' | ' + \
+          sushw + ' key=gx a=' + str(rx + sx) + \
+          ' b=' + str(drx) + \
+          ' c=' + str(dsx) + \
+          ' j=' + str(ntr) + ' | ' + \
+          sushw + ' key=sx a=' + str(sx) + \
+          ' c=' + str(dsx) + \
+          ' j=' + str(ntr) + ' | ' + \
+          sushw + ' key=gelev,selev,delrt' + \
+          ' a=' + str(-rz) + ',' + str(-sz) + ',' + str(delrt) + ' | ' + \
+          suchw + ' key1=offset key2=gx key3=sx c=-1 > ' + file              
+          
+    ret = os.system(cmd)
 
-#    print(cmd)
+    if ret != 0:
+       print('\nattempt to create shot record file ' + file + \
+                 ' via function rechdr failed')
 
-    os.system(cmd) 
+    return ret
 
-# spatial model - only homog buoy, optional lens in bulk
-# value at ctr of lens = lensfac*bulk
+def rsffile(file, datatype, unit, nx, nz, dx, dz, val=1.0):
+    '''
+    creates 2D RSF data file pair, spatially homogeneous data,
+    suitable for further processing via NumPy and m8r.
+
+    For all parameters, unit of length is m.
+
+    Parameters:
+        file (str): name of header (rsf) file - data file will be DATAPATH/file@
+        datatype (str): data type, eg. velocity, density,... - no embedded blanks!
+        unit (str): data unit - no embedded blanks
+        nx (int): number of points on axis 2 (horizontal)
+        nz (int): number of points on axis 1 (depth)
+        dx (float): increment on axis 2 (horizontal)
+        dz (float): increment on axis 1 (depth)
+        val (float): value assigned to all data points
+        returns value (int): return from os.system, = 0 for success
+
+    Also initializes header words dim, gdim, id1, id2, needed by
+    IWAVE applications but ignored by M8R
+    '''
+
+    RSFROOT = os.getenv('RSFROOT')
+    makevel = os.path.join(RSFROOT,'bin/sfmakevel')
+    put   = os.path.join(RSFROOT,'bin/sfput')
+    cmd = makevel + \
+         ' n1=' + str(nz) + \
+         ' n2=' + str(nx) + \
+         ' d1=' + str(dz) + \
+          ' d2=' + str(dx) + \
+         ' v000=' + str(val) + ' | ' +\
+         ' sfput dim=2 gdim=2 id1=0 id2=1 | ' +\
+         ' sfput unit1=m unit2=m | ' +\
+         ' sfput label1=Depth label2=Distance | ' +\
+         ' sfput label=' + datatype + ' unit=' + unit + ' > ' + file
+
+    ret = os.system(cmd)
+
+    if ret != 0:
+       print('\nattempt to create file ' + file + \
+                 ' via function rsffile failed')
+
+    return ret
+
 def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
+    ''' 
+    creates (bulk modulus, buoyancy) pair of rsf pairs for input
+    to iwave simulation code. bulk modulus has optional circular 
+    lens in center, with gaussian profile.
+
+    For all length parameters, unit = m.
+
+    Parameters:
+
+        bulkfile (str): name of bulk modulus header file. data file is 
+            DATAPATH/bulkfile@, buoyancy header is "by" + bulkfile
+        bulk (float): background bulk modulus, unit = GPa
+        nx (int): number of points on axis 2 (horizontal)
+        nz (int): number of points on axis 1 (depth)
+        dx (float): increment on axis 2 (horizontal)
+        dz (float): increment on axis 1 (depth)
+        lensfac (float): relative bulkmod change from background
+            to center of lens
+        buoy (float): buoyancy (homogeneous), unit = cc/g
+        return value (int): sum of return from os.system, = 0 for success
+    '''
+    
     RSFROOT = os.getenv('RSFROOT')
     makevel = os.path.join(RSFROOT,'bin/sfmakevel')
     put   = os.path.join(RSFROOT,'bin/sfput')
@@ -120,21 +234,19 @@ def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
          ' sfput dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
          ' sfput unit1=m unit2=m' + ' | ' +\
          ' sfput label1=Depth label2=Distance ' + ' | ' +\
-         ' sfput label=Bulk_modulus unit=GPa > ' + bulkfile + ' && ' +\
-         makevel + \
-         ' n1=' + str(nz) + \
-         ' n2=' + str(nx) + \
-         ' d1=' + str(dz) + \
-         ' d2=' + str(dx) + \
-         ' label1=Depth label2=Distance' + \
-         ' unit1=m unit2=m' + \
-         ' label=Buoyancy unit=cc/g' +\
-         ' v000=' + str(buoy) + ' | ' +\
-         ' sfput dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
-         ' sfput unit1=m unit2=m ' + ' | ' +\
-         ' sfput label1=Depth label2=Distance' + ' | ' +\
-         ' sfput label=Buoyancy unit=cc/g > by' + bulkfile
-#    print(cmd)
+         ' sfput label=Bulk_modulus unit=GPa > ' + bulkfile
 
-    os.system(cmd)
+    ret = os.system(cmd)
 
+    if ret != 0:
+       print('\nattempt to crete bulk modulus file ' + bulkfile + \
+                 ' via function model failed')
+
+    retby = rsffile('by' + bulkfile, 'Buoyancy', 'cc/g',
+                            nx, nz, dx, dz, val=buoy)
+
+    if retby != 0:
+       print('\nattempt to crete buoyancy file by' + bulkfile + \
+                 ' via function model failed')
+
+    return ret + retby
