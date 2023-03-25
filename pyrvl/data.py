@@ -97,7 +97,7 @@ def rechdr(file,nt,dt,ntr,rx,rz,sx,sz,drx,
         rx (float): first receiver horizontal position (fixed spread)
             or offset (towed streamer)
         rz (float): receiver depth
-b        sx (float): first shot horizontal position
+        sx (float): first shot horizontal position
         sz (float): shot depth
         drx (float): interval between receiver positions within
             shot record (all belonging to same shot)
@@ -166,10 +166,10 @@ def rsffile(file, datatype, unit, nx, nz, dx, dz, val=1.0):
         dx (float): increment on axis 2 (horizontal)
         dz (float): increment on axis 1 (depth)
         val (float): value assigned to all data points
-        returns value (int): return from os.system, = 0 for success
+        return value (int): return from os.system, = 0 for success
 
     Also initializes header words dim, gdim, id1, id2, needed by
-    IWAVE applications but ignored by M8R
+    some IWAVE applications but ignored by M8R
     '''
 
     RSFROOT = os.getenv('RSFROOT')
@@ -214,7 +214,7 @@ def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
         lensfac (float): relative bulkmod change from background
             to center of lens
         buoy (float): buoyancy (homogeneous), unit = cc/g
-        return value (int): sum of return from os.system, = 0 for success
+        return value (int): sum of returns from os.system, = 0 for success
     '''
     
     RSFROOT = os.getenv('RSFROOT')
