@@ -517,5 +517,69 @@ def simplot(f, addcb=False, clip=None, minval=None, maxval=None, width=7, asprat
             os.unlink(ff)
             os.unlink(datafile[2:len(datafile)-3])
 
-        
+import m8r
+import numpy as np
+import array
+
+def ndarraytorsfdata(x, rsfname):
+    '''
+    Overwrite NumPy ndarray onto data file of rsf pair. ndarray size
+    must be same as data file size, but axis lengths are not checked.
+    Note that original rsf data is destroyed. NumPy data is implicitly 
+    dimensionless, so data inherits unit of rsf. Data written as 32 bit 
+    IEEE floats, native endian.
+
+    Parameters:
+        x (ndarray): input NumPy data
+        rsfname (string): name of output rsf header file
+        returns None
+    '''
+       
+    try:
+        if not isinstance(rsfname,str):
+            raise Exception('Error: input second argument not string')
+        if not sanity(rsfname,'rsf'):
+            raise Exception('Error: input file name does not have .rsf suffix')
+        if not isinstance(x,np.ndarray):
+            raise Exception('Error: input first argument not ndarray')
+        inp=m8r.Input(rsfname)
+        n1=int(inp.get('n1'))
+        n2=int(inp.get('n2'))
+        n3=int(inp.get('n3'))
+        if x.size != n1*n2*n3:
+            raise Exception('Error: ndarray of size = ' + str(x.size) +
+                                ', rsf array size = ' + str(n1*n2*n3))
+        dataname = m8rstr(inp.get('in'))
+        datafile = open(dataname,'wb')
+        # allocate single precision array
+        dataarray = array.array('f')
+        # read in list data, converting to single precision
+        dataarray.fromlist((np.ravel(x)).tolist())
+        # output signle precision data to file
+        dataarray.tofile(datafile)
+        datafile.close()
+
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from function ndarraytorsfdata')
+
+def ndarrayfromrsfdata(rsfname):
+    '''
+    reads rsf data into NumPy ndarray. Returned ndarray has axis 
+    lengths specified by rsf. Note that NumPy data is implicitly 
+    dimensionless, so unit and axis unit info is lost.
+   
+    Parameters:
+        rsfname (string): name of rsf header file
+        returns NumPy ndarray
+    '''
+    try:
+        if not sanity(rsfname,'rsf'):
+            raise Exception('Error: input file name does not have .rsf suffix')
+        inp=m8r.Input(rsfname)
+        data = inp.read()
+        return data
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from function ndarrayfromrsfdata')
 

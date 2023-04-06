@@ -150,7 +150,7 @@ def rechdr(file,nt,dt,ntr,rx,rz,sx,sz,drx,
 
     return ret
 
-def rsffile(file, datatype, unit, nx, nz, dx, dz, val=1.0):
+def rsffile(file, datatype, unit, n1, n2, d1, d2, val=1.0):
     '''
     creates 2D RSF data file pair, spatially homogeneous data,
     suitable for further processing via NumPy and m8r.
@@ -161,10 +161,10 @@ def rsffile(file, datatype, unit, nx, nz, dx, dz, val=1.0):
         file (str): name of header (rsf) file - data file will be DATAPATH/file@
         datatype (str): data type, eg. velocity, density,... - no embedded blanks!
         unit (str): data unit - no embedded blanks
-        nx (int): number of points on axis 2 (horizontal)
-        nz (int): number of points on axis 1 (depth)
-        dx (float): increment on axis 2 (horizontal)
-        dz (float): increment on axis 1 (depth)
+        n1 (int): number of points on axis 1 (depth)
+        n2 (int): number of points on axis 2 (horizontal)
+        d1 (float): increment on axis 1 (depth)
+        d2 (float): increment on axis 2 (horizontal)
         val (float): value assigned to all data points
         return value (int): return from os.system, = 0 for success
 
@@ -176,10 +176,10 @@ def rsffile(file, datatype, unit, nx, nz, dx, dz, val=1.0):
     makevel = os.path.join(RSFROOT,'bin/sfmakevel')
     put   = os.path.join(RSFROOT,'bin/sfput')
     cmd = makevel + \
-         ' n1=' + str(nz) + \
-         ' n2=' + str(nx) + \
-         ' d1=' + str(dz) + \
-          ' d2=' + str(dx) + \
+         ' n1=' + str(n1) + \
+         ' n2=' + str(n2) + \
+         ' d1=' + str(d1) + \
+         ' d2=' + str(d2) + \
          ' v000=' + str(val) + ' | ' +\
          ' sfput dim=2 gdim=2 id1=0 id2=1 | ' +\
          ' sfput unit1=m unit2=m | ' +\
@@ -243,10 +243,13 @@ def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
                  ' via function model failed')
 
     retby = rsffile('by' + bulkfile, 'Buoyancy', 'cc/g',
-                            nx, nz, dx, dz, val=buoy)
+                            nz, nx, dz, dx, val=buoy)
 
     if retby != 0:
        print('\nattempt to crete buoyancy file by' + bulkfile + \
                  ' via function model failed')
 
     return ret + retby
+
+
+    
