@@ -65,11 +65,14 @@ class Space(ABC):
         else:            
             return self.raw_scale(x,c)
 
-    # convenience functions
+    # raw_copy should implement the un-Python like behaviour of
+    # altering its second argument, by copying the first onto it.
+    # so like numpy.copyto, not numpy.copy. 
     @abstractmethod        
     def raw_copy(self,x,y):
         pass
-    
+
+    # Note that this function returns None.
     def copy(self,x,y):
         try:
             if not self.isData(x):
@@ -80,7 +83,7 @@ class Space(ABC):
             print(ex)
             raise Exception('called from vcl.Space.copy')
         else:        
-            return self.raw_copy(x,y)
+            self.raw_copy(x,y)
 
     # for use in vector destructor - x is data
     # there is no "raw_cleanup" because this should be
@@ -123,7 +126,6 @@ class ProductSpace(Space):
     def getData(self):
         dl=[]
         for i in range(0,len(self.spl)):
-#            print(str(i))
             dl.append(self.spl[i].getData())
         return dl
 
@@ -157,13 +159,13 @@ class ProductSpace(Space):
 
     def raw_linComb(self,a,x,y,b=1.0):
         for i in range(0,len(self.spl)):
-            y[i]=spl[i].linComb(a,x[i],y[i],b)
+            y[i]=self.spl[i].linComb(a,x[i],y[i],b)
         return y
 
     def raw_dot(self,x,y):
         ret = 0.0
         for i in range(0,len(self.spl)):
-            ret += spl[i].dot(x[i],y[i])
+            ret += self.spl[i].dot(x[i],y[i])
         return ret
 
     def raw_scale(self,x,c):
@@ -173,8 +175,7 @@ class ProductSpace(Space):
     
     def raw_copy(self,x,y):
         for i in range(0,len(self.spl)):
-            y[i]=self.spl[i].copy(x[i],y[i])
-        return y
+            self.spl[i].copy(x[i],y[i])
     
     def cleanup(self,x):
         for i in range(0,len(self.spl)):
@@ -231,8 +232,6 @@ class Vector:
         try:
             if not self.space.isData(x):
                 raise Exception('Error: attempt to wrap non-data object')
-#            if not self.own:
-#                raise Exception('Error: already managing external data')
         except Exception as ex:
             print(ex)
             raise Exception("called from vcl.Vector.link")
@@ -275,10 +274,11 @@ class Vector:
         try:
             if x.space != self.space:
                 raise Exception('Error: vector source not in same space')
-            self.data = self.space.copy(x.data,self.data)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.copy')
+        else:
+            self.space.copy(x.data,self.data)
 
     # instantiate new vector, copy self data, return
     def dup(self):
@@ -403,21 +403,14 @@ class comp(Function):
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.comp.apply')
+        else:
+            return y
 
     def raw_deriv(self,x):
         try:
-#            print('vcl.comp.raw_deriv')
             gx = self.g(x)
-#            print('gx')
-#            gx.myNameIs()
             dfgx = self.f.deriv(gx)
-#            print('dfgx')
-#            dfgx.myNameIs()
             dg=self.g.deriv(x)
-#            print('g')
-#            self.g.myNameIs()
-#            print('dg')
-#            dg.myNameIs()
             return lopcomp(dfgx, dg) 
         except Exception as ex:
             print(ex)
@@ -429,7 +422,7 @@ class comp(Function):
         self.g.myNameIs()
         print('and output function (f)')
         self.f.myNameIs()
-       
+    
 class LinearOperator(Function):
 
     def apply(self,x,y):
@@ -442,10 +435,15 @@ class LinearOperator(Function):
     # alternate evaluation syntax
     def __mul__(self,x):
         try:
+#            print('in mul before:')
             if x.space != self.getDomain():
                 raise Exception('Error: input vec not in domain')
             y = Vector(self.getRange())
+#            y.myNameIs()
             self.applyFwd(x,y)
+#            print('in mul after:')
+#            y.myNameIs()
+#            print('exit mul')
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.LinearOperator operator*')
@@ -472,10 +470,16 @@ class transp(LinearOperator):
 
     def applyFwd(self,x,y):
         try:
+#            print('transp.applyFwd')
+#            print('|x|=' + str(x.norm()))
             self.op.applyAdj(x,y)
+#            print('|y|=' + str(y.norm()))
+#            print('exit transp.applyFwd')
         except Exception as ex:
             print(ex)
             raise Exception('called from transp:applyFwd')
+        else:
+            return y
 
     def applyAdj(self,x,y):
         try:
@@ -483,6 +487,8 @@ class transp(LinearOperator):
         except Exception as ex:
             print(ex)
             raise Exception('called from transp:raw_applyFwd')
+        else:
+            return y
 
     def myNameIs(self):
         print('adjoint operator of:')
@@ -611,7 +617,6 @@ class RowLinearOperator(LinearOperator):
             self.oplist[i].myNameIs()
 
 
-    
 class Jet:
 
     def __init__(self,f,x):
@@ -668,7 +673,7 @@ class ScalarFunction(ABC):
         else:        
             return self.value(x)
 
-    # should return vector
+    # returns vector
     @abstractmethod
     def raw_gradient(self,x):
         pass
@@ -680,15 +685,40 @@ class ScalarFunction(ABC):
             return self.raw_gradient(x)
         except Exception as ex:
             print(ex)
-            self.MyNameIs()
             raise Exception('called from vcl.ScalarFunction gradient')
         
-    @abstractmethod
+    # returns linear operator. Note required for some first order methods
+    # (steepest descent, BFGS) so has default implementation returning None
+    def raw_Hessian(self,x):
+        return None
+    
+    def Hessian(self,x):
+        try:
+            if x.space != self.getDomain():
+                raise Exception('Error: input vec not in domain')
+            H = self.raw_Hessian(x)
+            if H is None:
+                raise Exception('Error: Hessian not implemented for this class')
+        except Exception as ex:
+            print(ex)
+            self.MyNameIs()
+            raise Exception('called from vcl.ScalarFunction Hessian')
+        else:
+            return H
+            
     def myNameIs(self):
         pass
 
 # function x -> 0.5*|f(x)-b|^2
 class LeastSquares(ScalarFunction):
+    '''
+    Simple nonlinear least squares function. Gauss-Newton Hessian supplied 
+    by default, can be overridden. No attempt at retaining intermediate data
+    common between methods - there is no assured way to do so. If such
+    retention is advantageous, write a ScalarJet subclass instead - that
+    allows for retention of intermediate data without risk of incoherence, 
+    absent malicious interference.
+    '''
 
     def __init__(self,f,b):
         self.f = f
@@ -708,6 +738,9 @@ class LeastSquares(ScalarFunction):
         res.linComb(-1.0,self.b)
         df=self.f.deriv(x)
         return transp(df)*res
+
+    def raw_Hessian(self,x):
+        return NormalOp(self.f.deriv(x))
 
     def myNameIs(self):
         print('Least Squares Function')
@@ -740,4 +773,198 @@ class NormalOp(LinearOperator):
         print('normal operator of')
         self.op.myNameIs()
 
+# separable function, aka linear-function-valued function. Not
+# realized as a function itself, but as a repository of the
+# components necessary to create the two restrictions that
+# figure in VPM
+class SepFunction(ABC):
+
+    @abstractmethod    
+    def getDomain(self):
+        pass
+    
+    @abstractmethod    
+    def getRange(self):
+        pass
+
+    # linear in x1
+    @abstractmethod
+    def applyFwd(self,x0,x1,y):
+        pass
+
+    # adjoint of x1 -> applyFwd(x0,x1,y)
+    @abstractmethod
+    def applyAdj(self,x0,y,x1):
+        pass
+
+    # returns partial derivative of applyFwd(x0,x1,y) in x0
+    @abstractmethod
+    def applyFwdDeriv(self, x0, dx0, x1, y):
+        pass
+
+    # adjoint partial derivative of applyFwd(x0,x1,y) in x0
+    @abstractmethod    
+    def applyAdjDeriv(self, x0, y, x1, dx0):
+        pass
+
+    @abstractmethod
+    def myNameIs(self):
+        pass
+
+# linear restriction of separable function
+class LinearRestriction(LinearOperator):
+
+    def __init__(self, s, x0):
+        try:
+            if not isinstance(s, SepFunction):
+                raise Exception('first input not SepFunction')
+            if not isinstance(s.getDomain(), ProductSpace):
+                raise Exception('domain of first input not ProductSpace')
+            if len(s.getDomain().spl) != 2:
+                raise Exception('number of components of domain != 2')
+            if not isinstance(x0, Vector):
+                raise Exception('second input not Vector')
+            if x0.space != s.getDomain()[0]:
+                raise Exception('second input not Vector in comp 0 of SepFunction domain')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LinearRestriction constructor')
+        else:
+            self.s = s
+            self.x0 = x0
+
+    def getDomain(self):
+        return self.s.getDomain()[1]
+
+    def getRange(self):
+        return self.s.getRange()
+
+    def applyFwd(self,x,y):
+        self.s.applyFwd(x0,x,y)
+
+    def applyAdj(self,x,y):
+        self.s.applyAdj(x0,x,y)
+
+    def myNameIs(self):
+        print('Linear Restriction of Separable Function:')
+        self.s.myNameIs()
+        print('at nonlinear component vector:')
+        self.x0.myNameIs()
+        
+# derivative of nonlinear restriction of separable function
+class DerivNonlinearRestriction(LinearOperator):
+
+    def __init__(self, s, x0, x1):
+        try:
+            if not isinstance(s, SepFunction):
+                raise Exception('first input not SepFunction')
+            if not isinstance(s.getDomain(), ProductSpace):
+                raise Exception('domain of first input not ProductSpace')
+            if len(s.getDomain().spl) != 2:
+                raise Exception('number of components of domain != 2')
+            if not isinstance(x0, Vector):
+                raise Exception('second input not Vector')
+            if x0.space != s.getDomain()[0]:
+                raise Exception('second input not Vector in comp 0 of SepFunction domain')
+            if not isinstance(x1, Vector):
+                raise Exception('second input not Vector')
+            if x1.space != s.getDomain()[1]:
+                raise Exception('second input not Vector in comp 1 of SepFunction domain')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from DerivNonlinearRestriction constructor')
+        else:
+            self.s = s
+            self.x0 = x0
+            self.x1 = x1
+
+    def getDomain(self):
+        return self.s.getDomain()[0]
+
+    def getRange(self):
+        return self.s.getRange()
+
+    def applyFwd(self,dx0,y):
+        self.s.applyFwdDeriv(self.x0, dx0, self.x1, y)
+
+    def applyAdj(self,y,dx0):
+        self.s.applyAdjDeriv(self.x0, y, self.x1, dx0)
+
+    def myNameIs(self):
+        print('Derivative of Nonlinear Restriction of Separable Function:')
+        self.s.myNameIs()
+        print('at nonlinear component vector:')
+        self.x0.myNameIs()
+        print('and linear component vector:')
+        self.x1.myNameIs()
+
+# Nonlinear restriction of separable function
+class NonlinearRestriction(Function):
+
+    def __init__(self, s, x1):
+        try:
+            if not isinstance(s, SepFunction):
+                raise Exception('first input not SepFunction')
+            if not isinstance(s.getDomain(), ProductSpace):
+                raise Exception('domain of first input not ProductSpace')
+            if len(s.getDomain().spl) != 2:
+                raise Exception('number of components of domain != 2')
+            if not isinstance(x1, Vector):
+                raise Exception('second input not Vector')
+            if x1.space != s.getDomain()[1]:
+                raise Exception('second input not Vector in comp 1 of SepFunction domain')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LinearRestriction constructor')
+        else:
+            self.s = s
+            self.x1 = x1
+
+    def getDomain(self):
+        return self.s.getDomain()[0]
+
+    def getRange(self):
+        return self.s.getRange()
+
+    def apply(self,x0,y):
+        self.s.applyFwd(x0,self.x1,y)
+
+    def deriv(self,x0):
+        return DerivNonlinearRestriction(self.s, x0, self.x1)
+
+    def myNameIs(self):
+        print('Nonlinear Restriction of Separable Function:')
+        self.s.myNameIs()
+        print('at nonlinear component vector:')
+        self.x0.myNameIs()        
+        
+class ScalarJet(ABC):
+    '''
+    Abstract 2-jet class for scalar functions. Stores  
+    copy of evaluation point to reduce dependence on calling
+    unit. This choice makes accidental incoherence of attributes
+    unlikely.
+    '''
+
+    @abstractmethod
+    def point(self):
+        pass
+
+    @abstractmethod
+    def value(self):
+        pass
+
+    @abstractmethod
+    def gradient(self):
+        pass
+
+    @abstractmethod
+    def Hessian(self):
+        pass
+
+    @abstractmethod
+    def myNameIs(self):
+        pass
+
+    
 

@@ -29,15 +29,10 @@ def runtests():
 
     # dup
     print('\n**** duplicate m.rsf')
-    mdup = m.dup()
+    mdup = vcl.Vector(m.space)
+    mdup.copy(m)
     #mdup.myNameIs()
 
-    print("\n**** correct copy")
-    try:
-        mdup.copy(m)
-    except Exception as ex:
-        print(ex)
-        
     # different space - same geom
     sp0 = rsfSpace('m.rsf')
     

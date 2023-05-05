@@ -194,7 +194,7 @@ class Vector:
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector.linComb')
-        
+
     def dot(self,x):
         try:
             if x.space != self.space:
@@ -269,6 +269,15 @@ class Vector:
         self.space.printData(self.data)
         # print('Owned by vector = ' + str(self.own))
 
+# external function version of vector methods - often convenient
+# linComb returns a new vector linear comb - organized to be ax+y by
+# default, consistent with BLAS
+def linComb(a,x,y,b=1.0):
+    z = y.dup()
+    z.linComb(a,x,b)
+    return z
+def dot(x,y):
+    return x.dot(y)
 
 # simple nonlinear op class
 class Function(ABC):
@@ -292,35 +301,33 @@ class Function(ABC):
 
 # most functions will be built this way
 class StdFunction(Function):
-    __doc__ = '''
+    '''
     domain and range are vcl.Space objects
 
-    apply is a function with signature apply(x,y,aux), 
+    apply is a function with signature apply(x,y,**aux), 
     where
         x is a data object for input vector in the domain
         y is a data object for output vector in the range
-        aux is a dictionary of additional arguments (if any)
+        aux is additional args (if any) passed by keyword
 
     applyFwd is a function with signature 
-        applyFwd(x,dx,dy,aux)
+        applyFwd(x,dx,dy,**aux)
     where
         x is a data object for input reference vector in the domain
         dx is a data object for input perturbation vector in the domain
         dy is a data object for output perturbation vector in the range
-        aux is a dictionary listing auxiliary arguments for apply, passed via
-            kwargs
+        aux is additional args (if any) passed by keyword
 
     applyAdj is a function with signature 
-        applyAdj(x,dy,dx,aux)
+        applyAdj(x,dy,dx,**aux)
     where
         x is a data object for input reference vector in the domain
         dy is a data object for input perturbation vector in the range
         dx is a data object for output perturbation vector in the domain
-        aux is a dictionary listing auxiliary arguments for apply, passed via
-            kwargs
+        aux is additional args (if any) passed by keyword
     '''
 
-    def __init__(self,dom,rng,apply,applyFwd=None,applyAdj=None,aux=None):
+    def __init__(self,dom,rng,apply,applyFwd=None,applyAdj=None,**aux):
         self.dom = dom
         self.rng = rng
         self.apply = apply
@@ -332,11 +339,8 @@ class StdFunction(Function):
         try:
             if x.space != self.dom:
                 raise Exception('Error: input vec not in domain')
-            y = vcl.Vector(self.rng)
-            if self.aux is None:
-                y.data=self.apply(x.data,y.data)
-            else:
-                y.data=self.apply(x.data,y.data,**self.aux)
+            y = Vector(self.rng)
+            y.data=self.apply(x.data,y.data,**self.aux)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.StdFunction.operator()')
@@ -349,13 +353,13 @@ class StdFunction(Function):
                 raise Exception('deriv construction requires non-None applyFwd')
             if self.applyAdj is None:
                 raise Exception('deriv construction requires non-None applyAdj')
-            return LinearFunction(self.dom,self.rng,
+            return StdLinearOperator(self.dom,self.rng,
                                       partial(self.applyFwd,x.data),
                                       partial(self.applyAdj,x.data),
-                                      aux = self.aux)
+                                      **self.aux)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vcl.LinearFunction.deriv')
+            raise Exception('called from vcl.LinearOperator.deriv')
 
     def myNameIs(self):
         print('\nvcl.Function instance')
@@ -371,7 +375,7 @@ class StdFunction(Function):
             print('*** deriv: applyAdj supplied')
 
 # function composition f after g
-class FunctionComp(Function):
+class comp(Function):
 
     def __init__(self,f,g):
         try:
@@ -383,8 +387,8 @@ class FunctionComp(Function):
         else:
             self.f = f
             self.g = g
-	    self.dom = g.dom
-	    self.rng = f.rng
+            self.dom = g.dom
+            self.rng = f.rng
 
     def __call__(self,x):
         try:
@@ -392,11 +396,11 @@ class FunctionComp(Function):
                 raise Exception('Error: input vec not in domain')
             y = self.g(x)
             z = self.f(y)
-	except Exception as ex:
-	    print(ex)
-	    raise Exception('called from FunctionComp operator()')
-	else:
-	    return z
+        except Exception as ex:
+	        print(ex)
+	        raise Exception('called from comp operator()')
+        else:
+	        return z
     
     def deriv(self,x):
         try:
@@ -415,7 +419,7 @@ class FunctionComp(Function):
         print('and output function (f)')
         self.f.myNameIs()
 
-class LinearFunction(Function):
+class LinearOperator(Function):
 
     def __call__(self,x):
         return __mul__(x)
@@ -433,13 +437,13 @@ class LinearFunction(Function):
     def deriv(self,x):
         return self
 
-class StdLinearFunction(LinearFunction):
+class StdLinearOperator(LinearOperator):
 
     '''
     applyFwd and applyAdj have same signature as apply in Function
     '''
 
-    def __init__(self,dom,rng,applyFwd,applyAdj,aux=None):
+    def __init__(self,dom,rng,applyFwd,applyAdj,**aux):
 
         self.dom = dom
         self.rng = rng
@@ -451,11 +455,8 @@ class StdLinearFunction(LinearFunction):
         try:
             if x.space != self.dom:
                 raise Exception('Error: input vec not in domain')
-            y = vcl.Vector(self.rng)
-            if self.aux is None:
-                y.data=self.applyFwd(x.data,y.data)
-            else:
-                y.data=self.applyFwd(x.data,y.data,**self.aux)
+            y = Vector(self.rng)
+            y.data=self.applyFwd(x.data,y.data,**self.aux)
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.Vector operator()')
@@ -466,19 +467,16 @@ class StdLinearFunction(LinearFunction):
         try:
             if x.space != self.rng:
                 raise Exception('Error: input vec not in range')
-            y = vcl.Vector(self.dom)
-            if self.aux is None:
-                y.data=self.applyAdj(x.data,y.data)
-            else:
-                y.data=self.applyAdj(x.data,y.data,**self.aux)
+            y = Vector(self.dom)
+            y.data=self.applyAdj(x.data,y.data,**self.aux)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vcl.StdLinearFunction.tmul')
+            raise Exception('called from vcl.StdLinearOperator.tmul')
         else:
             return y
 	    
     def myNameIs(self):
-        print('\nvcl.LinearFunction instance')
+        print('\nvcl.LinearOperator instance')
         print('*** domain')
         self.dom.myNameIs()
         print('*** range')
@@ -486,7 +484,7 @@ class StdLinearFunction(LinearFunction):
         print('*** apply function')
         self.applyFwd(None,None,**self.aux)
 
-class transp(LinearFunction):
+class transp(LinearOperator):
 
     def __init__(self, lf):
         self.dom = lf.rng
@@ -532,8 +530,8 @@ class lopcomp(LinearOperator):
         else:
             self.a = a
             self.b = b
-	    self.dom = b.dom
-	    self.rng = a.rng
+        self.dom = b.dom
+        self.rng = a.rng
     
     def __mul__(self,x,y):
         try:
@@ -542,10 +540,10 @@ class lopcomp(LinearOperator):
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.lopcomp.applyFwd')
-	else:
-	    return y
+        else:
+            return y
 
-    def tmul(self,x:
+    def tmul(self,x):
         try:
             z=transp(self.a)*x
             y=transp(self.b)*z
@@ -553,7 +551,7 @@ class lopcomp(LinearOperator):
             print(ex)
             raise Exception('called from vcl.lopcomp.applyAdj')
         else:
-	    return y
+            return y
 
     def myNameIs(self):
         print('vcl.lopcomp object: a composed with (after) b')

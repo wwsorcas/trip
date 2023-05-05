@@ -43,13 +43,16 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, verbose):
             
         # print('#3. $\alpha = gamma / \langle p, s\rangle$')
         alpha = gamma/p.dot(s)
+        #print('|p|=' + str(p.norm()) + ' |q|=' + str(q.norm()) + ' |s|=' + str(s.norm()) + ' alpha=' + str(alpha))
 
         # print('#4. $x \leftarrow x+\alpha p$')
         x.linComb(alpha,p)
 
         # print('#5. $e \leftarrow e-\alpha q$')
+        #print('|e| before =' + str(e.norm()))
         e.linComb(-alpha,q)
         enorm = e.norm()
+        #print('|e| after  =' + str(enorm))
         
         # print('#6. $r \leftarrow r-\alpha s$')
         r.linComb(-alpha,s)
@@ -100,18 +103,21 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
         
         # print('#2. $e = b$')
         if e is None:
-            e = b.dup()
-        else:
-            e.copy(b)
+            e = vcl.Vector(b.space)
+        e.copy(b)
         
         # print('#3. $r = A^Tb$')
-        p = transp(A)*b
+        #print('vcalg.conjgrad')
+        #print('|b|=' + str(b.norm()))
+        p=transp(A)*b
+        #print('|p|=' + str(p.norm()))
+        p.myNameIs()
         
         # print('#4. $p = r$')
         if r is None:
-            r = p.dup()
-        else:
-            r.copy(p)
+            r = vcl.Vector(p.space)
+        r.copy(p)
+        #print('|r|=' + str(r.norm()))
         
         # print('#7. $\gamma_0 = \langle r, r \rangle$')
         gamma0 = r.dot(r)
@@ -236,7 +242,8 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
         r = transp(A)*b
         
         # print('#4. $p = r$')
-        p = r.dup()
+        p = vcl.Vector(r.space)
+        p.copy(r)
 
         # print('#5. $\gamma_0 = \langle r, r \rangle$')
         gamma0 = r.dot(r)
@@ -355,7 +362,8 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
 
             # trial update, actred, predred
             # xp.copy(x)
-            xp = x.dup()
+            xp = vcl.Vector(x.space)
+            xp.copy(x)
             xp.linComb(1.0,s)
             #F.apply(xp,resp)
             resp = F(xp)
@@ -424,3 +432,286 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
     except Exception as ex:
         print(ex)
         raise Exception('called from trgn')
+
+# single steps are separated from loops as separate functions in order
+# to force garbage-collection.
+
+###################### BASIC CONJUGATE GRADIENT ITERATION ######################
+
+# Basic algorithm, as opposed to CGNE implemented above
+
+# args:
+#  x = estimated solution on return
+#  b = data
+#  A = SPD operator
+#  kmax = max iterations for termination
+#  rho = relative residual decrease for termination
+#  r = residual on return (optional)
+#  verbose = verbosity level
+#    0 - no print output
+#    1 - print number of its performed, residual norm
+#    2 - (or more) print it, res at every it
+
+def bcgstep(x, A, k, p, r, gamma, verbose, Delta=None):
+#    os.system('echo top; ls /var/tmp')
+    try:
+            
+        # print('#2. $s = A^Tq$')
+        s = A*p
+            
+        # print('#3. $\alpha = gamma / \langle p, s\rangle$')
+        alpha = gamma/p.dot(s)
+
+        # print('#4. $x \leftarrow x+\alpha p$')
+        x.linComb(alpha,p)
+
+        cgend = False
+        xnorm = x.norm()
+        # print('xnorm = ' + str(xnorm))
+        if Delta is not None:
+            if xnorm > Delta:
+                x.scale(Delta/xnorm)
+                cgend = True
+
+        if not cgend:
+            
+            # print('#6. $r \leftarrow r-\alpha s$')
+            r.linComb(-alpha,s)
+        
+            # print('#7. $\delta = \langle r, r \rangle$')
+            gammaold = gamma
+            gamma = r.dot(r)
+
+            # print('#8. $\beta = \delta / \gamma$')
+            beta = gamma/gammaold
+        
+            # print('#9. $p \leftarrow r + \beta p$')
+            p.linComb(1.0,r,beta)
+        
+            # print('#11. $k \leftarrow k+1$')
+            k=k+1
+        
+            # print('#12. print $k$ (iteration) $\|e\|$ (residual norm),
+            # $\|r\|$ (normal residual norm)')
+            if verbose > 1:
+                print('%3d  %10.4e' % (k, math.sqrt(gamma)))
+
+        # without the following code, the vector destructor is not called
+        # until the program exits
+        # reduce ref count for q, s to 1, which is unreachable - the
+        # reference created by invoking the constructor 
+        del s
+        # force garbage collection
+        n=gc.collect()
+
+        return [x, k, p, r, gamma, cgend]
+
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from cgstep')
+                
+def bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None):
+    '''
+    Standard CG algorithm for solution of SPD linear systems Ax=b. 
+    Initial estimate is zero vector. Residual vector is optional argument.
+    Optionally implements trust radius truncation. Note that if truncation
+    is active, then residual has not been calculated for truncated solution
+    on return - that task is left to the calling unit.
+    
+    Parameters:
+    x (vcl.Vector): solution estimate
+    b (vcl.Vector): right-hand side vector
+    A (vcl.LinearOperator): SPD linear map
+    kmax (int): iteration limit
+    rho (float): residual tolerance
+    verbose (int): verbosity level - 0 = no output, 1 = summary at 
+        end if iteration, > 1 = it count and residual at every iteration.
+    r (vcl.Vector): residual vector, optional
+    Delta (float): trust radius, optional
+
+    Return value: k (int) = number of iterations
+
+    '''
+    try:
+
+        #Initialize:
+        # print('#1. $x = 0$')
+        x.scale(0.0)
+
+        # initial search direction = initial negative residual = b
+        p = vcl.Vector(x.space)
+        p.copy(b)
+        
+        # print('#4. $p = r$')
+        if r is None:
+            r = vcl.Vector(x.space)
+        r.copy(p)
+        #print('|r|=' + str(r.norm()))
+        
+        # print('#7. $\gamma_0 = \langle r, r \rangle$')
+        gamma0 = r.dot(r)
+        
+        # print('#8. $\gamma = \gamma_0$')
+        gamma=gamma0
+        
+        # print('#9. $k=0$')
+        k=0
+        rnorm = math.sqrt(gamma)
+        rnorm0=rnorm
+    
+        if verbose > 1:
+            print('  k       |r|')
+            print('%3d  %10.4e' % (k, rnorm))
+
+        cgend = False
+        
+        #Repeat while $k<k_{\rm max}$, $\|e\|>\epsilon \|d\|$:
+        while k<kmax and rnorm>rho*rnorm0 and not cgend:
+
+            [x, k, p, r, gamma, cgend] = \
+                bcgstep(x, A, k, p, r, gamma, verbose, Delta)
+
+            rnorm = math.sqrt(gamma)
+            
+        if verbose > 0:
+            print('------- bcg final ---------')
+            if cgend:
+                print('active tr rad = ' + str(Delta))
+                print('k = ' + str(k))                    
+            else:
+                print('  k      |r|      |r|/r0|')
+                print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
+            print('---------------------------')
+
+        return k
+
+    except Exception as ex:
+        print(ex)
+        raise Exception("called from bcg")
+
+def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
+             gammared=0.1, gammainc=0.9, nverbose=0, cgverbose=0, \
+             maxback=0, gnorm0=None):
+
+    try:
+
+        # total CG steps
+        ktot = 0
+        # total function evals
+        jtot = 0
+        # total gradient evals
+        gtot = 0
+            
+        # Initialize scalar function jet
+        Jx = J(x)
+        
+        # negative gradient
+        grad = Jx.gradient()
+        grad.scale(-1.0)
+        gtot+= 1
+
+        gnorm = grad.norm()
+        if gnorm0 is None:
+            gnorm0 = gnorm
+
+        # storage for step
+        s=Vector(x.space)
+        # storage for trial update
+        xp = vcl.Vector(x.space)
+        
+        # current value
+        Jc=Jx.value()
+        jtot+= 1
+        
+        # Newton iteration
+        i=0
+        if nverbose>0:
+            print('  i      J        |grad J|      Delta')
+            print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
+
+        while i<imax and gnorm>eps*gnorm0:
+
+            # compute step
+            #bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None)
+            k = bcg(s, grad, Jx.Hessian, kmax, rho,
+                        verbose=cgverbose, r=None, Delta=Delta)
+            ktot += k
+            print('executed ' + str(k) + ' CG steps, total so far = ' +
+                      str(ktot))
+            
+            actred = 0.0
+            predred=0.5*s.dot(grad)
+
+            # trial update, actred, predred
+
+            xp.copy(x)
+            xp.linComb(1.0,s)
+            Jxp = J(xp)
+            Jp = Jxp.value()
+            jtot+= 1
+            actred=Jc-Jp
+            # remember grad is NEGATIVE grad
+            if nverbose>1:
+                print('actred=' + str(actred) + ' predred=' + str(predred))
+
+            # backtracking loop
+            j = 0
+            while actred < gammared*predred and j < maxback:
+                # trust radius reduction
+                Delta *= mured
+                # scale step
+                s.scale(mured)
+                # scale predred
+                predred *= mured
+                # recompute
+                xp.copy(x)
+                xp.linComb(1.0,s)
+                Jxp = J(xp)
+                Jp = Jxp.value()
+                jtot+= 1
+                actred=Jc-Jp
+                if nverbose>1:
+                    print('backtrack step ' + str(j) + ':')
+                    print('actred=' + str(actred) + ' predred=' + str(predred))
+                j += 1
+
+            # if still not there, reduce Delta and re-run CG
+            if actred < gammared*predred:
+                Delta *= mured
+
+            # update
+            else:
+                x.copy(xp)
+                # res = resp
+                Jx = J(x)
+                Jc = Jx.value()
+                jtot += 1
+                grad = Jx.gradient()
+                grad.scale(-1.0)
+                gtot+= 1
+                gnorm = grad.norm()
+                # trust radius increase
+                if actred > gammainc*predred:
+                    Delta *= muinc
+                i=i+1
+            if nverbose > 0:
+                print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
+                
+        print('total function evals     = ' + str(jtot))
+        print('total gradient evals     = ' + str(gtot))
+        print('total CG steps           = ' + str(ktot))
+
+        return [Delta, gnorm0]
+        
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from trgn')
+
+
+
+
+
+        
+
+
+

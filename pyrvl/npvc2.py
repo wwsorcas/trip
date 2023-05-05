@@ -1,9 +1,9 @@
-import vcl
+import vcl2
 import numpy as np
 import sys
 
 # numpy vector space
-class Space(vcl.Space):
+class Space(vcl2.Space):
 
     def __init__(self,n):
         self.dim = n
@@ -14,95 +14,73 @@ class Space(vcl.Space):
     def isData(self,x):
         return (isinstance(x,np.ndarray) and x.shape == (self.dim,1))
 
-    def raw_linComb(self,a,x,y,b=1.0):
+    def linComb(self,a,x,y,b=1.0):
         y = (a*x + b*y)
         return y
         
-    def raw_dot(self,x,y):
+    def dot(self,x,y):
         return np.dot(x.T,y)[0][0]
 
-    def raw_scale(self,x,c):
+    def scale(self,x,c):
         x=c*x
         return x
 
-    # convenience functions
-    def raw_copy(self,x,y):
-        np.copyto(y,x)
+    def copy(self,x,y):
+        y=np.copy(x)
         return y
 
     # nothing to see here
     def cleanup(self,x):
         pass
 
-    def raw_printData(self,x):
+    def printData(self,x):
         print(x)
        
     def myNameIs(self):
         print('npvc.Space of dimension ' + str(self.dim))
-    
-class MatrixOperator(vcl.LinearOperator):    
 
-    def __init__(self,dom,rng,mat):
-
-        try: 
-            self.dom = dom
-            self.rng = rng
-            matuple  = mat.shape
-            if matuple[0] != rng.dim:
-                raise Exception('num rows ne rng dim')
-            if matuple[1] != dom.dim:
-                raise Exception(' num cols ne dom dim')
-            self.mat = np.copy(mat)
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from MatrixOperator constructor')
-    
-    def getDomain(self):
-        return self.dom
-    
-    def getRange(self):
-        return self.rng
-    
-    def applyFwd(self,x, y):
-        y.data = self.mat@x.data
+def matmult(x,y,mat):
+    try:
+        if y is None:
+            print('matmult')
+            print('matrix multiplication function: matrix = ')
+            print(mat)
+            return
+        y=mat@x
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from matmult')
+    else:
         return y
 
-    def applyAdj(self,x, y):
-        y.data = self.mat.T@x.data
+def adjmult(x,y,mat):
+    try:
+        if y is None:
+            print('matmult')
+            print('matrix transpose multiplication function: matrix = ')
+            print(mat)
+            return
+        y=mat.T@x
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from matmult')
+    else:
         return y
+    
+#def buildMatrixOperator(dom,rng,applyFwd,applyAdj,mat=None):
+#    return stdLinearOperator(dom,rng,applyFwd,applyAdj,mat)
 
-    def myNameIs(self):
-        print('NUMPY Matrix Operator with matrix:')
-        print(self.mat)
-        print('domain:')
-        self.dom.myNameIs()
-        print('range:')
-        self.rng.myNameIs()
+#class OpExpl1(vcl.Function):
 
-class OpExpl1(vcl.Function):
-
-    def __init__(self,dom,rng):
-        try:
-            self.dom = dom
-            self.rng = rng
-            if dom.dim != 2 or rng.dim !=3:
-                raise Exception('Error: input dims wrong')
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from npvc:OpExpl1')
-        
-    def getDomain(self):
-        return self.dom
-
-    def getRange(self):
-        return self.rng
-
-    def apply(self,x,y):
+def OpExpl1(x,y):
+    try:
         y.data[0] = x.data[0]*x.data[1]
         y.data[1] = -x.data[1]+x.data[0]*x.data[0]
         y.data[2] = x.data[1]*x.data[1]
+    except Exception as ex:
+        print(ex)
 
-    def raw_deriv(self,x):
+def DerivOpExl1(x,dx,dy):
         mat = np.zeros((3,2))
         mat[0,0] = x.data[1]
         mat[0,1] = x.data[0]
@@ -396,4 +374,5 @@ class invulbounds(vcl.Function):
     
 
         
+
 
