@@ -111,7 +111,7 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
         #print('|b|=' + str(b.norm()))
         p=transp(A)*b
         #print('|p|=' + str(p.norm()))
-        p.myNameIs()
+        #p.myNameIs()
         
         # print('#4. $p = r$')
         if r is None:
@@ -589,9 +589,36 @@ def bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None):
         print(ex)
         raise Exception("called from bcg")
 
-def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
+def trcgnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, \
              gammared=0.1, gammainc=0.9, nverbose=0, cgverbose=0, \
-             maxback=0, gnorm0=None):
+             maxreds=0, gnorm0=None, jetargs=None):
+    '''
+    Generic Newton or Newton-esque algorithm for minimization of a scalar
+    function. The objective function is represented by its ScalarJet class
+    J. Since the class definition (which has no persistent state controlled 
+    at runtime) is passed, provision is made for additional keyword-indexed 
+    arguments to the ScalarJet subclass constructor.
+
+    Parameters:
+    x (vcl.Vector): solution estimate, Vector in domain of J
+    J (class): ScalarJet subclass
+    newtmax (int): max Newton iterates
+    newteps (float): gradient reduction - GN stopping criterion
+    cgmax (int): max CG iterates per GN iteration
+    cgeps (float): normal residual reduction - CG stopping criterion
+    Delta (float): trust radius
+    mured (float): Delta reduction factor
+    muinc (float): Delta increase factor
+    gammared (float): G-A reduction threshhold
+    gammainc (float): G-A increase threshhold
+    maxreds (int): max trust radius reductions
+    nverbose (int): Newton verbosity flag
+    cgverbose (int): CG verbosity flag
+    gnorm0 (float): base gradient norm, defaults to initial, 
+        for relative reduction test. Assign saved value to 
+        re-start iteration
+    jetargs (dict): optional keywrod args to jet constructor
+    '''
 
     try:
 
@@ -603,7 +630,7 @@ def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         gtot = 0
             
         # Initialize scalar function jet
-        Jx = J(x)
+        Jx = J(x,**jetargs)
         
         # negative gradient
         grad = Jx.gradient()
@@ -629,34 +656,33 @@ def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             print('  i      J        |grad J|      Delta')
             print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
 
-        while i<imax and gnorm>eps*gnorm0:
+        while i<newtmax and gnorm>newteps*gnorm0:
 
             # compute step
-            #bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None)
-            k = bcg(s, grad, Jx.Hessian, kmax, rho,
+            k = bcg(s, grad, Jx.Hessian(), cgmax, cgeps,
                         verbose=cgverbose, r=None, Delta=Delta)
             ktot += k
             print('executed ' + str(k) + ' CG steps, total so far = ' +
                       str(ktot))
             
             actred = 0.0
+            # remember grad is NEGATIVE grad
             predred=0.5*s.dot(grad)
 
             # trial update, actred, predred
 
             xp.copy(x)
             xp.linComb(1.0,s)
-            Jxp = J(xp)
+            Jxp = J(xp,**jetargs)
             Jp = Jxp.value()
             jtot+= 1
             actred=Jc-Jp
-            # remember grad is NEGATIVE grad
             if nverbose>1:
                 print('actred=' + str(actred) + ' predred=' + str(predred))
 
             # backtracking loop
             j = 0
-            while actred < gammared*predred and j < maxback:
+            while actred < gammared*predred and j < maxreds:
                 # trust radius reduction
                 Delta *= mured
                 # scale step
@@ -666,7 +692,7 @@ def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
                 # recompute
                 xp.copy(x)
                 xp.linComb(1.0,s)
-                Jxp = J(xp)
+                Jxp = J(xp,**jetargs)
                 Jp = Jxp.value()
                 jtot+= 1
                 actred=Jc-Jp
@@ -683,7 +709,7 @@ def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             else:
                 x.copy(xp)
                 # res = resp
-                Jx = J(x)
+                Jx = J(x,**jetargs)
                 Jc = Jx.value()
                 jtot += 1
                 grad = Jx.gradient()
@@ -701,11 +727,11 @@ def trnewt(x, b, J, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
         print('total gradient evals     = ' + str(gtot))
         print('total CG steps           = ' + str(ktot))
 
-        return [Delta, gnorm0]
+        return [Delta, gnorm]
         
     except Exception as ex:
         print(ex)
-        raise Exception('called from trgn')
+        raise Exception('called from trcgnewt')
 
 
 

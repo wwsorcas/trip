@@ -29,8 +29,9 @@ def runtests():
 
     # dup
     print('\n**** duplicate m.rsf')
-    mdup = vcl.Vector(m.space)
-    mdup.copy(m)
+    #mdup = Vector(m.space)
+    #mdup.copy(m)
+    mdup = m.dup()
     #mdup.myNameIs()
 
     # different space - same geom
