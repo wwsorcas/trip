@@ -825,7 +825,7 @@ class StandardJet(ScalarJet):
                 raise Exception('first arg not in domain of second arg')
         except Exception as ex:
             print(ex)
-            raise Exception('called from StanardJet constructor')
+            raise Exception('called from StandardJet constructor')
         else:
             self.f = fcn
             self.x = x
