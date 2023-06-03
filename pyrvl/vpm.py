@@ -320,6 +320,68 @@ class expl1(vcl.ScalarFunction):
     def myNameIs(self):
         print('vpm expl 1, n = ' + str(self.n))
 
+class jetexpl1(vcl.ScalarJet):
+
+    def __init__(self,x):
+        try:
+            if not isinstance(x,vcl.Vector):
+                raise Exception('input not vcl.Vector')
+            if not isinstance(x.space,npvc.Space):
+                raise Exception('input Vector not member of npvc.Space')
+            self.x = x
+            self.n = x.space.dim
+            self.mat0 = np.zeros((2*self.n,self.n))
+            self.mat1 = np.zeros((2*self.n,self.n))            
+            for i in range(self.n):
+                self.mat0[i][i] = 1.0
+                self.mat1[self.n+i][i] = i+1
+            self.rhs = np.zeros((2*self.n,1))
+            for i in range(self.n):
+                self.rhs[i]=(-i-1)**(i+1)
+            ## trigger for internal computation
+            self.w = None
+            self.r = None
+            self.v = None
+            self.g = None
+            self.H = None
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vpmtest.expl1 constructor')
+        
+    def point(self):
+        return self.x
+
+    # internal computations
+    def nobodysbiz(self):
+        if self.r is None:
+            print('--> nobodysbiz')
+            xs = self.x.norm()**2/(1 + self.x.norm()**2)
+            mat = self.mat0 + xs*self.mat1
+            [self.w, res, rk, s] = np.linalg.lstsq(mat,self.rhs, rcond=None)
+            self.r = mat @ self.w - self.rhs        
+
+    def value(self):
+        self.nobodysbiz()
+        if self.v is None:
+            self.v = 0.5*np.dot(self.r.T,self.r)[0][0]
+        return self.v
+    
+    def gradient(self):
+        self.nobodysbiz()
+        if self.g is None:
+            self.g = vcl.Vector(self.x.space)
+            p = np.dot(self.r.T,self.mat1 @ self.w)[0][0]
+            np.copyto(self.g.data,
+                          2.0*self.x.data*p/((1+self.x.norm()**2)**2))
+        return self.g
+
+    # temporary
+    def Hessian(self,x):
+        return None
+
+    def myNameIs(self):
+        print('vpm jet expl 1, n = ' + str(self.n))
+        
 ###################
 
 class sepexpl1(SepFunction):
