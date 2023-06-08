@@ -31,7 +31,7 @@ class SepFunction(ABC):
         pass
     
     @abstractmethod
-    def opfcn(self, x0):
+    def opfcn(self, x0) -> vcl.LinearOperator:
         pass
 
     @abstractmethod

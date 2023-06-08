@@ -849,6 +849,8 @@ class StandardJet(ScalarJet):
         print('Evaluation point:')
         self.x.myNameIs()
 
+import typing
+
 class LSSolver(ABC):
     ''' 
     Interface for a function object (fcn) producing
@@ -874,7 +876,7 @@ class LSSolver(ABC):
     '''
 
     @abstractmethod
-    def solve(self, op, rhs):
+    def solve(self, op, rhs) -> [Vector, Vector]:
         pass
         
     
