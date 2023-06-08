@@ -849,5 +849,35 @@ class StandardJet(ScalarJet):
         print('Evaluation point:')
         self.x.myNameIs()
 
+class LSSolver(ABC):
+    ''' 
+    Interface for a function object (fcn) producing
+    approximate solution of least squares problem
+    min |Ax-b|
+    returns approximate solution x and residual b-Ax. 
+    A is a linear operator and b is a vector in its
+    range space.
+
+    Not necessarily a linear function (regarded as outputting x)
+    since various iterative algorithms for LS solution are not
+    linear in b. Similarly, not necessarily even differentiable. 
+    For this reason, not implemented as subclass of Function or
+    LinearOperator, even though some instances actually do define
+    specializations of these types.
+
+    Strictly speaking, the only requirement on solve method is
+    that it returns a pair consisting of vectors in domain and 
+    range of the op argument. Its intended use is
+    [x,e] = solve(A,b)
+    where op=A, rhs=b, x is an approximate minimizer of |Ax-|,
+    and e = b-Ax.
+    '''
+
+    @abstractmethod
+    def solve(self, op, rhs):
+        pass
+        
+    
+
     
 

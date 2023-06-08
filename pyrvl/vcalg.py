@@ -149,6 +149,42 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
     except Exception as ex:
         print(ex)
         raise Exception("called from cg.conjgrad")
+
+class cgne(vcl.LSSolve):
+    '''
+    object interface for CGNE algorithm, for use in VPM and other
+    applications requiring solution of lease squares problem:
+    min_x |Ax-b|
+    in terms of this description, the args are
+    op = A
+    rhs = b
+    sol = x
+    res = b-Ax
+    Constructor stores CG parameters. Solve method sanity-checks and
+    calls CG algorithm.
+    '''
+    def __init__(self, kmax, eps, rho, verbose=0):
+        self.kmax = kmax
+        self.eps = eps
+        self.rho = rho
+        self.verbose = verbose
+
+    def solve(self, op, rhs):
+        try:
+            if not isinstance(op, LinearOperator):
+                raise Exception('first arg not LinearOperator')
+            if not isinstance(rhs, Vector):
+                raise Exception('second arg not Vector')
+            if rhs.space != op.getRange():
+                raise Exception('second arg not in range of first arg')
+            x = vcl.Vector(op.getDomain())
+            e = vcl.Vector(op.getRange())
+            conjgrad(x, rhs, op, self.kmax, self.eps, self.rho,
+                        verbose=self.verbose, e=e, r=None)
+            return [x, e]
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcalg.cgnefcn.solve)
         
 
 ########### TRUST-RADIUS MODIFIED CONJUGATE GRADIENT ITERATION ##########

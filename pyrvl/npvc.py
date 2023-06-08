@@ -64,12 +64,10 @@ class MatrixOperator(vcl.LinearOperator):
         return self.rng
     
     def applyFwd(self,x, y):
-        y.data = self.mat@x.data
-        return y
+        np.copyto(y.data,self.mat@x.data)
 
     def applyAdj(self,x, y):
-        y.data = self.mat.T@x.data
-        return y
+        np.copyto(y.data,self.mat.T@x.data)
 
     def myNameIs(self):
         print('NUMPY Matrix Operator with matrix:')
@@ -78,6 +76,8 @@ class MatrixOperator(vcl.LinearOperator):
         self.dom.myNameIs()
         print('range:')
         self.rng.myNameIs()
+
+###### EXAMPLES
 
 class OpExpl1(vcl.Function):
 

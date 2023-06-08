@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import vcl
 import vcalg
 import numpy as np
+import typing
 
 class SepFunction(ABC):
     '''
@@ -11,181 +12,38 @@ class SepFunction(ABC):
     (x0,x1) \rightarrow A(x0)x1, 
 
     in which A is a linear-op-value function
-    of x0. Not realized as a function itself, but as a repository of the
-    components necessary to create the two restrictions that
-    figure in VPM. 
+    of x0. Since linear operators do not have a natural Hilbert space 
+    structure, it is not possible to realize this concept as a vcl.Function,
+    which by convention has a Hilbert space (really, vcl.Space) range. 
+    Instead, this class has twp methods, each returning a linear operator:
+    the function x0 -> A(x0), and the x0-partial derivative of the function 
+    (x0,x1) -> A(x0)x1, that is, (x0,x1) -> D_x0(A(x0)x1).
     '''
-    @abstractmethod    
-    def getDomain(self):
+    @abstractmethod
+    def opfcn(self, vcl.Vector: x0) -> vcl.LinearOperator
+        pass
+
+    @abstractmethod
+    def derfcn(self, vcl.Vector: x0, vcl.Vector: x1) -> vcl.LinearOperator
         pass
     
-    @abstractmethod    
-    def getRange(self):
-        pass
-
-    # linear in x1
-    @abstractmethod
-    def applyFwd(self,x0,x1,y):
-        pass
-
-    # adjoint of x1 -> applyFwd(x0,x1,y)
-    @abstractmethod
-    def applyAdj(self,x0,y,x1):
-        pass
-
-    # returns partial derivative of applyFwd(x0,x1,y) in x0
-    @abstractmethod
-    def applyFwdDeriv(self, x0, dx0, x1, y):
-        pass
-
-    # adjoint partial derivative of applyFwd(x0,x1,y) in x0
-    @abstractmethod    
-    def applyAdjDeriv(self, x0, y, x1, dx0):
-        pass
-
     @abstractmethod
     def myNameIs(self):
-        pass
+        pass        
 
-# linear restriction of separable function
-class LinearRestriction(vcl.LinearOperator):
-
-    def __init__(self, s, x0):
-        try:
-            if not isinstance(s, SepFunction):
-                raise Exception('first input not SepFunction')
-            if not isinstance(s.getDomain(), vcl.ProductSpace):
-                raise Exception('domain of first input not ProductSpace')
-            if len(s.getDomain().spl) != 2:
-                raise Exception('number of components of domain != 2')
-            if not isinstance(x0, vcl.Vector):
-                raise Exception('second input not Vector')
-            if x0.space != s.getDomain()[0]:
-                raise Exception('second input not Vector in comp 0 of SepFunction domain')
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from LinearRestriction constructor')
-        else:
-            self.s = s
-            self.x0 = x0
-
-    def getDomain(self):
-        return self.s.getDomain()[1]
-
-    def getRange(self):
-        return self.s.getRange()
-
-    def applyFwd(self,x,y):
-        self.s.applyFwd(self.x0,x,y)
-
-    def applyAdj(self,x,y):
-        self.s.applyAdj(self.x0,x,y)
-
-    def myNameIs(self):
-        print('Linear Restriction of Separable Function:')
-        self.s.myNameIs()
-        print('at nonlinear component vector:')
-        self.x0.myNameIs()
-        
-# derivative of nonlinear restriction of separable function
-class DerivNonlinearRestriction(vcl.LinearOperator):
-
-    def __init__(self, s, x0, x1):
-        try:
-            if not isinstance(s, SepFunction):
-                raise Exception('first input not SepFunction')
-            if not isinstance(s.getDomain(), vcl.ProductSpace):
-                raise Exception('domain of first input not ProductSpace')
-            if len(s.getDomain().spl) != 2:
-                raise Exception('number of components of domain != 2')
-            if not isinstance(x0, vcl.Vector):
-                raise Exception('second input not Vector')
-            if x0.space != s.getDomain()[0]:
-                raise Exception('second input not Vector in comp 0 of SepFunction domain')
-            if not isinstance(x1, vcl.Vector):
-                raise Exception('second input not Vector')
-            if x1.space != s.getDomain()[1]:
-                raise Exception('second input not Vector in comp 1 of SepFunction domain')
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from DerivNonlinearRestriction constructor')
-        else:
-            self.s = s
-            self.x0 = x0
-            self.x1 = x1
-
-    def getDomain(self):
-        return self.s.getDomain()[0]
-
-    def getRange(self):
-        return self.s.getRange()
-
-    def applyFwd(self,dx0,y):
-        self.s.applyFwdDeriv(self.x0, dx0, self.x1, y)
-
-    def applyAdj(self,y,dx0):
-        self.s.applyAdjDeriv(self.x0, y, self.x1, dx0)
-
-    def myNameIs(self):
-        print('Derivative of Nonlinear Restriction of Separable Function:')
-        self.s.myNameIs()
-        print('at nonlinear component vector:')
-        self.x0.myNameIs()
-        print('and linear component vector:')
-        self.x1.myNameIs()
-
-# Nonlinear restriction of separable function
-class NonlinearRestriction(vcl.Function):
-
-    def __init__(self, s, x1):
-        try:
-            if not isinstance(s, SepFunction):
-                raise Exception('first input not SepFunction')
-            if not isinstance(s.getDomain(), vcl.ProductSpace):
-                raise Exception('domain of first input not ProductSpace')
-            if len(s.getDomain().spl) != 2:
-                raise Exception('number of components of domain != 2')
-            if not isinstance(x1, vcl.Vector):
-                raise Exception('second input not Vector')
-            if x1.space != s.getDomain()[1]:
-                raise Exception('second input not Vector in comp 1 of SepFunction domain')
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from LinearRestriction constructor')
-        else:
-            self.s = s
-            self.x1 = x1
-
-    def getDomain(self):
-        return self.s.getDomain()[0]
-
-    def getRange(self):
-        return self.s.getRange()
-
-    def apply(self,x0,y):
-        self.s.applyFwd(x0,self.x1,y)
-
-    def deriv(self,x0):
-        return DerivNonlinearRestriction(self.s, x0, self.x1)
-
-    def myNameIs(self):
-        print('Nonlinear Restriction of Separable Function:')
-        self.s.myNameIs()
-        print('at Linear component vector:')
-        self.x1.myNameIs()        
-
-class vpmcgjet(vcl.ScalarJet):
+class vpmjet(vcl.ScalarJet):
 
     '''
     Implementation of variable projection reduction for nonlinear
-    separable least squares problems, using conjugate gradient
-    approximate solution of the linear least squares subproblem
+    separable least squares problems, using a vcl.Function S to supply
+    approximate solution of the linear least squares subproblem.
 
     Parameters:
         x0 (vcl.Vector): evaluation point in nonlinear subspace 
             of domain
         F (SepFunction): separable function object
         b (vcl.Vector): rhs vector in LS objective function
+        S (vcl.LSsolver): LS solution function
         kmax (int): max number of CG iterations
         eps (float): residual tolerance
         rho (float): normal residual tolerance
@@ -193,14 +51,18 @@ class vpmcgjet(vcl.ScalarJet):
         
     '''
 
-    def __init__(self, x0, F, b, kmax, eps, rho, verbose=0):
+    def __init__(self, x0, F, b, S):
         try:
             if not isinstance(x0, vcl.Vector):
                 raise Exception('first arg not vcl.Vector')
+            if not isinstance(F, SepFunction):
+                raise Exception('second arg not SepFunction')
+            if not isinstance(b, vcl.Vector):
+                raise Exception('third arg not vcl.Vector')
+            if not isinstance(S, vcl.LSSolver):
+                raise Exception('fourth arg not vcl.LSSolver')
             if x0.space != F.getDomain()[0]:
                 raise Exception('first arg not in domain of second arg')
-            if not isinstance(F, SepFunction):
-                raise Exception('second arg not vcl.SepFunction')
             if b.space != F.getRange():
                 raise Exception('third arg not vector in range of second arg')
         except Exception as ex:
@@ -210,10 +72,7 @@ class vpmcgjet(vcl.ScalarJet):
             self.x = x0
             self.F = F
             self.b = b
-            self.kmax = kmax
-            self.eps = eps
-            self.rho = rho
-            self.verbose = verbose
+            self.S = S
             # storage for residual 
             self.e = None
             self.w = None
@@ -226,12 +85,8 @@ class vpmcgjet(vcl.ScalarJet):
     def value(self):
         try:
             if self.e is None:
-                A = LinearRestriction(self.F,self.x)
-                self.e = vcl.Vector(A.getRange())
-                self.w = vcl.Vector(A.getDomain())
-                vcalg.conjgrad(self.w, self.b, A, self.kmax,
-                                   self.eps, self.rho, self.verbose,
-                                   e=self.e)
+                [self.w, self.e] =
+                    self.S.solve(self.F.opfcn(self.x),self.b)
             if self.v is None:
                 self.v = 0.5*(self.e.norm()**2)
         except Exception as ex:
@@ -243,16 +98,12 @@ class vpmcgjet(vcl.ScalarJet):
     def gradient(self):
         try:
             if self.e is None:
-                A = LinearRestriction(self.F,self.x)
-                self.e = vcl.Vector(A.getRange())
-                self.w = vcl.Vector(A.getDomain())
-                vcalg.conjgrad(self.w, self.b, A, self.kmax,
-                                   self.eps, self.rho, self.verbose,
-                                   e=self.e)
+                [self.w, self.e] =
+                    self.S.solve(self.F.opfcn(self.x),self.b)
             if self.g is None:
-                G = DerivNonlinearRestriction(self.F,self.x,self.w)
+                G = Der(self.F,self.x,self.w)
                 # r = b-Ax, grad = DA^T(Ax-b)
-                self.g = vcl.transp(G)*self.e
+                self.g = vcl.transp(self.F.derfcn(self.x,self.w))*self.e
                 self.g.scale(-1.0)
         except Exception as ex:
             print(ex)
@@ -407,37 +258,25 @@ class sepexpl1(SepFunction):
             self.mat1 = np.zeros((2*self.n,self.n))
             for i in range(self.n):
                 self.mat0[i][i] = 1.0
-                self.mat1[self.n+i][i] = i+1
+                self.mat1[self.n+i][i] = 1.0/(i+1)
         except Exception as ex:
             print(ex)
             raise Exception('called from vpmtest.expl1 constructor')
         
-    def getDomain(self):
-        return self.dom
-    
-    def getRange(self):
-        return self.rng
-
-    def applyFwd(self,x0,x1,y):
+    def opfcn(self, x0):
         xs = x0.norm()**2/(1 + x0.norm()**2)
         mat = self.mat0 + xs*self.mat1
-        np.copyto(y.data,mat @ x1.data)
+        return npvc.MatrixOperator(self.dom.spl[1],self.rng,mat)
         
-    def applyAdj(self,x0,y,x1):
-        xs = x0.norm()**2/(1 + x0.norm()**2)
-        mat = self.mat0 + xs*self.mat1
-        np.copyto(x1.data, mat.T @ y.data)
-
     # returns partial derivative of applyFwd(x0,x1,y) in x0
-    def applyFwdDeriv(self, x0, dx0, x1, y):
-        dxs = 2*x0.dot(dx0)/((1+x0.norm()**2)**2)
-        mat = dxs*self.mat1
-        np.copyto(y.data,mat @ x1.data)
-
-    # adjoint partial derivative of applyFwd(x0,x1,y) in x0
-    def applyAdjDeriv(self, x0, y, x1, dx0):
-        dxs = (2.0/((1+x0.norm()**2)**2))
-        np.copyto(dx0.data,dxs*np.dot(y.data.T,self.mat1 @ x1.data)[0][0]*x0.data)
+    def derfcn(self, x0, x1):
+#        dxs = 2*x0.dot(dx0)/((1+x0.norm()**2)**2)
+        f1 = self.mat1 @ x1.data
+        f2 =  2*x0.data.T/((1+x0.norm()**2)**2)
+        mat = f2 @ f1
+#        mat = dxs*self.mat1
+#        np.copyto(y.data,mat @ x1.data)
+        return npvc.MatrixOperator(self.dom.sp[0],self.rng,mat)
 
     def myNameIs(self):
         print('sepexpl1')
