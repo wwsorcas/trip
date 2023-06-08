@@ -19,12 +19,23 @@ class SepFunction(ABC):
     the function x0 -> A(x0), and the x0-partial derivative of the function 
     (x0,x1) -> A(x0)x1, that is, (x0,x1) -> D_x0(A(x0)x1).
     '''
+
+    # return produce space in which (x0,x1) lies
     @abstractmethod
-    def opfcn(self, vcl.Vector: x0) -> vcl.LinearOperator
+    def getDomain(self):
+        pass
+
+    # range of linear operator A(x0)
+    @abstractmethod
+    def getRange(self):
+        pass
+    
+    @abstractmethod
+    def opfcn(self, x0):
         pass
 
     @abstractmethod
-    def derfcn(self, vcl.Vector: x0, vcl.Vector: x1) -> vcl.LinearOperator
+    def derfcn(self, x0, x1):
         pass
     
     @abstractmethod
@@ -85,29 +96,27 @@ class vpmjet(vcl.ScalarJet):
     def value(self):
         try:
             if self.e is None:
-                [self.w, self.e] =
-                    self.S.solve(self.F.opfcn(self.x),self.b)
+                [self.w, self.e] = self.S.solve(self.F.opfcn(self.x),self.b)
             if self.v is None:
                 self.v = 0.5*(self.e.norm()**2)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vpmcg.value')
+            raise Exception('called from vpmjet.value')
         else:
             return self.v
 
     def gradient(self):
         try:
             if self.e is None:
-                [self.w, self.e] =
-                    self.S.solve(self.F.opfcn(self.x),self.b)
+                [self.w, self.e] = self.S.solve(self.F.opfcn(self.x),self.b)
             if self.g is None:
-                G = Der(self.F,self.x,self.w)
+                #G = Der(self.F,self.x,self.w)
                 # r = b-Ax, grad = DA^T(Ax-b)
                 self.g = vcl.transp(self.F.derfcn(self.x,self.w))*self.e
-                self.g.scale(-1.0)
+#                self.g.scale(-1.0)
         except Exception as ex:
             print(ex)
-            raise Exception('called from vpmcg.gradient')
+            raise Exception('called from vpmjet.gradient')
         else:
             return self.g
 
@@ -116,7 +125,7 @@ class vpmjet(vcl.ScalarJet):
         return None
 
     def myNameIs(self):
-        print('vpmcgjet blah blah')
+        print('vpmjet blah blah')
 
 ############## EXAMPLES ##############
 
@@ -258,10 +267,16 @@ class sepexpl1(SepFunction):
             self.mat1 = np.zeros((2*self.n,self.n))
             for i in range(self.n):
                 self.mat0[i][i] = 1.0
-                self.mat1[self.n+i][i] = 1.0/(i+1)
+                self.mat1[self.n+i][i] = i+1
         except Exception as ex:
             print(ex)
             raise Exception('called from vpmtest.expl1 constructor')
+
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.rng
         
     def opfcn(self, x0):
         xs = x0.norm()**2/(1 + x0.norm()**2)
@@ -271,12 +286,14 @@ class sepexpl1(SepFunction):
     # returns partial derivative of applyFwd(x0,x1,y) in x0
     def derfcn(self, x0, x1):
 #        dxs = 2*x0.dot(dx0)/((1+x0.norm()**2)**2)
+# m x 1
         f1 = self.mat1 @ x1.data
+# 1 x n
         f2 =  2*x0.data.T/((1+x0.norm()**2)**2)
-        mat = f2 @ f1
+        mat = f1 @ f2
 #        mat = dxs*self.mat1
 #        np.copyto(y.data,mat @ x1.data)
-        return npvc.MatrixOperator(self.dom.sp[0],self.rng,mat)
+        return npvc.MatrixOperator(self.dom.spl[0],self.rng,mat)
 
     def myNameIs(self):
         print('sepexpl1')

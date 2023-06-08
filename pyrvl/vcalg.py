@@ -150,7 +150,7 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
         print(ex)
         raise Exception("called from cg.conjgrad")
 
-class cgne(vcl.LSSolve):
+class cgne(vcl.LSSolver):
     '''
     object interface for CGNE algorithm, for use in VPM and other
     applications requiring solution of lease squares problem:
@@ -184,7 +184,7 @@ class cgne(vcl.LSSolve):
             return [x, e]
         except Exception as ex:
             print(ex)
-            raise Exception('called from vcalg.cgnefcn.solve)
+            raise Exception('called from vcalg.cgnefcn.solve')
         
 
 ########### TRUST-RADIUS MODIFIED CONJUGATE GRADIENT ITERATION ##########

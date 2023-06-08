@@ -77,6 +77,35 @@ class MatrixOperator(vcl.LinearOperator):
         print('range:')
         self.rng.myNameIs()
 
+class MatrixLSSolver(vcl.LSSolver):
+    '''
+    Solves least squares problem min |Ax-b| given MatrixOperator A
+    and Vector b. Returns pair [x,e] with x being solution and e =
+    Ax-b. Uses NumPy least squares solver. This class is an empty 
+    wrapper around the solve function, but is required because
+    other instances of vcl.LSSolver have instance data.
+    '''
+    def solve(self, A, b):
+        try:
+            if not isinstance(A, MatrixOperator):
+                raise Exception('first arg not npvc.MatrixOperator')
+            if not isinstance(b, vcl.Vector):
+                raise Exception('second arg not vcl.Vector')
+            if not isinstance(b.space, Space):
+                raise Exception('space of second arg not npvc.Space')
+            matuple  = A.mat.shape
+            if matuple[0] != b.space.dim:
+                raise Exception('num rows ne rhs dim')
+            x = vcl.Vector(A.getDomain())
+            e = vcl.Vector(A.getRange())
+            [w, res, rk, s] = np.linalg.lstsq(A.mat,b.data, rcond=None)
+            np.copyto(x.data,w)
+            np.copyto(e.data, A.mat @ w - b.data)
+            return [x, e]
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from npvc.MatrixLSSolver.solve')
+
 ###### EXAMPLES
 
 class OpExpl1(vcl.Function):

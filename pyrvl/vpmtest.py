@@ -49,16 +49,40 @@ print('\nvpmcgjet evaluation:')
 
 g = vpm.sepexpl1(sp,sp2)
 
-kmax = 10
-eps  = 1.e-3
-rho  = 1.e-3
+x.data[0] = 1.0
+x.data[1] = 0.2
+x.data[2] =-0.5
+x.data[3] =-0.4
+
+print('matrix at [1.0,0.2,-0.5,-0.4] = ')
+
+op = g.opfcn(x)
+
+print(op.mat)
+
+S = npvc.MatrixLSSolver()
+
 b = vcl.Vector(g.getRange())
-# nonzeros in b only in top half
-for i in range(n):
+
+for i in range(g.getDomain().spl[1].dim):
     b.data[i]=(-i-1)**(i+1)
 
-gx = vpm.vpmcgjet(x, g, b, kmax, eps, rho, verbose=2)
+Jx = vpm.vpmjet(x, g, b, S)
 
-print('\nvpmcgjet value = ' + str(gx.value()))
-print('\ngradient = ')
-print(gx.gradient().data)
+print('value at [1.0,0.2,-0.5,-0.4] = ' + str(Jx.value()))
+print('gradient at [1.0,0.2,-0.5,-0.4] = ')
+print(Jx.gradient().data)
+
+#kmax = 10
+#eps  = 1.e-3
+#rho  = 1.e-3
+#b = vcl.Vector(g.getRange())
+# nonzeros in b only in top half
+#for i in range(n):
+#    b.data[i]=(-i-1)**(i+1)
+
+#gx = vpm.vpmcgjet(x, g, b, kmax, eps, rho, verbose=2)
+
+#print('\nvpmcgjet value = ' + str(gx.value()))
+#print('\ngradient = ')
+#print(gx.gradient().data)
