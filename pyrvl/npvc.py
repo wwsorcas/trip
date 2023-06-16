@@ -100,7 +100,7 @@ class MatrixLSSolver(vcl.LSSolver):
             e = vcl.Vector(A.getRange())
             [w, res, rk, s] = np.linalg.lstsq(A.mat,b.data, rcond=None)
             np.copyto(x.data,w)
-            np.copyto(e.data, A.mat @ w - b.data)
+            np.copyto(e.data, b.data - A.mat @ w)
             return [x, e]
         except Exception as ex:
             print(ex)

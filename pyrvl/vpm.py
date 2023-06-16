@@ -20,7 +20,7 @@ class SepFunction(ABC):
     (x0,x1) -> A(x0)x1, that is, (x0,x1) -> D_x0(A(x0)x1).
     '''
 
-    # return produce space in which (x0,x1) lies
+    # return product space in which (x0,x1) lies
     @abstractmethod
     def getDomain(self):
         pass
@@ -35,7 +35,7 @@ class SepFunction(ABC):
         pass
 
     @abstractmethod
-    def derfcn(self, x0, x1):
+    def derfcn(self, x0, x1) -> vcl.LinearOperator:
         pass
     
     @abstractmethod
@@ -113,7 +113,7 @@ class vpmjet(vcl.ScalarJet):
                 #G = Der(self.F,self.x,self.w)
                 # r = b-Ax, grad = DA^T(Ax-b)
                 self.g = vcl.transp(self.F.derfcn(self.x,self.w))*self.e
-#                self.g.scale(-1.0)
+                self.g.scale(-1.0)
         except Exception as ex:
             print(ex)
             raise Exception('called from vpmjet.gradient')
