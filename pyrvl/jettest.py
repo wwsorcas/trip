@@ -55,11 +55,11 @@ print('\n****************** ')
 print('\n Newton test')
 print('\n****************** ')
 
-vcalg.trcgnewt(x, vcl.StandardJet, newtmax=40, newteps=0.001,
+vcalg.trnewt(x, vcl.StandardJet, newtmax=40, newteps=0.001,
              cgmax=10, cgeps=1.e-6, Delta=10.0, \
              mured=0.5, muinc=1.8, \
              gammared=0.1, gammainc=0.95, nverbose=2, cgverbose=2, \
-             maxreds=0, gnorm0=None, jetargs=rosieargs)
+             maxreds=10, gnorm0=None, jetargs=rosieargs)
 
 print('\nSolution')
 x.myNameIs()

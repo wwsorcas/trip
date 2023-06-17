@@ -298,8 +298,6 @@ def trconjgrad(x, b, A, kmax, rho, Delta, verbose=0):
         rnorm0=r.norm()
         rnorm=rnorm0
 
-        xnorm = x.norm()
-    
         # flag to indicate trust region truncation, indicating
         # return to gn loop
         cgend = False
@@ -402,7 +400,7 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
             # compute step
             k = trconjgrad(s, res, DFx, kmax, rho, Delta, cgverbose)
             ktot += k
-            print('executed ' + str(k) + ' CG steps, total so far = ' + str(ktot))
+#            print('executed ' + str(k) + ' CG steps, total so far = ' + str(ktot))
             
             actred = 0.0
             predred=0.5*s.dot(grad)
@@ -509,7 +507,7 @@ def bcgstep(x, A, k, p, r, gamma, Delta=None, verbose=0):
             
         # print('#3. $\alpha = gamma / \langle p, s\rangle$')
         alpha = gamma/p.dot(s)
-        print('alpha = ' + str(alpha))
+        #print('alpha = ' + str(alpha))
         
         # print('#4. $x \leftarrow x+\alpha p$')
         x.linComb(alpha,p)
@@ -533,11 +531,11 @@ def bcgstep(x, A, k, p, r, gamma, Delta=None, verbose=0):
             # print('#7. $\delta = \langle r, r \rangle$')
             gammaold = gamma
             gamma = r.dot(r)
-            print('gamma = ' + str(gamma))
+            #print('gamma = ' + str(gamma))
 
             # print('#8. $\beta = \delta / \gamma$')
             beta = gamma/gammaold
-            print('beta = ' + str(beta))            
+            #print('beta = ' + str(beta))            
         
             # print('#9. $p \leftarrow r + \beta p$')
             p.linComb(1.0,r,beta)
@@ -562,7 +560,7 @@ def bcgstep(x, A, k, p, r, gamma, Delta=None, verbose=0):
 
     except Exception as ex:
         print(ex)
-        raise Exception('called from cgstep')
+        raise Exception('called from bcgstep')
                 
 def bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None):
     '''
@@ -618,34 +616,31 @@ def bcg(x, b, A, kmax, rho, verbose=0, r=None, Delta=None):
         if verbose > 0:
             print('-------------------->>> CG >>>------------------------')
             print('  k       |r|        |r|/r0|')
-            print('%3d  %10.4e  %10.4' % (k, rnorm, rnorm/rnorm0))
+            print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
 
         #Repeat while $k<k_{\rm max}$, $\|e\|>\epsilon \|d\|$:
         while k<kmax and rnorm>rho*rnorm0 and not cgend:
-            print('gamma before: ' + str(gamma))
+            #print('gamma before: ' + str(gamma))
             [x, k, p, r, gamma, cgend] = \
                 bcgstep(x, A, k, p, r, gamma, Delta, verbose)
-            print('gamma after:  ' + str(gamma))
+            #print('gamma after:  ' + str(gamma))
 
             rnorm = math.sqrt(gamma)            
 
-            if verbose > 0:
-                if cgend:
-                    print('k = ' + str(k) + ' active tr rad = ' + str(Delta))
-                    print()                    
-                else:
-                    print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
+            if verbose > 0 and not cgend:
+                print('%3d  %10.4e  %10.4e' % (k, rnorm, rnorm/rnorm0))
 
         if verbose > 0:            
             print('--------------------<<< CG <<<------------------------')
-
-        return k
 
     except Exception as ex:
         print(ex)
         raise Exception("called from bcg")
 
-def trcgnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, \
+    else:
+        return k
+
+def trnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, \
              gammared=0.1, gammainc=0.9, nverbose=0, cgverbose=0, \
              maxreds=0, gnorm0=None, jetargs=None):
     '''
@@ -719,8 +714,8 @@ def trcgnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, 
             k = bcg(s, grad, Jx.Hessian(), cgmax, cgeps,
                         verbose=cgverbose, r=None, Delta=Delta)
             ktot += k
-            print('executed ' + str(k) + ' CG steps, total so far = ' +
-                      str(ktot))
+            #print('executed ' + str(k) + ' CG steps, total so far = ' +
+            #          str(ktot))
             
             actred = 0.0
             # remember grad is NEGATIVE grad
@@ -760,15 +755,16 @@ def trcgnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, 
 
             # if still not there, reduce Delta and re-run CG
             if actred < gammared*predred:
-                Delta *= mured
+                print('******** trnewt: backtrack loop failed *******')
+                return
 
             # update
             else:
                 x.copy(xp)
                 # res = resp
-                Jx = J(x,**jetargs)
+#                Jx = J(x,**jetargs)
 #               Jx = Jxp
-                Jc = Jx.value()
+#                Jc = Jx.value()
 #                jtot += 1
                 Jx = Jxp
                 Jc = Jp
@@ -780,9 +776,9 @@ def trcgnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, 
                 if actred > gammainc*predred:
                     Delta *= muinc
                 i=i+1
-            if nverbose > 0:
-                print('\nNewton Iteration ' + str(i))
-                print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
+                if nverbose > 0:
+#                print('\nNewton Iteration ' + str(i))
+                    print('%3d  %10.4e  %10.4e  %10.4e' % (i, Jc, gnorm, Delta))
                 
         print('total function evals     = ' + str(jtot))
         print('total gradient evals     = ' + str(gtot))
