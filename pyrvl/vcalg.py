@@ -8,7 +8,7 @@ from vcl import transp
 # single steps are separated from loops as separate functions in order
 # to force garbage-collection.
 
-###################### CONJUGATE GRADIENT ITERATION ######################
+############## CONJUGATE GRADIENT ITERATION FOR THE NORMAL EQUATION ##############
 
 # residual and normal residual vectors e and r are arguments, so
 # that they can be examined after completion. Other work vectors are
@@ -186,7 +186,8 @@ class cgne(vcl.LSSolver):
             raise Exception('called from vcalg.cgnefcn.solve')
         
 
-########### TRUST-RADIUS MODIFIED CONJUGATE GRADIENT ITERATION ##########
+########### TRUST-RADIUS MODIFIED CONJUGATE GRADIENT ITERATION FOR NORMAL EQUATION ##########
+
 def trcgstep(x, A, k, p, r, gamma,
                  Delta=None, verbose=0):
     try:

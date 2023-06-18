@@ -813,7 +813,7 @@ class StandardJet(ScalarJet):
     x (Vector): at this point in its domain
     '''
 
-    def __init__(self,x,fcn):
+    def __init__(self, x, fcn=None):
         try:
             if fcn is None:
                 raise Exception('second arg is None - cannot have a jet without a function!')
