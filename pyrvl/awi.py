@@ -55,10 +55,19 @@ def compawipen(u, p, u0rms, precond, alpha):
             raise Exception('string TRIP not defined')
         if not os.path.exists(TRIP):
             raise Exception('TRIP package = ' + TRIP + ' not found')
-        if linalg.sanity(u,'su') and linalg.sanity(u0rms,'su') and linalg.sanity(p,'su'):
+        if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
             cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x')
-            ret = os.system(cmd + ' in=' + u + ' rms=' + u0rms + ' out=' + p +
-                                ' precond=' + str(precond) + ' alpha=' + str(alpha))
+            if precond !=0 and linalg.sanity(u0rms,'su'):
+                ret = os.system(cmd + ' in=' + u + ' rms=' + u0rms
+                                    + ' out=' + p + ' precond=' + str(precond)
+                                    + ' alpha=' + str(alpha))
+            else:
+                #print(cmd + ' in=' + u  
+                #            + ' out=' + p + ' precond=0 alpha='
+                #            + str(alpha))
+                ret = os.system(cmd + ' in=' + u  
+                                    + ' out=' + p + ' precond=0 alpha='
+                                    + str(alpha))
             if ret != 0:
                 raise Exception('iwave/trace/main/awipen.x failed')
         else:
@@ -76,14 +85,15 @@ class awipen(vcl.LinearOperator):
         d (vcl.Vector): observed data vector in segyvc.Space
         p (vcl.Vector): predicted data vector in same sevyvc.Space as d
         precond (int): preconditioning flag - 0 for none, nonzero for yes
-        alpha (float): penalty parametere 
+        alpha (float): penalty parameter
         kmax (int): max number of CG iterations for estimating u0
         eps (float): residual tolerance for CG
         rho (float): normal residual tolerance fof CG
         verbose (int): CG verbosity flag
     '''
 
-    def __init__(self, dom, m, w, d, p, precond, alpha, kmax, eps, rho, verbose):
+    def __init__(self, dom, alpha=0.0, precond=0, d=None, p=None, 
+                     kmax=0, eps=0.0, rho=0.0, verbose=0):
         try:
             self.dom = dom
             self.d = d
@@ -103,15 +113,26 @@ class awipen(vcl.LinearOperator):
                 temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
                 temp.close()
                 self.u0rms = temp.name
-                print('in awipen constructor: u0rms=' + self.u0rms)
+                # print('in awipen constructor: u0rms=' + self.u0rms)
                 os.system('touch ' + self.u0rms)
-            
+
+                if not isinstance(d,vcl.Vector):
+                    raise Exception('input observed data not vector')
+                if not isinstance(d.space,segyvc.Space):
+                    raise Exception('input observed data not SEGY')
+
+                if not isinstance(p,vcl.Vector):
+                    raise Exception('input predicted data not vector')
+                if not isinstance(p.space,segyvc.Space):
+                    raise Exception('input predicted data not SEGY')
+
                 if d.space != p.space:
                     raise Exception('observed, predicted data spaces differ')
+                
                 Sm0 = segyvc.ConvolutionOperator(dom=self.dom,
                                             rng=self.d.space,
                                             green=self.p.data)
-                print('in awipen constructor: compute u0')
+                # print('in awipen constructor: compute u0')
                 u0=vcl.Vector(self.dom)
                 vcalg.conjgrad(x=u0, b=self.d, A=Sm0, kmax=self.kmax, \
                 eps=self.eps, rho=self.rho, verbose=self.verbose)
