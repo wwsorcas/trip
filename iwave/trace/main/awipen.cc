@@ -59,57 +59,57 @@ int main(int argc, char ** argv) {
   /* extract input parameters */
   par=ps_new();
   if ( ps_createargs(par, argc - 1, argv + 1) ) {
-    printf("Error parsing input data. ABORT.\n");
+    fprintf(stderr,"Error parsing input data. ABORT.\n");
     exit(1);
   }
              
   if (ps_flcstring(*par,"in",&in)) {
-    printf("error reading input file name ABORT.\n");
+    fprintf(stderr,"error reading input file name ABORT.\n");
     exit(1);
   }
 
-    // default: use awi preconditioning
+    // default: no preconditioning
   if (ps_flint(*par,"precond",&precond)) {
-    precond = 1;
+    precond = 0;
   }
 
   if (precond) {
     if (ps_flcstring(*par,"rms",&rms)) {
-      printf("error reading input file name ABORT.\n");
+      fprintf(stderr,"error reading input file name ABORT.\n");
       exit(1);
     }
   }
   
   if (ps_flcstring(*par,"out",&out)) {
-    printf("error reading output file name. ABORT.\n");
+    fprintf(stderr,"error reading output file name. ABORT.\n");
     exit(1);
   }
 
   if (ps_flfloat(*par,"alpha",&alpha)) {
-    printf("error reading output file name. ABORT.\n");
+    fprintf(stderr,"error reading output file name. ABORT.\n");
     exit(1);
   }
 
 
   /* open data files */
   if (!(fpin=fopen(in,"r"))) {
-    printf("failed to open input file = %s for read. ABORT.\n",in);
+    fprintf(stderr,"failed to open input file = %s for read. ABORT.\n",in);
     exit(1);
   }
 
   if (precond) {
     if (!(fprms=fopen(rms,"r"))) {
-      printf("failed to open input file = %s for read. ABORT.\n",rms);
+      fprintf(stderr,"failed to open input file = %s for read. ABORT.\n",rms);
       exit(1);
     }
   }
   
   if (!(fpout=fopen(out,"w"))) {
-    printf("failed to open output file = %s for write. ABORT.\n",out);
+    fprintf(stderr,"failed to open output file = %s for write. ABORT.\n",out);
     exit(1);
   }
 
-  /* read loop */
+  //fprintf(stderr,"read loop\n"); 
 
   j=0;
 
@@ -119,7 +119,7 @@ int main(int argc, char ** argv) {
 
     if (precond) {
       if (!(fgettr(fprms,&tr1))) {
-	printf("failed to read rms trace %d \n",j);
+	fprintf(stderr,"failed to read rms trace %d \n",j);
 	exit(1);
       }
     }
@@ -144,6 +144,7 @@ int main(int argc, char ** argv) {
     else fac=alpha*dt;
 
     idelrt = (int)((delrt/dt) + 0.1f);
+    //cout<<"tr="<<j<<" fac="<<fac<<" idelrt="<< idelrt<<"\n";
 
     //cout<<"nt = "<<nt<<" dt = "<<dt<<" fac = "<<fac<<endl;
     /* trace rms */
@@ -159,7 +160,7 @@ int main(int argc, char ** argv) {
 
   free(str);
   fclose(fpin);
-  fclose(fprms);
+  if (precond) fclose(fprms);
   fclose(fpout);
   ps_delete(&par);
 
