@@ -48,7 +48,7 @@ Command self-docs and doxygen-generated html reference material are
 included in the release, and require no additional work on the user's
 part.
 
-The subdirectories of repro define Madagascar books. These build with
+The paper subdirectory of repro contains paper projects, each with a top level directory, usually a project subdirectory with scripts for generating intermediate data and figures, and sometimes other subdirectories. Other subdirectories of repro define Madagascar books. These build with
 the Madagascar reproducible research framework. Also, many of the
 project directories require Seismic Unix (unlike Madadagascar books
 proper, which build with Madagascar only).
