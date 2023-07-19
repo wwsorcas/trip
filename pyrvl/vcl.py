@@ -878,6 +878,10 @@ class LSSolver(ABC):
     @abstractmethod
     def solve(self, op, rhs) -> [Vector, Vector]:
         pass
+
+    @abstractmethod
+    def myNameIs(self):
+        pass
         
     
 

@@ -184,6 +184,13 @@ class cgne(vcl.LSSolver):
         except Exception as ex:
             print(ex)
             raise Exception('called from vcalg.cgnefcn.solve')
+
+    def myNameIs(self):
+        print('Conjugate Gradients for the Normal Equations')
+        print('  max iterations = ' + str(self.kmax))
+        print('  residual tol   = ' + str(self.eps))
+        print('  normal res sol = ' + str(self.rho))
+        print('  verbosity flag = ' + str(self.verbose))
         
 
 ########### TRUST-RADIUS MODIFIED CONJUGATE GRADIENT ITERATION FOR NORMAL EQUATION ##########

@@ -26,7 +26,7 @@ def fdop(m,w,d,adj=0):
         ' source_p=' + w + \
         ' deriv=0 adjoint=' + str(adj) + ' order=2 cfl=0.5 cmin=1.0 cmax=3.0' + \
         ' dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0' + \
-        ' sampord=1 '
+        ' sampord=1 printact=0'
     #
     # execute
 #    print(cmd)
