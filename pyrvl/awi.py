@@ -1,6 +1,7 @@
 import linalg
 import vcl
 import vcalg
+import vpm
 import segyvc
 import rsfvc
 import os
@@ -363,20 +364,33 @@ class awiop(vcl.LinearOperator):
     problem.
     '''
 
-    def __init__(self, p, awisp, alpha, awisol=None, data=None):
-        # p is predicted data
-        self.p = p
-        # range is product (range of F x awisp)
-        self.rng = vcl.ProductSpace([p.space, awisp])
-        self.sp = awisp
-        self.alpha = alpha
-        self.sol = awisol
-        self.d = data
-        self.Sm0 = segyvc.ConvolutionOperator(self.sp, self.p.space, self.p.data)
-        self.alphaT = awi.awipensol(self.sp, self.alpha, solver=self.sol, d=data, p=self.p)
+    def __init__(self, dom, rng, predicted, alpha, awisol=None, observed=None):
+        try:
+            # range is product (data space x adaptive kernel space)
+            if not isinstance(rng, vcl.ProductSpace):
+                raise Exception('range not product space')
+            if dom != rng[1]:
+                raise Exception('domain not same as range[1]')
+            if predicted.space != rng[0]:
+                raise Exception('p not in 0th component of range')
+            if observed is not None:
+                if observed.space != rng[0]:
+                    raise Exception('data not in 0th component of range')
+            self.rng = rng
+            # p is predicted data
+            self.p = predicted
+            self.alpha = alpha
+            self.sol = awisol
+            self.d = observed
+            self.Sm0 = segyvc.ConvolutionOperator(self.rng[1], self.rng[0], self.p.data)
+            self.alphaT = awipensol(self.rng[1], self.alpha,
+                                            solver=self.sol, d=self.d, p=self.p)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awiop constructor')
 
     def getDomain(self):
-        return self.sp
+        return self.rng[1]
 
     def getRange(self):
         return self.rng
@@ -402,7 +416,7 @@ class awiop(vcl.LinearOperator):
     def myNameIs(self):
         print('AWI operator')
         print('domain = ')
-        self.dom.myNameIs()
+        self.getDomain().myNameIs()
         print('range = data space OPLUS domain')
         if self.d is not None:
             print('observed data:')
@@ -412,6 +426,63 @@ class awiop(vcl.LinearOperator):
         print('penalty weight = ' + str(self.alpha))
         print('internal solver:')
         self.sol.myNameIs()
+
+class awisep(vpm.SepFunction):
+    '''
+    separable function expressing AWI configuration
+
+    domain = bulk moduli space x adaptive kernel space
+    range  = data space x adaptive kernel space
+
+    '''
+    
+    def __init__(self, dom, rng, F, alpha, awisol=None, observed=None):
+        try:
+            # range is product (data space x adaptive kernel space)
+            if not isinstance(dom, vcl.ProductSpace):
+                raise Exception('domain not product space')
+            if dom[0] != F.getDomain():
+                raise Exception('0th comp of domain not = simulator domain')
+            if not isinstance(rng, vcl.ProductSpace):
+                raise Exception('range not product space')
+            if rng[0] != F.getRange():
+                raise Exception('0th comp of range not = simulator range')
+            if dom[1] != rng[1]:
+                raise Exception('domain[1] not same as range[1]')
+            self.dom = dom
+            self.rng = rng
+            self.F = F
+            self.alpha = alpha
+            self.awisol = awisol
+            self.observed = observed
+
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awisep constructor')
+        
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.rng
+    
+    def opfcn(self, m):
+        try:
+            return awiop(self.dom[1], self.rng, self.F(m), self.alpha,
+                             awisol=self.awisol, observed=self.observed)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awisep.opfcn')
+        
+    def derfcn(self, x0, x1):
+        raise Exception('awisep.defcn not defined yet (2023.07.19)')
+
+    def myNameIs(self):
+        print('AWI separable function object')
+        
+    
+
+
 
 
 

@@ -20,20 +20,18 @@ class SepFunction(ABC):
     (x0,x1) -> A(x0)x1, that is, (x0,x1) -> D_x0(A(x0)x1).
     '''
 
-    # return product space in which (x0,x1) lies
     @abstractmethod
     def getDomain(self):
         pass
 
-    # range of linear operator A(x0)
     @abstractmethod
     def getRange(self):
         pass
-    
-    @abstractmethod
-    def opfcn(self, x0) -> vcl.LinearOperator:
-        pass
 
+    @abstractmethod
+    def opfcn(self, x0):
+        pass
+    
     @abstractmethod
     def derfcn(self, x0, x1) -> vcl.LinearOperator:
         pass
