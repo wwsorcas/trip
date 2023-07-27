@@ -1,0 +1,284 @@
+\title{Notes on AWI}
+\author{William W. Symes}
+
+\begin{abstract}
+goes here.
+\end{abstract}
+
+\section{Introduction}
+
+\section{AWI and why it works}
+
+The version of AWI introduced by Michael Warner and Lluis Guasch \cite[]{Warner:16,GuaschWarnerRavaut:GEO19} rests on the assumption that seismic waves are governed by linear acoustics, and that each shot is associated to an isotropic point source with known location $\bx_s$ and wavelet $w(t;\bx_s)$. That is, the pressure and velocity fields $p({\bf x},t;{\bf x}_s)$, ${\bf v}({\bf x},t;{\bf x}_s)$ for the shot location ${\bf x}_s$ depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf x})$ (reciprocal of the density $\rho({\bf x})$), and wavelet $w(t;{\bf x}_s)$ through the acoustic system
+ $$
+ \frac{\partial p}{\partial t} = - \kappa \nabla \cdot {\bf v} +
+w(t;{\bf x}_s) \delta({\bf x}-{\bf x}_s);
+\frac{\partial {\bf v}}{\partial t} = - \beta \nabla p; 
+p, {\bf v} = 0 \mbox{ for }  t \ll 0.
+$$
+For sake of brevity, define the model vector $m=(\kappa,\rho)$. The forward map or {\em modeling operator} is $F[m]w = \{p({\bf x}_r,t;{\bf x}_s)\}$, in which shot and receiver positions ${\bf x}_s, {\bf x}_r$ define the acquisition geometry.
+
+Acoustic inversion, for present purposes, means: given time interval $[0,T]$, source and receiver locations $(\bx_s,\bx_r)$, source wavelet $w_* \in C_0^{\infty}(\bR)$ and data traces $d(\bx_r,\cdot;\bx_s) \in L^2([0,T])$, find a model $m$ so that $F[m]w_* \approx d$. The simplest version of FWI concretizes this task by asking for a model $m$ minimizing the mean square error
+\begin{equation}
+  \label{eqn:fwi}
+  J_{\rm FWI}[m;d] = \frac{1}{2}\|F[m]w_*-d\|^2
+\end{equation}
+Practical versions of FWI include various types of regularization and homotopy, see the sources cited in the Introduction. As mentioned there, local iterative optimization methods tend to stagnate at highly sub-optimal (``cycle-skipped'') estimates of $m$ unless the initial estimate is of quite high quality, often available only at considerable cost in effort and data collection.
+%For now, assume that the data $d({\bf x}_r,t;{\bf x}_s)$ is the output of the modeling operator for "true" model $m_*$, that is, the "true" bulk modulus, buoyancy, and wavelet $\kappa_*, \beta_*, w_*$: that is, $d = F[m_*]w_*$.
+
+AWI is based on extending the modeling operator $F$, that is, enlarging its domain.
+The extended modeling operator ${\bar F}$ maps extended sources $\bar{w}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure field. That is, the extended source depends on the receiver location as well as the source location - so there is one acoustic system for each source *and* receiver position - a lot of wave equations! If all of the wavelets for each source are the same, that is, ${\bar w}({\bf x}_r,t;{\bf x}_s) = w(t;{\bf x}_s)$ is independent of receiver position, then ${\bar F}[m]\bar{w} = F[m]w$. That is, $F$ is a special case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of $F$. This is the *source-recever* extension, in the terminology of Huang et al. 2015. 
+
+AWI assumes that the extended sources are time convolutions of the (known) exact source with an {\em adaptive kernel} $u({\bf x}_r,t;{\bf x}_s)$: that is, $\bar{w} = u * w_*$ - the asterisk denotes convolution in time. Since linear acoustics is time-translation invariant, its solution commutes with time convolution, that is,
+$$
+\bar{F}[m]\bar{w} = \bar{F}[m](u* w_*) = (F[m]w_*)*u
+$$
+For notational convenience, introduce the notation $S[m,w_*]$ for the convolution operator with kernel $F[m]w_*$:
+\begin{equation}
+  \label{eqn:defs}
+  S[m,w_*]u = (F[m]w_*)*u
+\end{equation}
+Warner and Guasch assume (implicitly) that there is always a (near-)zero-residual solution of the extended inversion problem. That is, they assume that for any $m$, there is an extended source $\bar{w}$, or equivalently an adaptive kernel $u_0$ with $\bar{w} = w_**u_0$ for which $\bar{F}[m]\bar{w} = S[m,w_*]u_0\approx d$. If $\kappa \approx \kappa_*, \beta \approx \beta_*$, then $\bar{w}$ should be $\approx w_*$, so the adaptive kernel $u_0$ should be approximately $\delta(t)$ and independent of ${\bf x}_s,{\bf x}_r$. Such a kernel $u_0$ is (approximately) in the null space of multiplication by $t$.
+
+This observation leads to the definition of the Warner-Guasch AWI objective function $\tJz$:
+
+\begin{itemize}
+\item[1. ]Given $m$, solve the deconvolution problem $(F[m]w_*)*u_0 = d$ for $u_0$, if necessary in a least squares sense and with Tihonov regularization;. 
+\item[3. ]Compute the objective 
+  \begin{equation}
+    \label{eqn:tJz}
+    \tJz[m] = \sum_{x_s,x_r} \left(\frac{\int dt |tu_0|^2}{\int dt |u_0|^2}\right)
+  \end{equation}
+and its gradient, then update $\kappa,\beta$ using a gradient descent method to minimize $\tJz$.
+\end{itemize}
+
+The normalization of the integrand per source and receiver by the $L^2$ norm of $u_0$ is quite important, as will be explained shortly.
+
+It may not be obvious at first glance why this approach to estimating $m$ should be any more effective than FWI. To see why AWI works, in at least some settings, we assume that the spatial dimension is three, and make use of the geometric optics approximation to the solution of the wave equation, in a form due to Hadamard. This approximation is {\em local}: it applies when sources and receivers are sufficiently close. We will discuss its global failure and the consequences for AWI in a later section.
+
+Transient acoustic sources have no DC (zero frequency) component and are relatively small at low frequencies. One was to enforce these characteristics is to assume that the wavelet $w_*$ is the time derivative of a $v_* \in C_0^{\infty}(\bR)$. Set $\lambda(w_*) = \|v_*\|/\|w_*\|$ ($L^2$ norms). $\lambda$ is a proxy for wavelength: it is the reciprocal of the RMS frequency.
+
+For a particular source-receiver pair ${\bf x}_s,{\bf x}_r$ with $\bx_r$ "not too far" from $\bx_s$,, suppressed from the notation,
+\begin{equation}
+  \label{eqn:hadamard}
+  F[m]w_*(t) = a[m]w_*(t-\tau[m]) + Rw_*(t)
+\end{equation}
+where $R(\bx_r,\bx_s)$ is a bounded operator on $L^2((-\infty,T])$ bounded by a multiple of $\lambda(w_*)$. This ``single arrival'' approximation  follows from the expansion of the fundamental solution of the wave equation due to Hadamard, see for instance \cite{Friedlander:75}. This construction is sketched in Appendix B. Note that in general the approximation \ref{eqn:hadamard} is only local: for smooth $m$, it holds for $\bx_r$ sufficiently close to $\bx_s$, but fails at larger distances.
+
+For approximations with $O(\lambda(w_*)$ remainders, write
+\begin{equation}
+  \label{eqn:pwe}
+  F[m]w_*(t) \approx a[m]w_*(t-\tau[m])
+\end{equation}
+Thanks to the approximation \ref{eqn:pwe},
+\begin{equation}
+  \label{eqn:spwe}
+S[m,w_*]u(t) \approx a[m](w_**u)(t-\tau[m])
+\end{equation}
+Assume that the data is noise-free:
+$$
+d(t)=F[m_*]w_*(t) \approx a[m_*]w_*(t-\tau[m_*])
+$$
+The (approximate) solution of $S[m,w_*]u_0=d$ is obvious by inspection: $u_0(t) = a[m_*]/a[m]\delta(t-\tau[m_*]+\tau[m])$. There is immediately a big problem: this $u_0$ is not square-integrable, and the AWI objective $\tJz$ is undefined. To fix this, it's necessary to treat $u_0$ as the solution of a regularized least squares problem: define
+$$
+u_0^{\epsilon} = \mbox{argmin}_u (\|S[m,w_*]u-d\|^2 + \epsilon^2\|u\|^2)
+$$
+$$
+\approx \mbox{argmin}_u (\|a[m](w_**u)(\cdot-\tau[m])-a[m_*]w_*(\cdot-\tau[m_*])\|^2 + \epsilon^2\|u\|^2)
+$$
+Use the temporary abbreviations $a_*=a[m_*], a=a[m], \tau_*=\tau[m_*], \tau=\tau[m]$, and write in terms of the Fourier transforms $\hat{u}_{\epsilon},\hat{w_*}$ of $u_0^{\epsilon}$ and $w_*$:
+$$
+\hat{u}_{\epsilon} \approx \mbox{argmin}_{\hat{u}}\left(\int d\omega |a\hat{w_*}\hat{u}e^{i\omega \tau}-a_*\hat{w_*}e^{i\omega\tau_*}|^2 + \epsilon^2 |\hat{u}|^2\right)
+$$
+The normal equation is
+$$
+(a^2 |\hat{w}_*|^2 +\epsilon^2)\hat{u} = a a_*|\hat{w}_*|^2e^{i\omega(\tau_*-\tau)}
+$$
+the solution of which is
+$$
+\hat{u}_{\epsilon} \approx \frac{a^*}{a}\hat{g}_{\frac{a^*}{a}\epsilon} e^{i\omega(\tau_*-\tau)}
+$$
+where
+$$ 
+\hat{g}_{\epsilon} = \frac{a_*^2|\hat{w}_*|^2}{a_*^2|\hat{w}_*|^2 + \epsilon^2}.
+$$
+Since $w_* \in C_0^{\infty}$, $\hat{w_*}(\omega) \rightarrow 0$ faster than any negative power of $\omega$ as $|\omega| \rightarrow \infty$ and is analytic, whence $\hat{g}_{\epsilon}: \epsilon > 0$ tends to $1$ almost everywhere as $\epsilon \rightarrow 0$. Hence the inverse Fourier transform $g_{\epsilon}$ tends to $\delta$ in the sense of distributions, and 
+$$
+u_0^{\epsilon}(t) \approx \frac{a^*}{a}g_{\frac{a^*}{a}\epsilon}(t-(\tau_*-\tau))
+$$
+to a multiple of a shifted $\delta$, in fact exactly the distribution solution of $\bar{S}[m,w_*]u=d$. However for $\epsilon>0$, $u_0^{\epsilon}$ is square integrable.
+
+\cite{HuangSymes:SEG15a} presented an analysis of the unweighted AWI objective (numerator of the right hand side in the definition \ref{eqn:tJz}), based in turn on ideas presented in Song's thesis \cite[]{Song:94c}. With $u$ replaced by $u_0^{\epsilon}$,  this unweighted objective is
+$$
+\int dt |tu_0^{\epsilon}|^2 \approx \frac{a_*^2}{a^2} \int dt\, t^2|g_{\frac{a^*}{a}\epsilon}(t-(\tau_*-\tau))|^2
+$$
+$$
+=\frac{a_*^2}{a^2} \int dt\, (t+(\tau_*-\tau))^2|g_{\frac{a^*}{a}\epsilon}(t)|^2
+$$
+The linear (in t) term vanishes, since $g$ is necessarily even in time (since it Fourier transform is real). So this is
+$$
+=\frac{a_*^2}{a^2} \int dt\, t^2|g_{\frac{a^*}{a}\epsilon}(t)|^2
++(\tau_*-\tau)^2\frac{a_*^2}{a^2}\|g_{\frac{a^*}{a}\epsilon}\|^2
+$$
+The first term tends to zero as $\epsilon \rightarrow 0$, since $g_{\epsilon}$ is a delta-family, so you can make it negligible with proper choice of $\epsilon$. The second term suggests that this function is related to the travel-time error $\tau_*-\tau$.
+
+The relation is obscured by the presence of of the amplitude ratio $a_*/a$ both as a multiplier and in the scaling of $\epsilon$. Since the amplitudes depend on $m$, their presence may influence the location (or even the presence) of  stationary points of $\tJz$ for models differing in their travel time predictions. So stationary points of the unweighted AWI objective may not yield slowness models that match travel-times with the data, even in the noise-free case (even though the examples reported in Huang and Symes SEG 2015, and other works cited there, suggest that sometimes this is the case). 
+
+The scaling by trace norms of $u_0^{\epsilon}$ in the definition \ref{eqn:tJz} eliminates the possibility of non-travel-time stationary points. Since the objective function is built up trace-by-trace, use the same approximation for the norm of $u_0^{\epsilon}$: 
+$$
+\|u_0^{\epsilon}\| \approx \frac{a^*}{a}\|g_{\frac{a^*}{a}\epsilon}\|
+$$
+So
+$$
+J_0[m,w_*] \approx \sum_{{\bf x}_s,{\bf x}_r} (\tau[m_*]({\bf x}_s,{\bf x}_r)-\tau[m]({\bf x}_s,{\bf x}_r))^2
+$$
+ignoring the $\|tg_{...}\|^2$ term as being negligible for small enough $\epsilon$. 
+
+In other words, the AWI objective is *exactly* an approximation to the travel-time tomography objective. And that's why it works - when geometric optics in the form given here is an accurate approximation to the Green's function.
+
+It remains to see what geometric optics has to say about the penalty objective $\tilde{J}_{\alpha}[m,w_*]$, how geometric optics might fail, and what happens to AWI when it does.
+
+\section{A Penalty Version of AWI}
+The adaptive kernel $u_0^{\epsilon}$ appearing in the definition \ref{eqn:tJz} is the solution of a regularized least squares problem. This observation suggests augmenting the regularized least squares objective by a penalty proportional to the right-hand side of \ref{eqn:tJz}:
+\begin{equation}
+  \label{eqn:Ja}
+  \Ja[m,u;d] = \frac{1}{2}\left(\|S[m,w_*]u-d\|_d^2 + \epsilon^2\|u\| + \alpha^2\|tu\|_m\right).
+\end{equation}
+Here $\|u\|^2 = \langle u, u \rangle$ is the (unweighted) $L^2$ norm, and $\|\cdot\|_m$ is an $(m,d)$-dependent (weighted) norm: with
+\[
+  u_0^{\epsilon}[m,d] = \mbox{arg min}_u \Jz[m,u;d],
+\]
+define
+\[
+  Wu (\bx_r,t;\bx_s) = \sum_{\bx_r,\bx_s}\frac{1}
+  {\int\,ds\,|u_0^{\epsilon}[m,d](\bx_r,s;\bx_s)|^2}u(\bx_r,t;\bx_s)
+\]
+and
+\begin{equation}
+  \label{eqn:defmnorm}
+  \|u\|^2_m = \langle u, W u \rangle.
+\end{equation}
+With this notation,
+\[
+  \tJz[m;d] = \frac{1}{2}\|tu^{\epsilon}_0[m;d]\|^2_m
+\]
+In the definition of $\tJz$, a quadratic is evaluated at the minimizer of $\Jz[m,u;d]$. This suggests the possibility of evaluating the quadratic objective $\Ja[m,u;d]$ at its own minimizer:
+\begin{equation}
+  \label{eqn:tJa}
+  \tJa[m;d] = \min_u \Ja[m,u,d] = \Ja[m,\ua[m;d];d]
+\end{equation}
+This is the so-called variable projection reduction of the quadratic $\Ja$.
+Note that the right-hand side of the definition of $\tJz$ is the last term on the right-hand side of $\Ja$, scaled by $\alpha^{-2}$ and evaluated at the minimizer of the sum of the first two terms, that is, $\Ja$ for $\alpha=0$.
+
+\begin{theorem}
+  \label{thm:basic}
+Suppose that $S \in {\cal L}(U,D)$, the is a bounded linear maps from (Hilbert space) domain $U$ (``model space'') with inner product $\langle \cdot, \cdot \rangle_m$ to range $D$ with inner product $\langle \cdot, \cdot \rangle_d$. Assume that $S$ is coercive, that is, there exists $\epsilon >0$ so that $\|Su\|_d \ge \epsilon\|u\|_m$ for $u \in U$.
+Suppose also that $A \in {\cal L}(U,U)$, and that $d \in D$. Define the function $J_{\alpha}$ on $U$ by 
+\begin{equation}
+  \label{eqn:eq1}
+  J_{\alpha}(u) = \frac{1}{2}(\|Su-d\|^2_d + \alpha^2\|Au\|_m^2).
+\end{equation}
+Then for $\alpha \ge 0$, $J_{\alpha}$ possesses a unique minimizer $u_{\alpha} \in U$, for which
+\begin{equation}
+  \label{eqn:eq0}
+  \tilde{J}_{\alpha} = \min_{u \in U} J_{\alpha}(u) = J_{\alpha}(u_{\alpha}),
+\end{equation}
+and
+\begin{equation}
+  \label{eqn:eq4}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tilde{J}_{\alpha}-\tilde{J}_0).= \frac{1}{2}\|Au_0\|^2
+\end{equation}
+This limit is uniform over bounded sets of $(S, A) \in {\cal L}(U,D) \times {\cal L}(U, U)$.
+\end{theorem}
+
+For completeness, the proof is given in an appendix.
+
+This relation will be applied in the context of a model space $U$ possessing a reference Hilbert norm $\|\cdot\|$ and a family of equivalent norms $\|\cdot\|_m$ depending on a parameter $m \in M$, in which $M$ is an open subset of a Banach space $X$. The dependence is through a an operator-valued function $W$ on $M$, taking values in cone ${\cal B}(U)$ of bounded self-adjoint positive-definite operators on $U$. On the other hand, we assume that the norm on $D$ is fixed, independent of $M$, and treat it as a reference norm.
+
+\begin{theorem}
+  \label{thm:uniform}
+Assume that $W: M \rightarrow {\cal B}(U)$ is of class $C^1$ and uniformly positive definite, and that the norm $\|\cdot\|_m$ is given by
+\begin{equation}
+  \label{eqn:normdef}
+  \|u\|_m^2 = \langle u, W[m] u \rangle.
+\end{equation}
+Suppose also that $S: M \rightarrow {\cal L}(U,D)$ is of class $C^1$ and uniformly coercive, and that $A \in {\cal L}(U,U)$ as before. For $\alpha \ge 0$, define $\tJa: M \rightarrow \bR$ by
+\[
+  \tilde{J}_{\alpha}[m] = \min_{u \in U}\frac{1}{2}(\|S[m]u-d\|^2_d + \alpha^2\|Au\|_m^2)
+\]
+\begin{equation}
+  \label{eqn:tjadef}
+  = \frac{1}{2}(\|S[m]u_{\alpha}[m]-d\|^2_d + \alpha^2\|Au_{\alpha}[m]\|_m^2)
+\end{equation}
+where
+\begin{equation}
+  \label{eqn:ua}
+  u_{\alpha}[m] = \mbox{arg min}_{u \in U}\frac{1}{2}(\|S[m]u-d\|^2_d + \alpha^2\|Au\|_m^2)
+\end{equation}
+for $m \in M$. Then $\tilde{J}_{\alpha}$ is of class $C^1(M)$, and
+\begin{equation}
+  \label{eqn:lim}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tJa[m]-\tJz[m]).= \frac{1}{2}\|A\uz[m]\|_m^2.
+\end{equation}
+The limit is in the sense of $C^1(M)$, that is, both the left-hand side and its $m$ derivative converge to the right-hand side and its $m$ derivative, respectively. Moreover $u_{\alpha}$ is of class $C^1(M,U)$.
+\end{theorem}
+
+\begin{proof} All conclusions but the last follow immediately from Theorem \ref{thm:basic} and the uniformity assumptions on $S$ and $W$.
+
+Since the norm in $D$ is fixed for the discussion, drop the subscript and treat it as a reference norm. Denote the adjoint with respect to the norms $\|\cdot\|_m$ on $U$, $\|\cdot\|_d = \|\cdot\|$ on $D$ by a superscript $*$, and with respect to $\|\cdot\|$ on $U$ by a superscript $T$. The normal equation defining $\ua$ is
+  \[
+    (S[m]^*S[m] + \alpha^2 A[m]^*A) \ua[m] = S[m]^*d
+  \]
+  \begin{equation}
+    \label{eqn:normal}
+= (W[m]^{-1}S[m]^TS[m] + \alpha^2 W[m]^{-1}A^TW[m]A)\ua[m]= W[m]^{-1}S[m]^Td
+\end{equation}
+or equivalently
+\begin{equation}
+  \label{eqn:normal1}
+  (S[m]^TS[m] + \alpha^2 A^TW[m]A)\ua[m] = S[m]^Td
+\end{equation}
+Since $S$ is uniformly coercive, and both $S$ and $W$ are of class $C^1$, the normal operator on the left hand side is boundedly invertible and of class $C^1$. Therefore the solution $\ua$ is of class $C^1$.
+
+[need to add proof of $C^1$ convergence.]
+\end{proof}
+
+Apply this relation in the context of the AWI penalty problem defined earlier. $M$ is an open set in $C^k(\Omega, \bR^2)$. $U$ is $\oplus_{\bx_r,\bx_s}L^2([-T_u,T_u])$, $D$ is the data space $\oplus_{\bx_r,\bx_s}L^2([0,T])$,. $S$ is the regularized modeling operator $(S[m,w_*],\epsilon I)^T$, $d$ is replaced by the $(d,0) \in D \times U$,  $W$ is the weight operator on $U$ defined in \ref{eqn:defmnorm}.
+
+As noted before [but it wasn't - fix!], stationary points of $\tJz$ are $\lambda(w_*)$-close to stationary points of the travel time mean-square error, in the single-arrival case. The result of this section implies that stationary points of $\tJa$ are close to those of $\tJz$. Therefore, at least for small $\alpha$, minimization of $\tJa$ produces acoustic models that closely match the traveltimes predicted in single-arrival data.
+
+
+\append{$\alpha \rightarrow 0$ scaled limit of penalty function}
+Define
+\begin{equation}
+  \label{eqn:eq0}
+  \tJa = \min_u J_{\alpha}(u) = J_{\alpha}(\ua)
+\end{equation}
+Since $S$ is positive definite, the minimum is well-defined for any $\alpha \ge 0$, and the minimizer $\ua \in U$ satisfies the normal equation.
+
+The claim to be established is that
+\begin{equation}
+  \label{eqn:eq4}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tJa-\tJz).= \frac{1}{2}\|A\uz\|_m^2
+\end{equation}
+
+To see this, use the normal equation to write
+\[
+  \ua = (S^TS + \alpha^2 A^TA)^{-1}S^Td = (S^TS + \alpha^2 A^TA)^{-1}S^TS \uz
+\]
+\begin{equation}
+  \label{eqn:eq2}
+  = \uz - \alpha^2 (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz = \uz-\alpha^2 \va
+\end{equation}
+Note that $\va = (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz$ is uniformly bounded in $\alpha \ge 0$.
+
+Stuff the RHS of equation \ref{eqn:eq2} into the definition \ref{eqn:eq1} to obtain
+\begin{equation}
+  \label{eqn:eq3}
+  \tJa = \frac{1}{2}(\|S\uz-d\|_d^2 - 2 \alpha^2\langle S\uz-d, S\va\rangle_d + \alpha^2\|A\uz\|_m^2 + O(\alpha^4))
+\end{equation}
+The second term on the RHS of equation \ref{eqn:eq3} vanishes thanks to the normal equation, and the first term is precisely $\tJz$. The conclusion \ref{eqn:eq4} follows.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
