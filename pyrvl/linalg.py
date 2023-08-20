@@ -563,6 +563,91 @@ def ndarraytorsfdata(x, rsfname):
         print(ex)
         raise Exception('called from function ndarraytorsfdata')
 
+def ndarraytorsf(x, rsfname, n=None, d=None, o=None, unit=None, units=None):
+    '''
+    Write NumPy ndarray and aux data onto rsf pair. ndarray size
+    must be same as data file size, but axis lengths are not checked.
+    Data written as 32 bit IEEE floats, native endian.
+
+    Parameters:
+        x (ndarray): input NumPy data
+        rsfname (string): name of output rsf header file
+        n (int array or None): axis lengths
+        d (float array or None): axis increments
+        o (float array or None): axis origins
+        unit (string): quantity unit
+        units... (string array): axis units
+        returns None
+    '''
+       
+    try:
+        dim = 1
+        nout = []
+        oout = []
+        dout = []
+        if n is None:
+            nout.append(x.size)
+        else:
+            dim = len(n)
+            tot = 1
+            for i in range(dim):
+                nout.append(n[i])
+                tot *= n[i]
+            if tot != x.size:
+                raise Exception('product of axis lengths != x.size')
+                
+        if d is None:
+            for i in range(dim):
+                dout.append(1.0)
+        else:
+            if len(d) != dim:
+                raise Exception('d.size != n.size')
+            for i in range(dim):
+                dout.append(d[i])
+        
+        if o is None:
+            for i in range(dim):
+                oout.append(0.0)
+        else:
+            if len(o) != dim:
+                raise Exception('o.size != n.size')
+            for i in range(dim):
+                oout.append(o[i])
+
+        # write header file
+        hdr = open(rsfname, 'w')
+        for i in range(dim):
+            hdr.write('n' + str(i+1) + '=' + str(nout[i]) +
+                          ' d' + str(i+1) + '=' + str(dout[i]) +
+                          ' o' + str(i+1) + '=' + str(oout[i]) + '\n')
+        if unit is not None:
+            hdr.write('unit=' + unit)
+        if units is not None:
+            if len(units) != dim:
+                raise Exception('units.size != n.size')
+            for i in range(dim):
+                hdr.write(' unit' + str(i+1) + '=' + units[i])
+        if unit is not None or units is not None:
+            hdr.write('\n')
+        hdr.write('data_format="native_float" esize=4 \n')
+        hdr.write('in=' + rsfname + '@')
+        hdr.close()
+
+        # write data file
+        datafile = open(rsfname + '@', 'wb')
+        # allocate single precision array
+        dataarray = array.array('f')
+        # read in list data, converting to single precision
+        dataarray.fromlist((np.ravel(x)).tolist())
+        # output signle precision data to file
+        dataarray.tofile(datafile)
+        datafile.close()
+            
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from function ndarraytorsf for file ' + rsfname)
+
+
 def ndarrayfromrsfdata(rsfname):
     '''
     reads rsf data into NumPy ndarray. Returned ndarray has axis 

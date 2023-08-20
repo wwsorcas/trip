@@ -10,25 +10,12 @@ from vcl import transp
 
 ############## CONJUGATE GRADIENT ITERATION FOR THE NORMAL EQUATION ##############
 
-# residual and normal residual vectors e and r are arguments, so
-# that they can be examined after completion. Other work vectors are
-# local, deleted on return.
-
-# args:
-#  x = estimated solution on return
-#  b = data
-#  A = operator
-#  kmax = max iterations for termination
-#  eps = relative residual decrease for termination
-#  rho = relative normal residual decrease for termination
-#  e = residual on return (optional)
-#  r = normal residual on return (optional)
-#  verbose = verbosity level
-#    0 - no print output
-#    1 - print number of its performed, residual and normal residual
-#    2 - (or more) print it, res, nres at every it
-
-def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, verbose):
+def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0):
+    ''' 
+    Single step of CG iteration for solution of normal equations, with
+    optional regularization. See doc for function conjgrad.
+    '''
+    
 #    os.system('echo top; ls /var/tmp')
     try:
         # print('k='+str(k))
@@ -36,8 +23,10 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, verbose):
         # print('#1. $q = Ap$')
         q = A*p
             
-        # print('#2. $s = A^Tq$')
+        # print('#2. $s = A^T q + sig^2 p$')
         s = transp(A)*q
+        if sigsq is not None:
+            s.linComb(sigsq,p)
             
         #os.system('echo q s; ls /var/tmp')
             
@@ -93,8 +82,42 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, verbose):
         print(ex)
         raise Exception('called from cgstep')
                 
-def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
+def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
+    '''
+    conjugate gradient iteration for the normal equation, with optional
+    Tihonov regularization. Approximate minimization of
 
+    |Ax-b|^2 + sig^2 |x|^2
+
+    The second term is optional: to avoid it without extra arithmetic, set
+    sig = None (not sig = 0).
+
+    Aim is to reduce residual norm |Ax-b| or normal residual norm |A^T(Ax-b)|
+    below a given fraction of initial value.
+
+    Note that the "residual" in this discussion means Ax-b, not the augmented
+    residual (Ax-b, sig x)
+
+    Iteration terminates if
+        - max number of iterations reached
+        - residual norm reduced below fraction of initial value
+        - normal residual norm reduced below fraction if initial value
+
+    Parameters:
+    x (vcl.Vector):           solution estimate, initially = 0
+    b (vcl.Vector):           right-hand side
+    A (vcl.LinearOperator):   linear op defining problem
+    kmax (int):               iteration limit
+    eps (float):              residual reduction
+    rho (float):              normal residual reduction
+    sig (float):              optional regularization weight (float or None)
+    verbose (int):            verbosity flag, 0 = no output, 
+                                              1 = end of iteration summary, 
+                                              2 = step-by-step
+    e (vcl.Vector):           optional return, residual
+    r (vcl.Vector):           optional return, normal residual
+    '''
+    
     try:
 
         #Initialize:
@@ -136,10 +159,15 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
             print('  k       |e|       |r|=')
             print('%3d  %10.4e  %10.4e' % (k, enorm, rnorm))
     
+        # prepare square of reg weight if used
+        sigsq = None
+        if sig is not None:
+            sigsq = sig*sig
+            
         #Repeat while $k<k_{\rm max}$, $\|e\|>\epsilon \|d\|$:
         while k<kmax and enorm>eps*enorm0 and rnorm>rho*rnorm0:
 
-            [k, enorm, rnorm, gamma] = cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, verbose)
+            [k, enorm, rnorm, gamma] = cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq, verbose)
             
         if verbose > 0:
             print('----------------------------------------------------')
@@ -153,19 +181,21 @@ def conjgrad(x, b, A, kmax, eps, rho, verbose=0, e=None, r=None):
 class cgne(vcl.LSSolver):
     '''
     object interface for CGNE algorithm, for use in VPM and other
-    applications requiring solution of lease squares problem:
-    min_x |Ax-b|
+    applications requiring solution of reg. least squares problem:
+    min_x |Ax-b|^2 + sig^2|x|^2.
     in terms of this description, the args are
     op = A
     rhs = b
     Constructor stores CG parameters. Solve method sanity-checks and
     calls CG algorithm, then returns solution x and residual b-Ax as
-    a vector list. 
+    a vector list. Regularization weight sig should be set to None if 
+    (Tihonov) regularization not desired, to avoid useless flops.
     '''
-    def __init__(self, kmax, eps, rho, verbose=0):
+    def __init__(self, kmax, eps, rho, sig=None, verbose=0):
         self.kmax = kmax
         self.eps = eps
         self.rho = rho
+        self.sig = sig
         self.verbose = verbose
 
     def solve(self, op, rhs):
@@ -178,7 +208,7 @@ class cgne(vcl.LSSolver):
                 raise Exception('second arg not in range of first arg')
             x = vcl.Vector(op.getDomain())
             e = vcl.Vector(op.getRange())
-            conjgrad(x, rhs, op, self.kmax, self.eps, self.rho,
+            conjgrad(x, rhs, op, self.kmax, self.eps, self.rho, sig=self.sig,
                         verbose=self.verbose, e=e, r=None)
             return [x, e]
         except Exception as ex:

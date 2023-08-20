@@ -479,6 +479,128 @@ class awisep(vpm.SepFunction):
 
     def myNameIs(self):
         print('AWI separable function object')
+
+class awiwg(vcl.ScalarJet):
+    '''
+    Original Warner-Guasch AWI function jet, including preconditioning.
+    
+    Constructor parameters:
+        dom (segyvc:Space): domain, extended source (awi adaptive kernel) space
+        sim (vcl.Function): simulator / modeling operator
+        mod (vcl.Vector): model, in domain of sim
+        solver (vcl.LSSolver): LS solver
+        d (vcl.Vector): observed data vector in range of sim
+        precond (int): if not = 0, then precondition per AWI
+=    '''
+
+    def __init__(self, dom, sim, mod, solver, d, precond=1):
+        try:
+            
+            # sanity checks
+            if not isinstance(d,vcl.Vector):
+                raise Exception('input observed data not vector')
+            if not isinstance(d.space,segyvc.Space):
+                raise Exception('input observed data not SEGY')
+            if not isinstance(mod,vcl.Vector):
+                raise Exception('input model not vector')
+            if mod.space != sim.getDomain():
+                raise Exception('mod not in domain of sim')
+            if d.space != sim.getRange():
+                raise Exception('data vector d not in range of sim')
+            # store instance data
+            self.dom = dom
+            self.sim = sim
+            self.mod = mod
+            self.solver = solver
+            self.d = d
+            self.precond = precond
+            # minimizer of |Su-d|
+            self.u0 = vcl.Vector(self.dom)
+            # after application of AWI penalty
+            self.au0 = vcl.Vector(self.dom)
+            # file of u0 trace rms values 
+            self.u0rms = None
+            self._unlink = os.unlink
+            
+            # set up tmp filename for u0rms
+            if precond != 0:
+                datapath = os.getenv('DATAPATH')
+                if not os.path.exists(datapath):
+                    raise Exception('Error: datapath = ' + datapath + ' not valid path')
+                temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
+                temp.close()
+                self.u0rms = temp.name
+                # print('in awipen constructor: u0rms=' + self.u0rms)
+                os.system('touch ' + self.u0rms)
+                
+            # predicted data
+            self.p = sim(mod)
+
+            # residual vector Su-d
+            self.e = vcl.Vector(d.space)
+
+            # convolution by predicted data
+            Sm0 = segyvc.ConvolutionOperator(dom=self.dom,
+                                                rng=self.p.space,
+                                                green=self.p.data)
+            # decon observed by predicted
+            [self.u0, self.e] = solver.solve(Sm0,d)
+            if self.u0rms is not None:
+                setrms(self.u0.data,self.u0rms)
+
+            # apply scale-by-t and optionally reciprocal trace norms
+            compawipensol(self.u0.data, self.au0.data, 1.0, self.u0rms)
+
+            # compute value
+            n = self.au0.norm()
+            self.val = 0.5*n*n
+            
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awipen constructor')
+
+    def __del__(self):
+        if self.u0rms is not None:
+            self._unlink(self.u0rms)
+
+    def point(self):
+        return self.mod
+
+    def value(self):
+        return self.val
+
+    def gradient(self):
+        try:
+            raise Exception('gradient not available')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awiwg.gradient')
+        
+    def Hessian(self):
+        try:
+            raise Exception('Hessian not available')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awiwg.Hessian')
+
+    def myNameIs(self):
+        print('Warner-Guasch function')
+        print('    adaptive kernel space:')
+        self.dom.myNameIs()
+        print('    simulator:')
+        self.sim.myNameIs()
+        print('    model:')
+        self.mod.myNameIs()
+        print('    observed data:')
+        self.d.myNameIs()
+        print('    LS solver:')
+        self.solver.myNameIs()
+        if self.u0rms is not None:
+            print('    preconditioned by kernel rms')
+            print('    filename for kernel trace rms = ' + self.u0rms)
+        else:
+            print('    no preconditioning applied')
+
         
     
 
