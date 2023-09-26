@@ -33,9 +33,8 @@ def setrms(u, urms):
         print(ex)
         raise Exception('called from setrms')
 
-### as of 2023.07.19, this class is deprecated in favor of compawipensol
 
-def compawipen(u, p, u0rms, precond, alpha):
+def compawipensol(u, p, alpha=1.0, u0rms=None):
     '''
     Compute action of AWI penalty operator on a set of traces. Multiplies 
     trace samples by time and penalty weight, optionally scales by 
@@ -53,62 +52,23 @@ def compawipen(u, p, u0rms, precond, alpha):
     alpha (float): penalty weight
     '''
     try:
-        #print('compawipen: u=' + u + ' p=' + p + ' u0rms=' + u0rms)
+#        print('compawipen')
+#        print('compawipen: u=' + u + ' p=' + p + ' u0rms=' + u0rms + ' alpha=' + str(alpha))
+#        print('next')
         if not isinstance(TRIP,str):
             raise Exception('string TRIP not defined')
         if not os.path.exists(TRIP):
             raise Exception('TRIP package = ' + TRIP + ' not found')
+#        print('sanity')
         if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
-            cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x')
-            if precond !=0 and linalg.sanity(u0rms,'su'):
-                ret = os.system(cmd + ' in=' + u + ' rms=' + u0rms
-                                    + ' out=' + p + ' precond=' + str(precond)
-                                    + ' alpha=' + str(alpha))
-            else:
-                #print(cmd + ' in=' + u  
-                #            + ' out=' + p + ' precond=0 alpha='
-                #            + str(alpha))
-                ret = os.system(cmd + ' in=' + u  
-                                    + ' out=' + p + ' precond=0 alpha='
-                                    + str(alpha))
-            if ret != 0:
-                raise Exception('iwave/trace/main/awipen.x failed')
-        else:
-            raise Exception('at least one input does not have .su suffix')
-    except Exception as ex:
-        print(ex)
-        raise Exception('called from compawipen')
-
-def compawipensol(u, p, alpha,  u0rms=None):
-    '''
-    Compute action of AWI penalty operator on a set of traces. Multiplies 
-    trace samples by time and penalty weight, optionally scales by 
-    reciprocal of trace-dependent scale factor, intended to be L2 norms 
-    of traces for alpha=0 AWI source.
-    Parameters:
-    u (string): filename of input SEGY traces
-    p (string): filename of output SEGY traces, same geometry as
-    input traces (u)
-    u0rms (string): filename of auxiliary length-1 traces containing
-    scale factors for preconditioning. Same number of traces as input
-    (u) and output (p)
-    precond (int): preconditioning flag. 0 = no scaling, else scaling
-    applied
-    alpha (float): penalty weight
-    '''
-    try:
-        #print('compawipen: u=' + u + ' p=' + p + ' u0rms=' + u0rms)
-        if not isinstance(TRIP,str):
-            raise Exception('string TRIP not defined')
-        if not os.path.exists(TRIP):
-            raise Exception('TRIP package = ' + TRIP + ' not found')
-        if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
-            cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x')
+            cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x') \
+                + ' in=' + u + ' rms=' + u0rms \
+                + ' out=' + p + ' precond=1' \
+                + ' alpha=' + str(alpha)
             if (u0rms is not None):
                 if linalg.sanity(u0rms,'su'):
-                    ret = os.system(cmd + ' in=' + u + ' rms=' + u0rms
-                                        + ' out=' + p + ' precond=1'
-                                        + ' alpha=' + str(alpha))
+#                    print('alpha=' + str(alpha))
+                    ret = os.system(cmd)
                 else:
                     raise Exception('u0rms does not have suffix .su')
             else:
@@ -126,120 +86,6 @@ def compawipensol(u, p, alpha,  u0rms=None):
         print(ex)
         raise Exception('called from compawipensol')
 
-### as of 2023.07.19 this class is deprecated in favor of awipensol
-
-class awipen(vcl.LinearOperator):
-    '''
-    AWI penalty operator, including AWI preconditioning and penalty weight.
-    
-    Constructor parameters:
-        dom (segyvc:Space): domain, extended source space
-        d (vcl.Vector): observed data vector in segyvc.Space
-        p (vcl.Vector): predicted data vector in same sevyvc.Space as d
-        precond (int): preconditioning flag - 0 for none, nonzero for yes
-        alpha (float): penalty parameter
-        kmax (int): max number of CG iterations for estimating u0
-        eps (float): residual tolerance for CG
-        rho (float): normal residual tolerance fof CG
-        verbose (int): CG verbosity flag
-    '''
-
-    def __init__(self, dom, alpha=0.0, precond=0, d=None, p=None, 
-                     kmax=0, eps=0.0, rho=0.0, verbose=0):
-        try:
-            self.dom = dom
-            self.d = d
-            self.p = p
-            self.precond = precond
-            self.alpha = alpha
-            self.kmax = kmax
-            self.eps = eps
-            self.rho = rho
-            self.verbose = verbose
-            self.u0rms = None
-            ### preconditioning setup
-            if precond != 0:
-                datapath = os.getenv('DATAPATH')
-                if not os.path.exists(datapath):
-                    raise Exception('Error: datapath = ' + datapath + ' not valid path')
-                temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
-                temp.close()
-                self.u0rms = temp.name
-                # print('in awipen constructor: u0rms=' + self.u0rms)
-                os.system('touch ' + self.u0rms)
-
-                if not isinstance(d,vcl.Vector):
-                    raise Exception('input observed data not vector')
-                if not isinstance(d.space,segyvc.Space):
-                    raise Exception('input observed data not SEGY')
-
-                if not isinstance(p,vcl.Vector):
-                    raise Exception('input predicted data not vector')
-                if not isinstance(p.space,segyvc.Space):
-                    raise Exception('input predicted data not SEGY')
-
-                if d.space != p.space:
-                    raise Exception('observed, predicted data spaces differ')
-                
-                Sm0 = segyvc.ConvolutionOperator(dom=self.dom,
-                                            rng=self.d.space,
-                                            green=self.p.data)
-                # print('in awipen constructor: compute u0')
-                u0=vcl.Vector(self.dom)
-                vcalg.conjgrad(x=u0, b=self.d, A=Sm0, kmax=self.kmax, \
-                eps=self.eps, rho=self.rho, verbose=self.verbose)
-                setrms(u0.data,self.u0rms)
-
-            self._unlink = os.unlink
-            
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from awipen constructor')
-
-    def __del__(self):
-        if self.u0rms is not None:
-            self._unlink(self.u0rms)
-
-    def getDomain(self):
-        return self.dom
-
-    def getRange(self):
-        return self.dom
-
-    def applyFwd(self,dx,dy):
-        try:
-            compawipen(dx.data, dy.data, self.u0rms, self.precond, self.alpha)
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from awipen.applyFwd')
-        else:
-            return dy
-        
-    def applyAdj(self,dx,dy):
-        try:
-            compawipen(dx.data, dy.data, self.u0rms, self.precond, self.alpha)
-        except Exception as ex:
-            print(ex)
-            raise Exception('called from awipen.applyAdj')
-        else:
-            return dy
-
-    def myNameIs(self):
-        print('AWI penalty operator')
-        print('    domain = range:')
-        self.dom.myNameIs()
-        print('    observed data:')
-        self.d.myNameIs()
-        print('    predicted data:')
-        self.p.myNameIs()
-        print('    preconditioning flag = ' + str(self.precond))
-        print('    penalty weight = ' + str(self.alpha))
-        print('    max CG iterations = ' + str(self.kmax))
-        print('    relative residual tolerance = ' + str(self.eps))
-        print('    relative normal residual tolerance = ' + str(self.rho))
-        print('    CG verbosity flag = ' + str(self.verbose))
-        print('    filename for filter trace rms = ' + self.u0rms)
-
 class awipensol(vcl.LinearOperator):
     '''
     AWI penalty operator, including AWI preconditioning and penalty weight.
@@ -247,26 +93,30 @@ class awipensol(vcl.LinearOperator):
     Constructor parameters:
         dom (segyvc:Space): domain, extended source (awi adaptive kernel) space
         p (vcl.Vector): predicted data vector in same sevyvc.Space as d
-        alpha (float): penalty parameter
+        sigma (float): reg parameter
         solver (vcl.LSSolver): LS solver
         d (vcl.Vector): observed data vector in segyvc.Space
 
         solver and d needed only for precond branch
     '''
 
-    def __init__(self, dom, alpha=0.0, solver=None, d=None, p=None):
+    def __init__(self, dom, filt=None, sigma=None, solver=None, d=None):
         try:
             # d and solver retained only for self-doc
             self.dom = dom
+            self.filt = filt
             self.solver = solver
-            self.alpha = alpha
+            self.sigma = sigma
             self.d = d
-            self.p = p
+            self.u0 = None
+            self.e0 = None
             self.u0rms = None
             self._unlink = os.unlink
                         
             ### preconditioning setup
-            if (self.d is not None) and (self.p is not None) and (self.solver is not None):
+            if (self.d is not None) and (self.solver is not None) and (self.filt is not None):
+                if dom != filt.getDomain():
+                    raise Exception('domain not = domain of filter op')
                 datapath = os.getenv('DATAPATH')
                 if not os.path.exists(datapath):
                     raise Exception('Error: datapath = ' + datapath + ' not valid path')
@@ -281,21 +131,25 @@ class awipensol(vcl.LinearOperator):
                 if not isinstance(d.space,segyvc.Space):
                     raise Exception('input observed data not SEGY')
 
-                if not isinstance(p,vcl.Vector):
-                    raise Exception('input predicted data not vector')
-                if not isinstance(p.space,segyvc.Space):
-                    raise Exception('input predicted data not SEGY')
+                if d.space != filt.getRange():
+                    raise Exception('observed data space != filter range')
 
-                if d.space != p.space:
-                    raise Exception('observed, predicted data spaces differ')
-                
-                Sm0 = segyvc.ConvolutionOperator(dom=self.dom,
-                                            rng=self.p.space,
-                                            green=self.p.data)
+                print('\nawi.awipensol: compute adaptive filter and preconditioner data')
+                print('sigma = ' + str(self.sigma))
+                if self.sigma is None:
+                    rfilt = filt
+                    dp = d
+                else:
+                    rfilt = vcl.LinearOpReg(filt, self.sigma)
+                    dp = vcl.Vector(rfilt.getRange())
+                    dp[0].copy(d)
                 # print('in awipen constructor: compute u0')
-                u0=vcl.Vector(self.dom)
-                [u0, e] = solver.solve(Sm0,d)
-                setrms(u0.data,self.u0rms)
+                self.u0=vcl.Vector(rfilt.getDomain())
+                self.e0=vcl.Vector(rfilt.getRange())
+                [tmpu0, tmpe0] = solver.solve(rfilt,dp)
+                self.u0.copy(tmpu0)
+                self.e0.copy(tmpe0)
+                setrms(self.u0.data,self.u0rms)
             
         except Exception as ex:
             print(ex)
@@ -311,9 +165,36 @@ class awipensol(vcl.LinearOperator):
     def getRange(self):
         return self.dom
 
+    def innersol(self):
+        try:
+            if self.u0 is None:
+                raise Exception('no precond, innersol not computed')
+            return self.u0
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.awipensol.innersol')
+        
+    def innerrms(self):
+        try:
+            if self.u0rms is None:
+                raise Exception('no precond, innerrms not computed')
+            return self.u0rms
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.awipensol.innerrms')
+
+    def innererr(self):
+        try:
+            if self.e0 is None:
+                raise Exception('no precond, innererr not computed')
+            return self.e0
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.awipensol.innererr')
+        
     def applyFwd(self,dx,dy):
         try:
-            compawipensol(dx.data, dy.data, self.alpha, self.u0rms)
+            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
         except Exception as ex:
             print(ex)
             raise Exception('called from awipen.applyFwd')
@@ -322,7 +203,7 @@ class awipensol(vcl.LinearOperator):
         
     def applyAdj(self,dx,dy):
         try:
-            compawipensol(dx.data, dy.data, self.alpha, self.u0rms)
+            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
         except Exception as ex:
             print(ex)
             raise Exception('called from awipen.applyAdj')
@@ -333,9 +214,9 @@ class awipensol(vcl.LinearOperator):
         print('AWI penalty operator')
         print('    domain = range:')
         self.dom.myNameIs()
-        print('    predicted data:')
+        print('    filter:')
         self.p.myNameIs()
-        print('    penalty weight = ' + str(self.alpha))
+        print('    reg weight = ' + str(self.sigma))
         if self.d is not None:
             print('    observed data:')
             self.d.myNameIs()
@@ -352,11 +233,14 @@ class awiop(vcl.LinearOperator):
     solution norms.
 
     Parameters:
-    F (vcl.Function): simulation operator
-    d (vcl.Vector): trace data
-    awisp (vcl.Space): AWI adaptive kernel space
+    dom (vcl.Space): adaptive filter space
+    rng (vcl.ProductSpace): 
+        comp 0 = data space, comp 1 = comp 2 = adaptive filter space
+    predicted (vcl.Vector): predicted data
+    alpha (float): penalty weight
+    sigma (float): reg weight
     awisol (vcl.LSSolver): computes adaptive kernel
-    data (vcl.Vector): optional data trace, flags preconditioning
+    observed (vcl.Vector): optional data trace, flags preconditioning
 
     if data is provided, then it is used to compute the preconditioned
     verstion of the AWI penalty operator. Note that in the application,
@@ -364,27 +248,27 @@ class awiop(vcl.LinearOperator):
     problem.
     '''
 
-    def __init__(self, dom, rng, predicted, alpha, awisol=None, observed=None):
+    def __init__(self, dom, rng, awifilt, awipen, alpha=None, sigma=None, observed=None):
         try:
             # range is product (data space x adaptive kernel space)
             if not isinstance(rng, vcl.ProductSpace):
                 raise Exception('range not product space')
             if dom != rng[1]:
                 raise Exception('domain not same as range[1]')
-            if predicted.space != rng[0]:
+            if dom != rng[2]:
+                raise Exception('domain not same as range[2]')
+            if awifilt.getRange() != rng[0]:
                 raise Exception('p not in 0th component of range')
             if observed is not None:
                 if observed.space != rng[0]:
                     raise Exception('data not in 0th component of range')
             self.rng = rng
             # p is predicted data
-            self.p = predicted
+            self.filt = awifilt
+            self.pen = awipen
             self.alpha = alpha
-            self.sol = awisol
+            self.sigma = sigma                
             self.d = observed
-            self.Sm0 = segyvc.ConvolutionOperator(self.rng[1], self.rng[0], self.p.data)
-            self.alphaT = awipensol(self.rng[1], self.alpha,
-                                            solver=self.sol, d=self.d, p=self.p)
         except Exception as ex:
             print(ex)
             raise Exception('called from awiop constructor')
@@ -395,10 +279,25 @@ class awiop(vcl.LinearOperator):
     def getRange(self):
         return self.rng
 
+    def innersol(self):
+        return self.pen.innersol()
+
+    def innerrms(self):
+        return self.pen.innerrms()
+
     def applyFwd(self, dx, dy):
         try:
-            self.Sm0.applyFwd(dx,dy[0])
-            self.alphaT.applyFwd(dx,dy[1])
+            self.filt.applyFwd(dx,dy[0])
+            if self.alpha is None:
+                dy[1].scale(0.0)
+            else:
+                self.pen.applyFwd(dx,dy[1])
+                dy[1].scale(self.alpha)
+            if self.sigma is None:
+                dy[2].scale(0.0)
+            else:
+                dy[2].copy(dx)
+                dy[2].scale(self.sigma)
         except Exception as ex:
             print(ex)
             raise Exception('called from awiop.applyFwd')
@@ -406,9 +305,12 @@ class awiop(vcl.LinearOperator):
     def applyAdj(self, dx, dy):
         try:
             cy = vcl.Vector(self.getDomain())
-            self.Sm0.applyAdj(dx[0],cy)
-            self.alphaT.applyAdj(dx[1],dy)
-            dy.linComb(1.0,cy)
+            self.filt.applyAdj(dx[0],dy)
+            if self.alpha is not None:
+                self.pen.applyAdj(dx[1],cy)
+                dy.linComb(self.alpha,cy)
+            if self.sigma is not None:
+                dy.linComb(self.sigma,dx[2])
         except Exception as ex:
             print(ex)
             raise Exception('called from awiop.applyAdj')
@@ -568,6 +470,18 @@ class awiwg(vcl.ScalarJet):
 
     def value(self):
         return self.val
+
+    def innersol(self):
+        return self.u0
+
+    def innerrms(self):
+        try:
+            if self.u0rms is None:
+                raise Exception('no u0rms')
+            return self.u0rms
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awipensol:innerrms')
 
     def gradient(self):
         try:
