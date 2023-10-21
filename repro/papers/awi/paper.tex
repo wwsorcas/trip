@@ -27,38 +27,55 @@ Practical versions of FWI include various types of regularization and homotopy, 
 %For now, assume that the data $d({\bf x}_r,t;{\bf x}_s)$ is the output of the modeling operator for "true" model $m_*$, that is, the "true" bulk modulus, buoyancy, and wavelet $\kappa_*, \beta_*, w_*$: that is, $d = F[m_*]w_*$.
 
 AWI is based on extending the modeling operator $F$, that is, enlarging its domain.
-The extended modeling operator ${\bar F}$ maps extended sources $\bar{w}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure field. That is, the extended source depends on the receiver location as well as the source location - so there is one acoustic system for each source *and* receiver position - a lot of wave equations! If all of the wavelets for each source are the same, that is, ${\bar w}({\bf x}_r,t;{\bf x}_s) = w(t;{\bf x}_s)$ is independent of receiver position, then ${\bar F}[m]\bar{w} = F[m]w$. That is, $F$ is a special case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of $F$. This is the *source-recever* extension, in the terminology of Huang et al. 2015. 
+The extended modeling operator ${\bar F}$ maps extended sources
+$\bar{w}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
+field. That is, the extended source depends on the receiver location
+as well as the source location - so there is one acoustic system for
+each source *and* receiver position - a lot of wave equations! If all
+of the wavelets for each source are the same, that is, ${\bar w}({\bf
+  x}_r,t;{\bf x}_s) = w(t;{\bf x}_s)$ is independent of receiver
+position, then ${\bar F}[m]\bar{w} = F[m]w$. That is, $F$ is a special
+case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
+$F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
 
-AWI assumes that the extended sources are time convolutions of the (known) exact source with an {\em adaptive kernel} $u({\bf x}_r,t;{\bf x}_s)$: that is, $\bar{w} = u * w_*$ - the asterisk denotes convolution in time. Since linear acoustics is time-translation invariant, its solution commutes with time convolution, that is,
-$$
-\bar{F}[m]\bar{w} = \bar{F}[m](u* w_*) = (F[m]w_*)*u
-$$
-For notational convenience, introduce the notation $S[m,w_*]$ for the convolution operator with kernel $F[m]w_*$:
+AWI assumes that the extended sources are time convolutions of the
+(known) exact source $w_*$ with an {\em adaptive filter} $u({\bf x}_r,t;{\bf x}_s)$: that is, $\bar{w} = u * w_*$ - the asterisk denotes convolution in time. Since linear acoustics is time-translation invariant, its solution commutes with time convolution, that is,
+\[
+ \bar{F}[m]\bar{w} = \bar{F}[m](u* w_*) = (F[m]w_*)*u
+\]
+Since the known source $w_*$ is not adjusted during the inversion, 
+introduce the notation $S[m]$ for the convolution operator with kernel $F[m]w_*$:
 \begin{equation}
-  \label{eqn:defs}
-  S[m,w_*]u = (F[m]w_*)*u
+  \label{eqn:sdef}
+  \equiv S[m]u
 \end{equation}
-Warner and Guasch assume (implicitly) that there is always a (near-)zero-residual solution of the extended inversion problem. That is, they assume that for any $m$, there is an extended source $\bar{w}$, or equivalently an adaptive kernel $u_0$ with $\bar{w} = w_**u_0$ for which $\bar{F}[m]\bar{w} = S[m,w_*]u_0\approx d$. If $\kappa \approx \kappa_*, \beta \approx \beta_*$, then $\bar{w}$ should be $\approx w_*$, so the adaptive kernel $u_0$ should be approximately $\delta(t)$ and independent of ${\bf x}_s,{\bf x}_r$. Such a kernel $u_0$ is (approximately) in the null space of multiplication by $t$.
+Warner and Guasch assume (implicitly) that there is always a
+(near-)zero-residual solution of the extended inversion problem. That
+is, they assume that for any $m$, there is an extended source
+$\bar{w}$, or equivalently an adaptive filter $u_0$ with $\bar{w}=w_**u_0$, for which $S[m]u_0\approx d$. If $\kappa \approx \kappa_*, \beta \approx \beta_*$, then $\bar{w}$ should be $\approx w_*$, so the adaptive kernel $u_0$ should be approximately $\delta(t)$ and independent of ${\bf x}_s,{\bf x}_r$. Such a kernel $u_0$ is (approximately) in the null space of multiplication by $t$.
 
 This observation leads to the definition of the Warner-Guasch AWI objective function $\tJz$:
 
 \begin{itemize}
-\item[1. ]Given $m$, solve the deconvolution problem $(F[m]w_*)*u_0 = d$ for $u_0$, if necessary in a least squares sense and with Tihonov regularization;. 
+\item[1. ]Given $m$, solve the deconvolution problem $S[m]u_0 = d$ for
+  $u_0$, if necessary in a least squares sense and with Tihonov
+  regularization (``prewhitening'');
 \item[3. ]Compute the objective 
   \begin{equation}
     \label{eqn:tJz}
-    \tJz[m] = \sum_{x_s,x_r} \left(\frac{\int dt |tu_0|^2}{\int dt |u_0|^2}\right)
+    \tJz[m] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu_0(\bx_r,t;\bx_s)|^2}{\int dt |u_0(\bx_r,t;\bx_s)|^2}\right)
   \end{equation}
 and its gradient, then update $\kappa,\beta$ using a gradient descent method to minimize $\tJz$.
 \end{itemize}
 
-The normalization of the integrand per source and receiver by the $L^2$ norm of $u_0$ is quite important, as will be explained shortly.
+The trace-by-trace normalization of the integrand by the
+$L^2$ norm of $u_0$ is quite important, as will be explained shortly.
 
 It may not be obvious at first glance why this approach to estimating $m$ should be any more effective than FWI. To see why AWI works, in at least some settings, we assume that the spatial dimension is three, and make use of the geometric optics approximation to the solution of the wave equation, in a form due to Hadamard. This approximation is {\em local}: it applies when sources and receivers are sufficiently close. We will discuss its global failure and the consequences for AWI in a later section.
 
 Transient acoustic sources have no DC (zero frequency) component and are relatively small at low frequencies. One was to enforce these characteristics is to assume that the wavelet $w_*$ is the time derivative of a $v_* \in C_0^{\infty}(\bR)$. Set $\lambda(w_*) = \|v_*\|/\|w_*\|$ ($L^2$ norms). $\lambda$ is a proxy for wavelength: it is the reciprocal of the RMS frequency.
 
-For a particular source-receiver pair ${\bf x}_s,{\bf x}_r$ with $\bx_r$ "not too far" from $\bx_s$,, suppressed from the notation,
+For a particular source-receiver pair ${\bf x}_s,{\bf x}_r$ with $\bx_r$ "not too far" from $\bx_s$, suppressed from the notation,
 \begin{equation}
   \label{eqn:hadamard}
   F[m]w_*(t) = a[m]w_*(t-\tau[m]) + Rw_*(t)
@@ -73,15 +90,15 @@ For approximations with $O(\lambda(w_*)$ remainders, write
 Thanks to the approximation \ref{eqn:pwe},
 \begin{equation}
   \label{eqn:spwe}
-S[m,w_*]u(t) \approx a[m](w_**u)(t-\tau[m])
+S[m]u(t) \approx a[m](w_**u)(t-\tau[m])
 \end{equation}
 Assume that the data is noise-free:
 $$
 d(t)=F[m_*]w_*(t) \approx a[m_*]w_*(t-\tau[m_*])
 $$
-The (approximate) solution of $S[m,w_*]u_0=d$ is obvious by inspection: $u_0(t) = a[m_*]/a[m]\delta(t-\tau[m_*]+\tau[m])$. There is immediately a big problem: this $u_0$ is not square-integrable, and the AWI objective $\tJz$ is undefined. To fix this, it's necessary to treat $u_0$ as the solution of a regularized least squares problem: define
+The (approximate) solution of $S[m]u_0=d$ is obvious by inspection: $u_0(t) = a[m_*]/a[m]\delta(t-\tau[m_*]+\tau[m])$. There is immediately a big problem: this $u_0$ is not square-integrable, and the AWI objective $\tJz$ is undefined. To fix this, it's necessary to treat $u_0$ as the solution of a regularized least squares problem: define
 $$
-u_0^{\epsilon} = \mbox{argmin}_u (\|S[m,w_*]u-d\|^2 + \epsilon^2\|u\|^2)
+u_0^{\epsilon} = \mbox{argmin}_u (\|S[m]u-d\|^2 + \epsilon^2\|u\|^2)
 $$
 $$
 \approx \mbox{argmin}_u (\|a[m](w_**u)(\cdot-\tau[m])-a[m_*]w_*(\cdot-\tau[m_*])\|^2 + \epsilon^2\|u\|^2)
@@ -142,7 +159,7 @@ It remains to see what geometric optics has to say about the penalty objective $
 The adaptive kernel $u_0^{\epsilon}$ appearing in the definition \ref{eqn:tJz} is the solution of a regularized least squares problem. This observation suggests augmenting the regularized least squares objective by a penalty proportional to the right-hand side of \ref{eqn:tJz}:
 \begin{equation}
   \label{eqn:Ja}
-  \Ja[m,u;d] = \frac{1}{2}\left(\|S[m,w_*]u-d\|_d^2 + \epsilon^2\|u\| + \alpha^2\|tu\|_m\right).
+  \Ja[m,u;d] = \frac{1}{2}\left(\|S[m]u-d\|_d^2 + \epsilon^2\|u\| + \alpha^2\|tu\|_m\right).
 \end{equation}
 Here $\|u\|^2 = \langle u, u \rangle$ is the (unweighted) $L^2$ norm, and $\|\cdot\|_m$ is an $(m,d)$-dependent (weighted) norm: with
 \[
@@ -243,9 +260,255 @@ Since $S$ is uniformly coercive, and both $S$ and $W$ are of class $C^1$, the no
 [need to add proof of $C^1$ convergence.]
 \end{proof}
 
-Apply this relation in the context of the AWI penalty problem defined earlier. $M$ is an open set in $C^k(\Omega, \bR^2)$. $U$ is $\oplus_{\bx_r,\bx_s}L^2([-T_u,T_u])$, $D$ is the data space $\oplus_{\bx_r,\bx_s}L^2([0,T])$,. $S$ is the regularized modeling operator $(S[m,w_*],\epsilon I)^T$, $d$ is replaced by the $(d,0) \in D \times U$,  $W$ is the weight operator on $U$ defined in \ref{eqn:defmnorm}.
+Apply this relation in the context of the AWI penalty problem defined earlier. $M$ is an open set in $C^k(\Omega, \bR^2)$. $U$ is $\oplus_{\bx_r,\bx_s}L^2([-T_u,T_u])$, $D$ is the data space $\oplus_{\bx_r,\bx_s}L^2([0,T])$,. $S$ is the regularized modeling operator $(S[m],\epsilon I)^T$, $d$ is replaced by the $(d,0) \in D \times U$,  $W$ is the weight operator on $U$ defined in \ref{eqn:defmnorm}.
 
-As noted before [but it wasn't - fix!], stationary points of $\tJz$ are $\lambda(w_*)$-close to stationary points of the travel time mean-square error, in the single-arrival case. The result of this section implies that stationary points of $\tJa$ are close to those of $\tJz$. Therefore, at least for small $\alpha$, minimization of $\tJa$ produces acoustic models that closely match the traveltimes predicted in single-arrival data.
+As noted before [but it wasn't - fix!], stationary points of $\tJz$
+are $\lambda(w_*)$-close to stationary points of the travel time
+mean-square error, in the single-arrival case. The result of this
+section implies that stationary points of $\tJa$ are close to those of
+$\tJz$. Therefore, at least for small $\alpha$, minimization of $\tJa$
+produces acoustic models that closely match the traveltimes predicted
+in single-arrival data.
+
+\section{Computation of the Reduced Penalty Function and its Gradient}
+Like all penalty functions, this one is best viewed as a least-squares objective of a map with values in a product space: define
+$$
+A_{\alpha,\epsilon}[m] =  
+\left[
+\begin{array}{c}
+S[m]\\
+\epsilon I\\
+\alpha T_{\epsilon}[m]
+\end{array}
+\right]
+, \, b = \left[
+\begin{array}{c}
+d\\
+0\\
+0
+\end{array}
+\right]
+$$
+Then
+$$
+J_{\alpha,\epsilon}[m,w_*,u] = 0.5\|A_{\alpha,\epsilon}[m]u-b\|^2
+$$
+
+Both Newton's method with the Kaufman Hessian approximation (described in the VCL notebook) and LBFGS or similar first-order methods apply to minimization of $\tilde{J}_{\alpha,\epsilon}[m]$. As shown in the VCL notebook, application of these algorithms to a VPM reduction like $\tilde{J}_{\alpha,\epsilon}$ requires access to two linear operator valued functions of $m$, namely $A_{\alpha,\epsilon}[m]$ and the (partial) derivative $D_m(A_{\alpha,\epsilon}[m]u)$. The former is the main actor in computation of the objective via solution of the normal equations. The latter appears in the VPM gradient formula:
+$$
+\nabla \tilde{J}_{\alpha,\epsilon}[m] = (D_m A_{\alpha,\epsilon}[m]u)|_{u=\tilde{u}_{\alpha,\epsilon}[m]}^T(A_{\alpha,\epsilon}[m]\tilde{u}_{\alpha,\epsilon}[m] -b)
+$$
+Note that $D_m A_{\alpha,\epsilon}[m]u$ is a map from the model parameter space to the product range space of $A$, and the transpose is a map in the other direction. 
+
+\subsection{Computing $D_mA_{\alpha,\epsilon}[m]^T$}
+The main goal of this and the next two subsections is to express the
+operator in the subsection title in terms of
+\begin{itemize}
+  \item trace-by-trace convolution and cross-correlation operators,
+  \item the derivative $D_mF[m]w_*$ and its adjoint, and
+  \item trace-by-trace scaling.
+\end{itemize}
+These the first two bullets describe common components of FWI.The
+third is necessary to express the AWI penalty operator.
+
+Note that the second-mentioned operator describes the derivative of
+the acoustic forward modeling operator for a single point source per
+receiver gather, not the extended modeling operator $\bar{F}$. The
+latter is not a modular component of FWI, and a self-contained
+implementation is not likely to be available.
+
+Write $\nabla \tilde{J}_{\alpha,\epsilon}$ in terms of its components:
+\begin{equation}
+= D_mS[m]^T e_0 + \alpha D_mT_{\epsilon}[m]^Te_2
+\label{eqn:tildejgrad}
+\end{equation}
+where $e=(e_0,e_1,e_2)^T$ is the residual vector:
+$$
+e = \left[
+\begin{array}{c}
+S[m]u-d\\
+\epsilon u\\
+\alpha T[m]u
+\end{array}
+\right],\, u=\tilde{u}_{\alpha,\epsilon}[m].
+$$
+Note that the regularization term does not appear in the VPM gradient expression, since it does not depend explicitly on $m$.
+
+Evidently the key calculations are $D_mS^T$ and $D_m T^T$. 
+
+\subsection{Convolution Revisited}
+
+To keep track of the data flow in subsequent calculations, it is convenient to introduce a notation for the operator of convolution by $u$. This notation must include the time ranges for input and output traces, as these define the index limits in the sums that implement the convolution operator. Looked at another way, these ranges define the domain and range of the operator, and that is how the definition in *segyvc.ConvolutionOperator* is arranged: the arguments to the class constructor are the domain and range (as *segyvc.Spaces*, type-checked) and the filename for the convolution kernel. Domain, range, and kernel must share spatial geometry (source and receiver positions, in particular number of traces, and time step; these conditions are checked. In this section, the convolution operator with compatible trace space domain $X$ and range $Y$, and kernel $z \in Z$ is denoted $C[X,Y,Z,z]$. The kernel space $Z$ is also compatible with $X$ and $Y$.
+
+The domain, range, and kernel spaces considered here are all coordinate spaces, defined by finite time index ranges (or, in the continuum case, bounded time ranges). For such a coordinate space $X$, denote by $\Pi_X$ the orthogonal projection of the ambient space $l^2$ (or $L^2({\bf R})$ onto $X$. In the discrete case, this projection $\Pi_X$ simply extracts the values inside the characterizing index range $I_X$:
+$$
+(\Pi_X f)_i = f_i, \, i \in I_X,
+$$
+and similarly for the continuum case. The transpose projection $\Pi_X^T$ injects the array of values within the range into $l^2$, with zeros outside. So $\Pi_X^T\Pi_X$ is the projection onto the subspace of $l^2$ (or $L^2({\bf R})$) corresponding to $X$, i.e. the range of $\Pi_X^T$, and $\Pi_X \Pi_X^T = I_X$.
+
+Define convolution $f*g$ by the usual sum or integral, for arguments $f$ and $g$ of bounded support. With these conventions,
+$$
+C[X,Y,Z,z]x = \Pi_Y(\Pi_Z^T z * \Pi_X^T x).
+$$
+The class *segyvc.ConvolutionOperator* implements precisely the discrete version of this definition.
+
+Both discrete and continuous convolution are commutative. The same is true of the discrete, finite version of convolution implemented in *segyvc.ConvolutionOperator*, and can be expressed as the follow obvious consequence of the definition: if $X, Y, Z$ are compatible trace spaces, and $z \in Z, x \in X$, then
+\begin{equation}
+C[X,Y,Z,z]x = C[Z,Y,X,x]z
+\label{eqn:convcomm}
+\end{equation}
+The transpose of convolution is expressed via the time reversal operator $f \mapsto \check{f}\, \check{f}_i = f_{-i}$:  
+$$
+\langle f*g,h \rangle = \langle g, \check{f}*h \rangle.
+$$ 
+The right-hand side defines the cross-correlation of $f$ and $h$. From the definition of $C$,
+$$
+\langle C[X,Y,Z,z]x, y\rangle_Y = \langle \Pi_Y(\Pi_Z^T z * \Pi_X^T x), y \rangle_Y
+$$
+$$
+= \langle \Pi_Z^T z * \Pi_X^T x, \Pi_y^T y \rangle = \langle \Pi_X^T x, \check{(\Pi_Z^T z)}* \Pi_Y^T y \rangle
+$$
+Denote by $\check{Z}$ the coordinate space produced by time reversal applied to $Z$, that is, $I_{\check{Z}}$ consists of the negatives of members of $I_Z$. Then $\check{(\Pi_Z^T z)}=\Pi_{\check{Z}}\check{z}$, so the above is
+$$
+=\langle \Pi_X^T x, \Pi_{\check{Z}}^T \check{z} * \Pi_Y^T y \rangle =\langle x, \Pi_X(\Pi_{\check{Z}}^T \check{z} * \Pi_Y^T y) \rangle_X
+$$
+$$
+= \langle x, C[Y,X,\check{Z},\check{z}]y \rangle_X.
+$$
+That is, $C[X,Y,Z,z]^T = C[Y,X,\check{Z},\check{z}]$.
+
+Combining the commutativity relation $\ref{eqn:convcomm}$ with this identity yields the useful identity:
+\begin{equation}
+C[X,Y,Z,z]^Ty = C[Y,X,\check{Z},\check{z}]y =
+C[\check{Z},X,Y,y]\check{z} =
+C[X,\check{Z},\check{Y},\check{y}]^T\check{z}.
+\label{eqn:convcommtransp}
+\end{equation}
+
+\subsection{Back to AWI penalty gradient}
+
+The SEGY trace spaces involved in the AWI calculation are the data space $D$ and the adaptive filter space $U$. Minimization of $J_{\alpha,\epsilon}$ amounts to solution of a least squares problem with operator $C[U,D,D,F[m]w]$, that is, convolution with the predicted data:
+$$
+S[m]u = C[U,D,D,F[m]w_*]u = C[D,D,U,u]F[m]w_*
+$$
+The second expression, equivalent by the commutativity relation \ref{eqn:convcomm} to the first, is more convenient for computing the derivative with respect to $m$ of $S[m]u$:
+$$
+D_m(S[m]u) \delta m = C[D,D,U,u](D_mF[m]\delta m)
+$$
+whence ($e_0 = S[m]u_{\alpha,\epsilon}[m]-d \in D$) the first summand in the gradient of $\tilde{J}_{\alpha,\epsilon}$ is
+$$
+D_m(S[m]u)^T e_0 = D_mF[m]^TC[D,D,U,u]^Te_0.
+$$
+%The derivative $D_mF[m]$ and its adjoint are defined in the *vcl.Function* subclass *asg.fsbop*, and the convolution operator $C$ and its transpose in *segyvc.ConvolutionOperator*.
+
+Introduce the set $SR$ of source-receiver pairs active in the data
+$D$, and scale factor space $P = \{f:SR \rightarrow \bR\}$. Write
+\[
+  T[m]u = B_2 \circ B_1 \circ B_0[m],
+\]
+where 
+\[
+B_2: P \times U \rightarrow U, \, B_2[f,u](bx_r,t;\bx_s) = f(\bx_r,\bx_s) tu(\bx_r,t;\bx_s)
+\]
+\[
+B_1: U \rightarrow P, \,B_1[u](\bx_r,t,\bx_s) = \|u(\bx_r,\cdot; \bx_s)\|^{-1}
+\]
+\[
+B_0: M \rightarrow U, \, B_0[m] = u_{0,\epsilon}[m]
+\]
+Then
+\[
+ \frac{\alpha^2}{2} D_m(\|T[m]u\|_U^2)\delta m = \alpha^2\langle D_m(
+ T[m]u)\delta m, T[m]u \rangle_U
+\]
+\[
+  =\alpha^2 \langle DB_2(B_1\circ B_0[m],u)DB_1(B_0[m]) DB_0[m]\delta m,
+  T[m]u\rangle_U
+\]
+\begin{equation}
+  \label{eqn:compgrad}
+  =\alpha^2 \langle DB_0[m]\delta m, DB_1(B_0[m])^TDB_2(B_1\circ
+  B_0[m],u)^TT[m]u\rangle_U
+\end{equation}
+Next display the derivative and adjoint derivative of $B_1$ and $B_2$:
+$$
+(D_fB_2[f,u]\delta f)(\bx_r,t;\bx_s) = tu(\bx_r,t;\bx_s)\delta f(\bx_r,\bx_s)
+$$
+$$
+D_f(B_2[f,u])^Te_2(\bx_r,\bx_s) = \int dt\,te_2(\bx_r,t;\bx_s)u(\bx_r,t;\bx_S);
+$$
+$$
+D_u B_1[u]\delta u(\bx_r,\bx_s) = -\|u(\bx_r,\cdot;\bx_s)\|^{-3}\langle u(bx_r,\cdot;\bx_s), \delta u(\bx_r,\cdot;\bx_s) \rangle
+$$
+$$
+(D_u B_1[u])^Tf(\bx_r,t;\bx_s) =
+-f(\bx_r,\bx_s)\|u(\bx_r,\cdot;\bx_s\|^{-3}u(\bx_r,t;\bx_s)
+$$
+With these expressions, compose various components appearing on the
+right hand side of equation \ref{eqn:compgrad}:
+\[
+  B_1\circ B_0[m] (\bx_r,\bx_s) =  \|\tilde{u}_{0,\epsilon}(\bx_r,\cdot; \bx_s)\|^{-1},
+\]
+\[
+ DB_2(B_1\circ B_0[m],u)^Te_2 = \int dt\,te_2(\bx_r,t;\bx_s)u(\bx_r,t;\bx_s),
+\]
+(Note that the result is independent of the first argument.)
+\[
+DB_1(B_0[m])^Tf(\bx_r,t:\bx_s)=
+-f(\bx_r,\bx_s)\|u_{0,\epsilon}(\bx_r,\cdot;\bx_s)\|^{-3}u_{0,\epsilon}(\bx_r,\cdot;\bx_s),
+\]
+and
+\[
+  DB_1(B_0[m])^TDB_2(B_1\circ  B_0[m],u)^TT[m]u =
+\]
+\begin{equation}
+  \label{eqn:compgrad1}
+  -\int dt\,t(T[m]u)(\bx_r,t;\bx_s)u(\bx_r,t;\bx_s)
+  \|u_{0,\epsilon}(\bx_r,\cdot;\bx_s)\|^{-3}u_{0,\epsilon}(\bx_r,\cdot;\bx_s)
+\end{equation}
+$$
+u_{0,\epsilon}[m] = (S[m]^TS[m] + \epsilon^2 I)^{-1}S[m]^Td
+$$
+$$
+= (C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \epsilon^2 I)^{-1}C[U,D,D,F[m]w_*]^Td.
+$$
+So
+$$
+D_mB_0[m]\delta m = (C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \epsilon^2 I)^{-1}
+$$
+$$
+\times ((D_mC[U,D,D,F[m]w_*]\delta m)^Td -(D_m(C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*])\delta m)u_{0,\epsilon}[m])
+$$
+$$
+=(C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \epsilon^2 I)^{-1}
+$$
+$$
+\times
+(D_m(C[U,D,D,F[m]w_*]^Tr_0)\delta m  - C[U,D,D,F[m]w_*]^TD_m(C[U,D,D,F[m]w_*]u_0)\delta m)
+$$ 
+where the derivatives are to be evaluated before the insertion of the definitions 
+$$
+r_0 = d -C[U,D,D,F[m]w_*]u_{0,\epsilon}[m], \, u_0 = u_{0,\epsilon}[m]
+$$
+From the commutativity relation,
+$$
+D_m(C[U,D,D,F[m]w_*]u_0)\delta m = D_m(C[D,D,U,u_0]F[m]w_*)\delta m
+=C[D,D,U,u_0]D_mF[m]\delta m.
+$$
+Similarly, use the identity \ref{eqn:convcommtransp} to write
+$$
+C[U,D,D,F[m]w_*]^Tr_0 = C[U,\check{D},\check{D},\check{r_0}]^T({F[m]w_*})\check, 
+$$
+so
+$$
+D_m(C[U,D,D,F[m]w_*]^Tr_0)\delta m=
+C[U,\check{D},\check{D},\check{r_0}]^T(D_mF[m]w_* \delta m)\check.
+$$
+
+Putting these calculations together,
+
+
+
 
 
 \append{$\alpha \rightarrow 0$ scaled limit of penalty function}
