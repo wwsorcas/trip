@@ -1,0 +1,372 @@
+\title{Computation of the Reduced AWI Penalty Function and its Gradient}
+\author{William W. Symes}
+
+\begin{abstract}
+goes here.
+\end{abstract}
+
+\section{Definitions}
+Hilbert space $X$ has inner product $\langle \cdot,\cdot \rangle_X$ and norm $\|\cdot\|_X$.
+
+$Q \subset \bR^3 \times \bR^3$ = finite ``acquisition'' set of source-receiver location pairs $(\bx_r,\bx_s)$, assumed disjoint from the diagonal (sources and receivers non-coincident). $Q_s$ = projection onto second factor (source locations occurring in $Q$).
+
+$P = \bR^{|Q|}$ = real functions on $Q$, with Euclidean norm (no attempt to scale for geometry of acquisition).
+
+$[0,t_d]$ = acquisition time interval
+
+$[-t_U,t_U]$ = adaptive filter time interval
+
+$D$ = data Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([0,t_D])$ (again, no attempt to scale for geometry of acquisition).
+
+$U$ = adaptive filter Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([-t_U,t_U])$
+
+$w_* \in C_0^{\infty}(\bR)$ = known point source wavelet
+
+$M = $ model set, bounded open subset of $ C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3)$.
+
+\begin{theorem}
+  \label{thm:eu}
+For $(\log \kappa, \log \beta) \in M$, shot location ${\bf x}_s\in Q_s$, there exist distributions (pressure and velocity fields) $p(\cdot,\cdot,t;\bx_s)$, ${\bf v}(\cdot,\cdot;\bx_s)$ satisfying
+\begin{itemize}
+\item
+  \begin{eqnarray}
+    \label{eqn:awe}
+    \frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv +
+                                        w(t;\bx_s) \delta(\bx-\bx_s); \\
+    \frac{\partial \bv}{\partial t} & = & - \beta \nabla p; \\
+    p, \bv & = & 0 \mbox{ for }  t \ll 0.
+  \end{eqnarray}
+\item
+  $p, \bv$ are smooth in the punctured space-time $\bR^4 \setminus \{(\bx_s,t): t \in \bR\}$.
+\end{itemize}
+\end{theorem}
+\begin{proof}
+  See Appendix A.
+\end{proof}
+
+Define $F: M \rightarrow D$ by
+\[
+  F[m](\bx_r,t;\bx_s) = p(\bx_r,t;\bx_s), \, (\bx_r,\bx_s) \in Q, \, t \in [0,t_D],
+\]
+for the pressure field $p$ solving \ref{eqn:awe}.
+
+\begin{theorem}
+  \label{thm:mbd}
+  $\|F[m](\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])}$ is uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+\end{theorem}
+\begin{proof}
+  See Appendix A.
+\end{proof}
+
+$S: M \rightarrow {\cal B}(U,D)$ = trace-by-trace convolution with predicted data: $S[m]u = F[m] * u$. Due to smoothness of $F$, $S \in C^1(M,{\cal B}(U,D))$. Operation is trace-by-trace, that is block-diagonal: $S[m] = \bigoplus_{(\bx_r,\bx_s) \in Q}S[m]_{\bx_r,\bx_s}$. The Modeling Bound Assumption implies that $\|S[m](\bx_r,\cdot;\bx_s)\|_{{\cal B}(L^2([-t_U,t_U]),L^2([0,t_D]))}$ is also uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+
+No-zero-traces Assumption: there exists $C>0$ so that for all $(\bx_r,\bx_s) \in Q$,
+$\|d(\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])} \ge C.$
+
+Observable Data Assumption: there exists $C>0$ so that for all $m \in M, (\bx_r,\bx_s) \in Q$,
+\begin{equation}
+  \label{eqn:obsdata}
+  \|S[m]_{\bx_r,\bx_s}^Td(\bx_r,\cdot;\bx_s)\|_{L^2[-t_U,t_U]} \ge C \|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}
+\end{equation}.
+That is, the projection of each trace onto the range of convolution of the corresponding predicted data trace is coercive.  
+
+$\sigma > 0$ = Tihonov regularization weight
+
+$\alpha \ge 0$ = penalty weight
+
+Definition of AWI penalty objective divides into two parts:
+
+Part 1: Unpenalized adaptive filter $u_{0,\sigma}[m,d]$ solving regularized least squares data fitting problem:  given $m \in M$, minimizes
+\[
+ J_{0,\sigma}[u,m,d] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \sigma^2 \|u\|^2_U).
+\]
+Since $\sigma > 0$, normal operator is uniformly bounded below and of class $C^1$ in $M$ and $D$. So unique solution exists, and $u_{0,\sigma} \in C^1(M \times D, U)$.
+
+Also, the normal operator is block-diagonal, so each trace solves a least-squares problem, and
+\[
+  (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)= S[m]_{\bx_r,\bx_s}^Td(\bx_r,\cdot;\bx_s)
+\]
+According to the Modeling Bound Assumption, observable data assumption, the left-hand side is bounded by a multiple of $\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]}$, uniformly in $m \in M, (\bx_r,\bx_s) \in Q$. According to the Observable Data Assumption, the right-hand side is bounded below by a multiple of $\|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}$, uniform in the same sense. Conclude that there exists $C>0$ so that
+\begin{equation}
+  \label{eqn:u0lower}
+  \|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} \ge C \|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}
+\end{equation}
+uniformly in $m \in M, (\bx_r,\bx_s) \in Q$.
+
+Part 2:
+Preconditioned penalty operator: block diagonal, 
+\begin{equation}
+  \label{eqn:ppf}
+  T_{\sigma}[m]u (\bx_r,t;\bx_s) = \frac{t u(\bx_r,t;\bx_s)}{\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} }
+\end{equation}
+Well-defined and $C^1$ as function of $m$ due to the bound \ref{eqn:u0lower} and the the No-zero-trace assumption.
+
+\section{Objectives}
+Define for $\alpha \ge 0$
+\[
+ J_{\alpha,\sigma}[u,m,d] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \alpha^2\|T_\sigma[m]u\|_U^2 + \sigma^2 \|u\|^2_U).
+\]
+Note that the notation is consistent, that is, reduces to $J_{0,\sigma}$ as defined above for $\alpha=0$.
+
+The variable projection reduction of $J_{\alpha,\sigma}$ is
+\begin{equation}
+  \label{eqn:jtilde}
+ \tilde{J}_{\alpha,\sigma}[m,d] = \frac{1}{2}(\|S[m]u_{\alpha,\sigma}[m,d] - d\|_D^2 + \alpha^2\|T_\sigma[m]u_{\alpha,\sigma}[m,d]\|_U^2 + \sigma^2 \|u_{\alpha,\sigma}\|^2_U).
+\end{equation}
+in which $u_{\alpha,\sigma}[m,d]$ is the minimizer of $J_{\alpha\sigma}[u,m,d]$ over $u \in U$. The fundamental result of variable projection theory \cite[]{GolubPeyreyra:73} applies under the conditions presented here: the stationary points of $J_{\alpha,\sigma}$ and $\tilde{J}_{\alpha,\sigma}$ are in bijective correspondence.
+
+Computing $\tilde{J}_{\alpha,\sigma}$ takes place in two stages, corresponding to the two-stage construction of $J_{\alpha,\sigma}$:
+\begin{itemize}
+\item[1. ] minimize $J_{0,\sigma}$ to compute $u_{0,\sigma}$;
+\item[2. ] use $u_{0,\sigma}$ to compute $u \mapsto T_{\sigma}[m]u$, and compute $u_{\alpha,\sigma}$ by minimizing $J_{\alpha,\sigma}$.
+\end{itemize}
+Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of two least-squares problems, in sequence.
+
+\section{Derivatives}
+This section presents the derivative of $\tilde{J}_{\alpha,\sigma}$, expressed in terms of
+\begin{itemize}
+  \item trace-by-trace convolution and cross-correlation operators,
+  \item the derivative $D_mF[m]$ and its adjoint, and
+  \item trace-by-trace scaling
+\end{itemize}
+These the first two items are common components of typical FWI implementations. The
+third is necessary to express the AWI penalty operator.
+
+As pointed out by \cite{GolubPeyreyra:73}, the directional derivative $D_m\tilde{J}_{\alpha,\sigma}[m,d]\delta m$ is the same as the partial directional derivative $D_mJ[u,m,d]\delta m$ with $u = u_{\alpha,\sigma}[m,d]$. Since 
+\begin{equation}
+D_mJ[u,m,d]\delta m = D_mS[m]^T (S[m]u-d) + \alpha^2 D_m(T_{\sigma}[m]u)^TT_{\sigma}[m]u,
+\label{eqn:basederiv}
+\end{equation}
+the key calculations are $D_mS^T$ and $D_m T^T$. 
+
+Note that the regularization term does not appear in the VPM gradient expression, since it does not depend explicitly on $m$.
+
+\subsection{Convolution Revisited}
+
+To keep track of the data flow in subsequent calculations, it is convenient to introduce a notation for the operator of convolution by $u$. This notation must include the time ranges for input and output traces, as these define the index limits in the sums that implement the convolution operator. Looked at another way, these ranges define the domain and range of the operator, and that is how the definition in {\em segyvc.ConvolutionOperator} is arranged: the arguments to the class constructor are the domain and range (as {\em segyvc.Space}s, type-checked) and the filename for the convolution kernel. Domain, range, and kernel must share spatial geometry (source and receiver positions, in particular number of traces, and time step; these conditions are checked). In this section, the trace-by-trace convolution operator with compatible trace space domain $X$ and range $Y$, and kernel $z \in Z$ is denoted $C[X,Y,Z,z]$. 
+The kernel space $Z$ is also assumed compatible with $X$ and $Y$.
+
+The domain, range, and kernel spaces considered here are all coordinate spaces, defined by finite time index ranges (or, in the continuum case, bounded time ranges). For such a coordinate space $X$, denote by $I_X$ the index range (for the discrete case) associated with $X$, and $\Pi_X$ the orthogonal projection of the ambient space $l^2$ (or $L^2({\bf R})$ onto $X$. That is, in the discrete case, for $i \in {\bf Z}, (\bx_r,\bx_s) \in Q$,
+\[
+  \Pi_Xu(\bx_r,\bx_s)_i  =
+  \left\{
+    \begin{array}{c}
+      u(\bx_r,\bx_s)_i, i \in I_X, \\
+      0, \mbox{ else.}
+    \end{array}
+  \right.
+\]  
+and similarly for the continuum case. The transpose projection $\Pi_X^T$ injects the array of values within the range into $l^2$, with zeros outside. So $\Pi_X^T\Pi_X$ is the projection onto the subspace of $l^2$ (or $L^2({\bf R})$) corresponding to $X$, i.e. the range of $\Pi_X^T$, and $\Pi_X \Pi_X^T = I_X$.
+
+Define convolution $f*g$ by the usual sum or integral, interpreted as block-diagonal (trace-by-trace) for  $f$ and $g$ of bounded support. With these conventions,
+\begin{equation}
+  \label{eqn:convdef}
+C[X,Y,Z,z]x = \Pi_Y(\Pi_Z^T z * \Pi_X^T x).
+\end{equation}
+The class {\em segyvc.ConvolutionOperator} implements precisely the discrete version of this definition.
+
+Both discrete and continuous convolution are commutative. The same is true of the discrete, finite version of convolution implemented in {\em segyvc.ConvolutionOperator}, and can be expressed as the follow obvious consequence of the definition: if $X, Y, Z$ are compatible trace spaces, and $z \in Z, x \in X$, then
+\begin{equation}
+C[X,Y,Z,z]x = C[Z,Y,X,x]z
+\label{eqn:convcomm}
+\end{equation}
+The transpose of convolution is expressed via the time reversal operator $f \mapsto \check{f}\, \check{f}_i = f_{-i}$:  
+$$
+\langle f*g,h \rangle = \langle g, \check{f}*h \rangle.
+$$ 
+The right-hand side defines the cross-correlation of $f$ and $h$. From the definition of $C$,
+$$
+\langle C[X,Y,Z,z]x, y\rangle_Y = \langle \Pi_Y(\Pi_Z^T z * \Pi_X^T x), y \rangle_Y
+$$
+$$
+= \langle \Pi_Z^T z * \Pi_X^T x, \Pi_y^T y \rangle = \langle \Pi_X^T x, \check{(\Pi_Z^T z)}* \Pi_Y^T y \rangle
+$$
+Denote by $\check{Z}$ the coordinate space produced by time reversal applied to $Z$, that is, $I_{\check{Z}}$ consists of the negatives of members of $I_Z$. Then $\check{(\Pi_Z^T z)}=\Pi_{\check{Z}}\check{z}$, so the above is
+$$
+=\langle \Pi_X^T x, \Pi_{\check{Z}}^T \check{z} * \Pi_Y^T y \rangle =\langle x, \Pi_X(\Pi_{\check{Z}}^T \check{z} * \Pi_Y^T y) \rangle_X
+$$
+$$
+= \langle x, C[Y,X,\check{Z},\check{z}]y \rangle_X.
+$$
+That is, $C[X,Y,Z,z]^T = C[Y,X,\check{Z},\check{z}]$.
+
+Combining the commutativity relation $\ref{eqn:convcomm}$ with this identity yields the useful identity:
+\begin{equation}
+C[X,Y,Z,z]^Ty = C[Y,X,\check{Z},\check{z}]y =
+C[\check{Z},X,Y,y]\check{z} =
+C[X,\check{Z},\check{Y},\check{y}]^T\check{z}.
+\label{eqn:convcommtransp}
+\end{equation}
+
+\subsection{Back to AWI penalty gradient}
+
+The SEGY trace spaces involved in the AWI calculation are the data space $D$ and the adaptive filter space $U$. Minimization of $J_{\alpha,\sigma}$ amounts to solution of a least squares problem with operator $C[U,D,D,F[m]w]$, that is, convolution with the predicted data:
+$$
+S[m]u = C[U,D,D,F[m]w_*]u = C[D,D,U,u]F[m]w_*
+$$
+The second expression, equivalent by the commutativity relation \ref{eqn:convcomm} to the first, is more convenient for computing the derivative with respect to $m$ of $S[m]u$:
+$$
+D_m(S[m]u) \delta m = C[D,D,U,u](D_mF[m]\delta m)
+$$
+whence ($e_0 = S[m]u_{\alpha,\sigma}[m]-d \in D$) the first summand in the gradient of $\tilde{J}_{\alpha,\sigma}$ is
+$$
+D_m(S[m]u)^T e_0 = D_mF[m]^TC[D,D,U,u]^Te_0.
+$$
+%The derivative $D_mF[m]$ and its adjoint are defined in the *vcl.Function* subclass *asg.fsbop*, and the convolution operator $C$ and its transpose in *segyvc.ConvolutionOperator*.
+
+Recall the set $Q$ of source-receiver pairs active in the data
+$D$, and scale factor space $P = \{f:Q \rightarrow \bR\}$. Write
+\[
+  T_{\sigma}[m]u = B_2 \circ B_1 \circ B_0[m],
+\]
+where 
+\[
+B_2: P \times U \rightarrow U, \, B_2[f,u](bx_r,t;\bx_s) = f(\bx_r,\bx_s) tu(\bx_r,t;\bx_s)
+\]
+\[
+B_1: U \rightarrow P, \,B_1[u](\bx_r,t,\bx_s) = \|u(\bx_r,\cdot; \bx_s)\|^{-1}
+\]
+\[
+B_0: M \rightarrow U, \, B_0[m] = u_{0,\sigma}[m]
+\]
+Then
+\[
+ \frac{\alpha^2}{2} D_m(\|T_{\sigma}[m]u\|_U^2)\delta m = \alpha^2\langle D_m(
+ T_{\sigma}[m]u)\delta m, T_{\sigma}[m]u \rangle_U
+\]
+\[
+  =\alpha^2 \langle D_fB_2(B_1\circ B_0[m],u)D_uB_1(B_0[m]) D_mB_0[m]\delta m,
+  T_{\sigma}[m]u\rangle_U
+\]
+\begin{equation}
+  \label{eqn:compgrad}
+  =\alpha^2 \langle D_mB_0[m]\delta m, D_uB_1(B_0[m])^TD_fB_2(B_1\circ
+  B_0[m],u)^TT_{\sigma}[m]u\rangle_U
+\end{equation}
+Next display the derivative and adjoint derivative of $B_1$ and $B_2$:
+$$
+(D_fB_2[f,u]\delta f)(\bx_r,t;\bx_s) = tu(\bx_r,t;\bx_s)\delta f(\bx_r,\bx_s)
+$$
+$$
+D_f(B_2[f,u])^Te_2(\bx_r,\bx_s) = \int dt\,te_2(\bx_r,t;\bx_s)u(\bx_r,t;\bx_S);
+$$
+$$
+D_u B_1[u]\delta u(\bx_r,\bx_s) = -\|u(\bx_r,\cdot;\bx_s)\|^{-3}\langle u(bx_r,\cdot;\bx_s), \delta u(\bx_r,\cdot;\bx_s) \rangle
+$$
+$$
+(D_u B_1[u])^Tf(\bx_r,t;\bx_s) =
+-f(\bx_r,\bx_s)\|u(\bx_r,\cdot;\bx_s\|^{-3}u(\bx_r,t;\bx_s)
+$$
+With these expressions, compose various components appearing on the
+right hand side of equation \ref{eqn:compgrad}:
+\[
+  B_1\circ B_0[m] (\bx_r,\bx_s) =  \|\tilde{u}_{0,\sigma}(\bx_r,\cdot; \bx_s)\|^{-1},
+\]
+\[
+ D_fB_2(B_1\circ B_0[m],u)^Te_2 = \int dt\,te_2(\bx_r,t;\bx_s)u(\bx_r,t;\bx_s),
+\]
+(Note that the result is independent of the first argument.)
+\[
+D_uB_1(B_0[m])^Tf(\bx_r,t:\bx_s)=
+-f(\bx_r,\bx_s)\|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-3}u_{0,\sigma}(\bx_r,\cdot;\bx_s),
+\]
+and
+\[
+  (DB_1(B_0[m])^TDB_2(B_1\circ  B_0[m],u)^TT_{\sigma}[m]u )(\bx_r,\cdot,\bx_s)
+\]
+\[
+  = -\int dt\,t(T_{\sigma}[m]u)(\bx_r,t;\bx_s)u(\bx_r,t;\bx_s)
+  \|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-3}u_{0,\sigma}(\bx_r,\cdot;\bx_s)
+\]
+In view of the definition of $T_{\sigma}[m]$, this is
+\begin{equation}
+  \label{eqn:compgrad1}
+  = -\||T_{\sigma}[m]u(\bx_r,\cdot;\bx_s)\|^2
+  \|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-2}u_{0,\sigma}(\bx_r,\cdot;\bx_s)
+\end{equation}
+It remains to compute $ DB_0[m]\delta m,$:
+$$
+B_0[m] = u_{0,\sigma}[m] = (S[m]^TS[m] + \sigma^2 I)^{-1}S[m]^Td
+$$
+\begin{equation}
+  \label{eqn:compgrad4}
+  DB_0[m]\delta m = (S[m]^TS[m] + \sigma^2 I)^{-1}(D_m(S[m]^T r_0)\delta m - S[m]^TD_m(S[m]u_0)\delta m)
+\end{equation}
+%$$
+%= (C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \sigma^2 I)^{-1}C[U,D,D,F[m]w_*]^Td.
+%$$
+%So
+%$$
+%D_mB_0[m]\delta m = (C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \sigma^2 I)^{-1}
+%$$
+%$$
+%\times ((D_mC[U,D,D,F[m]w_*]\delta m)^Td -(D_m(C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*])\delta m)u_{0,\sigma}[m])
+%$$
+%$$
+%=(C[U,D,D,F[m]w_*]^TC[U,D,D,F[m]w_*] + \sigma^2 I)^{-1}
+%$$
+%$$
+%\times
+%(D_m(C[U,D,D,F[m]w_*]^Tr_0)\delta m  - C[U,D,D,F[m]w_*]^TD_m(C[U,D,D,F[m]w_*]u_0)\delta m)
+%$$ 
+where the derivatives are to be evaluated before the insertion of the definitions 
+$$
+r_0 = d -S[m]u_{0,\sigma}[m], \, u_0 = u_{0,\sigma}[m].
+$$
+From the commutativity relation \ref{eqn:convcomm},
+\begin{equation}
+  \label{eqn:compgrad2}
+D_m(S[m]u_0)\delta m = D_m(C[U,D,D,F[m]w_*]u_0)\delta m = D_m(C[D,D,U,u_0]F[m]w_*)\delta m
+=C[D,D,U,u_0]D_mF[m]\delta m.
+\end{equation}
+Similarly, use the identity \ref{eqn:convcommtransp} to write
+$$
+S[m]^Tr_0 = C[U,D,D,F[m]w_*]^Tr_0 = C[U,\check{D},\check{D},\check{r_0}]^T({F[m]w_*})\check, 
+$$
+so
+ \[
+  D_m(S[m]^Tr_0)\delta m =  D_m(C[U,D,D,F[m]w_*]^Tr_0)\delta m
+\]
+\begin{equation} \label{eqn:compgrad3}
+  =C[U,\check{D},\check{D},\check{r_0}]^T(D_mF[m]w_* \delta m)\check= C[U,D,D,F[m]w_*\delta m]^Tr_0
+\end{equation}
+From \ref{eqn:compgrad4}, \ref{eqn:compgrad2}, and \ref{eqn:compgrad3},
+\[
+  DB_0[m]\delta m = (S[m]^TS[m] + \sigma^2 I)^{-1}
+\]  
+\begin{equation}
+  \label{eqn:compgrad5}
+\times (C[U,D,D,DF[m]\delta m]^T(S[m]u_{0,\sigma}[m]-d) - C[D,D,U,u_{0,\sigma}[m]]D_mF[m]\delta m).
+\end{equation}
+Putting \ref{eqn:compgrad}, \ref{eqn:compgrad1}, \ref{eqn:compgrad2},
+and \ref{eqn:compgrad3} together,
+\[
+  \frac{\alpha^2}{2} D_m(\|T_{\sigma}[m]u\|_U^2)\delta m 
+  =\alpha^2 \sum_{(\bx_r,\bx_s) \in Q} \langle  (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)^{-1}
+\]
+\[
+  \times (C[U,D,D,DF[m)\delta m]_{\bx_r,\bx_s}^T(S[m _{\bx_r,\bx_s}]u_{0,\sigma}[m](\bx_r,\cdot;\bx_S)-d(\bx_r,\cdot;\bx_s))
+\]
+\[
+  - S[m]_{\bx_r,\bx_s} C[U,D,D, D_mF[m]\delta m]_{\bx_r,\bx_s} u_{0,\sigma} (\bx_r,\cdot;\bx_S),
+\]
+\[
+  \||T_{\sigma}[m]u(\bx_r,\cdot;\bx_s)\|^2
+  \|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-2}u_{0,\sigma}(\bx_r,\cdot;\bx_s)\rangle
+\]
+
+\[
+  = \alpha^2 \sum_{(\bx_r,\bx_s) \in Q} \||T_{\sigma}[m]u(\bx_r,\cdot;\bx_s)\|^2\|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-2}
+\]
+\[
+  \times \left( \langle S[m _{\bx_r,\bx_s}]u_{0,\sigma}[m](\bx_r,\cdot;\bx_S)-d(\bx_r,\cdot;\bx_s),\right.
+\]
+\[
+  \left. C[U,D,D,DF[m)\delta m]_{\bx_r,\bx_s} (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)^{-1}u_{0,\sigma}[m](\bx_r,\cdot;\bx_S) \right. \rangle_D
+\]
+\[
+  - \left. u_{0,\sigma}[m](\bx_r,\cdot;\bx_S),\right.
+\]
+\[
+\left. (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)^{-1}u_{0,\sigma}[m](\bx_r,\cdot;\bx_S) \rangle \right)
+\]

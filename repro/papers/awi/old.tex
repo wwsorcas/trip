@@ -1,0 +1,86 @@
+\title{Notes on AWI}
+\author{William W. Symes}
+
+\begin{abstract}
+Adaptive Waveform Inversion is the technique closest to our approach in the single-trace transmission project that applies to ``real'' data and has a literature. In fact, it inspired parts of our project. Here are some ideas on how to use AWI as the next step, and what we might accomplish. 
+\end{abstract}
+
+\section{Background}
+Like our project, AWI treats each data trace (i.e. choice of source and receiver) independently. It also uses the same annihilator,  that is, the goal is to explain the data with a source wavelet as compact as possible and centered at zero, and uses multiplication by time as the penalty operator. It differs in assuming multidimensional data (many traces) and multidimensional models (slowness is a 2D or 3D field). In the form presented by Mike Warner and his group, it assumes a known (``true'') source wavelet. Also, their objective function is just the norm-squared of the annihilator output, normalized by the input wavelet norm-squared, as explained in the AWI notebook. In fact, Warner's objective function is the $\alpha \rightarrow 0$ limit of a scaled penalty function, see below for explanation.
+
+I've sketched a proof in the AWI notebook that AWI ``works'', that is, has a ``good'' slowness model as its only stationary point (or points - uniqueness wasn't part of the story), provided that the data samples transmitted waves through a smooth material model without caustics.. Specifically, any stationary point approximates a stationary point of the travel time tomography objective. Warner has been quiet about the limitations of this result. I am pretty sure that AWI is essentially equivalent to FWI for reflection data, no special good properties in that case.
+
+The successes I know about for AWI are consistent with this picture. In particular, Warner has used AWI to invert diving wave data. Diving waves are transmitted waves refracted back to the surface, and usually appear at longer offsets because the p-wave velocity in the earth increases with depth. Inversion of diving waves is also the``conventional'' use of FWI, so AWI has some real utility.
+
+Diving waves have limited penetration depth - the larger the offset, then greater the depth. This fact has driven the development of super long cables, node surveys, and the like. It also explains the way in which Warner \& Co. use AWI. Starting with the Chevron blind test data in 2014, through a number of published 3D field data examples, Warner typically runs AWI first, pinning down the depth range probed by diving waves. Then he uses FWI (or, more recently RFWI, a variant) to further refine the model at greater depths. So far as I know he has never discussed the reasons for this work flow, just presented examples.
+
+The overall picture is that AWI is a useful and usable velocity estimation technique that applies to ``real'' data, is as close as possible to our prior work, and presents the quickest avenue I can see to produce something both ``practical'' and somewhat familiar. Your sponsors should be quite interested, and there should be several publishable papers in it, eventually. 
+
+\section{Goals}
+\begin{itemize}
+\item State and implement penalty form of AWI;
+\item careful write-up of the analysis in the AWI notebook, also for the penalty form;
+\item illustrate the properties of AWI: improvement over FWI for single-arrival transmission data including diving waves, failure to improve over FWI for strongly triplicated transmission data and reflection data; This requires
+  \begin{itemize}
+  \item implement FWI
+  \item create several good examples, of both FWI success and failure
+  \item implement AWI, and apply to various examples to illustrate the features listed above.
+  \end{itemize}
+\item for ``good'' case, discrepancy-based control of penalty parameter
+\item explore small-$\alpha$ vs. discrepancy-controlled $\alpha$: resolution of slowness, sensitivity to noise;
+\item also for ``good'' case, implementation and examples of noise estimation algorithm
+\end{itemize}
+I propose that we do all of this using my acoustic 2D code. This means that the noise estimation algorithm won't make sense for field data, since the model will be totally wrong hence the noise level too large. But we will be able to produce much more interesting synthetic examples.
+
+\append{$\alpha \rightarrow 0$ scaled limit of penalty function}
+This appendix sketches a justification for the relation between the penalty function and original formulations of AWI asserted in the AWI notebook. I worked this out for the review of a paper about another extension inversion method, and can't imagine that it's not somewhere, in some form - it's too simple not to be - but I don't know where (else), so here it is.
+
+Start with the penalty function
+\begin{equation}
+  \label{eqn:eq1}
+  J_{\alpha}(u) = \frac{1}{2}(\|Su-d\|_d + \alpha^2\|Au\|_m^2).
+\end{equation}
+Here $S$ is a bounded linear map with (Hilbert space) domain $U$ (``model space'') with inner product $\langle \cdot, \cdot \rangle_m$ and range $D$ with inner product $\langle \cdot, \cdot \rangle_d$. Assume that $S$ is positive definite, that is, there exists $\epsilon >0$ so that $\|Su\|_d \ge \epsilon\|u\|_m$. The ``annihilator'' $A$ is a bounded linear map on $U$.
+
+In the notation of the AWI notebook, $S$ is the regularized modeling operator $(\tilde{S}(m,w_*),\epsilon I)^T$, $u$ is the adaptive kernel $\tilde{u}$, $d$ is the augmented data $(d,0)^T$,  and $A$ is the multiply-by-$t$ operator $T$. The limit relation in question does not involve the arguments $m, w_*$ of $\tilde{S}$, so I've suppressed them. The relation in question pertains only to the linear least-squares function $J_{\alpha}$ defined in equation \ref{eqn:eq1}, not to the nonlinear dependence of $\tilde{S}$ on $(m,w_*)$.
+
+Define
+\begin{equation}
+  \label{eqn:eq0}
+  \tJa = \min_u J_{\alpha}(u) = J_{\alpha}(\ua)
+\end{equation}
+Since $S$ is positive definite, the minimum is well-defined for any $\alpha \ge 0$, and the minimizer $\ua \in U$ satisfies the normal equation.
+
+The claim to be established is that
+\begin{equation}
+  \label{eqn:eq4}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tJa-\tJz).= \frac{1}{2}\|A\uz\|^2
+\end{equation}
+
+To see this, use the normal equation to write
+\[
+  \ua = (S^TS + \alpha^2 A^TA)^{-1}S^Td = (S^TS + \alpha^2 A^TA)^{-1}S^TS \uz
+\]
+\begin{equation}
+  \label{eqn:eq2}
+  = \uz - \alpha^2 (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz = \uz-\alpha^2 \va
+\end{equation}
+Note that $\va = (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz$ is uniformly bounded in $\alpha \ge 0$.
+
+Stuff the RHS of equation \ref{eqn:eq2} into the definition \ref{eqn:eq1} to obtain
+\begin{equation}
+  \label{eqn:eq3}
+  \tJa = \frac{1}{2}(\|S\uz-d\|_d^2 - 2 \alpha^2\langle S\uz-d, S\va\rangle_d + \alpha^2\|A\uz\|_m^2 + O(\alpha^4))
+\end{equation}
+The second term on the RHS of equation \ref{eqn:eq3} vanishes thanks to the normal equation, and the first term is precisely $\tJz$. The conclusion \ref{eqn:eq4} follows.
+
+Note that this conclusion is not quite what is stated in the notebook (which I will modify shortly!), since the $\alpha=0$ limit of the VPM objective $\tJa$ is non-zero and has to be subtracted. That's not a big deal: in the notation of the notebook,
+\[
+  \tJz = \frac{1}{2}(\|\tilde{S}[m,w_*]u_{\epsilon} -d\|^2 + \epsilon^2 \|u_{\epsilon}\|^2),
+\]
+that is, the minimum value of the regularized least squares function.
+
+I included the model space norm $\|\cdot\|_m$ in this derivation because it is not just the $L^2$ norm - it's how the scaling by the norm of $u_{\epsilon}$ naturally enters.
+%\bibliographystyle{seg}
+%\bibliography{../../bib/masterref}
+
