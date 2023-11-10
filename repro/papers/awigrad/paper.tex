@@ -1,14 +1,16 @@
-\title{Computation of the Reduced AWI Penalty Function and its Gradient}
-\author{William W. Symes}
+\title{Implementation of Adaptive Waveform Inversion via a Penalty Function}
+\author{Huiyi Chen, Susan E. Minkoff, and William W. Symes}
 
 \begin{abstract}
 goes here.
 \end{abstract}
 
-\section{Definitions}
-Hilbert space $X$ has inner product $\langle \cdot,\cdot \rangle_X$ and norm $\|\cdot\|_X$.
+\section{Introduction}
 
-$Q \subset \bR^3 \times \bR^3$ = finite ``acquisition'' set of source-receiver location pairs $(\bx_r,\bx_s)$, assumed disjoint from the diagonal (sources and receivers non-coincident). $Q_s$ = projection onto second factor (source locations occurring in $Q$).
+\section{Preliminaries}
+
+
+$Q \subset \bR^3 \times \bR^3$ is the finite ``acquisition'' set of source-receiver location pairs $(\bx_r,\bx_s)$, assumed disjoint from the diagonal (sources and receivers non-coincident). $Q_s$ denotes projection onto second factor (source locations occurring in $Q$).
 
 $P = \bR^{|Q|}$ = real functions on $Q$, with Euclidean norm (no attempt to scale for geometry of acquisition).
 
@@ -22,7 +24,7 @@ $U$ = adaptive filter Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([-t_U
 
 $w_* \in C_0^{\infty}(\bR)$ = known point source wavelet
 
-$M = $ model set, bounded open subset of $ C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3)$.
+$M = $ bounded open subset of ${\cal M} = C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3) \cap L^2(\bR^3) \times L^2(\bR^3)$.
 
 \begin{theorem}
   \label{thm:eu}
@@ -32,7 +34,7 @@ For $(\log \kappa, \log \beta) \in M$, shot location ${\bf x}_s\in Q_s$, there e
   \begin{eqnarray}
     \label{eqn:awe}
     \frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv +
-                                        w(t;\bx_s) \delta(\bx-\bx_s); \\
+                                        w_*(t) \delta(\bx-\bx_s); \\
     \frac{\partial \bv}{\partial t} & = & - \beta \nabla p; \\
     p, \bv & = & 0 \mbox{ for }  t \ll 0.
   \end{eqnarray}
@@ -48,19 +50,53 @@ Define $F: M \rightarrow D$ by
 \[
   F[m](\bx_r,t;\bx_s) = p(\bx_r,t;\bx_s), \, (\bx_r,\bx_s) \in Q, \, t \in [0,t_D],
 \]
-for the pressure field $p$ solving \ref{eqn:awe}.
+for the pressure field $p$ solving \ref{eqn:awe}. 
 
 \begin{theorem}
   \label{thm:mbd}
-  $\|F[m](\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])}$ is uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+  Under the hypotheses of Theorem \label{thm:eu},
+  \begin{itemize}
+  \item [1, ] $\|F[m](\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])}$ is uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+  \item [2. ] $F$ has a directional derivative $DF[m]: {\cal M} \rightarrow D$ for every $m \in M$.
+    \item [3. ] for every $m \in M$, $DF[m]$ extends to a bounded map on ${\cal H} = L^2(\bR^3) \times L^2(\bR^3)$
+  \end{itemize}
 \end{theorem}
 \begin{proof}
   See Appendix A.
 \end{proof}
 
-$S: M \rightarrow {\cal B}(U,D)$ = trace-by-trace convolution with predicted data: $S[m]u = F[m] * u$. This notation for convolution in time hides a number of important details: none of the arguments are defined on the entire real line, so extension and truncation are involved in the definition. I make these details explicit later in the paper.
+$F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields. 
 
-Due to smoothness of $F$, $S \in C^1(M,{\cal B}(U,D))$. Operation is trace-by-trace, that is block-diagonal: $S[m] = \bigoplus_{(\bx_r,\bx_s) \in Q}S[m]_{\bx_r,\bx_s}$. Theorem \ref{thm:mbd} implies that $\|S[m](\bx_r,\cdot;\bx_s)\|_{{\cal B}(L^2([-t_U,t_U]),L^2([0,t_D]))}$ is also uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+The central object in AWI is the adaptive-filter-to-data operator $S: M \rightarrow {\cal B}(U,D)$, computed by trace-by-trace convolution with predicted data: $S[m]u = F[m] * u$. This notation for convolution in time hides a number of important details: none of the arguments are defined on the entire real line, so extension and restriction must be involved in the definition. Define $\Pi_D: \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow D$ to be the restriction operator: that is, for $t \in [0,t_D]$, $\Pi_Df(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$. Then its adjoint $\Pi_D^T$ is the zero extension operator: that is, $\Pi_D^Tf(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$ if $t \in [0,t_D]$, $= 0$ else. Define $\Pi_U:  \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow U$ similarly.
+
+The meaning of convolution in the definition of $S$ is: extension followed by (trace-by-trace) convolution followed by restriction. That is, for $u \in U, f \in D$,
+\begin{equation}
+  \label{eqn:convdef}
+  K[u]f(\bx_r,t;\bx_s) = \Pi_D\left(\int\,ds\,(\Pi_U^Tu)(\bx_rt-s;\bx_s) (\Pi_D^Tf)(\bx_r,s;\bx_s)\right)
+\end{equation}
+So defined, $K:U \rightarrow {\cal B}(D,D)$ is continuous and bilinear thanks to Young's inequality.
+
+Convolution is commutative, so the right-hand side of the definition \ref{eqn:convdef} could also be viewed as defining $L: D \rightarrow {\cal B}(U,D)$, for $u \in U, f \in D$,
+\begin{equation}
+  \label{eqn:altconvdef}
+  L[f]u = K[u]f
+\end{equation}
+
+The convolution operator implemented in the module {\tt segyvc} actually implements a time-discrete version of $K$ (or $L$). Note that the transpose $K[u]^T]$ is a restricted version of cross-correlation, implemented as the transpose of {\tt segyvc.ConvolutionOperator}.
+
+A proper definition of $S[m]$ is thus
+\begin{equation}
+  \label{eqn:sdef}
+  S[m]u = K[u]F[m] = L[F[m]]u.
+\end{equation}
+$S$ has a directional partial derivative with respect to its first argument, given by
+\begin{equation}
+  \label{eqn:dsdef}
+  D_m(S[m]u) \delta m = K[u]DF[m] \delta m,\,m\in M, u \in U, \delta m \in {\cal M}.
+\end{equation}
+Since $DF[m]$ extends to a continuous linear map: ${\cal H} \rightarrow D$, the same is true of $D_mS[m]u$, $m \in M, u \in U$..
+
+Since operation is trace-by-trace, that is block-diagonal, $S[m] = \mbox{diag}_{(\bx_r,\bx_s) \in Q}S[m]_{\bx_r,\bx_s}$. Theorem \ref{thm:mbd} implies that $\|S[m]_{\bx_r,\bx_s}\|_{{\cal B}(L^2([-t_U,t_U]),L^2([0,t_D]))}$ is also uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$. A similar statement applies to the derivative.
 
 No-zero-traces Assumption: there exists $C>0$ so that for all $(\bx_r,\bx_s) \in Q$,
 $\|d(\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])} \ge C.$
@@ -78,31 +114,34 @@ $\alpha \ge 0$ = penalty weight
 
 Definition of AWI penalty objective divides into two parts:
 
-Part 1: Unpenalized adaptive filter $u_{0,\sigma}[m,d]$ solving regularized least squares data fitting problem:  given $m \in M$, minimizes
+\subsection{ Unpenalized adaptive filter}
+The unpenalized filter $u_{0,\sigma}[m]$ solves the regularized least squares data fitting problem:  given $m \in M$, minimizes
 \[
- J_{0,\sigma}[u,m,d] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \sigma^2 \|u\|^2_U).
+ J_{0,\sigma}[u,m] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \sigma^2 \|u\|^2_U).
 \]
-Since $\sigma > 0$, normal operator is uniformly bounded below and of class $C^1$ in $M$ and $D$. So unique solution exists, and $u_{0,\sigma} \in C^1(M \times D, U)$.
+Since $\sigma > 0$, the normal operator is uniformly bounded below and of class $C^1$ in $M$ and $D$. So a unique solution $u_{0,\sigma} \in C^1(M, U)$ exists.
 
 Also, the normal operator is block-diagonal, so each trace solves a least-squares problem:
 \begin{equation}
   \label{eqn:blocknormal}
-  (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)= S[m]_{\bx_r,\bx_s}^Td(\bx_r,\cdot;\bx_s)
+  (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)u_{0,\sigma}[m](\bx_r,\cdot; \bx_s)= S[m]_{\bx_r,\bx_s}^Td(\bx_r,\cdot;\bx_s)
 \end{equation}
-According to Theorem \ref{thm:mbd} and the Observable Data Assumption, the left-hand side is bounded by a multiple of $\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]}$, uniformly in $m \in M, (\bx_r,\bx_s) \in Q$. According to the Observable Data Assumption, the right-hand side is bounded below by a multiple of $\|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}$, uniform in the same sense. Conclude that there exists $C>0$ so that
+
+According to Theorem \ref{thm:mbd} and the Observable Data Assumption, the left-hand side of equation \ref{eqn:blocknormal} is bounded by a multiple of $\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]}$, uniformly in $m \in M, (\bx_r,\bx_s) \in Q$. According to the Observable Data Assumption, the right-hand side is bounded below by a multiple of $\|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}$, uniform in the same sense. Conclude that there exists $C>0$ so that
 \begin{equation}
   \label{eqn:u0lower}
   \|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} \ge C \|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}
 \end{equation}
 uniformly in $m \in M, (\bx_r,\bx_s) \in Q$.
 
-Part 2:
-Preconditioned penalty operator: block diagonal, 
+\subsection{AWI Penalty Operator}
+The penalty operator is also block diagonal, that is, operates independently on each trace. For the trace at $(\bx_r,\bx_s) \in Q$, 
 \begin{equation}
   \label{eqn:ppf}
-  T_{\sigma}[m]u (\bx_r,t;\bx_s) = \frac{t u(\bx_r,t;\bx_s)}{\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} }
+  T_{\sigma}[m]u (\bx_r,t;\bx_s) = \frac{t u(\bx_r,t;\bx_s)}{\|u_{0,\sigma}[m](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} }
 \end{equation}
-Well-defined and $C^1$ as function of $m$ due to the bound \ref{eqn:u0lower} and the the No-zero-trace assumption.
+That is, this penalty operator scales the trace by time, so that the output is small if the nonzero samples are concentrated near $t=0$. The second scaling, by the reciprocal of norm of the trace $u_{0,\sigma}(\bx_r,\cdot;\bx_s)$, plays an essential role in linking the AWI objective to the travel-time residual, as is explained in \ref{eqn:HCSMWS:23a}
+This operator is well-defined and $C^1$ as function of $m$ due to the bound \ref{eqn:u0lower} and the the No-zero-trace assumption.
 
 \section{Objectives}
 Define for $\alpha \ge 0$
@@ -114,28 +153,42 @@ Note that the notation is consistent, that is, reduces to $J_{0,\sigma}$ as defi
 The variable projection reduction of $J_{\alpha,\sigma}$ is
 \begin{equation}
   \label{eqn:jtilde}
- \tilde{J}_{\alpha,\sigma}[m,d] = \frac{1}{2}(\|S[m]u_{\alpha,\sigma}[m,d] - d\|_D^2 + \alpha^2\|T_\sigma[m]u_{\alpha,\sigma}[m,d]\|_U^2 + \sigma^2 \|u_{\alpha,\sigma}\|^2_U).
+ \tilde{J}_{\alpha,\sigma}[m,d] = \frac{1}{2}(\|S[m]u_{\alpha,\sigma}[m,d] - d\|_D^2 + \alpha^2\|T_{\sigma}[m]u_{\alpha,\sigma}[m,d]\|_U^2 + \sigma^2 \|u_{\alpha,\sigma}\|^2_U).
 \end{equation}
-in which $u_{\alpha,\sigma}[m,d]$ is the minimizer of $J_{\alpha\sigma}[u,m,d]$ over $u \in U$. The fundamental result of variable projection theory \cite[]{GolubPeyreyra:73} applies under the conditions presented here: the stationary points of $J_{\alpha,\sigma}$ and $\tilde{J}_{\alpha,\sigma}$ are in bijective correspondence.
+in which $u_{\alpha,\sigma}[m,d]$ is the minimizer of $J_{\alpha\sigma}[u,m,d]$ over $u \in U$, that is, the solution of the normal equation
+\begin{equation}
+  \label{eqn:normal}
+  (S[m]^TS[m] + \alpha^2T_{\sigma}[m]^TT_{\sigma}[m] + \sigma^2I)u_{\alpha,\sigma}[m] = S[m]^Td
+\end{equation}
+Note that $u_{0,\sigma}$ solves the above system for $\alpha=0$, and that the left-hand side is block-diagonal, similar to the left-hand side of equation \ref{eqn:blocknormal}.
 
-Computing $\tilde{J}_{\alpha,\sigma}$ takes place in two stages, corresponding to the two-stage construction of $J_{\alpha,\sigma}$:
-\begin{itemize}
-\item[1. ] minimize $J_{0,\sigma}$ to compute $u_{0,\sigma}$;
-\item[2. ] use $u_{0,\sigma}$ to compute $u \mapsto T_{\sigma}[m]u$, and compute $u_{\alpha,\sigma}$ by minimizing $J_{\alpha,\sigma}$.
-\end{itemize}
-Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of two least-squares problems, in sequence.
+The fundamental result of variable projection theory \cite[]{GolubPereyra:73} applies under the conditions presented here: the stationary points of $J_{\alpha,\sigma}$ and $\tilde{J}_{\alpha,\sigma}$ are in bijective correspondence.
+
+Computing $\tilde{J}_{\alpha,\sigma}$ requires the following steps:
+\begin{enumerate}
+\item given $m$, $d$, $\alpha$, and $\sigma$, compute $u_{0,\sigma}[m]$ by solving the normal equations \ref{eqn:normal} for $\alpha=0$;
+\item compute $v_0 \in U$ by solving $(S[m]^TS[m] + \sigma^2 I)v_0 = u_{0,\sigma}[m]$
+\item use $u_{0,\sigma}[m]$ to construct $T_{\sigma}[m]$, a linear operator on $U$  that scales each input trace at $(\bx_r,\bx_s) \in Q$  by $t\|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-1}$;
+\item use $S[m]$, $T_{\sigma}[m]$ to compute $u_{\alpha,\sigma}[m]$ by solving the normal equations \ref{eqn:normal} with the given value of $\alpha$;
+\item assemble $\tilde{J}_{\alpha,\sigma}[m]$ according to equation \ref{eqn:jtilde}.
+\end{enumerate}
+
+Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of two least-squares problems, in sequence:
+
+{\bf Note:} The implementation {\tt vcalg.conjgrad} of the Conjugate Gradient algorithm for the normal equations optionally returns the residual vector (parameter {\tt e}). The obvious way to use this is to create a 3-component product space for the output of the block-column operator $(S[m],\alpha T[m], \sigma I)^T$, and set the right-hand side vector (parameter {\tt b})
+to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
 
 \section{Derivatives}
 This section presents the derivative of $\tilde{J}_{\alpha,\sigma}$, expressed in terms of
 \begin{itemize}
   \item trace-by-trace convolution and cross-correlation operators,
-  \item the derivative $D_mF[m]$ and its adjoint, and
+  \item the derivative $DF[m]$ and its adjoint, and
   \item trace-by-trace scaling
 \end{itemize}
 These the first two items are common components of typical FWI implementations. The
 third is necessary to express the AWI penalty operator.
 
-As pointed out by \cite{GolubPeyreyra:73}, the directional derivative $D_m\tilde{J}_{\alpha,\sigma}[m,d]\delta m$ is the same as the partial directional derivative $D_mJ[u,m,d]\delta m$ with $u = u_{\alpha,\sigma}[m,d]$. Since 
+As pointed out by \cite{GolubPereyra:73}, the directional derivative $D_m\tilde{J}_{\alpha,\sigma}[m,d]\delta m$ is the same as the partial directional derivative $D_mJ[u,m,d]\delta m$ with $u = u_{\alpha,\sigma}[m,d]$. Since 
 \begin{equation}
 D_mJ[u,m,d]\delta m = \langle D_m(S[m]u)\delta m, S[m]u-d \rangle + \alpha^2 \langle D_m(T_{\sigma}[m]u)\delta m,T_{\sigma}[m]u\rangle_U,
 \label{eqn:basederiv}
@@ -155,17 +208,15 @@ Since both $S$ and $T$ are block-diagonal, acting trace-by-trace, I will first c
 Inner products and transposes are implicit in these definitions.
 
 With these notational conventions, the normal equation \ref{eqn:blocknormal} for $u_{0,\sigma}$ implies
-\begin{equation}
-  \label{eqn:blocksingle}
-  u_{0,\sigma}[m] = (S[m]^TS[m] + \sigma^2I)^{-1}S[m]^Td.
-\end{equation}
-So
+\[
+  D_mu_{0,\sigma}[m] \delta m = (S[m]^TS[m] + \sigma^2I)^{-1}
+\]
 \begin{equation}
   \label{eqn:blockderiv}
-  D_mu_{0,\sigma}[m] \delta m = (S[m]^TS[m] + \sigma^2I)^{-1}((DS[m]^{T}\delta m) (d - S[m]u_{0,\sigma}[m]) - S[m]^T(DS[m]\delta) m u_{0,\sigma}[m])
+  \times ((DS[m]^{T}\delta m) (d - S[m]u_{0,\sigma}[m]) - S[m]^T(DS[m]\delta) m u_{0,\sigma}[m])
 \end{equation}
 
-The derivative of $S$ is related to the derivative of $F$ by convolution. The relation with $T$ is more complicated.
+The derivative of $S$ is related to the derivative of $F$ by convolution (definition \ref{eqn:sdef}). The relation with $T$ is more complicated.
 The single-trace version of the definition \ref{eqn:ppf} is
 \[
   (T_{\sigma}[m]u)(t) = \frac{t u(t)}{\|u_{0,\sigma}[m]\|},\,u \in L^2[-t_U,t_U],
@@ -181,34 +232,98 @@ D(T_{\sigma}[m] u)\delta m = -\frac{t u}{\|u_{0,\sigma}[m]\|^3}\langle D_mu_{0,\
 \]
 Since $\|tu\|^2\| u_{0,\sigma}[m]\|^{-4} = \|T_{\sigma}[m]u\|^2\| u_{0,\sigma}[m]\|^{-2}$,
 \[
-  D_m \frac{\alpha^2}{2}\|T_{\sigma}[m]u\|\delta m =-\alpha^2\left( \langle d-S[m]u_{0,\sigma}[m], DS[m]\delta m (S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]\rangle \right.
+  D_m \frac{\alpha^2}{2}\|T_{\sigma}[m]u\|^2\delta m =-\alpha^2\left( \langle d-S[m]u_{0,\sigma}[m], DS[m]\delta m (S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]\rangle \right.
 \]
 \[
   \left. - \langle (DS[m]\delta m)u_{0,\sigma}[m],S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]\rangle \right)
 \]
+\begin{equation}
+  \label{eqn:penderiv}
+  \times  \|T_{\sigma}[m]u\|^2\| u_{0,\sigma}[m]\|^{-2}.
+\end{equation}
+
+The first term on the right-hand side of the derivative \ref{eqn:basederiv} is
+\begin{equation}
+  \label{eqn:firstsinglebis}
+  \langle DS[m]u, S[m]u-d\rangle = \langle DF[m]\delta m, K[u]^T(S[m]u-d) \rangle
+\end{equation}
+The right-hand side of \ref{eqn:firstsinglebis} can be re-writtenn as
+\begin{equation}
+  \label{eqn:resderiv1}
+  = \langle \delta m, DF[m]^TK[u]^T(S[m]-d)\rangle_M
+\end{equation}
+which identifies the part of the gradient coming from the first term in expression \ref{eqn:basederiv}, in the case of a single trace. 
+
+\noindent{\bf Remark:} ``Gradient'' should really be in quotes, as $F$ is not actually differentiable, or even well-defined, in any open subset of ${\cal H}$. It is however well-defined in the intersection of $M$ with any ${\cal H}$-closed subspace of ${\cal M}$. The latter is necessarily finite-dimensional, but all feasible calculations are carried out in finite-dimensional settings, so that's OK.
+
+Applying the same manipulations to the penalty derivative expression \ref{eqn:penderiv}:
+\[
+  D_m \frac{\alpha^2}{2}\|T_{\sigma}[m] u\|^2\delta m 
+\]
+\[
+  =-\alpha^2\left( \langle d-S[m]u_{0,\sigma}[m], K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]] DF[m]\delta m \rangle \right.
+\]
+\[
+  \left. - \langle K[u_{0,\sigma}[m] ]DF[m]\delta m, S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]\rangle \right)
+\]
 \[
   \times  \|T_{\sigma}[m]u\|^2\| u_{0,\sigma}[m]\|^{-2}.
 \]
-
-Recall that $S[m]u$ is the convolution of the pertinant trace of $u \in U$ with the corresponding trace of $F[m]$. These are functions defined on bounded time intervals: in particular, $F:M \rightarrow L^2([0,t_D])$. So restriction and extension must also be involved. Define $\Pi_D: L^2(\bR) \rightarrow L^2([0,t_D])$ to be the restriction operator. Then its adjoint $\Pi_D^T$ is the zero extension operator: that is, $\Pi_D^Tf(t) = f(t)$ if $t \in [0,t_D]$, $= 0$ else. Define $\Pi_U:  L^2(\bR) \rightarrow L^2([-t_U,t_U])$ similarly. Then
-\begin{equation}
-  \label{eqn:sdefsingle}
-  S[m]u = \Pi_D(\Pi_D^TF[m] * \Pi_U^Tu)
-\end{equation}
-
-The first term in the expression \ref{eqn:basederiv} for the derivative of $\tilde{J}_{\alpha,\sigma}$ can then be re-written
 \[
-  \langle DS[m]u, S[m]u-d\rangle = \langle \Pi_D(\Pi_D^TDF[m]\delta m * \Pi_U^Tu), S[m]u-d\rangle
+  = -\alpha^2 \langle \delta m, \|T_{\sigma}[m]u\|^2\| u_{0,\sigma}[m]\|^{-2}
 \]
 \[
-  = \langle \Pi_D^TDF[m]\delta m * \Pi_U^Tu, \Pi_D^T (S[m]u-d) \rangle
-\]
-\[
-  = \langle \Pi_D^TDF[m]\delta m,  R(\Pi_U^Tu)*\Pi_D^T (S[m]u-d) \rangle
+  \times DF[m]^T(K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]]^T (d-S[m]u_{0,\sigma}[m]) 
 \]
 \begin{equation}
-  \label{eqn:firstsingle}
-  = \langle DF[m]\delta m, \Pi_D(R(\Pi_U^Tu)*\Pi_D^T (S[m]u-d))\rangle
+  \label{eqn:penderiv1}
+  -K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]) \rangle
 \end{equation}
-In the previous two expressions, $R: L^2(\bR) \rightarrow L^2(\bR)$ is the time-reversal operator: $Rf(t) = f(-t)$.
+Combining equations \ref{eqn:resderiv1} and \ref{eqn:penderiv1} and substituting $u = u_{\alpha,\sigma}$, obtain for the gradient of $\tilde{J}_{\alpha,\sigma}$ in the case of a single trace:
+\[
+  \nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^T\left( K[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d) - \alpha^2 \|T_{\sigma}[m]u_{\alpha,\sigma}[m]\|^2\| u_{0,\sigma}[m]\|^{-2}\right.
+\]
+\[
+  \left. \times( K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]]^T (d-S[m]u_{0,\sigma}[m]) \right.
+\]
+\begin{equation}
+  \label{eqn:singlegrad}
+\left.-K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]) \right).
+\end{equation}
 
+\subsection{Multiple Traces}
+The general case follows immediately from the single trace case. It is just necessary to insert restriction to various (receiver, source) pairs in the relation \ref{eqn:singlegrad}, and sum. Note that the sum is implicit in the definition of $DF[m]^T$, and of $K^T$ and $S$, but must be carried out explicitly for the part of this expression that amounts to trace-by-trace scaling:
+\[
+  \nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^T\left( K[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d)\right.
+\]
+\[
+  \left.  +\alpha^2 \sum_{(\bx_r,\bx_s)\in Q}\|T_{\sigma}[m]u_{\alpha,\sigma}[m](\bx_r,\cdot;\bx_s)\|^2\| u_{0,\sigma}[m](\bx_r,\cdot;\bx_s\|^{-2}\right.
+\]
+\[
+  \left. \times( K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d)_{(\bx_r,\bx_s)} \right.
+\]
+\begin{equation}
+  \label{eqn:singlegrad}
+\left.+K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]) _{(\bx_r,\bx_s)} \right).
+\end{equation}
+This expression suggestions the following algorithm outline:
+\begin{enumerate}
+\item given $m$, $d$, $\alpha$, and $\sigma$, compute $u_{0,\sigma}[m]$ by solving the normal equations \ref{eqn:normal} for $\alpha=0$;
+\item compute $v_0 \in U$ by solving $(S[m]^TS[m] + \sigma^2 I)v_0 = u_{0,\sigma}[m]$
+\item use $u_{0,\sigma}[m]$ to construct $T_{\sigma}[m]$, a linear operator on $U$  that scales each input trace at $(\bx_r,\bx_s) \in Q$  by $t\|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-1}$;
+\item use $S[m]$, $T_{\sigma}[m]$ to compute $u_{\alpha,\sigma}[m]$ by solving the normal equations \ref{eqn:normal};
+\item compute $r_0 = S[m]u_{0,\sigma}[m]-d,\,r_{\alpha} = S[m]u_{\alpha,\sigma}[m]-d$ (these may be by-products of steps 1 and 4;
+\item construct linear operator $W_{\alpha,\sigma}[m]$ on $D$ that scales each trace at $(\bx_r,\bx_s) \in Q$  by $ \|tu_{\alpha,\sigma}[m](\bx_r,\cdot;\bx_s)\|^2\|u_{0,\sigma}[m](\bx_r,\cdot;\bx_s)\|^{-4}$
+\item compute four vectors in $D$:
+  \begin{enumerate}
+  \item $G_1 = K[u_{\alpha,\sigma}[m]]^Tr_{\alpha}$
+  \item $G_2 = K[v_0]^Tr_0$
+  \item $G_3 = K[u_{0,\sigma}[m]]^TS[m]v_0$
+  \item $G_0 = G_1 + \alpha^2W_{\alpha,\sigma}[m](G_2 + G_3)$
+  \end{enumerate}
+\item assemble
+  $\nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^TG_0$
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
