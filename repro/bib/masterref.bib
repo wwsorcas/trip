@@ -11944,7 +11944,7 @@
 
  @article{LasLionsTrig:86,
  title="Non-Homogeneous Boundary Value Problems for Second Order Hyperbolic Operators",
- author="Lasiecka, I. and Lions, J.-L., and Triggiani, R.",
+ author="Lasiecka, I. and Lions, J.-L. and Triggiani, R.",
  journal="Journal de Math\'{e}matiques Pures et Appliqu\'{e}es",
  volume="65",
  pages="149-192",
@@ -14613,16 +14613,6 @@ pages={3120-3124}
  pages="1386-1388",
  year="2015"}
 
- @inproceedings{HuangSymes:SEG15a,
- title={Full Waveform Inversion via Matched Source Extension},
- author={Huang, G. and Symes, William W.},
- booktitle={Expanded Abstracts},
- publisher={Society of Exploration Geophysicists},
- meeting={85th Annual International Meeting},
- year="2015",
- pages="1320-1325"
- }
-
  @article{Abubakaretal:09,
  author={Abubakar, A. and Hu, W. and Habashy, T. and {van den {B}erg}, P.},
  title={Application of the finite-difference contrast-source inversion algorithm to seismic full-waveform data},
@@ -15993,18 +15983,19 @@ year={2022},
 note={arXiv:2110.15494v2}
 }
 
-@misc{Symes:22b,
-title={Extended Waveform Inversion and Travel Time Tomography},
-author={Symes, W.},
-year={2022},
-note={arXiv}
-}
-
-@misc{Symes:22c,
-title={Efficient computation of the Variable Projection gradient for Surface Source Extended Inversion},
-author={Symes, W.},
-year={2022},
-note={arXiv}
+@article{Symes:22,
+doi = {10.1088/1361-6420/ac8cac},
+url = {https://dx.doi.org/10.1088/1361-6420/ac8cac},
+year = {2022},
+month = {sep},
+publisher = {IOP Publishing},
+volume = {38},
+number = {11},
+pages = {115002},
+author = {William W Symes},
+title = {Error bounds for extended source inversion applied to an acoustic transmission inverse problem},
+journal = {Inverse Problems},
+abstract = {A simple inverse problem for the wave equation requires determination of both the wave velocity in a homogenous acoustic material and the transient waveform of an isotropic point radiator, given the time history of the wavefield at a remote point in space. The duration (support) of the source waveform and the source-to-receiver distance are assumed known. A least squares formulation of this problem exhibits the ‘cycle-skipping’ behavior observed in field scale problems of this type, with many local minima differing greatly from the global minimizer. An extended formulation, dropping the support constraint on the source waveform in favor of a weighted quadratic penalty, eliminates this misbehaviour. With proper choice of the weight operator, the velocity component at any local minimizer of this extended objective function differs from the global minimizer of the least-squares formulation by less than a linear combination of the source waveform support radius and data noise-to-signal ratio.}
 }
 
 @misc{Symes:22d,
@@ -16113,5 +16104,112 @@ pages={R475-R495},
 year={2018}
 }
 
+@article{GuaschWarnerRavaut:GEO19,
+title={Adaptive waveform inversion: Practice},
+author={Guasch, L. and Warner, M. and Ravaut, C.},
+journal={Geophysics},
+volume={84},
+number={3},
+pages={R447-R461},
+year={2019}
+}
 
+@inproceedings{Warneretal:SEG21,
+title={Adaptive reflection waveform inversion: Faster, tighter, deeper, smarter},
+author={Warner, M. and Nangoo, T. and Umpleby, A. and Shah, N. and Kahn, D. and Isernia, M.},
+publisher={Society of Exploration Geophysicists},
+meeting={91st Annual International Meeting},
+pages={582-586},
+year={2021},
+doi={10.1190/segam2021-3594686.1}
+}
 
+@article{Guaschetal:NPJDM20,
+title={Full-waveform inversion imaging of the human brain},
+author={Guasch, L. and Calderón, A. and Tang, M. and Nachev, P. and Warner, M.},
+journal={NPJ Digital Medicine},
+volume={3},
+number={28},
+year={2020},
+doi={10.1038/s41746-020-0240-8}
+}
+
+@inproceedings{Yongetal:EAGE21,
+title={Improving adaptive waveform inversion by local matching filter},
+author={Yong, P. and Brossier, R. and Métivier, L. and Li, Y. and He, W. and Virieux, J.},
+publisher={European Association of Geoscientists and Engineers},
+meeting={82nd EAGE Annual Conference and Exhibition},
+pages={1-5},
+year={2021},
+doi={10.3997/2214-4609.202113018}
+}
+
+@inproceedings{Yongetal:IMAGE22,
+title={Robust localized adaptive waveform inversion: a new regulrization for {G}abor deconvolution},
+author={Yong, P. and Brossier, R. and Métivier, L.},
+publisher={Society of Exploration Geophysicists},
+meeting={2nd International Meeting for Applied Geoscience and Energy},
+pages={972-976},
+year={2022}
+}
+
+@article{Yongetal:GJI23,
+title={Localized adaptive waveform inversion: theory and numerical verification},
+author={Yong, P. and Brossier, R. and Métivier, L. and Virieux, J.},
+journal={Geophysical Journal International},
+volume={233},
+number={2},
+pages={1055-1080},
+year={2023}
+}
+
+@article{Symes:23,
+title={Efficient computation of extended surface sources},
+author={Symes, W.},
+journal={International Journal on Geomathematics},
+volume={14},
+number={1},
+pages={3},
+year={2023},
+doi={10.1007/s13137-023-00213-0},
+abstract={Source extension is a reformulation of inverse problems in
+                  wave propagation, that at least in some cases leads
+                  to computationally tractable iterative solution
+                  methods. The core subproblem in all source extension
+                  methods is the solution of a linear inverse problem
+                  for a source (right hand side in a system of wave
+                  equations) through minimization of data error in the
+                  least squares sense with soft imposition of physical
+                  constraints on the source via an additive quadratic
+                  penalty. For an acoustic formulation for sources
+                  supported on a surface, with a soft contraint
+                  enforcing concentration at a point, a variant of the
+                  time reversal method from photoacoustic tomography
+                  provides an approximate solution. This approximate
+                  inverse can be used to precondition Krylov space
+                  iteration for rapid convergence to the solution of
+                  the core subproblem in this setting. Numerical
+                  examples illustrate the effectiveness of this
+                  preconditioner.}
+}		  
+
+@misc{HCSMWS:23a,
+title={A penalty appraoch to {A}daptive {W}aveform {I}nversion}: theory},
+author={Chen, H. and Minkoff, S. and Symes, W.},
+year={2023},
+note={arXiv}
+}
+
+@misc{HCSMWS:23b,
+title={A penalty appraoch to {A}daptive {W}aveform {I}nversion: implementation}
+author={Chen, H. and Minkoff, S. and Symes, W.},
+year={2023},
+note={arXiv}
+}
+
+@misc{Symes:23a,
+title={Mapping properties of point-source acoustic wave simulation},
+author={Symes, W.},
+year={2023},
+note={arXiv}
+}
