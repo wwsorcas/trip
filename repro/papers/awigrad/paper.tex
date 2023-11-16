@@ -12,62 +12,53 @@ goes here.
 
 $Q \subset \bR^3 \times \bR^3$ is the finite ``acquisition'' set of source-receiver location pairs $(\bx_r,\bx_s)$, assumed disjoint from the diagonal (sources and receivers non-coincident). $Q_s$ denotes projection onto second factor (source locations occurring in $Q$).
 
-$P = \bR^{|Q|}$ = real functions on $Q$, with Euclidean norm (no attempt to scale for geometry of acquisition).
+%$P = \bR^{|Q|}$ = real functions on $Q$, with Euclidean norm (no attempt to scale for geometry of acquisition).
 
-$[0,t_d]$ = acquisition time interval
+The data to be inverted consists of $|Q|$ functions of time (``traces''). The time interval of recording is assumed to be the same for all traces, namely $[0,t_D]$. Traces are assumed square-integrable, members of $ L^2([0,t_D])$ - indeed the square of the trace $L^2$ norm is essentially the energy transferred from the surrounding acoustic fluid to the recording instrument \cite[]{SantosaSymes:00}. The set of traces forms the Hilbert space $D$ = data Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([0,t_D])$. Note that no attempt is made to weight the traces for the spatial distribution of the acquisition coordinates.
 
-$[-t_U,t_U]$ = adaptive filter time interval
+The pressure field $p$, sampled at the receiver locations, is a component of the solution ${p,\bv}$ of the linear acoustic wave equation
+\begin{eqnarray}
+  \label{eqn:awe}
+  \frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv +
+                                      w_*(t) \delta(\bx-\bx_s); \\
+  \frac{\partial \bv}{\partial t} & = & - \beta \nabla p; \\
+  p, \bv & = & 0 \mbox{ for }  t \ll 0.
+\end{eqnarray}
+The right-hand side is localized in space at a source position $\bx_s \in Q_s$, with time dependence given by a {source wavelet} $w_* \in C_0^{\infty}(\bR)$. Details about the source mechanism are in fact difficult to measure directly and could justifiably be included in the parameters to be estimated in the solution of the inverse problem, but for the purposes of this discussion the wavelet $w_*$ is assumed known.
 
-$D$ = data Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([0,t_D])$ (again, no attempt to scale for geometry of acquisition).
+The acoustic parameter fields, bulk modulus ($\kappa$) and buoyancy ($\beta$) appearing in the system \ref{eqn:awe} are assumed smooth and uniformly bounded.
+Since the speed of propagation is bounded as is the set of source locations $Q_s$ and the interval of propagation $[0,t_D]$, the values of $\kappa(\bx)$ and $\beta(\bx)$ for sufficiently lartge $|\bx|$ have no effect on the solution of the system \ref{eqn:awe}, so $\log \kappa$ and $\log \beta$ can be assumed square-integrable without loss of generality. The set of feasible models $M$ is a  bounded open subset of ${\cal M} = C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3) \cap L^2(\bR^3) \times L^2(\bR^3)$.
 
-$U$ = adaptive filter Hilbert space = $\bigoplus_{(\bx_r,\bx_s) \in Q} L^2([-t_U,t_U])$
-
-$w_* \in C_0^{\infty}(\bR)$ = known point source wavelet
-
-$M = $ bounded open subset of ${\cal M} = C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3) \cap L^2(\bR^3) \times L^2(\bR^3)$.
-
-\begin{theorem}
-  \label{thm:eu}
-For $(\log \kappa, \log \beta) \in M$, shot location ${\bf x}_s\in Q_s$, there exist distributions (pressure and velocity fields) $p(\cdot,\cdot,t;\bx_s)$, ${\bf v}(\cdot,\cdot;\bx_s)$ satisfying
+Under these conditions, the following conclusions may be drawn about the system \ref{eqn:awe}:
 \begin{itemize}
-\item
-  \begin{eqnarray}
-    \label{eqn:awe}
-    \frac{\partial p}{\partial t} & = & - \kappa \nabla \cdot \bv +
-                                        w_*(t) \delta(\bx-\bx_s); \\
-    \frac{\partial \bv}{\partial t} & = & - \beta \nabla p; \\
-    p, \bv & = & 0 \mbox{ for }  t \ll 0.
-  \end{eqnarray}
-\item
-  $p, \bv$ are smooth in the punctured space-time $\bR^4 \setminus \{(\bx_s,t): t \in \bR\}$.
-\end{itemize}
-\end{theorem}
-\begin{proof}
-  See Appendix A.
-\end{proof}
-
-Define $F: M \rightarrow D$ by
+  \item[A1. ] For $m = (\log \kappa, \log \beta) \in M$, shot location ${\bf x}_s\in Q_s$, there exist distributions (pressure and velocity fields) $p(\cdot,\cdot;\bx_s)$, ${\bf v}(\cdot,\cdot;\bx_s)$ satisfying the system \ref{eqn:awe};
+  \item[A2. ] $p(\cdot,\cdot,t;\bx_s)$, ${\bf v}(\cdot,\cdot;\bx_s)$ are smooth in the punctured space-time $\bR^4 \setminus \{(\bx_s,t): t \in \bR\}$;
+    \item[A3. ] For $(\log \kappa, \log \beta) \in M$, define 
 \[
   F[m](\bx_r,t;\bx_s) = p(\bx_r,t;\bx_s), \, (\bx_r,\bx_s) \in Q, \, t \in [0,t_D],
 \]
-for the pressure field $p$ solving \ref{eqn:awe}. 
-
-\begin{theorem}
-  \label{thm:mbd}
-  Under the hypotheses of Theorem \label{thm:eu},
-  \begin{itemize}
-  \item [1, ] $\|F[m](\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])}$ is uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
-  \item [2. ] $F$ has a directional derivative $DF[m]: {\cal M} \rightarrow D$ for every $m \in M$.
-    \item [3. ] for every $m \in M$, $DF[m]$ extends to a bounded map on ${\cal H} = L^2(\bR^3) \times L^2(\bR^3)$
+for the pressure field $p$ solving \ref{eqn:awe}. The mapping ({\em forward map}, {\em modeling operator},...) $F: M \rightarrow D$ so defined satisfies
+\begin{itemize}
+  \item[A3.1 ] $\|F[m](\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])}$ is uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$.
+  \item[A3.2 ] $F$ has a directional derivative $DF[m]: {\cal M} \rightarrow D$ for every $m \in M$;
+  \item[A3.3 ] for every $m \in M$, $DF[m]$ extends to a bounded map on ${\cal H} = L^2(\bR^3) \times L^2(\bR^3)$.
   \end{itemize}
-\end{theorem}
-\begin{proof}
-  See Appendix A.
-\end{proof}
+\end{itemize}
+See \cite{Symes:23a} for detailed statements and justifications of these assertions.
 
-$F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields. 
+{\bf Note:}
+$F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields.
 
-The central object in AWI is the adaptive-filter-to-data operator $S: M \rightarrow {\cal B}(U,D)$, computed by trace-by-trace convolution with predicted data: $S[m]u = F[m] * u$. This notation for convolution in time hides a number of important details: none of the arguments are defined on the entire real line, so extension and restriction must be involved in the definition. Define $\Pi_D: \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow D$ to be the restriction operator: that is, for $t \in [0,t_D]$, $\Pi_Df(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$. Then its adjoint $\Pi_D^T$ is the zero extension operator: that is, $\Pi_D^Tf(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$ if $t \in [0,t_D]$, $= 0$ else. Define $\Pi_U:  \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow U$ similarly.
+Adaptive filters are collections of traces defined on a (possibly)
+different time interval, usually conveniently chosen to be
+time-symmetric, that is, $[-t_U,t_U]$. The trace geometry of adaptive
+filters is otherwise the same as that of the data traces. $U$ will denote the  adaptive
+filter Hilbert space: $U= \bigoplus_{(\bx_r,\bx_s) \in Q} L^2([-t_U,t_U])$.
+
+The central object in AWI is the adaptive-filter-to-data operator $S:
+M \rightarrow {\cal B}(U,D)$, computed by trace-by-trace convolution
+with predicted data: $S[m]u = F[m] * u$.
+This notation for convolution in time hides a number of important details: none of the arguments are defined on the entire real line, so extension and restriction must be involved in the definition. Define $\Pi_D: \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow D$ to be the restriction operator: that is, for $t \in [0,t_D]$, $\Pi_Df(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$. Then its adjoint $\Pi_D^T$ is the zero extension operator: that is, $\Pi_D^Tf(\bx_r,t;\bx_s) = f(\bx_r,t;\bx_s)$ if $t \in [0,t_D]$, $= 0$ else. Define $\Pi_U:  \bigoplus_{(\bx_r,\bx_s) \in Q} L^2(\bR) \rightarrow U$ similarly.
 
 The meaning of convolution in the definition of $S$ is: extension followed by (trace-by-trace) convolution followed by restriction. That is, for $u \in U, f \in D$,
 \begin{equation}
@@ -82,7 +73,7 @@ Convolution is commutative, so the right-hand side of the definition \ref{eqn:co
   L[f]u = K[u]f
 \end{equation}
 
-The convolution operator implemented in the module {\tt segyvc} actually implements a time-discrete version of $K$ (or $L$). Note that the transpose $K[u]^T]$ is a restricted version of cross-correlation, implemented as the transpose of {\tt segyvc.ConvolutionOperator}.
+The convolution operator implemented in the module {\tt segyvc} actually implements a time-discrete version of $K$ (or $L$). Note that the transpose $K[u]^T$ is a restricted version of cross-correlation, implemented as the transpose of {\tt segyvc.ConvolutionOperator}.
 
 A proper definition of $S[m]$ is thus
 \begin{equation}
@@ -96,7 +87,7 @@ $S$ has a directional partial derivative with respect to its first argument, giv
 \end{equation}
 Since $DF[m]$ extends to a continuous linear map: ${\cal H} \rightarrow D$, the same is true of $D_mS[m]u$, $m \in M, u \in U$..
 
-Since operation is trace-by-trace, that is block-diagonal, $S[m] = \mbox{diag}_{(\bx_r,\bx_s) \in Q}S[m]_{\bx_r,\bx_s}$. Theorem \ref{thm:mbd} implies that $\|S[m]_{\bx_r,\bx_s}\|_{{\cal B}(L^2([-t_U,t_U]),L^2([0,t_D]))}$ is also uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$. A similar statement applies to the derivative.
+Since operation is trace-by-trace, that is block-diagonal, $S[m] = \mbox{diag}_{(\bx_r,\bx_s) \in Q}S[m]_{\bx_r,\bx_s}$. Fact A3.1 implies that $\|S[m]_{\bx_r,\bx_s}\|_{{\cal B}(L^2([-t_U,t_U]),L^2([0,t_D]))}$ is also uniformly bounded over $m \in M, (\bx_r,\bx_s) \in Q$. A similar statement applies to the derivative.
 
 No-zero-traces Assumption: there exists $C>0$ so that for all $(\bx_r,\bx_s) \in Q$,
 $\|d(\bx_r,\cdot;\bx_s)\|_{L^2([0,t_D])} \ge C.$
@@ -127,7 +118,7 @@ Also, the normal operator is block-diagonal, so each trace solves a least-square
   (S[m]_{\bx_r,\bx_s}^TS[m]_{\bx_r,\bx_s} + \sigma^2 I)u_{0,\sigma}[m](\bx_r,\cdot; \bx_s)= S[m]_{\bx_r,\bx_s}^Td(\bx_r,\cdot;\bx_s)
 \end{equation}
 
-According to Theorem \ref{thm:mbd} and the Observable Data Assumption, the left-hand side of equation \ref{eqn:blocknormal} is bounded by a multiple of $\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]}$, uniformly in $m \in M, (\bx_r,\bx_s) \in Q$. According to the Observable Data Assumption, the right-hand side is bounded below by a multiple of $\|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}$, uniform in the same sense. Conclude that there exists $C>0$ so that
+According to Fact A3.1 and the Observable Data Assumption, the left-hand side of equation \ref{eqn:blocknormal} is bounded by a multiple of $\|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]}$, uniformly in $m \in M, (\bx_r,\bx_s) \in Q$. According to the Observable Data Assumption, the right-hand side is bounded below by a multiple of $\|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}$, uniform in the same sense. Conclude that there exists $C>0$ so that
 \begin{equation}
   \label{eqn:u0lower}
   \|u_{0,\sigma}[m,d](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} \ge C \|d(\bx_r,\cdot;\bx_s)\|_{L^2[0,t_D]}
@@ -140,7 +131,7 @@ The penalty operator is also block diagonal, that is, operates independently on 
   \label{eqn:ppf}
   T_{\sigma}[m]u (\bx_r,t;\bx_s) = \frac{t u(\bx_r,t;\bx_s)}{\|u_{0,\sigma}[m](\bx_r,\cdot; \bx_s)\|_{L^2[-t_U,t_U]} }
 \end{equation}
-That is, this penalty operator scales the trace by time, so that the output is small if the nonzero samples are concentrated near $t=0$. The second scaling, by the reciprocal of norm of the trace $u_{0,\sigma}(\bx_r,\cdot;\bx_s)$, plays an essential role in linking the AWI objective to the travel-time residual, as is explained in \ref{eqn:HCSMWS:23a}
+That is, this penalty operator scales the trace by time, so that the output is small if the nonzero samples are concentrated near $t=0$. The second scaling, by the reciprocal of norm of the trace $u_{0,\sigma}(\bx_r,\cdot;\bx_s)$, plays an essential role in linking the AWI objective to the travel-time residual, as is explained by \cite{HCSMWS:23a}
 This operator is well-defined and $C^1$ as function of $m$ due to the bound \ref{eqn:u0lower} and the the No-zero-trace assumption.
 
 \section{Objectives}
@@ -173,10 +164,56 @@ Computing $\tilde{J}_{\alpha,\sigma}$ requires the following steps:
 \item assemble $\tilde{J}_{\alpha,\sigma}[m]$ according to equation \ref{eqn:jtilde}.
 \end{enumerate}
 
-Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of two least-squares problems, in sequence:
+Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of
+two least-squares problems, in sequence.
 
 {\bf Note:} The implementation {\tt vcalg.conjgrad} of the Conjugate Gradient algorithm for the normal equations optionally returns the residual vector (parameter {\tt e}). The obvious way to use this is to create a 3-component product space for the output of the block-column operator $(S[m],\alpha T[m], \sigma I)^T$, and set the right-hand side vector (parameter {\tt b})
 to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
+
+To express the penalty operator $T_{\sigma}[m]$ conveniently, along
+with similar operators appearing in the expression for the gradient
+developed below, introduce functions
+\begin{enumerate}
+\item $R: U \rightarrow ({\bf R}^{+})^{|Q|}$,
+  \[
+    Ru((\bx_r,\bx_s)) = \|u(\bx_r, \cdot;\bx_s)\|
+  \]
+\item $W: {\bf R}^{|Q|} \times {\bf R} \times {\bf R}^{+}
+  \rightarrow {\cal B}(D,D)$,
+  \[
+    W(q,p_s, p_t)f (\bx_r,t;\bx_s) = t^{p_t}
+    q(\bx_r,\bx_s)^{p_s}f(\bx_r,t;\bx_s)
+  \]
+\end{enumerate}
+Use the same notation for the similar function with $D$ replaced by
+$U$. Note that $W$ is only well-defined if either $p_s \ge 0$ or $q>0$.
+
+With these notations, $T_{\sigma}[m]$ may be expressed as
+\begin{equation}
+  \label{eqn:talt}
+  T_{\sigma}[m] = W(Ru_{0,\sigma}[m],-1, 1)
+\end{equation}
+
+{\bf Note:} IWAVE implements the mappings $R$ and $W$ in the form of
+the commands {\tt iwave/trace/main/rms.x} and {\tt
+  iwave/trace/main/txgain.x}. The natural python implementation of $R$
+would output the vector of trace norms as a python array (or a NumPy
+ndarray). However that would require extracting the number of traces
+from the input, and checking that the inputs are compatible. This is
+already implicitly done in the IWAVE manipulations of SU trace
+data. So {\tt iwave/trace/main/rms.x} stores the vector of trace norms
+as the 0th data sample in a set of traces, one for each trace of the
+input data: all header words are the same except for {\tt ns}, which
+is set to 1.
+
+The python functions {\tt awi.setrms} and {\tt awi.applytxgain} call
+the two IWAVE commands, manipulating the data as SU data files, rather
+than as VCL vectors. That is, these are simply functions, not {\tt
+  vcl.Function} objects. Since VCL vectors defined on a {\tt segyvc.Space}
+have access to their data files (keyword {\tt data}), these is
+convenient to use in the definitions of AWI penalty operator,
+gradient, and so on.
+
 
 \section{Derivatives}
 This section presents the derivative of $\tilde{J}_{\alpha,\sigma}$, expressed in terms of
@@ -292,38 +329,76 @@ Combining equations \ref{eqn:resderiv1} and \ref{eqn:penderiv1} and substituting
 \end{equation}
 
 \subsection{Multiple Traces}
-The general case follows immediately from the single trace case. It is just necessary to insert restriction to various (receiver, source) pairs in the relation \ref{eqn:singlegrad}, and sum. Note that the sum is implicit in the definition of $DF[m]^T$, and of $K^T$ and $S$, but must be carried out explicitly for the part of this expression that amounts to trace-by-trace scaling:
+The general case follows immediately from the single trace case. It is
+just necessary to observe that the scalare multiplication in the
+expression \ref{eqn:singlegrad} is a trace-by-trace scaling that can
+be computed by a suitable combination of the mappings $R$ and $W$,
+defined above. The gradient is unlikely to be needed without the value
+of $\tilde{J}_{\alpha,\sigma}$, so assume that
+$T_{\sigma}[m]u_{\alpha,\sigma}$ is available, as well as the vector
+of trace norms of $Ru_{0,\sigma}[m]$. Then multiplication of a trace
+at $(\bx_r,\bx_s)$ by
+$\|T_{\sigma}[m]u_{\alpha,\sigma}[m](\bx_r,\cdot;\bx_s)\|^2\|
+u_{0,\sigma}[m](\bx_r,\cdot;\bx_s)\|^{-2}$ is precisely application of
+\[
+  W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m] u_{\alpha,\sigma}[m],2,0)
+\]
+So
 \[
   \nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^T\left( K[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d)\right.
 \]
 \[
-  \left.  +\alpha^2 \sum_{(\bx_r,\bx_s)\in Q}\|T_{\sigma}[m]u_{\alpha,\sigma}[m](\bx_r,\cdot;\bx_s)\|^2\| u_{0,\sigma}[m](\bx_r,\cdot;\bx_s\|^{-2}\right.
-\]
-\[
-  \left. \times( K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d)_{(\bx_r,\bx_s)} \right.
+  \left.  +\alpha^2 W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m]u_{\alpha,\sigma},2,0)
+( K[(S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d) \right.
 \]
 \begin{equation}
   \label{eqn:singlegrad}
-\left.+K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]) _{(\bx_r,\bx_s)} \right).
+\left.+K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m])  \right).
 \end{equation}
 This expression suggestions the following algorithm outline:
 \begin{enumerate}
-\item given $m$, $d$, $\alpha$, and $\sigma$, compute $u_{0,\sigma}[m]$ by solving the normal equations \ref{eqn:normal} for $\alpha=0$;
-\item compute $v_0 \in U$ by solving $(S[m]^TS[m] + \sigma^2 I)v_0 = u_{0,\sigma}[m]$
-\item use $u_{0,\sigma}[m]$ to construct $T_{\sigma}[m]$, a linear operator on $U$  that scales each input trace at $(\bx_r,\bx_s) \in Q$  by $t\|u_{0,\sigma}(\bx_r,\cdot;\bx_s)\|^{-1}$;
-\item use $S[m]$, $T_{\sigma}[m]$ to compute $u_{\alpha,\sigma}[m]$ by solving the normal equations \ref{eqn:normal};
-\item compute $r_0 = S[m]u_{0,\sigma}[m]-d,\,r_{\alpha} = S[m]u_{\alpha,\sigma}[m]-d$ (these may be by-products of steps 1 and 4;
-\item construct linear operator $W_{\alpha,\sigma}[m]$ on $D$ that scales each trace at $(\bx_r,\bx_s) \in Q$  by $ \|tu_{\alpha,\sigma}[m](\bx_r,\cdot;\bx_s)\|^2\|u_{0,\sigma}[m](\bx_r,\cdot;\bx_s)\|^{-4}$
+\item given $m$, $d$, $\alpha$, and $\sigma$, compute
+  $u_{0,\sigma}[m]$ by solving the normal equations \ref{eqn:normal}
+  for $\alpha=0$, and $T_{\sigma}[m]=W(Ru_{0,\sigma},-1,1)$ (this has
+  likely already been done to compute the value of $\tilde{J}_{\alpha,\sigma}$;
+\item use $S[m]$, $T_{\sigma}[m]$ to compute $u_{\alpha,\sigma}[m]$ by
+  solving the normal equations \ref{eqn:normal}, and record
+  $T_{\sigma}[m]u_{\alpha,\sigma}[m]$ as a by-product;
+\item compute $v_{0\sigma} \in U$ by solving $(S[m]^TS[m] + \sigma^2 I)v_{0,\sigma} = u_{0,\sigma}[m]$
+\item compute $r_0 = S[m]u_{0,\sigma}[m]-d,\,r_{\alpha} = S[m]u_{\alpha,\sigma}[m]-d$ (these may be by-products of steps 1 and 3;
 \item compute four vectors in $D$:
   \begin{enumerate}
   \item $G_1 = K[u_{\alpha,\sigma}[m]]^Tr_{\alpha}$
   \item $G_2 = K[v_0]^Tr_0$
   \item $G_3 = K[u_{0,\sigma}[m]]^TS[m]v_0$
-  \item $G_0 = G_1 + \alpha^2W_{\alpha,\sigma}[m](G_2 + G_3)$
+  \item $G_0 = G_1 + \alpha^2  W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m]u_{\alpha,\sigma}[m],2,0) (G_2 + G_3)$
   \end{enumerate}
 \item assemble
   $\nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^TG_0$
 \end{enumerate}
+
+\subsection{Warner-Guasch AWI}
+The (``forward'') AWI objective defined in \cite{Warner:16} is
+the limit
+\[
+  \tilde{J}_{\sigma}[m] = \lim_{\alpha \rightarrow 0}
+  \frac{1}{\alpha^2}(\tilde{J}_{\alpha,\sigma}[m]-\tilde{J}_{0,\sigma})
+\]
+\begin{equation}
+  \label{eqn:wg}
+  = \frac{1}{2} \|T_{\sigma}[m]u_{0,\sigma}\|^2
+\end{equation}
+\cite{Warner:16} presume that $S[m]u_{0,\sigma} = d$, which is
+manifestly not the case for $\sigma > 0$, however for small $\sigma$
+the error is presumably negligible. Neglecting it, the gradient becomes
+\[
+  \nabla \tilde{J}_{\sigma}[m] = DF[m]^T
+    W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m]u_{0,\sigma}[m],2,0)
+\]
+\begin{equation}
+  \label{eqn:wggrad}
+\times K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]).
+\end{equation}
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
