@@ -34,7 +34,8 @@ def setrms(u, urms):
         raise Exception('called from setrms')
 
 
-def compawipensol(u, p, alpha=1.0, u0rms=None):
+#def compawipensol(u, p, alpha=1.0, u0rms=None):
+def applytxgain(u, p, u0rms=None, spower=0, tpower=1):
     '''
     Compute action of AWI penalty operator on a set of traces. Multiplies 
     trace samples by time and penalty weight, optionally scales by 
@@ -49,42 +50,55 @@ def compawipensol(u, p, alpha=1.0, u0rms=None):
     (u) and output (p)
     precond (int): preconditioning flag. 0 = no scaling, else scaling
     applied
-    alpha (float): penalty weight
     '''
     try:
 #        print('compawipen')
-#        print('compawipen: u=' + u + ' p=' + p + ' u0rms=' + u0rms + ' alpha=' + str(alpha))
 #        print('next')
         if not isinstance(TRIP,str):
             raise Exception('string TRIP not defined')
         if not os.path.exists(TRIP):
             raise Exception('TRIP package = ' + TRIP + ' not found')
+# 23.11.15 old version        
 #        print('sanity')
-        if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
-            cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x') \
-                + ' in=' + u + ' rms=' + u0rms \
-                + ' out=' + p + ' precond=1' \
-                + ' alpha=' + str(alpha)
-            if (u0rms is not None):
-                if linalg.sanity(u0rms,'su'):
+#        if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
+#            cmd = os.path.join(TRIP,'iwave/trace/main/awipen.x') \
+#                + ' in=' + u + ' rms=' + u0rms \
+#                + ' out=' + p + ' precond=1' \
+#                + ' alpha=' + str(alpha)
+#            if (u0rms is not None):
+#                if linalg.sanity(u0rms,'su'):
 #                    print('alpha=' + str(alpha))
-                    ret = os.system(cmd)
-                else:
-                    raise Exception('u0rms does not have suffix .su')
+#                    ret = os.system(cmd)
+#                else:
+#                    raise Exception('u0rms does not have suffix .su')
+#            else:
+#                #print(cmd + ' in=' + u  
+#                #            + ' out=' + p + ' precond=0 alpha='
+#                #            + str(alpha))
+#                ret = os.system(cmd + ' in=' + u  
+#                                    + ' out=' + p + ' precond=0'
+#                                    + ' alpha=' + str(alpha))
+#
+# 23.11.15 new version
+        if linalg.sanity(u,'su') and linalg.sanity(p,'su'):
+            if u0rms is None:
+                cmd = os.path.join(TRIP,'iwave/trace/main/txgain.x') \
+                + ' in=' + u + ' out=' + p + ' spower=0 tpower=' \
+                + str(tpower)
             else:
-                #print(cmd + ' in=' + u  
-                #            + ' out=' + p + ' precond=0 alpha='
-                #            + str(alpha))
-                ret = os.system(cmd + ' in=' + u  
-                                    + ' out=' + p + ' precond=0'
-                                    + ' alpha=' + str(alpha))
+                if not linalg.sanity(u0rms,'su'):
+                    raise Exception('u0rms does not have suffix .su')
+                cmd = os.path.join(TRIP,'iwave/trace/main/txgain.x') \
+                + ' in=' + u + ' out=' + p + ' sfile=' + u0rms \
+                + ' spower=' + str(spower) + ' tpower=' + str(tpower)
+            ret = os.system(cmd)
             if ret != 0:
-                raise Exception('iwave/trace/main/awipen.x failed')
+                raise Exception('iwave/trace/main/txgain.x failed')
         else:
             raise Exception('at least one input does not have .su suffix')
     except Exception as ex:
         print(ex)
-        raise Exception('called from compawipensol')
+        raise Exception('called from applytxgain')
 
 class awipensol(vcl.LinearOperator):
     '''
@@ -194,7 +208,13 @@ class awipensol(vcl.LinearOperator):
         
     def applyFwd(self,dx,dy):
         try:
-            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
+#            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
+            if self.u0rms is None:
+                applytxgain(dx.data, dy.data, spower=0, tpower=1)
+            else:
+                applytxgain(dx.data, dy.data, u0rms=self.u0rms,
+                            spower=-1, tpower=1)
+
         except Exception as ex:
             print(ex)
             raise Exception('called from awipen.applyFwd')
@@ -203,7 +223,12 @@ class awipensol(vcl.LinearOperator):
         
     def applyAdj(self,dx,dy):
         try:
-            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
+#            compawipensol(dx.data, dy.data, u0rms=self.u0rms)
+            if self.u0rms is None:
+                applytxgain(dx.data, dy.data, spower=0, tpower=1)
+            else:
+                applytxgain(dx.data, dy.data, u0rms=self.u0rms,
+                            spower=-1, tpower=1)
         except Exception as ex:
             print(ex)
             raise Exception('called from awipen.applyAdj')
@@ -233,14 +258,14 @@ class awiop(vcl.LinearOperator):
     solution norms.
 
     Parameters:
-    dom (vcl.Space): adaptive filter space
     rng (vcl.ProductSpace): 
         comp 0 = data space, comp 1 = comp 2 = adaptive filter space
-    predicted (vcl.Vector): predicted data
+    awifilt (vcl.LinearOperator): predicted data filter, dom = adaptive filter 
+        space, rng = data space
+    awipen (vcl.LinearOperator): penalty operator, domain = range = adaptive
+        filter space
     alpha (float): penalty weight
-    sigma (float): reg weight
-    awisol (vcl.LSSolver): computes adaptive kernel
-    observed (vcl.Vector): optional data trace, flags preconditioning
+    sigma (float): regularization weight
 
     if data is provided, then it is used to compute the preconditioned
     verstion of the AWI penalty operator. Note that in the application,
@@ -248,27 +273,27 @@ class awiop(vcl.LinearOperator):
     problem.
     '''
 
-    def __init__(self, dom, rng, awifilt, awipen, alpha=None, sigma=None, observed=None):
+    def __init__(self, awifilt, awipen, alpha=None, sigma=None):
         try:
             # range is product (data space x adaptive kernel space)
             if not isinstance(rng, vcl.ProductSpace):
                 raise Exception('range not product space')
-            if dom != rng[1]:
-                raise Exception('domain not same as range[1]')
-            if dom != rng[2]:
-                raise Exception('domain not same as range[2]')
+            if awifilt.getDomain() != rng[1]:
+                raise Exception('filter domain not same as range[1]')
+            if awipen.getDomain() != rng[1]:
+                raise Exception('penalty domain not same as range[1]')
+            if awipen.getRange() != rng[1]:
+                raise Exception('penalty range not same as range[1]')          
+            if awifilt.getDomain() != rng[2]:
+                raise Exception('filter domain not same as range[2]')
             if awifilt.getRange() != rng[0]:
-                raise Exception('p not in 0th component of range')
-            if observed is not None:
-                if observed.space != rng[0]:
-                    raise Exception('data not in 0th component of range')
+                raise Exception('filter range not same as range[0]')
             self.rng = rng
             # p is predicted data
             self.filt = awifilt
             self.pen = awipen
             self.alpha = alpha
             self.sigma = sigma                
-            self.d = observed
         except Exception as ex:
             print(ex)
             raise Exception('called from awiop constructor')
@@ -279,11 +304,11 @@ class awiop(vcl.LinearOperator):
     def getRange(self):
         return self.rng
 
-    def innersol(self):
-        return self.pen.innersol()
+    def filter(self):
+        return self.filt
 
-    def innerrms(self):
-        return self.pen.innerrms()
+    def penalty(self):
+        return self.pen
 
     def applyFwd(self, dx, dy):
         try:
@@ -317,17 +342,13 @@ class awiop(vcl.LinearOperator):
 
     def myNameIs(self):
         print('AWI operator')
-        print('domain = ')
-        self.getDomain().myNameIs()
-        print('range = data space OPLUS domain')
-        if self.d is not None:
-            print('observed data:')
-            self.d.myNameIs()
-        print('predicted data:')
-        self.p.myNameIs()
+        print('filter = ')
+        self.filt.myNameIs()
+        print('penalty op = ')
+        self.pen.myNameIs()
+        print('range = filter range OPLUS domain OPLUS domain')
         print('penalty weight = ' + str(self.alpha))
-        print('internal solver:')
-        self.sol.myNameIs()
+        print('regularization weight = ' + str(self.sigma))
 
 class awisep(vpm.SepFunction):
     '''
@@ -338,7 +359,7 @@ class awisep(vpm.SepFunction):
 
     '''
     
-    def __init__(self, dom, rng, F, alpha, awisol=None, observed=None):
+    def __init__(self, dom, rng, F, alpha, sigma, awisol=None, observed=None):
         try:
             # range is product (data space x adaptive kernel space)
             if not isinstance(dom, vcl.ProductSpace):
@@ -351,10 +372,13 @@ class awisep(vpm.SepFunction):
                 raise Exception('0th comp of range not = simulator range')
             if dom[1] != rng[1]:
                 raise Exception('domain[1] not same as range[1]')
+            if dom[1] != rng[2]:
+                raise Exception('domain[1] not same as range[2]')
             self.dom = dom
             self.rng = rng
             self.F = F
             self.alpha = alpha
+            self.sigma = sigma
             self.awisol = awisol
             self.observed = observed
 
@@ -370,8 +394,19 @@ class awisep(vpm.SepFunction):
     
     def opfcn(self, m):
         try:
-            return awiop(self.dom[1], self.rng, self.F(m), self.alpha,
-                             awisol=self.awisol, observed=self.observed)
+            ### convolution with predicted data
+            ### note that the third arg in the constructor of the
+            ### segyvc conv op is a segy data filename, not a vcl.Vector
+            filt = segyvc.ConvolutionOperator(dom=self.dom[1],
+             rng=self.rng[0], green=self.F(m).data)
+            ### penalty operator, owns alpha=0 soln & trace norms
+            pen = awipensol(self.dom[1], filt,
+                                         sigma=self.sigma,
+                                         solver=self.awisol,
+                                         d=self.observed)
+            op = awiop(self.dom[1], self.rng, filt, pen,
+                             alpha=self.alpha, sigma=self.sigma)
+            return op
         except Exception as ex:
             print(ex)
             raise Exception('called from awisep.opfcn')
@@ -379,6 +414,29 @@ class awisep(vpm.SepFunction):
     def derfcn(self, x0, x1):
         raise Exception('awisep.defcn not defined yet (2023.07.19)')
 
+    def compj0(self):
+        if self.filt is None:
+            self.filt = segyvc.ConvolutionOperator(dom=self.dom[1],
+                                    rng=self.rng[0],
+                                    green=self.F(m).data)
+        ### penalty operator, owns alpha=0 soln & trace norms
+        if self.pen is None:
+            self.pen = awipensol(self.dom[1], filt=self.filt,
+                                     sigma=self.sigma,
+                                     solver=self.awisol,
+                                     d=self.observed)
+        x = pen.innererr().norm()
+        x0 = pen.innererr()[0].norm()
+        x1 = pen.innererr()[1].norm()
+        j0 = 0.5*x*x
+        print('j0 = ' + str(j0))
+        print('components of j0:')
+        print('0: ' + str(0.5*x0*x0))
+        print('1: ' + str(0.5*x1*x1))
+        ta = pen*pen.innersol()
+        wg = 0.5*ta.dot(ta)
+        print('wg = ' + str(wg))
+        
     def myNameIs(self):
         print('AWI separable function object')
 
@@ -419,7 +477,7 @@ class awiwg(vcl.ScalarJet):
             # minimizer of |Su-d|
             self.u0 = vcl.Vector(self.dom)
             # after application of AWI penalty
-            self.au0 = vcl.Vector(self.dom)
+            self.txu0 = vcl.Vector(self.dom)
             # file of u0 trace rms values 
             self.u0rms = None
             self._unlink = os.unlink
@@ -451,11 +509,20 @@ class awiwg(vcl.ScalarJet):
                 setrms(self.u0.data,self.u0rms)
 
             # apply scale-by-t and optionally reciprocal trace norms
-            compawipensol(self.u0.data, self.au0.data, 1.0, self.u0rms)
+#            compawipensol(self.u0.data, self.txu0.data, self.u0rms)
+            if self.u0rms is None:
+                applytxgain(self.u0.data, self.txu0.data, spower=0, tpower=1)
+            else:
+                applytxgain(self.u0.data, self.txu0.data, u0rms=self.u0rms,
+                            spower=-1, tpower=1)
 
             # compute value
-            n = self.au0.norm()
+            n = self.txu0.norm()
             self.val = 0.5*n*n
+
+            # placeholders
+            self.grad = None
+            self.hess = None
             
         except Exception as ex:
             print(ex)
@@ -485,7 +552,8 @@ class awiwg(vcl.ScalarJet):
 
     def gradient(self):
         try:
-            raise Exception('gradient not available')
+           # if self.grad is None:
+            raise Exception('gradient not available')                
         except Exception as ex:
             print(ex)
             raise Exception('called from awiwg.gradient')
