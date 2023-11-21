@@ -882,6 +882,52 @@ class LSSolver(ABC):
     @abstractmethod
     def myNameIs(self):
         pass
+
+class LinearOpReg(LinearOperator):
+    '''
+    Tihonov regularization of linear operator
+    
+    Constructor parameters:
+    A (LinearOperator): unreg op
+    sigma (float): reg weight
+    
+    Note that range is instance data, not external.
+    '''
+    
+    def __init__(self, A=None, sigma=0.0):
+        try:
+            if A is None:
+                raise Exception('no op given')
+            self.A = A
+            self.sigma = sigma
+            self.rng = ProductSpace([A.getRange(), A.getDomain()])
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LinearOpReg constructor')
+        
+    def getDomain(self):
+        return self.A.getDomain()
+
+    def getRange(self):
+        return self.rng
+
+    def applyFwd(self,x,y):
+        y[0].copy(self.A*x)
+        y[1].copy(x)
+        y[1].scale(self.sigma)
+            
+    def applyAdj(self,x,y):
+        y.copy(transp(self.A)*x[0])
+        y.linComb(self.sigma,x[1])
+
+    def myNameIs(self):
+        print('Tihonov Regularization of Linear Operator:')
+        self.A.myNameIs()
+        print('Regularization weight = ' + str(self.sigma))
+            
+
+        
+
         
     
 
