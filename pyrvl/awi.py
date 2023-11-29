@@ -448,67 +448,110 @@ class awiwg(vcl.ScalarJet):
         dom (segyvc:Space): domain, extended source (awi adaptive kernel) space
         sim (vcl.Function): simulator / modeling operator
         mod (vcl.Vector): model, in domain of sim
-        solver (vcl.LSSolver): LS solver
-        d (vcl.Vector): observed data vector in range of sim
+        data (vcl.Vector): observed data vector in range of sim
+        sigma (float): regularization weight
+        kmax (int): CG iteration limit
+        rho (float): CG residual tolerance
         precond (int): if not = 0, then precondition per AWI
+        verbose (int): if not = 0, then print current action messages
 =    '''
 
-    def __init__(self, dom, sim, mod, solver, d, precond=1):
+    def __init__(self,
+                     dom=None, sim=None, mod=None, data=None,
+                     sigma=0.0, kmax=20, rho=0.01, precond=1, verbose=0):
         try:
-            
+            if verbose != 0:
+                print('awiwg constructor')
             # sanity checks
-            if not isinstance(d,vcl.Vector):
+            if data is None:
+                raise Exception('data vector not provided')
+            if not isinstance(data,vcl.Vector):
                 raise Exception('input observed data not vector')
-            if not isinstance(d.space,segyvc.Space):
+            if not isinstance(data.space,segyvc.Space):
                 raise Exception('input observed data not SEGY')
+            if mod is None:
+                raise Exception('model vector not provided')
             if not isinstance(mod,vcl.Vector):
                 raise Exception('input model not vector')
+            if sim is None:
+                raise Exception('sim operator not provided')
             if mod.space != sim.getDomain():
                 raise Exception('mod not in domain of sim')
-            if d.space != sim.getRange():
-                raise Exception('data vector d not in range of sim')
+            if data.space != sim.getRange():
+                raise Exception('data vector not in range of sim')
+            if dom is None:
+                raise Exception('adaptive filter space not provided')
+            if not isinstance(dom,segyvc.Space):
+                raise Exception('adaptive filter space no segyvc.Space instance')
+            
             # store instance data
             self.dom = dom
             self.sim = sim
             self.mod = mod
-            self.solver = solver
-            self.d = d
+            self.d = data
+            self.sigma = sigma
+            self.kmax = kmax
+            self.rho = rho
             self.precond = precond
+            self.verbose = verbose
+            
             # minimizer of |Su-d|
             self.u0 = vcl.Vector(self.dom)
             # after application of AWI penalty
             self.txu0 = vcl.Vector(self.dom)
-            # file of u0 trace rms values 
+            # file of u0, txu0 trace rms values 
             self.u0rms = None
+            self.txu0rms = None
             self._unlink = os.unlink
             
-            # set up tmp filename for u0rms
+            if self.verbose != 0:
+                print('awiwg constructor: set up tmp filenames for u0rms, txu0rms')
             if precond != 0:
                 datapath = os.getenv('DATAPATH')
                 if not os.path.exists(datapath):
                     raise Exception('Error: datapath = ' + datapath + ' not valid path')
-                temp = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
-                temp.close()
-                self.u0rms = temp.name
+                temp1 = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
+                temp1.close()
+                self.u0rms = temp1.name
+                temp2 = tempfile.NamedTemporaryFile(delete=False,dir=datapath,suffix='.su')
+                temp2.close()
+                self.txu0rms = temp2.name
                 # print('in awipen constructor: u0rms=' + self.u0rms)
                 os.system('touch ' + self.u0rms)
-                
-            # predicted data
-            self.p = sim(mod)
+                os.system('touch ' + self.txu0rms)
 
-            # residual vector Su-d
-            self.e = vcl.Vector(d.space)
+            if self.verbose != 0:
+                print('awiwg constructor: compute predicted data')
+            self.p = self.sim(self.mod)
 
             # convolution by predicted data
-            Sm0 = segyvc.ConvolutionOperator(dom=self.dom,
+            self.S = segyvc.ConvolutionOperator(dom=self.dom,
                                                 rng=self.p.space,
                                                 green=self.p.data)
-            # decon observed by predicted
-            [self.u0, self.e] = solver.solve(Sm0,d)
+
+            # regularized convop
+            self.L = vcl.LinearOpReg(A=self.S,sigma=self.sigma)
+
+            # reg rhs
+            dp = vcl.Vector(self.L.getRange())
+            ep = vcl.Vector(self.L.getRange())
+            dp[0].copy(self.d)
+            
+            if self.verbose != 0:
+                print('awiwg constructor: decon observed by predicted')
+            #            [self.u0, self.e] = solver.solve(Sm0,d)
+            eps=0.0
+            vcalg.conjgrad(self.u0, dp, self.L, self.kmax, eps,
+                               self.rho, e=ep, verbose=self.verbose)
+                        # residual vector Su-d
+            self.e = vcl.Vector(self.sim.getRange())
+            self.e.copy(ep[0])
+
             if self.u0rms is not None:
                 setrms(self.u0.data,self.u0rms)
 
-            # apply scale-by-t and optionally reciprocal trace norms
+            if self.verbose != 0:
+                print('awiwg constructor: apply scale-by-t and reciprocal trace norms')
 #            compawipensol(self.u0.data, self.txu0.data, self.u0rms)
             if self.u0rms is None:
                 applytxgain(self.u0.data, self.txu0.data, spower=0, tpower=1)
@@ -520,6 +563,9 @@ class awiwg(vcl.ScalarJet):
             n = self.txu0.norm()
             self.val = 0.5*n*n
 
+            if self.verbose != 0:
+                print('awiwg constructor: value = ' + str(self.val))
+
             # placeholders
             self.grad = None
             self.hess = None
@@ -530,7 +576,9 @@ class awiwg(vcl.ScalarJet):
 
     def __del__(self):
         if self.u0rms is not None:
-            self._unlink(self.u0rms)
+            self._unlink(self.u0rms) 
+        if self.txu0rms is not None:
+            self._unlink(self.txu0rms)       
 
     def point(self):
         return self.mod
@@ -541,6 +589,9 @@ class awiwg(vcl.ScalarJet):
     def innersol(self):
         return self.u0
 
+    def innererr(self):
+        return self.e
+        
     def innerrms(self):
         try:
             if self.u0rms is None:
@@ -552,8 +603,43 @@ class awiwg(vcl.ScalarJet):
 
     def gradient(self):
         try:
-           # if self.grad is None:
-            raise Exception('gradient not available')                
+                
+            if self.grad is None:
+                if self.verbose > 0:
+                    print('awiwg.gradient: 1. v0 = (S^TS +eps^2 I)^{-1}u0')
+                v0 = vcl.Vector(self.dom)
+                vcalg.bcg(v0, self.u0, vcl.NormalOp(self.L),
+                              self.kmax, self.rho, verbose=self.verbose)
+                if self.verbose > 0:
+                    print('awiwg.gradient: 2. w0 = S v0')                  
+                w0 = self.S*v0
+
+                if self.verbose > 0:
+                    print('awiwg.gradient: 3. w1 = K[u0]^T*w0')
+                K = segyvc.ConvolutionOperator(dom=self.p.space,
+                                                rng=self.p.space,
+                                                green=self.u0.data)
+                w1 = vcl.transp(K)*w0
+
+                if self.verbose > 0:
+                    print('awiwg.gradient: 4. w2 = diag(txu0rms)^2 * w1')
+                setrms(self.txu0.data,self.txu0rms)
+                w2 = vcl.Vector(self.p.space)
+                applytxgain(w1.data, w2.data, u0rms=self.txu0rms,
+                            spower=2, tpower=0)
+
+                if self.verbose > 0:
+                    print('awiwg.gradient: 5. w3 = diag(u0rms)^-2 * w2')
+                w3 = vcl.Vector(self.p.space)
+                applytxgain(w2.data, w3.data, u0rms=self.u0rms,
+                            spower=-2, tpower=0)
+
+                if self.verbose > 0:
+                    print('awiwg.gradient: 6. grad = DF^T w3')
+                self.grad = vcl.Vector(self.sim.getDomain())
+                (self.grad).copy(vcl.transp(self.sim.deriv(self.mod))*w3)
+
+            return self.grad
         except Exception as ex:
             print(ex)
             raise Exception('called from awiwg.gradient')
@@ -575,8 +661,6 @@ class awiwg(vcl.ScalarJet):
         self.mod.myNameIs()
         print('    observed data:')
         self.d.myNameIs()
-        print('    LS solver:')
-        self.solver.myNameIs()
         if self.u0rms is not None:
             print('    preconditioned by kernel rms')
             print('    filename for kernel trace rms = ' + self.u0rms)
