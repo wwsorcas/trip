@@ -1,6 +1,9 @@
 import os
 import tempfile
 
+def hello():
+    print('hello from data')
+
 def bpfilt(file,nt,dt,s,f1,f2,f3,f4,sx,sz):
 
     CWPROOT = os.getenv('CWPROOT')
@@ -181,10 +184,10 @@ def rsffile(file, datatype, unit, n1, n2, d1, d2, val=1.0):
          ' d1=' + str(d1) + \
          ' d2=' + str(d2) + \
          ' v000=' + str(val) + ' | ' +\
-         ' sfput dim=2 gdim=2 id1=0 id2=1 | ' +\
-         ' sfput unit1=m unit2=m | ' +\
-         ' sfput label1=Depth label2=Distance | ' +\
-         ' sfput label=' + datatype + ' unit=' + unit + ' > ' + file
+         put + ' dim=2 gdim=2 id1=0 id2=1 | ' +\
+         put + ' unit1=m unit2=m | ' +\
+         put + ' label1=Depth label2=Distance | ' +\
+         put + ' label=' + datatype + ' unit=' + unit + ' > ' + file
 
     ret = os.system(cmd)
 
@@ -194,7 +197,7 @@ def rsffile(file, datatype, unit, n1, n2, d1, d2, val=1.0):
 
     return ret
 
-def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
+def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0, lensradd=0.2, lensradt=0.2):
     ''' 
     creates (bulk modulus, buoyancy) pair of rsf pairs for input
     to iwave simulation code. bulk modulus has optional circular 
@@ -214,6 +217,8 @@ def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
         lensfac (float): relative bulkmod change from background
             to center of lens
         buoy (float): buoyancy (homogeneous), unit = cc/g
+        lensradd (float): lens diameter, as proportion of total range
+        lensradt (float): lens thickness, as proportion of total range
         return value (int): sum of returns from os.system, = 0 for success
     '''
     
@@ -228,13 +233,13 @@ def model(bulkfile, bulk, nx, nz, dx, dz, lensfac, buoy=1.0):
          ' v000=' + str(bulk) + \
          ' x1lens=' + str(nz*dz/2.0) + \
          ' x2lens=' + str(nx*dx/2.0) + \
-         ' dlens=' + str(nz*dz/5.0) + \
-         ' tlens=' + str(nx*dx/5.0) + \
+         ' dlens=' + str(nz*dz*lensradd) + \
+         ' tlens=' + str(nx*dx*lensradt) + \
          ' vlens=' + str(bulk*(lensfac-1.0)) + ' | ' +\
-         ' sfput dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
-         ' sfput unit1=m unit2=m' + ' | ' +\
-         ' sfput label1=Depth label2=Distance ' + ' | ' +\
-         ' sfput label=Bulk_modulus unit=GPa > ' + bulkfile
+         put + ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+         put + ' unit1=m unit2=m' + ' | ' +\
+         put + ' label1=Depth label2=Distance ' + ' | ' +\
+         put + ' label=Bulk_modulus unit=GPa > ' + bulkfile
 
     ret = os.system(cmd)
 

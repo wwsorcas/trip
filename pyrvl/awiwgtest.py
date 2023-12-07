@@ -1,3 +1,6 @@
+import os
+import sys
+
 import linalg
 import data
 import vcl
@@ -6,39 +9,63 @@ import vpm
 import segyvc
 import rsfvc
 import asg
-import os
 import awi
 
     ################## domain, range spaces ###################
 
 try:
-    wsc=1.0e+3
-    mysigma=1.e-5
 
-    mykmax=1000
-    myrho=0.01
+    # arg1 = job choice: 'vals', 'u0', 'grad', 'grad0'
+    # arg2 = frequency index
+    # arg3 = lens index
+    # arg4 = sigma
+    # arg5 = rho
     
-    data.rechdr(file='baru.su',nt=251,dt=8.0,\
+    choice = sys.argv[1]
+    idx = int(sys.argv[2])
+    lens = int(sys.argv[3])
+    mysigma = float(sys.argv[4])
+    myrho = float(sys.argv[5])
+    
+    wsc=1.0e+3
+    mykmax=1000
+
+    NTU = [251,501]
+    NTD = [626,1251]
+    NX  = [401, 801]
+    NZ  = [201, 401]
+    DELRTW = [-1000, -500]
+    DT  = [8, 4]
+    DX  = [20, 10]
+    F1  = [1.0, 2.0]
+    F2  = [2.5, 5.0]
+    F3  = [7.5, 15.0]
+    F4  = [12.5, 25.0]
+
+    LENSRADD = [0.2, 0.4]
+    LENSFAC = [0.7, 0.5]
+
+    data.rechdr(file='baru.su',nt=NTU[idx],dt=DT[idx],\
                 ntr=201,rx=2000,rz=1000,sx=4200,sz=3000,drx=20,delrt=-1000)
 
     usp=segyvc.Space('baru.su')
     u0 = vcl.Vector(usp,'baru.su')
 
     # bulk modulus with less focussing lens
-    data.model(bulkfile='m.rsf', bulk=4.0, nx=401, nz=201,
-                   dx=20, dz=20, lensfac=0.7)
+    data.model(bulkfile='m.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                   dx=DX[idx], dz=DX[idx], lensfac=LENSFAC[lens], lensradd=LENSRADD[lens])
 
     # homogeneous bulk modulus 
-    data.model(bulkfile='m0.rsf', bulk=4.0, nx=401, nz=201,
-                   dx=20, dz=20, lensfac=1.0)
+    data.model(bulkfile='m0.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                   dx=DX[idx], dz=DX[idx], lensfac=1.0)
 
     # bandpass filter source at sx=4200, sz=3000 (single trace)
-    data.bpfilt(file='wstar.su',nt=251,dt=8.0,s=1.0,
-                    f1=1.0,f2=2.5,f3=7.5,f4=12,sx=4200,sz=3000)
+    data.bpfilt(file='wstar.su',nt=NTU[idx],dt=DT[idx],s=1.0,
+                    f1=F1[idx],f2=F2[idx],f3=F3[idx],f4=F4[idx],sx=4200,sz=3000)
     linalg.scale('wstar.su',wsc)
     
     # create zero data file with same source position, rz=500, rx=[2000,6000]
-    data.rechdr(file='g.su',nt=626,dt=8.0,ntr=201,
+    data.rechdr(file='g.su',nt=NTD[idx],dt=DT[idx],ntr=201,
                     rx=2000.0,rz=1000.0,sx=4200,sz=3000,drx=20.0)
     
     bulksp = rsfvc.Space('m.rsf')
@@ -57,37 +84,62 @@ try:
 
     print('wavelet scale = ' + str(wsc))
 
-    print('compute observed data')
-    d = F(m)
-
-    vals = []
-    errs = []
-    dnorm = d.norm()
-    for i in range(13):
-        mm = vcl.Vector(bulksp)
-        mm.copy(m0)
-        mm.scale(0.1*(10-i))
-        mm.linComb(0.1*i,m)
-        wg = awi.awiwg(dom=usp, sim=F, mod=mm, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
-        vals.append(wg.value())
-        errs.append(wg.innererr().norm()/dnorm)
-    print('\nvals, rel errors at mtest = (1-t)*m0 + t*m')
-    print('  t       val       relerr')
-    for i in range(13):
-        print('%2.1f  %10.4e  %10.4e' % (0.1*i, vals[i], errs[i]))
+    print('compute observed data at m, predicted data at m0')
+    os.system('/bin/cp g.su d.su')
+    os.system('/bin/cp g.su d0.su')
+    d = vcl.Vector(datasp,'d.su')
+    d.copy(F(m))
+    
+    if choice == 'vals':
+        
+        vals = []
+        errs = []
+        dnorm = d.norm()
+        for i in range(13):
+            mm = vcl.Vector(bulksp)
+            mm.copy(m0)
+            mm.scale(0.1*(10-i))
+            mm.linComb(0.1*i,m)
+            wg = awi.awiwg(dom=usp, sim=F, mod=mm, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+            vals.append(wg.value())
+            errs.append(wg.innererr().norm()/dnorm)
+        print('\nvals, rel errors at mtest = (1-t)*m0 + t*m')
+        print('sigma = ' + str(mysigma) + ' rho = ' + str(myrho))
+        print('  t       val       relerr')
+        for i in range(13):
+            print('%2.1f  %10.4e  %10.4e' % (0.1*i, vals[i], errs[i]))
                                             
 # construct jet at m0
 
-    #wg = awi.awiwg(dom=usp, sim=F, mod=m0, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+    if choice == 'u0' or choice == 'grad0' or choice == 'grad':
 
-    # homogeneous bulk modulus 
-    #data.model(bulkfile='g.rsf', bulk=4.0, nx=401, nz=201,
-#                   dx=20, dz=20, lensfac=1.0)
+        if choice == 'grad0':
+        # homogeneous bulk modulus 
+            wg = awi.awiwg(dom=usp, sim=F, mod=m0, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+            data.model(bulkfile='grad0.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                    dx=DX[idx], dz=DX[idx], lensfac=1.0)
 
-    #g = vcl.Vector(bulksp,'g.rsf')
-    #g.copy(wg.gradient())
+            g = vcl.Vector(bulksp,'grad0.rsf')
+            g.copy(wg.gradient())
 
-    #u0.copy(wg.innersol())
+        elif choice == 'grad':
+            # target bulk modulus
+            wg = awi.awiwg(dom=usp, sim=F, mod=m, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+            data.model(bulkfile='grad.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                    dx=DX[idx], dz=DX[idx], lensfac=1.0)
+
+            g = vcl.Vector(bulksp,'grad.rsf')
+            g.copy(wg.gradient())
+            
+        else:
+            wg = awi.awiwg(dom=usp, sim=F, mod=m0, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+            u0.copy(wg.innersol())
+            os.system('/bin/cp g.su recon.su')
+            d0 = vcl.Vector(datasp,'d0.su')
+            d0.copy(F(m0))
+            r = vcl.Vector(datasp,'recon.su')
+            conv = segyvc.ConvolutionOperator(datasp, datasp, u0.data)
+            r.copy(conv*d0)
     
 except Exception as ex:
     print(ex)

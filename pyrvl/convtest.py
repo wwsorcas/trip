@@ -9,6 +9,8 @@ import os
 def runtest():
     # bulk modulus with lens
     data.model(bulkfile='m.rsf', bulk=4.0, nx=401, nz=201, dx=20, dz=20, lensfac=0.7)
+    # bulk modulus without lens
+    data.model(bulkfile='m0.rsf', bulk=4.0, nx=401, nz=201, dx=20, dz=20, lensfac=1.0)
 
     # bandpass filter source at sx=4200, sz=3000 (single trace)
     data.bpfilt(file='wstar.su',nt=251,dt=8.0,s=1.0,f1=1.0,f2=2.5,f3=7.5,f4=12,sx=4200,sz=3000)
@@ -20,6 +22,7 @@ def runtest():
     datasp = segyvc.Space('g.su')
     
     m=vcl.Vector(bulksp,'m.rsf')
+    m0=vcl.Vector(bulksp,'m0.rsf')
     
     ######################$ operator ############################
     F = asg.fsbop(dom=bulksp, rng=datasp, \
@@ -31,13 +34,14 @@ def runtest():
     
     # evaluate F[m]
     Fm = F(m)
+    Fm0 = F(m0)
 
     data.rechdr(file='baru.su',nt=251,dt=8.0,\
             ntr=201,rx=2000,rz=1000,sx=4200,sz=3000,drx=20,delrt=-1000)
     usp=segyvc.Space('baru.su')
     baru=vcl.Vector(usp,'baru.su')
 
-    barSm = segyvc.ConvolutionOperator(dom=usp, rng=datasp, green=Fm.data)
+    barSm0 = segyvc.ConvolutionOperator(dom=usp, rng=datasp, green=Fm0.data)
 
     # max allowed iterations
     kmax = 50
@@ -49,8 +53,21 @@ def runtest():
     # vcalg.conjgrad(x=baru, b=Fm, A=barSm, \
     #                kmax=kmax, eps=eps, rho=rho, verbose=2)
 
-    vcalg.trconjgrad(x=baru, b=Fm, A=barSm, \
+    vcalg.trconjgrad(x=baru, b=Fm, A=barSm0, \
                     kmax=kmax, rho=rho, Delta=10, verbose=2)
+
+    # compare conv_u d and conv_d u
+    uconvd = barSm0*baru
+
+    Convu = segyvc.ConvolutionOperator(dom=datasp, rng=datasp, green=baru.data)
+    dconvu = Convu*Fm0
+
+    err = vcl.Vector(datasp)
+    err.copy(uconvd)
+    err.linComb(-1.0, dconvu)
+    print('error norm = ' + str(err.norm()) + 
+    ' rel = ' + str(err.norm()/uconvd.norm()))
+    
     
 runtest()    
 
