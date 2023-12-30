@@ -27,7 +27,7 @@ The pressure field $p$, sampled at the receiver locations, is a component of the
 The right-hand side is localized in space at a source position $\bx_s \in Q_s$, with time dependence given by a {source wavelet} $w_* \in C_0^{\infty}(\bR)$. Details about the source mechanism are in fact difficult to measure directly and could justifiably be included in the parameters to be estimated in the solution of the inverse problem, but for the purposes of this discussion the wavelet $w_*$ is assumed known.
 
 The acoustic parameter fields, bulk modulus ($\kappa$) and buoyancy ($\beta$) appearing in the system \ref{eqn:awe} are assumed smooth and uniformly bounded.
-Since the speed of propagation is bounded as is the set of source locations $Q_s$ and the interval of propagation $[0,t_D]$, the values of $\kappa(\bx)$ and $\beta(\bx)$ for sufficiently lartge $|\bx|$ have no effect on the solution of the system \ref{eqn:awe}, so $\log \kappa$ and $\log \beta$ can be assumed square-integrable without loss of generality. The set of feasible models $M$ is a  bounded open subset of ${\cal M} = C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3) \cap L^2(\bR^3) \times L^2(\bR^3)$.
+Since the speed of propagation is bounded as is the set of source locations $Q_s$ and the interval of propagation $[0,t_D]$, the values of $\kappa(\bx)$ and $\beta(\bx)$ for sufficiently large $|\bx|$ have no effect on the solution of the system \ref{eqn:awe}, so $\log \kappa$ and $\log \beta$ can be assumed square-integrable without loss of generality. The set of feasible models $M$ is a  bounded open subset of ${\cal M} = C^{\infty}(\bR^3) \times C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3) \times L^{\infty}(\bR^3) \cap L^2(\bR^3) \times L^2(\bR^3)$.
 
 Under these conditions, the following conclusions may be drawn about the system \ref{eqn:awe}:
 \begin{itemize}
@@ -151,7 +151,17 @@ developed below, introduce functions
   \]
 \end{enumerate}
 Use the same notation for the similar function with $D$ replaced by
-$U$. Note that $W$ is only well-defined if either $p_s \ge 0$ or $q>0$.
+$U$. Note that $W$ is only well-defined if either $p_s \ge 0$ or
+$q>0$.
+
+For convenience, note these obvious properties of $W$:
+\begin{itemize}
+\item[W1. ] $W(\cdot,\cdot,0)$ is block-scalar, hence commutes with any
+  block-diagonal operator;
+\item[W2. ] $W(q,p_{s,1},p_{t,1})W(q,p_{s,2},p_{t,2}) = W(q,p_{s,1}+p_{s,2},p_{t,1}+p_{t,2})$;
+\item[W3. ] $W(q_1,p_s,p_{t,1})W(q_2,p_s,p_{t,2}) = W(q_1,q_2,
+  p_s,p_{t,1}+p_{t,2})$
+\end{itemize}
 
 With these notations, $T_{\sigma}[m]$ may be expressed as
 \begin{equation}
@@ -219,12 +229,13 @@ The fundamental result of variable projection theory
 the stationary points of $J_{\alpha,\sigma}$ and
 $\tilde{J}_{\alpha,\sigma}$ are in bijective correspondence. Moreover,
 \[
-D_m\tilde{J}_{\alpha,\sigma}[m]\delta m D_mJ[u,m]\delta m|_{u =
-  u_{\alpha,\sigma}[m,d]}
+D_m\tilde{J}_{\alpha,\sigma}[m]\delta m = D_mJ[u,m]\delta m|_{u =u_{\alpha,\sigma}[m,d]}
+\]
+\[
+  = \langle D_m(S[m]u)\delta m_{u =  u_{\alpha,\sigma}[m]} (S[m]u_{\alpha,\sigma}[m]-d) \rangle
 \]
 \begin{equation}
-= \langle (D_mS[m]u\delta m)_{u =
-  u_{\alpha,\sigma}[m]} (S[m]u_{\alpha,\sigma}[m]-d \rangle + \alpha^2 \langle D_m(T_{\sigma}[m]u)\delta m)_{u=u_{\alpha,\sigma}[m]},T_{\sigma}[m]u_{\alpha,\sigma}[m]\rangle_U.
++ \alpha^2 \langle D_m(T_{\sigma}[m]u)\delta m|_{u=u_{\alpha,\sigma}[m]},T_{\sigma}[m]u_{\alpha,\sigma}[m]\rangle_U.
 \label{eqn:basederiv}
 \end{equation}
 Note that the regularization term does not appear in the VPM gradient expression, since it does not depend explicitly on $m$.
@@ -267,11 +278,11 @@ right-hand side of equation \ref{eqn:basederiv} is
 
 With the notational conventions listed above, the normal equation \ref{eqn:blocknormal} for $u_{0,\sigma}[m]$ implies
 \[
-  D_mu_{0,\sigma}[m] \delta m = (S[m]^TS[m] + \sigma^2I)^{-1}
+  D_mu_{0,\sigma}[m] \delta m = -(S[m]^TS[m] + \sigma^2I)^{-1}
 \]
 \begin{equation}
   \label{eqn:blockderiv}
-  \times ((DS[m]^{T}\delta m) (d - S[m]u_{0,\sigma}[m]) - S[m]^T(DS[m]\delta) m u_{0,\sigma}[m])
+  \times ((DS[m]^{T}\delta m) (S[m]u_{0,\sigma}[m]-d) + S[m]^T(DS[m]\delta m) u_{0,\sigma}[m])
 \end{equation}
 The single-trace version of the definition \ref{eqn:ppf} is
 \[
@@ -290,18 +301,18 @@ D(T_{\sigma}[m] u)\delta m = -\frac{t u}{\|u_{0,\sigma}[m]\|^3}\langle D_mu_{0,\
 \]
 Define
 \begin{equation}
-  \label{eqn:defvsigma}
-  v_{\sigma} = (S[m]^TS[m]+ \sigma^2I)^{-1} u_{0,\sigma}[m] \in
+  \label{eqn:defv0tilde}
+  \tilde{v}_{0,\sigma}[m] = (S[m]^TS[m]+ \sigma^2I)^{-1} u_{0,\sigma}[m] \in
   L^2[-t_U,t_U].
 \end{equation}
 Then
 \[
   D(T_{\sigma}[m] u)\delta m =
   \frac{t u}{\|u_{0,\sigma}[m]\|^3}[\langle (DS[m]\delta
-  m)v_{\sigma}[m], S[m]u_{0,\sigma}[m]-d\rangle
+  m)\tilde{v}_{0,\sigma}[m], S[m]u_{0,\sigma}[m]-d\rangle
 \]
 \[+
-  \langle S[m]v_{\sigma}[m], (DS[m]\delta m) u_{0,\sigma}[m] \rangle ]
+  \langle S[m]\tilde{v}_{0,\sigma}[m], (DS[m]\delta m) u_{0,\sigma}[m] \rangle ]
 \]
 and
 \[
@@ -310,47 +321,70 @@ and
 \]
 \[
 \times [\langle (DS[m]\delta
-  m)v_{\sigma}[m], S[m]u_{0,\sigma}[m]-d\rangle
+  m)\tilde{v}_{0,\sigma}[m], S[m]u_{0,\sigma}[m]-d\rangle
 +
-  \langle S[m]v_{\sigma}[m], (DS[m]\delta m) u_{0,\sigma}[m] \rangle ]
+  \langle S[m]\tilde{v}_{0,\sigma}[m], (DS[m]\delta m) u_{0,\sigma}[m] \rangle ]
 \]
 \[
   = \frac {\|t u\|^2}{\|u_{0,\sigma}[m]\|^4}
 \]
 \[
-  \times [\langle DF[m]\delta m, K[v_{\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d)
+  \times [\langle DF[m]\delta m, K[\tilde{v}_{0,\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d)
 +
-K[u_{0,\sigma}[m]]^T S[m]v_{\sigma}[m]\rangle ]
+K[u_{0,\sigma}[m]]^T S[m]\tilde{v}_{0,\sigma}[m]\rangle ]
 \]
 
 \[
-  = \langle DF[m]\delta m, W(RT_{\sigma}u,2,0)W(Ru_{0,\sigma}[m],-2,0)
+  = \langle DF[m]\delta m, W(R(W(Ru_{0,\sigma}[m],-2,1)u),2,0)
 \]
 \begin{equation}
   \label{eqn:penderiv}
-  \times ( K[v_{\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d)
+  \times ( K[\tilde{v}_{0,\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d)
 +
-K[u_{0,\sigma}[m]]^T S[m]v_{\sigma}[m])\rangle 
+K[u_{0,\sigma}[m]]^T S[m]\tilde{v}_{0,\sigma}[m])\rangle
 \end{equation}
 
+It will turn out to be convenient to take advantage of the {\em
+  block-scalar} property of the operator
+$W(R(W(Ru_{0,\sigma}[m],-2,1)u),2,0)$. The other operators on the RHS
+of equation \ref{eqn:penderiv} are all block-diagonal, and the
+right-hand side is linear in $\tilde{v}_{0,\sigma}[m]$. Thus the
+$W...$ operator can be combined with the definition of $\tilde{v}...$:
+define
+\[
+  v_{0,\sigma}[m,u]=W(R(W(Ru_{0,\sigma}[m],-2,1)u),2,0) \tilde{v}_{0,\sigma}[m]
+\]
+to be the solution of the system
+\begin{equation}
+  \label{eqn:defv0}
+  (S[m]^TS[m]+ \sigma^2I) v_{0,\sigma}[m,u] = W(R(W(Ru_{0,\sigma}[m],-2,1)u),2,0) u_{0,\sigma}[m].
+\end{equation}
+
+Then equation \ref{eqn:penderiv} can be re-written as
+\[
+  \langle D(T_{\sigma}[m]u)\delta m, T_{\sigma}[m]u\rangle = \langle DF[m]\delta m, 
+\]
+\begin{equation}
+  \label{eqn:penderiv}
+   K[v_{0,\sigma}[m,u]]^T(S[m]u_{0,\sigma}[m]-d)
++
+K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u]\rangle
+\end{equation}
 Combine equations \ref{eqn:resderiv} and \ref{eqn:penderiv} with
 equation \ref{eqn:basederiv} to obtain
 \[
   \nabla \tilde{J}_{\alpha,\sigma}[m] =
-  DF[m]^T\large[ K[u_{\alpha,\sigma}[m]]^T (S[m]u_{\alpha,\sigma}[m]-d)
-\]
-\[
-  + \alpha^2 W(RT_{\sigma}[m]u_{\alpha,\sigma}[m],2,0)W(Ru_{0,\sigma}[m],-2,0) (
-  K[v_{\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d)
+  DF[m]^T\large\{ K[u_{\alpha,\sigma}[m]]^T (S[m]u_{\alpha,\sigma}[m]-d)
 \]
 \begin{equation}
   \label{eqn:deriv}
-+ K[u_{0,\sigma}[m]]^T S[m]v_{\sigma}[m]) \large]
+  + \alpha^2 (
+  K[v_{0,\sigma}[m, u_{\alpha,\sigma}[m]]]^T(S[m]u_{0,\sigma}[m]-d)
++ K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u_{\alpha,\sigma}[m]]) \large\}.
 \end{equation}
-with $v_{\sigma}$ defined in equation \ref{eqn:defvsigma}.
 
 \noindent{\bf Remark:} ``Gradient'' should really be in quotes, as $F$ is not actually differentiable, or even well-defined, in any open subset of ${\cal H}$. It is however well-defined in the intersection of $M$ with any ${\cal H}$-closed subspace of ${\cal M}$. The latter is necessarily finite-dimensional, but all feasible calculations are carried out in finite-dimensional settings, so that's OK.
-
+ 
 \subsection{Multiple Traces}
 The general case follows immediately from the single trace case, since
 every operator ($S[m]$, $K[...]$, $W$, $R$) ,appearing in the right-hand side of expression
@@ -361,28 +395,29 @@ operation, so its expression is also the same. That is, equation
 multi-trace case.
 
 The gradient is unlikely to be needed without the value
-of $\tilde{J}_{\alpha,\sigma}$, so 
-$T_{\sigma}[m]u_{\alpha,\sigma}$ will have been computed and can be
-cached. The same is true of the vector of trace norms
-$Ru_{0,\sigma}[m]$. So all ingredient for application of
-$W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m] u_{\alpha,\sigma}[m],2,0)$
+of $\tilde{J}_{\alpha,\sigma}$, so the vector of trace norms
+$Ru_{0,\sigma}[m]$ will have been computed, as it is a key ingredient
+in the definition of the penalty
+$T_{\sigma}[m]u_{\alpha,\sigma}$, and can be
+cached.
 
 \begin{enumerate}
 \item given $m$, $d$, $\alpha$, and $\sigma$, compute
   $u_{0,\sigma}[m]$ by solving the normal equations \ref{eqn:normal}
-  for $\alpha=0$, and $T_{\sigma}[m]=W(Ru_{0,\sigma},-1,1)$ (this has
-  likely already been done to compute the value of $\tilde{J}_{\alpha,\sigma}$;
-\item use $S[m]$, $T_{\sigma}[m]$ to compute $u_{\alpha,\sigma}[m]$ by
+  for $\alpha=0$, also $Ru_{0,\sigma}$ (this has
+  likely already been done to compute the value of $\tilde{J}_{\alpha,\sigma}$);
+\item compute $u_{\alpha,\sigma}[m]$ by
   solving the normal equations \ref{eqn:normal}, and record
-  $T_{\sigma}[m]u_{\alpha,\sigma}[m]$ as a by-product;
-\item compute $v_{0\sigma} \in U$ by solving $(S[m]^TS[m] + \sigma^2 I)v_{0,\sigma} = u_{0,\sigma}[m]$
+  $R(W(Ru_{0,\sigma}[m],-2,1)u_{\alpha,\sigma}[m])$ as a by-product;
+\item compute $v_{0\sigma}[m, u_{\alpha,\sigma}[m]] \in U$ by solving the linear system
+  \ref{eqn:defv0};
 \item compute $r_0 = S[m]u_{0,\sigma}[m]-d,\,r_{\alpha} = S[m]u_{\alpha,\sigma}[m]-d$ (these may be by-products of steps 1 and 3;
 \item compute four vectors in $D$:
   \begin{enumerate}
   \item $G_1 = K[u_{\alpha,\sigma}[m]]^T r_{\alpha}$
-  \item $G_2 = K[v_{\sigma}[m]]^Tr_0$
-  \item $G_3 = K[u_{0,\sigma}[m]]^T S[m]v_{\sigma}[m]$
-  \item $G_0 = G_1 + \alpha^2  W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m]u_{\alpha,\sigma}[m],2,0) (G_2 + G_3)$
+  \item $G_2 = K[v_{0,\sigma}[m, u_{\alpha,\sigma}[m]]]^Tr_0$
+  \item $G_3 = K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m, u_{\alpha,\sigma}[m]]$
+  \item $G_0 = G_1 + \alpha^2 (G_2 + G_3)$
   \end{enumerate}
 \item assemble
   $\nabla \tilde{J}_{\alpha,\sigma}[m] = DF[m]^TG_0$
@@ -391,26 +426,157 @@ $W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m] u_{\alpha,\sigma}[m],2,0)$
 \subsection{Warner-Guasch AWI}
 The (``forward'') AWI objective defined in \cite{Warner:16} is
 the limit
-\[
+\begin{equation}
+  \label{eqn:wglim}
   \tilde{J}_{\sigma}[m] = \lim_{\alpha \rightarrow 0}
   \frac{1}{\alpha^2}(\tilde{J}_{\alpha,\sigma}[m]-\tilde{J}_{0,\sigma}[m])
-\]
+\end{equation}
 \begin{equation}
   \label{eqn:wg}
   = \frac{1}{2} \|T_{\sigma}[m]u_{0,\sigma}\|^2
 \end{equation}
 
-\cite{Warner:16} presume that $S[m]u_{0,\sigma} = d$, which is
-manifestly not the case for $\sigma > 0$, however for small $\sigma$
-the error is presumably negligible. Neglecting it, the gradient becomes
+In the following paragraphs, I will compute the $m$ derivative of
+$\tilde{J}_{\sigma}$ directly from the right-hand side of the
+definition \ref{eqn:wg}. Then I will compute it as the limit of
+derivatives as suggested in the identity \ref{eqn:wglim}, and show
+that these are the same.  A by-product of this comparison is the
+observation that the limit \ref{eqn:wglim} is in the sense of
+$C^1(L^{\infty}(\bR^3) \times L^{\infty}(\bR^3))$.
+
+The derivative of the expression on the right-hand side of
+\ref{eqn:wg} is the sum of two terms, the first of which is given by
+\ref{eqn:penderiv} with $u = u_{0,\sigma}[m]$. The second is
 \[
-  \nabla \tilde{J}_{\sigma}[m] = DF[m]^T
-    W(Ru_{0,\sigma}[m],-2,0)W(RT_{\sigma}[m]u_{0,\sigma}[m],2,0)
+  \langle T_{\sigma}[m]u_{0,\sigma}[m], T_{\sigma}[m]D_m
+  u_{0,\sigma}[m]\delta m \rangle
+\]
+which from identity \ref{eqn:blockderiv} is
+\[
+  = -\langle  T_{\sigma}[m]^TT_{\sigma}[m]u_{0,\sigma}[m], (S[m]^TS[m] + \sigma^2I)^{-1}
+\]
+\[
+  \times ((DS[m]^{T}\delta m) (S[m]u_{0,\sigma}[m]-d) +
+  S[m]^T(DS[m]\delta) m u_{0,\sigma}[m])
+\]
+Since
+$T_{\sigma}[m]^TT_{\sigma}[m] = W(Ru_{0,\sigma}[m],-2,2)$, this is
+\[
+  = -\langle (DS[m]\delta m) (S[m]^TS[m] +
+  \sigma^2I)^{-1}W(Ru_{0,\sigma}[m],-2,2)u_{0,\sigma}[m],
+  S[m]u_{0,\sigma}[m] - d \rangle
 \]
 \begin{equation}
-  \label{eqn:wggrad}
-\times K[u_{0,\sigma}[m]]^T S[m](S[m]^TS[m] + \sigma^2I)^{-1}u_{0,\sigma}[m]).
+  \label{eqn:term2}
+  - \langle S[m] (S[m]^TS[m] +
+  \sigma^2I)^{-1}W(Ru_{0,\sigma}[m],-2,2)u_{0,\sigma}[m], (DS[m]\delta
+  m)u_{0,\sigma}[m] \rangle
 \end{equation}
+Introduce the abbreviation
+\begin{equation}
+  \label{eqn:defv1}
+  v_{1,\sigma}[m] = (S[m]^TS[m] + \sigma^2I)^{-1}W(Ru_{0,\sigma}[m],-2,2)u_{0,\sigma}[m].
+\end{equation}
+Then the RHS of equation \ref{eqn:term2bis} may be re-written as
+\begin{equation}
+  \label{eqn:term2bis}
+  = -\langle DF[m]\delta m, K[v_{1,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d) + 
+  K[u_{0,\sigma}[m]]^T S[m] v_{1,\sigma}[m] \rangle.
+\end{equation}
+Recall that we have just computed the second of two terms, the sum of
+which is the derivative of $\tilde{J}_{\sigma}[m]$. The first is
+\ref{eqn:penderiv} with $u = u_{0,\sigma}[m]$. Combine the two
+terms to obtain
+\[
+  D\tilde{J}_{\sigma}[m] \delta m = \langle DF[m]\delta m,
+\]
+\[
+  K[v_{0,\sigma}[m,u_{0,\sigma}[m]]]^T(S[m]u_{0,\sigma}[m]-d)
++
+K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u_{0,\sigma}[m]]\rangle
+\]
+\[
+  -\langle DF[m]\delta m, K[v_{1,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d) + 
+  K[u_{0,\sigma}[m]]^T S[m] v_{1,\sigma}[m] \rangle
+\]
+\[
+  = \langle DF[m]\delta
+  m,(K[v_{0,\sigma}[m,u_{0,\sigma}[m]]]-K[v_{1,\sigma}[m]])^T(S[m]u_{0,\sigma}[m]-d)
+\]
+\[
+  + K[u_{0,\sigma}[m]]^T S[m] (v_{0,\sigma}[m,u_{0,\sigma}[m]] -
+  v_{1,\sigma}[m]) \rangle.
+\]
+To simplify this expression further, and reduce the computational
+complexity of the derivative expression, note that the
+operator-valued function $K$ is linear in its argument, according to
+its definition \ref{eqn:convdef}. So the above is
+\begin{equation}
+  \label{eqn:wgderiv}
+  = \langle DF[m]\delta m, (K[v_{\sigma}[m]]^T(S[m]u_{0,\sigma}[m]-d) 
+  + K[u_{0,\sigma}[m]]^T S[m] v_{\sigma}[m] )\rangle.
+\end{equation}
+in which
+\[
+  v_{\sigma}[m] = v_{0,\sigma}[m,u_{0,\sigma}[m]] -  v_{1,\sigma}[m].
+\]
+The definitions \ref{eqn:defv0} and \ref{eqn:defv1} imply that
+$v_{\sigma}[m]$ is the solution of the linear system
+\begin{equation}
+  \label{eqn:defvsigma}
+  (S[m]^TS[m]+ \sigma^2I) v_{\sigma}[m] =
+  (W(R(W(Ru_{0,\sigma}[m],-2,1)u_{0,\sigma}),2,0) - W(Ru_{0,\sigma}[m],-2,2))
+  u_{0,\sigma}[m].
+\end{equation}
+That is, computation of $v_{\sigma}[m]$, hence of $D
+\tilde{J}_{\sigma}[m]\delta m$, requires the solution of only one additional
+linear system, beyond that necessary to compute the value of $\tilde{J}_{\sigma}[m]$.
+
+\noindent {\bf Remark:} The expression \ref{eqn:wgderiv} immediately
+yields a formal prescription for the gradient of
+$\tilde{J}_{\sigma}[m]$ as the output of the adjoint modeling operator
+$DF[m]^T$ applied to an ``adjoint source'' (the right-hand side of the
+inner product \ref{eqn:wgderiv}. \cite{Warner:16} point out this
+similarity with FWI, in which the adjoint source (in the simplest
+version) is the residual $F[m]-d$. Consequently, FWI implementations
+already contain a great deal of the code necessary to implement
+AWI. \cite{Warner:16} also presume that the regularization weight
+$\sigma$ is sufficiently small that the adaptive filter $u_{0,\sigma}$
+effectively fits the data. Thus $S[m]u_{0,\sigma}-d$ is negligible,
+regardless of $m$, and the first term on the right-hand side of the
+inner product \ref{eqn:wgderiv} drops out, further simplifying the AWI
+adjoint source.
+
+It remains to establish that the same result (expression
+\ref{eqn:wgderiv}) for the derivative can be derived from the
+limit \ref{eqn:wglim}. From from equation \ref{eqn:basederiv},
+\[
+  \frac{1}{\alpha^2}(D \tilde{J}_{\alpha,\sigma}[m] \delta m - D
+  \tilde{J}_{0,\sigma}[m]\delta m) =
+\]
+\[
+  = \frac{1}{\alpha^2} \left(\langle D_m(S[m]u)\delta m_{u =  u_{\alpha,\sigma}[m]}, (S[m]u_{\alpha,\sigma}[m]-d) \rangle\right.
+\]
+\[
+  - \left.\langle D_m(S[m]u)\delta m_{u =  u_{0,\sigma}[m]}, (S[m]u_{0,\sigma}[m]-d) \rangle\right)
+\]
+\[
+  +  \langle D_m(T_{\sigma}[m]u)\delta
+  m|_{u=u_{\alpha,\sigma}[m]},T_{\sigma}[m]u_{\alpha,\sigma}[m]\rangle_U
+\]
+Since the normal operator \ref{eqn:normal} is uniformly positive
+definite hence boundedly invertible uniformly in $\alpha \ge 0$,
+$u_{\alpha,\sigma}[m] \rightarrow u_{0,\sigma}[m]$ in $U$. All of the
+operators appearing in the third term are $U-$continuous, so  the
+third term tends to
+\[
+  \langle D_m(T_{\sigma}[m]u)\delta
+  m|_{u=u_{0,\sigma}[m]},T_{\sigma}[m]u_{0,\sigma}[m]\rangle_U
+\]
+which is identixal to the left-hand side of equation
+\ref{eqn:penderiv} and is the first term in the direct computation of
+the $\tilde{J}_{\sigma}$ derivative, analyzed above.
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
