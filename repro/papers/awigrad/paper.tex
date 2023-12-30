@@ -46,9 +46,6 @@ for the pressure field $p$ solving \ref{eqn:awe}. The mapping ({\em forward map}
 \end{itemize}
 See \cite{Symes:23a} for detailed statements and justifications of these assertions.
 
-{\bf Note:}
-$F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields.
-
 Adaptive filters are collections of traces defined on a (possibly)
 different time interval, usually conveniently chosen to be
 time-symmetric, that is, $[-t_U,t_U]$. The trace geometry of adaptive
@@ -72,8 +69,6 @@ Convolution is commutative, so the right-hand side of the definition \ref{eqn:co
   \label{eqn:altconvdef}
   L[f]u = K[u]f
 \end{equation}
-
-The convolution operator implemented in the module {\tt segyvc} actually implements a time-discrete version of $K$ (or $L$). Note that the transpose $K[u]^T$ is a restricted version of cross-correlation, implemented as the transpose of {\tt segyvc.ConvolutionOperator}.
 
 A proper definition of $S[m]$ is thus
 \begin{equation}
@@ -169,31 +164,12 @@ With these notations, $T_{\sigma}[m]$ may be expressed as
   T_{\sigma}[m] = W(Ru_{0,\sigma}[m],-1, 1)
 \end{equation}
 
-{\bf Note:} IWAVE implements the mappings $R$ and $W$ in the form of
-the commands {\tt iwave/trace/main/rms.x} and {\tt
-  iwave/trace/main/txgain.x}. The natural python implementation of $R$
-would output the vector of trace norms as a python array (or a NumPy
-ndarray). However that would require extracting the number of traces
-from the input, and checking that the inputs are compatible. This is
-already implicitly done in the IWAVE manipulations of SU trace
-data. So {\tt iwave/trace/main/rms.x} stores the vector of trace norms
-as the 0th data sample in a set of traces, one for each trace of the
-input data: all header words are the same except for {\tt ns}, which
-is set to 1.
-
-The python functions {\tt awi.setrms} and {\tt awi.applytxgain} call
-the two IWAVE commands, manipulating the data as SU data files, rather
-than as VCL vectors. That is, these are simply functions, not {\tt
-  vcl.Function} objects. Since VCL vectors defined on a {\tt segyvc.Space}
-have access to their data files (keyword {\tt data}), these are
-convenient to use to express the action of $R$ and $W$ in AWI penalty operator,
-gradient, and so on.
-
 \section{Objectives}
 Define for $\alpha \ge 0$
-\[
+\begin{equation}
+  \label{eqn:j}
  J_{\alpha,\sigma}[u,m,d] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \alpha^2\|T_\sigma[m]u\|_U^2 + \sigma^2 \|u\|^2_U).
-\]
+\end{equation}
 Note that the notation is consistent, that is, reduces to $J_{0,\sigma}$ as defined above for $\alpha=0$.
 
 The variable projection reduction of $J_{\alpha,\sigma}$ is
@@ -219,9 +195,6 @@ Computing $\tilde{J}_{\alpha,\sigma}$ requires the following steps:
 
 Therefore evaluating $\tilde{J}_{\alpha,\sigma}$ involves solution of
 two least-squares problems, in sequence.
-
-{\bf Note:} The implementation {\tt vcalg.conjgrad} of the Conjugate Gradient algorithm for the normal equations optionally returns the residual vector (parameter {\tt e}). The obvious way to use this is to create a 3-component product space for the output of the block-column operator $(S[m],\alpha T[m], \sigma I)^T$, and set the right-hand side vector (parameter {\tt b})
-to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
 
 \section{Derivatives}
 The fundamental result of variable projection theory
@@ -365,22 +338,22 @@ Then equation \ref{eqn:penderiv} can be re-written as
   \langle D(T_{\sigma}[m]u)\delta m, T_{\sigma}[m]u\rangle = \langle DF[m]\delta m, 
 \]
 \begin{equation}
-  \label{eqn:penderiv}
+  \label{eqn:penderiv1}
    K[v_{0,\sigma}[m,u]]^T(S[m]u_{0,\sigma}[m]-d)
 +
 K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u]\rangle
 \end{equation}
-Combine equations \ref{eqn:resderiv} and \ref{eqn:penderiv} with
+Combine equations \ref{eqn:resderiv} and \ref{eqn:penderiv1} with
 equation \ref{eqn:basederiv} to obtain
 \[
   \nabla \tilde{J}_{\alpha,\sigma}[m] =
-  DF[m]^T\large\{ K[u_{\alpha,\sigma}[m]]^T (S[m]u_{\alpha,\sigma}[m]-d)
+  DF[m]^T\{ K[u_{\alpha,\sigma}[m]]^T (S[m]u_{\alpha,\sigma}[m]-d)
 \]
 \begin{equation}
   \label{eqn:deriv}
   + \alpha^2 (
   K[v_{0,\sigma}[m, u_{\alpha,\sigma}[m]]]^T(S[m]u_{0,\sigma}[m]-d)
-+ K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u_{\alpha,\sigma}[m]]) \large\}.
++ K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u_{\alpha,\sigma}[m]]) \}.
 \end{equation}
 
 \noindent{\bf Remark:} ``Gradient'' should really be in quotes, as $F$ is not actually differentiable, or even well-defined, in any open subset of ${\cal H}$. It is however well-defined in the intersection of $M$ with any ${\cal H}$-closed subspace of ${\cal M}$. The latter is necessarily finite-dimensional, but all feasible calculations are carried out in finite-dimensional settings, so that's OK.
@@ -446,7 +419,7 @@ $C^1(L^{\infty}(\bR^3) \times L^{\infty}(\bR^3))$.
 
 The derivative of the expression on the right-hand side of
 \ref{eqn:wg} is the sum of two terms, the first of which is given by
-\ref{eqn:penderiv} with $u = u_{0,\sigma}[m]$. The second is
+\ref{eqn:penderiv1} with $u = u_{0,\sigma}[m]$. The second is
 \[
   \langle T_{\sigma}[m]u_{0,\sigma}[m], T_{\sigma}[m]D_m
   u_{0,\sigma}[m]\delta m \rangle
@@ -485,7 +458,7 @@ Then the RHS of equation \ref{eqn:term2bis} may be re-written as
 \end{equation}
 Recall that we have just computed the second of two terms, the sum of
 which is the derivative of $\tilde{J}_{\sigma}[m]$. The first is
-\ref{eqn:penderiv} with $u = u_{0,\sigma}[m]$. Combine the two
+\ref{eqn:penderiv1} with $u = u_{0,\sigma}[m]$. Combine the two
 terms to obtain
 \[
   D\tilde{J}_{\sigma}[m] \delta m = \langle DF[m]\delta m,
@@ -560,10 +533,11 @@ limit \ref{eqn:wglim}. From from equation \ref{eqn:basederiv},
 \[
   - \left.\langle D_m(S[m]u)\delta m_{u =  u_{0,\sigma}[m]}, (S[m]u_{0,\sigma}[m]-d) \rangle\right)
 \]
-\[
+\begin{equation}
+  \label{eqn:limdiff}
   +  \langle D_m(T_{\sigma}[m]u)\delta
   m|_{u=u_{\alpha,\sigma}[m]},T_{\sigma}[m]u_{\alpha,\sigma}[m]\rangle_U
-\]
+\end{equation}
 Since the normal operator \ref{eqn:normal} is uniformly positive
 definite hence boundedly invertible uniformly in $\alpha \ge 0$,
 $u_{\alpha,\sigma}[m] \rightarrow u_{0,\sigma}[m]$ in $U$. All of the
@@ -574,9 +548,149 @@ third term tends to
   m|_{u=u_{0,\sigma}[m]},T_{\sigma}[m]u_{0,\sigma}[m]\rangle_U
 \]
 which is identixal to the left-hand side of equation
-\ref{eqn:penderiv} and is the first term in the direct computation of
+\ref{eqn:penderiv1} with $u=u_{0,\sigma}[m]$ and is the first term in the direct computation of
 the $\tilde{J}_{\sigma}$ derivative, analyzed above.
 
+It remains to understand
+\[
+\frac{1}{\alpha^2} \left(\langle D_m(S[m]u)\delta m_{u =  u_{\alpha,\sigma}[m]}, (S[m]u_{\alpha,\sigma}[m]-d) \rangle\right.
+\]
+\[
+  - \left.\langle D_m(S[m]u)\delta m_{u =  u_{0,\sigma}[m]}, (S[m]u_{0,\sigma}[m]-d) \rangle\right)
+\]
+\[
+  =\frac{1}{\alpha^2} \left(\langle D_m(S[m]u)\delta m_{u =  u_{\alpha,\sigma}[m]-u_{0,\sigma}[m]}, (S[m]u_{\alpha,\sigma}[m]-d) \rangle\right.
+\]
+\begin{equation}
+  \label{eqn:resterms}
+  + \left.\langle D_m(S[m]u)\delta m_{u =  u_{0,\sigma}[m]},
+    (S[m](u_{\alpha,\sigma}[m]-u_{0,\sigma}[m]) \rangle\right)
+\end{equation}
+Observe that the normal equation \ref{eqn:normal} implies that
+\[
+  (S[m]^TS[m] + \sigma^2 I)(u_{\alpha,\sigma}[m]-u_{0,\sigma}[m]) =
+  -\alpha^2 T_{\sigma}[m]^TT_{\sigma}[m]u_{\alpha,\sigma}[m]
+\]
+Since $u_{\alpha,\sigma}[m] \rightarrow u_{0,\sigma}$ in the sense of
+$U$ as $\alpha \rightarrow 0$, it follows from definition \ref{eqn:defv1} that
+\[
+  \frac{1}{\alpha^2 }u_{\alpha,\sigma}[m]-u_{0,\sigma}[m] \rightarrow
+  - v_{1,\sigma}[m], \, \alpha \rightarrow 0
+\]
+Writing as before $D_m(S[m]u)\delta m_{u =  ...} =
+(DS[m]\delta m)...$,  the quantity on the right-hand side of equation
+\ref{eqn:resterms}, obtain
+\[
+  \lim_{\alpha \rightarrow 0} 
+\frac{1}{\alpha^2} \left(\langle D_m(S[m]u)\delta m_{u =  u_{\alpha,\sigma}[m]}, (S[m]u_{\alpha,\sigma}[m]-d) \rangle\right.
+\]
+\[
+  - \left.\langle D_m(S[m]u)\delta m_{u =  u_{0,\sigma}[m]}, (S[m]u_{0,\sigma}[m]-d) \rangle\right)
+\]
+\[
+  = - \langle (DS[m]\delta m)v_{1,\sigma}[m], S[m]u_{0,\sigma}[m]-d
+  \rangle
+\]
+\[
+  - \langle (DS[m]\delta m) u_{0,\sigma}[m],S[m]v_{1,\sigma}[m] \rangle
+\]
+\[
+  =-\langle DF[m]\delta m, K[v_{1,\sigma}[m]]^T (S[m]u_{0,\sigma}[m]-d) + 
+  K[u_{0,\sigma}[m]]^T S[m] v_{1,\sigma}[m] \rangle.
+\]
+which is precisely the right-hand side of equation
+\ref{eqn:term2bis}. That is, the limit of the first two terms on the
+right-hand side of equation \ref{eqn:limdiff} as $\alpha \rightarrow
+0$ is exactly the second term of the direct derivative
+computation. Since we have already shown that the third term in
+\ref{eqn:limdiff} limits to
+the first term in the direct computation, a second derivation of the
+derivative $D\tilde{J}_{\sigma}[m]$ has been accomplished.
+
+We have also shown that the limit of the scaled difference of the
+derivatives is the derivative of the limit of the scaled difference,
+pointwise in $m \in M$. In fact the limit is locally uniform in a
+suitable sense, but that is a topic for another discussion.
+
+\append{Unpreconditioned AWI: Matched Source Waveform Inversion}
+Matched Source Waveform Inversion (MSWI) is a close relative to
+AWI, differing in the use of a simpler penalty operator $T$, defined
+by
+\begin{equation}
+  \label{eqn:upf}
+  Tu (\bx_r,t;\bx_s) = t u(\bx_r,t;\bx_s).
+\end{equation}
+Similarly to AWI, $m$ is estimated by minimizing
+\begin{equation}
+  \label{eqn:junp}
+ J^{\rm unp}_{\alpha,\sigma}[u,m,d] = \frac{1}{2}(\|S[m]u - d\|_D^2 + \alpha^2\|Tu\|_U^2 + \sigma^2 \|u\|^2_U).
+\end{equation}
+or equivalently
+\begin{equation}
+  \label{eqn:jtildeunp}
+ \tilde{J}^{\rm unp}_{\alpha,\sigma}[m,d] = \frac{1}{2}(\|S[m]u_{\alpha,\sigma}[m,d] - d\|_D^2 + \alpha^2\|Tu_{\alpha,\sigma}[m,d]\|_U^2 + \sigma^2 \|u_{\alpha,\sigma}\|^2_U).
+\end{equation}
+in which $u_{\alpha,\sigma}$ is the solution of the normal equation
+\begin{equation}
+  \label{eqn:normalunp}
+  (S[m]^TS[m] + \alpha^2T^TT + \sigma^2I)u_{\alpha,\sigma}[m] = S[m]^Td
+\end{equation}
+The only difference between AWI and MSWI lies in the defintiion of the
+penalty operator.
+
+MSWI was introduced in Hua Song's thesis
+\cite[]{Song:94c} using a different definition of $T$ (but also
+$m$-independent). The penalty operator defined in \ref{eqn:upf}, and
+the associated inversion algorithm, was explored by Huang and Symes
+\cite[]{HuangSymes2015SEG,HuangSymes:Geo17}, who show that at least to
+some extent it avoids the cycle-skipping pathology of FWI. Note that
+the division by $Ru_{0,\sigma}[m]$ in the definition of
+$T_{\sigma}[m]$ is responsible for the global relation between AWI and
+travel time tomography, within a limited class of problems, and this
+relation cannot be asserted for MSWI.
+
+Since the MSWI penalty operator $T$ is $m$-independent, it does not
+appear explicilly in the the gradient
+of the reduced MSWI objective $\tilde{J}^{\rm unp}_{\alpha,\sigma}$, as
+given by the VPM gradient formula:
+\[
+  \nabla \tilde{J}^{\rm unp}_{\alpha,\sigma}[m] =
+  D(S[m]u)^T_{u=u_{\alpha,\sigma}[m]}(S[m]u_{\alpha,\sigma}[m]-d)
+\]
+\begin{equation}
+  \label{eqn:tildejunpgrad}
+  = DF[m]^T(K[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d).
+\end{equation}
+
+\append{Remarks on VCL Implementation}
+\noindent {\bf 1.} $F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields.
+
+\noindent {\bf 2.} The convolution operator implemented in the module {\tt segyvc}
+actually implements a time-discrete version of $K$ (or $L$). Note that
+the transpose $K[u]^T$ is a restricted version of cross-correlation,
+implemented as the transpose of {\tt segyvc.ConvolutionOperator}.
+
+\noindent {\bf 3.} IWAVE implements the mappings $R$ and $W$ in the form of
+the commands \\{\tt iwave/trace/main/rms.x} and {\tt
+  iwave/trace/main/txgain.x}. The natural python implementation of $R$
+would output the vector of trace norms as a python array (or a NumPy
+ndarray). However that would require extracting the number of traces
+from the input, and checking that the inputs are compatible. This is
+already implicitly done in the IWAVE manipulations of SU trace
+data. So {\tt iwave/trace/main/rms.x} stores the vector of trace norms
+as the 0th data sample in a set of traces, one for each trace of the
+input data: all header words are the same except for {\tt ns}, set to 1.
+
+\noindent {\bf 4.} The python functions {\tt awi.setrms} and {\tt awi.applytxgain} call
+the two IWAVE commands, manipulating the data as SU data files, rather
+than as VCL vectors. That is, these are simply functions, not {\tt
+  vcl.Function} objects. Since VCL vectors defined on a {\tt segyvc.Space}
+have access to their data files (keyword {\tt data}), these are
+convenient to use to express the action of $R$ and $W$ in AWI penalty operator,
+gradient, and so on.
+
+\noindent {\bf 5.} The implementation {\tt vcalg.conjgrad} of the Conjugate Gradient algorithm for the normal equations optionally returns the residual vector (parameter {\tt e}). The obvious way to use this is to create a 3-component product space for the output of the block-column operator $(S[m],\alpha T[m], \sigma I)^T$, and set the right-hand side vector (parameter {\tt b})
+to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
