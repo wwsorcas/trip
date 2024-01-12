@@ -276,19 +276,11 @@ class awiop(vcl.LinearOperator):
     def __init__(self, awifilt, awipen, alpha=None, sigma=None):
         try:
             # range is product (data space x adaptive kernel space)
-            if not isinstance(rng, vcl.ProductSpace):
-                raise Exception('range not product space')
-            if awifilt.getDomain() != rng[1]:
-                raise Exception('filter domain not same as range[1]')
-            if awipen.getDomain() != rng[1]:
+            self.rng = vcl.ProductSpace([awifilt.getRange(), awifilt.getDomain(), awifilt.getDomain()])
+            if awipen.getDomain() != self.rng[1]:
                 raise Exception('penalty domain not same as range[1]')
-            if awipen.getRange() != rng[1]:
+            if awipen.getRange() != self.rng[1]:
                 raise Exception('penalty range not same as range[1]')          
-            if awifilt.getDomain() != rng[2]:
-                raise Exception('filter domain not same as range[2]')
-            if awifilt.getRange() != rng[0]:
-                raise Exception('filter range not same as range[0]')
-            self.rng = rng
             # p is predicted data
             self.filt = awifilt
             self.pen = awipen
@@ -666,6 +658,171 @@ class awiwg(vcl.ScalarJet):
             print('    filename for kernel trace rms = ' + self.u0rms)
         else:
             print('    no preconditioning applied')
+
+class mswi(vcl.ScalarJet):
+    '''
+    Matched Source Waveform Inversion function jet.
+    
+    Constructor parameters:
+        dom (segyvc:Space): domain, extended source (awi adaptive kernel) space
+        sim (vcl.Function): simulator / modeling operator
+        mod (vcl.Vector): model, in domain of sim
+        data (vcl.Vector): observed data vector in range of sim
+        sigma (float): regularization weight
+        alpha (float): penalty weight
+        kmax (int): CG iteration limit
+        rho (float): CG residual tolerance
+        verbose (int): if not = 0, then print current action messages
+=    '''
+
+    def __init__(self,
+                     dom=None, sim=None, mod=None, data=None,
+                     alpha=0.0, sigma=0.0, kmax=20, rho=0.01, verbose=0):
+        try:
+            if verbose != 0:
+                print('mswi constructor')
+            # sanity checks
+            if data is None:
+                raise Exception('data vector not provided')
+            if not isinstance(data,vcl.Vector):
+                raise Exception('input observed data not vector')
+            if not isinstance(data.space,segyvc.Space):
+                raise Exception('input observed data not SEGY')
+            if mod is None:
+                raise Exception('model vector not provided')
+            if not isinstance(mod,vcl.Vector):
+                raise Exception('input model not vector')
+            if sim is None:
+                raise Exception('sim operator not provided')
+            if mod.space != sim.getDomain():
+                raise Exception('mod not in domain of sim')
+            if data.space != sim.getRange():
+                raise Exception('data vector not in range of sim')
+            if dom is None:
+                raise Exception('adaptive filter space not provided')
+            if not isinstance(dom,segyvc.Space):
+                raise Exception('adapt filter space not segyvc.Space instance')
+            
+            # store instance data
+            self.dom = dom
+            self.sim = sim
+            self.mod = mod
+            self.d = data
+            self.sigma = sigma
+            self.alpha = alpha
+            self.kmax = kmax
+            self.rho = rho
+            self.verbose = verbose
+            
+            if self.verbose != 0:
+                print('mswi constructor: compute predicted data')
+            self.p = self.sim(self.mod)
+
+            # other internals
+            # u = solution of inner linear system = estimated
+            # adaptive kernel
+            self.u = None
+            # ep = residual of inner linear system (3 components) - note
+            # thta this is d-Lu, not Lu-d
+            self.ep = None
+            # value of objective
+            self.val = None
+            # gradient of objective
+            self.grad = None
+            # hessian of objective (Kaufman approx)
+            self.hess = None            
+
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awipen constructor')
+
+    # auxiliary method - solves inner least squares problem 
+    def resid(self):
+        if self.ep is None or self.u is None:
+            # convolution by predicted data
+            S = segyvc.ConvolutionOperator(dom=self.dom,
+                                                rng=self.p.space,
+                                                green=self.p.data)
+
+            # penalty op
+            A = awipensol(self.dom)
+
+            # mswi op = awi op witn no precond
+            L = awiop(S, A, self.alpha, self.sigma)
+
+            # penalized regularized adaptive filter
+            self.u = vcl.Vector(L.getDomain())
+
+            # reg rhs
+            dp = vcl.Vector(L.getRange())
+            # residual
+            self.ep = vcl.Vector(L.getRange())
+            dp[0].copy(self.d)
+            
+            if self.verbose != 0:
+                print('mswi constructor: decon observed by predicted')
+            eps=0.0
+            vcalg.conjgrad(self.u, dp, L, self.kmax, eps,
+                               self.rho, e=self.ep, verbose=self.verbose)
+
+#        return [self.u, self.ep]
+
+    def dataerr(self):
+        if self.ep is None:
+#            [self.u, self.ep] = self.resid()
+            self.resid()
+        return self.ep[0].norm() 
+
+    def point(self):
+        return self.mod
+
+    def value(self):
+        if self.val is None:
+#            [self.u, self.ep] = self.resid()
+            self.resid()
+            n = self.ep.norm()
+            self.val = 0.5*n*n            
+        return self.val
+
+    def gradient(self):
+        if self.grad is None:
+            self.resid()
+            K = segyvc.ConvolutionOperator(dom=self.p.space,
+                                               rng=self.p.space,
+                                               green=self.u.data)
+            pregrad = vcl.transp(K)*self.ep[0]
+            pregrad.scale(-1.0)
+            self.grad = vcl.Vector(self.sim.getDomain())
+            simderiv = self.sim.deriv(self.mod)
+            self.grad.copy(vcl.transp(simderiv)*pregrad)
+        return self.grad
+        
+    def Hessian(self):
+        try:
+            raise Exception('Hessian not available')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awiwg.Hessian')
+
+    def myNameIs(self):
+        print('MSWI function')
+        print('    adaptive kernel space:')
+        self.dom.myNameIs()
+        print('    simulator:')
+        self.sim.myNameIs()
+        print('    model:')
+        self.mod.myNameIs()
+        print('    observed data:')
+        self.d.myNameIs()
+
+        
+    
+
+
+
+
+
+
 
         
     
