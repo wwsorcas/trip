@@ -95,8 +95,8 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
     Aim is to reduce residual norm |Ax-b| or normal residual norm |A^T(Ax-b)|
     below a given fraction of initial value.
 
-    Note that the "residual" in this discussion means Ax-b, not the augmented
-    residual (Ax-b, sig x)
+    Note that the "residual" in this discussion means b-Ax, not the augmented
+    residual (b-Ax, sig x)
 
     Iteration terminates if
         - max number of iterations reached
@@ -116,6 +116,8 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
                                               2 = step-by-step
     e (vcl.Vector):           optional return, residual
     r (vcl.Vector):           optional return, normal residual
+
+    NOTE: e here is b-Ax, not Ax-b.
     '''
     
     try:
