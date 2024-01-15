@@ -1,0 +1,266 @@
+\title{Notes on the Variable Projection Method}
+\author{William W. Symes}
+
+\begin{abstract}
+The variable projection reduction of a separable least squares objective function has a gradient of simple form. Stationary points of the reduced function and the original, un-reduced function are in 1-1 correspondence. An approximate Hessian analogous to the Gauss-Newton Hessian of nonlinear least squares guarantees a non-increase direction and involves less computation than the full Hessian.
+\end{abstract}
+
+\section{Introduction}
+The Variable Projection Method (VPM) is a useful algorithm for solving separable least squares problems, that is, those whose objectives are linear in some of their unknowns. It uses an inner solution or reduction of the linear unknowns to eliminate them, leaving a function of the nonlinear unknowns to be minimied. The utility of VPM rests largely on the simplicitly of the derivative, or gradient, of the reduced function: it is the same as the gradient of the original, unreduced function, evaluated with the linear variables fixed at their inner solution value. Furthermore, stationary points of the reduced function are in 1-1 correspondence (under certain widely-met conditions) with stationary points of the unreduced function. These observation due to Golub and Pereyra underlie the widespread popularity of VPM  \cite[]{GolubPereyra:73,GolubPereyra:03}.
+
+VPM has been widely used in conjunction with generalized secant (quasi-Newton) methods such as Limited Memory Broyden-Fletcher-Goldfarb-Shanno \cite[]{NocedalWright} in application to scientific and engineering separable least-squares problems, often without explicit acknowledgement that VPM is involved or with drastic approximation to the reduction \cite[]{Ghattas:IP25,LeeuwenHerrmann:16,vanLeeuwenMulder:09,Warner:16}. Other approximations to Newton's method in the VPM context are less often found, since the Hessian computation is relatively involved compared to the gradient. However \cite{Kaufman:75} developed a simplified Hessian, with roughly the same relation to the full Hessian as the Gauss-Newton Hessian to the full Hessian for ordinary nonlinear least squares, 
+
+In this note, I review the construction of the reduced gradient, with somewhat more care than is common in the literature. Then I present a complete derivation of the Kaufman Hessian. I end with a comment on the use of this structure in a Krylov-Newton context, in which all of the inner linear systems are solved by iterative methods such as conjugate gradients. 
+
+\section{The Variable Projection Objective}
+The variable projection method is a minimization algorithm for a scalar function on a product space $f:X \oplus W \rightarrow Y$ of class $C^2$. I will assume that $f$ is defined on the whole product space; the refinements necessary to accommodate constraints on $x$ are similar to those needed for solution of other nonlinear optimization problems. While not strictly necessary, I will also assume that $f$ is quadratic in the second variable. Put another way, $f(x,w) = 0.5*\|A(x)w-b\|^2$, where the values of $A$ are linear operators $: W \rightarrow Y$. Further, it's usually assumed that $A(x)$ is of full column rank (or coercive, in the infinite dimensional case), so that that for each $x$, there is a unique minimiser $\tilde{w}(x)$ of $w \mapsto f(x,w)$, the solution of the normal equation: $A(x)^T(A(x)\tilde{w}(x) - b)=0$. Define the ``variable projection (VP) reduction'' $\tilde{f}$ by 
+$$
+\tilde{f}(x) = 0.5*\|A(x)\tilde{w}(x)-b\|^2= \min_w f(x,w)
+$$
+Since $A(x)$ is assumed coercive for every $x \in X$, $A(x)^TA(x)$ is invertible, and $\tilde{w}(x) = (A(x)^TA(x))^{-1}A(x)^Tb$. So
+$$ 
+\tilde{f}(x) = 0.5*\|(A(x)(A(x)^TA(x))^{-1}A(x)^T - I)b\|^2
+$$
+The operator in parenthesis projects $Y$ onto the orthocomplement of the range of $A(x)$: call it $P(x)$. That is,
+$$
+P(x) = I-A(x)(A(x)^TA(x))^{-1}A(x)^T
+$$
+and
+$$
+\tilde{f}(x) = 0.5*\|P(x)b\|^2
+$$
+So the reduced objective is half the length squared of the projection of the data vector $b$ onto the orthocomplement of the range of $A(x)$, which of course depends on $x$. That fact accounts for the name "variable projection".
+
+\section{Gradient: the Observation of Golub and Peyreyra}
+
+One of the main results of the Golub and Pereyra 1973 paper is that $x$ is a stationary point of $\tilde{f}$ if and only if $(x,\tilde{w}(x))$ is a stationary point of $f$. It's worth spelling out the argument because it highlights several important points about the VP reduction.
+
+Note that $f$ is differentiable, if $(x,w)\mapsto A(x)w$ is differentiable, which I will assume. Suppose $s \in X$. Then the directional derivative of $\tilde{w}(x)=(A(x)^TA(x))^{-1}A(x)^Tb$ at $x$ in direction $s$ is 
+$$
+\frac{d}{dt}((A(x+ts)^TA(x+ts))^{-1}A(x+ts)^Tb)|_{t=0}
+$$
+$$
+=-(A(x)^TA(x))^{-1}\frac{d}{dt}(A(x+ts)^TA(x+ts)(A(x)^TA(x))^{-1}A(x)^Tb)|_{t=0}
+$$
+$$
++ (A(x)^TA(x))^{-1}\frac{d}{dt}(A(x+ts)^Tb)|_{t=0}
+$$
+and in particular $\tilde{w}$ is differentiable. Therefore
+$$
+\frac{d}{dt}\tilde{f}(x+ts)|_{t=0} = \left\langle\frac{d}{dt}A(x+ts)\tilde{w}(x), A(x)\tilde{w}(x)-b\right\rangle + 
+$$
+$$
+0.5\left\langle A(x)\frac{d}{dt}\tilde{w}(x+ts),A(x)\tilde{w}-b\right\rangle
+$$
+Since the normal equation is equivalent to the assertion that the residual $A(x)\tilde{w}(x)-b$ is orthogonal to the range of $A(x)$, the last term vanishes.
+
+The first term can be re-written as the directional derivative of $f(x,w)$ for fixed $w=\tilde{w}(x)$, that is,
+$$
+\frac{d}{dt}\tilde{f}(x+ts)|_{t=0} = \frac{d}{dt}f(x+ts,w)|_{t=0,w=\tilde{w}(x)}.
+$$
+So $x$ is a stationary point of $\tilde{f}$ if and only if the directional derivative of $f$ at $(x,\tilde{w}(x))$ in all directions $(s,0)$ is zero. But the directional derivative of $f$ at $(x,\tilde{w}(x))$ in all directions $(0,\delta w)$ is also zero - that is the definition of $\tilde{w}(x)$. Since the directional derivative is linear in the direction, the directional derivative of $f$ at $(x,\tilde{w}(x))$ is zero in all directions, that is, $(x,\tilde{w}(x))$ is a stationary point of $f$, if and only if $x$ is a stationary point of $\tilde{f}$. 
+
+The derivative of the linear-operator-value function $A$ is naturally a bilinear-operator-valued function, since it's linear in the argument $w$ and in the direction $s$ separately. Call it $DA$:
+$$
+\frac{d}{dt}A(x+ts)w|_{t=0} = DA(x)(w,s)
+$$ 
+In terms of $DA$, the directional derivative of $\tilde{f}$ is
+$$
+\frac{d}{dt}\tilde{f}(x+ts)|_{t=0} = \left\langle DA(x)(\tilde{w}(x),s), A(x)\tilde{w}(x)-b\right\rangle 
+$$
+The expression on the right is the same as the derivative of the function
+$$
+x \mapsto f(x,w) = 0.5*\|A(x)w-b\|^2,
+$$ 
+evaluated at $w=\tilde{w}(x)$, that is, $f(x,w)$ {\em for fixed w'}. 
+The gradient of $\tilde{f}$ is the Riesz representer of the directional derivative:
+$$
+\langle s, \mbox{grad} \tilde{f}(x)\rangle = \frac{d}{dt}\tilde{f}(x+ts)|_{t=0}
+$$
+$$
+= \left\langle s, DA(x)^*(\tilde{w}(x),A(x)\tilde{w}(x)-b)\right\rangle 
+$$
+in which $DA(x)^*$ denotes the {\em partial adjoint} in the second (nonlinear) argument, defined by
+$$
+\langle s, DA(x)^*(w,y) \rangle = \langle DA(x)(w,s),y\rangle
+$$
+That is, $y \mapsto DA(x)^*(w,y)$ is the adjoint of the map $s \mapsto DA(x)(w,s)$, the latter being the derivative of $x \mapsto A(x)w$. 
+
+Thus
+$$
+\mbox{grad} \tilde{f}(x) = DA(x)^*(\tilde{w}(x),A(x)\tilde{w}(x)-b).
+$$
+
+In fact, this is also the gradient of a least-squares objective.
+For a fixed choice $w \in W$, define $F_w(x) = A(x)w$. Then $DA(x)^*(w,y) = DF_w(x)^Ty$. Moreover, if $f_w(x) = 0.5*\|F_w(x)-b\|^2$, then 
+$$
+\mbox{grad} f_w(x)|_{w=\tilde{w}(x)} =  \mbox{grad}\tilde{f}(x).
+$$
+From the preceding section,
+$$
+\mbox{grad} f_w(x) = DF_w(x)^T(F_w(x)-b).
+$$ 
+Therefore computing the gradient of the VP reduction can be accomplished by combining a computation of the gradient of a nonlinear least-squares objective with a solution of the normal equation.
+
+What's more, $x$ is a stationary point of the VPM objective $\tilde{f}$ if and only if $(x,\tilde{w})$ is a stationary point of the original objective $f$.
+
+\subsection{Computing the gradient}
+To compute the gradient of $\mbox{grad} \tilde{f}(x)$,
+
+1. Calculate the minimizer 
+\begin{equation}
+  \label{eqn:g1}
+\tilde{w}(x) = \mbox{argmin}_w 0.5*|A(x)w-b|^2
+\end{equation}
+and the optimal residual
+\begin{equation}
+  \label{eqn:g2}
+  \tilde{r}(x) = A(x)\tilde{w}(x) - b.
+\end{equation}
+
+2.  Then
+$$
+\mbox{grad} \tilde{f}(x) = D_x(F(x)w)^T_{w=\tilde{w}(x)} \tilde{r}(x).
+$$
+\begin{equation}
+  \label{eqn:g3}
+= DA(x)^*(\tilde{w}(x),\tilde{r}(x))
+\end{equation}
+
+\noindent {\bf Notes:}
+1. Note again that the gradient is identical to the gradient of the fixed-$w$ nonlinear least squares objective $\mbox{grad}_{x} f(x,w)$ with $w$ set equal to $\tilde{w}(x)$.
+
+2. For large-scale problems, iterative solutions of the minimization \ref{eqn:g1} is likely imperative, hence $\tilde{w}(x)$ will be an approximation.
+
+3. Software for least-squares problems often returns the residual as in equation \ref{eqn:g2} as a by-product of the minimization \ref{eqn:g1}.
+
+\section{The Kaufman Hessian Approximation}
+
+Of course $\tilde{f}$ is itself a nonlinear least squares objective: if you define $F(x)=A(x)\tilde{w}(x)$, then 
+$$
+\tilde{f}(x) = 0.5*\|F(x)-b\|^2.
+$$
+so it is natural to use the Gauss-Newton algorithm to minimize $\tilde{f}$. The Gauss-Newton step $s$ solves $DF(x)^T(DF(x)s-(F(x)-b))=DF(x)^TDF(x)s+\mbox{grad}\tilde{f}(x)=0$. This is a simplification over the Newton step, but for the special case of the VP reduction can be simplified still further.
+$$
+DF(x)s = D(A(x)\tilde{w}(x))s = DA(x)(\tilde{w}(x),s) + A(x)D\tilde{w}(x)s
+$$
+From the differentiability analysis of $\tilde{w}$,
+$$
+D\tilde{w}(x)s = 
+$$
+$$
+=-(A(x)^TA(x))^{-1}(DA(x)^T(A(x)((A(x)^TA(x))^{-1}A(x)^Tb),s)
+$$
+$$
++ A(x)^T DA(x)((A(x)^TA(x)^{-1}A(x)^Tb,s) + (A(x)^TA(x)^{-1}DA(x)^T(b,s)|
+$$
+$$
+= -(A(x)^TA(x))^{-1}[DA(x)^T(A(x)\tilde{w}(x),s) + A(x)^TDA(x)(\tilde{w}(x),s)]
+$$
+$$
++ (A(x)^TA(x))^{-1}DA(x)^T(b,s)
+$$
+So 
+$$
+DF(x)s = DA(x)(\tilde{w},s) - A(x) (A(x)^TA(x))^{-1}
+$$
+$$
+\times [DA(x)^T(A(x)\tilde{w}(x),s) + A(x)^TDA(x)(\tilde{w}(x),s)] + A(x)(A(x)^TA(x))^{-1}DA(x)^T(b,s)
+$$
+$$
+= (I-A(x)(A(x)^TA(x))^{-1}A(x)^T)DA(\tilde{w}(x),s)
+$$
+$$
++ A(x)(A(x)^TA(x))^{-1}DA(x)^T(b-A(x)\tilde{w}(x),s)
+$$
+The second term has the residual $b-A(x)\tilde{w}(x)=b-F(x)$ as the first argument of the bilinear operator $DA(x)^T$. Kaufman first pointed this out in 1974, and proposed that this term be dropped with the same justification as underlies the transition from Newton to Gauss-Newton: that is, if the residual is small (nearly noise-free data and close to the solution), this term should be negligible. Accepting this proposal, obtain 
+$$
+DF(x)s \approx (I-A(x)(A(x)^TA(x))^{-1}A(x)^T)DA(x)(\tilde{w}(x),s)
+$$
+$$
+= P(x)DA(x)(\tilde{w}(x),s)
+$$
+where $P(x)=I-A(x)(A(x)^TA(x))^{-1}A(x)^T$ is the projection of $Y$ onto the orthocomplement of the range of $A(x)$, introduced earlier.
+Since $P(x)$ is a projection, it is symmetric, positive semi-definite, and idempotent, that is $P(x)^TP(x)=P(x)^2=P(x)$. Thus the Gauss-Newton operator is approximately
+$$
+DF(x)^TDF(x)s \approx \mbox{Hess}_{VP}\tilde{f}(x)s = DA(x)^*(\tilde{w}(x),P(x)DA(x)(\tilde{w}(x),s)).
+$$
+The right-hand side of this equation is the Kaufman Hessian approximation.
+
+The solution $s$ of the modified Newton step equation $\mbox{Hess}_{VP}\tilde {f}(x)s=-\mbox{grad}\tilde{f}(x)$ is a descent (or at least non-ascent) direction for $\tilde{f}$:
+$$
+\langle \mbox{grad}\tilde{f}(x), s \rangle 
+= -\langle \mbox{Hess}_{VP}\tilde{f}(x)s, s\rangle 
+$$
+$$
+=-\langle DA(x)^*(\tilde{w}(x),P(x)DA(x)(\tilde{w}(x),s)),s\rangle
+$$
+$$
+= - \langle DA(x)(\tilde{w}(x),s),P(x)DA(x)(\tilde{w}(x),s)\rangle
+$$
+$$
+= -\|P(x)DA(x)(\tilde{w}(x),s)\|^2 \le 0
+$$
+since $P(x)$ is a projector. 
+
+\subsection{Computing the Kaufman Hessian}
+
+To calculate the Kaufman Hessian approximation $\mbox{Hess}_{VP}\tilde{f}(x)s$ for a direction vector $s$ at position $x$,
+
+1. Calculate the minimizer $\tilde{w}(x)$ and residual $\tilde{r}(x)$ per equations \ref{eqn:g1} and \ref{eqn:g2};
+
+2. Compute the auxiliary minimizer
+\begin{equation}
+  \label{eqn:h1}
+\tilde{v}(x,s) = \mbox{argmin}_v 0.5*|A(x)v-DA(x)(\tilde{w}(x),s)|^2
+\end{equation}
+and auxiliary residual
+\begin{equation}
+  \label{eqn:h2}
+  \tilde{q}(x,s) = A(x)\tilde{v}(x,s) - DA(x)(\tilde{w}(x),s).
+\end{equation}
+
+3. Then
+\begin{equation}
+  \label{eqn:h3}
+  \mbox{Hess}_{VP}\tilde{f}(x)s = DA(x)^*(\tilde{w}(x),A(x)\tilde{q}(x,s)).
+\end{equation}
+
+\section{Krylov-Newton optimization of VP reduced objectives}
+
+The major costs of (approximate) Newton optimization are
+\begin{enumerate}
+\item $A(x)$ - cost of construction ($C_A$)
+\item $w \mapsto A(x)w$, $r \mapsto A(x)^T r$ - cost of application ($C_w$)
+\item $DA(x,w)s$ - cost of application ($C_{fwd}$)
+\item $DA^*(x,w)q$ - cost of application ($C_{adj}$)
+\item number of Newton iterations ($N_N$)
+\item for direct inner minimization (equations \ref{eqn:g1}, \ref{eqn:h1}), cost of solve ($C_S$)
+\item for iterative inner minimization (equations \ref{eqn:g1}, \ref{eqn:h1}), average number of iterations required ($N_I$).
+\end{enumerate}
+The cost of gradient (and objective value) compuation is
+\[
+  C_g = C_A + 2 C_w +C_S + C_{adj}
+\]
+for direct inner solves, or
+\[
+   C_g = C_A + 2 (1 + N_I)C_w + C_{adj}
+ \]
+for iterative inner solves. Similarly, the cost of Hessian computation (assuming that the first step in that computation has been taken in computing the gradient) is
+\[
+  C_h =  2 C_w +C_S + C_{fwd} + C_{adj}
+\]
+for direct inner solves, or
+\[
+   C_h = 2 (1 + N_I)C_w) + C_{fwd} + C_{adj}
+ \]
+for iterative inner solves. In either case, the cost of Newton optimization is roughly
+\[
+  N_N (C_g + C_h)
+\]
+The literature has mostly discussed the cost based on direct solution of the Newton equation. For iterative (Newton-Krylov, for instance) solution, the cost is dominated by the inner iterations for each outer iteration, proportional to $N_NN_I$. This is however roughly similar to Newton-Krylov for nonlinear least squares, which has been used successfully for solution of simulation-driven optimization problems for a long time \cite[]{Ghattas:IP25}.
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
+
+
