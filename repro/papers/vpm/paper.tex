@@ -6,14 +6,17 @@ The variable projection reduction of a separable least squares objective functio
 \end{abstract}
 
 \section{Introduction}
-The Variable Projection Method (VPM) is a useful algorithm for solving separable least squares problems, that is, those whose objectives are linear in some of their unknowns. It uses an inner solution or reduction of the linear unknowns to eliminate them, leaving a function of the nonlinear unknowns to be minimied. The utility of VPM rests largely on the simplicitly of the derivative, or gradient, of the reduced function: it is the same as the gradient of the original, unreduced function, evaluated with the linear variables fixed at their inner solution value. Furthermore, stationary points of the reduced function are in 1-1 correspondence (under certain widely-met conditions) with stationary points of the unreduced function. These observation due to Golub and Pereyra underlie the widespread popularity of VPM  \cite[]{GolubPereyra:73,GolubPereyra:03}.
+The Variable Projection Method (VPM) is a useful algorithm for solving separable least squares problems, that is, those whose objectives $f(x,w)$ are quadratic in some of their unknowns, say $w$, and (possibly) non-quadratic in others, say $x$. A common approach to minimizing such objectives is {\em alternating direction minimiazation}. This iterative method starts with an initial guess $(x_0,w_0)$ at the solution, and constructs a sequence $\{(x_k,w_k)\}$, guaranteed to converge to a stationary point if it converges (to anything). The sequence is constructed as follows: given a current guess $(x_k,w_k)$ at the solution, find $w_{k+1}$ by minimizing $f(x_k,w)$ over $w$, then find $x_{k+1}$ by minimizing $f(x,w_{k+1})$ over $x$. This approach is conceptually simple and makes use of whatever might be known about the two separate minimization problems (over $w$, respectively $x$), but tends to be quite inefficient. That is, it can require many more function and gradient evaluations to achieve a good approximation of a stationary point that would Newton's method (say) applied directly to $f(x,w)$.
+
+Variable projection is an alternative approach roughly as rapidly convergent as Newton's method but uses solutions of the (computationally smaller) $w$ and $x$ subproblems.
+It takes advantage of special algorithms for quadratic minimization to eliminate the quadratic unknowns ($w$), leaving a function of the nonlinear unknowns ($x$) to be minimied. The utility of VPM rests largely on the simplicitly of the derivative, or gradient, of the reduced function: it is the same as the gradient of the original, unreduced function, evaluated with the quadratic variables fixed at their inner solution value. Furthermore, stationary points of the reduced function are in 1-1 correspondence (under certain widely-met conditions) with stationary points of the unreduced function. These observation due to Golub and Pereyra underlie the widespread popularity of VPM  \cite[]{GolubPereyra:73,GolubPereyra:03}.
 
 VPM has been widely used in conjunction with generalized secant (quasi-Newton) methods such as Limited Memory Broyden-Fletcher-Goldfarb-Shanno \cite[]{NocedalWright} in application to scientific and engineering separable least-squares problems, often without explicit acknowledgement that VPM is involved or with drastic approximation to the reduction \cite[]{Ghattas:IP25,LeeuwenHerrmann:16,vanLeeuwenMulder:09,Warner:16}. Other approximations to Newton's method in the VPM context are less often found, since the Hessian computation is relatively involved compared to the gradient. However \cite{Kaufman:75} developed a simplified Hessian, with roughly the same relation to the full Hessian as the Gauss-Newton Hessian to the full Hessian for ordinary nonlinear least squares, 
 
 In this note, I review the construction of the reduced gradient, with somewhat more care than is common in the literature. Then I present a complete derivation of the Kaufman Hessian. I end with a comment on the use of this structure in a Krylov-Newton context, in which all of the inner linear systems are solved by iterative methods such as conjugate gradients. 
 
 \section{The Variable Projection Objective}
-The variable projection method is a minimization algorithm for a scalar function on a product space $f:X \oplus W \rightarrow Y$ of class $C^2$. I will assume that $f$ is defined on the whole product space; the refinements necessary to accommodate constraints on $x$ are similar to those needed for solution of other nonlinear optimization problems. While not strictly necessary, I will also assume that $f$ is quadratic in the second variable. Put another way, $f(x,w) = 0.5*\|A(x)w-b\|^2$, where the values of $A$ are linear operators $: W \rightarrow Y$. Further, it's usually assumed that $A(x)$ is of full column rank (or coercive, in the infinite dimensional case), so that that for each $x$, there is a unique minimiser $\tilde{w}(x)$ of $w \mapsto f(x,w)$, the solution of the normal equation: $A(x)^T(A(x)\tilde{w}(x) - b)=0$. Define the ``variable projection (VP) reduction'' $\tilde{f}$ by 
+The variable projection method is a minimization algorithm for a scalar function on a product space $f:X \oplus W \rightarrow \bR$ of class $C^2$, $X$ and $W$ being Hilbert spaces. I will assume that $f$ is defined on the whole product space; the refinements necessary to accommodate constraints on $x$ are similar to those needed for solution of other nonlinear optimization problems. While not strictly necessary, I will also assume that $f$ is quadratic in the second variable. Put another way, $f(x,w) = 0.5*\|A(x)w-b\|^2$, where $b \in Y$ (another Hilbert space with norm $\|\cdot\|$) and the values of $A$ are linear operators $: W \rightarrow Y$. Further, it's usually assumed that $A(x)$ is of full column rank (or coercive, in the infinite dimensional case), so that that for each $x$, there is a unique minimiser $\tilde{w}(x)$ of $w \mapsto f(x,w)$, the solution of the normal equation: $A(x)^T(A(x)\tilde{w}(x) - b)=0$. Define the ``variable projection (VP) reduction'' $\tilde{f}$ by 
 $$
 \tilde{f}(x) = 0.5*\|A(x)\tilde{w}(x)-b\|^2= \min_w f(x,w)
 $$
@@ -22,9 +25,10 @@ $$
 \tilde{f}(x) = 0.5*\|(A(x)(A(x)^TA(x))^{-1}A(x)^T - I)b\|^2
 $$
 The operator in parenthesis projects $Y$ onto the orthocomplement of the range of $A(x)$: call it $P(x)$. That is,
-$$
+\begin{equation}
+  \label{eqn:proj}
 P(x) = I-A(x)(A(x)^TA(x))^{-1}A(x)^T
-$$
+\end{equation}
 and
 $$
 \tilde{f}(x) = 0.5*\|P(x)b\|^2
@@ -182,12 +186,18 @@ $$
 $$
 where $P(x)=I-A(x)(A(x)^TA(x))^{-1}A(x)^T$ is the projection of $Y$ onto the orthocomplement of the range of $A(x)$, introduced earlier.
 Since $P(x)$ is a projection, it is symmetric, positive semi-definite, and idempotent, that is $P(x)^TP(x)=P(x)^2=P(x)$. Thus the Gauss-Newton operator is approximately
-$$
+\begin{equation}
+  \label{eqn:kauf}
 DF(x)^TDF(x)s \approx \mbox{Hess}_{VP}\tilde{f}(x)s = DA(x)^*(\tilde{w}(x),P(x)DA(x)(\tilde{w}(x),s)).
-$$
+\end{equation}
 The right-hand side of this equation is the Kaufman Hessian approximation.
 
-The solution $s$ of the modified Newton step equation $\mbox{Hess}_{VP}\tilde {f}(x)s=-\mbox{grad}\tilde{f}(x)$ is a descent (or at least non-ascent) direction for $\tilde{f}$:
+The solution $s$ of the modified Newton step equation
+\begin{equation}
+  \label{eqn:NewtVP}
+  \mbox{Hess}_{VP}\tilde {f}(x)s=-\mbox{grad}\tilde{f}(x)
+\end{equation}
+is a descent (or at least non-ascent) direction for $\tilde{f}$:
 $$
 \langle \mbox{grad}\tilde{f}(x), s \rangle 
 = -\langle \mbox{Hess}_{VP}\tilde{f}(x)s, s\rangle 
@@ -212,7 +222,7 @@ To calculate the Kaufman Hessian approximation $\mbox{Hess}_{VP}\tilde{f}(x)s$ f
 2. Compute the auxiliary minimizer
 \begin{equation}
   \label{eqn:h1}
-\tilde{v}(x,s) = \mbox{argmin}_v 0.5*|A(x)v-DA(x)(\tilde{w}(x),s)|^2
+\tilde{v}(x,s) = \mbox{argmin}_v 0.5*\|A(x)v-DA(x)(\tilde{w}(x),s)\|^2
 \end{equation}
 and auxiliary residual
 \begin{equation}
@@ -227,38 +237,17 @@ and auxiliary residual
 \end{equation}
 
 \section{Krylov-Newton optimization of VP reduced objectives}
+The numerical analysis literature on VPM has mostly discussed the cost based on direct solution of the Newton equation, with all of the linear operators appearing above represented as matrices and the linear systems solved by Gaussian elimination \cite[]{Kaufman:75,GolubPereyra:03}. In this case, each Newton iteration has approximately the same cost, so that $N_N$ Newton iterations have cost proportional to $N_N$. This direct approach is (by definition!) not practical for large-scale problems.
 
-The major costs of (approximate) Newton optimization are
-\begin{enumerate}
-\item $A(x)$ - cost of construction ($C_A$)
-\item $w \mapsto A(x)w$, $r \mapsto A(x)^T r$ - cost of application ($C_w$)
-\item $DA(x,w)s$ - cost of application ($C_{fwd}$)
-\item $DA^*(x,w)q$ - cost of application ($C_{adj}$)
-\item number of Newton iterations ($N_N$)
-\item for direct inner minimization (equations \ref{eqn:g1}, \ref{eqn:h1}), cost of solve ($C_S$)
-\item for iterative inner minimization (equations \ref{eqn:g1}, \ref{eqn:h1}), average number of iterations required ($N_I$).
-\end{enumerate}
-The cost of gradient (and objective value) compuation is
-\[
-  C_g = C_A + 2 C_w +C_S + C_{adj}
-\]
-for direct inner solves, or
-\[
-   C_g = C_A + 2 (1 + N_I)C_w + C_{adj}
- \]
-for iterative inner solves. Similarly, the cost of Hessian computation (assuming that the first step in that computation has been taken in computing the gradient) is
-\[
-  C_h =  2 C_w +C_S + C_{fwd} + C_{adj}
-\]
-for direct inner solves, or
-\[
-   C_h = 2 (1 + N_I)C_w) + C_{fwd} + C_{adj}
- \]
-for iterative inner solves. In either case, the cost of Newton optimization is roughly
-\[
-  N_N (C_g + C_h)
-\]
-The literature has mostly discussed the cost based on direct solution of the Newton equation. For iterative (Newton-Krylov, for instance) solution, the cost is dominated by the inner iterations for each outer iteration, proportional to $N_NN_I$. This is however roughly similar to Newton-Krylov for nonlinear least squares, which has been used successfully for solution of simulation-driven optimization problems for a long time \cite[]{Ghattas:IP25}.
+Alternatives to direct Newton solves are generalized secant or quasi-Newton iteration, replacing the Hessian by a low-rank approximation that can be explicitly inverted (\cite[]{NocedalWright}), and Newton-Krylov iteration in which the Newton equation \ref{eqn:NewtVP} is solved by an iterative (Krylov) method. The quasi-Newton approach ia most popular for VPM-reduced large scale problems, since it requires neither explicit formation, application, nor inversion of the Hessian (for instance \cite{Warner:16}. The value and gradient are required at each quasi-Newton step, and these can be computed by completion of a single inner iteration, as noted above. If this inner iteration requires $N_I$ applications of the operator $A(x)$, then the total cost is proportional to $N_NN_I$.
+
+Newton-Krylov iteration for nonlinear least squares problems uses iterative solution of the Newton equation \ref{eqn:NewtVP} via a Krylov subspace algorithm, for example conjugate gradient iteration \cite[]{Ghattas:IP25}. If $N_M$ iterations are required for the Newton step, then the total cost is proportional to $N_NN_M$.  For some least-squares problems based on solution of partial differential equations (simulation-driven optimization), the Newton-Krylov approach can be superior in both quality of output and cost to the quasi-Newton approach \cite[]{Metivier:2014}. $N_M$ and $N_I$ are similar for many problems, but $N_N$ can be substantially smaller for Newton-Krylov than for a quasi-Newton algorithm.
+
+To employ the Newton-Krylov approach in the context of VPM, each step in the Krylov iteration requires solution of the Newton equation \ref{eqn:NewtVP}. Accomplishing this task by a Krylov iteration as well, as would presumably be necessary for large scale problems, involvs a number $N_H$ of applications of $A(x)$ and its transpose for each step. Thus the total cost is roughly proportional to $N_NN_MN_H$. If $N_M$ and $N_H$ are both roughly the same as the number of Krylov iterations $N_I$ required for solution of the inner least squares problem \ref{eqn:g1}, then the cost is proportional to $N_NN_I^2$, which appears to compare unfavorably to the cost of the quasi-Newton approach. This apparent cost penalty makes Newton-Krylov with the Kaufman Hessian unattracive, or even infeasible.
+
+For some simulation-driven optimization problems, a way around this difficulty might be found in specific choices of norm in the quadratic model space ($W$) and possibly in the data Hilbert space $Y$, making $A(x)$ approximately orthogonal: $A(x)^TA(x) \simeq I$ (the change in norms changes the meaning of the transpose or adjoint, of course). Computable norms with this property have been constructed for a number of simulation driven optimization problems based on wave propagation, and used to accelerate convergence of Newton-llike methods \cite[]{HouSymes:16,Herve2017,DafniSymes:SEG18b}. For application to the VPM-reduced problem, the projector $P(x)$ (definition \ref{eqn:proj}) in the Kaufman Hessian formula \ref{eqn:kauf} is $\approx I-A(x)A(x)^T$. Evaluation of this approximation requires no linear system soluition, and the cost estimate for VPM-Newton-Krylov collapses to $N_nN_M$, that is, the same as Newton-Krylov applied to a similar nonlinear least squares problem.
+
+In practice, some modifications are necessary, for example to ensure that the approximate Hessian is positive definite. Also, for any approaches based on iterative solution of the inner problem \ref{eqn:g1}, some criterion must be supplied to stop the iteration. Further, the accuracy with which $\tilde{w}(x)$ is computed affects the accuracy of the computed gradient $\mbox{grad} \tilde{f}(x)$ and any version of the Hessian, hence the rate (or even existence) of convergence of any Newton-like method. All of these issues require further attention.
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
 
