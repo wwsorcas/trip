@@ -71,7 +71,7 @@ class vpmjet(vcl.ScalarJet):
             if not isinstance(S, vcl.LSSolver):
                 raise Exception('fourth arg not vcl.LSSolver')
             if x0.space != F.getDomain()[0]:
-                raise Exception('first arg not in domain of second arg')
+                raise Exception('first arg not in domain of second arg[0]')
             if b.space != F.getRange():
                 raise Exception('third arg not vector in range of second arg')
         except Exception as ex:
@@ -103,6 +103,16 @@ class vpmjet(vcl.ScalarJet):
         else:
             return self.v
 
+    def innersol(self):
+        try:
+            if self.e is None:
+                [self.w, self.e] = self.S.solve(self.F.opfcn(self.x),self.b)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vpmjet.innersol')
+        else:
+            return self.w
+        
     def gradient(self):
         try:
             if self.e is None:

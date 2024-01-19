@@ -106,6 +106,11 @@ class MatrixLSSolver(vcl.LSSolver):
             print(ex)
             raise Exception('called from npvc.MatrixLSSolver.solve')
 
+    def myNameIs(self):
+        print('MatrixLSSolver: NumPy-based LS solver')
+        print('  uses numpy.linalg.lstsq')
+        
+
 ###### EXAMPLES
 
 class OpExpl1(vcl.Function):

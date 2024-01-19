@@ -111,7 +111,7 @@ try:
                                             
 # construct jet at m0
 
-    if choice == 'u0' or choice == 'grad0' or choice == 'grad':
+    else:
 
         if choice == 'grad0':
         # homogeneous bulk modulus 
@@ -130,7 +130,34 @@ try:
 
             g = vcl.Vector(bulksp,'grad.rsf')
             g.copy(wg.gradient())
-            
+
+        elif choice == 'gradtest':
+            print('awiwg gradient test')
+            h = 0.1
+            data.model(bulkfile='dm.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                    dx=DX[idx], dz=DX[idx], lensfac=1.0)
+            dm = vcl.Vector(bulksp,'dm.rsf')
+            dm.copy(m)
+            dm.linComb(-1.0,m0)
+            wg = awi.awiwg(dom=usp, sim=F, mod=m0, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
+            data.model(bulkfile='grad0.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
+                    dx=DX[idx], dz=DX[idx], lensfac=1.0)
+            g = vcl.Vector(bulksp,'grad0.rsf')
+            g.copy(wg.gradient())
+            v0 = wg.value()
+            print('  v at m0 = ' + str(v0))
+            for ih in range(3):
+                data.model(bulkfile='mtest.rsf', bulk=4.0,
+                               nx=NX[idx], nz=NZ[idx],
+                               dx=DX[idx], dz=DX[idx], lensfac=1.0)
+                mtest = vcl.Vector(bulksp,'mtest.rsf')
+                mtest.copy(m0)
+                mtest.linComb(h,dm)
+                wgtest = awi.awiwg(dom=usp, sim=F, mod=mtest, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=0)
+                print('  v at m0 + ' + str(h) + '*dm = ' + str(wgtest.value()))
+                print('  predicted dv = ' + str(h*g.dot(dm)))
+                print('  actual dv = ' + str(wgtest.value()-v0))
+                h *= 0.5
         else:
             wg = awi.awiwg(dom=usp, sim=F, mod=m0, data=d, sigma=mysigma, kmax=mykmax, rho=myrho, precond=1, verbose=2)
             u0.copy(wg.innersol())
