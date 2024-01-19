@@ -119,7 +119,8 @@ try:
             vals.append(j.value())
             errs.append(j.dataerr()/dnorm)
         print('\nvals, rel errors at mtest = (1-t)*m0 + t*m')
-        print('alpha = ' + str(myalpha) + ' sigma = ' + str(mysigma) + ' rho = ' + str(myrho))
+        print('alpha = %10.4e sigma = %10.4e rho = %10.4e'
+                      % (myalpha, mysigma, myrho))
         print('  t       val       relerr')
         for i in range(13):
             print('%2.1f  %10.4e  %10.4e' % (0.1*i, vals[i], errs[i]))
@@ -128,7 +129,7 @@ try:
 
     else:
 
-        if choice == 'grad':
+        if choice == 'grad0':
         # homogeneous bulk modulus 
             j0 = awi.mswi(dom=usp, sim=F, mod=m0, data=d, alpha=myalpha, sigma=mysigma, kmax=mykmax, rho=myrho, verbose=2)
             data.model(bulkfile='grad0.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
@@ -152,10 +153,7 @@ try:
             dm.copy(m)
             dm.linComb(-1.0,m0)
             j0 = awi.mswi(dom=usp, sim=F, mod=m0, data=d, alpha=myalpha, sigma=mysigma, kmax=mykmax, rho=myrho, verbose=2)
-#            data.model(bulkfile='grad0.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
-#                           dx=DX[idx], dz=DX[idx], lensfac=1.0)
-#            data.model(bulkfile='mtest.rsf', bulk=4.0, nx=NX[idx], nz=NZ[idx],
-#                           dx=DX[idx], dz=DX[idx], lensfac=1.0)
+
             mtest = vcl.Vector(bulksp)
             g = vcl.Vector(bulksp)
             g.copy(j0.gradient())
