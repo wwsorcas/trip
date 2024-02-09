@@ -664,9 +664,9 @@ class mswi(vcl.ScalarJet):
     Matched Source Waveform Inversion function jet.
     
     Constructor parameters:
+        mod (vcl.Vector): model, in domain of sim
         dom (segyvc:Space): domain, extended source (awi adaptive kernel) space
         sim (vcl.Function): simulator / modeling operator
-        mod (vcl.Vector): model, in domain of sim
         data (vcl.Vector): observed data vector in range of sim
         sigma (float): regularization weight
         alpha (float): penalty weight
@@ -675,8 +675,8 @@ class mswi(vcl.ScalarJet):
         verbose (int): if not = 0, then print current action messages
 =    '''
 
-    def __init__(self,
-                     dom=None, sim=None, mod=None, data=None,
+    def __init__(self, mod=None,
+                     dom=None, sim=None, data=None,
                      alpha=0.0, sigma=0.0, kmax=20, rho=0.01, verbose=0):
         try:
             if verbose != 0:
@@ -767,6 +767,11 @@ class mswi(vcl.ScalarJet):
 
 #        return [self.u, self.ep]
 
+    def filter(self):
+        if self.u is None:
+            self.resid()
+        return self.u
+    
     def dataerr(self):
         if self.ep is None:
 #            [self.u, self.ep] = self.resid()

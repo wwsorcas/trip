@@ -202,9 +202,9 @@ class Vector:
                 self.data = sp.getData()
                 self.own = True
             else:
+                self.own = False
                 if self.space.isData(data):
                     self.data = data
-                    self.own = False
                 else:
                     raise Exception('Error: data is not compatible with Space')
             self.comp = []

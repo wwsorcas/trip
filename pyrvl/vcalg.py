@@ -4,6 +4,7 @@ import vcl
 import math
 from vcl import Vector
 from vcl import transp
+from abc import ABC, abstractmethod
 
 # single steps are separated from loops as separate functions in order
 # to force garbage-collection.
@@ -830,110 +831,186 @@ def trnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, \
         print(ex)
         raise Exception('called from trcgnewt')
 
-def DDwgrad(g, Winv=None):
-    '''
-    Weghted gradient ascent direction.
+class SearchDir(ABC):
 
-    Parameters:
-    g (vcl.Vector):            gradient
-    Winv (vcl.LinearOperator): SPD operator (inverse of weight defining inner product)
+     # accepts vector in space as gradient,
+     # returns search direction
+     @abstractmethod
+     def Update(self, g):
+         pass
 
-    Returns:
-    Winv*g:                    weighted gradient = gradient in weighted norm
-    '''
-
-    try:
-        return Winv*g
-    except Exception as ex:
-        print(ex)
-        raise Exception('called from vcalg.DDwgrad')
+class SDwgrad(SearchDir):
         
-def btls(x, val, J, dir, dr, step, lsmax,
-             mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9,
-             lsverbose=0, jetargs=None):
-    '''
-    Backtracking line step loop. 
+    def __init__(self,sp, Winv=None):
+        '''
+        Weghted gradient ascent direction.
 
-    Parameters:
+        Parameters:
+        g (vcl.Vector):            gradient
+        Winv (vcl.LinearOperator): SPD operator (inverse of weight defining inner product)
+        
+        Returns:
+        Winv*g:                    weighted gradient = gradient in weighted norm
+        '''
+        self.sp = sp
+        self.Winv = Winv
+
+    def Update(self, g):
+        try:
+            if not isinstance(g, vcl.Vector):
+                raise Exception('input gradient object not vcl.Vector')
+            if not g.space == self.sp:
+                raise Exception('input gradient not in search space')
+            if self.Winv is None:
+                return g;
+            return self.Winv*g
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcalg.SDwgrad.Update')
+
+class LineSearch(ABC):
+    '''
+    Abstract line search class. Stores generically required
+    items
+
+    Constructor Parameters:
     x (vcl.Vector):       current solution estimate
     val (float):          current objective value
-    J (vcl.ScalarJet):    objective jet (class)
+    grad (vcl.Vector):    current gradient
     dir (vcl.Vector):     search direction
-    dr (float):           rate of ascent
     step (float):         initial step
+    J (vcl.ScalarJet):    objective jet (class)
+#    lsargs:               additional arguments (keyword)
+    '''
+
+    def __init__(self, x, val, grad, dir, step, J, jetargs):
+        self.x = x
+        self.val = val
+        self.grad = grad
+        self.dir = dir
+        self.step = step
+        self.J = J
+        self.jetargs = jetargs
+#        self.lsargs = lsargs
+
+    # returns updated jet instance and step
+#    @abstractmethod
+    def search(self):
+        raise Exception('Error: somehow called base class method LineSearch.search')
+        
+class btls(LineSearch):
+
+    '''
+    Simple acktracking line search. 
+
+    Generic Parameters:
+    x (vcl.Vector):       current solution estimate
+    val (float):          current objective value
+    grad (vcl.Vector):    current gradient
+    dir (vcl.Vector):     search direction
+    step (float):         initial step
+    J (vcl.ScalarJet):    objective jet (class)
+    jetargs (dict):       keyword args for jet constructor
+
+    
     lsmax (int):          max steps
     mured (float):        (remaining args doc'd in lsopt)
     muinc (float):
     gammared (float):
     gammainc (float):
     lsverbose (int):
-    jetargs (dict)
 
-    return:
+    return from search():
     Jx (vcl.ScalarJet):   evaluated jet at final step, or None for failure
     step (float):         updated step
     '''
+    
+    def __init__(self, x, val, grad, dir, step, J, jetargs=None,
+             lsmax=1, mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9,
+             lsverbose=0):
 
-    try:
-        k = 0
-        takestep = 0
+#        self.x = x
+#        self.val = val
+#        self.grad = grad
+#        self.dir = dir
+#        self.step = step
+#        self.J = J
+#        self.jetargs = jetargs
+
+# note explicit invokation of superclass constructor with self pointer
+# quite different from C++!
+        LineSearch.__init__(self,x, val, grad, dir, step, J, jetargs)
+
+        self.lsmax = lsmax
+        self.mured = mured
+        self.muinc = muinc
+        self.gammared = gammared
+        self.gammainc = gammainc
+        self.lsverbose = lsverbose
+
+    def search(self):
+        try:
+            k = 0
+            takestep = 0
         
-        while k < lsmax and takestep==0:
-            if lsverbose > 0:
-                print('\n    Line Search Step ' + str(k))
-                print('        update step, jet')
-            xtest = vcl.Vector(x.space)
-            xtest.copy(x)
-            xtest.linComb(-step,dir)
-            Jx = J(xtest, **jetargs)
-            vtest = Jx.value()
-            if lsverbose > 0:
-                print('        step = %10.4e val = %10.4e' % (step, vtest))
-            # G-A test
-            actred = val-vtest
-            predred = step*dr
-            print('        actred = %10.4e predred = %10.4e' % (actred,predred))
-            if gammainc*predred < actred and k < lsmax-1:
-                if lsverbose > 0:
-                    print('        try longer step')
-                takestep = 0
-                step *= muinc
-                k += 1
-            elif gammared*predred < actred:
-                if lsverbose > 0:
-                    print('        in G-A range')
-                takestep = 1
-            elif k == lsmax-1:
-                if lsverbose > 0:
-                    print('        last allowed step - save estimate')
-                takestep = 1
+            while k < self.lsmax and takestep==0:
+                if self.lsverbose > 0:
+                    print('\n    Line Search Step ' + str(k))
+                    print('        update step, jet')
+                xtest = vcl.Vector(self.x.space)
+                xtest.copy(self.x)
+                xtest.linComb(-self.step,self.dir)
+                Jx = self.J(xtest, **self.jetargs)
+                vtest = Jx.value()
+                if self.lsverbose > 0:
+                    print('        step = %10.4e val = %10.4e' % (self.step, vtest))
+                # G-A test
+                actred = self.val-vtest
+                predred = self.step*self.dir.dot(self.grad)
+                print('        actred = %10.4e predred = %10.4e' % (actred,predred))
+                if self.gammainc*predred < actred and k < self.lsmax-1:
+                    if self.lsverbose > 0:
+                        print('        try longer step')
+                    takestep = 0
+                    self.step *= self.muinc
+                    k += 1
+                elif self.gammared*predred < actred:
+                    if self.lsverbose > 0:
+                        print('        in G-A range')
+                    takestep = 1
+                elif k == self.lsmax-1:
+                    if self.lsverbose > 0:
+                        print('        last allowed step - save estimate')
+                    takestep = 1
+                else:
+                    if self.lsverbose > 0:
+                        print('        try shorter step')
+                    takestep = 0
+                    self.step *= self.mured
+                    k += 1
+
+            if takestep == 1:
+                return [Jx, self.step]
             else:
-                if lsverbose > 0:
-                    print('        try shorter step')
-                takestep = 0
-                step *= mured
-                k += 1
+                return [None, self.step]
 
-        if takestep == 1:
-            return [Jx, step]
-        else:
-            return [None, step]
-
-    except Exception as ex:
-        print(ex)
-        raise Exception('called from vcalg.btls')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcalg.btls')
 
 # lsargs - see above
-def lsopt(x, J, DD=None, descmax=0, desceps=0.01, descverbose=0, lsargs=None, jetargs=None, ddargs=None ):
+def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, lsargs=None, jetargs=None, ddargs=None ):
     '''
     Line seach optimization algorithm. Two principal components:
-    - DD: computes search direction from current gradient and other parameters (ddargs)
-    - LS: line search, uses direction from DD and other parameters (lsargs)
+    - SD: SearchDir class: Update methodcomputes search direction from 
+    current gradient and other parameters (ddargs)
+    - LS: line search function, uses direction from SD and other parameters (lsargs)
     
     Parameters:
     x (vcl.Vector):     initial estimate on call
-    J (vcl.ScalarJet):  jet of objective function (class - instantiated within)
-    DD (function):      returns search direction based on gradient and other params (ddargs)
+    J (vcl.ScalarJet):  class: jet of objective function 
+    SD (SearchDir):     class: returns search direction based on gradient and other params (ddargs)
+    LS (LineSearch):    class: implements line search 
     descmax (int):      max number of descent steps
     desceps (float):    terminates if gradient falls below this proportion of initial
     descverbose (int):  verbosity flag
@@ -953,47 +1030,61 @@ def lsopt(x, J, DD=None, descmax=0, desceps=0.01, descverbose=0, lsargs=None, je
         #
         initprop = 0.125
 
-        # initialize jet
+        if descverbose != 0:
+            print('\nLine Search Optimization')
+            print('\ninitialize jet')
+            
         Jx = J(x, **jetargs)
 
-        # compute descent direction
-        if DD is None:
+        if descverbose != 0:
+            print('compute initial descent direction')
+        if SD is None:
             raise Exception('Descent Direction generator not provided')
-        
-        ddir = DD(Jx.gradient(),**ddargs)
+        SDinstance = SD(x.space, **ddargs)
+        ddir = SDinstance.Update(Jx.gradient())
         gtot += 1
 
+        if descverbose != 0:
+            print('compute initial ascent rate')
         dr = Jx.gradient().dot(ddir)
 
-        # sanity check for sufficient ascent
+        if descverbose != 0:
+            print('sanity check for sufficient ascent')
         if 1.0 + dr <= 1.0:
             raise Exception('ascent rate = ' + str(dr) + ' insufficient or negative')
 
         # initial step calculation
         # assumes target value = 0
+        print('compute initial step')
         step = initprop*Jx.value()/dr
         jtot += 1
         
         # descent iteration
         i = 0
         gtest = Jx.gradient().norm()
-        while i < descmax and Jx.gradient().norm() > desceps*gtest:
+
+        if descverbose !=0:
+            print('initial value = %10.4e'  % (Jx.value()))
+            print('initial step  = %10.4e' % (step))
+            print('initial ascent rate = %10.4e' % (dr))
+        more = True
+        drinit = dr
+        while i < descmax and dr > desceps*drinit and more:
             if descverbose > 0:
-                print('line search step ' + str(i))
-            # lsargs = lsmax=0, mured=mured, muinc=muinc, gammared=gammared, gammainc=gammainc,
-            # lsverbose=lsverbose,
-            [Jxtest, steptest] = btls(Jx.point(), Jx.value(), J, ddir, dr, step,  **lsargs, jetargs=jetargs)
+                print('\nIteration ' + str(i))
+            LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step, J, jetargs=jetargs, **lsargs)
+            [Jxtest, steptest] = LSinstance.search()
             # test for successful step
             if Jxtest is not None:
                 if descverbose > 0:
-                    print('accept new jet and step')
+                    print('\naccept new jet and step')
                 Jx = Jxtest
                 step = steptest
                 if descverbose > 0:
-                    print('value = ' + str(Jx.value()) + ' step = ' + str(step))
+                    print('value = %10.4e step = %10.4e' % (Jx.value(),step))
                 if descverbose > 0:
                     print('update search direction')
-                ddir = DD(Jx.gradient(),**ddargs)
+                ddir = SDinstance.Update(Jx.gradient())
                 # update ascent rate
                 dr = Jx.gradient().dot(ddir)
                 # update counter
@@ -1001,9 +1092,21 @@ def lsopt(x, J, DD=None, descmax=0, desceps=0.01, descverbose=0, lsargs=None, je
                 
             else:
                 # bail out
+                more = False
                 if descverbose > 0:
                     print('line search failed, exit lsopt')
-
+                    
+        if more == True:
+            if descverbose > 0:
+                if dr <= drinit:
+                    print('\nachieved prescribed ascent rate reduction:')
+                if i==descmax:
+                    print('\nreached iteration limit')
+                print('final value = %10.4e'  % (Jx.value()))
+                print('final step  = %10.4e' % (step))
+                print('finial ascent rate = %10.4e' % (dr))
+                print('exit lsopt')
+                
         return Jx
     
     except Exception as ex:

@@ -3,6 +3,7 @@ import os
 import linalg
 import tempfile
 import op
+import sys
 
 class Space(vcl.Space):
 
@@ -108,6 +109,87 @@ class ConvolutionOperator(vcl.LinearOperator):
         print('range:')
         self.rng.myNameIs()
 
+        
+class MultiTraceConvOp(vcl.LinearOperator):
+
+    '''
+    trace-by-trace convolution of two SEGY data sets (input and kernel), 
+    output to another SEGY data set. Input and output represented as vcl.Vectors
+    in SEGYSpaces, kernel is given as a filename (can be data member of another
+    SEGYSpace vcl.Vector). Input and output must have at least as many traces as 
+    kernel. Only the trace range between trmin and trmax is convolved and written
+    to the corresponding traces in output. Both convolution and adjoint convolution
+    (cross-correlation) are represented as fwd and adj options of this linear op. 
+    Note that since possibly only part of the output data is altered, this is really
+    a AXPY, rather than a linear op, unless all traces are written.
+
+    Constructor Parameters:
+    dom (SEGYSpace) - domain (inputs)
+    rng (SEGYSpace) - range (outputs)
+    ker (string) - filename for kernel traces
+    trmin (int) - min trace index (tracl)
+    trmax (int) - max trace index
+    '''
+    
+    def __init__(self,dom,rng,ker,trmin=0,trmax=sys.maxsize):        
+        self.dom = dom
+        self.rng = rng
+        if not linalg.sanity(ker,'su'):
+            raise Exception('Error: convolution kernel file not SEGY') 
+        self.ker   = ker
+        TRIP = os.getenv('TRIP')
+        if not os.path.exists(TRIP):
+            raise Exception('TRIP package = ' + TRIP + ' not found')
+        sim = os.path.join(TRIP,'iwave/trace/main/SEGYConv.x')
+        self.trmin = trmin
+        self.trmax = trmax
+        self.cmd = sim + ' min=' + str(trmin) + ' max=' + str(trmax)
+        # print('\ncmd = ' + self.cmd)
+        
+    def getDomain(self):
+        return self.dom
+    
+    def getRange(self):
+        return self.rng
+    
+    def applyFwd(self,x, y):
+        try:
+            loccmd = self.cmd + ' in=' + x.data + \
+              ' out=' + y.data + ' ker=' + self.ker + \
+              ' adj=0'
+            print('fwd: loccmd = ' + loccmd)
+            ret= os.system(loccmd)
+            if ret != 0: 
+                msg = 'Failed to execute ' + loccmd + \
+                  '\ncalled from segyvc.MultiTraceConvOp.applyFwd'
+                raise Exception(msg)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.MultiTraceConvOp.applyFwd')
+        
+    def applyAdj(self,x, y):
+        try:
+            loccmd = self.cmd + ' in=' + x.data + \
+              ' out=' + y.data + ' ker=' + self.ker + \
+              ' adj=1'
+            print('adj: loccmd = ' + loccmd)
+            ret= os.system(loccmd)
+            if ret != 0: 
+                msg = 'Failed to execute ' + loccmd + \
+                  '\ncalled from segyvc.MultiTraceConvOp.applyAdj'
+                raise Exception(msg)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.MultiTraceConvOp.applyFwd')
+        
+    def myNameIs(self):
+        print('Multi Trace Convolution operator with kernel ' + self.ker)
+        print('domain:')
+        self.dom.myNameIs()
+        print('range:')
+        self.rng.myNameIs()
+        print('trace range [' + str(self.trmin) + ', ' + str(self.trmax-1) + ']')
+        
 class TScaleOperator(vcl.LinearOperator):
 
     def __init__(dom,scale):
@@ -149,5 +231,86 @@ class TScaleOperator(vcl.LinearOperator):
         ptinr('  scale = ' + str(self.xcale))
         print('  domain = rainge = ')
         self.dom.myNameIs()
-                    
 
+#import multiprocessing
+
+class MultiTraceConvOp(vcl.LinearOperator):
+
+    '''
+    trace-by-trace convolution of two SEGY data sets (input and kernel), 
+    output to another SEGY data set. Input and output represented as vcl.Vectors
+    in SEGYSpaces, kernel is given as a filename (can be data member of another
+    SEGYSpace vcl.Vector). Input and output must have at least as many traces as 
+    kernel. Only the trace range between trmin and trmax is convolved and written
+    to the corresponding traces in output. Both convolution and adjoint convolution
+    (cross-correlation) are represented as fwd and adj options of this linear op. 
+    Note that since possibly only part of the output data is altered, this is really
+    a AXPY, rather than a linear op, unless all traces are written.
+
+    Constructor Parameters:
+    dom (SEGYSpace) - domain (inputs)
+    rng (SEGYSpace) - range (outputs)
+    ker (string) - filename for kernel traces
+    trmin (int) - min trace index (tracl)
+    trmax (int) - max trace index
+    '''
+    
+    def __init__(self,dom,rng,ker,trmin=0,trmax=sys.maxsize):        
+        self.dom = dom
+        self.rng = rng
+        if not linalg.sanity(ker,'su'):
+            raise Exception('Error: convolution kernel file not SEGY') 
+        self.ker   = ker
+        TRIP = os.getenv('TRIP')
+        if not os.path.exists(TRIP):
+            raise Exception('TRIP package = ' + TRIP + ' not found')
+        sim = os.path.join(TRIP,'iwave/trace/main/SEGYMConv.x')
+        self.trmin = trmin
+        self.trmax = trmax
+        self.cmd = sim + ' min=' + str(trmin) + ' max=' + str(trmax)
+        print('\ncmd = ' + self.cmd)
+        
+    def getDomain(self):
+        return self.dom
+    
+    def getRange(self):
+        return self.rng
+    
+    def applyFwd(self,x, y):
+        try:
+            loccmd = self.cmd + ' in=' + x.data + \
+              ' out=' + y.data + ' ker=' + self.ker + \
+              ' adj=0'
+            print('fwd: loccmd = ' + loccmd)
+            ret= os.system(loccmd)
+            if ret != 0: 
+                msg = 'Failed to execute ' + loccmd + \
+                  '\ncalled from segyvc.MultiTraceConvOp.applyFwd'
+                raise Exception(msg)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.MultiTraceConvOp.applyFwd')
+        
+    def applyAdj(self,x, y):
+        try:
+            loccmd = self.cmd + ' in=' + x.data + \
+              ' out=' + y.data + ' ker=' + self.ker + \
+              ' adj=1'
+            print('adj: loccmd = ' + loccmd)
+            ret= os.system(loccmd)
+            if ret != 0: 
+                msg = 'Failed to execute ' + loccmd + \
+                  '\ncalled from segyvc.MultiTraceConvOp.applyAdj'
+                raise Exception(msg)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from segyvc.MultiTraceConvOp.applyFwd')
+        
+    def myNameIs(self):
+        print('Multi Trace Convolution operator with kernel ' + self.ker)
+        print('domain:')
+        self.dom.myNameIs()
+        print('range:')
+        self.rng.myNameIs()
+        print('trace range [' + str(self.trmin) + ', ' + str(self.trmax-1) + ']')
+        
