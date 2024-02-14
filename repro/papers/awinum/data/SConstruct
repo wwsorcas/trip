@@ -1,0 +1,267 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+
+import os
+import scenv
+import datasim
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+b2a             = os.path.join(CWPROOT,'bin/b2a')
+farith          = os.path.join(CWPROOT,'bin/farith')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+sumean          = os.path.join(CWPROOT,'bin/sumean')
+RSFROOT         = os.getenv('RSFROOT')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
+sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
+sfadd           = os.path.join(RSFROOT,'bin/sfadd')
+sfget           = os.path.join(RSFROOT,'bin/sfget')
+sfput           = os.path.join(RSFROOT,'bin/sfput')
+sfspray         = os.path.join(RSFROOT,'bin/sfspray')
+sfcp            = os.path.join(RSFROOT,'bin/sfcp')
+sfmakevel       = os.path.join(RSFROOT,'bin/sfmakevel')
+MYAPPS          = os.getenv("MYAPPS")
+python          = os.path.join(MYAPPS,'conda/miniconda/bin/python')
+mfexec          = os.path.join(MYAPPS,'trip/pyrvl/mfexec.py')
+
+################################## S/R GEOMETRY ##################################
+
+# time steps in source, filter
+NTU=251
+
+# time steps in data
+NTD=626
+
+# time of first filter sample (ms)
+DELRT=-1000
+
+# time step (ms)
+DT=8
+
+# first corner frequency, bandpass filter (Hz)
+F1=1.0
+
+# second corner frequency, bandpass filter (Hz)
+F2=2.5
+
+# third corner frequency, bandpass filter (Hz)
+F3=7.5
+
+# fourth corner frequency, bandpass filter (Hz)
+F4=12.5
+
+# number of receivers
+NR=201
+
+# first receiver x (m)
+RX=2000
+
+# first receiver z (m)
+RZ=1000
+
+# receiver x step (m)
+DRX=20
+
+# receiver z step (m)
+DRZ=0
+
+# number of sources
+NS=11
+
+# first source x (m)
+SX=3000
+
+# first source x (m), single shot case
+SX1=4200
+
+# first source z (m)
+SZ=3000
+
+# source x step (m)
+DSX=200
+
+# source z step (m)
+DSZ=0
+
+# source scale factor
+WSC=1000.0
+
+Flow('w1.su', None,
+     suspike +  ' nt=' + str(NTU) + ' ntr=1 offset=0 ix1=1 nspk=1' + \
+                ' it1=' + str((1000/DT)+1) + ' dt=' + str(0.001*DT) + ' | ' +
+     sufilter + ' f=' + str(F1) + ',' + str(F2) + ',' + str(F3) + ',' + str(F4) + ' | ' + \
+     sugain +   ' scale=' + str(WSC/DT) + ' | ' + \
+     sushw +    ' key=delrt,gelev,selev,gx,sx a=0.0,' + str(-SZ) + ',' + str(-SZ) + ',' + str(SX1) + ',' + str(SX1),
+     stdin=0)
+
+Flow('u1.su', None,
+     sunull +   ' nt=' + str(NTU) + \
+                ' ntr=' + str(NR) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(DELRT) + ' | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('h1.su', None,
+     sunull +   ' nt=' + str(NTD) + \
+                ' ntr=' + str(NR) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ', 0 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('w11.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=' + str(NS) + ', sxstart=' + str(SX) + ',szstart=' + str(SZ) + ',dsx=' + str(DSX) + ',dsz=0.0)'), stdin=0, stdout=-1)
+     
+Flow('u11.su', None,
+     sunull +   ' nt=' + str(NTU) + \
+                ' ntr=' + str(NR*NS) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(DELRT) + ' | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('h11.su', None,
+     sunull +   ' nt=' + str(NTD) + \
+                ' ntr=' + str(NR*NS) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ', 0 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+     
+########################################## lens model ########################################
+
+# background bulk modulus (GPa)
+BULK=4.0
+
+# background buoyancy (cc/g)
+BUOY=1.0
+
+# samples in x 
+NX=401
+
+# samples in z
+NZ=201
+
+# x step = z step
+DX=20
+
+# horizontal diameter of lens (proportion of x extent)
+LENSRADD = 0.4
+
+# vertical diameter of lens (proportion of z extent)
+LENSRADT = 0.2
+
+# value at center (proportion of background)
+LENSFAC = 0.5
+
+Flow(['m.rsf', 'bym.rsf', 'm0.rsf'], None,
+     sfmakevel+' n1=' + str(NZ) + \
+               ' n2=' + str(NX) + \
+               ' d1=' + str(DX) + \
+               ' d2=' + str(DX) + \
+               ' v000=' + str(BULK) + \
+               ' x1lens=' + str(NZ*DX/2.0) + \
+               ' x2lens=' + str(NX*DX/2.0) + \
+               ' dlens=' + str(NZ*DX*LENSRADD) + \
+               ' tlens=' + str(NX*DX*LENSRADT) + \
+               ' vlens=' + str(BULK*(LENSFAC-1.0)) + ' | ' +\
+     sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+     sfput +   ' unit1=m unit2=m' + ' | ' +\
+     sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[0]} && ' +\
+     sfmakevel+' n1=' + str(NZ) + \
+               ' n2=' + str(NX) + \
+               ' d1=' + str(DX) + \
+               ' d2=' + str(DX) + \
+               ' v000=' + str(BUOY) + ' | ' + \
+     sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+     sfput +   ' unit1=m unit2=m' + ' | ' +\
+     sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
+     sfput +   ' label=Buoyancy unit=cc/g > ${TARGETS[1]} && ' +\
+     sfmakevel+' n1=' + str(NZ) + \
+               ' n2=' + str(NX) + \
+               ' d1=' + str(DX) + \
+               ' d2=' + str(DX) + \
+               ' v000=' + str(BULK) + ' | ' + \
+     sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+     sfput +   ' unit1=m unit2=m' + ' | ' +\
+     sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[2]}', stdin=0, stdout=-1)
+
+
+################################ finite diffeence simulation ####################################
+
+# parameters for staggered grid acoustic simulator - see self doc for meaning
+# boundstest - test for bounds, exit in error condition if violated
+# noisy - if True, print standard message and active task numbers (for parallel tasks)
+fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0' + \
+       	 	   ' ' + 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 boundstest=True noisy=True'
+
+for i in [1, 11]:
+    Flow('d' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+    Flow('dh' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm0.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)  				 
