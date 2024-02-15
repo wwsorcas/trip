@@ -1,20 +1,23 @@
+\address{email: {\tt symes@rice.edu}}
 \title{Wavefield Reconstruction Inversion: an example}
-\author{William. W. Symes \thanks{The Rice Inversion Project,
-Department of Computational and Applied Mathematics, Rice University,
-Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+\author{William. W. Symes}
 
 \lefthead{Symes}
 
 \righthead{1D WRI}
 
 \begin{abstract}
-  Full waveform inversion, or nonlinear least squares data-fitting
-  driven by wave equation simulation, has proven its ability to
+  Nonlinear least squares data-fitting driven by physical process
+  simulation is a classic and widely successful technique for the
+  solution of inverse problems in science and engineering. Known as
+  ``Full Waveform Inversion'' in application to seismology, it can
   extract detailed maps of earth structure from near-surface seismic
-  observations. However, the least squares error function at the heart
+  observations, but also suffers from a defect not always encountered
+  in other applications: the least squares error function at the heart
   of this method tends to develop a high degree of nonconvexity, so
   that local optimization methods (the only numerical methods feasible
-  for field-scale problems) tend to fail, unless provided with initial
+  for field-scale problems) may fail to produce geophysically useful
+  final estimates of earth structure, unless provided with initial
   estimates of a quality not always available. A number of alternative
   optimization principles have been advanced that promise some degree
   of release from the multimodality of Full Waveform Inversion,
@@ -22,9 +25,10 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
   paper. Applied to a simple 1D acoustic transmission problem, both
   Full Waveform and Wavefield Reconstruction Inversion methods reduce
   to minimization of explicitly computable functions, in an asymptotic
-  sense. The analysis presented here shows that Wavefield
+  sense. The analysis presented here shows explicitly how multiple
+  local minima arise in Full Waveform Inversion, and that Wavefield
   Reconstruction Inversion can be vulnerable to the same
-  ``cycle-skipping'' failure mode as Full Waveform Inversion.
+  ``cycle-skipping'' failure mode.
 \end{abstract}
 
 \section{Introduction}
@@ -33,7 +37,7 @@ Full waveform inversion (FWI) is the current nomenclature in the
 seismology literature for data-fitting earth structure estimation
 driven by wavefield modeling. The earth properties to be estimated
 (material densities, stiffnesses, attenuation rates,...) form a vector
-$c$ of spatially fields that appear as coefficients in systems of hyperbolic
+$c$ of spatially varying fields that appear as coefficients in systems of hyperbolic
 partial differential equations, modeling seismic wave
 propagation. The wavefields used in structure estimation (``imaging'')
 are small motion disturbances of the earth's equilibrium state, so the
@@ -49,7 +53,7 @@ vector $c$, so is naturally represented by a family of linear
 operators $S[c]$ parametrized by the coefficient vector $c$.
 
 The objective of FWI is to find $c$ and $f$, given $d$, so that
-$S[c]f \approx d$. A typical method for enforcing this requirement is
+$S[c]f \approx d$. A typical method for achieving this goal is
 the minimization of an objective misfit measure (objective, for
 short), the most common choice being the square norm of a Hilbert
 space in which the data is presumed to reside:
@@ -80,7 +84,8 @@ having nothing to do with a usable estimate of earth structure. [An
 explicit example of this multi-modal behaviour appears below.]
 Reliable estimation of $c$ via iterative local optimization requires
 that the initial estimate predict the correct arrival time of waves,
-as they appears in the data, within a wavelength at dominant
+as they appears in the data, within a wavelength (in fact,
+conventionally a half wavelength) at dominant
 frequencies \cite[]{GauTarVir:86,VirieuxOperto:09}.
 
 Despite this severe constraint, FWI has shown enough promise as a tool
@@ -109,18 +114,23 @@ failing to solve the equations of motion with the correct right hand side:
     minimize }
   \|d -  S[c]f\|^2+\alpha^2\|f-q\|^2.
 \end{equation}
-Examples given
-by \cite{LeeuwenHerrmannWRI:13} and others suggest that the problem
-defined in display \ref{eqn:defwri} is less likely to develop
-uninformative local minima if $\alpha$ is small. This might be so for
-several reasons: one is that when less weight is
-put on making the residual in the wave equation ($f-q$) small, 
-$f$ may be chosen to make the data residual $d-S[c]f$ small
-instead. One aspect of failure to predict the arrival times of waves
-accurately is that small data residual is then difficult to
-achieve. By maintaining fidelity to
-the data, local minimization of the WRI objective might provide a
-spurious-minimum-free path to a satisfactory estimate of $c$. 
+\cite{Leeuwen2019note} points out that the formulation
+\ref{eqn:defwri} is available not just for seismic problems, but for
+any inverse problem based on a separable (partly linear) modeling
+operator.
+
+Examples given by \cite{LeeuwenHerrmannWRI:13} and others suggest that
+the problem defined in display \ref{eqn:defwri} is less likely to
+develop uninformative local minima than is the least squares problem
+\ref{eqn:deffwi} in application to seismic inversion, if $\alpha$ is
+sufficiently small. This might be so for several reasons: one is that
+when less weight is put on making the residual in the wave equation
+($f-q$) small, $f$ may be chosen to make the data residual $d-S[c]f$
+small instead. One aspect of failure to predict the arrival times of
+waves accurately is that small data residual is then difficult to
+achieve. By maintaining fidelity to the data, local minimization of
+the WRI objective might provide a spurious-minimum-free path to a
+satisfactory estimate of $c$.
 
 The main result of this paper is that in one simple case, in which all
 of the necessary computations can be carried out by hand, this hope is
@@ -161,27 +171,27 @@ lead to global behaviour asymptotically more amenable to local optimization.
 This paper begins with a description of the 1D inverse transmission
 problem and explicit computation of various components of the FWI
 approach, based on explicit solution of the 1D acoustic system
-presented in Appendix A. In the third section I introduce the $\lambda-$dependent
-family of problems, and establish the asymptotic properties of FWI as
-$\lambda \rightarrow 0$. The fourth section develops the algebraic
-structure of WRI, culminating in a remarkable identity revealing WRI
-to be equivalent to minimization of a weighted norm of the data
-residual, with a weight operator depending on the coefficient vector
-$c$. This identity has also been derived by \cite{Leeuwen2019note},
-using a different argument. The result is quite general, applying to essentially any
-realization of WRI, and already shows that its behaviour must be
-closely related to that of FWI. In the fifth section I return to 
-1D acoustics problem and the $\lambda$-dependent family of inverse
-problems, compute that weight operator explicitly, and deduce the
-global behaviour of WRI in this instance. The paper ends with a
-discussion of the relation of the analysis presented here to a
-previous analysis of optimization formulations of wave inversion
-problems based on parameter-dependent quadratic forms
-\cite[]{StolkSymes:03}, and a brief discussion of some other
-alternatives to FWI.
+presented in Appendix A. In the third section I introduce the
+$\lambda-$dependent family of problems, and establish the asymptotic
+properties of FWI as $\lambda \rightarrow 0$. The fourth section
+develops the algebraic structure of WRI, culminating in a remarkable
+identity revealing WRI to be equivalent to minimization of a weighted
+norm of the data residual, with a weight operator depending on the
+coefficient vector $c$. This identity has also been derived by
+\cite{Leeuwen2019note}, using a different argument. The result is
+quite general, applying to essentially any realization of WRI, and
+already shows that its behaviour must be closely related to that of
+FWI. In the fifth section I return to 1D acoustics problem and the
+$\lambda$-dependent family of inverse problems, compute that weight
+operator explicitly, and deduce the global behaviour of WRI in this
+instance. The paper ends with a discussion of the
+relation of the analysis presented here to a previous analysis of
+optimization formulations of wave inversion problems based on
+parameter-dependent quadratic forms \cite[]{StolkSymes:03}, and a
+brief discussion of some other alternatives to FWI.
 
 \section{FWI for 1D Acoustics}
-The example of FWI to be explored in this paper is one of the simplest possible, based on the 1D acoustics system connecting excess pressure $p$, particle velocity $v$, sonstitutive law defect (``source'') $f$, density $\rho$, and wave velocity $c$:
+The example of FWI to be explored in this paper is one of the simplest possible, based on the 1D acoustics system connecting excess pressure $p$, particle velocity $v$, constitutive law defect (``source'') $f$, density $\rho$, and wave velocity $c$:
 \begin{eqnarray}
 \label{eqn:awe1d}
 \frac{\partial p}{\partial t} + \rho c^2\frac{\partial 
@@ -219,7 +229,7 @@ The formulation of the inverse problem via least-squares requires a choice of Hi
 That is, the support of f will be assumed to lie in the strip $[z_{\rm min},z_{\rm max}] \times \bR$.
 As it will turn out, the choice of spatial interval $[z_{\rm min},z_{\rm max}]$ is arbitrary, so long as it has positive length.
 
-For homogeneous ($z$-independent) $\kappa$, Appendix A provides an explicit expression:
+For homogeneous ($z$-independent) $c$, Appendix A provides an explicit expression:
 \begin{equation}
   \label{eqn:defmodhom}
   S[c]f(t) = \frac{1}{2c}\int_{z_{\rm min}}^{z_{\rm max}} dz f\left(z,t - \frac{|z_r-z|}{c}\right) 
@@ -244,12 +254,15 @@ z_s \le z_{\rm max}$ and $z_s \ne z_r$, but is otherwise arbitrary.
 
 This point source field depends on a function of time (``wavelet'')
 $w \in L^2(\bR)$. Formally, the resulting acoustic field satisfies the
-system \ref{eqn:awe1d} with $f=w(t)\delta(z-z_s)$. Inserting this
+system \ref{eqn:awe1d} with $f(z,t)=w(t)\delta(z-z_s)$. Inserting this
 expression in the explicit expression \ref{eqn:defmodhom}, obtain
-\begin{equation}
+\begin{eqnarray}
+  f(z,t) & = & w(t)\delta(z-z_s)\nonumber\\
+  (S[c]f)(t) &=& \frac{1}{2c}w\left(t -
+                              \frac{|z_r-z_s|}{c}\right)\nonumber\\
+  &= &(S_p[c]w)(t)
   \label{eqn:defmodpt}
-  S[c](w\delta(\cdot-z_s)) = \frac{1}{2c}w\left(t - \frac{|z_r-z_s|}{c}\right) = S_p[c]w(t)
-\end{equation}
+\end{eqnarray}
 Thus for this restricted class of source fields, the FWI objective can be redefined as
 \begin{equation}
   \label{eqn:deffwipt}
@@ -291,7 +304,7 @@ the role of wavelength:
   \wl(t) = \frac{1}{\sqrt{\lambda}}w_1\left(\frac{t}{\lambda}\right).
 \end{equation}
 In the definition \ref{eqn:wfam}, the ``mother wavelet'' $w_1\in
-C_0^{\infty}(0,1)$ has dimensionless argument, and the scaling is chosen so fhat
+C_0^{\infty}(0,1)$ has dimensionless argument, and the scaling is chosen so that
 $\|\wl\|_{L^2(\bR)}$ is independent of $\lambda>0$.
 
 Evidently there is no control of $c$ at all in the data if the time
@@ -313,15 +326,12 @@ $c_*$ and the wavelet family $\wl$:
   \dl = S_p[c_*]\wl
 \end{equation}
 and a corresponding family of FWI objectives:
-\[
-  J_{\rm FWI}[c,\dl,\wl] = \frac{1}{2}\|\dl-S_p[c]\wl\|^2
-\]
-\begin{equation}
-  \label{eqn:fwiexpl}
-  =
-  \int_0^T\,dt\,\left|\frac{1}{2c_*}\wl\left(t-\frac{|z_s-z_r|}{c_*}\right)
+\begin{eqnarray}
+  J_{\rm FWI}[c,\dl,\wl] &=& \frac{1}{2}\|\dl-S_p[c]\wl\|^2\nonumber\\
+  &=&  \int_0^T\,dt\,\left|\frac{1}{2c_*}\wl\left(t-\frac{|z_s-z_r|}{c_*}\right)
     - \frac{1}{2c}\wl\left(t-\frac{|z_s-z_r|}{c}\right)\right|^2
-\end{equation}
+  \label{eqn:fwiexpl}
+\end{eqnarray}
 Note that $\mbox{supp }\wl \subset [0,\lambda]$, so
 \begin{equation}
   \label{eqn:wlsupps}
@@ -351,21 +361,20 @@ means the behaviour for $c$ far from $c_*$. Define
   L = \frac{2 c_{\rm max}^2}{|z_s-z_r|}.
 \end{equation}
 Then if $|c_*-c| > L\lambda$,
-\[
+\begin{eqnarray}
   \left|\frac{|z_s-z_r|}{c}-\frac{|z_s-z_r|}{c_*}\right|
-  =\frac{|c-c_*||z_s-z_r|}{cc_*} 
-\]
-\[
-\ge \frac{|c-c_*||z_s-z_r|}{c_{\rm max}^2} > L\lambda
-\frac{|z_s-z_r|}{c_{\rm max}^2} = 2\lambda.
-\]
-That is, the infima of the supports of $S_p[c]\wl, \dl=S_p[c_*]\wl$
-are further apart than the lengths of these supports. In that case,
+  &=&\frac{|c-c_*||z_s-z_r|}{cc_*} \nonumber\\
+  &\ge& \frac{|c-c_*||z_s-z_r|}{c_{\rm max}^2}\nonumber\\
+  &>& L\lambda\frac{|z_s-z_r|}{c_{\rm max}^2} \nonumber\\
+  &=& 2\lambda.
+      \label{eqn:shift}
+\end{eqnarray}
+That is, equation \ref{eqn:shift} shows that when the condition
+\ref{eqn:defL} is satisfied, the infima of the supports of $S_p[c]\wl, \dl=S_p[c_*]\wl$
+are further apart than the lengths of these supports. Then
 necessarily
-\[
-  \mbox{supp }S_p[c]\wl \cap \mbox{supp }S_p[c_*]\wl = \emptyset.
-\]
-Therefore $S_p[c]\wl$ and $S_p[c_*]\wl$ are orthogonal in $L^2[0,T]$,
+  $\mbox{supp }S_p[c]\wl \cap \mbox{supp }S_p[c_*]\wl = \emptyset$, so
+$S_p[c]\wl$ and $S_p[c_*]\wl$ are orthogonal in $L^2[0,T]$,
 and
 \begin{equation}
   \label{eqn:fwiscrewed}
@@ -460,7 +469,7 @@ simplest is relevant here:
 \begin{quote}
   For all admissible models $c$, $S[c]$ is surjective.
 \end{quote}
-That is, {em any data can be fit exactly using the extended model
+That is, {\em any data can be fit exactly using the extended model
   space (the domain of $S$)}.
 This property is a characteristic of of extended modeling
 methods \cite[]{geoprosp:2008}: the ability to fit any data appears to
@@ -501,35 +510,25 @@ under the surjectivity assumption, $S[c]S[c]^T$ is injective, whence
   e_{\alpha}[c]=(S[c]S[c]^T+\alpha^2I)^{-1}r[c]
 \end{equation}
 Consequently
-\[
-  J_{\rm WRI}^{\alpha}[c,d,q] =
-  \frac{1}{2}(\|r[c]-S[c]S[c]^Te_{\alpha}[c]\|^2+\alpha^2\|S[c]^Te_{\alpha}[c]\|^2)
-\]
-\[
-  = \frac{1}{2}\left(\|r[c]-S[c]S[c]^T
-    (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2 \right.
-\]
-\[
+\begin{eqnarray}
+  J_{\rm WRI}^{\alpha}[c,d,q] &=&
+  \frac{1}{2}(\|r[c]-S[c]S[c]^Te_{\alpha}[c]\|^2+\alpha^2\|S[c]^Te_{\alpha}[c]\|^2)\nonumber\\
+  &=& \frac{1}{2}\left(\|r[c]-S[c]S[c]^T
+    (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2\right. \nonumber\\
+  & &
   \left.+\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],
   S[c]S[c]^T (S[c]S[c]^T+\alpha^2I)^{-1}r[c]
-  \rangle\right)
-\]
-\[
-  =\frac{1}{2}\left(\|\alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2\right.
-\]
-\[
-  \left.
-  +\alpha^2\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],
-  -\alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\rangle\right.
-\]
-\[
-  + \left.\alpha^2\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle\right)
-\]
-\[
-  =  \frac{\alpha^2}{2}
-\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle 
-\]
-That is,
+  \rangle\right)  \nonumber\\
+  &=&\frac{1}{2}\left(\|\alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\|^2\right. \nonumber\\
+  & &
+  + \left. \alpha^2 \langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],
+  - \alpha^2 (S[c]S[c]^T+\alpha^2I)^{-1}r[c]\rangle\right. \nonumber\\
+  & &  + \left. \alpha^2\langle (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle\right) \nonumber\\
+  &=&  \frac{\alpha^2}{2}\langle
+      (S[c]S[c]^T+\alpha^2I)^{-1}r[c],r[c]\rangle.
+   \label{eqn:longone}
+\end{eqnarray}
+Rearranging the RHS of equation \ref{eqn:longone}, obtain
 \begin{equation}
   \label{eqn:defwrialt}
   J_{\rm WRI}^{\alpha}[c,d,q] = \frac{1}{2}\langle r[c], W_{\alpha}[c] r[c]\rangle
@@ -610,17 +609,16 @@ Define
 \begin{proof}
   From \ref{eqn:wriscrewed}, \ref{eqn:wriwthom}, and
   \ref{eqn:fwiscrewed}, if $|c-c_*| > L\lambda$,
-  \[
-    J_{\rm WRI}^{\alpha}[c,\dl,\wl\delta(\cdot-z_s)] =
+\begin{eqnarray}
+    J_{\rm WRI}^{\alpha}[c,\dl,\wl\delta(\cdot-z_s)] &=&
     \frac{\alpha^2}{2}\left(\frac{z_{\rm max}-z_{\rm
-          min}}{4c^2}+\alpha^2\right)^{-1}\frac{1}{2}\left(\frac{1}{4c^2}+\frac{1}{4c_*^2}\right)\|w_1\|^2
-  \]
-  \[
-    =
-    \frac{\alpha^2}{4}\frac{1+\frac{c^2}{c_*^2}}{z_{\rm 
+          min}}{4c^2}+\alpha^2\right)^{-1}\frac{1}{2}\left(\frac{1}{4c^2}+\frac{1}{4c_*^2}\right)\|w_1\|^2\nonumber\\
+   & =&    \frac{\alpha^2}{4}\frac{1+\frac{c^2}{c_*^2}}{z_{\rm 
         max}-z_{\rm min}+4c^2\alpha^2}
-  \]
-  This linear fractional function of $c^2$ is increasing, decreasing,
+  \label{eqn:yetanutta}
+\end{eqnarray}
+  The linear fractional function of $c^2$ on the RHS of equation
+  \ref{eqn:yetanutta} is increasing, decreasing,
   or constant if $\beta>0, \beta<0$ or $\beta=0$, respectively.
 \end{proof}
 
@@ -658,7 +656,7 @@ non-convexity of FWI and WRI, and in fact do not in several cases that
 I will mention. 
 
 First, a consequence of the results proven here: $J_{\rm FWI}[c,d,w]$
-and $J_{\rm WRI}[c,d,q]$ are not smooth as joint functions of model
+and $J_{\rm WRI}^{\alpha}[c,d,q]$ are not smooth as joint functions of model
 ($c$) and data ($d$) vectors. If they were, their derivatives would be
 bounded uniformly over bounded sets in $c,d$, but the two main results
 show that this is not the case. As $\lambda \rightarrow 0$, $d=\dl$
@@ -678,7 +676,7 @@ known for a much wider class of quadratic form objectives for inverse
 problems. 
   
 These results
-concern optimization problems of the genral form
+concern optimization problems of the general form
 \begin{equation}
   \label{eqn:gen1}
   \mbox{Given }d\mbox{, find }c\mbox{ to extremize }
@@ -686,24 +684,27 @@ concern optimization problems of the genral form
 \end{equation}
 In this prescription, $d$ is a data vector, as in the examples above,
 $c$ is a vector of material parameters to be estimated, $G[c]$ is a
-$c$-dependent family of operators having the same nature as the
-simulation operators $S[c]$ and $S_p[c]$ figuring in the preceding
-discussion, and $A[c]$ is an operator-valued function of $c$, on the range
-of $G[c]$.
+$c$-dependent family of operators, whose common range is a Hilbert
+space with inner product $\langle \cdot, \cdot \rangle$.
+$A[c]$ is an operator-valued function of $c$, with domain and the
+range equal to the range of $G[c]$.
 
 \cite{StolkSymes:03} assume that the
 operator-valiued function $G[c]$ is of a class typical of modeling
 operators for wave equation inverse problems, or their inverses or
-adjoints. The precise characterization of the so-called {\em microlocally elliptic Fourier Integral
+adjoints. The precise characterization of these so-called {\em microlocally elliptic Fourier Integral
 Operators} is quite technical \cite[]{Dui:95}. Roughly speaking, such operators map high-frequency localized wave packets to other
 such packets with well-defined changes of position and direction of
-oscillation. If the dependence of such an operator $G[c]$ on $c$ is of sufficiently full rank, in
+oscillation. The simulation operators $S[c]$ and $S_p[c]$ figuring in the preceding
+discussion are particularly simple examples of this type.
+
+If the dependence of such an operator $G[c]$ on $c$ is of sufficiently full rank, in
 the sense that destination packets can be shifted in any direction by
 changing $c$ appropriately, along with a couple of other technical
 assumptions, one can conclude that $J$ as defined in \ref{eqn:gen1} is
 smooth in $c$ and $d$ jointly if and only if the operator $A[c]$ is a 
 {\em pseudodifferential operator} - again, a class of operators whose
-precise definition is quite technical. However these operators also
+precise definition is quite technical \cite[]{Dui:95,Tay:81}. However these operators also
 have a rough characterization: they do not change the location of
 oscillatory wave packets
 or alter their direction of oscillation, but only scale such packets
@@ -713,23 +714,25 @@ With a bit of fiddling, the FWI problem \ref{eqn:deffwipt} for 1D
 acoustic transmission inversion can be rewritten in the form \ref{eqn:gen1}. Note
 that $S_p[c]$ is invertible (more specifically, has a right inverse; if [0,T] were
 extended to $(-\infty,\infty)$ it would have a left inverse too). From
-the defintion \ref{eqn:dfam} of the data family $\dl$, one sees that
+the definition \ref{eqn:dfam} of the data family $\dl$, one sees that
 $\wl = S_p[c_*]^{-1}\dl$. Therefore
-\[
-  J_{\rm FWI}[c,\dl,\wl] = \frac{1}{2}\|(I-S_p[c]S_p[c_*]^{-1})\dl\|^2
-\]
-\[
-  =\frac{1}{2}(\|\dl\|^2 + \|S_p[c]S_p[c_*]^{-1}\dl\|^2) + \langle \dl,
+\begin{eqnarray}
+  \label{eqn:anutta}
+  J_{\rm FWI}[c,\dl,\wl] &=&
+                             \frac{1}{2}\|(I-S_p[c]S_p[c_*]^{-1})\dl\|^2 \nonumber\\
+ & =&\frac{1}{2}(\|\dl\|^2 + \|S_p[c]S_p[c_*]^{-1}\dl\|^2) + \langle \dl,
   S_p[c]S_p[c_*]^{-1}\dl\rangle
-\]
-For the operator family $S_p[c]$ defined above, it is easy to see that 
-the second term is smooth in $c$, and the first is constant. The third 
-can be rewritten as 
-\[
+\end{eqnarray}
+For the operator family $S_p[c]$ defined above, it is easy to see that
+the second term in the right hand side of equation \ref{eqn:anutta} is
+smooth in $c$, and the first is constant. The third can be rewritten
+as
+\begin{equation}
+  \label{eqn:evenmore}
   \langle \dl,  S_p[c]S_p[c_*]^{-1}\dl\rangle = \langle S[c]^T\dl, 
-  (S_p[c]^T S_p[c_*])^{-1}S_p[c]^Td\rangle 
-\]
-which has the form \ref{eqn:gen1} with the choices $G[c]=S_p[c]^T$,
+  (S_p[c]^T S_p[c_*])^{-1}S_p[c]^Td\rangle.
+\end{equation}
+The RHS of equation \ref{eqn:evenmore} has the form \ref{eqn:gen1} with the choices $G[c]=S_p[c]^T$,
 $A[c]=(S_p[c]^T S_p[c_*])^{-1}$. A similar manipulation exhibits
 $J_{\rm WRI}$ as the sum of harmless terms and a quadratic form of the
 form \ref{eqn:gen1}.
@@ -812,6 +815,13 @@ restrictions are generally not met by any version of FWI. An
 examination of other versions of WRI from this point of view may prove
 informative.
 
+\section{Acknowledgements}
+The author thanks Felix Herrmann, Tristan van Leeuwen, David Yingst,
+and Chao Wang for informative conversations about Wavefield
+Reconstruction Inversion. Comments from Joakim Blanch and John
+Washbourne were very helpful in improving the manuscript. The sponsors
+of The Rice Inversion Project provided long-term support for the
+author's research, leading to the work reported here.
 
 
 

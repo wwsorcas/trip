@@ -610,7 +610,8 @@ int CG(float* x, float* r, float* v, float* Av, float* d, float** A, int N, int 
 {
 
     int i, j, itr;
-    double rs, rr0, vAv, rr, rAv, alpha, beta;
+    //double rs, rr0, vAv, rr, rAv, alpha, beta;
+    double rs, rr0, vAv, rr, alpha, beta;
 
 	//Initiation: r = d-Ax (x=0) ; rr = r*r ; v = r
     rr0 = 0.;
@@ -662,17 +663,17 @@ int CG(float* x, float* r, float* v, float* Av, float* d, float** A, int N, int 
 		//Save rr of cuurent iteration
 		rs  = rr;
 		rr  = 0.;
-		rAv = 0.;
+		//rAv = 0.;
 		//Update: x = x+alpha*v ; r = r-alpha*Av
 		for(i = 0 ; i < N ; ++i){
 		    x[i] += alpha * v[i];
 		    r[i] -= alpha * Av[i];
 		    rr  += (double)(r[i] * r[i]);
-		    rAv += (double)(r[i] * Av[i]);
+		    //rAv += (double)(r[i] * Av[i]);
 		}
 		//Reset the residual every ten iterations
 		if(itr/10*10 == itr){
-		    rAv = 0.;
+		  //rAv = 0.;
 		    rr  = 0.;
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(i, j) num_threads(8)
@@ -693,7 +694,7 @@ int CG(float* x, float* r, float* v, float* Av, float* d, float** A, int N, int 
 
 		    for(i = 0; i < N; ++i){
 				rr  += (double)(r[i] * r[i]);
-				rAv += (double)(r[i] * Av[i]);
+				//rAv += (double)(r[i] * Av[i]);
 	    	}
 		}
 		printf("CGitr = %d , residue = %lf\n" , itr , rr/rr0);
@@ -723,7 +724,8 @@ int CG_AVA(float* x, float* r, float* v, float* Av, float* d, float** A, int N, 
 
     int i, j, itr;
     int i0, j0, ires, jres;
-    double rs, rr0, vAv, rr, rAv, alpha, beta;
+    double rs, rr0, vAv, rr, alpha, beta;
+    //    double rs, rr0, vAv, rr, rAv, alpha, beta;
 
 	//Initiation: r = d-Ax (x=0) ; rr = r*r ; v = r
     rr0 = 0.;
@@ -782,17 +784,17 @@ int CG_AVA(float* x, float* r, float* v, float* Av, float* d, float** A, int N, 
 		//Save rr of cuurent iteration
 		rs  = rr;
 		rr  = 0.;
-		rAv = 0.;
+		//		rAv = 0.;
 		//Update: x = x+alpha*v ; r = r-alpha*Av
 		for(i = 0 ; i < N ; ++i){
 		    x[i] += alpha * v[i];
 		    r[i] -= alpha * Av[i];
 		    rr  += (double)(r[i] * r[i]);
-		    rAv += (double)(r[i] * Av[i]);
+		    //		    rAv += (double)(r[i] * Av[i]);
 		}
 		//Reset the residual every ten iterations
 		if(itr/10*10 == itr){
-		    rAv = 0.;
+		  //		    rAv = 0.;
 		    rr  = 0.;
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(i, j, i0, j0, ires, jres) num_threads(8)
@@ -820,7 +822,7 @@ int CG_AVA(float* x, float* r, float* v, float* Av, float* d, float** A, int N, 
 
 		    for(i = 0; i < N; ++i){
 				rr  += (double)(r[i] * r[i]);
-				rAv += (double)(r[i] * Av[i]);
+				//				rAv += (double)(r[i] * Av[i]);
 	    	}
 		}
 		printf("CGitr = %d , residue = %lf\n" , itr , rr/rr0);

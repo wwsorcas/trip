@@ -48,32 +48,32 @@ explref         = os.path.join(MYAPPS,'trip/iwave/explref/main/explref.x')
 # zero phase bandpass filter a la Jie
 # stack masquerading as zero-offset data
 PSDATA = 'paracdp.su'
-DATA = 'parastackf.su'	
+DATA = 'parastackf.su'        
 VELO = 'paravintz.rsf'
 VBIN = 'paravintz.bin'
 IMAGE= 'parapspif.rsf'
 BASIC='../../basic/project' 
 
 if not os.path.exists(BASIC):
-   print 'you must install basic on the same level as'
-   print 'the parent directory (born) to build this project'
+   print('you must install basic on the same level as')
+   print('the parent directory (born) to build this project')
    Exit(1)
 else:
    for i in [PSDATA, DATA, VELO, VBIN, IMAGE]:
        SRC = os.path.join(BASIC,i)
        if not os.path.exists(SRC):
-           print 'you must build the target ' + SRC
-	   print 'before building this project'	
-	   Exit(1)
+           print('you must build the target ' + SRC)
+           print('before building this project')
+           Exit(1)
        Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
-	  
-#       if os.path.exists(SRC):	
-#       	  Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+          
+#       if os.path.exists(SRC):        
+#                 Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
 #       else:
 #          Flow(i,None,
-#	       'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
-#	       myscons + ' ' + i + '; cd ' + 
-#	       thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+#               'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
+#               myscons + ' ' + i + '; cd ' + 
+#               thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
 
 # clean up stack - remove redundant traces, compute midpoint and assign to gx,
 # set sx=0 so it's treated as one shot
@@ -237,7 +237,7 @@ Flow(['pulsedata10.su'],['unitbuoy','unitbuoy','pulse10','parastackfixagcfilt.su
 # exploding reflector modeling, reflectivity = pulse15
 Flow(['pulsedata15.su','pulsemovie15','pulsevz15.su'],['unitbuoy','unitbuoy','pulse15','parastackfixagcfilt.su'],
      sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +
-     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[2]} && ' +	
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[2]} && ' +        
      'spray axis=3 n=25 o=0 d=100 < ${SOURCES[0]} | ' +
      'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
      explref + ' CWPROOT=' + CWPROOT + ' ' +
@@ -252,7 +252,7 @@ Flow(['pulsedata15.su','pulsemovie15','pulsevz15.su'],['unitbuoy','unitbuoy','pu
 
 # exploding reflector migration, data = pulsedata15
 Flow(['pulsemig15'],['unitbuoy','unitbuoy','pulse15','pulsedata15.su'],
-     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +	
+     'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} && ' +        
      explref + ' CWPROOT=' + CWPROOT + ' ' +
      '''
      bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
@@ -264,7 +264,7 @@ Flow(['pulsemig15'],['unitbuoy','unitbuoy','pulse15','pulsedata15.su'],
      
 # exploding reflector modeling, reflectivity = pulse45
 Flow(['pulsedata45.su','pulsemovie45'],['unitbuoy','unitbuoy','pulse45','parastackfixagcfilt.su'],
-     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +	
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +        
      'spray axis=3 n=31 o=0 d=100 < ${SOURCES[0]} | ' +
      'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
      explref + ' CWPROOT=' + CWPROOT + ' ' +
@@ -278,7 +278,7 @@ Flow(['pulsedata45.su','pulsemovie45'],['unitbuoy','unitbuoy','pulse45','parasta
 
 # exploding reflector modeling, reflectivity = pulse90
 Flow(['pulsedata90.su','pulsemovie90'],['unitbuoy','unitbuoy','pulse90','parastackfixagcfilt.su'],
-     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +	
+     sugain + ' scale=0.0 < ${SOURCES[3]} > ${TARGETS[0]} && ' +        
      'spray axis=3 n=25 o=0 d=100 < ${SOURCES[0]} | ' +
      'put dim=2 gdim=3 id1=0 id2=1 id3=2 > ${TARGETS[1]} && ' +
      explref + ' CWPROOT=' + CWPROOT + ' ' +

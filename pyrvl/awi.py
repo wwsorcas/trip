@@ -673,11 +673,19 @@ class mswi(vcl.ScalarJet):
         kmax (int): CG iteration limit
         rho (float): CG residual tolerance
         verbose (int): if not = 0, then print current action messages
+        archivedir (string): path to archive directory
+        pointname (string): filename root for model
+        gradname (string): filename root for gradient
+        filtername (string): filename root for filter
+        dataerrname (string): filename root for data error
+        
 =    '''
 
     def __init__(self, mod=None,
                      dom=None, sim=None, data=None,
-                     alpha=0.0, sigma=0.0, kmax=20, rho=0.01, verbose=0):
+                     alpha=0.0, sigma=0.0, kmax=20, rho=0.01, verbose=0,
+                     archivepath=None, pointname=None, gradname=None,
+                     filtername=None, dataerrname=None):
         try:
             if verbose != 0:
                 print('mswi constructor')
@@ -702,6 +710,10 @@ class mswi(vcl.ScalarJet):
                 raise Exception('adaptive filter space not provided')
             if not isinstance(dom,segyvc.Space):
                 raise Exception('adapt filter space not segyvc.Space instance')
+            # check archive path
+            if archivepath is not None:
+                if not os.path.exists(archivepath):
+                    raise Exception('given archive path = ' + archivepath + ' not valid')
             
             # store instance data
             self.dom = dom
@@ -713,6 +725,11 @@ class mswi(vcl.ScalarJet):
             self.kmax = kmax
             self.rho = rho
             self.verbose = verbose
+            self.archivepath = archivepath
+            self.pointname = pointname
+            self.gradname = gradname
+            self.filtername = filtername
+            self.dataerrname = dataerrname
             
             if self.verbose != 0:
                 print('mswi constructor: compute predicted data')
@@ -738,69 +755,86 @@ class mswi(vcl.ScalarJet):
 
     # auxiliary method - solves inner least squares problem 
     def resid(self):
-        if self.ep is None or self.u is None:
-            # convolution by predicted data
-            S = segyvc.ConvolutionOperator(dom=self.dom,
-                                                rng=self.p.space,
-                                                green=self.p.data)
-
-            # penalty op
-            A = awipensol(self.dom)
-
-            # mswi op = awi op witn no precond
-            L = awiop(S, A, self.alpha, self.sigma)
-
-            # penalized regularized adaptive filter
-            self.u = vcl.Vector(L.getDomain())
-
-            # reg rhs
-            dp = vcl.Vector(L.getRange())
-            # residual
-            self.ep = vcl.Vector(L.getRange())
-            dp[0].copy(self.d)
+        try:
+            if self.ep is None or self.u is None:
+                # convolution by predicted data
+                S = segyvc.ConvolutionOperator(dom=self.dom,
+                                                   rng=self.p.space,
+                                                   green=self.p.data)
+                
+                # penalty op
+                A = awipensol(self.dom)
+                
+                # mswi op = awi op witn no precond
+                L = awiop(S, A, self.alpha, self.sigma)
+                
+                # penalized regularized adaptive filter
+                self.u = vcl.Vector(L.getDomain())
+                
+                # reg rhs
+                dp = vcl.Vector(L.getRange())
+                # residual
+                self.ep = vcl.Vector(L.getRange())
+                dp[0].copy(self.d)
             
-            if self.verbose != 0:
-                print('mswi constructor: decon observed by predicted')
-            eps=0.0
-            vcalg.conjgrad(self.u, dp, L, self.kmax, eps,
-                               self.rho, e=self.ep, verbose=self.verbose)
-
-#        return [self.u, self.ep]
-
+                if self.verbose != 0:
+                    print('mswi constructor: decon observed by predicted')
+                eps=0.0
+                vcalg.conjgrad(self.u, dp, L, self.kmax, eps,
+                                self.rho, e=self.ep, verbose=self.verbose)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.resid')
+                
     def filter(self):
-        if self.u is None:
-            self.resid()
-        return self.u
-    
+        try:
+            if self.u is None:
+                self.resid()
+            return self.u
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.filter')
+        
     def dataerr(self):
-        if self.ep is None:
-#            [self.u, self.ep] = self.resid()
-            self.resid()
-        return self.ep[0].norm() 
+        try:
+            if self.ep is None:
+                self.resid()
+            return self.ep[0]
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.dataerr')        
+        
 
     def point(self):
         return self.mod
 
     def value(self):
-        if self.val is None:
-#            [self.u, self.ep] = self.resid()
-            self.resid()
+        try:
+            if self.val is None:
+                self.resid()
             n = self.ep.norm()
             self.val = 0.5*n*n            
-        return self.val
-
+            return self.val
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.value')
+        
     def gradient(self):
-        if self.grad is None:
-            self.resid()
-            K = segyvc.ConvolutionOperator(dom=self.p.space,
-                                               rng=self.p.space,
-                                               green=self.u.data)
-            pregrad = vcl.transp(K)*self.ep[0]
-            pregrad.scale(-1.0)
-            self.grad = vcl.Vector(self.sim.getDomain())
-            simderiv = self.sim.deriv(self.mod)
-            self.grad.copy(vcl.transp(simderiv)*pregrad)
-        return self.grad
+        try:
+            if self.grad is None:
+                self.resid()
+                K = segyvc.ConvolutionOperator(dom=self.p.space,
+                                                rng=self.p.space,
+                                                green=self.u.data)
+                pregrad = vcl.transp(K)*self.ep[0]
+                pregrad.scale(-1.0)
+                self.grad = vcl.Vector(self.sim.getDomain())
+                simderiv = self.sim.deriv(self.mod)
+                self.grad.copy(vcl.transp(simderiv)*pregrad)
+            return self.grad
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.gradient')
         
     def Hessian(self):
         try:
@@ -809,6 +843,23 @@ class mswi(vcl.ScalarJet):
             print(ex)
             raise Exception('called from awiwg.Hessian')
 
+    def archive(self,name,tag,suf):
+        try:
+            if self.archivepath is None:
+                return
+            tmpath = os.path.join(self.archivepath, name + tag + '.' + suf)
+            if name == 'point':
+                self.point().saveto(tmpath)
+            if name == 'gradient':
+                self.gradient().saveto(tmpath)
+            if name == 'filter':
+                self.filter().saveto(tmpath)
+            if name == 'dataerr':
+                self.dataerr().saveto(tmpath)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.archive')
+                
     def myNameIs(self):
         print('MSWI function')
         print('    adaptive kernel space:')

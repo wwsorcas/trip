@@ -388,14 +388,15 @@ int rd_fwriteslice(RDOM *dom, int iarr, const char *path, int idim, int li)
 
 int rd_a_fsprint(RDOM *dom, const char *path)
 {
-    int a, err;
-    char path2[70];
+  int a, err;
+  const int len=70;
+  char path2[len];
     
     if ( strlen(path) > 60L ) return E_BADINPUT;
         
     for ( a = 0; a < dom->narr; ++a )
     {
-        if ( sprintf(path2, "%s%d", path, a) < 0 ) return E_OTHER;
+      if ( snprintf(path2, len, "%s%d", path, a) < 0 ) return E_OTHER;
             
         err = ra_fprint(dom->_s + a, path2);
         if ( err ) return err;

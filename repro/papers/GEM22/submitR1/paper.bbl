@@ -1,10 +1,19 @@
 \begin{thebibliography}{}
 \itemsep0pt
 
+\bibitem[Aghmiry et~al., 2020]{Aghmiryetal:20}
+Aghmiry, H., A. Gholami, and S. Operto,  2020, Accurate and efficient
+  data-assimilated wavefield reconstruction in the time domain: Geophysics,
+  {\bf 85}, no. 2, A7--A12.
+
 \bibitem[Bao and Symes, 1991]{BaoSy:91b}
 Bao, G., and W. Symes,  1991, A trace theorem for solutions of linear partial
   differential equations: Mathematical Methods in the Applied Sciences, {\bf
   14}, 553--562.
+
+\bibitem[Chauris and Cocher, 2017]{Herve2017}
+Chauris, H., and E. Cocher,  2017, From migration to inversion velocity
+  analysis: Geophysics, {\bf 82}, no. 3, S207--S223.
 
 \bibitem[Courant and Hilbert, 1962]{CourHil:62}
 Courant, R., and D. Hilbert,  1962, Methods of mathematical physics, volume ii:
@@ -27,16 +36,18 @@ Gauthier, O., A. Tarantola, and J. Virieux,  1986, Two-dimensional nonlinear
 Golub, G.~H., and C.~F. van Loan,  2012, Matrix computations, 4th ed.: Johns
   Hopkins University Press.
 
-\bibitem[Hou and Symes, 2016a]{HouSymes:16}
-Hou, J., and W. Symes,  2016a, Accelerating extended least-squares migration
-  with weighted conjugate gradient iteration: Geophysics, {\bf 81}, no. 4,
-  S165--S179.
+\bibitem[Guasch et~al., 2020]{Guaschetal:NPJDM20}
+Guasch, L., A. Calderón, M. Tang, P. Nachev, and M. Warner,  2020,
+  Full-waveform inversion imaging of the human brain: NPJ Digital Medicine,
+  {\bf 3}.
 
-\bibitem[Hou and Symes, 2016b]{HouSymes:EAGE16}
---------, 2016b, Accelerating least squares migration with weighted conjugate
-  gradient iteration: 78th Annual International Conference and Exhibition,
-  Expanded Abstract, European Association for Geoscientists and Engineers,
-  P104.
+\bibitem[Guasch et~al., 2019]{GuachWarnerRavaut:GEO19}
+Guasch, L., M. Warner, and C. Ravaut,  2019, Adaptive waveform inversion:
+  Practice: Geophysics, {\bf 84}, R447--R461.
+
+\bibitem[Hou and Symes, 2015]{HouSymes:15}
+Hou, J., and W. Symes,  2015, An approximate inverse to the extended {B}orn
+  modeling operator: Geophysics, {\bf 80}, no. 6, R331--R349.
 
 \bibitem[Hristova, 2009]{Hristova:09}
 Hristova, Y.,  2009, Time reversal in thermoacoustic tomography - an error
@@ -71,6 +82,19 @@ Lasiecka, I., and R. Trigianni,  1989, Trace regularity of the solutions of the
 Lax, P.~D.,  2006, Hyperbolic partial differential equations ({C}ourant
   {L}ecture {N}otes): American Mathematical Society.
 
+\bibitem[Li et~al., 2018]{Lietal:18}
+Li, Z., Y. Lin, and K. Zhang,  2018, Time-domain wavefield reconstruction
+  inversion: Applied Geophysics, {\bf 14}, 523–--528.
+
+\bibitem[Louboutin et~al., 2020]{Louboutinetal:20}
+Louboutin, M., G. Rizzuti, and F. Herrmann,  2020, Time-domain wavefield
+  reconstruction inversion in a tti medium.
+\newblock (arXiv:2004.07355v1).
+
+\bibitem[Nirenberg, 1972]{Nir:72}
+Nirenberg, L.,  1972, Lectures on partial differential equations: Lecture
+  Note~17, CBMS, AMS, Providence.
+
 \bibitem[Payne, 1975]{Payn:75}
 Payne, L.,  1975, Improperly posed problems in partial differential equations:
   Lecture Note~22, CBMS, Society for Industrial and Applied Mathematics,
@@ -90,6 +114,11 @@ Plessix, R.-E.,  2006, A review of the adjoint-state method for computing the
 Rachele, L.,  2000, Boundary determination for an inverse problem in
   elastodynamics: Communications in Partial Differential Equations, {\bf 25},
   1951--1996.
+
+\bibitem[{Saint Raymond}, 1991]{SaiR:91}
+{Saint Raymond}, X.,  1991, Elementary introduction to the theory of
+  pseudodifferential operators: CRC Press.
+\newblock Studies in Advanced Mathematics.
 
 \bibitem[Schuster, 2017]{Schuster:17}
 Schuster, G.,  2017, Seismic inversion: Society of Exploration Geophysicists.
@@ -123,6 +152,9 @@ Symes, W., and L.~E. Payne,  1983, Trace theorem for solutions of the wave
 Tang, B., S. Xu, and Y. Zhang,  2013, 3{D} angle gathers with plane-wave
   reverse time migration: Geophysics, {\bf 78}, no. 2, S117--S123.
 
+\bibitem[Taylor, 1981]{Tay:81}
+Taylor, M.,  1981, {Pseudodifferential Operators}: Princeton University Press.
+
 \bibitem[ten Kroode, 2012]{tenKroode:12}
 ten Kroode, F.,  2012, A wave-equation-based {K}irchhoff operator: Inverse
   Problems,  115013:1--28.
@@ -132,9 +164,28 @@ ten Kroode, F.,  2012, A wave-equation-based {K}irchhoff operator: Inverse
   Inverse Problems - from Theory to Application, Proceedings, Institute of
   Physics, 142--146.
 
+\bibitem[van Leeuwen and Herrmann, 2013]{LeeuwenHerrmannWRI:13}
+van Leeuwen, T., and F. Herrmann,  2013, Mitigating local minima in
+  full-waveform inversion by expanding the search space: Geophysical Journal
+  International, {\bf 195}, 661--667.
+
+\bibitem[van Leeuwen and Herrmann, 2016]{LeeuwenHerrmann:16}
+--------, 2016, A penalty method for pde-constrained optimization in inverse
+  problems: Inverse Problems, {\bf 32}, 1--26.
+
 \bibitem[Virieux and Operto, 2009]{VirieuxOperto:09}
 Virieux, J., and S. Operto,  2009, An overview of full waveform inversion in
   exploration geophysics: Geophysics, {\bf 74}, no. 6, WCC127--WCC152.
+
+\bibitem[Warner and Guasch, 2016]{Warner:16}
+Warner, M., and L. Guasch,  2016, Adaptive waveform inversion: theory:
+  Geophysics, {\bf 81}, R429--R445.
+
+\bibitem[Warner et~al., 2021]{Warneretal:SEG21}
+Warner, M., T. Nangoo, A. Umpleby, N. Shah, D. Kahn, and M. Isernia,  2021,
+  Adaptive reflection waveform inversion: Faster, tighter, deeper, smarter:
+  91st Annual International Meeting, Expanded Abstracts, Society of Exploration
+  Geophysicists, 582--586.
 
 \bibitem[Xu et~al., 2012]{XuWang:2012}
 Xu, S., D. Wang, F. Chen, G. Lambaré, and Y. Zhang,  2012, Inversion on
@@ -143,6 +194,12 @@ Xu, S., D. Wang, F. Chen, G. Lambaré, and Y. Zhang,  2012, Inversion on
 \bibitem[Xu et~al., 2011]{XuZhangTang:11}
 Xu, S., Y. Zhang, and B. Tang,  2011, 3{D} angle gathers from reverse time
   migration: Geophysics, {\bf 76}, no. 2, S77--S92.
+
+\bibitem[Yong et~al., 2021]{Yongetal:EAGE21}
+Yong, P., R. Brossier, L. Métivier, Y. Li, W. He, and J. Virieux,  2021,
+  Improving adaptive waveform inversion by local matching filter: 82nd EAGE
+  Annual Conference and Exhibition, Expanded Abstracts, European Association of
+  Geoscientists and Engineers, 1--5.
 
 \bibitem[Zhang et~al., 2014]{YuZhang:14}
 Zhang, Y., A. Ratcliffe, G. Roberts, and L. Duan,  2014, Amplitude-preserving

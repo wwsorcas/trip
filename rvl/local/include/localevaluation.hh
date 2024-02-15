@@ -244,6 +244,54 @@ namespace RVL {
     virtual ~QuaternaryLocalFunctionObject() {}
   };
 
+/** Quinternary local evaluation mixin. */
+
+  template<class DataType>
+  class QuinternaryLocalEvaluation: public LocalEvaluation<DataType> {
+  public:
+    QuinternaryLocalEvaluation() {}
+    QuinternaryLocalEvaluation(const QuinternaryLocalEvaluation<DataType> &) {}
+    virtual ~QuinternaryLocalEvaluation() {}
+
+    /** Evaluation method for LDCs */
+    using LocalEvaluation<DataType>::operator();
+    virtual void operator () (LocalDataContainer<DataType> & target,
+			      LocalDataContainer<DataType> const & source1,
+			      LocalDataContainer<DataType> const & source2,
+			      LocalDataContainer<DataType> const & source3,
+			      LocalDataContainer<DataType> const & source4) = 0;
+
+    /** Generic evaluation method */
+    virtual void operator()(LocalDataContainer<DataType> & target,
+			    vector<LocalDataContainer<DataType> const *> & sources) {
+      try {
+	if (sources.size() != 3) {
+	  RVLException e;
+	  e<<"Error: QuinternaryLocalFunctionObject::operator() (generic)\n";
+	  e<<"vector of sources not of length 3\n";
+	  throw e;
+	}
+	(*this)(target,*(sources[0]),*(sources[1]),*(sources[2]),*(sources[3]));
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from QuinternaryLocalFunctionObject::operator() (generic)\n";
+	throw e;
+      }
+    }
+
+  };
+
+  /** Quinternary local function object: takes four local data container
+      arguments, no return value. */
+
+  template<class DataType>
+  class QuinternaryLocalFunctionObject: 
+    public FunctionObject, public QuinternaryLocalEvaluation<DataType> {
+  public:
+    QuinternaryLocalFunctionObject() {}
+    QuinternaryLocalFunctionObject(const QuinternaryLocalFunctionObject<DataType> &) {}
+    virtual ~QuinternaryLocalFunctionObject() {}
+  };
 }
 
 #endif

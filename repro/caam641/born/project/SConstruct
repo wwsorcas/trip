@@ -40,38 +40,39 @@ sushw           = os.path.join(CWPROOT,'bin/sushw')
 suchw           = os.path.join(CWPROOT,'bin/suchw')
 suop2           = os.path.join(CWPROOT,'bin/suop2')
 MYAPPS          = os.getenv('MYAPPS')
-acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/acd.x')
+acd             = os.path.join(MYAPPS,'trip/iwave/acd/main/sim.x')
 towed_array     = os.path.join(MYAPPS,'trip/iwave/trace/main/towed_array.x')
 
 # files from basic: bp05103040.su, paracdpf.su, paravintz.rsf
 # zero phase bandpass filter a la Jie
 PULS = 'bp05103040.su'
-DATA = 'paracdpf.su'	
+DATA = 'paracdpf.su'        
 VELO = 'paravintz.rsf'
 VBIN = 'paravintz.bin'
 IMAGE= 'parapspif.rsf'
 BASIC='../../basic/project' 
 
 if not os.path.exists(BASIC):
-   print 'you must install basic on the same level as'
-   print 'the parent directory (born) to build this project'
+   print('you must install basic on the same level as')
+   print ('the parent directory (born) to build this project')
    Exit(1)
 else:
    for i in [PULS, DATA, VELO, VBIN, IMAGE]:
        SRC = os.path.join(BASIC,i)
        if not os.path.exists(SRC):
-           print 'you must build the target ' + SRC
-	   print 'before building this project'	
-	   Exit(1)
+           print('you must build the target ' + SRC)
+           print('before building this project')        
+           Exit(1)
        Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
-	  
-#       if os.path.exists(SRC):	
-#       	  Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+          
+#       if os.path.exists(SRC):        
+#                 Flow(i,None,'/bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
 #       else:
 #          Flow(i,None,
-#	       'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
-#	       myscons + ' ' + i + '; cd ' + 
-#	       thispath + '; /bin/rm -rf ' + i + '; ln -s ' + SRC + ' .',stdin=0,stdout=-1)
+#               'cd ' + BASIC + '; export CWPROOT=' + CWPROOT + '; ' + 
+#               myscons + ' ' + i + '; cd ' + 
+#               thispath + '; /bin/rm -rf ' + i + '; ln -s ' +
+#               SRC + ' .',stdin=0,stdout=-1)
 
 # add offset to each trace
 Flow('paracdpfoff.su', 'paracdpf.su', suchw + ' key1=offset key2=gx key3=sx b=1 c=-1')

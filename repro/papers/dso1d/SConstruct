@@ -1,5 +1,21 @@
 from rsf.tex import *
 
+Paper('figs',
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy,float,wasysym,setspace,bm',
+include=r'''
+      \newcommand{\oF}{\bar{F}}
+      \newcommand{\oS}{\bar{S}}
+      \newcommand{\fl}{f_{\lambda}}
+      \newcommand{\dl}{d_{\lambda}}
+      \newcommand{\bx}{{\bf x}}
+      \newcommand{\aw}{w_{\alpha}}
+      \newcommand{\tJa}{\tilde{J}_{\alpha}}
+''',
+color='ALL'
+)
+
 End(
 lclass='georeport',
 options='notimes',
@@ -10,5 +26,7 @@ include=r'''
       \newcommand{\fl}{f_{\lambda}}
       \newcommand{\dl}{d_{\lambda}}
       \newcommand{\bx}{{\bf x}}
-''')
+''',
+color='ALL'
+)
 

@@ -184,8 +184,8 @@ As we will frequently need to refer to the depth ranges in the wells,
 introduce
 \begin{eqnarray}
 \label{eqn:depths} 
-Z_s & = & Z_s\} \nonumber \\
-Z_r & = & Z_r\} 
+Z_s & = & [z_s^{\rm min}, z_s^{\rm max}] \nonumber \\
+Z_r & = & [z_r^{\rm min},z_r^{\rm max}] 
 \end{eqnarray}
 We idealize energy sources as isotropic point radiators. A radiator at
 $\bx=\bx_s$ appears as the right-hand side in the acoustic wave
@@ -201,11 +201,13 @@ Slowness (reciprocal velocity) turns out to be a more convenient
 choice than velocity to represent the spatially varying acoustic
 properties of the interwell material. We denote the slowness by $m$.
 For physical reasons, $m$ should be positive and bounded uniformly above and 
-below, say by $0 < m_{\rm min} < m_{\rm max}$. We assume that the
+below, say by $0 < m_{\rm min} < m_{\rm max}$.
+
+We assume that the
 material is {\em acoustically transparent}, that is, generates no
 reflected waves of significant energy in the seismic band. The geometric
 optics approximation, to be summarized below, shows that a convenient
-mathematical proxy for transparency is the assumption that $m$is
+mathematical proxy for transparency is the assumption that $m$ is
 smooth, with derivatives up to
 order 2 bounded by another constant $\mu > 0$. These conditions are
 summarized in the definition of the feasible set of slowness models $M$:
@@ -857,112 +859,6 @@ Note that the conclusion of Theorem \ref{thm:FWIconv} holds regardless of whethe
 $f_1$ is oscillatory or mean-zero, so the common description of this
 phenomenon as ``cycle-skipping'' is somewhat misleading.
 \end{rem}
-
-\section{A Synthetic Example: FWI}
-A simple 2D synthetic example illustrates the impact of Theorem
-\ref{thm:FWIconv}. We will also use this example throughout the paper
-to illustrate alternative solution methods for the crosswell inverse
-problem.
-
-The target slowness $m_*$ is the reciprocal of a piecewise
-linear velocity (Figure
-\ref{fig:velbig}). This corresponding velocity has a constant $2$ km/s layer near $x=0$ and
-increases linearly for $x\ge 0.5$ km. Boundary conditions are Dirichlet
-for pressure on all parts of the boundary, although the wavefields
-occuring in the experiments described here interact only with the $x=0$
-surface so that the effective geometry is that of a half-space. Data
-for a single source at depth $x_s=$ 10 m, $z_s=$ 5100 m (coordinates as
-depicted in Figure \ref{fig:velbig}. A line of receivers is positioned
-at depth $x_r=$ 3000 m, with 4000 m $\le z_r \le$ 7000 m, spaced
-$\Delta z_r$=30 m apart. 
-
-The source pulse ($f$ in equation (\ref{eqn:pressure})) is a [2.5, 5, 25, 30]
-Hz trapezoidal bandpass filter produces the synthetic data
-depicted in Figure \ref{fig:shot6kmbig}. Note that the finite
-difference scheme used to produce this data approximates 2D wave
-propagation rather than the 3D propagation mentioned in the discussion
-so far, so that the data waveform is asymmetric, unlike the
-source. Also the presence of the pressure-free surface near the source
-contributes effectively another derivative. Nonetheless the data
-resemble the prediction of the constant velocity calculation (equation
-(\ref{eqn:cv})).
-
-For a very smooth $m$ such as that depicted in Figure
-\ref{fig:velbig}, the curve $z_r \mapsto \tau[m](z_s,z_r)$ resembles a hyperbola, as one sees from Figure
-\ref{fig:shot6kmbig}. The onset time of the signal in this figure
-depends on the slowness used in the simulation. For
-$m_0 \equiv 0.5$ s/km, the predicted data $S[m_0]f$ are depicted in
-Figure \ref{fig:shot6kmhom}. The general appearance is similar to   Figure
-\ref{fig:shot6kmbig}, but the onset time of the wave is later, due to
-the slower wave velocity.
-
-Now consider the inverse problem (\ref{eqn:ls}) with $d=S[m_*]f$. Since
-$m_*=m_0$ near the source point, it is not unreasonable to take $m_0$
-as an initial guess for the wave velocity. Conventional FWI uses
-iterative optimization algorithm to minimize $J_{\rm LS}$. Descent
-algorithms related to Newton's method have been favored for FWI, due
-to the computational cost of function evaluation
-\cite[]{VirieuxOperto:09}. Of course, any such algorithm finds a
-stationary point of the objective, assuming convergence, and not
-necessarily a global minimizer.
-
-A plot (Figure \ref{fig:fwicurve}) 
-of $J_{\rm LS}$ along the line
-segment from $m_0$ to $m_*$ immediately shows the difficulty faced by
-a local optimization approach: as one
-would predict from Theorem \ref{thm:FWIconv} and its proof, the predicted data change
-little in size along this segment and have support nearly disjoint
-from that of the target data $d$, hence are orthogonal to it, until the trial slowness becomes
-quite close to the target $m_*$, so that the local behaviour of $J_{\rm LS}$ in a small
-neighborhood of $m_0$ gives little or
-no hint about a constructive update direction. One would not expect a
-local optimization algorithm to be effective under such circumstances.
-
-Most descent methods require computed gradient, as input to the
-computation of a descent step. Assuming that $f \in H^1_0(\bR)$, the gradient of $J_{\rm LS}$ is 
-\be\label{eqn:gradls}
-\nabla J_{\rm LS}[m] = D(S[m]f)^T(w^2(S[m]f-d)).
-\ee
-In the expression \ref{eqn:gradls}, note that $m \rightarrow S[m]f$ is
-a map from $M$ to $L^2(\Omega)$, the derivative of which is given in
-equation  \ref{eqn:preq}. The symbol $D(S[m]f)^T$ denotes the
-transpose of this derivative with respect to a Hilbert space norm
-chosen for $M$, about which we have said nothing up to this point. We
-will mention some sensible possibilities in the Discussion section;
-for now, we simply identify $M$ with $L^2(\bR^2)$ for the purpose of
-computing the transpose, hence the gradient of $J_{\rm LS}$. Thus the
-gradient as computed here is the image of the formal or $L^2$ adjoint
-of $D(S[m]f)$, applied
-to the time-cutoff residual $w^2(S[m]f-d)$. 
-%There is no reason to suppose that this
-%image would be smooth, given the weak constraints on $f$ and $d$, so
-%in general it will not define an acceptable update direction for
-%velocity. One way out of this predicament is to extend the domain of
-%$S$ to a subset of a larger Hilbert space containing
-%$C^{\infty}(\bR^2)$, defined by control of finitely many derivatives,
-%such as a Sobolev space, and define the adjoint with respect to this
-%inner product structure, obtained by concatenating a smoothing
-%operator with the formal adjoint. The reader can consult for instance
-%\cite{KerSy:94} for more on this idea. For the purposes of this
-%discussion we will display the formal gradient (\ref{eqn:gradls})..
-
-Figure \ref{fig:fwigrad6kmbighom} shows the result of the computation
-(\ref{eqn:gradls}) for the example given previously, $m=m_0$, $d=S[m_*]f$. The adjoint $D(S[m]f)^T$ is
-computed by the adjoint state method
-\cite[]{Chavent:74,GauTarVir:86,Plessix:06}. Geometric optics explains
-the apparent interrogation of only the triangle spanning the source
-and the receiver segment - perturbations of velocity outside of it do
-not affect the geometric optics travel times (rays are straight lines,
-in constant velocity) connecting source and receivers. However there
-is very little indication of a productive update: the edge effects one
-sees in this figure (``rabbit ears'') average to very nearly zero when
-weighted by the difference between $m_0$ and $m_*$ - that is, the
-gradient is essentially orthogonal to the best search direction.
-
-If we use the gradient as a search direction, as one would for the
-steepest descent algorithm, for instance, then one obtains the values
-of $J_{\rm LS}$ displayed in Figure \ref{fig:fwigrad} - clearly not a
-productive search direction.
 
 \section{Source-Receiver Extension}
 
@@ -1788,47 +1684,47 @@ term. Similar reasoning applied to $P^T \ofa$ and appeal to Theorem
 %\plot{awicurve}{width=\textwidth}{RMS amplitudes of inversions for
 %trace-dependent source (matched source), scaled by t (second moment
 %objective). Convex combinations of homogeneous (2 km/s) and lens models.}
-\plot{velbig_dec_exp}{width=\textwidth}{Example: $v$ = 2 km/s for $z \le
-  0.5 km$, $=2.0 + (z-0.5)*0.5$ km/s for $z>0.5$ km. Source location
-  $x=5100$, $z=10$ m and receiver locations $x=3000 - 6000$ m,
-$z=3000$ m indicated.}
-\plot{shot6kmhom}{width=\textwidth}{Shot gather for geometry indicated
-  in Figure \ref{fig:velbig_dec_exp}, generated with homogeneous velocity:
-  $v_0=2$ km/s}
-\plot{shot6kmbig}{width=\textwidth}{Shot gather for geometry and
-  $v$ as in Figure \ref{fig:velbig_dec_exp}.}
-\plot{shot6kmbig_decon}{width=\textwidth}{Inverse image of data in 
-  Figure (\ref{shot6kmbig}) under extended modeling operator at $v_0$
-  = 2 km/s}
-\plot{shot6kmbig_bigdecon}{width=\textwidth}{Inverse image of data in 
-  Figure \ref{shot6kmbig} under extended modeling operator at target
-  $v$ (Figure \ref{fig:velbig_dec_exp}).}
-\plot{fwigrad6kmbighom}{width=\textwidth}{FWI gradient for shot gather
-defined in Figure \ref{fig:velbig_dec_exp}, at $v=v_0$ = 2 km/s. Scaled by
-10$^6$ for plotting. Note very
-small values, and sign is positive, indicating that FWI objective {\em
-increases} in the direction of the target velocity.}
-\plot{fwiscan}{width=\textwidth}{Plot of values of the FWI objective
-  along the line segment between $v_0$ and $v$, for the shot gather
-  described in Figure \ref{fig:velbig_dec_exp}. For abscissa $h$, value
-  plotted is FWI objective at $h v_0 + (1-h) v$. Note that objective
-  does in fact initially increase from its value at $v_0$, consistent
-  with the positive average value of the gradient as shown in Figure \ref{fig:fwigrad6kmbighom}. }
-\plot{ivagrad6kmbighom}{width=\textwidth}{Source-receiver Extended FWI
-  gradient, same geometry, data, and velocity model as in Figure
-  \ref{fig:fwigrad6kmbighom}. Note that overall sign is negative, indicating
-  correct conclusion that $v_0$ is slow.}
-\plot{fwistack}{width=\textwidth}{FWI gradient at $v=v_0$ for line of shots 
-  extending from 2100 m to 8000 m. Scaled by
-10$^6$ for plotting. Receiver locations are windowed so 
-  that the range of offsets is the same for all shots. In effect, the 
-  gradient is a stack of translates of the gradient in Figure
-  \ref{fig:fwigrad6kmbighom}.}
-\plot{ivastack}{width=\textwidth}{Source-receiver Extended FWI gradient at $v=v_0$ for line of shots 
-  extending from 2100 m to 8000 m. Receiver locations are windowed so 
-  that the range of offsets is the same for all shots. In effect, the 
-  gradient is a stack of translates of the gradient in Figure
-  \ref{fig:ivagrad6kmbighom}.}
+%\plot{./velbig_dec}{width=\textwidth}{Example: $v$ = 2 km/s for $z \le
+%  0.5 km$, $=2.0 + (z-0.5)*0.5$ km/s for $z>0.5$ km. Source location
+%  $x=5100$, $z=10$ m and receiver locations $x=3000 - 6000$ m,
+%$z=3000$ m indicated.}
+%\plot{shot6kmhom}{width=\textwidth}{Shot gather for geometry indicated
+%  in Figure \ref{fig:velbig_dec_exp}, generated with homogeneous velocity:
+%  $v_0=2$ km/s}
+%\plot{shot6kmbig}{width=\textwidth}{Shot gather for geometry and
+%  $v$ as in Figure \ref{fig:velbig_dec_exp}.}
+%\plot{shot6kmbig_decon}{width=\textwidth}{Inverse image of data in 
+%  Figure (\ref{shot6kmbig}) under extended modeling operator at $v_0$
+%  = 2 km/s}
+%\plot{shot6kmbig_bigdecon}{width=\textwidth}{Inverse image of data in 
+%  Figure \ref{shot6kmbig} under extended modeling operator at target
+%  $v$ (Figure \ref{fig:velbig_dec_exp}).}
+%\plot{fwigrad6kmbighom}{width=\textwidth}{FWI gradient for shot gather
+%defined in Figure \ref{fig:velbig_dec_exp}, at $v=v_0$ = 2 km/s. Scaled by
+%10$^6$ for plotting. Note very
+%small values, and sign is positive, indicating that FWI objective {\em
+%increases} in the direction of the target velocity.}
+%\plot{fwiscan}{width=\textwidth}{Plot of values of the FWI objective
+%  along the line segment between $v_0$ and $v$, for the shot gather
+%  described in Figure \ref{fig:velbig_dec_exp}. For abscissa $h$, value
+%  plotted is FWI objective at $h v_0 + (1-h) v$. Note that objective
+%  does in fact initially increase from its value at $v_0$, consistent
+%  with the positive average value of the gradient as shown in Figure \ref{fig:fwigrad6km%bighom}. }
+%\plot{ivagrad6kmbighom}{width=\textwidth}{Source-receiver Extended FWI
+%  gradient, same geometry, data, and velocity model as in Figure
+%  \ref{fig:fwigrad6kmbighom}. Note that overall sign is negative, indicating
+% correct conclusion that $v_0$ is slow.}
+%\plot{fwistack}{width=\textwidth}{FWI gradient at $v=v_0$ for line of shots 
+%  extending from 2100 m to 8000 m. Scaled by
+%10$^6$ for plotting. Receiver locations are windowed so 
+%  that the range of offsets is the same for all shots. In effect, the 
+%  gradient is a stack of translates of the gradient in Figure
+%  \ref{fig:fwigrad6kmbighom}.}
+%\plot{ivastack}{width=\textwidth}{Source-receiver Extended FWI gradient at $v=v_0$ for line of shots 
+%  extending from 2100 m to 8000 m. Receiver locations are windowed so 
+%  that the range of offsets is the same for all shots. In effect, the 
+%  gradient is a stack of translates of the gradient in Figure
+%  \ref{fig:ivagrad6kmbighom}.}
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}

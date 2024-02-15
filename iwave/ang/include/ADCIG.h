@@ -109,7 +109,7 @@ void HO2ADscat (stADCIG *pADCIG, int nthread, int taperFact) {
       }
     }
     
-    int count = 0;
+    //    int count = 0;
 #ifdef _OPENMP
 #pragma omp parallel default(shared) private(thread_id, n, k, m, j)
 #endif
@@ -131,7 +131,7 @@ void HO2ADscat (stADCIG *pADCIG, int nthread, int taperFact) {
 	  for(m = 0; m < pADCIG->np; m++)
 	    M[k][m][n] = Maux[thread_id][m];
 	}
-	count++;
+	//	count++;
 	//		printf ("thread %d did step %d\n", thread_id, count);
       }
     } // End of parallel region

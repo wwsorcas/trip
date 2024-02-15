@@ -34,7 +34,17 @@ class Space(vcl.Space):
 
     def isData(self,x):
         return ((self.filename == x) or linalg.rsfcomp(self.filename,x))
-    
+
+    def saveto(self,x,y):
+        try:
+            if not self.isData(x):
+                raise Exception('input data ' + str(x) + ' not rsf')
+            if not linalg.copy(x,y):
+                raise Exception('output data ' + str(y) + ' not legal path')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from rsfvc.Space.saveto')
+        
     # operates on data = filenames
     def raw_linComb(self,a,x,y,b=1.0):
         linalg.lincomb(a,x,y,b)

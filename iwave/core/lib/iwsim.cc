@@ -786,12 +786,14 @@ namespace TSOpt {
 	  drystr<<"    panel="<<panelindex<<" in range=["<<first<<", "<<last<<"], rank="<<retrieveGlobalRank()<<"\n";
 	}
 	else {
+	  // WWS 2024.02.08 changed -1 to 0
 	  if (printact > -1) {
 	    if (panelindex==first && retrieveGlobalRank()==0) {
 	      //	      fprintf(stream,"\n*** IWaveSim: model=%s  fwd=%d deriv=%d\n",ic.iwave_model.c_str(), fwd, order);
 	      fprintf(stderr,"\n*** IWaveSim: model=%s  fwd=%d deriv=%d\n",ic.iwave_model.c_str(), fwd, order);
+	      //	    fprintf(stream,"    panel=%d in range=[%d, %d], rank=%d\n", panelindex,first,last,retrieveGlobalRank());
+	      
 	    }
-	    //	    fprintf(stream,"    panel=%d in range=[%d, %d], rank=%d\n", panelindex,first,last,retrieveGlobalRank());
 	    fprintf(stderr,"    panel=%d in range=[%d, %d], rank=%d\n", panelindex,first,last,retrieveGlobalRank());
 	  }
 

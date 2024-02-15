@@ -467,10 +467,10 @@ void asg_timestep(std::vector<RDOM *> dom,
   i_v[2] = D_V2;
     
   /* fill in pml arrays; these are no-ops after the first call */
-  register ireal * restrict ep[RARR_MAX_NDIM];
-  register ireal * restrict epp[RARR_MAX_NDIM];
-  register ireal * restrict ev[RARR_MAX_NDIM];
-  register ireal * restrict evp[RARR_MAX_NDIM];
+  ireal * restrict ep[RARR_MAX_NDIM];
+  ireal * restrict epp[RARR_MAX_NDIM];
+  ireal * restrict ev[RARR_MAX_NDIM];
+  ireal * restrict evp[RARR_MAX_NDIM];
 
   // local pml widths for this domain
   IPNT nrsloc;
@@ -533,7 +533,7 @@ void asg_timestep(std::vector<RDOM *> dom,
       float *** f3= (dom[0]->_s)[icoeff]._s3;
       //      if (ndim == 2) {
       if ((f2) && (!f3)) {
-	register ireal ** restrict f = (dom[0]->_s)[icoeff]._s2;
+	ireal ** restrict f = (dom[0]->_s)[icoeff]._s2;
 	// extend in dim 1
 	for (int i0=gs[0]+nlsloc[0]; i0<=ge[0]-nrsloc[0]; i0++) {
 	  for (int i1=gs[1]; i1<=gs[1]+nlsloc[1]; i1++)
@@ -551,7 +551,7 @@ void asg_timestep(std::vector<RDOM *> dom,
       }
       //      else if (ndim == 3) {
       else if (f3) {
-	register ireal *** restrict f = (dom[0]->_s)[icoeff]._s3;
+	ireal *** restrict f = (dom[0]->_s)[icoeff]._s3;
 	// extend in dim 2
 	for (int i0=gs[0]+nlsloc[0]; i0<=ge[0]-nrsloc[0]; i0++) {
 	  for (int i1=gs[1]+nlsloc[1]; i1<=ge[1]-nrsloc[1]; i1++) {
@@ -619,17 +619,22 @@ void asg_timestep(std::vector<RDOM *> dom,
   RASN(dha,asgpars->dxs);
   IPNT ihmax;
   IASN(ihmax,asgpars->ihmax);
-  
-  if (ndim==2)
-      
-  // deriv = 0
-  if (n==1) {
-    //    if (fwd == true) {
-    if (ndim == 2) {
 
-      register ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
-      register ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
+  if (ndim == 3) {
+    RVLException e;
+    e<<"Error: asg_timestep(). 3D modeling not implemented yet.\n";
+  }
+  
+  if (ndim==2) {
+      
+    // deriv = 0
+    if (n==1) {
+      //    if (fwd == true) {
+      //      if (ndim == 2) {
+
+      ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
+      ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
+      ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
       if (!bulk3) {
 	// create new 3D array if necessary, also set loop limit on
 	// extended axis appropriately
@@ -638,10 +643,10 @@ void asg_timestep(std::vector<RDOM *> dom,
 	dha[2]=1.0f;
 	ihmax[2]=0;
       }
-      register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
-      register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+      ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+      ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+      ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+      ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
                 
 #ifdef VERBOSE
       fprintf(asgpars->stream,"asg_timestep: deriv=0 extd=%d\n",
@@ -726,206 +731,206 @@ void asg_timestep(std::vector<RDOM *> dom,
       fflush(asgpars->stream);
 #endif
     }
-    if (ndim == 3) {
-      RVLException e;
-      e<<"Error: asg_timestep(). 3D modeling not implemented yet.\n";
 
       /*      
-      register ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
-      register ireal *** restrict buoy3 = (dom[0]->_s)[D_BUOY]._s3;
-      register ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
-      register ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
-      register ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
-      register ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
-      register ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
-      register ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
+	      if (ndim == 3) {
+	      RVLException e;
+	      e<<"Error: asg_timestep
+	      (). 3D modeling not implemented yet.\n";
+	      ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
+	      ireal *** restrict buoy3 = (dom[0]->_s)[D_BUOY]._s3;
+	      ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
+	      ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
+	      ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
+	      ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
+	      ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
+	      ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
 
-      ireal * sdiv_alloc = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
-      ireal * sdiv = &(sdiv_alloc[-gsc_p[0]]);
-      for (int i2=gsc_p[2]+asgpars->nls[2]; i2<=gec_p[2]-asgpars->nrs[2];i2++) {
-	for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
-	  for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
-	    p13[i2][i1][i0]=p03[i2][i1][i0];
-	    p23[i2][i1][i0]=p03[i2][i1][i0];
+	      ireal * sdiv_alloc = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
+	      ireal * sdiv = &(sdiv_alloc[-gsc_p[0]]);
+	      for (int i2=gsc_p[2]+asgpars->nls[2]; i2<=gec_p[2]-asgpars->nrs[2];i2++) {
+	      for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
+	      for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
+	      p13[i2][i1][i0]=p03[i2][i1][i0];
+	      p23[i2][i1][i0]=p03[i2][i1][i0];
+	      }
+	      }
+	      }
+	      asg_pstep3d(bulk3,
+	      p03,p13,p23,
+	      v03,v13,v23,
+	      ep, epp,
+	      sdiv,
+	      gsc_p,gec_p,
+	      asgpars->lbc,asgpars->rbc,
+	      asgpars->k,asgpars->coeffs);
+	      userfree_(sdiv_alloc);
+
+	      ireal * gradp[RARR_MAX_NDIM];
+	      ireal * gradp_alloc[RARR_MAX_NDIM];
+	      gradp_alloc[0] = (ireal *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(ireal));
+	      gradp_alloc[1] = (ireal *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(ireal));
+	      gradp_alloc[2] = (ireal *)usermalloc_((gec_v[2][0]-gsc_v[2][0]+1)*sizeof(ireal));
+	      gradp[0]=&(gradp_alloc[0][-gsc_v[0][0]]);
+	      gradp[1]=&(gradp_alloc[1][-gsc_v[1][0]]);
+	      gradp[2]=&(gradp_alloc[2][-gsc_v[2][0]]);
+                    
+	      asg_vstep3d(buoy3,
+	      p03,p13,p23,
+	      v03,v13,v23,
+	      ev, evp,
+	      gradp,
+	      &(gsc_v[0][0]),&(gec_v[0][0]),
+	      &(gsc_v[1][0]),&(gec_v[1][0]),
+	      &(gsc_v[2][0]),&(gec_v[2][0]),
+	      asgpars->lbc,asgpars->rbc,
+	      asgpars->k,asgpars->coeffs);
+	      userfree_(gradp_alloc[0]);
+	      userfree_(gradp_alloc[1]);
+	      userfree_(gradp_alloc[2]);
+      */
+  
+    else if (n==2) {
+      //    cerr<<"step n=2 (deriv=1)\n";
+      //    if (fwd == true) {
+      if (ndim == 2) {
+	ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
+	ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
+	ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
+	ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+	ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+	ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+	ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+	ireal ** restrict bulk2d = (dom[1]->_s)[D_BULK]._s2;
+	ireal ** restrict buoy2d = (dom[1]->_s)[D_BUOY]._s2;
+	ireal *** restrict bulk3d = (dom[1]->_s)[D_BULK]._s3;
+	ireal ** restrict p02d = (dom[1]->_s)[i_p[0]]._s2;
+	ireal ** restrict p12d = (dom[1]->_s)[i_p[1]]._s2;
+	ireal ** restrict v02d = (dom[1]->_s)[i_v[0]]._s2;
+	ireal ** restrict v12d = (dom[1]->_s)[i_v[1]]._s2;
+
+	// this version requires bulk and bulkd to be commensurable
+	// ie representing vectors in same space
+	if ((!bulk3) && (!bulk3d)) {
+	  bulk3 = (float ***)usermalloc_(sizeof(float **));
+	  bulk3[0] = bulk2;
+	  bulk3d = (float ***)usermalloc_(sizeof(float **));
+	  bulk3d[0] = bulk2d;
+	  dha[2]=1.0f;
+	  ihmax[2]=0;
+	}
+
+	/* approach with div, grad buffers */
+	// aligned vector lengths
+	int align_words = USERMALLOC_ALIGN_BYTES/sizeof(float);
+	int p_alloc = align_words*(1+((gec_p[0]-gsc_p[0]+1)/align_words));
+
+	// allocate sdiv
+	float * sdiv_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
+	float ** sdiv = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
+	for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
+	  sdiv[idim] = &(sdiv_alloc[idim*p_alloc]);
+	}
+
+	// allocate sdivd
+	float * sdivd_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
+	float ** sdivd = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
+	for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
+	  sdivd[idim] = &(sdivd_alloc[idim*p_alloc]);
+	}
+
+	// allocate sdivb
+	float * sdivb_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
+	float ** sdivb = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
+	for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
+	  sdivb[idim] = &(sdivb_alloc[idim*p_alloc]);
+	}
+      
+	// allocate sdivbd
+	float * sdivbd_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
+	float ** sdivbd = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
+	for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
+	  sdivbd[idim] = &(sdivbd_alloc[idim*p_alloc]);
+	}
+      
+	// allocate gradp
+	float * gradp0 = (float *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(float));
+	float * gradp1 = (float *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(float));
+
+	// allocate gradp
+	float * gradp0d = (float *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(float));
+	float * gradp1d = (float *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(float));
+
+	for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1]; i1++) {
+	  for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0]; i0++) {
+	    p12[i1][i0]=p02[i1][i0];
 	  }
 	}
-      }
-      asg_pstep3d(bulk3,
-		  p03,p13,p23,
-		  v03,v13,v23,
-		  ep, epp,
-		  sdiv,
-		  gsc_p,gec_p,
-		  asgpars->lbc,asgpars->rbc,
-		  asgpars->k,asgpars->coeffs);
-      userfree_(sdiv_alloc);
 
-      ireal * gradp[RARR_MAX_NDIM];
-      ireal * gradp_alloc[RARR_MAX_NDIM];
-      gradp_alloc[0] = (ireal *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(ireal));
-      gradp_alloc[1] = (ireal *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(ireal));
-      gradp_alloc[2] = (ireal *)usermalloc_((gec_v[2][0]-gsc_v[2][0]+1)*sizeof(ireal));
-      gradp[0]=&(gradp_alloc[0][-gsc_v[0][0]]);
-      gradp[1]=&(gradp_alloc[1][-gsc_v[1][0]]);
-      gradp[2]=&(gradp_alloc[2][-gsc_v[2][0]]);
-                    
-      asg_vstep3d(buoy3,
-		  p03,p13,p23,
-		  v03,v13,v23,
-		  ev, evp,
-		  gradp,
-		  &(gsc_v[0][0]),&(gec_v[0][0]),
-		  &(gsc_v[1][0]),&(gec_v[1][0]),
-		  &(gsc_v[2][0]),&(gec_v[2][0]),
-		  asgpars->lbc,asgpars->rbc,
-		  asgpars->k,asgpars->coeffs);
-      userfree_(gradp_alloc[0]);
-      userfree_(gradp_alloc[1]);
-      userfree_(gradp_alloc[2]);
-      */
+	if (fwd) {
 
-    }
-  }  
-  else if (n==2) {
-    //    cerr<<"step n=2 (deriv=1)\n";
-        //    if (fwd == true) {
-    if (ndim == 2) {
-      register ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
-      register ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
-      register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
-      register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
-      register ireal ** restrict bulk2d = (dom[1]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoy2d = (dom[1]->_s)[D_BUOY]._s2;
-      register ireal *** restrict bulk3d = (dom[1]->_s)[D_BULK]._s3;
-      register ireal ** restrict p02d = (dom[1]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12d = (dom[1]->_s)[i_p[1]]._s2;
-      register ireal ** restrict v02d = (dom[1]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12d = (dom[1]->_s)[i_v[1]]._s2;
+	  asg2dtap_d(bulk3, bulk3d, buoy2, buoy2d, p02, p02d, p12, p12d,
+		     v02, v02d, v12, v12d, ep, epp, ev, evp,
+		     sdiv, sdivd, sdivb, sdivbd, 
+		     gradp0, gradp0d, gradp1, gradp1d,
+		     gsc_p,gec_p,
+		     &(gsc_v[0][0]),&(gec_v[0][0]),
+		     &(gsc_v[1][0]),&(gec_v[1][0]),
+		     asgpars->lbc,asgpars->rbc,
+		     dha[2],ihmax[2],		   
+		     asgpars->k,asgpars->coeffs,
+		     asgpars->stream);
 
-      // this version requires bulk and bulkd to be commensurable
-      // ie representing vectors in same space
-      if ((!bulk3) && (!bulk3d)) {
-	bulk3 = (float ***)usermalloc_(sizeof(float **));
-	bulk3[0] = bulk2;
-	bulk3d = (float ***)usermalloc_(sizeof(float **));
-	bulk3d[0] = bulk2d;
-	dha[2]=1.0f;
-	ihmax[2]=0;
-      }
-
-      /* approach with div, grad buffers */
-      // aligned vector lengths
-      int align_words = USERMALLOC_ALIGN_BYTES/sizeof(float);
-      int p_alloc = align_words*(1+((gec_p[0]-gsc_p[0]+1)/align_words));
-
-      // allocate sdiv
-      float * sdiv_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
-      float ** sdiv = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
-      for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
-	sdiv[idim] = &(sdiv_alloc[idim*p_alloc]);
-      }
-
-      // allocate sdivd
-      float * sdivd_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
-      float ** sdivd = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
-      for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
-	sdivd[idim] = &(sdivd_alloc[idim*p_alloc]);
-      }
-
-      // allocate sdivb
-      float * sdivb_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
-      float ** sdivb = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
-      for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
-	sdivb[idim] = &(sdivb_alloc[idim*p_alloc]);
-      }
-      
-      // allocate sdivbd
-      float * sdivbd_alloc = (float *)usermalloc_((gec_p[1]-gsc_p[1]+1)*p_alloc*sizeof(float));
-      float ** sdivbd = (float **)usermalloc_((gec_p[1]-gsc_p[1]+1)*sizeof(float *));
-      for (int idim=0; idim<gec_p[1]-gsc_p[1]+1; idim++) {
-	sdivbd[idim] = &(sdivbd_alloc[idim*p_alloc]);
-      }
-      
-      // allocate gradp
-      float * gradp0 = (float *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(float));
-      float * gradp1 = (float *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(float));
-
-      // allocate gradp
-      float * gradp0d = (float *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(float));
-      float * gradp1d = (float *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(float));
-
-      for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1]; i1++) {
-	for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0]; i0++) {
-	  p12[i1][i0]=p02[i1][i0];
 	}
-      }
-
-      if (fwd) {
-
-	asg2dtap_d(bulk3, bulk3d, buoy2, buoy2d, p02, p02d, p12, p12d,
-		   v02, v02d, v12, v12d, ep, epp, ev, evp,
-		   sdiv, sdivd, sdivb, sdivbd, 
-		   gradp0, gradp0d, gradp1, gradp1d,
-		   gsc_p,gec_p,
-		   &(gsc_v[0][0]),&(gec_v[0][0]),
-		   &(gsc_v[1][0]),&(gec_v[1][0]),
-		   asgpars->lbc,asgpars->rbc,
-		   dha[2],ihmax[2],		   
-		   asgpars->k,asgpars->coeffs,
-		   asgpars->stream);
-
-      }
-      else {
+	else {
 	
-	asg2dtap_b(bulk3, bulk3d, buoy2, buoy2d, p02, p02d, p12, p12d,
-		   v02, v02d, v12, v12d, ep, epp, ev, evp,
-		   sdiv, sdivd, sdivb, sdivbd, 
-		   gradp0, gradp0d, gradp1, gradp1d,
-		   gsc_p,gec_p,
-		   &(gsc_v[0][0]),&(gec_v[0][0]),
-		   &(gsc_v[1][0]),&(gec_v[1][0]),
-		   asgpars->lbc,asgpars->rbc,
-		   dha[2],ihmax[2],		   
-		   asgpars->k,asgpars->coeffs,
-		   asgpars->stream);
+	  asg2dtap_b(bulk3, bulk3d, buoy2, buoy2d, p02, p02d, p12, p12d,
+		     v02, v02d, v12, v12d, ep, epp, ev, evp,
+		     sdiv, sdivd, sdivb, sdivbd, 
+		     gradp0, gradp0d, gradp1, gradp1d,
+		     gsc_p,gec_p,
+		     &(gsc_v[0][0]),&(gec_v[0][0]),
+		     &(gsc_v[1][0]),&(gec_v[1][0]),
+		     asgpars->lbc,asgpars->rbc,
+		     dha[2],ihmax[2],		   
+		     asgpars->k,asgpars->coeffs,
+		     asgpars->stream);
+	}
+
+	userfree_(sdiv);		    
+	userfree_(sdiv_alloc);
+	userfree_(sdivb);
+	userfree_(sdivb_alloc);
+	userfree_(gradp0);
+	userfree_(gradp1);
+      
+	userfree_(sdivd);
+	userfree_(sdivd_alloc);
+	userfree_(sdivbd);
+	userfree_(sdivbd_alloc);
+	userfree_(gradp0d);
+	userfree_(gradp1d);
+
+	userfree_(bulk3);
+	userfree_(bulk3d);
+      
       }
 
-      userfree_(sdiv);		    
-      userfree_(sdiv_alloc);
-      userfree_(sdivb);
-      userfree_(sdivb_alloc);
-      userfree_(gradp0);
-      userfree_(gradp1);
-      
-      userfree_(sdivd);
-      userfree_(sdivd_alloc);
-      userfree_(sdivbd);
-      userfree_(sdivbd_alloc);
-      userfree_(gradp0d);
-      userfree_(gradp1d);
-
-      userfree_(bulk3);
-      userfree_(bulk3d);
-      
-   }
-
-    if (ndim == 3) {
-      RVLException e;
-      e<<"Error: asg_timestep(). 3D derivatives not implemented yet.\n";
+      //if (ndim == 3) {
+      //  RVLException e;
+      //  e<<"Error: asg_timestep(). 3D derivatives not implemented yet.\n";
+      //}
     }
-  }
 
-  else {
-    RVLException e;
-    //    e<<"Error: asg_timestep(). Only 0th, 1st derivatives are implemented.\n";
-    e<<"Error: asg_timestep(). Only 0th derivatives are implemented.\n";    
-    throw e;
-  }
+    else {
+      RVLException e;
+      //    e<<"Error: asg_timestep(). Only 0th, 1st derivatives are implemented.\n";
+      e<<"Error: asg_timestep(). Only 0th derivatives are implemented.\n";    
+      throw e;
+    }
 
-  //cerr<<"exit fd_asg::asg_timestep\n";
+    //cerr<<"exit fd_asg::asg_timestep\n";
+  }
 }
 
 /**

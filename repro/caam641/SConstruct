@@ -1,14 +1,14 @@
 from rsf.book import *
 from rsf.tex import Paper
 
-chapters=Split('madfigs basic born ray conv stack')
+chapters=Split('basic born ray conv stack madfigs')
        
-Book(chapters,author='William W. Symes',copyr='Rice University',group='The Rice Inversion Project',title='CAAM 641 NOTES: SPRING 2017',fig=('basic/project','parapspi.pdf','width=\\textwidth'))
+Book(chapters,author='William W. Symes',copyr='William W. Symes',group='WWSOrcas',title='Seismic Inversion \\\ Part 1: Classic Imaging',fig=('basic/project','parapspi.pdf','width=\\textwidth'))
 
 Paper('intro')
 
 End(options='book',
-use='hyperref,amsmath,amssymb,amsfonts,amsbsy,amscd,amsthm,rotating,framed,listings,setspace,wasysym,graphicx,graphics,float,subfig,wrapfig,multirow,algorithm,algpseudocode,color,geometry,tikz,adjustbox,caption,pgfplots,xcolor,fancyhdr,kpfonts,xspace,bm',
+use='hyperref,amsmath,amssymb,amsfonts,amsbsy,amscd,amsthm,rotating,framed,listings,setspace,wasysym,graphicx,graphics,float,subfig,wrapfig,multirow,algorithm,algpseudocode,color,geometry,tikz,adjustbox,caption,pgfplots,xcolor,fancyhdr,kpfonts,xspace,bm,appendix',
     include=r'''
 \newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}
 \newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}

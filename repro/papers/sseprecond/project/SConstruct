@@ -27,6 +27,7 @@ suresamp        = os.path.join(CWPROOT,'bin/suresamp')
 suamp           = os.path.join(CWPROOT,'bin/suamp')
 sufft           = os.path.join(CWPROOT,'bin/sufft')
 sushift         = os.path.join(CWPROOT,'bin/sushift')
+suflip          = os.path.join(CWPROOT,'bin/suflip')
 MYAPPS          = os.getenv('MYAPPS')
 asg             = os.path.join(MYAPPS,'trip/iwave/asg/main/sim.x')
 asg0cgne        = os.path.join(MYAPPS,'trip/iwave/asg/main/sse.x')
@@ -38,7 +39,8 @@ dot             = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYDot.x')
 norm            = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYNorm.x')
 offsc           = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYScalebyOffset.x')
 cg8to10         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL8to10.x')
-cg12to13         = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL12to13.x')
+cg12to13        = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYCGL12to13.x')
+timerev         = os.path.join(MYAPPS,'trip/iwave/trace/main/timerev.x')
 #######################################################################
 
 # dummy target
@@ -49,19 +51,30 @@ Flow('cout0.txt',None,'/usr/bin/touch $TARGET')
 BULK = 4.0
 BUOY = 1.0
 DX   = [20,10,5]
+#DXR  = [20,10,5]
+DXR  = [20,20,20]
 DT   = [0.008,0.004,0.002]
+#DT   = [0.008,0.008,0.008]
 NX   = [401,801,1601]
-NTR  = [201,401,801]
-FTR  = [75,150,300]
+#NTR  = [201,401,801]
+NTR  = [201,201,201]
+#FTR  = [75,150,300]
+FTR  = [75,75,75]
 NZ   = [201,401,801]
 NZTH = [31,31,31]
 ZMTH = [2700,2850,2925]
-NT   = [626,1251,2501]
-NTS  = [251,501,1001]
-F1   = [1,2,4]
-F2   = [2.5,5,10]
-F3   = [7.5,15,30]
-F4   = [12.5,25,50]
+#NT   = [626,1251,2501]
+#NTS  = [251,501,1001]
+NT   = [626,626,626]
+NTS  = [251,251,251]
+#F1   = [1,2,4]
+#F2   = [2.5,5,10]
+#F3   = [7.5,15,30]
+#F4   = [12.5,25,50]
+F1   = [1,1,1]
+F2   = [2.5,2.5,2.5]
+F3   = [7.5,7.5,7.5]
+F4   = [12.5,12.5,12.5]
 CLIP = [0.08,0.24,0.8]
 SCLIP= [20.0,80.0,320.0]
 DF   = 0.248
@@ -80,8 +93,8 @@ TP = 'gx:1000,1500,6000,6500'
 
 ################ discretization loop
 
-#for i in range(0,3):
-for i in [0]:
+for i in range(0,3):
+#for i in [0]:
 
 # scale for SSE maps: multiply by bulk/buoy because IWAVE does not scale RHS
 # functions, dx because surface source implicitly integrates over surface
@@ -97,7 +110,7 @@ for i in [0]:
          ' ntr=' + str(NTR[i]) +
          ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-         ' b=' + str(DX[i]) +
+         ' b=' + str(DXR[i]) +
          ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
          ' a=' + str(RZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
@@ -109,7 +122,7 @@ for i in [0]:
          ' ntr=' + str(NTR[i]) +
          ' dt=' + str(DT[i]) + ' | ' + 
          sushw + ' key=gx a=' + str(RXMIN) +
-         ' b=' + str(DX[i]) +
+         ' b=' + str(DXR[i]) +
          ' j=' + str(NTR[i]) + ' | ' +
          sushw + ' key=gelev,selev,sx' +
          ' a=' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' +
@@ -177,10 +190,10 @@ for i in [0]:
          sufilter + ' f=' +
          str(F1[i]) + ',' + str(F2[i]) + ',' +
          str(F3[i]) + ',' + str(F4[i]) + ' | ' +
-         sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
+         sugain + ' scale=' + str(DXR[i]/DT[i]) + ' | ' + 
          sushw + ' key=delrt,gelev,selev,sx' +
          ' a=0,' + str(SZ) + ',' + str(SZ) + ',' + str(SX) + ' | ' + 
-         sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
+         sushw + ' key=gx a=2000 b=' + str(DXR[i]) + ' j=' + str(NTR[i]) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',         
          stdin=0)
 
@@ -193,10 +206,10 @@ for i in [0]:
          sufilter + ' f=' +
          str(F1[i]) + ',' + str(F2[i]) + ',' +
          str(F3[i]) + ',' + str(F4[i]) + ' | ' +
-         sugain + ' scale=' + str(DX[i]/DT[i]) + ' | ' + 
+         sugain + ' scale=' + str(DXR[i]/DT[i]) + ' | ' + 
          sushw + ' key=delrt,gelev,selev,sx' +
          ' a=-500,' + str(DSZ) + ',' + str(DSZ) + ',' + str(SX) + ' | ' + 
-         sushw + ' key=gx a=2000 b=' + str(DX[i]) + ' j=' + str(NTR[i]) + ' | ' +
+         sushw + ' key=gx a=2000 b=' + str(DXR[i]) + ' j=' + str(NTR[i]) + ' | ' +
          suchw + ' key1=offset key2=gx key3=sx c=-1',         
          stdin=0)
 
@@ -652,10 +665,141 @@ for i in [0]:
              deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
              dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
              dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
-             ''' + TP, stdin=0, stdout=-1) 
+             ''' + TP, stdin=0, stdout=-1)
 
+### difference
+
+        Flow('ddifffwdaltp'+exp+'.su',
+            ['dfwdp'+exp+'.su','daltp'+exp+'.su'],
+            suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff',
+            stdin=0)
+	    
 ################## APPROXIMATE INVERSION ###################
 
+### another adjoint test: drecp = F dhsdeltaz
+
+        Flow(['adjdrecp' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'rechdr' + str(i) + '.su',
+	      'dfwdp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${TARGETS[0]} data_p=${SOURCES[4]} 
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('adjdrecp' + exp + '.txt',
+            ['dfwdp' + exp + '.su',
+	     'adjdrecp' + exp + '.su',
+	     'dhsdeltaz' + exp + '.su'],
+      	     'echo -n "<F src, F src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[0]} in2=${SOURCES[0]} >> ${TARGET} && ' +
+     	     'echo -n ", <src, F^TF src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[1]} in2=${SOURCES[2]} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+### try explicit time reversal
+
+        Flow('trdfwdp' + exp + '.su', 'dfwdp' + exp + '.su',
+	     timerev + ' in=${SOURCE} out=${TARGET}',
+     	     stdin=0,stdout=-1)
+        Flow('trsrchdr' + str(i) + '.su', 'srchdr' + str(i) + '.su',
+	     timerev + ' in=${SOURCE} out=${TARGET}',
+	     stdin=0,stdout=-1)
+
+        Flow('shtrdfwdp' + exp + '.su','trdfwdp' + exp + '.su',
+	     sushw + ' key=delrt a=0')
+        Flow('shtrsrchdr' + str(i) + '.su','trsrchdr' + str(i) + '.su',
+	     sushw + ' key=delrt a=3000')
+	     
+        Flow(['dfwdshtrdfwdp' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+              'byh' + str(i),
+              'shtrdfwdp' + exp + '.su',
+              'shtrsrchdr' + str(i) + '.su'],
+             '/bin/cp ${SOURCES[3]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${SOURCES[2]} data_p=${TARGETS[0]}
+             deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 printact=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('shdfwdshtrdfwdp' + exp + '.su', 'dfwdshtrdfwdp' + exp + '.su',
+	     sushw + ' key=delrt a=-2000')
+        Flow('trshdfwdshtrdfwdp' + exp + '.su', 'shdfwdshtrdfwdp' + exp + '.su',
+	     timerev + ' in=${SOURCE} out=${TARGET}',
+	     stdin=0,stdout=-1)
+
+        Flow('trshdfwdshtrdfwdp' + exp + '.txt',
+            ['dfwdp' + exp + '.su',
+	     'trshdfwdshtrdfwdp' + exp + '.su',
+	     'dhsdeltaz' + exp + '.su'],
+      	     'echo -n "<F src, F src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[0]} in2=${SOURCES[0]} >> ${TARGET} && ' +
+     	     'echo -n ", <src, F^TF src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[1]} in2=${SOURCES[2]} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+        Flow(['adjdfwdp' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+              'dfwdp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${TARGETS[0]} data_p=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 printact=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('adjdfwdp' + exp + '.txt',
+            ['dfwdp' + exp + '.su',
+	     'adjdfwdp' + exp + '.su',
+	     'dhsdeltaz' + exp + '.su'],
+      	     'echo -n "<F src, F src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[0]} in2=${SOURCES[0]} >> ${TARGET} && ' +
+     	     'echo -n ", <src, F^TF src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[1]} in2=${SOURCES[2]} >> ${TARGET}',
+	     stdin=0, stdout=-1)
+
+# adj calc for pt src
+
+        Flow(['adjrecp' + exp + '.su'],
+             ['bm' + exp[0] + str(i),
+              'byh' + str(i),
+              'ptsrc' + str(i) + '.su',
+              'recp' + exp + '.su'],
+             '/bin/cp ${SOURCES[2]} ${TARGETS[0]}; ' +
+             asg + 
+             '''
+             bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+             source_p=${TARGETS[0]} data_p=${SOURCES[3]}
+             deriv=0 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=3.0 
+             dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+             dump_lda=1 dump_ldc=1 dump_term=1 sampord=1 printact=1 taperpars=
+             ''' + TP, stdin=0, stdout=-1)
+
+        Flow('adjrecp' + exp + '.txt',
+            ['recp' + exp + '.su',
+	     'adjrecp' + exp + '.su',
+	     'ptsrc' + str(i) + '.su'],
+      	     'echo -n "<F src, F src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[0]} in2=${SOURCES[0]} >> ${TARGET} && ' +
+     	     'echo -n ", <src, F^TF src> = " >> ${TARGET} && ' +
+	     dot + ' in1=${SOURCES[1]} in2=${SOURCES[2]} >> ${TARGET}',
+	     stdin=0, stdout=-1)
 ### apply transpose of computed V operator. V operator = computed V operator x
 ### V scale. So transpose of Voperator = V scale x transpose of computed V
 ### operator. Need 4 x transpose of V operator
@@ -695,6 +839,20 @@ for i in [0]:
 	      adjcmd, stdin=0, stdout=-1)
 
         Flow('dinvhsnew'+exp+'.su','dinvvznew'+exp+'.su',
+             sugain + ' scale=4.0')
+
+# another take: apply S^T to v_z etc.
+
+        Flow(['dinvpalt' + exp + '.su',
+              'dinvvzalt' + exp + '.su'],
+             ['bm' + exp[1] + str(i),
+              'byh' + str(i),
+              'srchdr' + str(i) + '.su',
+	      'dfwdvz' + exp + '.su',
+	      'rechdr' + str(i) + '.su'],
+	      adjcmd, stdin=0, stdout=-1)
+
+        Flow('dinvhsalt'+exp+'.su','dinvvzalt'+exp+'.su',
              sugain + ' scale=4.0')
 
 #### resimulate USING SAME MODEL AS INVERSION
@@ -1361,7 +1519,7 @@ for i in [0]:
 
         itmax = 21
 
-        ch = 0
+        ch = 1
 
         alpha = alphalist[ch]
 	
@@ -1907,7 +2065,7 @@ for i in [0]:
 		0.0, 0.0, 0.0, 0.0,
 		1.2,
 		0.0, 0.0,
-                1.2, 1.2, 1.2,
+                1.2, 1.2, 1.2, 1.2,
                 1.2, 1.2, 1.2]
         tmax = [3.0, 3.0, 3.0, 3.0,
                 2.0, 2.0, 2.0,
@@ -1921,7 +2079,7 @@ for i in [0]:
 		2.0, 2.0, 2.0, 2.0,
 		3.0,
                 2.0, 2.0,		
-                3.0, 3.0, 3.0,
+                3.0, 3.0, 3.0, 3.0,
                 3.0, 3.0, 3.0]
         clip = [0.08, 0.08, 0.08, 0.08,
                 5.0, 5.0, 5.0,
@@ -1935,7 +2093,7 @@ for i in [0]:
 		0.2, 0.2, 0.2, 0.2,
 		0.08,
 		0.2, 0.2,
-                0.08, 0.08, 0.08,
+                0.08, 0.08, 0.08, 0.08,
                 0.08, 0.08, 0.08]
         id   = ['recp', 'recvz', 'fwdp', 'altp',
                 'invfs', 'invhs', 'predinvhs',
@@ -1949,7 +2107,7 @@ for i in [0]:
 		'preddnshstr', 'ddiffnslamtr', 'symmdnshs', 'avgdnshs',
 		'ddiffsymmdnshs',
 		'lamsstlamrdrecp', 'difflamsstlamrdrecp',
-                'drecp', 'dfwdp', 'daltp',
+                'drecp', 'dfwdp', 'daltp', 'ddifffwdaltp',
                 'dfwdvz', 'daltvz', 'dsvcomp']
                 
         for j in range(len(id)):
@@ -1959,7 +2117,7 @@ for i in [0]:
 ### convert gathers to rsf
 
             Flow(gid, gid + '.su',
-                 'suread read=data endian=0')
+                 'suread read=data endian=0 | put o2=2000 d2=20 ')
              
 ### pull out traces
 
@@ -1982,8 +2140,10 @@ for i in [0]:
                   'window min1=' + str(tmin[j]) +
                   ' max1=' + str(tmax[j]) + ' | ' 
                   'grey color=j clip=' + str(clip[j]) +
-                  ' scalebar=y minval=-' + str(clip[j]) +
-                  ' maxval=' + str(clip[j]) + ' wanttitle=n')
+                  ' scalebar=n minval=-' + str(clip[j]) +
+                  ' maxval=' + str(clip[j]) + ' wanttitle=n' +
+		  ' label2=Position unit2=m' +
+		  ' xinch=5 yinch=5')
 
 ### plot traces
 
@@ -2026,7 +2186,27 @@ for i in [0]:
 
         Result('compnres'+str(ch)+exp,
 	       'graph color=5,6 plotfat=4 min2=0.0 wanttitle=n')
+
+        Flow('compnrestrunc'+str(ch)+exp,'compnres'+str(ch)+exp,
+	     'sfcp')
+
+        Result('compnrestrunc'+str(ch)+exp, 
+	       'graph color=5,6 plotfat=4 min2=0.0 max2=1.0 wanttitle=n')
 	       
-Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=z label2=x unit1=m unit2=m barunit=GPa xinch=10 yinch=5')
+Result('bml0', 'grey color=j scalebar=y wanttitle=n label1=Depth label2=Position unit1=m unit2=m  min2=2000 max2=6000 minval=1.6 maxval=4 xinch=10 yinch=5')
+
+# trajectories
+
+Flow('lensvel0', 'bml0',
+     'add sqrt=y')
+     
+Flow('lensrays0', 'lensvel0',
+     'rays2 nt=1000 dt=5 zshot=3500 yshot=3500 a0=-25 amax=48 nr=51')
+
+Plot('lensrays0','graph transp=y yreverse=y plotcol=1 wanttitle=n wantaxis=n ' +
+     'min1=0 max1=4000 min2=2000 max2=6000 label1="" label2="" ' +
+     'unit1="" unit2="" xinch=8.85 yinch=4.95 xll=2.27 yll=2.65')
+
+Result('olensrays0', ['Fig/bml0', 'lensrays0'], 'Overlay')
     
 End()

@@ -396,10 +396,10 @@ void asg_timestep(std::vector<RDOM *> dom,
   i_v[2] = D_V2;
     
   /* fill in pml arrays; these are no-ops after the first call */
-  register ireal * restrict ep[RARR_MAX_NDIM];
-  register ireal * restrict epp[RARR_MAX_NDIM];
-  register ireal * restrict ev[RARR_MAX_NDIM];
-  register ireal * restrict evp[RARR_MAX_NDIM];
+  ireal * restrict ep[RARR_MAX_NDIM];
+  ireal * restrict epp[RARR_MAX_NDIM];
+  ireal * restrict ev[RARR_MAX_NDIM];
+  ireal * restrict evp[RARR_MAX_NDIM];
 
   // local pml widths for this domain
   IPNT nrsloc;
@@ -459,7 +459,7 @@ void asg_timestep(std::vector<RDOM *> dom,
     for (int icoeff=0;icoeff<ncoeff;icoeff++) {
       rd_a_gse(dom[0], icoeff, gs, ge);
       if (ndim == 2) {
-	register ireal ** restrict f = (dom[0]->_s)[icoeff]._s2;
+	ireal ** restrict f = (dom[0]->_s)[icoeff]._s2;
 	// extend in dim 1
 	for (int i0=gs[0]+nlsloc[0]; i0<=ge[0]-nrsloc[0]; i0++) {
 	  for (int i1=gs[1]; i1<=gs[1]+nlsloc[1]; i1++)
@@ -476,7 +476,7 @@ void asg_timestep(std::vector<RDOM *> dom,
 	}
       }
       else if (ndim == 3) {
-	register ireal *** restrict f = (dom[0]->_s)[icoeff]._s3;
+	ireal *** restrict f = (dom[0]->_s)[icoeff]._s3;
 	// extend in dim 2
 	for (int i0=gs[0]+nlsloc[0]; i0<=ge[0]-nrsloc[0]; i0++) {
 	  for (int i1=gs[1]+nlsloc[1]; i1<=ge[1]-nrsloc[1]; i1++) {
@@ -522,13 +522,13 @@ void asg_timestep(std::vector<RDOM *> dom,
   if (n==1) {
     //    if (fwd == true) {
     if (ndim == 2) {
-      register ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
-      register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
-      register ireal ** restrict ps2 = (dom[0]->_s)[D_PS]._s2;
-      register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+      ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
+      ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
+      ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+      ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+      ireal ** restrict ps2 = (dom[0]->_s)[D_PS]._s2;
+      ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+      ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
                 
       if (iv == 0) {
 	ireal * sdiv_alloc = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
@@ -615,14 +615,14 @@ void asg_timestep(std::vector<RDOM *> dom,
       }
     }
     if (ndim == 3) {
-      register ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
-      register ireal *** restrict buoy3 = (dom[0]->_s)[D_BUOY]._s3;
-      register ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
-      register ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
-      register ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
-      register ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
-      register ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
-      register ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
+      ireal *** restrict bulk3 = (dom[0]->_s)[D_BULK]._s3;
+      ireal *** restrict buoy3 = (dom[0]->_s)[D_BUOY]._s3;
+      ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
+      ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
+      ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
+      ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
+      ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
+      ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
 
                 
       if (iv == 0) {
@@ -677,18 +677,18 @@ void asg_timestep(std::vector<RDOM *> dom,
     //    cerr<<"step n=2 (deriv=1)\n";
         //    if (fwd == true) {
     if (ndim == 2) {
-      register ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
-      register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
-      register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
-      register ireal ** restrict bulkd2 = (dom[1]->_s)[D_BULK]._s2;
-      register ireal ** restrict buoyd2 = (dom[1]->_s)[D_BUOY]._s2;
-      register ireal ** restrict p02d = (dom[1]->_s)[i_p[0]]._s2;
-      register ireal ** restrict p12d = (dom[1]->_s)[i_p[1]]._s2;
-      register ireal ** restrict v02d = (dom[1]->_s)[i_v[0]]._s2;
-      register ireal ** restrict v12d = (dom[1]->_s)[i_v[1]]._s2;
+      ireal ** restrict bulk2 = (dom[0]->_s)[D_BULK]._s2;
+      ireal ** restrict buoy2 = (dom[0]->_s)[D_BUOY]._s2;
+      ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+      ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+      ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+      ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+      ireal ** restrict bulkd2 = (dom[1]->_s)[D_BULK]._s2;
+      ireal ** restrict buoyd2 = (dom[1]->_s)[D_BUOY]._s2;
+      ireal ** restrict p02d = (dom[1]->_s)[i_p[0]]._s2;
+      ireal ** restrict p12d = (dom[1]->_s)[i_p[1]]._s2;
+      ireal ** restrict v02d = (dom[1]->_s)[i_v[0]]._s2;
+      ireal ** restrict v12d = (dom[1]->_s)[i_v[1]]._s2;
                 
       if (iv == 0) {
 	ireal * sdiv_alloc =

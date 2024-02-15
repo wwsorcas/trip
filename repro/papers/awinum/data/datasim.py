@@ -15,7 +15,7 @@ import sys
 def asgsim(bulkmod, data_p, buoyancy, source_p, order=2, sampord=1, nsnaps=20,\
                cfl=0.5, cmin=1.0, cmax=3.0,dmin=0.8, dmax=3.0,\
                nl1=250, nr1=250, nl2=250, nr2=250, pmlampl=1.0,
-               boundstest=True, noisy=False):
+               boundstest=True, noisy=False, partask=0):
     
     try:
     
@@ -27,7 +27,7 @@ def asgsim(bulkmod, data_p, buoyancy, source_p, order=2, sampord=1, nsnaps=20,\
 
         F = asg.fsbop(bulksp, datasp, buoyancy, source_p, \
                           order, sampord, nsnaps, cfl, cmin, cmax, dmin, dmax,\
-                          nl1, nr1, nl2, nr2, pmlampl, boundstest, noisy \
+                          nl1, nr1, nl2, nr2, pmlampl, boundstest, noisy, partask \
                           )
 
         d.copy(F(m))
@@ -38,6 +38,7 @@ def asgsim(bulkmod, data_p, buoyancy, source_p, order=2, sampord=1, nsnaps=20,\
 
 if __name__ == '__main__':
     args = ", ".join(sys.argv[1:])
+    print(args)
     cmd = 'asgsim(' + args + ')'
     exec(cmd)
 

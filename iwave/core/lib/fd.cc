@@ -416,7 +416,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
     IPNT gs, ge;
     IPNT dgsr[IWAVE_NNEI], dger[IWAVE_NNEI];                        /*< receive domains */
     IPNT dgsrs[IWAVE_NNEI][RDOM_MAX_NARR], dgers[IWAVE_NNEI][RDOM_MAX_NARR];   /*< all receive domains */
-    int frcvempty[IWAVE_NNEI], rcvne;                       /*< empty receive flag */
+    int frcvempty[IWAVE_NNEI];                       /*< empty receive flag */
   
     /*< grid type in each dimension: primal grid (=0) or dual grid
       (=1) */
@@ -543,9 +543,6 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	    return E_INTERNAL;
 	  }
 
-	  rcvne = 0;
-	  for ( i = 0; i < nnei; ++i ) if ( !(frcvempty[i]) ) ++rcvne;
-	  
 	  for ( i = 0; i < nnei; ++i ) {
 	    //	    fprintf(stream,"iv=%d i=%d dgsr[i][0]=%d dger[i][0]=%d dgsr[i][1]=%d dger[i][1]=%d\n", iv, i, dgsr[i][0],dger[i][0],dgsr[i][1],dger[i][1]); 
 	    IASN(dgsrs[i][iv], dgsr[i]);

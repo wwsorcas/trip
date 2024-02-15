@@ -238,11 +238,28 @@ int main(int argc, char ** argv) {
     while (fgettr(fpker,&trker) && (nker < mxx)) {
       nker++;
 	
-      if (0==fgettr(fpinp,&trinp)) {
+      if (0 == fgettr(fpinp,&trinp)) {
 	RVL::RVLException e;
 	e<<"ERROR: SEGYConv\n";
 	e<<"  fwd mode\n";
 	e<<"  failed to read output trace "<<nker<<"\n";
+	throw e;
+      }
+
+      // read output trace, then back up, to get header right
+      off_t tmpoutoff = ftello(fpout);
+      if (0 == fgettr(fpout,&trout)) {
+	RVL::RVLException e;
+	e<<"ERROR: SEGYConv\n";
+	e<<"  fwd mode\n";
+	e<<"  failed to read output trace "<<nker<<"\n";
+	throw e;
+      }
+      if (fseeko(fpout,tmpoutoff,SEEK_SET)) {
+	RVL::RVLException e;
+	e<<"Error: SEGYConv\n";
+	e<<"  adj mode\n";	  
+	e<<"reset failed on file "<<out<<"\n";
 	throw e;
       }
 	

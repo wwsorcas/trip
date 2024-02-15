@@ -65,8 +65,9 @@ int initoutstream(FILE ** stream, int rk, int sz) {
 
     char *filename = NULL; /* workspace for output filename */
     char *tmp = NULL;   /* ditto */
-    tmp = (char *) usermalloc_(20*sizeof(char));
-    memset(tmp,0,20*sizeof(char));
+    int tmplen = 20;
+    tmp = (char *) usermalloc_(tmplen*sizeof(char));
+    memset(tmp,0,tmplen*sizeof(char));
     filename = (char *)usermalloc_(MAXPATHLEN * sizeof(char));    
     if ( filename == NULL ) {
 	if ( rk == 0 )
@@ -82,19 +83,19 @@ int initoutstream(FILE ** stream, int rk, int sz) {
     size_t aaa = strlen(filename);
     char bbb = filename[aaa-1];
     if ((aaa > 1) && ( bbb != '/')) 
-	strcat(filename,"/");
+      strcat(filename,"/");
     if      ( sz < 10 )
-	sprintf(tmp,"cout%01d.txt",rk);
+      snprintf(tmp,tmplen,"cout%01d.txt",rk);
     else if ( sz < 100 )
-	sprintf(tmp,"cout%02d.txt",rk);
+      snprintf(tmp,tmplen,"cout%02d.txt",rk);
     else if ( sz < 1000 )
-	sprintf(tmp,"cout%03d.txt",rk);
+      snprintf(tmp,tmplen,"cout%03d.txt",rk);
     else if ( sz < 10000 )
-	sprintf(tmp,"cout%04d.txt",rk);
+      snprintf(tmp,tmplen,"cout%04d.txt",rk);
     else if ( sz < 100000 )
-	sprintf(tmp,"cout%05d.txt",rk);
+      snprintf(tmp,tmplen,"cout%05d.txt",rk);
     else
-	sprintf(tmp,"cout%d.txt",rk);
+      snprintf(tmp,tmplen,"cout%d.txt",rk);
 
     strcat(filename,tmp);
 

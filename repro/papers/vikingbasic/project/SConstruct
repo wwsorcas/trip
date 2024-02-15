@@ -154,7 +154,7 @@ Result('paragazmig','paragazmig.su','suread endian=0  read=data | put label1=Tim
 Result('parapspi', 'parapspi.su','suread endian=0  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5')
 Result('parapspif', 'parapspif.su','suread endian=0  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5')
 Result('parapspiwind', 'parapspi.su','suread endian=0  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5')
-Result('parapspiwindf', 'parapspif.su','suread endian=0  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5')
+Result('parapspiwindf', 'parapspif.su','suread endian=0  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3500 min2=10000 max2=15000 | grey xinch=10 yinch=5')
 
 Result('paravintz','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
 Result('paravintt','put d1=0.004 label1="Time" unit1=s d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')

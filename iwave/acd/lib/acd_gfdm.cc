@@ -76,19 +76,19 @@ int acd_tsfm(RDOM * p, RDOM * r, int ia, void * fdpars) {
   IPNT i;
 
   /* pointers for 2D case */
-  register ireal ** restrict uc2;
-  register ireal ** restrict up2;
-  register ireal ** restrict csq2;
-  register ireal ** restrict uc2d;
-  register ireal ** restrict up2d;
-  register ireal ** restrict csq2d;
+  ireal ** restrict uc2;
+  ireal ** restrict up2;
+  ireal ** restrict csq2;
+  ireal ** restrict uc2d;
+  ireal ** restrict up2d;
+  ireal ** restrict csq2d;
   /* pointers for 3D case */
-  //  register ireal *** restrict uc3;
-  //  register ireal *** restrict up3;
-  register ireal *** restrict csq3;
-  //  register ireal *** restrict uc3d;
-  //  register ireal *** restrict up3d;
-  register ireal *** restrict csq3d;
+  //  ireal *** restrict uc3;
+  //  ireal *** restrict up3;
+  ireal *** restrict csq3;
+  //  ireal *** restrict uc3d;
+  //  ireal *** restrict up3d;
+  ireal *** restrict csq3d;
   
   int ndim;                       /* problem dmn */
   IPNT s, s0, cs0;                /* loop starts */ 
@@ -307,19 +307,19 @@ int acd_tsam(RDOM * p, RDOM * r, int ia, void * fdpars) {
   IPNT n;
 
   /* pointers for 2D case */
-  register ireal ** restrict uc2;
-  register ireal ** restrict up2;
-  register ireal ** restrict csq2;
-  register ireal ** restrict uc2d;
-  register ireal ** restrict up2d;
-  register ireal ** restrict csq2d;
+  ireal ** restrict uc2;
+  ireal ** restrict up2;
+  ireal ** restrict csq2;
+  ireal ** restrict uc2d;
+  ireal ** restrict up2d;
+  ireal ** restrict csq2d;
   /* pointers for 3D case */
-  //  register ireal *** restrict uc3;
-  //  register ireal *** restrict up3;
-  register ireal *** restrict csq3;
-  //  register ireal *** restrict uc3d;
-  //  register ireal *** restrict up3d;
-  register ireal *** restrict csq3d;
+  //  ireal *** restrict uc3;
+  //  ireal *** restrict up3;
+  ireal *** restrict csq3;
+  //  ireal *** restrict uc3d;
+  //  ireal *** restrict up3d;
+  ireal *** restrict csq3d;
 
   int ndim;                       /* problem dmn */
   IPNT s, s0, cs0;                /* loop starts */ 

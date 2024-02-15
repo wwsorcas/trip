@@ -2,9 +2,10 @@
 \author{William W. Symes}
 
 \begin{abstract}
-Under some restricted circumstances, Adaptive Waveform Inversion
-applied to transmitted wave data yields estimates of index of
-refraction (or wave velocity) similar to those obtained by travel time inversion.
+Adaptive Waveform Inversion
+applied to transient transmitted wave data yields estimates of index of
+refraction (or wave velocity) similar to those obtained by travel time
+inversion, provided that the data contain a single smooth wavefront.
 \end{abstract}
 
 \section{Introduction}
@@ -15,7 +16,7 @@ at its surface. Over the last several decades, this task has come to
 be carried out by minimizing the difference between computationa
 prediction of wave measurement versus actual observed
 measurements. The mechanical parameters to be inferred appear as
-coefficients in systems of partial differential equaitons governing
+coefficients in systems of partial differential equations governing
 the wave motion, and discrete representations of these parameters form
 the unknown vectors in the optimization problems thus generated.
 
@@ -35,7 +36,7 @@ Various modifications of straighforward best-fit FWI have been
 suggested to overcome this ``cycle-skipping'' pathology. One of these
 is Adaptive Waveform Inversion \cite[]{Warner:16} (AWI). This
 technique has been successfully applied to industry-scale seismic data
-\cite[]{GuaschWarnerRavaut:GEO19,Warneretal:SEG21} as well as to
+\cite[]{GuaschWarnerRavaut:GEO19,Warneretal:SEG21} and shows promise for
 ultrasonic imaging of the the human brain
 \cite[]{Guaschetal:NPJDM20}.
 
@@ -45,19 +46,20 @@ works, a clear explanation for its effectiveness is
 so far missing from the literature. In this short note, I show that
 for active sensing of acoustic materials with unique arrival times of
 transmitted waves
-(that is unique rays of geometric asymptotics between sources and
+(that is, unique rays of geometric asymptotics between sources and
 receivers), the AWI objective function is an approximation to the
 mean-square time-of-travel misfit. Thus AWI and travel time fitting
 lead to similar material parameter estimates. Since the latter is
 widely believed to be a near-optimal method for wave velocity
-estimation, this demonstration explains roughly ``why it works''.
+estimation, this demonstration explains roughly ``why AWI works'', at
+least within this restricted scope.
 
 The reader will
 note that a normalization component of the AWI objective function
 definition is very
 important in reaching this conclusion. The connection between
 objective normalization and the close relation to travel time
-inversion is completely independent from 
+inversion has nothing to do with
 the reasons for normalizing the objective advanced in the
 literature \cite[]{Warner:16,LiAlkhalifah:21}.
 
@@ -85,8 +87,7 @@ p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 \end{eqnarray}
 For sake of brevity, define the model vector $m=(\kappa,\rho)$. The forward map or {\em modeling operator} is $F[m]w = \{p({\bf x}_r,t;{\bf x}_s)\}$, in which source and receiver positions ${\bf x}_s, {\bf x}_r$ define the acquisition geometry.
 
-Acoustic inversion, for present purposes, means: given recording time interval
-$[0,T]$, source and receiver locations $(\bx_s,\bx_r)$, source wavelet
+Acoustic inversion, for present purposes, means: given source and receiver locations $(\bx_s,\bx_r)$, source wavelet
 $w(t;\bx_s)$ and data traces $d(\bx_r,\cdot;\bx_s)$, find a model $m$
 so that $F[m]w \approx d$. The
 simplest version of FWI concretizes this task by asking for a model
@@ -103,7 +104,16 @@ shorthand for the right-hand side of the definition \ref{eqn:fwi}:
 In the sequel I will use the $L^2$ norm notation to stand for
 mean-square over whatever variables make sense.
 
-Note that the wavelet $w$ is assumed known in this formulation of the
+Note that in actual data acquisition, recording occurs over finite
+time intervals, so the integrals appearing in the definition
+\ref{eqn:fwi} have finite upper and lower limits, as opposed to the
+$\pm \infty$ limits implicit in the notation. It will be assumed that
+wavefield energy is causal (zero before an onset time) and decays
+rapidly enough as $t \rightarrow \infty$ that the difference between
+finite and infinite range of integration can be ignored throughout
+this discussion.
+
+The wavelet $w$ is assumed known in this formulation of the
 FWI problem. In fact, even if actual acoustic sources are
 well-approximated by isotropic point radiators, their wave forms are
 usually poorly determined and may reasonably be

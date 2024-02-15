@@ -39,7 +39,7 @@ tscale          = os.path.join(MYAPPS,'trip/iwave/trace/main/SEGYTraceScale.x')
 TMIN = 1.8
 TMAX = 2.8
 
-##################################### plots from data ##########################
+##################################### data from data ##########################
 
 BASIC='../data'
 
@@ -59,24 +59,42 @@ for i in range(1):
     SRCLIST.append('pulse0'+str(i)+'.su')        
     for j in range(4):
     	SRCLIST.append('ptsrc'+str(j)+str(i)+'.su')
+    SRCLIST.append('plbulksm'+str(i)+'.rsf')
+    SRCLIST.append('dwdata'+str(i)+'.su')
+    SRCLIST.append('dwraw'+str(i)+'.su')
+    SRCLIST.append('ndwdata'+str(i)+'.su')
+    SRCLIST.append('ndwraw'+str(i)+'.su')
+    SRCLIST.append('ndwmute'+str(i)+'.su')
+    SRCLIST.append('plrays'+str(i)+'.rsf')
+    SRCLIST.append('plraysdwp'+str(i)+'.rsf')
+    SRCLIST.append('plraysdwm'+str(i)+'.rsf')
+    SRCLIST.append('plraysdw'+str(i)+'.rsf')    
+    SRCLIST.append('plraysndpnh'+str(i)+'.rsf')
+    SRCLIST.append('xtraysendfiner1interp' + str(i) + '.rsf')
+    SRCLIST.append('xtraysendfiner2interp' + str(i) + '.rsf')    
+    
 
 if not os.path.exists(BASIC):
-    print 'cannot find data source directory ' + BASIC
+    print('cannot find data source directory ' + BASIC)
     Exit(1)
 else:
     for i in SRCLIST:
         SRC = os.path.join(BASIC,i)
         if not os.path.exists(SRC):
-            print 'you must build the target ' + SRC
-            print 'before building this project' 
+            print('you must build the target ' + SRC)
+            print('before building this project') 
             Exit(1)
         Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
 
-Flow('pulse00','pulse00.su','suread read=data endian=0 ')
-Result('pulse00', 'wiggle clip=500.0 poly=y transp=y xinch=4 yinch=8 wanttitle=n label2=""')
-
 dx=20
 ox=2000
+
+Flow('pulse00','pulse00.su','suread read=data endian=0 ')
+Result('pulse00', 'wiggle clip=500.0 poly=y transp=y xinch=4 yinch=8 wanttitle=n label2=""')
+Flow('ptsrc00','ptsrc00.su',
+     'suread read=data endian=0 | put d2=20 o2=1500 | pad n2=226| window min2=2000 max2=6000') 
+Result('ptsrc00','grey color=j scalebar=y label2=Position unit2=m ' +
+           'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=300 minval=-300 maxval=300')
 
 for i in ['h', 'w', 'l', 't']: 
     Result('bm' + i + '0',
@@ -91,106 +109,104 @@ for i in ['h', 'w', 'l', 't']:
            'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
 
 
-############################# IVA inversions ################################
 
-Flow('cgwh_est_source_plh0.su', '../sse1/cgwh_est_source_plh0.su',
-     '/bin/cat') 	 
-Flow('cgwhestsourceplh0', 'cgwh_est_source_plh0.su',
-     'suread read=data endian=0 | put d2=20 o2=1500')
+#diving wave plots
 
-Flow('cgwh_res_data_plh0.su', '../sse1/cgwh_res_data_plh0.su',
-     '/bin/cat') 	 
-Flow('cgwhresdataplh0', 'cgwh_res_data_plh0.su',
-     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
-
-Result('cgwhestsourceplh0','grey color=j scalebar=y label2=Position unit2=m ' +
-       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=20.0 minval=-20.0 maxval=20.0')
-Result('cgwhresdataplh0','grey color=j scalebar=y label2=Position unit2=m ' +
-       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
-
-srcd2=[]
-srco2=[]
-srcwidth=[]
-sb=[]
-d2num=[]
-
-for i in range(7):
-    srcd2.append(str(20))
-    srco2.append(str(1500))
-    srcwidth.append(str(10))
-    sb.append('y')
-    
-for i in range(7,11):
-    srcd2.append(str(20))
-    srco2.append(str(2500))
-    srcwidth.append(str(5))
-    sb.append('y')
-
-for i in range(11,30):
-    srcd2.append(str(20))
-    srco2.append(str(3250))
-    srcwidth.append(str(1.25))
-    sb.append('n')
-    
-for i in range(1,31):
-    Result('cgw' + str(i) + 'bulkupdlh0','../sse1/cgw' + str(i) + '_bulkupdlh0.rsf',
-       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
+Result('plbulksm0',
+       'grey color=j scalebar=y minval=4 maxval=36 bias=4.0 wanttitle=n ' +
        'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
-       'xinch=10 yinch=5 clip=1.5')
+       'xinch=10 yinch=5')
+Flow('dwdata0','../data/dwdata0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('dwdata0','grey color=j scalebar=y label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')    
+Flow('dwraw0','../data/dwraw0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('dwraw0','grey color=j scalebar=y label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
 
-    Flow('cgw' + str(i-1) + '_est_source_plh0.su','../sse1/cgw' + str(i-1) + '_est_source_plh0.su',
-         '/bin/cat')
-    Flow('cgw' + str(i-1) + '_res_data_plh0.su','../sse1/cgw' + str(i-1) + '_res_data_plh0.su',
-    	 suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
-    Flow('cgw' + str(i-1) + 'estsourceplh0','cgw' + str(i-1) + '_est_source_plh0.su',
-         'suread read=data endian=0 | put d2=' + srcd2[i-1] + ' o2=' + srco2[i-1])
+Flow('ndwdata0','../data/ndwdata0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwdata0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=0.02 ' +
+     'minval=-0.1 maxval=0.1 min2=10000')
+Flow('ndwdatavz0','../diving/ndwdatavz0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwdatavz0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=0.02 ' +
+     'minval=-0.02 maxval=0.02 min2=14000')
+Flow('ndwdataresrcplbulksm0','../diving/ndwdataresrcplbulksm0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwdataresrcplbulksm0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=5.0 ' +
+     'minval=-5.0 maxval=5.0 min1=-0.5 max1=1.5 min2=5000 max2=15000')
+Flow('ndwdataresimplbulksm0','../diving/ndwdataresimplbulksm0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwdataresimplbulksm0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=0.02 ' +
+     'minval=-0.02 maxval=0.02 min2=14000')
+Flow('ndwdatarediffplbulksm0','../diving/ndwdatarediffplbulksm0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwdatarediffplbulksm0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=0.02 ' +
+     'minval=-0.02 maxval=0.02 min2=14000')
 
-    Flow('cgw' + str(i-1) + 'resdataplh0','cgw' + str(i-1) + '_res_data_plh0.su',
-         'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))	
-    Result('cgw' + str(i-1) + 'estsourceplh0', 'grey color=j scalebar=' + sb[i-1] + ' label2=Position unit2=m ' +
-         'barlabel=GPa wanttitle=n xinch=' + srcwidth[i-1] + ' yinch=5 clip=20.0 minval=-20.0 maxval=20.0')
-    Result('cgw' + str(i-1) + 'resdataplh0', 'grey color=j scalebar=y label2=Position unit2=m ' +
-         'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+Flow('ndwraw0','../data/ndwraw0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwraw0','grey color=j scalebar=n label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=5 yinch=5 clip=0.1 ' +
+     'minval=-0.1 maxval=0.1 min2=10000')
+Flow('ndwmute0','../data/ndwmute0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('ndwmute0','grey color=j scalebar=y label2=Position unit2=m min2=10000' +
+     'barlabel="" wanttitle=n xinch=8 yinch=8 clip=1 minval=0 maxval=1')     
+Flow('dwsrc0','../data/dwsrc0.su',
+     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=0')
+Result('dwsrc0','grey color=j scalebar=y label2=Position unit2=m ' +
+     'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
 
-Result('bmh0s','../data/bmh0.rsf',
-       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
-       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
-       'xinch=10 yinch=5 clip=1.5')
+Plot('plbulksm0',
+     'grey color=j scalebar=y minval=4 maxval=36 bias=4.0 wanttitle=n ' +
+     'label1="Depth" unit1=m label2="Position" unit2=m ' +
+     'min2=0 max2=20000 xinch=10 yinch=5 xll=2.5')
+     
+Plot('plrays0','graph transp=y yreverse=y plotcol=5 wanttitle=n wantaxis=n ' +
+     'min2=0 max2=20000 label1="" label2="" unit1="" unit2="" ' +
+     'xinch=8.85 yinch=5.0 xll=2.34 yll=2.65')
 
-Result('fwitrsse1bulkmodinvlh0','../sse1/fwitr_sse1_bulkmod_invlh0.rsf',
-       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
-       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
-       'xinch=10 yinch=5 clip=1.5')
+Plot('plraysndpnh0','graph transp=y yreverse=y plotcol=5 wanttitle=n wantaxis=n ' +
+     'min1=0 max1=4000 min2=0 max2=20000 label1="" label2="" unit1="" unit2="" ' +
+     'xinch=8.85 yinch=5.0 xll=2.33 yll=2.62')
 
-Flow('fwitr_sse1_data_p_reslh0.su','../sse1/fwitr_sse1_data_p_reslh0.su',
-     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
-Flow('fwitrsse1datapreslh0', 'fwitr_sse1_data_p_reslh0.su',
-     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
-Result('fwitrsse1datapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
-       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+Plot('plraysdwp0','graph transp=y yreverse=y plotcol=6 wanttitle=n wantaxis=n ' +
+     'min1=0 max1=4000 min2=0 max2=20000 label1="" label2="" unit1="" unit2="" ' +
+     'xinch=8.85 yinch=5.0 xll=2.34 yll=2.65')
+Plot('plraysdwm0','graph transp=y yreverse=y plotcol=6 wanttitle=n wantaxis=n ' +
+     'min1=0 max1=4000 min2=0 max2=20000 label1="" label2="" unit1="" unit2="" ' +
+     'xinch=8.85 yinch=5.0 xll=2.34 yll=2.65')
+Plot('plraysdw0','graph transp=y yreverse=y plotcol=6 wanttitle=n wantaxis=n ' +
+     'min1=0 max1=4000 min2=0 max2=20000 label1="" label2="" unit1="" unit2="" ' +
+     'xinch=8.85 yinch=5.0 xll=2.33 yll=2.62')
 
-Result('fwitrsse30bulkmodinvlh0','../sse1/fwitr_sse30_bulkmod_invlh0.rsf',
-       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
-       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
-       'xinch=10 yinch=5 clip=1.5')
+Plot('oplrays0', ['plbulksm0', 'plraysndpnh0'], 'Overlay')
 
-Flow('fwitr_sse30_data_p_reslh0.su','../sse1/fwitr_sse30_data_p_reslh0.su',
-     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
-Flow('fwitrsse30datapreslh0', 'fwitr_sse30_data_p_reslh0.su',
-     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
-Result('fwitrsse30datapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
-       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+#     'xinch=10 yinch=5)
+#     +
+#    'xinch=8.85 yinch=5.07 xll=2.34 yll=2.65')
+     
+#'xinch=10 yinch=5'
 
-Result('fwitrbulkmodinvlh0','../sse1/fwitr_bulkmod_invlh0.rsf',
-       'grey color=j scalebar=y minval=1.5 maxval=5 bias=4.0 wanttitle=n ' +
-       'label1="Depth" unit1=m label2="Position" unit2=m barlabel=GPa ' +
-       'xinch=10 yinch=5 clip=1.5')
+Result('ooplrays0',['oplrays0', 'plraysdw0'], 'Overlay')
 
-#Flow('fwitr_data_p_reslh0.su','../sse1/fwitr_data_p_reslh0.su',
-#     suwind + ' tmin=' + str(TMIN) + ' tmax=' + str(TMAX))
-Flow('fwitrdatapreslh0', 'fwitr_data_p_reslh0.su',
-     'suread read=data endian=0 | put d2=' + str(dx) + ' o2=' + str(ox))
-Result('fwitrdatapreslh0','grey color=j scalebar=y label2=Position unit2=m ' +
-       'barlabel=GPa wanttitle=n xinch=10 yinch=5 clip=0.15 minval=-0.15 maxval=0.15')
+Flow('xtraydirect',None, 'math n1=501 d1=20 o1=10000 output=\'0.5*sqrt((x1-10000)^2+250000)\'', stdin=0)
+
+Plot('xtraydirect','graph plotcol=7 min1=10000 max1=20000 min2=0 max2=5000 wanttitle=n wantaxis=y label1=Offset unit1=m label2=Time unit2=ms plotfat=4 yreverse=y')
+Plot('xtraysendfiner1interp0','graph plotcol=6 min1=10000 max1=20000 min2=0 max2=5000 wanttitle=n wantaxis=n plotfat=7 yreverse=y')
+Plot('xtraysendfiner2interp0','graph plotcol=5 min1=10000 max1=20000 min2=0 max2=5000 wanttitle=n wantaxis=n plotfat=7 yreverse=y')
+
+Plot('oxtraysend',['xtraysendfiner1interp0','xtraysendfiner2interp0'], 'Overlay')
+Result('ooxtraysend',['oxtraysend','xtraydirect'], 'Overlay')
+
+Result('xtraydirect','graph plotcol=7 min1=10000 max1=20000 min2=0 max2=5000 wanttitle=n wantaxis=y label1=Offset unit1=m label2=Time unit2=ms plotfat=7')
 
 End()

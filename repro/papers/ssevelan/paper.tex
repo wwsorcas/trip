@@ -14,7 +14,7 @@ Extension methods reformulate inverse problems in wave propagation by adding deg
 
 \end{abstract}
 
-\inputdir{../trans/project}
+\inputdir{project}
 
 \section{Full Waveform Inversion}
 
@@ -157,8 +157,8 @@ $\oS_1[\kappa]$ has a microlocal approximate inverse $(\oS[\kappa]^1)^{\dagger}$
 in which $W_s, W_r$ are properly supported $\Psi$DOs on $\Gamma_s \times \bR,\Gamma_r \times \bR$ respectively [from here on, suppress the arguments whenever these are obvious: $\oS_1 = \oS_1[\kappa]$ and so on]. The sense in which $\oS_1^{\dagger}$ is an inverse is that
 \begin{eqnarray}
 \label{eqn:proj}
-\oS_1^{\dagger}\oS &=& \Pi^1_s\\
-\oS \oS_1^{\dagger} &=& \Pi^1_r
+\oS_1^{\dagger}\oS_1 &=& \Pi^1_s\\
+\oS_1 \oS_1^{\dagger} &=& \Pi^1_r
 \end{eqnarray}
 in which $\Pi^1_{s,r} \in OPS^0(\Gamma_{s,r}\times \bR)$ have principal symbols $\sim 1$ in the conic sets $\gamma_{s,r} \subset T^*(\Gamma_{s,r}\times \bR)$.
 %, and $\ge 1/2$ in the larger conic sets $\tilde{\gamma}^1_{s,r} \supset \gamma^1_{s,r}$.
@@ -725,7 +725,7 @@ Taking these results together, we see that the only contribution to $D^2\Jared$ 
 \label{d2j}
 Suppose that $d=S\tilde{\Pi}f_{\lambda}$ is $r$-approximately point and $\{f_{\lambda}\}$ is a high-frequency wavelet family. Then
 \[
-D^2\Jared = \|[Q,A_r]\ofa\|^2 + O(\lambda^2)
+D^2\Jared = \alpha^2\|[Q,A_r]\ofa\|^2 + O(\lambda^2)
 \]
 \end{theorem}
 
@@ -765,4 +765,25 @@ $\Psi$DO calculus $\Rightarrow$ as $\lambda \rightarrow 0$,
 
 $D^2J_{\alpha}[\kappa](\delta \kappa,\delta \kappa) \ge (C+ O(\lambda)) \times \left\|\frac{\partial}{\partial \hat{k}}(D\tau[\kappa]\delta \kappa)\right\|^2 $
 
-{\color{blue} To 2nd order at consistent (model, data), SSE inversion $\approx$ traveltime tomography - $J_{\alpha}$ convex in ball of radius $O(1)$ in ``tomographically detectable'' subspace - {\em much} larger region of convexity than FWI} 
+{\color{blue} To 2nd order at consistent (model, data), SSE inversion
+  $\approx$ traveltime tomography - $J_{\alpha}$ convex in ball of
+  radius $O(1)$ in ``tomographically detectable'' subspace - {\em
+    much} larger region of convexity than FWI}
+
+% \plot{ptsrc00}{width=\textwidth}{Bandpass filter pulse}
+
+\plot{bml0}{width=\textwidth}{Lens model}
+\plot{plbulksm0}{width=\textwidth}{Layered model}
+\plot{oplrays0}{width=\textwidth}{Diving ray model}
+\plot{ooplrays0}{width=\textwidth}{Diving ray model}
+\plot{ndwdata0}{width=\textwidth}{Muted point source data}
+\plot{ndwdatavz0}{width=\textwidth}{Muted point source data}
+\plot{ndwdataresrcplbulksm0}{width=\textwidth}{Muted point source data}
+\plot{ndwdataresimplbulksm0}{width=\textwidth}{Muted point source
+  data}
+\plot{ndwdatarediffplbulksm0}{width=\textwidth}{Muted point source data}
+\plot{ndwraw0}{width=\textwidth}{Point source data}
+\plot{ndwmute0}{width=\textwidth}{Mute function}
+
+\plot{ooxtraysend}{width=\textwidth}{Ray crossing times $z=0$}
+

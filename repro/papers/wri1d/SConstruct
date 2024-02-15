@@ -3,7 +3,10 @@ from rsf.tex import *
 End(
 #lclass='segabs',
 lclass='georeport',
-use='amsmath,amssymb,amsthm,amscd,setspace,wasysym,graphicx',
+#options='report',
+#options='manuscript',
+#options='paper',
+use='amsmath,amssymb,amsthm,amscd,setspace,wasysym,graphicx,hyperref',
 
 include=r'''
 \newcommand{\mb}{\mathbf}

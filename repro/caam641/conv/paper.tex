@@ -1,7 +1,6 @@
 \title{The Convolutional Model}
 \maketitle
 \label{ch:conv}
-\inputdir{project}
 
 \section{Introduction}
 The model of the title relates a seismic data trace $d(t)$, a {\em reflectivity} $r(t)$, a wavelet $w(t)$, and a noise function $n(t)$ by
@@ -104,8 +103,12 @@ In fact, the earth is not layered (even locallly) - if it were, then the results
 The half-offset $h=|(x_r-x_s,y_r-y_s)|/2$ indexes traces in a CMP gather. The scalar half offset defined here suffices for present purposes, since the layered hypothesis implies rotational symmetry of the traces in a CMP about the midpoint.
 
 The CMP gathers in Figure \ref{fig:cdp-every50th} change quite a bit one to another, but they are 625 m apart. Figure \ref{fig:cdp1002-1040} on the other hand shows the same number of CMP gathers, but chosen contiguously, with spacing of 12.5 m. Over this range of CMPs, the data changes quite slowly, so perhaps it is not so dreadfully inaccurate to model the earth as layered on this scale.
+
+\inputdir{.}
 \plot{cdp-every50th}{width=0.9\textwidth}{Every 50th Common Midpoint Gather from the Viking Graben line introduced in Chapter \ref{ch:basic}. Midpoint spacing is 625 m.}
 \plot{cdp1002-1040}{width=0.9\textwidth}{Common Midpoint Gathers 1002-1040 from the Viking Graben line introduced in Chapter \ref{ch:basic}. Midpoint spacing is 12.5 m.}
+
+\inputdir{project}
 
 Due to the rotational symmetry already noted,
 \begin{equation}

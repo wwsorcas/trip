@@ -290,7 +290,12 @@ for par in ['grid_15_24_8']:
 	 
     # add source coordinates from hdrfile to source AND receiver 
     # coordinates from wavelet to create "dressed" wavelet for array
-    # source option in iwave. 
+    # source option in iwave.
+
+    # WWS 2020.03.25 seemes to have been left out
+    Flow('waveletr45.su','wavelet_free96m.su',
+          suwind + ' key=fldr min=45 max=45')
+    
 
     # time integrations for a# job definition dictionary
 

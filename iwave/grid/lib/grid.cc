@@ -311,14 +311,14 @@ int get_panelnum_grid(grid g) {
   _IPNT _id;
   int i;
   int sz=1;
-  int id_check=0;
+  //  int id_check=0;
   get_n(_n,g);
   get_id(_id,g);
   for (i=0;i<g.gdim;i++) {
     // id=dim - time axis id<EXTINT external extended axis
     if ((_id[i] > g.dim-1) && (_id[i] < EXTINT)) {
       sz*=_n[i];
-      id_check++;
+      //  id_check++;
     }
   }
   return sz;

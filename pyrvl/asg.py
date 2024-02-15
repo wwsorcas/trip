@@ -293,7 +293,8 @@ class fsbop(vcl.Function):
     def __init__(self, dom, rng, \
                      buoyancy, source_p, order, sampord, nsnaps,\
                      cfl, cmin, cmax, dmin, dmax, \
-                     nl1, nr1, nl2, nr2, pmlampl, boundstest=True, noisy=False):
+                     nl1, nr1, nl2, nr2, pmlampl, \
+                     boundstest=True, noisy=False, partask=0):
                      
         try:
             if not isinstance(dom, rsfvc.Space):
@@ -341,6 +342,7 @@ class fsbop(vcl.Function):
                 self.printact = 0
             else:
                 self.printact = -1
+            self.partask = partask
             self.therest = ' order=' + str(self.order) + \
               ' sampord=' + str(self.sampord) + \
               ' nsnaps=' + str(self.nsnaps) + \
@@ -354,7 +356,8 @@ class fsbop(vcl.Function):
               ' nl2=' + str(self.nl2) + \
               ' nr2=' + str(self.nr2) + \
               ' pmlampl=' + str(self.pmlampl) + \
-              ' printact=' + str(self.printact)
+              ' printact=' + str(self.printact) + \
+              ' partask=' + str(self.partask)
 
     def getDomain(self):
         return self.dom

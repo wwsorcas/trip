@@ -1,13 +1,11 @@
-%\input{title}
 \title{Error Bounds for Extended Source Inversion applied to an Acoustic Transmission Inverse Problem}
 \author{William W. Symes\\
-PO Box 43, Orcas, WA 98280 USA, {\tt symes@rice.edu}}
+  Department of Computational and Applied Mathematics, \\
+  Rice University, Houston, Texas 77251, USA; {\tt symes@rice.edu}}
 
-\lefthead{Symes}
+\lefthead{Error Bounds for Extended Source Inversion}
+\righthead{Symes}
 
-\righthead{1D Acoustic Inversion: Theory}
-
-\maketitle
 \begin{abstract}
   A simple inverse problem for the wave equation requires
   determination of both the wave velocity in a homogenous acoustic
@@ -138,20 +136,20 @@ units), is the solution of the the initial value problem for the wave equation \
 \begin{eqnarray}
   \label{eqn:awe}
   \left(m^2\frac{\partial^2 p}{\partial t^2} - \nabla^2\right) p(\bx,t) &=&
-                                                                         w(t)\delta(\bx-\bx_s) \nonumber\\
+                                                                         w(t)\delta(\bx-\bx_s), \nonumber\\
   p(\bx,t)&=&0, t\ll 0.
 \end{eqnarray}
 The solution is well-known, see for instance
 \cite{CourHil:62}, Chapter VI, section 12, equation 47:
 \begin{equation}
   \label{eqn:homsol}
-  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-m|\bx-\bx_s|\right),
+  p(\bx,t) = \frac{1}{4\pi |\bx-\bx_s|}w\left(t-m|\bx-\bx_s|\right).
 \end{equation}
 This trace of $p$ at $\bx_r \in \bR^3$ can be viewed as the result of
 applying an m-dependent linear operator $F[m]$ to the wavelet $w$:
 \begin{equation}
 \label{eqn:mod}
-F[m]w(t)  = p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right) 
+F[m]w(t)  = p(\bx_r,t) = \frac{1}{4\pi r}w\left(t-mr\right).
 \end{equation}
 The slowness $m$ must be positive, as follows from basic acoustics,
 and in fact reside in a range characteristic of the
@@ -216,7 +214,7 @@ Define the relative mean-square error $\lerr: M \times \lW \times D
 so that inequality \ref{eqn:probstat0} is equivalent to
 \begin{equation}
   \label{eqn:probstat1}
-  \lerr[m,w;d] \le \frac{1}{2}\epsilon^2,
+  \lerr[m,w;d] \le \frac{1}{2}\epsilon^2.
 \end{equation}
 Minimization of $\lerr$ is the standard least-squares formulation of
 the Inverse Problem defined above: if the global minimum value of
@@ -265,8 +263,8 @@ will be assumed throughout, $\lF[m]$ is injective for each $m \in M$ (in fact, $
 \noindent{\bf Remark:} A useful consequence of the condition 
 \ref{eqn:fullrec}: for every $m \in M$, 
 \begin{equation}
-  [-\lambda_{\rm max}, -\lambda_{\rm max}] \subset[ t_{\rm min}-mr , 
-  t_{\rm max}-mr]. 
+  [-\lambda_{\rm max}, \lambda_{\rm max}] \subset[ t_{\rm min}-mr , 
+  t_{\rm max}+mr]. 
   \label{eqn:zeroinc}
 \end{equation}
 
@@ -289,7 +287,7 @@ error = 1.0.
 \begin{proof} From the definition \ref{eqn:mod},
 \[
  \lerr[m,w;d] =  \frac{1}{32\pi^2
-    r^2\|d\|^2}\int\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2
+    r^2\|d\|^2}\int\,dt\,\left|w\left(t-mr\right)-w_*\left(t-m_*r\right)\right|^2.
 \]
 Since $w_*, w$ vanish for $|t|>\lambda$,
 $\lF[m_*]w_*(t)$ vanishes if $|t-m_*r|>\lambda$ and $\lF[m]w$ vanishes if $|t-mr|>\lambda$. So if $|mr-m_*r|
@@ -301,21 +299,21 @@ $\langle \cdot,\cdot \rangle_D$ on $D$:
 \begin{equation}
   \label{eqn:ortho}
   |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \langle F[m]w,
-  F[m_*]w_*\rangle_D = 0
+  F[m_*]w_*\rangle_D = 0.
 \end{equation}
 But $d = \lF[m_*]w_*$, so this is the same as saying that $d$ is
 orthogonal to $F[m]w$. So conclude after a minor manipulation that
 \[
   |m- m_*|r > 2\lambda \,\, \Rightarrow \,\, \lerr[m,w;d]=\frac{1}{32\pi^2 
-    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2).
+    r^2\|d\|^2}(\|w\|^2 + \|w_*\|^2)
 \]
 \begin{equation}
   \label{eqn:iso}
-  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right)
+  = \frac{1}{2}\left(\frac{\|w\|^2}{\|w_*\|^2} + 1 \right).
 \end{equation}
 That is, for slowness $m$ in error by more than $2\lambda/r$ from the 
 target slowness $m_*$, the means square error (FWI objective) $\lerr$ is independent of
-$m$, and its minimum over $w$ is attained for $w=0$
+$m$, and its minimum over $w$ is attained for $w=0$.
 \end{proof}
 
 Therefore local minimizers of $\lerr$ abound, as far as you like from the
@@ -358,13 +356,15 @@ With these choices, define
 \end{eqnarray}
 
 The main theoretical device used in the proofs of our main results on 
-extended inversion is Variable Projection reduction of the penalty objective $\Ja$
+extended inversion is reduction of the penalty objective $\Ja$
 (equation \ref{eqn:jdef}) to a function $\tJa$ of 
 $m$ alone, by minimization over $w$:
 \begin{equation}
   \label{eqn:redexp}
-  \tJa[m;d] = \inf_w \Ja[m,w;d]
+  \tJa[m;d] = \inf_w \Ja[m,w;d].
 \end{equation}
+Reduction of this type is often termed ``Variable Projection'', after \cite{GolubPereyra:73,GolubPereyra:03}.
+
 A minimizer $w$ on the right-hand side of definition
 \ref{eqn:redexp} must solve the {\em normal equation}
 \begin{equation}
@@ -448,7 +448,7 @@ equation \ref{eqn:norm}. This condition is an hypothesis of
           \left(\frac{1}{(4\pi r)^2} + \alpha^2
           a^2(t)\right)^{-1}\frac{1}{4 \pi r}d(t+mr), t \in [t_{\rm
           min}-mr, t_{\rm max}-mr];\\
-          0, \mbox{ else;}
+          0, \mbox{ else.}
         \end{array}
       \right.
     \end{equation}
@@ -546,14 +546,14 @@ expressions for $\tJa$ and its components.
   \begin{equation}
   \label{eqn:residnormgen}
   e[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r \alpha a(t-mr))^4(1 +
-  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2,
 \end{equation}
 \begin{equation}
   \label{eqn:anninormgen}
   p[m,\aw[m,d];d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}} \,dt\,(4\pi r a(t-mr))^2(1 +
-  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2
+  (4\pi r \alpha a(t-mr))^2)^{-2}d(t)^2,
 \end{equation}
-
+and
 \begin{equation}
   \label{eqn:expjgen}
 \tJa[m;d] = \frac{1}{2\|d\|^2}\int_{t_{\rm min}}^{t_{\rm max}}\,dt\,(4\pi r \alpha a(t-mr))^2(1+(4\pi r \alpha 
@@ -592,7 +592,7 @@ a(t-mr))^2)^{-1}d(t)^2.
   integrating, and changing integration variables $t \mapsto t-mr$
   gives the result \ref{eqn:anninormgen}
 
-  That the VPM objective $\tJa$ is given by \ref{eqn:expjgen} follows from equations \ref{eqn:redexp1}, \ref{eqn:residnormgen}, and
+  That the reduced objective $\tJa$ is given by \ref{eqn:expjgen} follows from equations \ref{eqn:redexp1}, \ref{eqn:residnormgen}, and
   \ref{eqn:anninormgen}.
 \end{proof}
 
@@ -616,7 +616,7 @@ For $a \in W^{1,\infty}_{\rm loc}(\bR)$ a limiting argument shows that the
 same expression gives the derivative of $\tJa$.
 \end{proof}
 
-It will be useful to record expressions for the various componenets of
+It will be useful to record expressions for the various components of
 $\tJa$ when the data is noise-free, that is, the context of
 Proposition \ref{thm:norminvexp}, item 3:
 \begin{corollary}
@@ -650,6 +650,9 @@ Finally, if $a \in W^{1,\infty}(\bR)$, then $\tJa[\cdot;d]$ is differentiable, a
 \end{equation}
 \end{corollary}
 
+
+\section{Stationary Points}
+
 Recall that the purpose of the penalty operator is to penalize energy away from 
 $t=0$. A simple multiplier of class $W^{1,\infty}$ that accomplishes
 this goal (and produces a differentiable reduced objective $\tJa$,
@@ -670,8 +673,6 @@ particular annihilator has been employed in earlier work on extended
 source inversion 
 \cite[]{Plessix:00a,LuoSava:11,Warner:14,HuangSymes:SEG15a,Warner:16,HuangSymes:Geo17}.
 
-\section{Stationary Points}
-
 \begin{proposition}
   \label{thm:rampgood}
   Suppose that
@@ -687,7 +688,7 @@ source inversion
   \begin{equation}
     | (m - m_*)r| > \lambda  \Rightarrow  \left|\frac{d}{dm}\tJa[m;d_*]\right| >  
     \frac{r(4 \pi r \alpha)^2(\lambda-\mu)}{(1+(4\pi r\alpha)^2 
-      (\lambda+\mu)^2)^{2}}  
+      (\lambda+\mu)^2)^{2}}.
     \label{eqn:gradbndnonoise}
   \end{equation}
 \end{proposition}
@@ -710,7 +711,7 @@ source inversion
   RHS of equation \ref{eqn:gradfinal} can be re-written
   \[
     = -\frac{r(4 \pi r \alpha)^2}{\|w_*\|^2}\int_{-(m-m_*)r-\lambda}^{-(m-m_*)r+\lambda}
-    \,dt\, t(1+(4\pi r)^2\alpha^2 t^2)^{-2}w_*\left(t+(m-m_*)r\right)^2
+    \,dt\, t(1+(4\pi r)^2\alpha^2 t^2)^{-2}w_*\left(t+(m-m_*)r\right)^2.
   \]
   Suppose that $\mu \le \lambda$ and $w_* \in W_{\mu}$. 
   If $m > m_*+\lambda/r$, then $t+(m-m_*)r \in \mbox{supp }w_*$
@@ -810,13 +811,12 @@ on the complement of any open interval containing
 $t=(m-m_*)r$. Therefore
 \begin{equation}
   \label{eqn:elimit}
-  \lim_{\alpha \rightarrow \infty}e[m,\aw[m;d];d] =
-  \frac{1}{2}\frac{1}{(4 \pi r)^2}\|w_*\|^2 = \frac{1}{2}\|d\|^2.
+  \lim_{\alpha \rightarrow \infty}e[m,\aw[m;d];d] = \frac{1}{2}.
 \end{equation}
 Consequently, there exists $\alpha_{\rm max}(\epsilon,\lambda,d)$ so
 that
 \[
-  e[m,\aw[m;d];d]  \le \frac{1}{2}\epsilon^2\|d\|^2
+  e[m,\aw[m;d];d]  \le \frac{1}{2}\epsilon^2
   \Rightarrow \alpha \le \alpha_{\rm max}(\epsilon,\lambda,d).
 \]
 The existence of this limiting penalty weight has been inferred
@@ -833,15 +833,21 @@ noise. Suppose that the data trace $d$ takes the form
 \end{equation}
 with $m_* \in M, w_* \in W_{\mu}$, $0<\mu<\lambda$, and noise trace $n \in
 D$. Since no support assumptions can be made about $n$, equation
-\ref{eqn:normsol} implies that $\aw[m;d] \notin \lW$ for any values of
-$\alpha$ and $\lambda$.  Therefore minimization of $\tJa$ cannot by itself yield a
+\ref{eqn:normsol} does not imply that $\aw[m;d] \in \lW$ for any values of
+$\alpha$ or $\lambda$.  Therefore minimization of $\tJa$ cannot by itself yield a
 solution of the inverse problem as defined in the problem statement
-\ref{eqn:probstat0}. In this section, I explain how a solution may
-nonetheless be constructed from a stationary point of $\tJa$.
+\ref{eqn:probstat0}. %\textcolor{red}{In this section, I explain how a solution may
+%nonetheless be constructed from a stationary point of $\tJa$.
+%First, examine the effect of additive noise on the estimation of the
+%slowness $m$. In expressing the result, use the dimensionless
+%relative data error}
 
-First, examine the effect of additive noise on the estimation of the
-slowness $m$. In expressing the result, use the dimensionless
-relative data error
+%\textcolor{blue}
+{To see how a solution may
+  nonetheless be constructed from a stationary point of $\tJa$,
+  examine the effect of additive noise on the estimation of the
+slowness $m$, in terms of the dimensionless
+relative data error}
 \begin{equation}
   \label{eqn:defeta}
   \eta = \frac{\|n\|}{\|d_*\|}. 
@@ -855,21 +861,25 @@ relative data error
   \begin{equation}
     \label{eqn:mnoisebnd}
     \eta(1+\eta) \le \frac{16}{3\sqrt{3}}\frac{4\pi r \alpha
-      (\lambda-\mu)}{(1+(4\pi r\alpha(\lambda+\mu))^2)^2}
+      (\lambda-\mu)}{(1+(4\pi r\alpha(\lambda+\mu))^2)^2}.
   \end{equation}
   Then
   \begin{equation}
     \label{eqn:mnoisebndfin}
-    |m-m_*| \le \frac{\lambda}{r}
+    |m-m_*| \le \frac{\lambda}{r}.
   \end{equation}.
 \end{proposition}
 
 \begin{proof}
   From equation \ref{eqn:dexpjgen}, $d \tJa / dm$ is the
-value of a quadratic form in $d$ with (indefinite) symmetric operator
+  value of a quadratic form in $d$
+%  \textcolor{red}{with}
+%  \textcolor{blue}
+  {defined by the}
+  (indefinite) symmetric operator
 $B = $ multiplication by
 \[
-  b(t;m,\alpha)  = -\frac{(4 \pi r \alpha)^2 (t-mr)}{(1+(4\pi r \alpha (t-mr))^2)^{2}}
+  b(t;m,\alpha)  = -\frac{(4 \pi r \alpha)^2 (t-mr)}{(1+(4\pi r \alpha (t-mr))^2)^{2}}.
 \]
 Therefore
 \begin{equation}
@@ -886,14 +896,14 @@ For a stationary point $m$ of
 $\tJa[\cdot;d]$, the inequality \ref{eqn:gradlip} implies
 \[
   \left|\frac{d}{dm}\tJa[m;d_*]\right| \le \frac{3\sqrt{3}}{16} 4\pi
-  r\alpha \eta(1+\eta)\|d_*\|^2
+  r\alpha \eta(1+\eta)\|d_*\|^2.
 \]
 On the other hand, the conclusion \ref{eqn:gradbndnonoise} of Proposition
 \ref{thm:rampgood} implies that if also
 \[
   \frac{3\sqrt{3}}{16} 4\pi r\alpha \eta(1+\eta)\|d_*\|^2 \le (4 \pi r
   \alpha)^2 \frac{\lambda-\mu}{(1+(4\pi r)^2\alpha^2
-    (\lambda+\mu)^2)^{2}} \|d_*\|^2
+    (\lambda+\mu)^2)^{2}} \|d_*\|^2,
 \]
 then $|m-m_*|\le \lambda/r$. Rearranging, obtain the conclusion.
 \end{proof}
@@ -905,7 +915,7 @@ then $|m-m_*|\le \lambda/r$. Rearranging, obtain the conclusion.
   \begin{equation}
     \label{eqn:mnoisecor}
     |m-m_*| \le \frac{\mu}{r} + \frac{\eta}{\alpha} \left(\frac{3\sqrt{3}(1+\eta)}{64\pi r^2}(1+(8\pi r \alpha
-      \lambda_{\rm max})^2)^2\right)
+      \lambda_{\rm max})^2)^2\right).
   \end{equation}
 \end{corollary}
 
@@ -944,7 +954,7 @@ inversion \cite[]{FuSymes2017discrepancy}, used in the companion paper
   \end{equation}
 \end{theorem}
 
-\begin{proof} of Theorem \ref{thm:mnoiseres}:
+\begin{proof}.
   Write $\lambda = (1+\delta)\mu$, and $x=4 \pi r \alpha \mu$. Then
   the right-hand side of equation \ref{eqn:mnoisebnd} may be written as
   \begin{equation}
@@ -965,7 +975,7 @@ inversion \cite[]{FuSymes2017discrepancy}, used in the companion paper
   \]
   Thus
   \[
-    1+C^2x^2 = \frac{4}{3}
+    1+C^2x^2 = \frac{4}{3},
   \]
   hence the maximum value is
   \[
@@ -1026,7 +1036,7 @@ Conclusion 1 in Theorem \ref{thm:mnoiseres} constrains the range of
 noise level to which these results apply to a bit more than 60\%. That
 is, the bound given by conclusion 2 is useful only for small noise. In
 the limit as $\eta \rightarrow 0$, conclusion 2 becomes
-$\lambda/\mu \gtrsim 1 + 2\eta$, that is, the ``fudge factor'' beyond
+$\lambda/\mu \ge 1 + 2\eta$, that is, the ``fudge factor'' beyond
 the noise-free bound is approximatly twice the noise level.
 
 On the other hand, stronger bounds than given by Theorem
@@ -1069,24 +1079,23 @@ project $\aw[m;d]$ onto $\lW$. For sufficiently large $\lambda,
   \end{equation}    
 \end{theorem}
 
-\begin{proof} of Theorem \ref{thm:ipnoisesuf}:
+\begin{proof}:
 From Theorem \ref{thm:norminv}, 
 \[
   \aw[m;d](t) = (1+ (4 \pi r \alpha t)^2)^{-1}(w_*(t+(m-m_*)) + 4\pi r 
   n(t+mr)) 
 \]
 \[
-  = \aw[m;d_*] + (1+ (4 \pi r \alpha t)^2)^{-1}4\pi r n(t+mr)
+  = \aw[m;d_*] + (1+ (4 \pi r \alpha t)^2)^{-1}4\pi r n(t+mr).
 \]
-
 From Theorem \ref{thm:mnoiseres},
 \[
-  |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r} 
+  |m-m_*| \le \left(1+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r},
 \]
 which from assumption \ref{eqn:ipnoiselam} is
 \[
   =\left(2+\frac{2\eta(1+\eta)}{1-\eta(1+\eta)}\right)\frac{\mu}{r}
-  -\frac{\mu}{r} \le \left(\frac{\lambda}{\mu}-1\right)\frac{\mu}{r}
+  -\frac{\mu}{r} \le \left(\frac{\lambda}{\mu}-1\right)\frac{\mu}{r}.
 \]
 That is,
 \[
@@ -1095,31 +1104,31 @@ That is,
 From Theorem \ref{thm:norminv},
 \[
   \mbox{supp }\aw[m;d_*] \subset [-\mu-(m-m_*)r, \mu-(m-m_*)r]
-  \subset [-\lambda,\lambda]
+  \subset [-\lambda,\lambda],
 \]
 so
 \[
-  E_{\lambda}\aw[m;d](t) = \aw[m;d_*](t) + E_{\lambda}(1+ (4 \pi r \alpha
-  t)^2)^{-1}4\pi r n(t+mr)
+  {\bf 1}_{[-\lambda,\lambda]}\aw[m;d](t) = \aw[m;d_*](t) + {\bf 1}_{[-\lambda,\lambda]}(1+ (4 \pi r \alpha
+  t)^2)^{-1}4\pi r n(t+mr).
 \]
 From the definition of $F[m]$, for any $t_1<t_2$, $w \in W$,  
 \[
-  F[m]{\bf 1}_{[t_1.t_2]}w = {\bf 1}_{[t_1+mr,t_2+mr]}F[m]w  
+  F[m]{\bf 1}_{[t_1.t_2]}w = {\bf 1}_{[t_1+mr,t_2+mr]}F[m]w.
 \]
 Thus the data residual after projection is
 \[
-  F[m]E_{\lambda}\aw[m,d](t) -d(t) = F[m]\aw[m,d_*](t) -d_*(t)  
+  F[m]{\bf 1}_{[-\lambda,\lambda]}\aw[m,d](t) -d(t) = F[m]\aw[m,d_*](t) -d_*(t)  
 \]
 \[
   + {\bf 1}_{[-\lambda+mr,\lambda+mr]}(4 \pi r \alpha (t-mr))^2 (1+ (4 \pi
   r \alpha (t-mr))^2)^{-1} n(t)
 \]
 \[
-  -(1- {\bf 1}_{[-\lambda+mr,\lambda+mr]})n(t)
+  -(1- {\bf 1}_{[-\lambda+mr,\lambda+mr]})n(t).
 \]
 From \ref{eqn:residnorm} and the bound on $m-m_*$,
 \[
-  \| F[m]E_{\lambda}\aw[m,d_*] -d_*\|^2 = (4 \pi r \alpha)^4
+  \| F[m]{\bf 1}_{[-\lambda,\lambda]}\aw[m,d_*] -d_*\|^2 = (4 \pi r \alpha)^4
   \int_{-\lambda+(m-m_*)r}^{\lambda+(m-m_*)r}\,dt\, (t-(m-m_*)r)^4
 \]
 \[
@@ -1127,21 +1136,21 @@ From \ref{eqn:residnorm} and the bound on $m-m_*$,
   (t-(m-m_*)r)^2)^{-2}d_*(t)^2
 \]
 \[
-  \le (4 \pi r \alpha \lambda)^4\|d_*\|^2
+  \le (4 \pi r \alpha \lambda)^4\|d_*\|^2.
 \]
 Similarly, the norm squared of the sum of the last two terms is 
 \[
   \le (4 \pi r \alpha \lambda)^2 \|{\bf 1}_{[-\lambda+mr,\lambda+mr]}
-  n\|^2 + \|(1 - {\bf 1}_{[-\lambda+mr,\lambda+mr]}n\|^2
+  n\|^2 + \|(1 - {\bf 1}_{[-\lambda+mr,\lambda+mr]}n\|^2.
 \]
 Without additional hypotheses to outlaw the accumulation of $n$ near
 $t=mr$, all that can be said is that this is
 \[
-  \le \max \{(4 \pi r \alpha \lambda)^2, 1\} \|n\|^2
+  \le \max \{(4 \pi r \alpha \lambda)^2, 1\} \|n\|^2.
 \]
 Putting this all together,
 \[
-  \|F[m]E_{\lambda}\aw[m,d]-d\| \le (4 \pi r \alpha
+  \|F[m]{\bf 1}_{[-\lambda,\lambda]}\aw[m,d]-d\| \le (4 \pi r \alpha
   \lambda)^2\|d_*\| + \max \{4\pi r \alpha \lambda, 1\}\|n\|
 \]
 \[
@@ -1165,8 +1174,9 @@ sufficiently small ($O(\sqrt{\epsilon})$).
 
 
 \bibliographystyle{seg}
-\bibliography{../../bib/masterref}
+\bibliography{../../bib/masterref}<
 
+%\input{paper.bbl}
 
 % \appendix{Abstract Structure of the Gradient}
 \section*{APPENDIX: ABSTRACT STRUCTURE OF THE GRADIENT}
@@ -1190,7 +1200,7 @@ prototypical problems:
 \item Because of this data-fitting assumption, a straightforward
   algorithm for scaling the quadratic penalty, based on the
   Discrepancy Principle, is available - see
-  \cite{FuSymes2017discrepancy,Symes:21a,SymesChenMinkoff:21}. This
+  \cite{FuSymes2017discrepancy,SymesChenMinkoff:21}. This
   scaling varies dynamically during iterative optimization, in effect
   changing the objective function sporadically as the iteration
   converges.
@@ -1220,7 +1230,7 @@ Recall that $\aw[m;d]$ is the solution of the normal equation
   \tJa[m;d] = \Ja[m,\aw[m;d];d]
 \]
 \[
-  = \frac{1}{2}(\|F[m]\aw[m;d]-d\|^2 + \alpha^2\|Aw[m;d]\|^2)
+  = \frac{1}{2}(\|F[m]\aw[m;d]-d\|^2 + \alpha^2\|A\aw[m;d]\|^2)
 \]
 (equation \ref{eqn:redexp1})
 \begin{equation}
@@ -1256,11 +1266,11 @@ operator on the RHS of equation \ref{eqn:faw} is multiplication by a
 smooth function, with its arguments shifted by $mr$. Such an operator
 is smooth in $m$, hence so is $F\aw$.
 
-Since $\tJa$ and its gradient depend smoothly on their arguments, it
-is possible to derive an alternate expression assuming that $d \in
-H^1(\bR)$, then extend it by continuity to $d \in L^2(\bR)$. Note that
-if $w \in H^1(\bR)$, then
-  differentiable, and 
+Theorem \ref{thm:diffobj} also gives an explicit expression for the
+derivative of $\tJa$. An alternative expression
+does not depend on the structure of the single-trace modeling
+operator, hence applies in a much more general setting. Note that if
+$w \in H^1(\bR)$, then $m \mapsto F[m]w$ is differentiable, and
 \begin{equation}
 \label{eqn:deriv}
 (D(F[m]w)\delta m)(t) = F[m](Q[m]\delta m)w (t), 
@@ -1270,17 +1280,16 @@ where
 \label{eqn:defq}
 (Q[m]\delta m)w = -r\delta m \frac{dw}{dt}. 
 \end{equation}
-
 That is, $DF[m]\delta m$ factors into $F[m]$ following $Q[m]\delta m$,
 where the latter a skew-adjoint differential operator of order 1,
 depending linearly on $\delta m$.
 
 Assume that $d \in H^1(\bR)$. From equation \ref{eqn:normsol}, it
-follows that $w[m;d] \in H^1(\bR)$ and moreover that $m \mapsto
+follows that $\aw[m;d] \in H^1(\bR)$ and moreover that $m \mapsto
 \aw[m;d]$ is differentiable as a map from $\bR^+$ to
 $L^2(\bR)$. From equation \ref{eqn:redexp1},
 \[
-  \tJa[m;d] = \frac{1}{2}(\|F[m]w[m;d]-d\|^2 + \alpha^2 \|Aw[m;d]\|),
+  \tJa[m;d] = \frac{1}{2}(\|F[m]\aw[m;d]-d\|^2 + \alpha^2 \|A\aw[m;d]\|),
 \]
 whence $m \mapsto \tJa[m;d]$ is differentiable. A standard calculation
 invoking the normal equation \ref{eqn:norm} shows that
@@ -1302,12 +1311,12 @@ invoking the normal equation \ref{eqn:norm} shows that
 (using antisymmetry of $Q$)
 \[
   = \alpha^2 \langle \aw[m;d],[ (Q[m]\delta m), A^TA]\aw[m;d] \rangle
-  + \alpha^2 \langle (Q[m]\delta m)\aw[m;d],A^TA\aw[m;d] \rangle
+  + \alpha^2 \langle (Q[m]\delta m)\aw[m;d],A^TA\aw[m;d] \rangle.
 \]
 Rearranging,
 \begin{equation}
   \label{eqn:djq}
-  d\tJa[m;d]\delta m = \frac{1}{2}\alpha^2 \langle \aw[m;d],[
+  D\tJa[m;d]\delta m = \frac{1}{2}\alpha^2 \langle \aw[m;d],[
   (Q[m]\delta m), A^TA]\aw[m;d] \rangle.
 \end{equation}
 Since $Q$ is a differential operator of order 1, and $A^TA$ an

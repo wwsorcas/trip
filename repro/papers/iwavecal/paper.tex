@@ -1,6 +1,8 @@
 \title{Calibrating IWAVE}
 \date{}
-\author{William W. Symes, The Rice Inversion Project}
+\author{William W. Symes}
+
+\inputdir{project}
 
 \lefthead{Symes}
 \righthead{Calibrating IWAVE}
@@ -11,6 +13,46 @@
 IWAVE simulation of wavefields involves many individual computations combined into a single command. While each computation can be tested for accuracy on its own, it is also important to ensure that the final result accurately approximates the solution of the target continuum problem by direct comparison with solutions of known accuracy. This paper presents comparison of acoustic simulations on staggered and non-staggered grids with numerical implementations of analytic solutions in homogeneous media. The comparisons suggest that IWAVE correctly solves these problems with reasonable accuracy.
 \end{abstract}
 
+\section{Introduction}
+This note concerns verification of the IWAVE family of finite
+difference wave solvers \cite[]{GeoPros:11}. In the numerics QC vernacular, verification
+means ``show that the equations are solved correctly'', as opposed to
+validation, ``show that the correct equations are solved''. In the
+context of discrete methods for partial differential equations,
+``correctly'' means: with an adequate rate of convergence as grids or
+meshes are refined.
+
+Several types of verification tests exist, none of
+them entirely satisfactory (see for example \cite{FehlerKeliher:11},
+Chapter 3). The approach used here is comparison with
+analytic (or nearly analytic) closed-form solutions. Such solutions
+exist only in special cases, for example, wave equations with constant
+coefficients, the case considererd here. While verification in such
+special cases does not necessarily predict the errors encountered
+under fewer constraints (for example, heterogenous media), it does
+indicate whether overall scaling of the numerical solution is correct.
+
+The example reported below, and similar examples not explicitly shown,
+verify the correct solution of homogeneous medium acoustics problems
+with isotropic point sources using IWAVE finite difference
+simulators. This task requires first that the
+analytic solution for a homogeneous medium be derived. While such
+solutions are found in many publications, most instances take
+advantage of restrictions on the problem parameters to simplify the
+results. Since the point of this exercise is to verify correct
+dependence on parameters, I begin this note with a complete derivation
+of the homogeneous medium point source solution (the ``radiation
+problem'' of \cite{CourHil:62}, Chapter 6), with dependence on
+parameters explicitly described. The solution for the 3D version of
+this problem is actually analytic. Since 2D finite difference
+simulation is much less expensive than 3D, that case is also
+important, but the result involves quadrature, so is not really
+analytic. I pose a 2D homogeneous medium point source problem, and
+solve it using IWAVE's staggered grid finite difference simulator, and
+a trapezoidal rule realization of the 2D quasi-analytic
+solution. Comparison shows convincingly that the finite difference
+simulator is functioning correctly for this class of problems.
+
 \section{Theory}
 Linear acoustics describes small amplitude motions of a compressible fluid in terms of the evolution of (excess) pressure $p(\bx,t)$ and particle velocity $\bv(\bx,t)$: 
 \begin{eqnarray}
@@ -19,7 +61,7 @@ Linear acoustics describes small amplitude motions of a compressible fluid in te
 \frac{\partial \bv}{\partial t}(\bx,t) & = & -\beta(\bx) \nabla p(\bx,t)\nonumber\\
 p, \bv &=& 0,\, t << 0.
 \end{eqnarray}
-(\cite[]{gur81}, section 19, or \cite[]{Frie:58}, Chapter 1). The linear acoustic constitutive law makes relative change of volume and pressure proportional by the the bulk modulus $\kappa$, which therefore has units of pressure = force/area. The first of the equations in \ref{eqn:aws} therefore represents input of energy into the system via a defect in the acoustic consitutive relation: the forcing (or source) term $f$ has units of 1/time, that is, relative rate of change. The second equation in \ref{eqn:aws} expresses Newton's law relating acceleration and force for the acoustic model in which stress is scalar and its divergence (by definition) equal to the negative pressure gradient. The buoyancy $\beta$ is the reciprocal of density, $\beta=1/\rho$. The final condition in \ref{eqn:aws} specifies causal solutions.
+(\cite{gur81}, section 19, or \cite{Frie:58}, Chapter 1). The linear acoustic constitutive law makes relative change of volume and pressure proportional by the the bulk modulus $\kappa$, which therefore has units of pressure = force/area. The first of the equations in \ref{eqn:aws} therefore represents input of energy into the system via a defect in the acoustic consitutive relation: the forcing (or source) term $f$ has units of 1/time, that is, relative rate of change. The second equation in \ref{eqn:aws} expresses Newton's law relating acceleration and force for the acoustic model in which stress is scalar and its divergence (by definition) equal to the negative pressure gradient. The buoyancy $\beta$ is the reciprocal of density, $\beta=1/\rho$. The final condition in \ref{eqn:aws} specifies causal solutions.
 
 The system \ref{eqn:aws} is equivalent to a single second order PDE for pressure: differentiate the first equation with respect to time, then use the second equation to eliminate $\bv$ and obtain
 \begin{eqnarray}
@@ -30,7 +72,7 @@ p & = & 0, \,t<<0
 
 The systems \ref{eqn:aws} and \ref{eqn:awe} describe linear acoustodynamics in any dimension, in particular in 2D or 3D, and far from physical boundaries, or in Euclidean space without boundaries. Appropriate boundary conditions must be supplied to complete the description of acoustics in  domains with boundaries. 
 
-In this section we will develop analytic expressions for the pressure field $p$ in \ref{eqn:aws} or \ref{eqn:awe} for 2D and 3D, assuming that $\kappa$ and $\beta$ are constant and $f$ has the form of an {\em isotropic point radiator} located at the origin:
+In this section I will develop analytic expressions for the pressure field $p$ in \ref{eqn:aws} or \ref{eqn:awe} for 2D and 3D, assuming that $\kappa$ and $\beta$ are constant and $f$ has the form of an {\em isotropic point radiator} located at the origin:
 \begin{equation}
 \label{eqn:ipr}
 f(\bx,t) = w(t) \delta(\bx).
@@ -47,7 +89,7 @@ p & = & 0, \,t<<0
 using the wave velocity $c=\sqrt{\kappa\beta}$. Note that the forcing term has units of density rate, or force/distance. The same for would be obtained starting with a version of \ref{eqn:aws} with a body force, that is, inhomogenous term in Newton's law, in which case the source would be the divergence of a force.
 
 \subsection{3D}
-The solution of the point radiator problem is well-known, see for example \cite{CouHil:62}, Chapter 6 or \cite{GuiSte:79}, Chapter 1. I repeat it here for completeness. Since the isotropic point radiator \ref{eqn:ipr} is rotationally symmetric, it is natural to expect the same of the pressure field, i.e. that $p(\bx,t) = P(r,t)$ with $r=|\bx|$. The simple identity
+The solution of the point radiator problem is well-known, see for example \cite{CourHil:62}, Chapter 6 or \cite{GuiSte:79}, Chapter 1. I repeat it here for completeness. Since the isotropic point radiator \ref{eqn:ipr} is rotationally symmetric, it is natural to expect the same of the pressure field, i.e. that $p(\bx,t) = P(r,t)$ with $r=|\bx|$. The simple identity
 \begin{equation}
 \label{eqn:calc}
 \nabla^2 \frac{F(r)}{r} = \left(\frac{\partial^2}{\partial r^2} + \frac{2}{r}\frac{\partial}{\partial r}\right) \frac{F(r)}{r} = \frac{1}{r}\frac{\partial^2 F}{\partial r}^2(r)
@@ -115,14 +157,20 @@ w_{ACD} = \frac{\partial w_{ASG}}{\partial t}.
 Equation \ref{eqn:acdasg} is consistent with $w_{ASG}$ having units of force $\cdot$ velocity, and $w_{ACD}$ force $\cdot$ acceleration, as follows from equations \ref{eqn:asg} and \ref{eqn:acd} respectively.
 
 \subsection{2D}
-I will regard 2D solutions of equations \ref{eqn:aws} and \ref{eqn:awe} as line source solutions of the 3D equations. In this subsection, I use the notation $\bx=(x,z)$ for the 2D position vector in the ``inline'' plane perpindicular to the $y$ axis, and $\bx_{3D} = (x,y,z)$. The isotropic line radiator appropriate for the ASG version of the acoustic system \ref{eqn:asg} is 
+I will regard 2D solutions of equations \ref{eqn:aws} and
+\ref{eqn:awe} as line source solutions of the 3D equations. In this
+subsection, I use the notation $\bx=(x,z)$ for the 2D position vector
+in the ``inline'' plane perpindicular to the $y$ axis, and $\bx_{3D} =
+(x,y,z)$. The isotropic line radiator appropriate for the ASG version
+of the acoustic system
+\ref{eqn:asg} is 
 \begin{equation}
 \label{eqn:ilr}
 f(\bx_{3D},t) = w_{ASG2D}(t)\delta(\bx).
 \end{equation}
 For constant $\kappa$ and $\beta$, the weak solution $(p_{ASG2D}, \bv_{ASG2D})$ of system \ref{eqn:asg} is also independent of $y$. Since $\delta(\bx)$ has units of 1/area, $w_{ASG2D}$ must have units of pressure $\cdot$ area / time. 
  
-To find an analytic form for the pressure field of an isotropic line radiator, use D'Alembert's method of descent (\cite[]{CouHil:62}, Ch. 6). This approach begins with the observation that
+To find an analytic form for the pressure field of an isotropic line radiator, use D'Alembert's method of descent (\cite{CourHil:62}, Ch. 6). This approach begins with the observation that
 \[
 \delta(\bx) = \int dy \delta(\bx_{3D})
 \]
@@ -157,28 +205,177 @@ since the integrand is continuous, of compact support, and even in $y$. Set $\ta
 \[
 =\lim_{\epsilon \rightarrow 0} \frac{1}{2\pi c}\int_{\sqrt{|\bx|^2+\epsilon^2}/c}^{\infty} d\tau \frac{\frac{dw_{ASG2D}}{dt}(t-\tau)}{\sqrt{c^2 \tau^2 -|\bx|^2}}
 \]
-so taking the limit $\epsilon \rightarrow 0$ and introducing the Heavyside function to express the integral as a convolution, obtain
+so taking the limit $\epsilon \rightarrow 0$ and introducing the
+Heavyside function to express the integral as a convolution, obtain
+\[
+p_{ASG2D}(\bx,t) = \frac{1}{2\pi c}\int d\tau
+\frac{dw_{ASG2D}}{dt}(t-\tau)\frac{H(c\tau-|\bx|)}{\sqrt{c^2 \tau^2
+    -|\bx|^2}}
+\]
 \begin{equation}
 \label{eqn:asgsol2d}
-p_{ASG2D}(\bx,t) = \frac{1}{2\pi c}\int d\tau \frac{dw_{ASG2D}}{dt}(t-\tau)\frac{H(c\tau-|\bx|)}{\sqrt{c^2 \tau^2 -|\bx|^2}}
+= \frac{d}{dt}(w * g(\cdot,r))
+\end{equation}
+where
+\begin{equation}
+  \label{eqn:green2dsing}
+  g(t,r) = \frac{1}{2\pi c^2}\frac{H(t-r/c)}{\sqrt{t^2 -r^2/c^2}}
 \end{equation}
 
-The integral \ref{eqn:asgsol2d} is singular, and inconvenient for computation. The singular factor in the denominator is $\sigma = \sqrt{\tau -|\bx|/c}$, which if used as an alternate integration variable desingularizes the integral. Note that
-$\tau = \sigma^2 + |\bx|/c$, $d\tau = 2 \sigma d\sigma$, that the range of $\sigma$ is $[0,\sqrt{t-|\bx|/c}]$, and that
+The convolution kernel \ref{eqn:green2dsing} is singular, so simple
+regular grid 
+discretizations
+of convolution (for instance trapezoidal rule) have sub-optimal accuracy. 
+To produce an equivalent expression involving less singular
+integrands, note that
 \[
-\sqrt{c^2\tau^2-|\bx|^2} = c\sigma \sqrt{\sigma^2 + 2|\bx|/c}.
+  g(t,r) = \frac{1}{2\pi c^2}
+  \left(\frac{H(t-r/c)}{\sqrt{t+r/c}}2\frac{d}{dt}\sqrt(t-r/c)\right)
 \]
-So
-\begin{equation}\label{eqn:asgsol2dalt}
-p_{ASG2D}(\bx,t)=\frac{1}{\pi c^2} \int_0^{\sqrt{t-|\bx|/c}}d\sigma \frac{\frac{dw_{ASG2D}}{dt}(t-\sigma^2-|\bx|/c)}{\sqrt{\sigma^2 + 2|\bx|/c}}. 
+\[
+  =\frac{1}{\pi c^2}\left(\frac{d}{dt} H(t-r/c)
+    \sqrt{\frac{t-r/c}{t+r/c}}
+ - H(t-r/c)\sqrt{t-r/c}
+    \frac{d}{dt}\frac{H(t-r/c)}{\sqrt{t+r/c}}\right)
+\]
+Since $H(t-r/c)\sqrt{t-r/c}$ is continuous and vanishes at $t=r/c$, 
+\[
+  = \frac{d}{dt} \left(\frac{1}{\pi c^2}H(t-r/c)
+    \frac{(t-r/c)^{1/2}}{(t+r/c)^{1/2}} \right)+
+  \left(\frac{1}{2\pi c^2} H(t-r/c)
+    \frac{(t-r/c)^{1/2}}{(t+r/c)^{3/2}} \right)
+\]
+Therefore, the relation \ref{eqn:asgsol2d} is equivalent to
+\begin{equation}
+  \label{eqn:asg2dsolbis}
+  p_{ASG2D}(\bx,t) = \frac{d^2}{dt^2}(g_1(\cdot, r) *w)(t) + \frac{d}{dt}(g_2(\cdot,r)*w)(t),
 \end{equation}
-Discrete evaluation for this expression requires interpolation of $f$, but the integral is proper so ordinary numerical quadrature works well.
+in which
+\begin{eqnarray}
+  \label{eqn:green2dt1}
+  g_1(t,r) &=& \frac{1}{\pi c^2}H(t-r/c)
+               \frac{(t-r/c)^{1/2}}{(t+r/c)^{1/2}},\\
+  \label{eqn:green2dt2}
+  g_2(t,r) &=& \frac{1}{2\pi c^2} H(t-r/c)
+               \frac{(t-r/c)^{1/2}}{(t+r/c)^{3/2}}.
+\end{eqnarray}
 
-From the relation \ref{eqn:asgacd}, 
-\begin{equation}\label{eqn:acdsol2dalt}
-p_{ACD2D}(\bx,t)=\frac{1}{\pi c^2} \int_0^{\sqrt{t-|\bx|/c}}d\sigma \frac{w_{ACD2D}(t-\sigma^2-|\bx|/c)}{\sqrt{\sigma^2 + 2|\bx|/c}}. 
-\end{equation}
-Here $p_{ACD2D}$ solves the 2D version of the system \ref{eqn:acd} with line source pulse $w_{ACD2D}$.
+\section{Example}
+In this section, I present a 2D example showing that pressure traces
+computed via convolution with Green;'s functions, as developed in the
+last section, closely approximate
+those computed via staggered
+grid finite difference approximation of the system \ref{eqn:asg}. I
+present only the 2D case, to avoid computational expense. This example
+verifies that calibration of the finite difference implementation.
 
-It is easily checked that the right-hand sides of equations \ref{eqn:asgsol2d}, \ref{eqn:asgsol2dalt}, and \ref{eqn:acdsol2dalt} have units of pressure.
+Numerical evaluation of the right-hand side in equation
+\ref{eqn:asg2dsolbis} requires a choice of quadrature rule. The
+Green's function components $g_1$ and $g_2$ are continuous but have a
+$t^{1/2}$ singularity at the wavefront $t=r/c$. Sampling on a uniform
+grid effectively zeros $g_1$ and $g_2$ in the sample interval next
+to the wavefront, resulting in a time shift of a fraction of the time
+step. The trapezoidal rule
+applied to such integrands is therefore only first-order accurate. A
+specialized quadrature rule adapted to this singularity would yield
+more accurate results. Alternatively, further
+integration-by-parts manipulations like those that led to the
+expression \ref{eqn:asg2dsolbis} would shift more derivatives onto the
+wavelet, thus restoring second-order accuracy of the trapezoidal rule
+approximate convolution. I will not explore these options, since the
+main aim (calibration of the finite difference code) is achieved
+without them.
+
+The finite difference scheme used to approximate the solution of the
+system \ref{eqn:asg}
+is the staggered grid scheme
+introduced by \cite{GauTarVir:86}, based on leapfrog centered
+difference formulae. Any even formal order of accuracy in space and
+time can be achieved by higher-order leapfrog formulae in space and
+Lax-Wendroff refinement in time \cite[]{moczoetal:06}. The scheme used
+here is 2nd order accurate in time, 4th order in space. I will show
+computational results from three levels of grid refinement, by a
+factor of 2 in both space and time, so the formal order of accuracy is
+2. The use of a higher order of accuracy in the space derivatives
+leads to less grid dispersion, that is, a more accurate result at each
+level of grid refinement.
+
+IWAVE source input assumes that right-hand sides in the wave equation
+are represented by time traces, and that each time trace is the
+coefficient of a spatial delta function. Spatial delta functions are
+discretized by adjoint interpolation, mapping amplitudes at
+(arbitrary) sample points
+to nearby grid points, and scaling by the inverse of the spatial grid
+cell volume. This adjoint sampling and scaling is built into
+IWAVE. Only the time trace - in other words, the wavelet in the
+context of the present problem - need be passed to the simulator, in
+the form of a SEGY trace file.
+
+In this example, $\kappa = $ 4 GPa and $\rho = 1$ g/cm$^3$, so that $c = 2$
+m/ms. A point source is placed at at $x_s=$ 3500 m, $z_s=$ 3000 m with
+respect to an arbitrarly chosen origin, and a receiver at $x_r=$ 3500
+m, $z_r=$ 1000 m, so the source-receiver distance is $r=$
+2061.552... Note that the the wavefront position will not lie on any
+time grid point, which are integral multiples of a
+millisecond, for the sampling used below.
+The source wavelet is a trapezoidal bandpass filter
+with corner frequencies at 1.0, 2.5, 7.5 and 12 Hz, depicted in Figure
+\ref{fig:ptsrc2}.
+
+\plot{ptsrc2}{width=0.8\textwidth}{Zero-phase bandpass filter  with
+  corner frequencies 1, 2.5, 7.5, 12 Hz, delayed by 1 s.}
+
+The computations use three time sample rates for source wavelet and
+data traces, with $\Delta t = 0.008, 0.004, $ and
+$0.002$ s. The finite difference computations use corresponding square spatial grids
+with $\Delta x = \Delta z = $ 20, 10, and 5 m. The finite difference 
+time step is computed internally, and is smaller than the time sample
+rates. Cubic spline interpolation and adjoint interpolation
+transfers data between internal and sample time grids.
+
+Figures \ref{fig:plot0}, \ref{fig:plot1}, and \ref{fig:plot2} show
+the finite difference and convolutional traces computed with these choices for time steps $\Delta t = $
+0.008, 0.004, and 0.002 s respectively, along with the difference
+traces. The first order error is visually obvious, but so is
+convergence. The $L^2$ errors (relative to the finite difference
+traces) are 29\%, 14.8\%, and 7.6\% respectively. Almost all of this
+error is the effective time shift error in the trapezoidal rule evaluation of
+the integrations in equation \ref{eqn:asg2dsolbis}: the relative $L^2$
+error between the finite difference traces for coarsest and finest
+grids is 2.7\%.
+
+\plot{plot0}{width=0.8\textwidth}{Finite difference trace (blue)
+  vs. convolution with Green's function (equation
+  \ref{eqn:asg2dsolbis}) (red) and difference trace (black), coarsest grid
+  ($\Delta t$ = 0.008 s).}
+
+\plot{plot1}{width=0.8\textwidth}{Finite difference trace (blue)
+  vs. convolution with Green's function (equation
+  \ref{eqn:asg2dsolbis}) (red) and difference trace (black), medium grid
+  ($\Delta t$ = 0.004 s).}
+
+\plot{plot2}{width=0.8\textwidth}{Finite difference trace (blue)
+  vs. convolution with Green's function (equation
+  \ref{eqn:asg2dsolbis}) (red) and difference trace (black), finest grid
+  ($\Delta t$ = 0.002 s).}
+
+\section{Conclusion}
+The calculations presented here accomplished two objectives. First,
+the Green's functions constructed here are correctly scaled for linear
+acoustics in homogeneous fluids with arbitrary bulk modulus and
+density. While many references give expressions for these Green's
+functions, most choose a particular reference scale (frequently
+$\kappa = \rho = 1$) hence do not explicitly give results needed for
+comparison to numerical solutions. Second, the problem is formulated
+consistently with the IWAVE finite difference codes for both the
+second-order wave equation and the first-order pressure-velocity
+system. With these tools, verification of correct calibration for the
+finite difference codes is straightforward. The example presented in
+the last section verifies correct calibration of the staggered grid
+scheme for the pressure-velocity system in 2D. Similar verifications
+are possible for the other cases covered by the theory presented above.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
+
 

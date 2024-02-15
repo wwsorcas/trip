@@ -68,7 +68,7 @@ def convop(g,w,d,adj=0):
         ' ker=' + g + \
         ' adj=1 >& crud'        
     # execute
-    #    print(cmd)
+    # print(cmd)
     ret = os.system(cmd)
     if ret != 0:
         print('command failed with return value ' + str(ret))

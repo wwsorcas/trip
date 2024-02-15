@@ -923,7 +923,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
   else {
     if (!err && !strcmp(type,"char")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%c",*((char *)val));
+      err=snprintf(l,MAX_STR_LEN, "%c",*((char *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -931,7 +931,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"long")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%ld",*((long *)val));
+      err=snprintf(l,MAX_STR_LEN,"%ld",*((long *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -939,7 +939,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"ulong")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%lu",*((unsigned long *)val));
+      err=snprintf(l,MAX_STR_LEN, "%lu",*((unsigned long *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -948,7 +948,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     else if (!err && !strcmp(type,"int")) {
       /*      fprintf(stderr,"in ps_set - int\n"); */
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%d",*((int *)val));
+      err=snprintf(l,MAX_STR_LEN,"%d",*((int *)val));
       /*      fprintf(stderr,"output = %s err=%d\n",l,err); */
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
@@ -957,7 +957,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"uint")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%u",*((unsigned int *)val));
+      err=snprintf(l,MAX_STR_LEN,"%u",*((unsigned int *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -965,7 +965,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"short")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%hd",*((short *)val));
+      err=snprintf(l,MAX_STR_LEN,"%hd",*((short *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -973,7 +973,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"ushort")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%hu",*((unsigned short *)val));
+      err=snprintf(l,MAX_STR_LEN,"%hu",*((unsigned short *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -981,7 +981,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }    
     else if (!err && !strcmp(type,"float")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%g",*((float *)val));
+      err=snprintf(l,MAX_STR_LEN,"%g",*((float *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -989,7 +989,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     }
     else if (!err && !strcmp(type,"double")) {
       memset(l,'\0',MAX_STR_LEN);
-      err=sprintf(l,"%g",*((double *)val));
+      err=snprintf(l,MAX_STR_LEN,"%g",*((double *)val));
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;
       }
@@ -998,9 +998,9 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
     else if (!err && !strcmp(type,"ireal")) {
       memset(l,'\0',MAX_STR_LEN);
 #if DT_REAL == DT_DOUBLE
-      err=sprintf(l,"%g",*((double *)val));
+      err=snprintf(l,MAX_STR_LEN,"%g",*((double *)val));
 #else
-      err=sprintf(l,"%g",*((float *)val));
+      err=snprintf(l,MAX_STR_LEN,"%g",*((float *)val));
 #endif
       if (0==err || MAX_STR_LEN==err) {
 	err=E_PARSECONVERT;

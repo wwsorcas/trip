@@ -907,6 +907,150 @@ namespace RVL {
     string getName() const  { string s = "ElementwiseSqrtAbs"; return s; }
   };
 
+  /**  Maps R^n onto interior of cube defined by bounds l, u
+   */
+  template<class Scalar>
+  class ULFwd: public QuaternaryLocalFunctionObject<Scalar> {
+  public:
+    ULFwd()
+      : QuaternaryLocalFunctionObject<Scalar>(numeric_limits<Scalar>::max()) {}
+    ULFwd(Scalar _res)
+      : QuaternaryLocalFunctionObject<Scalar>(_res) { }
+    ULFwd(const ULFwd<Scalar> & m)
+      : QuaternaryLocalFunctionObject<Scalar>(m) {}
+    ~ULFwd() {}
+  
+    using RVL::QuaternaryLocalEvaluation<Scalar>::operator();
+    void operator() (LocalDataContainer<Scalar> & y,
+		     LocalDataContainer<Scalar> const & l,
+		     LocalDataContainer<Scalar> const & u,
+		     LocalDataContainer<Scalar> const & x) {
+      size_t n=x.getSize();
+      Scalar const * px = x.getData();
+      Scalar const * pl = l.getData();
+      Scalar const * pu = u.getData();
+      Scalar * py = y.getData();
+      if ((n != l.getSize()) ||
+	  (n != u.getSize()) ||
+	  (n |= y.getSize())) {
+	RVLException e;
+	e << "Error: ULFwd::operator()\n";
+	e << "Incompatible argument dims.\n";
+	throw e;
+      }	
+      for (size_t i=0;i<n;i++) {
+	py[i] = 0.5*(pu[i]+pl[i]) +
+	  0.5*(pu[i]-pl[i])*px[i]/sqrt(1.0 + px[i]*px[i]);
+      }	  
+    }
+
+    string getName() const  { return "ULFwd"; }
+  };
+
+  /**  Maps interior of cube defined by bounds l, u onto R^n; inverse of 
+       ULFwd
+   */
+  template<class Scalar>
+  class ULInv: public QuaternaryLocalFunctionObject<Scalar> {
+  public:
+    ULInv()
+      : QuaternaryLocalFunctionObject<Scalar>(numeric_limits<Scalar>::max()) {}
+    ULInv(Scalar _res)
+      : QuaternaryLocalFunctionObject<Scalar>(_res) { }
+    ULInv(const ULInv<Scalar> & m)
+      : QuaternaryLocalFunctionObject<Scalar>(m) {}
+    ~ULInv() {}
+  
+    using RVL::QuaternaryLocalEvaluation<Scalar>::operator();
+    void operator() (LocalDataContainer<Scalar> & y,
+		     LocalDataContainer<Scalar> const & l,
+		     LocalDataContainer<Scalar> const & u,
+		     LocalDataContainer<Scalar> const & x) {
+      size_t n=x.getSize();
+      Scalar const * px = x.getData();
+      Scalar const * pl = l.getData();
+      Scalar const * pu = u.getData();
+      Scalar * py = y.getData();
+      if ((n != l.getSize()) ||
+	  (n != u.getSize()) ||
+	  (n |= y.getSize())) {
+	RVLException e;
+	e << "Error: ULInv::operator()\n";
+	e << "Incompatible argument dims.\n";
+	throw e;
+      }
+      float guard = 0.0;
+      float z;
+      for (size_t i=0;i<n;i++) {
+	if (ProtectedDivision(px[i] - 0.5*(pu[i] + pl[i]),
+			      0.5*(pu[i]-pl[i]), z)) {
+	  RVLException e;
+	  e<<"Error: ULInv::operator()\n";
+	  e<<"u too close to l\n";
+	  throw e;
+	}
+	guard = fmin(0.0,1.0-z*z);
+	if (guard<0.0) {
+	  RVLException e;
+	  e<<"Error: ULInv::operator()\n";
+	  e<<"input vec outside of cube\n";
+	  throw e;
+	}
+	if (ProtectedDivision(z,fabs(1.0-z*z)*sqrt(fabs(1.0-z*z)),py[i])) {
+	  RVLException e;
+	  e<<"Error: ULInv::operator()\n";
+	  e<<"input vec too near bdry of cube\n";
+	  throw e;
+	}
+      }	  
+    }
+
+    string getName() const  { return "ULInv"; }
+  };
+
+  /**  Deriv of ULFwd
+   */
+  template<class Scalar>
+  class DULFwd: public QuinternaryLocalFunctionObject<Scalar> {
+  public:
+    DULFwd()
+      : QuinternaryLocalFunctionObject<Scalar>(numeric_limits<Scalar>::max()) {}
+    DULFwd(Scalar _res)
+      : QuinternaryLocalFunctionObject<Scalar>(_res) { }
+    DULFwd(const ULFwd<Scalar> & m)
+      : QuinternaryLocalFunctionObject<Scalar>(m) {}
+    ~DULFwd() {}
+  
+    using RVL::QuinternaryLocalEvaluation<Scalar>::operator();
+    void operator() (LocalDataContainer<Scalar> & dy,
+		     LocalDataContainer<Scalar> const & l,
+		     LocalDataContainer<Scalar> const & u,
+		     LocalDataContainer<Scalar> const & x,
+		     LocalDataContainer<Scalar> const & dx) {
+      size_t n=x.getSize();
+      Scalar const * px = x.getData();
+      Scalar const * pdx = dx.getData();
+      Scalar const * pl = l.getData();
+      Scalar const * pu = u.getData();
+      Scalar * pdy = dy.getData();
+      if ((n != dx.getSize()) ||
+	  (n != l.getSize()) ||
+	  (n != u.getSize()) ||
+	  (n |= dy.getSize())) {
+	RVLException e;
+	e << "Error: DULFwd::operator()\n";
+	e << "Incompatible argument dims.\n";
+	throw e;
+      }	
+      for (size_t i=0;i<n;i++) {
+	pdy[i] = 0.5*pdx[i]*(pu[i]-pl[i])
+	  /((1.0 + px[i]*px[i])*sqrt(1.0 + px[i]*px[i]));
+      }	  
+    }
+
+    string getName() const  { return "DULFwd"; }
+  };
+  
 }
       
 #endif

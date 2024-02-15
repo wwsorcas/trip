@@ -1,9 +1,39 @@
-import os
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
 
-if os.path.exists(os.getenv('CWPROOT')):
-   SConscript(dirs='.',name='SConstruct.hasSU')
-else:
-   print 'This project requires that Seismic Unix be installed'
-   Exit(1)
-   
-   
+# extract, plot archived results
+
+reslist = { 'e1'  : ['bulkmig','bulkinvp1it0','bulkinvp1it10'],
+            'e20' : ['bulkinvp1it0','bulkinvp1it10'],
+           }           
+for ext in ['e1', 'e20']:
+    for arch in reslist[ext]:
+        Flow(ext + arch + '.rsf', None, 'dd form=native < ../' + ext + '-269-508/Orig/' + arch + '.HH > ${TARGET}', stdin=0)
+        Result(ext + arch,'window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=2e+6 xinch=10 yinch=5 wanttitle=n')
+        if ext=='e20':
+            Flow('bulkreinvp1it10', None, 'dd form=native < ../' + ext + '-269-508/Orig/bulkreinvp1it10.HH > ${TARGET}', stdin=0)
+            Result('bulkreinvp1it10','window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=2e+6 xinch=10 yinch=5 wanttitle=n')
+            Flow('bulkreinvp1it10zo', 'bulkreinvp1it10', 'window min3=-5 max3=5')
+            Result('bulkreinvp1it10zo','window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=2e+6 xinch=10 yinch=5 wanttitle=n')
+            Flow(ext + arch + 'dip', None, 'dd form=native < ../' + ext + '-269-508/Orig/' + arch + 'dip.HH > ${TARGET}', stdin=0)
+            Result(ext + arch + 'dip','window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=2e+10 xinch=10 yinch=5 wanttitle=n')
+            Flow(ext + arch + 'zo', ext + arch,
+                'window min3=-5 max3=5')
+            Result(ext + arch + 'zo','window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=1e+6 xinch=10 yinch=5 wanttitle=n')
+            for x in [180,220,260,300,340,380,420,460,500,540]:
+                Flow(ext + arch + 'g' + str(int(8005+x*12.5)),
+                     ext + arch,
+                     'window n2=1 f2=' + str(x))
+                Result(ext + arch + 'g' + str(int(8005+x*12.5)),
+                      'grey clip=2e+6 wanttitle=n')
+            Flow(ext + arch + 'dipzo', ext + arch + 'dip',
+                'window min3=-5 max3=5')
+            Result(ext + arch + 'dipzo','window min2=10000 max2=15000 | put label1=Depth label2=Distance unit1=m unit2=m | grey clip=5e+9 xinch=10 yinch=5 wanttitle=n')
+            for x in [180,220,260,300,340,380,420,460,500,540]:
+                Flow(ext + arch + 'dipg' + str(int(8005+x*12.5)),
+                     ext + arch + 'dip',
+                     'window n2=1 f2=' + str(x))
+                Result(ext + arch + 'dipg' + str(int(8005+x*12.5)),
+                      'grey clip=2e+6 wanttitle=n')                      

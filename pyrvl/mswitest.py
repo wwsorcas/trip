@@ -117,7 +117,7 @@ try:
             mm.linComb(0.1*i,m)
             j = awi.mswi(dom=usp, sim=F, mod=mm, data=d, alpha=myalpha, sigma=mysigma, kmax=mykmax, rho=myrho, verbose=2)
             vals.append(j.value())
-            errs.append(j.dataerr()/dnorm)
+            errs.append(j.dataerr().norm()/dnorm)
         print('\nvals, rel errors at mtest = (1-t)*m0 + t*m')
         print('alpha = %10.4e sigma = %10.4e rho = %10.4e'
                       % (myalpha, mysigma, myrho))

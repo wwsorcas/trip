@@ -11,7 +11,8 @@ stdmdl          = os.path.join(RSFSRC,'trip/iwave/grid/main/standardmodel.x')
 #######################################################################
 
 # dummy target
-Flow('cout0.txt',None,'touch $TARGET')
+#sftouch does not work
+Flow('cout0.txt',None,'/usr/bin/touch $TARGET',stdin=0, stdout=-1)
 
 choose = {
 'bm': '3',
@@ -82,7 +83,9 @@ for hk in hks:
     i += 1
     hstr += '%s=${SOURCES[%d]} ' % (hk,i)
 
-Flow('tdata',['data']+hks,'segyheader ' + hstr) 
+# 2022.02.04: python3 error
+#Flow('tdata',['data']+hks,'segyheader ' + hstr)
+Flow('tdata',['data','sx','gx','delrt','selev','gelev'],'segyheader ' + hstr) 
 Flow('hdr.su','data tdata', 
      'suwrite tfile=${SOURCES[1]} endian=0')
      

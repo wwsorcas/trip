@@ -30,7 +30,7 @@
 \newtheorem{remark}{Remark}
 \newtheorem{cor}{Corollary}
 \newtheorem{example}{Example}
-\newtheorem{definition}{Defenition}
+\newtheorem{definition}{Definition}
 
 
 
@@ -51,7 +51,20 @@ ORCID 0000-0001-6213-4272}
 
 \maketitle
 \begin{abstract}
-Source extension is a reformulation of inverse problems in wave propagation, that at least in some cases leads to computationally tractable iterative solution methods. The core subproblem in all source extension methods is the solution of a linear inverse problem for a source (right hand side in a system of wave equations) through minimization of data error in the least squares sense with soft imposition of physical constraints on the source via an additive quadratic penalty. A variant of the time reversal method from photoacoustic tomography provides an approximate solution that can be used to precondition Krylov space iteration for rapid convergence to the solution of this subproblem. An acoustic 2D example for sources supported on a surface, with a soft contraint enforcing point support, illustrates the effectiveness of this preconditioner.
+Source extension is a reformulation of inverse problems in wave
+propagation, that at least in some cases leads to computationally
+tractable iterative solution methods. The core subproblem in all
+source extension methods is the solution of a linear inverse problem
+for a source (right hand side in a system of wave equations) through
+minimization of data error in the least squares sense with soft
+imposition of physical constraints on the source via an additive
+quadratic penalty. For an acoustic formulation for sources supported
+on a surface, with a soft contraint enforcing concentration at a
+point, a variant of the time reversal method from photoacoustic
+tomography provides an approximate solution. This approximate inverse
+can be used to precondition Krylov space iteration for rapid
+convergence to the solution of the core subproblem in this
+setting. Numerical examples illustrate the effectiveness of this preconditioner.
 \end{abstract}
 
 \noindent {\bf Keywords:} inverse problems, wave propagation, time
@@ -163,8 +176,7 @@ accelerate (``precondition'') Krylov space methods for the solution of the surfa
 subproblem \ref{eqn:esis}. I will fully describe a preconditioner for a special
 case of the source subproblem \ref{eqn:esis}, in which ${\bf u}$ is an
 acoustic field, $L[{\bf c}]$ is the wave operator of linear
-acoustodynamics, and the source and receiver surfaces are horizontal
-planes. Numerical examples in this setting suggest the
+acoustodynamics. Numerical examples in this setting suggest the
 effectiveness of this acceleration.
 
 I will use two 2D numerical models 
@@ -246,10 +258,10 @@ fluid over a time interval $0 \le t \le t_{\rm max}$. The time reversal method p
 pressure field has returned to equilibrium (zero excess pressure), or
 close to it, in the fluid-containing region at the
 final time $t=t_{\rm max}$ Then the field can be (at least
-approximately) viewed as the backwards-in-time initial boundary value
+approximately) viewed as the solution of the backwards-in-time initial boundary value
 problem with zero final conditions at $t=t_{\rm max}$, and boundary
 values given by the measurements. Evolving the field backwards in time
-backwards to $t=0$ thus solves the problem. Except in special
+to $t=0$ thus solves the problem. Except in special
 circumstances, the pressure field never actually vanishes at finite
 time, so the solution is approximate.
 
@@ -272,50 +284,44 @@ within high-frequency asymptotic approximation. This step requires
 some assumptions about the ray fields: all rays responsible for
 significant energy in the receiver data must arrive from the source
 surface, and must cross the source and receiver surfaces
-transversally, that is, making non-zero angles. Also, the rays must
-approach source and receiver surfaces from one side or the other
-(``the inside''), so that locally the surfaces can be treated as
-boundaries of propagation domains. Specifically, rays must emanate
-from the source surface towards the inside (``incoming'' rays), and
-arrive at the receiver surface from the inside (``outgoing'' rays).
+transversally, that is, making non-zero angles. The surfaces must be
+oriented, with a choice of (``outward'') unit normal vector. The
+energetic rays must emanate
+from the source surface inwards (``incoming'' rays), and
+arrive at the receiver surface outwards (``outgoing'' rays). Then both surfaces
+can be treated locally as
+boundaries of propagation domains. 
 With these assumptions, reverse-time propagation of the receiver data
-closely approximates the acoustic fields near the source surface. Next
-observe that for a causal field with a surface pressure source (with a
-continuous pressure field across the surface), the source is
+closely approximates the acoustic fields near the source
+surface. Next, I show that for a causal field with a surface pressure source (with a
+continuous pressure field across the surface), the source amplitude is
 proportional to the jump in the (particle) velocity field. Moreover,
 to leading order in frequency, the velocity field switches sign at the
 surface, so the jump is just twice the sampled value on the
-surface. Thus reverse-time propagation and reading off the velocity
+surface. Thus constructing a source from the veloity trace on the
+receiver surface, reverse-time propagation of this source, and reading off the velocity
 field on the source surface yields a source that reproduces the
 pressure data, within an asymptotically small error.
-%Preconditioning amounts to a change of
-%norm in the domain and range spaces of the modeling operator. In this
-%case, the modfied norms are weighted $L^2$, and the weight operators
-%map pressure to corresponding surface source on the source and
-%receiver planes.
 
 This is the essence of the approximate solution of the problem
 \ref{eqn:esis} for penalty weight $\alpha=0$. To see how Krylov
-iteration might be accelerated, note that time-reverse propagation of
-the receiver pressure values may be represented by a time-reverse
-source propagation, with the source constructed from the velocity
-field at the receiver surface. Moreover, the reverse-time
-source-to-pressure propagation is the transpose (adjoint) of the
+iteration might be accelerated, I note that reverse-time propagation of
+the receiver surface source to pressure on the source surface is the transpose (adjoint) of the
 forward-time source-to-pressure propagation - this is a very simple
 version of the adjoint state construction \cite[]{Plessix:06}. So the
 approximate inverse may be described as: conversion of pressure to source at the
-receiver surface, followed by the adjoint of the modeling operator,
+receiver surface, followed by application of the modeling operator adjoint,
 followed by the conversion of pressure to source at the source
 surface. This sequence precisely describes the adjoint of the modeling
 operator with respect to weighted norms in the spaces of source and
 receiver data, with the weight operators being the
-pressure-to-source operators. That this construction results in an
+pressure-to-source operators on the two surfaces. That this construction results in an
 approximate inverse means that the modeling operator is approximately
 unitary with respect to these weighted norms, which in turn implies
 that a properly constructed preconditioned conjugate gradient algorithm should converge
 rapidly.
 
-FInally, the $\alpha=0$ case is not sufficient: the penalty operator
+Finally, the $\alpha=0$ case is not sufficient: the penalty operator
 $A$ is an essential component of the nonlinear inverse propblem
 \ref{eqn:esi}. As it turns out, $A$ commutes with the other operators
 involved - approximately, but that is enough. Therefore the effect of
@@ -325,31 +331,34 @@ preconditioned acceleration extended to the case $\alpha > 0$.
 This pressure-to-source map is closely related to the ``hyperbolic
 Dirichlet-to-Neumann'' operator that plays a prominent role in
 photoacoustic tomography and other wave inverse problems
-\cite[]{Rachele:00,StefUhl:05}. \cite{HouSymes:EAGE16} demonstrated a
-very similar preconditioner for Least Squares Migration, also for its
-subsurface offset extension \cite[]{HouSymes:16}, motivated by
-\cite{tenKroode:12}. These constructions also involve the
-Dirichlet-to-Neumann operator. This concept also turns up in hidden
+\cite[]{Rachele:00,StefUhl:05}. In this terminology, ``Dirichlet''
+refers to pressure restricted to a surface, and ``Neumann'' to the
+normal derivative of pressure on that surface. Since the latter is
+proportional to normal particle acceleration thanks the equations of motion,
+and normal particle velocity is proportion to source, the relation to the
+pressure-to-source map as described in this paper is clear. A number
+of authors have described preconditioners for Least Squares Migration
+with subsurface offset extension in which the Dirichlet-to-Neumann or
+pressure-to-source map plays a central role
+\cite[]{tenKroode:12,HouSymes:15,Herve2017}. It also turns up in hidden
 form in the work of Yu Zhang and collaborators on true amplitude
 migration
 \cite[]{YuZhang:14,TangXuZhang:13,XuWang:2012,XuZhangTang:11,Zhang:SEG09}.
 
-
-
-%The obvious computation of the pressure-to-source map - prescribe the
-%pressure, solve the wave equation with this boundary condition, read
-%off the equivalent source - suffers from intrinsic numerical
-%inaccuracy. I suggest an alternative computationally feasible
-%approach, via economical short-distance wave propagation. Since the
-%map is symmetric only in an approximate, asymptotic sense, it must be
-%symmetrized for use as a Krylov preconditioner. I describe a
-%symmetrization procedure that requires no further wave computations
-%beyond those necessary to compute the action of the operator itself.
-
-
 The discussion in this paper is formal and incomplete, in the sense
 that some important mathematical underpinnings are only
-sketched. I will treat the modeling operator $PL[{\bf c}]^{-1}$ as if
+sketched. The transport of high-frequency energy along rays is a
+crucial ingredient in the constructions explained here. Of course,
+such transport only occurs in material parameter models that vary
+slowiy in space on the wavelength scale, and even then only
+approximately. Rather than provide explicit
+smoothness constraints and asymptotic error estimates, I will use
+these concepts in an intuitive way, using ``approximate'' and
+``asymptotic'' and the symbol ``$\approx$'' to suggest asymptotically
+negligible errors not explicitly assessed, and refer to such errors as
+``negligible''.
+
+I will treat the modeling operator $PL[{\bf c}]^{-1}$ as if
 it mapped square integrable surface sources to square integrable sampled
 data. This is not true in full generality: while the surface source
 problem has distribution solutions, they are not generally square
@@ -360,7 +369,6 @@ the sampling
 operator $P$ on the receiver surface is not well-defined for arbitrary
 finite-energy acoustic fields. Thus the modeling operator envisioned above
 is not be well-defined, strictly speaking.
-
 This phenomenon is related to the ill-posedness of wave equations as
 evolution equations in spatial variables, an observation attributed to
 Hadamard (see \cite{CourHil:62}, Chapter 6, section 17). A number of
@@ -439,7 +447,7 @@ for example, $L=L[\bf{c}]$.
 Most of what follows is valid for any space dimension $n >0$. I will
 describe the theory for $n=3$, write $\bx=(x,y,z)^T$ for the spatial
 coordinate vector, and similarly for the 
-particle velocity $\bv = (v_x,v_y,v_z)$. For computational convenience, the
+particle velocity $\bv = (v_x,v_y,v_z)^T$. For computational convenience, the
 examples are two-dimensional.
 
 The surface source extension replaces point sources on or near a
@@ -468,6 +476,8 @@ h_s \delta_{\Sigma_s}, \nonumber \\
 p & =& 0 \mbox{ for }  t \ll 0,\nonumber\\ 
 \bv & = & 0 \mbox{ for } t \ll 0.
 \end{eqnarray}
+in which $\delta_{\Sigma_s}$ is the delta function on $\Sigma_s$, and
+similarly for $\Sigma_r$. 
 
 \noindent {\bf Remark:} In system \ref{eqn:awepm} and many similar
 systems to follow, I will use the shorthand such as
@@ -487,11 +497,11 @@ signifies that $p$ is anti-causal.
 
 Extended forward modeling consists in solving \ref{eqn:awepm} and
 sampling the solution components at a receiver surface $\Sigma_r$ with
-(``outward'') unit normal field ${\bf n}_r$.
+(outward) unit normal field ${\bf n}_r$.
 $P_s$ and $P_r$ are the sampling operators on $\Sigma_s$ and
 $\Sigma_r$ respectively. In
 practice, sampling necessarily occurs at a discrete array of points
-(trace locations), and over a zone of finite extent. In this
+(trace locations). In this
 theoretical discussion, I will neglect the finite sample rate, and
 regard the data, for example $P_rp$, as continuously sampled. The
 output samples are necessarily muted, that is, non-zero only over a space-time domain
@@ -503,12 +513,17 @@ $h_s,f_s$ on $\Sigma_s$ to the sampled pressure and normal velocity
 $p$, $\bv \cdot {\bf n}_r$ for 
 the solution $(p,\bv)$ of the systems \ref{eqn:awepm} by
 \begin{equation}
-  {\cal S}(h_s,f_s)^T  = (P_rp,P_r(\bv \cdot {\bf n}_r) )^T,
+   {\cal S}(h_s,f_s)^T  = (P_rp,P_r(\bv \cdot {\bf n}_r) )^T,
   \label{eqn:fwd}
 \end{equation}
 
 Denote by $\Pi_i, i=0,1$ the projection on the first,respectively
-second, component of a vector in $\bR^2$. The forward modeling
+second, component of a vector in $\bR^2$:
+\begin{equation}
+  \label{eqn:pidef}
+  \Pi_0 (a,b)^T = a, \, \Pi_1(a,b)^T= b.
+\end{equation}
+The forward modeling
 operator from pressure source to pressure trace is
 \begin{equation}
   \label{eqn:sdef}
@@ -534,14 +549,16 @@ The two examples mentioned in the introduction illustrate the setting
 just described. The first example (Figure \ref{fig:olensrays0}) embeds
 an acoustic (low-velocity) lens between a source surface
 $\Sigma_s= \{z = z_s=3000 \mbox{ m}\}$ (orange horizontal line) m and
-a receiver surface $\Sigma_r= \{z=z_r=1000 \mbox{ m}\}$ (yellow
+receiver surface $\Sigma_r= \{z=z_r=1000 \mbox{ m}\}$ (yellow
 horizontal line).  The data to be used in this example results from a
 point source at $(3500, 3500)$ m (orange star). I have overlain
 the rays connecting this source point with the data portion of the
 receiver surface: evidently all of the rays involved cross the source
-and receiver surfaces transversally. Also, regarding ``inwards'' as
-being ``upwards'' at the source surface, ``downwards'' at the receiver
-surface, it is clear that the data is incoming at the source surface,
+and receiver surfaces transversally. The outward normal vectors are chosen as
+${\bf n}_s={\bf e}_z=(0,1)^T$ on the source surface and ${\bf
+  n}_r=-{\bf e}_z$ on the receiver surface.
+One sees from the Figure that the ray field carrying high frequency
+energy is incoming at the source surface,
 outgoing at the receiver surface.
 
 \begin{figure}
@@ -551,7 +568,9 @@ outgoing at the receiver surface.
     m, yellow horizontal
     line is receiver surface at depth $z_r=1000$ m. Point source location for data
     generation at $(3500, 3500)$ m indicated with star. Overlain with rays from point
-    source to receiver surface.}
+    source to receiver surface. Outward normal points down at source
+    surface, up at receiver surface, so rays are incoming at source
+    surface, outgoing at receiver surface.}
   \label{fig:olensrays0}
 \end{figure}
 
@@ -563,7 +582,7 @@ significant energy between 1 and 12.5 Hz. The mute embedded in $P_r$
 limits trace positions to 2000 m $ \le x_r \le $ 6000 m, and times to
 1.2 s $ \le t \le $ 3 s.
 
-Figure \ref{fig:dsrcphh0} displays an extended (pressure) source $h_s$, in the form of
+Figure \ref{fig:dhshh0} displays an extended (pressure) source $h_s$, in the form of
 traces in the spatial range 2000 m $ \le x_r \le $ 6000 m and time
 range 0 s $\le t \le $ 2 s. The modeling operator output $Sh_s$,
 obtained from the causal solution $(p, \bv)$ of \ref{eqn:awepm}
@@ -580,7 +599,7 @@ approximates the point source gather $P_r p_{\rm pt}$ (Figure
 \begin{figure}
   \centering
   \subfloat[\label{fig:drecplh0}]{\includegraphics[width=0.32\textwidth]{drecplh0.pdf}}
-  \subfloat[\label{fig:dsrcphh0}]{\includegraphics[width=0.32\textwidth]{dsrcphh0.pdf}}
+  \subfloat[\label{fig:dhshh0}]{\includegraphics[width=0.32\textwidth]{dhshh0.pdf}}
   \subfloat[\label{fig:dfwdplh0}]{\includegraphics[width=0.32\textwidth]{dfwdplh0.pdf}}
   \caption{Data generated using configuration in Figure
     \ref{fig:olensrays0}. (a) traces from point source at $(3500,3500)$
@@ -607,10 +626,11 @@ the previous example.
     m, yellow horizontal
     line is receiver surface at depth $z_r=100$ m. Point source location for data
     generation at $(500, 10000)$ m indicated with star. Overlain with rays from point
-    source to receiver surface.}
+    source to receiver surface. Outward normal points up at both source
+    and receiver surfaces, so rays are incoming at source
+    surface, outgoing at receiver surface.}
   \label{fig:ooplrays0}
 \end{figure}
-
 
 A diving wave arrival is clearly visible in Figure
 \ref{fig:ndwraw0}, which displays data traces over the position range $14000 \le
@@ -644,31 +664,31 @@ Figure \ref{fig:ndwdata0}.
 
 \section{Time Reversal}
 
-Time reversal as found in the literature on photoacoustic tomography
+The time reversal construction, as found in the literature on photoacoustic tomography,
 must be localized to apply to the surface source inversion problem,
 since there is no measurement surface surrounding the region of
 propagation. It must also be modified to produce a source, rather than
-a restriction of the pressure field. The assumption of incoming rays at the source surface and
+a slice of the pressure field. The assumption of incoming rays at the source surface and
 outgoing rays at the receiver surface makes both modifications  
 possible.
 
-The construction takes place in three stages: first, an
-acoustic field with high-frequency energy propagating along an
-incoming ray family is identified as the causal solution of an inhomogeneous boundary value problem {\em locally and on
-  the inside}. The boundary value is simply the restriction of the
-acoustic field to the surface. Second, the same causal solution is
-identified as the causal solution of an acoustic problem with source,
-singular on the surface in the fashion of equation
-\ref{eqn:awepm}. The source amplitude is proportional to 
-the velocity field sampled on the surface. Third, this identification is used twice, first to
-propagate the receiver data backwards in time as the solution of an
-anti-causal problem,  the velocity field of which is sampled on the
-source surface; then the causal problem is solved with the
-source built from the velocity samples. This solution must be
-identical to the field generating the data, along the ray fields
-carrying all of the high-frequency energy. Therefore the reconstructed
-source is an approximate solution of the problem \ref{eqn:esis} for
-$\alpha=0$.
+The construction takes place in three stages: first, an acoustic field
+with high-frequency energy propagating along an incoming ray family is
+identified as the causal solution of an inhomogeneous boundary value
+problem {\em locally and on the inside}. The boundary value is simply
+the restriction of the pressure field to the surface. Second, the same
+causal solution is identified as the causal solution of an acoustic
+problem with source, singular on the surface in the fashion of
+equation \ref{eqn:awepm}. The source amplitude is proportional to the
+velocity field sampled on the surface. Third, this identification is
+used twice, first to propagate the receiver data backwards in time as
+the solution of an anti-causal problem with source on the receiver
+surface; the velocity field of which is sampled on the source surface;
+then the causal problem is solved with the source built from the
+velocity samples. This solution must asymptotically approximate the
+field generating the data, along the ray fields carrying all of the
+high-frequency energy. Therefore the reconstructed source is an
+approximate solution of the problem \ref{eqn:esis} for $\alpha=0$.
 
 %For the bulk of this section, the source and receiver surfaces are
 %arbitrary smooth surfaces, as there is no conceptual penalty in
@@ -681,7 +701,7 @@ domain, as is the case in the photoacoustic tomography configuration.
 
 In this subsection $(p,\bv)$ is a solution of the homogeneous acoustic system
 \begin{eqnarray}
-\label{eqn:awebase}
+\label{eqn:awefree}
   \frac{1}{\kappa}\frac{\partial p}{\partial t} & = & - \nabla \cdot \bv, \nonumber \\
   \rho\frac{\partial \bv}{\partial t} & = & - \nabla p,
 \end{eqnarray}
@@ -725,9 +745,9 @@ negligibly from the solution of the boundary value problem
 \label{eqn:aweloc}
   \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} & = & - \nabla \cdot \tilde{\bv}, \nonumber \\
   \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla
-                                                    \tilde{p}, \\
+                                                    \tilde{p}, \nonumber \\
   \tilde{p}(\bx,t) & = & p(\bx,t) \mbox{ for } \bx \in \Sigma, 0 \le t \le 
-  \tau,\\
+  \tau, \nonumber \\
   \tilde{p}(\bx,t) & = & 0 \mbox{ for } \bx \in \partial \Omega^+ \setminus \Sigma, 0 \le t \le
  \tau.
 \end{eqnarray}
@@ -761,14 +781,13 @@ solves
 \label{eqn:awebase}
   \frac{1}{\kappa}\frac{\partial \tilde{p}}{\partial t} & = & [\bv \cdot {\bf n}]_{\Sigma}\delta_{\Sigma}
                                                       - \nabla \cdot \tilde{\bv}, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p}, \nonumber \\
   \tilde{p}(\bx,t) & = & 0 \mbox{ for } \bx \in \partial \Omega, 0 \le t \le 
-  \tau,\\
-  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega^+, t , \\
+  \tau, \nonumber \\
+  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega^+, t , \nonumber \\
   \tilde{\bv} & = & {\bf 0} \mbox{ for } \bx \in \Omega^+, t = 0.       
 \end{eqnarray}
-in which $\delta_{\Sigma}$ is the delta function on $\Sigma$. The
-square bracket denotes the jump in the quantity enclosed across
+The square bracket denotes the jump in the quantity enclosed across
 $\Sigma$, from the outside to the inside. Since ${\bf n}$ points from
 the inside to the outside, this convention contributes another minus
 sign.
@@ -784,12 +803,12 @@ There is a downside, namely the apparent necessity of constructing the
 solution in $\Omega^-$ so that the jump of $\bv \cdot {\bf n}$ may be
 computed. That is actually not necessary, however.
 This is best seen by analyzing a generic geometric optics
-component associated to the phase function $\psi^+$ in $\Omega^+$ and its family of
+component associated to the phase function $\psi$ in $\Omega^+$ and its family of
 rays. The acoustic field is assembled by a sum (in the continuum, an
 integral) over such solutions. A particular summand looks like
 \begin{equation}
   \label{eqn:go}
-   a(\bx)e^{i\omega (t - \psi(\bx))}.
+   a(\bx,t)e^{i\omega (t - \psi(\bx))}.
 \end{equation}
 for $\bx \in \Omega^+$.
 The phase $\psi$ solves the eikonal equation, the amplitude $a$ the
@@ -821,30 +840,31 @@ it follows that the normal components of $\tilde{\bv}$ have limits at
 point of $\Sigma$ 
 that are opposite in sign: for $\bx \in \Sigma$,
 \[
-  \lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf
-    n}(\bx+\zeta {\bf n})) = 
--\lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf
-  n}(\bx -\zeta {\bf n}))
+  \lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx+\zeta {\bf n}(\bx),t) \cdot {\bf
+    n}(\bx)) = 
+-\lim_{\zeta \rightarrow 0} (\tilde{\bv}(\bx-\zeta {\bf n}(\bx),t) \cdot {\bf
+  n}(\bx))
 \]
 whence
 \begin{equation}
-[\tilde{\bv} \cdot {\bf n}] = 2  \label{eqn:vjump} \lim_{\zeta
-  \rightarrow 0} (\tilde{\bv}(\bx,t) \cdot {\bf n}(\bx -\zeta {\bf
-  n}))
-\approx 2 \bv \cdot {\bf n}
+   \label{eqn:vjump}
+   [\tilde{\bv} \cdot {\bf n}] = 2 \lim_{\zeta
+  \rightarrow 0} (\tilde{\bv}(\bx -\zeta {\bf
+  n}(\bx),t) \cdot {\bf n}(\bx))
+\approx 2 \bv(\bx) \cdot {\bf n}(\bx)
 \end{equation}
 That is, at least over the short time interval $0 \le t \le \tau$,
 $(p,\bv)$ is asymptotically approximated in $\Omega^+$ by
 $(\tilde{p},\tilde{\bv})$, which solves
 \begin{eqnarray}
 \label{eqn:awesrc}
-  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & f \delta_{\Sigma}
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & h \delta_{\Sigma}
                                                       - \nabla \cdot \tilde{\bv}, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
-  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega, t=0, \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p}, \nonumber \\
+  \tilde{p} & = & 0 \mbox{ for } \bx \in \Omega, t=0, \nonumber \\
   \tilde{\bv} & = & {\bf 0} \mbox{ for } \bx \in \Omega, t = 0.       
 \end{eqnarray}
-with $f = 2 \bv \cdot {\bf n}$ on $\Sigma$.
+with $h = 2 \bv \cdot {\bf n}$ on $\Sigma$.
 
 This result appears limited by the short time assumption (on $\tau$)
 and the corresponding spatial localization to $\Omega^+$. However
@@ -858,36 +878,38 @@ globally. Thus the last two conditions may be replaced by the basic
 causality condition
 \begin{eqnarray}
   \label{eqn:awesrcmod}
-  ... & = & ...\\
-  \tilde{p} & = & 0 \mbox{ for }  t \ll 0, \\
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & h \delta_{\Sigma}
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p}, \nonumber \\
+  \tilde{p} & = & 0 \mbox{ for }  t \ll 0, \nonumber \\
   \tilde{\bv} & = & {\bf 0} \mbox{ for } t \ll 0.       
 \end{eqnarray}
 The effect of this change on the receiver surface traces of $\tilde{p}$ and
 $\tilde{\bv}$ is negligible.
 
-An example has already appeared in Figure \ref{fig:dsrcphh0}. In this
+An example has already appeared in Figure \ref{fig:dhshh0}. In this
 example, the field $(p, \bv)$ is the point source solution with the
 point source depicted in Figure \ref{fig:olensrays0}, located at
-$(3500, 3500)$ m. The role of $\Sigma$ is played by the source surface
-$z=z_s=3000$ m, and near this surface the field solves the source-free
-system \ref{eqn:awebase}. The ``inside'' in this example is the region
-$z > z_s$, and the outward unit normal is therefore ${\bf n}=(0,0,-1)$.
+$(3500, 3500)$ m. The role of $\Sigma$ is played by the source surface $\Sigma_s=
+\{z=z_s=3000 \mbox{ m}\}$, and near this surface the field solves the source-free
+system \ref{eqn:awefree}. The ``inside'' in this example is the region
+$z > z_s$, and the outward unit normal is therefore ${\bf n}=(0,0,-1)^T$.
 Thus $(p,\bv)$ should be asymptotically close to the solution
 $(\tilde{p},\tilde{\bv})$ of the
 system \ref{eqn:awesrc} in the region $z< z_s$, at least at locations
-connected by the ray field shown in Figure \ref{fig:olenrays0} to the
-source surface, provided that the source amplitude $f$ is chosen $=
--2v_z$ on $\Sigma=\{z=z_s\}$. Figure \ref{fig:dsrcphh0} displays exactly this $f$, and
+connected by the ray field shown in Figure \ref{fig:olensrays0} to the
+source surface, provided that the source amplitude $h$ is chosen $=
+-2v_z$ on $\Sigma_s=\{z=z_s\}$. Figure \ref{fig:dhshh0} displays exactly this $h$, and
 \ref{fig:dfwdplh0} the traces of $\tilde{p}$ on the
   receiver surface $z=z_r=1000$ m, which satisfies the ray condition. The extremely
-close match between Figures \ref{fig:drecplh0} (traces of $p$) and
+close match between Figures \ref{fig:drecplh0} (traces of $p$ on $\Sigma_r$) and
 \ref{fig:dfwdplh0} is consistent with the conclusion reached here.
 
 \subsection{Approximate Inversion}
 
 The time-reversal construction can now be translated into the context
 of seismic surface source inversion. Assume that $(p,\bv)$ is a
-solution of the free-space acoustic system \ref{eqn:awebase}, with
+solution of the free-space acoustic system \ref{eqn:awefree}, with
 high-frequency energy carried by a ray family that satisfies the
 criteria described earlier: incoming at the source surface $\Sigma_s$
 with normal field ${\bf n}_s$, outging at the receiver surface
@@ -904,73 +926,73 @@ integrated Newton's law \ref{eqn:newt} acquires a minus sign if the
 integration from $-\infty$ to $t$ is replaced by integration from $t$
 to $\infty$. Apply the construction of the last subsection in reverse
 time, to conclude
-that $(p,\bv)$ is approximated by $(\tilde{p},\tilde{\bv})$, where the
+that $(p,\bv)$ is approximated by $(\hat{p},\hat{\bv})$, where the
 latter solves the time-reversed problem
 \begin{eqnarray}
-\label{eqn:awerec}
-  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & h_r \delta_{\Sigma_r}
-                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
-  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p},\\
-  \tilde{p} & = & 0 \mbox{ for } t\gg 0, \\
-  \tilde{\bv} & = & {\bf 0} \mbox{ for } t \gg 0.       
+\label{eqn:awerecglob}
+  \frac{1}{\kappa}\frac{\partial\hat{p}}{\partial t} & = & h_r \delta_{\Sigma_r}
+                                                      - \nabla \cdot \hat{\bv}, \nonumber \\
+  \rho\frac{\partial \hat{\bv}}{\partial t} & = & - \nabla \hat{p}, \nonumber \\
+  \hat{p} & = & 0 \mbox{ for } t\gg 0, \nonumber \\
+  \hat{\bv} & = & {\bf 0} \mbox{ for } t \gg 0.       
 \end{eqnarray}
 with $h_r = -2P_r(\bv \cdot {\bf n}_r)$.
 
-By construction, high-frequency energy in $(\tilde{p},\tilde{\bv})$ is
+By construction, high-frequency energy in $(\hat{p},\hat{\bv})$ is
 carried by the same ray family as for $(p,\bv)$. Every ray passes over
 $\Sigma_s$ and is incoming there. Since $(p,\bv)$ vanishes for $t \ll
-0$ near $\Sigma_s$, $(\tilde{p},\tilde{\bv})$ is negligible there,  So
+0$ near $\Sigma_s$, $(\hat{p},\hat{\bv})$ is negligible there,  So
 the construction detailed in the last two sections is applicable
-again, and $(\tilde{p},\tilde{\bv})$ is approximated by the solution
-of 
+again, and the reverse-time field $(\hat{p},\hat{\bv})$ is
+approximated by the forward-time field $(\tilde{p},\tilde{\bv})$ that solves
 \begin{eqnarray}
-\label{eqn:awesrc}
-  \frac{1}{\kappa}\frac{\partial\hat{p}}{\partial t} & = & h_s \delta_{\Sigma_s}
-                                                      - \nabla \cdot \hat{\bv}, \nonumber \\
-  \rho\frac{\partial \hat{\bv}}{\partial t} & = & - \nabla \hat{p},\\
-  \hat{p} & = & 0 \mbox{ for } t\ll 0, \\
-  \hat{\bv} & = & {\bf 0} \mbox{ for } t \ll 0.       
+\label{eqn:awesrcglob}
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & h_s \delta_{\Sigma_s}
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & - \nabla \tilde{p}, \nonumber \\
+  \tilde{p} & = & 0 \mbox{ for } t\ll 0, \nonumber \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for } t \ll 0.       
 \end{eqnarray}
-with $h_s = 2P_s(\tilde{\bv} \cdot {\bf n}_r) \approx 2P_s(\bv \cdot
+with $h_s = 2P_s(\hat{\bv} \cdot {\bf n}_r) \approx 2P_s(\bv \cdot
 {\bf n}_r)$.
 
 \subsection{Summary}
 The surface source version of the time reversal construction involves three steps: given
 pressure data $P_rp$ on the receiver surface $\Sigma_r$ for a solution
-$(p,\bv)$ of the system \ref{eqn:awebase} satisfying the ray conditions,
+$(p,\bv)$ of the system \ref{eqn:awefree} satisfying the ray conditions,
 \begin{itemize}
 \item[1. ] create a source $h_r$ on $\Sigma_r$
   by multiplying the corresponding normal velocity trace by $-2$: $h_r = -2P_r(\bv
   \cdot {\bf n}_r)$;
 \item[2. ] propagate $h_r$ backwards in time by solving the system
-  \ref{eqn:awerec} for the acoustic field $(\tilde{p},\tilde{\bv})$;
+  \ref{eqn:awerecglob} for the acoustic field $(\hat{p},\hat{\bv})$;
 \item[3. ] create a source $h_s$ on $\Sigma_s$ by  multiplying tne
-  normal velocity trace of $(\tilde{p},\tilde{\bv})$ by 2: $h_s = 2P_s(\tilde{\bv}
+  normal velocity trace of $\hat{\bv}\cdot {\bf n}_s$ by 2: $h_s = 2P_s(\hat{\bv}
   \cdot {\bf n}_s)$.
 \end{itemize}
 Then $P_r p \approx Sh_s$.
 
 The surface source representaion part of the construction shows that
-under the assumed ray conditions, a solution of \ref{eqn:awebase} is
-asymptotically the same near the receive surface $\Sigma_r$ as the
+under the assumed ray conditions, a solution of \ref{eqn:awefree} is
+asymptotically the same near the receiver surface $\Sigma_r$ as the
 solution of the system \ref{eqn:awepm} with a suitable source
-$\tilde{f}_s$ (and zero velocity source, $h_s=0$. Therefore this
+$h_s$ (and zero velocity source, $f_s=0$). Therefore this
 construction also inverts the modeling operator $S$ in the sense that
 $Sh_s\approx S\tilde{h_s}$ if $P_rp \approx S\tilde{h_s}$. That is,
-this construction produces an asymptotic rightt inverse of $S$: it
+this construction produces an asymptotic right inverse of $S$: it
 does not necessily (approximately) recover the source that generates
 the data, but recovers some source that generates the data.
 
 \subsection{Example: Lens}
 The first example uses the acoustic lens model (Figure
-\ref{fig:olensrays0}, with $\Sigma_s$ = horizontal line at depth 
+\ref{fig:olensrays0}), with $\Sigma_s$ = horizontal line at depth 
 3000 m, and $\Sigma_r$ = horizontal line at depth 1000 m. The pressure
 data to be inverted is the sampling of the pressure field on
 $\Sigma_r$, generated by the point source shown in the figure, at
-$(3500, 3500)$ m (Figure \ref{fig:drecplh0}. However, I will invert
+$(3500, 3500)$ m (Figure \ref{fig:drecplh0}). However, I will invert
 this data in a homogeneous medium with $\kappa \equiv 4$ GPa. These
 choice illustrate two facts about surface source inversion and the
-approximate inversion based on time reversal. First, the success of the inversion demostrates the
+approximate inversion based on time reversal. First, the success of the inversion demonstrates the
 insensitivity of the time reversal method to ray multipathing
 (triplication), evident in the data (Figure \ref{fig:drecplh0}).
 %s respectively
@@ -992,12 +1014,12 @@ carrying significant energy at points of $\Sigma_r$ pass over
 $\Sigma_s$. The outward unit normal at $\Sigma_s$ is ${\bf n}_s ={\bf
   e}_z=(0,1)$; at $\Sigma_r$, it's ${\bf n}_r =-{\bf
   e}_z=(0,-1)$. So the source on the receiver surface $\Sigma_r$, input to reverse time propagation
-(system \ref{eqn:awerec}, generating the fields $(\tilde{p},\tilde{\bv})$) is
+(system \ref{eqn:awerecglob}, generating the fields $(\hat{p},\hat{\bv})$) is
 $h_r=2P_rv_z$ (the field $P_rv_z$ is depicted in Figure \ref{fig:dfwdvzlh0}). After reverse time propagation , the approximate
-inversion $\tilde{h}_s=2P_s\tilde{v}_z$ is shown in Figure
-\ref{dinvhslh0}. It differs considerably from the source field used to
-generate the data (Figure \ref{fig:dsrcphh0}, however when used as the
-source in forward modeling (system \ref{eqn:awesrc}) {\em with the
+inversion $\hat{h}_s=2P_s\hat{v}_z$ is shown in Figure
+\ref{fig:dinvhslh0}. It differs considerably from the source field used to
+generate the data (Figure \ref{fig:dsrcphh0}), however when used as the
+source in forward modeling (system \ref{eqn:awesrcglob}) {\em with the
   same material parameters used in the inversion}, it generates a
 pressure gather on $\Sigma_r$ (Figure \ref{fig:drerecplh0}) very
 closely 
@@ -1021,13 +1043,12 @@ difference is plotted on the same color scale in Figure
   \subfloat[\label{fig:drerecplh0}]{\includegraphics[width=0.45\textwidth]{drerecplh0.pdf}}
   \subfloat[\label{fig:ddiffrecplh0}]{\includegraphics[width=0.45\textwidth]{ddiffrecplh0.pdf}}
   \caption{(a) Resimulated data: pressure gather generated from
-    inverted source (Figure \ref{fig:dinvhslh0}, using same
+    inverted source (Figure \ref{fig:dinvhslh0}), using same
     homogeneous bulk modulus as used in inversion. (b) Difference
     between data depicted in Figure \ref{fig:drerecplh0} and in Figure \ref{fig:dfwdplh0}.
     Both (a) and (b) plotted with same color scale as Figure \ref{fig:dfwdplh0}.}
 \end{figure}
   
-
 \subsection{Example: Diving Wave}
 
 The second example is based on the diving wave model (Figure
@@ -1062,7 +1083,7 @@ propagation yields the pressure gather shown in Figure
 \ref{fig:ndwdataresimplbulksm0}, which closely matches the original
 diving wave pressure data (Figure \ref{fig:ndwdata0}). The difference
 is displayed on the same color scale in Figure
-\ref{fig:ndwdatarediffplbulksm0}.
+                    \ref{fig:ndwdatarediffplbulksm0}.
 
 \begin{figure}
   \centering
@@ -1079,313 +1100,786 @@ is displayed on the same color scale in Figure
   \subfloat[\label{fig:ndwdataresimplbulksm0}]{\includegraphics[width=0.45\textwidth]{ndwdataresimplbulksm0.pdf}}
   \subfloat[\label{fig:ndwdatarediffplbulksm0}]{\includegraphics[width=0.45\textwidth]{ndwdatarediffplbulksm0.pdf}}
   \caption{(a) Resimulated data: pressure gather generated from
-    inverted source (Figure \ref{fig: ndwdataresrcplbulksm0}, using same
+    inverted source (Figure \ref{fig:ndwdataresrcplbulksm0}), using same
     bulk modulus (Figure \ref{fig:ooplrays0}) as used in data
     generation and inversion. (b) Difference
     between data depicted in Figure \ref{fig:ndwdataresimplbulksm0} and in Figure \ref{fig:ndwdata0}.
-    Both (a) and (b) plotted with same color scale as Figure \ref{fig:ndwdata0}.}
+    Both (a) and (b) plotted with same color scale as Figure
+    \ref{fig:ndwdata0}. Note that low-amplitude ``ghosts'' of other
+    arrival branches appear in the difference plot.}
 \end{figure}
 
 \section{Pressure-to-Source}
 
-Since the system \ref{eqn:awepm} has a unique solution by standard
-theory \cite[]{Lax:PDENotes}, the source vector field $(h_s,f_s)$
-determines the acoustic field $(p^{\pm},\bv^{\pm})$ in space time, and
-in particular the limits from the right at $z=z_s$, $P_sp^{\pm}$ and
-$P_sv_z^{\pm}$. This relation is not invertible: it is not possible to
-prescribe both pressure and normal velocity on a surface such as
-$z=z_s$. So the columns of the matrix operator
-${\cal S}^{\pm}_{z_s,z_r}$ must satisfy a linear relation. In this
-section I will explain this relation; it involves the {\em
-  pressure-to-source} map. This operator also turns out to be the
-principal component of a preconditioning strategy for iterative
-solution of the optimization problem \ref{eqn:esis}, so I will devote
-some effort to its proper definition. It is closely related to the
-Dirichlet-to-Neumann operator mentioned in the introduction.
+The result of the last section has a couple of apparent
+defects. First, the approximate inversion of pressure data requires
+knowledge of velocity data, which is not prescribed in the problem
+statement \ref{eqn:esisp}. Second, the significance of the
+reverse-time field $(\hat{p},\hat{\bv})$ is obscure. In this section
+these two issues are addressed.
 
-While it is not possible to prescribe both pressure and velocity on
-$z=z_s$ in solutions of \ref{eqn:awepm}, it is possible to
-prescribe pressure only, for instance: if the function $\phi$ on
-the surface $z=z_s$ satisfies suitable conditions, for
-example the downgoing constraint mentioned earlier, a unique solution
-exists for the acoustic system in both half-spaces $\pm z > z_s$:
-\begin{eqnarray}
-\label{eqn:awe0}
-  \frac{1}{\kappa}\frac{\partial p_{\pm}}{\partial t} & = & - \nabla \cdot \bv_{\pm}, \nonumber \\
-  \rho\frac{\partial \bv_{\pm}}{\partial t} & = & - \nabla
-                                                    p_{\pm}, \nonumber \\
-  p_{\pm} & =& 0,  \mbox{ for } t \ll 0, \nonumber\\ 
-  \bv_{\pm} & = & 0 \mbox{ for } t \ll 0, \nonumber\\
-  \lim_{z \rightarrow z_s^{\pm}}p_{\pm}(x,y,t,z)& =& \phi(x,y,t).
-\end{eqnarray}
-Note that the subscript $\pm$ here refers to the sign of $z-z_s$, as opposed
-to the superscript ${\pm}$, which refers to the sign of $t$ throughout
-this paper.
+\subsection{Pressure-to-source operator}
+The first step is to formalize the relation between pressure and
+source (or equally well, pressure and normal velocity) on as surface
+$\Sigma$ as the application of an operator.
 
-From the boundary condition (last equation in \ref{eqn:awe0}), one
-sees that the pressures $p_{\pm}$ in the two half-spaces have the same
-limit at the boundary $z=z_s$. Stick the two half-space
-solutions together to form an acoustic field $(p^+,\bv^+)$ in all of
-space-time, that is,
+Observe that in principle it's not necessary to
+supply the normal velocity at the source (or receiver) surface, since
+it's determined locally by the pressure on the surface, or causal (or
+anti-causal) fields. This follows from the observation that the system
+\ref{eqn:aweloc} has a unique solution, a by-product of the
+conservation of energy (see for example \cite{Lax:PDENotes}, section
+4.3). That is, in the language of that discussion, knowledge of $p$ on
+$\Sigma$ for $0\le t \le \tau$ determines $(\tilde{p},\tilde{\bv})$ in
+the entire domain $\Omega^+$, $0\le t \le \tau$. Therefore knowledge
+of $p$ on $\Sigma$ for $0\le t \le \tau$ determines
+$\bv \cdot {\bf n}$, up to a negligible error. As in the last section,
+it follows that knowledge of $p$ on $\Sigma$, any $t$, determines a
+source $h$ on $\Sigma$ for which the pressure field $\tilde{p}$
+(solution of the system \ref{eqn:awesrcmod}) differs negligibly from
+$p$.
+
+This relation defines a causal {\em pressure-to-source operator}
+$\Lambda: p \mapsto h$, yielding the source on a surface $\Sigma$ that
+reproduces the (causal) pressure field from its trace on $\Sigma$, at
+least locally on the inward side as defined by the selection of normal
+field on $\Sigma$, under the ray conditions defined earlier. Since
+$h \approx 2 \bv \cdot {\bf n}$ (limiting value of $\bv$ from the
+inward direction), $\Lambda$ is effectively the
+pressure-to-normal-velocity operator.
+
+With this convention, two of the three steps in
+the approximate inversion procedure are operator applications. The
+operators involved are the causal pressure-to-source operator for the
+source surface $\Sigma_s$, denoted $\Lambda_s$, and an analogous
+anti-causal operator for the receiver surface $\Sigma_r$. 
+The characterization of the the source field $h_r$ in equation
+\ref{eqn:awerecglob} shows that this anti-causal pressure-to-source
+operator differs from its causal analogue only by sign. Denote the
+causal operator by $\Lambda_r$.
+
+\subsection{Time Reversal as Adjoint State}
+The middle step is solution of the reverse-time system
+\ref{eqn:awerecglob} for the field $(\hat{p},\hat{\bv})$, with input
+pressure source
+$h_r$ on $\Sigma_r$ and output $P_ss\hat{p}$ on $\Sigma_s$. To
+understand the significance of this mapping, it is just as easy, and
+will be useful later, to include a velocity source $f_r$, that is,
+modify the second equation in \ref{eqn:awerecglob} by adding $f_r {\bf
+  n}_r \delta_{\Sigma_r}$, so that it becomes a reverse-time version
+of the basic system \ref{eqn:awepm}. Recall the definition of energy
+in the acoustic field $(p,\bv)$:
 \begin{equation}
-  \label{eqn:awealt}
-  p^+(x,y,z,t) =
-  \left\{
-    \begin{array}{c}
-      p_+(x,y,z,t) \mbox{ if } z>0,\\
-      p_-(x,y,z,t) \mbox{ if } z<0,
-    \end{array}
-  \right.
+  \label{eqn:energydef}
+   E[p,\bv](t) = \frac{1}{2} \int \,dx\,dy\,dz\, \left(\frac{p(\bx,t)^2}{\kappa(\bx)} + \rho(\bx)\bv(\bx,t)
+   \cdot \bv(\bx,t)\right)
 \end{equation}
-and a similar definition for $\bv^+$. Then $p^+$ is continuous across
-$z=z_s$, and the boundary condition in system \ref{eqn:awe0} may be
-written as $P_sp^+=\phi$.
-
-The same construction can be carried out in the anti-causal sense,
-with anti-causal half-space solutions glued together to form a
-full-space distribution solution $(p^-,\bv^-)$, with the property that
-$p^-$ is continuous across $z=z_s$ and $P_sp^-=\phi$.
-
-The reader may object that the notation $(p^\pm,\bv^\pm)$ is already in
-use, for the solution of \ref{eqn:awepm}. This objection is
-valid. However, {\em in the sense
-  of distributions}, $(p^{\pm},\bv^{\pm})$ as defined in display
-\ref{eqn:awealt}, is {\em exactly} the causal solution of \ref{eqn:awepm}
-for the choice $h_s = -[v^{\pm}_{z}]|_{z=z_s}, f_s=0$, as follows from a
-simple integration-by-parts calculation. So the notation is consistent!
-
-The negative jump $-[v^{\pm}_{z}]|_{z=z_s}$ is thus a function of $\phi$. Define
-the {\em pressure-to-source} operator $\Lambda^{\pm}_{z_s}$ by
+This is a quadratic form. Polarization makes a bilinear form, into
+which one can plug a pair of fields. Use the solutions $(p,\bv)$ of
+the forward-time system \ref{eqn:awepm} for one of the pair, and
+the solution $(\hat{p},\hat{\bv})$ of system \ref{eqn:awerecglob}
+(augmented with the velocity surface source) for the other. Since $(p,\bv)$ vanishes
+for large negative time, $(\hat{p},\hat{\bv})$ for large positive
+time, 
+\[
+0 = 
+\left(\int\, dx\,dy\,dz\, \frac{p \hat{p}}{\kappa} +  
+\rho \bv \cdot \hat{\bv} \right)|_{t \rightarrow \infty}
+-
+\left(\int\, dx\,dy\,dz\, \frac{p \hat{p}}{\kappa} +  \rho \bv \cdot \hat{\bv} \right)|_{t \rightarrow -\infty}
+\]
+\[
+= 
+\int_{-\infty}^{\infty} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p \hat{p}}{\kappa} +  \rho \bv \cdot \hat{\bv} \right)
+\]
+Differentiate, replace time derivatives by space derivatives and
+source terms using the equations of motion in the systems
+\ref{eqn:awepm} and \ref{eqn:awerecglob}, and integrate by parts to
+move all of the space derivatives onto $p$ and $\bv$.  Most of the
+remaining expressions cancel, leaving
+\[
+  = \int_{-\infty}^{\infty}\,dt \, \left[
+    \int\,d\sigma_s(\bx)\,(h_sP_s\hat{p}+f_sP_s(\hat{\bv}\cdot{\bf
+      n}_s)) +
+    \int\,d\sigma_r(\bx)\,(h_rP_rp+f_rP_r(\bv\cdot{\bf n}_r)) \right]
+\]
+Here $\sigma_s$ and $\sigma_r$ are the area elements on $\Sigma_s$ and
+$\Sigma_r$. These integrals are inner products of time traces on $\Sigma_s$ and $\Sigma_r$. Denote these inner products by $\langle \cdot,\cdot
+\rangle_s$ and $\langle \cdot,\cdot
+\rangle_r$ respectively. Then the above is written in terms of the
+vector modeling operator ${\cal S}$ (definition \ref{eqn:fwd}) as 
+\[
+  = \langle (h_s,f_s)^T, (P_s\hat{p},P_s(\hat{\bv}\cdot{\bf
+    n}_s))^T \rangle_s+ \langle (h_r,f_r)^T, {\cal S}(h_s,f_s)^T \rangle_r,
+\]
+whence identify the adjoint of ${\cal S}$ as
 \begin{equation}
-  \label{eqn:deflam}
-  \Lambda^{\pm}_{z_s}\phi = -[v^{\pm}_{z}]|_{z=z_s}
+  \label{eqn:vecadj}
+  {\cal S}^T(h_r,f_r) = -(P_s\hat{p},P_s(\hat{\bv}\cdot{\bf
+    n}_s))^T.
 \end{equation}
-The conclusion: if $h_s = \Lambda^{\pm}_{z_s}\phi$ and $f_s=0$ in the
-system \ref{eqn:awepm}, then $\phi=P_sp^{\pm}$.
-
-Otherwise put, $S^{\pm}_{z_s,z_s}\Lambda^{\pm}_{z_s} \phi = \phi$, so
-$\Lambda^{\pm}_{z_s}$ is inverse to $S^{\pm}_{z_s,z_s}$. The relation
-\ref{eqn:trtrcomp} implies in turn that
+Speclializing to the pressure modeling operator $S$ (equation
+\ref{eqn:sdef}),
 \begin{equation}
-  \label{eqn:lamadj}
-  (\Lambda^{\pm}_{z_s})^T = - \Lambda^{\mp}_{z_s}
+  \label{eqn:padj}
+  S^T = (\Pi_0 {\cal S} \Pi_0^T)^T = \Pi_0 {\cal S}^T \Pi_0^T
+\end{equation}
+so to calculate the adjoint of $S$ applied to $h_r$, solve system
+\ref{eqn:awerecglob} (with $f_r=0$) and extract the pressure at $\Sigma_s$:
+\[
+  S^T(h_r) = -P_s \hat{p}.
+\]
+
+Combined with the definitions of the pressure-to-source operators
+$\Lambda_s$ and $\Lambda_r$, these results enable a translation of the
+approximate inverse construction in the last section into a chain of
+operator applications: to invert a pressure gather $d$ on $\Sigma_r$
+for a source $h_s$ on $\Sigma_s$ that approximately reproduces it ($d
+\approx Sh_s$),
+\begin{itemize}
+\item[1. ] create a source $h_r = -2\Lambda_r d$ on $\Sigma_r$;
+\item[2. ] apply the adjoint $S^T$ (solve the reverse time system
+  \ref{eqn:awerecglob}) to $h_r$;
+\item[3. ] apply $\Lambda_s$ to $-S^Td$.
+\end{itemize}
+Putting this all together, an approximate right inverse operator
+$S^{\dagger}$ to $S$ may be expressed as
+\begin{equation}
+  \label{eqn:baseinv}
+  S^{\dagger} = \Lambda_s S^T \Lambda_r,
+\end{equation}
+that is,
+\begin{equation}
+  \label{eqn:rightinv}
+  SS^{\dagger} \approx I.
 \end{equation}
 
-There is also a {\em velocity-to-source} operator. For the solution
-$(p^{\pm},\bv^{\pm})$ of system \ref{eqn:awepm} with $h_s=0$, the
-normal component of velocity, $v^{\pm}_z$, is continuous across
-$z=z_s$, and the velocity source (vertical load)
-$f_s=-[p^{\pm}]_{z=z_s}$. I will not name the velocity-to-source
-operator, as it does not appear explicitly in the developments to
-follow. As will be seen, it is essentially the inverse of the
-pressure-to-source operator.
+\subsection{Positivity of $\Lambda$}
 
-The quadratic form defined by $\Lambda^{\pm}_{z_s}$ has fundamental
-physical significance. Define the total acoustic energy $E^{\pm}(t)$ of the
-field $(p^{\pm},\bv^{\pm})$, at time $t$ by
-\begin{equation}
-  \label{eqn:defae0}
-  E^{\pm}(t) = \frac{1}{2} \int \,d\bx \, \left(\frac{(p^{\pm})^2}{\kappa} + \rho |\bv^{\pm}|^2\right)(\bx,t).
-\end{equation}
-Then
-\begin{equation}
-  \label{eqn:elim}
-  \pm \lim_{\pm t \rightarrow \infty} E^{\pm}(t) =  \langle P_sp^{\pm},
-  (\Lambda^{\pm}_{z_s} P_sp^{\pm}) \rangle_{L^2(z=z_s)}.
-\end{equation}
+Equation \ref{eqn:baseinv} is remarkable, in that the form of
+$S^{\dagger}$ is that of an adjoint with respect to weighted norms,
+defined by the operators $\Lambda_s^{-1}$ in the domain of $S$ and
+$\Lambda_r$ in the range. This only makes sense if the
+pressure-to-source operators are positive definite and symmetric, the
+necessary conditions to define weighted norms. 
+
+In fact the pressure-to-source operator is positive semi-definite, and that
+fact has fundamental physical significance. Suppose that $(p,\bv)$
+solves the basic system \ref{eqn:awepm} with $f_s=0$. From the
+definition of energy \ref{eqn:energydef} and causality of the fields,
+\[
+ E[p,\bv](t) = \frac{1}{2} \int_{-\infty}^{t} \,dt \int \,dx\,dy\,dz\,
+ \frac{d}{dt}\left(\frac{p(\bx,t)^2}{\kappa(\bx)} +
+   \rho(\bx)\bv(\bx,t) \cdot \bv(\bx,t)\right)
+\]
+\[
+  = \int_{-\infty}^{t} \,ds \int \,dx\,dy\,dz\,
+ \left(\frac{p (\bx,s)\frac{\partial p}{\partial t}(\bx,s)^2}{\kappa(\bx)} +
+   \rho(\bx)\bv(\bx,s) \cdot \partial{\bv}{\partial t}(\bx,s)\right)
+\]
+Using \ref{eqn:awepm}, replace the time derivatives with spatial derivatives and the delta
+function on ths source surface, integrate by parts to shift the space
+derivatives to $p$. Everything cancels except for
+\[
+  =  \int_{-\infty}^{t} \,ds \int \,dx\,dy\,dz\, p(\bx,s) h_s(\bx,s)
+  \delta_{\Sigma_s}(\bx) = \int_{-\infty}^{t} \,dt \int_{\Sigma_s} \,d\sigma_s \, p h_s.
+\]
+Take the limit as $t \rightarrow \infty$ to get
+\[
+\lim_{t \rightarrow \infty} E[p,\bv](t) = \langle h_s, P_s p \rangle_s = \langle P_s p, \Lambda_s P_s p \rangle_s. 
+\]
 That is, the value of the quadratic form defined by
-$\Lambda^{\pm}_{z_s}$, evaluated at the pressure trace on $z=z_s$,
+$\Lambda_s$, evaluated at the pressure trace on $\Sigma_s$,
 gives the total energy transferred from the source to the
 acoustic field over time. Since $E$ is itself a positive definite
-quadratic form in the acoustic field, it follows that $\pm
-\Lambda^{\pm}_{z_s}$ is positive semi-definite. 
+quadratic form in the acoustic field, it follows that $
+\Lambda_s$ is positive semi-definite. 
 
-While $\Lambda^{\pm}_{z_s}$ is positive semi-definite, it is not
+\subsection{Approximate symmetry of $\Lambda$}
+Except in special cases, $\Lambda_{s,r}$ is not
 symmetric. However, it is {\em approximately symmetric} in the
-high-frequency sense. This fact follows from a
-geometric optics analysis of the half-space solution. This leads to
-the identification of $\Lambda^{\pm}_{z_s}$ as a {\em
-  pseudodifferential operator} of order zero on $z=z_s$, with principal symbol
+high-frequency sense. This fact follows from a high-frequency
+asymptotic analysis, a sketch of which follows for the special case of
+a planar source surface
+$\Lambda_s=\{z=z_s\}$, as in the two examples. SInce the same reasoning
+applies to $\Lambda_r$, I will omit the subscript for the remainder of
+this subsection.
+
+The source amplitude
+$h=h(x,y,t)$ can be expressed as a Fourier synthesis over
+oscillatory wave packets of the form
 \begin{equation}
-  \label{eqn:lamsym}
-  \sigma_0(\Lambda^{\pm}_{z_s}) = \pm 2(\kappa(\bx)
-  \rho(\bx))^{1/2}\left(1-\frac{\kappa(\bx)(\xi^2+\eta^2)}{\rho(\bx)\omega^2}\right)^{-1/2}.
+  \label{eqn:pwp}
+ a_0(x,y,t) e^{i\omega(t-x\xi-y\eta)}
 \end{equation}
-Here $\xi$, $\eta$, and $\omega$ are the dual Fourier variables to
-$x$, $y$, and $t$ respectively. The downgoing assumptions means that
-for local planewave components of $P_sp$, the quantity inside the
-square root is positive. Thus $\Lambda^{\pm}_{z_s}$ has real principal
-symbol (in fact, the entire symbol is real) hence defines an
-asymptotically symmetric operator:
+in which the spatial frequencies have been expressed as slownesses
+$\xi,\eta$ scaled by temporal frequency $\omega$. The function $a_0$
+is a frequency-independent envelope, equal to 1 where $h$ is
+non-zero.
+
+The wave packet $a_0(x,y,t) e^{i\omega(t-x\xi-y\eta)}$ can be
+viewed as the boundary value on $\Sigma$ of a
+high-frequency asymptotic solution of the form \ref{eqn:go}, provided that the
+slowness vector $(\xi, \eta)$ satisfies the propagating condition
+$c^2(\bx)(\xi^2+\eta^2) < 1$ at all $\bx$ for
+which $a_0(\bx,t)$ is non-zero for any $t$. In that case, two
+solutions $\psi$ of the eikonal equation $|\nabla \psi|=c$ exist, at least locally near
+$\Sigma$, for which $\psi(x,y,0)=x\xi+y\eta$. Choose the solution
+that increases in the direction of the outward unit normal ${\bf
+  n}$, and solve the corresponding transport equation for an
+amplitude $a$ satisfying $a(x,y,0,t) = a_0(x,y,t)$. Then the geometric optics solution $a e^{i\omega(t-\psi)}$ is
+asymptotic the pressure field of to an incoming solution. From the
+evolution equation for $\bv$, integrated in time as in equation
+\ref{eqn:newt},  an expression follows for the corresponding normal
+velocity:
+\[
+  -{\bf n} \cdot \frac{1}{\rho}\int_{-\infty}^t ds \nabla (a
+  e^{i\omega(t-\psi)})=\frac{1}{\rho}\int_{-\infty}^t ds {\bf n}
+  \cdot(i\omega a\nabla \psi -\nabla a) e^{i\omega(t-\psi)})
+\]
+Now use the identity
+\[
+  e^{i\omega(t-\psi)} = \frac{1}{i\omega}\frac{d}{dt}e^{i\omega(t-\psi)}
+\]
+and integrate by parts in $t$ to obtain the expression for
+the normal velocity field 
+\[
+  = \frac{a}{\rho} ({\bf n} \cdot \nabla \psi)  e^{i\omega(t-\psi)} + O(1/\omega).
+\]
+The terms not written explicitly begin with one of order -1 in
+$\omega$. The remainder appears to be also of order -1, but
+application of the integration-by-parts trick described above yields
+another term of order -2 plus another remainder of apparent order
+-2. Continuing this process develops the $O(1/\omega)$ remainder in an
+asymptotic series of homogeneous terms in $1/\omega$ of arbitrary
+length.
+
+An expression for the normal velocity 
+$\Sigma$ follows by restriction. Note that ${\bf n} \cdot \nabla \psi =( c^{-2}(x,y,z)-
+(\xi^2+\eta^2))^{1/2}$ because of the choice of sign and the eikonal
+equation, and the root is real because of the propagating assumption.
+
+The upshot of this calculation is that to leading order in frequency,
+the normal velocity corresponding to a pressure wave packet differs by a position- and slowness-dependent
+factor. Accounting for the factor of 2 difference between the source
+amplitude and velocity trace, this calculation may be summarized:
+\begin{equation}
+  \label{eqn:lamwp}
+  \Lambda (a_0e^{i\omega(t-x\xi-y\eta)}) = \lambda
+  (a_0e^{i\omega(t-x\xi-y\eta)}),
+\end{equation}
+where $\lambda(x,y,t,\xi,\eta,\omega$ is
+defined by the asymptotic series in $\omega$ developed above. Its dominant term,
+$O(1)$ (order 0) in $\omega$, is
+\[
+  \lambda^0(x,y,t,\xi,\eta,\omega) = 2\frac{( c^{-2}(x,y,z)-
+    \xi^2+\eta^2)^{1/2}}{\rho} + O(1/\omega)
+\]
+\begin{equation}
+  \label{eqn:lamsymb}
+= 2(\kappa
+\rho)^{-1/2}\left(1-\frac{\kappa(k_x^2+k_y^2)}{\rho \omega^2}\right)^{1/2} + O(1/\omega).
+\end{equation}
+In the final expression, the slownesses $\xi,\eta$ have been replaced
+by the Fourier variables $k_x=x\xi, k_y=y\eta$. Note that as a
+function of $k_x,k_y,\omega$, $\lambda^0$ is homogeneous of order
+0. It is easy to see that the $N$th term of the asymptotic series
+defining $\lambda$ is of homogeneous order $-N$.
+
+%%%%%%%%%%%
+% discussion of psidos
+%
+Operators that affect oscillatory wave packets by multiplication with
+functions having the properties of $\lambda$ have come to
+be called ``pseudodifferential'' \cite[]{Nir:72,Tay:81,SaiR:91}. The multiplier ($\lambda$ in this
+case) is called the {\em symbol} of the operator, and the dominant
+term in an asymptotic development of the multiplier
+(for instance $\lambda^0$) is called the {\em principal symbol}.
+Amongst other special properties of these operators, their adjoints
+are operators of the same type. In particular, the principal symbol of the adjoint is
+the Hermitian (matrix) adjoint of the principal symbol. For scalar
+operators like $\Lambda$ (mapping scalar-valued functions to
+scalar-valued functions), the symbols are scalar ($1 \times 1$), and
+the Hermitian adjoint is simply the complex conjugate (\cite{Tay:81},
+section II.4). Therefore scalar operators with real principal symbol,
+like $\Lambda$, have the same principal symbols as their adjoints. So
+$\Lambda$ differs from $\Lambda^T$ by a pseudodifferential operator
+whose symbol is an asymptotic sum of terms of negative order in
+frequency. Therefore the difference is negligible in the limit of high
+frequencies. This observation establishes the conclusion of this subsection: 
 \begin{equation}
   \label{eqn:lamappsim}
-  (\Lambda^{\pm}_{z_s})^T \approx \Lambda^{\pm}_{z_s}.
+  \Lambda^T \approx \Lambda,
 \end{equation}
-(For more on this, see \cite{StefUhl:05}.)
-The analysis also reveals that the solution components not continuous
-at $z=z_s$ are odd there:
-\begin{equation}
-  \label{eqn:odd1}
-  \lim_{z\rightarrow z_s^+} v^{\pm}_{z} \approx - \lim_{z\rightarrow z_s^-}
-  v^{\pm}_{z}
-\end{equation}
-for the solution of \ref{eqn:awepm} with $f_s=0$.
-Similarly, 
-\begin{equation}
-  \label{eqn:odd2}
-  \lim_{z\rightarrow z_s^+} p^{\pm}\approx - \lim_{z\rightarrow z_s^-}
-  p^{\pm}
-\end{equation}
-for the solution of \ref{eqn:awepm} with $h_s=0$. Here ``$\approx$''
-means in the sense of high frequency asymptotics, that is, that the
-difference between the two sides is relatively smooth, hence small if
-the data is highly oscillatory. Therefore if $f_s=0$ in system \ref{eqn:awepm},
-\begin{equation}
-  h_s = \Lambda^{\pm}_{z_s}P_sp^{\pm} = -[v^{\pm}_{z}]|_{z=z_s} \approx -2
-  P_sv^{\pm}_{z}
-  \label{eqn:tracejump10}
-\end{equation}
-Similarly, if $h_s=0$ in system \ref{eqn:awepm}, then
-\begin{equation}
-  \label{eqn:tracejump20}
-  f_s = -[p^{\pm}]|_{z=z_s} \approx -2 P_s p^{\pm}.
-\end{equation}
-Thus $f_s$ determines approximately the boundary value of $p^{\pm}$,
-as a solution of the acoustic wave system in the half-space
-$z>z_s$. However, as repeated in equation \ref{eqn:tracejump10}, a
-solution with this boundary value is also the restriction to $z>z_s$
-of a solution to \ref{eqn:awepm} with $f_s=0$ and $h_s=
-\Lambda^{\pm}_{z_s}P_sp^{\pm}$. Therefore if
-\begin{equation}
-  \label{eqn:hfcondn}
-  h_s =-\frac{1}{2}\Lambda^{\pm}_{z_s}f_s,
-\end{equation}
-then the pressure boundary value $P_sp^{\pm}$ is the
-same for the solutions of \ref{eqn:awepm} for source vectors $(h_s,0)$
-and $(0,f_s)$. Since the pressure boundary values are the same, the solutions
-in $z>z_s$ are the same. In particular, since $z_r>z_s$ and ${\cal
-  S}^{\pm}_{z_s,z_r}(h_s,f_s)^T = (P_rp^{\pm},P_rv^{\pm}_z)^T$, it follows
-that
+
+Before leaving this topic, recall that the computation outlined above
+was predicated on the propagating assumption, namely that the slowness
+parameters $\xi,\eta$ of the wave packet defined in \ref{eqn:pwp}
+satisfy $c(x,y,z_s)^2(\xi^2 + \eta^2) < 1$ whereever the amplitude
+$a_0(x,y,t)$ is non-zero. Therefore the conclusion \ref{eqn:lamappsim}
+holds only for application to such wave packets. However, the restriction of
+propagating waves (such as those that are output by the modeling
+operator $S$ or its adjoint $S^T$) are well-approximated by sums over
+propagating wave packets: this is part of the assumption that the rays
+carrying high-frequency energy cross the source and receiver surfaces
+at non-zero angles. To make the definition of $\Lambda$ complete, it
+must be extended to non-propagating wave packets, for instance by
+making its effect negligible via a dip filter. I will ignore this refinement, since the
+application to non-propagating components appears to play little role
+in approximate inversion and its applications as developed here.
+
+\section{Computing $\Lambda$}
+
+The missing ingredient in the preceding discussion is any indication
+of how the action of the pressure-to-source operators $\Lambda$ is to be
+computed. As will be seen in the next section, an (approximate)
+inverse of this operator is also required in the formulation of
+preconditioned Krylov iteration. 
+
+Direct computation of the pressure-to-source operator $\Lambda_s$, for instance, by solving
+\ref{eqn:awepm} and reading off $P_sv_{z}$, turns out to be
+numerically ill-behaved. An alternate approach begins with the
+observation that a pressure gather on $\Sigma_r$ produced by a
+pressure source $h_s$ on $\Sigma_s$ can also be well-approximated by
+the field from a velocity source. To see this, recall the first major
+step in the time reversal construction, that a solution of the wave
+equation near $\Sigma_s$ can be represented as the solution of a
+boundary value problem with $p$ given on $\Sigma_s$ (system
+\ref{eqn:aweloc}). The derivation combined the unique determination of
+the field by its pressure boundary values on an enclosing domain with
+the consequences of the standing assumptions about rays carrying high
+frequency energy. Precisely the same logic could have been applied to
+the normal velocity boundary values, as these also uniquely determine
+the field in an enclosing domain. Proceeding further, a source
+representation based on continuous extension of normal velocity, with
+a jump in the pressure follows by logic precisely analogous to that
+leading to the system \ref{eqn:awesrc}: instead, obtain a field
+$(\tilde{p},\tilde{\bv})$ differing negligibly from the field of the
+same name in the earlier discussion, solving 
+\begin{eqnarray}
+\label{eqn:awesrcvzmod}
+  \frac{1}{\kappa}\frac{\partial\tilde{p}}{\partial t} & = & 
+                                                      - \nabla \cdot \tilde{\bv}, \nonumber \\
+  \rho\frac{\partial \tilde{\bv}}{\partial t} & = & f_s {\bf n}\delta_{\Sigma}- \nabla \tilde{p}, \nonumber \\
+  \tilde{p} & = & 0 \mbox{ for }  t \ll 0, \nonumber \\
+  \tilde{\bv} & = & {\bf 0} \mbox{ for }  t \ll  0.       
+\end{eqnarray}
+(that is, system \ref{eqn:awepm} with $h=0$) with $f_s = 2P_sp$.
+
+This fact can usefully be rewritten using the vector modeling
+operator ${\cal S}$ (definition \ref{eqn:fwd}), and the projection
+operators $\Pi_i$ (definition \ref{eqn:pidef}), which insert scalar
+sources into the pairs that occur in the acoustic system
+\ref{eqn:awepm}: explicitly, $\Pi_0(h,f)^T = h, \Pi_1(h,f)^T = f,
+\Pi_0^Th = (h,0), \Pi_1^Tf = (0,f)$. Then
+\begin{eqnarray}
+  P_r\tilde{p} &=& \Pi_0 {\cal S} \Pi_1^Tf_s, \nonumber \\
+  P_r({\bf n}_r \cdot \tilde{\bv}) &=& \Pi_1 {\cal S} \Pi_1^Tf_s.
+                                       \label{eqn:ptildef}
+\end{eqnarray}
+Since the field $(\tilde{p},\tilde{\bv}$ constructed here differs negligbly from that
+constructed earlier with the same name, which in turn differs negligibly from $p$, it
+follows that $P_r\tilde{p} \approx P_rp = Sh_s$. By definition of $S$
+(\ref{eqn:sdef}), this is the same as $=\Pi_0{\cal
+  S}\Pi_0^Th_s$. Since the velocity fields also differ negligibly,
+obtain
+\begin{eqnarray}
+  P_r\tilde{p} & \approx & \Pi_0 {\cal S} \Pi_0^Th_s, \nonumber \\
+  P_r({\bf n}_r \cdot \tilde{\bv}) & \approx & \Pi_1 {\cal S} \Pi_0^Th_s.
+                                       \label{eqn:ptildeh}
+\end{eqnarray}
+
+From the defintiion of $\Lambda_s$, $h_s=\Lambda_sP_sp =
+\frac{1}{2}\Lambda_sf_s$. Combining \ref{eqn:ptildef},
+\ref{eqn:ptildeh}, and this last identity, obtain
 \begin{equation}
   \label{eqn:snull}
-  {\cal S}^{\pm}_{z_s,z_r}\left(\frac{1}{2}\Lambda^{\pm}_{z_s}f_s,f_s\right)^T \approx 0.
+  {\cal S}\left(-\frac{1}{2}\Lambda_{z_s}f_s,f_s\right)^T \approx 0.
 \end{equation}
 
-Equation \ref{eqn:snull} states the relation between the columns of $
-{\cal S}^{\pm}_{z_s,z_r}$ mentioned in the introduction to this
-section.
+That is, the same data gather on $\Sigma_r$ can be obtained either
+with a pressure source $h_s$ or with a velocity source $f_s$, and
+there is a definite relation betwen the two. To illustrate this
+relation, recall that for the first of the two examples introduced
+above. The velocity source $f_s$ is twice the pressure trace shown in
+Figure \ref{fig:dsrcphh0}, and the pressure source (Figure \ref{fig:dhshh0}) is twice the normal
+velocity trace shown in Figure \ref{fig:dsrcvzhh0}.
+Figure \ref{fig:daltplh0} shows $\Pi_0{\cal S}\Pi_1^Tf_s$, Figure
+\ref{fig:dfwdplh0bis} shows $\Pi_0{\cal S}\Pi_0^Th_s$, and Figure
+\ref{fig:ddifffwdaltplh0} shows the difference on the same color scale.
 
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:dsrcphh0}]{\includegraphics[width=0.45\textwidth]{dsrcphh0.pdf}}
+  \subfloat[\label{fig:dsrcvzhh0}]{\includegraphics[width=0.45\textwidth]{dsrcvzhh0.pdf}}
+  \caption{(a) Pressure gather for Lens example on source surface
+    $\Sigma_s=\{z=1000\mbox{ m}\}$, generated by point source at
+    $(3500,3500)$ m. (b) Normal velocity gather for Lens example on source surface
+    $\Sigma_s=\{z=1000\mbox{ m}\}$, generated by point source at
+    $(3500,3500)$ m.}
+\end{figure}
 
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:dfwdplh0bis}]{\includegraphics[width=0.32\textwidth]{dfwdplh0.pdf}}
+  \subfloat[\label{fig:daltplh0}]{\includegraphics[width=0.32\textwidth]{daltplh0.pdf}} 
+  \subfloat[\label{fig:ddifffwdaltplh0}]{\includegraphics[width=0.32\textwidth]{ddifffwdaltplh0.pdf}}
+  \caption{(a) Pressure gather on receiver surface
+    $\Sigma_r=\{z=1000\mbox{ m}\}$ due to extended pressure source = 2
+    $\times$ normal velocity gather shown in Figure
+    \ref{fig:dsrcvzhh0}. This is the same gather as shown in Figure
+    \ref{fig:dfwdplh0}, and the extended pressure source has been
+    shown in Figure \ref{fig:dhshh0}.
+    (b) Pressure gather on receiver surface
+    $\Sigma_r=\{z=1000\mbox{ m}\}$ due to extended velocity source = 2
+    $\times$ pressure gather shown in Figure
+    \ref{fig:dsrcvzhh0}. (c) Difference (b)-(a), plotted on same color
+    scale.}
+\end{figure}
 
-\section{Unitarity}
-
-The next chapter in this story recognizes the relations in display
-\ref{eqn:approxinv} as asserting the approximate unitarity of
-$S^+_{z_s,z_r}$.
-
-The matrix identity \ref{eqn:snull} implies a relation between $S, V,$
-and $\Lambda$ of some interest in itself. After minor re-arrangement, the second row of reads
+One other important consequence of this duality is an alternate view
+of the time reversal construction of the approximate inverse. The
+entire construction can be carried out with traces of the normal
+velocity in place of trace of the pressure. The steps are precisely
+analogous, and justified in exactly the same way. Therefore I will
+simply summarize the result:
+to invert a pressure gather $d$ on $\Sigma_r$
+for a source $f_s$ on $\Sigma_s$ that approximately reproduces it ($d
+\approx \Pi_0{\cal S}\Pi_1^Tf_s$):
+\begin{itemize}
+\item[1. ] create a source $f_r = - 2d$ on $\Sigma_r$;
+\item[2. ] apply the adjoint $(\Pi_1{\cal S}\Pi_1^T)^T=\Pi_1{\cal
+    S}^T\Pi_1^T$ (solve the reverse time system
+  \begin{eqnarray}
+  \label{eqn:awerecglobvz}
+  \frac{1}{\kappa}\frac{\partial\hat{p}}{\partial t} & = & 
+                                                      - \nabla \cdot \hat{\bv}, \nonumber \\
+  \rho\frac{\partial \hat{\bv}}{\partial t} & = & f_r {\bf n}r
+  \delta_{\Sigma_r} - \nabla \hat{p}, \nonumber \\
+  \hat{p} & = & 0 \mbox{ for } t\gg 0, \nonumber \\
+    \hat{\bv} & = & {\bf 0} \mbox{ for } t \gg 0.
+  \end{eqnarray}
+\item[3. ]
+  then extract $h_s=2{\bf n_s}\cdot P_s\hat{\bv}. = 2\Pi_1{\cal
+    S}^T\Pi_1^Tf_r=-4\Pi_1{\cal S}^T\Pi_1^Td$.
+\end{itemize}
+The upshot of this construction is the alternate computation for the
+approximate inverse:
 \begin{equation}
-  \label{eqn:snull2}
--\frac{1}{2}\Pi_1{\cal S}^{\pm}_{z_s,z_r}\Pi_0^T\Lambda^{\pm}_{z_s}  \approx
-V^{\pm}_{z_s,z_r}.
+  \label{eqn:altinv}
+  S^{\dagger}  \approx -4\Pi_1{\cal S}^T\Pi_1^T.
 \end{equation}
-In these relations, the projection on the left picks out the vertical velocity component
-of a downgoing wavefield at $z=z_r$: that is,
-\[
--\frac{1}{2}\Pi_1{\cal S}^{\pm}_{z_s,z_r}\Pi_0^T\Lambda^{\pm}_{z_s}P_sp^+
-=-\frac{1}{2}P_r v_z^+,
-\]
-where $(p^+, \bv^+)$ solve the system \ref{eqn:awepm} with $f_s=0$ and
-$h_s = \Lambda^{\pm}_{z_s}P_sp^+$. On the other hand, from relation
-\ref{eqn:tracejump10},
-\[
-  P_r v_z^+ = -\frac{1}{2}\Lambda^+_{z_r}P_r p^+
-\]
-where
-\[
-  P_r p^+ = \Pi_0{\cal S}^{+}_{z_s,z_r}\Pi_0^T\Lambda^{+}_{z_s}P_s
-  p^+
-\]
-\[
-  = S^+_{z_s,z_r}\Lambda^{+}_{z_s}P_sp^+
-\]
-Therefore combining the last two equations with \ref{eqn:snull2},
-obtain
+The first row of
+\ref{eqn:snull}, slightly rearranged, reads
 \begin{equation}
-  \label{eqn:sv}
-  \frac{1}{4}\Lambda^+_{z_r}S^+_{z_s,z_r}\Lambda^{+}_{z_s} = V^+_{z_s,z_r}.
+  \label{eqn:lamidea}
+  \Pi_0{\cal S}\Pi_1^T f_s \approx  \frac{1}{2} S\Lambda_sf_s.
 \end{equation}
-This is the promised relation.
-
-
-As shown in the last section, $4(V_{z_s,z_r}^+)^T$ is approximately
-inverse to $S^{+}_{z_s,z_r}$. Therefore, transposing both sides of
-equation \ref{eqn:sv} and using \ref{eqn:approxinv}, obtain
+Apply the approximate inverse construction in the form
+\ref{eqn:altinv} to solve \ref{eqn:lamidea} for $\Lambda_s$:
 \begin{equation}
-  \label{eqn:almostunitary}
-  4(V_{z_s,z_r}^+)^TS^+_{z_s,z_r} = [ (\Lambda^+_{z_s})^T
-  (S^{+}_{z_s,z_r})^T(\Lambda^+_{z_r})^T]S^{+}_{z_s,z_r} \approx I.
+  \label{eqn:lamident}
+  \Lambda_s \approx -8\Pi_1{\cal S}^T\Pi_1^T\Pi_0 {\cal S}\Pi_1^T.
 \end{equation}
+This identity is the major result of this section: it shows how
+to compute that action of $\Lambda_s$ by propagating the input
+pressure trace, identified as a source for the velocity evolution,
+forward in time 
+reading off the pressure trace on $\Sigma_r$, identifying it once more as
+a point load (source for velocity), propagating it backwards in time, and finally reading off the velocity trace, scaled to be a
+pressure evolution source on $\Sigma_s$. 
 
-The remarkable feature of the identity \ref{eqn:almostunitary} is that
-it exhibits an approximate right inverse of $S^+$ as an adjoint with
-respect to a weighted inner product - or it would, if the operators
-$(\Lambda^+)$ were symmetric positive definite. As noted earlier,
-these operators are only approximately symmetric, though they are
-positive semi-definite. That is not a great obstacle, however:
-symmetrizing them in the obvious way commits a negligible error, of
-the sort that this paper already neglects wholesale. That is,
+The importance of this result lies in the failure of the obvious
+method for computing the action of $\Lambda_s$, namely to
+employ the pressure trace as a source in the velocity equation ($f_s$,
+in the notation used above) at $\Sigma_s$, and read off the velocity
+field also at $\Sigma_s$. This difficulty is related to the existence of
+tangentially propagating waves and the lack of continuity of the trace
+operator. The method implicit in equation \ref{eqn:lamident} avoids
+this difficulty by propagating the fields a positive distance in $z$:
+assuming as always that the causal fields are downgoing, this step
+eliminates any tangentially propagating fields from consideration.
+
+It is implicit in the discussion above of the pressure-to-source operator 
+depends only on the model coefficients near the source surface
+$\Sigma_s$. However an even more useful
+observation is that the calculations in the approximation
+\ref{eqn:lamident} could just as well be carried out in a much smaller
+region around the source surface, and produce a result that is
+functionally identical in that it will serve as a source for the same
+acoustic fields globally, with small error. Take advantage of this
+observation by replacing - for the purpose of evaluating the
+expression \ref{eqn:lamident} only -  the receiver surface by an
+auxiliary receiver surface $\Sigma_a$ near $\Sigma_s$ but a small positive
+distance from it. Define the auxiliary operator ${\cal S}_a$ by
+sampling solution of the system \ref{eqn:awepm} on $\Sigma_a$ rather
+than $\Sigma_r$. Thus obtain an approximation for $\Lambda_s$
 \begin{equation}
-  \label{eqn:unitary}
-  [ \frac{1}{2}((\Lambda^+_{z_s})^T+ \Lambda^+_{z_s})
-  (S^{+}_{z_s,z_r})^T \frac{1}{2}((\Lambda^+_{z_r})^T+
-  \Lambda^+_{z_r})]S^{+}_{z_s,z_r} \approx I.
+  \label{eqn:lamnear}
+ \Lambda_s \approx -8\Pi_1{\cal S}_a^T\Pi_1^T\Pi_0 {\cal S}_a\Pi_1^T. 
 \end{equation}
 
+Using an auxiliary receiver datum closer to the source surface to
+compute that pressure-to-source maps (only!) has two favorable consequences:
+\begin{itemize}
+\item The computational domain can be smaller than is necessary to
+  simulate the target data, as it need only contain the source
+  surface and the receiver datum implicit in
+  equation \ref{eqn:lamident}. If the domain is small enough, the ray
+  conditions imply that no ray re-enters the region between the source
+  suface and the auxiliary surface, therefore an absorbing boundary
+  condition can be applied outside of this region, considerably
+  shrinking the computational domain and substantial improving computational
+  efficiency. The results shown below used such a truncation strategy.
+\item Since the receiver data may be chosen much closer to the
+  source surface that is the case for the target data, the effective
+  aperture active in the relation \ref{eqn:lamident} can be much
+  larger, producing an estimated source gather much less affected by
+  aperture limitation.
+\end{itemize}
 
-The symmetrized $\Lambda$ operators are at least positive
-semi-definite, hence define (at least) semi-norms.
-Similar relations have been derived for other scattering operators,
+Figures
+\ref{fig:preddnshshh0} and \ref{fig:ddiffnshshh0} show an example of
+this construction.
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:preddnshshh0}]{\includegraphics[width=0.45\textwidth]{preddnshshh0.pdf}}
+  \subfloat[\label{fig:ddiffnshshh0}]{\includegraphics[width=0.45\textwidth]{ddiffnshshh0.pdf}}
+  \caption{(a) Pressure source gather = image
+  under pressure-to-source operator $\Lambda_s$ of pressure gather
+  shown in Figure \ref{fig:dsrcphh0}, computed using
+  auxiliary receiver surface``near''  at $z=2900$ m and equation \ref{eqn:lamnear}. Compare Figure
+  \ref{fig:dhshh0}: because the sources and
+  receivers are close, little aperture is lost in this case. (b)
+  Difference between data plotted in (a)
+  and source gather
+  inferred from vertical velocity at source
+  surface ($z=3000$ m) (Figure \ref{fig:dhshh0}). Same color scale as in Figure
+  (a).}
+\end{figure}
+
+In the iterative methods to ne discussed in the next section, it will
+be important to be able to compute the transpose of the
+pressure-to-source operator - not approximately, but to machine
+precision. The prescription \ref{eqn:lamnear} only
+defines an approximation. However simply substituting the right-hand
+side of equation \ref{eqn:lamnear} - in effect, substituting the
+approximation for the operator that it approximates - gives an
+operator variant of $\Lambda_s$ with an accessible
+machine-precision adjoint:
+\begin{equation}
+  \label{eqn:lamneartr}
+ \Lambda_s^T \approx -8\Pi_1{\cal S}_a^T\Pi_0^T\Pi_1 {\cal S}_a\Pi_1^T. 
+\end{equation}
+From now on, when $\Lambda_s$ or $\Lambda_s^T$ appear, the symbols are
+understood to mean the approximations \ref{eqn:lamnear} and
+\ref{eqn:lamneartr}.
+
+Figure \ref{fig:preddnshstrhh0} shows the image of the pressure gather
+in Figure \ref{fig:dsrcphh0} under $\Lambda_s^T$ approximated as in
+equation \ref{eqn:lamneartr},
+using the auxiliary receiver surface at $z=2900$. Note
+the close resemblance to the image of the same pressure gather under
+$\Lambda_s$ displayed in Figure
+\ref{fig:preddnshshh0}. The difference of these two images is
+displayed in \ref{fig:ddiffnslamtrhh0}, on the same color scale as the
+images themselves. Note that propagation takes place entirely in a
+region where the mechanical parameters are homogenous.
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:preddnshstrhh0}]{\includegraphics[width=0.45\textwidth]{preddnshstrhh0.pdf}}
+  \subfloat[\label{fig:ddiffnslamtrhh0}]{\includegraphics[width=0.45\textwidth]{ddiffnslamtrhh0.pdf}}
+  \caption{(a) Pressure source gather = image
+  under transposed pressure-to-source operator $\Lambda_s^T$ of pressure gather
+  shown in Figure \ref{fig:dsrcphh0}, computed using
+  auxiliary receiver surface``near''  at $z=2900$ m and equation \ref{eqn:lamneartr}. Compare Figure
+  \ref{fig:dhshh0}: because the sources and
+  receivers are close, little aperture is lost in this case. (b) Difference between (a) 
+  and source gather inferred from vertical velocity at source
+  surface ($z=3000$ m) (Figure \ref{fig:dhshh0}). Same color scale as (a).}
+\end{figure}
+
+
+
+\section{Accelerated Iterative Inversion}
+
+The preceding sections provide an approximate inverse for the modeling
+operator $S$ and a means to compute it effectively. These constitute
+the basic ingredients of an effective preconditioning strategy. The
+remaining tasks are: the construction of weighted norms making $S$
+approximately unitary (insofar as possible), definition of a formal
+preconditioned conjugate gradient algorithm; and modification of the
+symmetrized approximate inverse to account for the presence of the
+penalty term. Examples illustrate the effectiveness of the resulting
+preconditioning strategy.
+
+\subsection{Symmetrization and Weighted Norms}
+Since $\Lambda_s$ approximates its transpose (equation \ref{eqn:lamappsim}), it also approximates its
+ symmetrization:
+\begin{equation}
+  \label{eqn:lamsymm}
+  \frac{1}{2}(\Lambda_s^T+\Lambda_s) \approx \Lambda_s.
+\end{equation}
+and similarly for $\Lambda_r$.
+
+Define
+\begin{eqnarray}
+  W_m^{-1}&=& \frac{1}{2}(\Lambda_s^T+
+              \Lambda_s),\nonumber \\
+  W_d &=& \frac{1}{2}(\Lambda_r^T+ \Lambda_r)
+          \label{eqn:wdef}
+\end{eqnarray}
+(the subscripts signify ``model space'' and ``data space'' of $S$).
+These operators define (semi)-norms in the spaces of finite energy
+pressure fields on $\Sigma_s$ and $\Sigma_r$:
+\[
+  \|p_s\|^2 = \langle p_s, W_m p_s\rangle,  \|p_r\|^2 = \langle p_r,
+  W_d p_r\rangle,
+\] 
+The identification of the symmetrized $\Lambda_s$ as the inverse
+of another operator $W_m$ is formal at this point, since the former operator is
+likely to have null (or nearly-null) vectors due to aperture-related
+amplitude loss, and certainly due to asymptotic vanishing at
+non-propagating waves. Since some version of $W_m$ is essential in the
+formulation for effective preconditioning, I will derive a usable
+candidate to stand in for it below.
+
+The adjoint of $S$ with respect to the weighted norms is given
+approximately by
+\begin{equation}
+\label{eqn:wadj}
+S^{\dagger} \approx  W_m^{-1}S^TW_d,
+\end{equation}
+As we have shown (equations \ref{eqn:baseinv}, \ref{eqn:rightinv},
+$S^{\dagger}$ is an approximate right inverse to $S$: repeating
+equation \ref{eqn:rightinv} for convenience,
+\begin{equation}
+  \label{eqn:wunitary}
+  SS^{\dagger} \approx I.
+\end{equation}
+This is not quite enough to establish that
+$S$ is approximately unitary with respect to the
+weighted norms defined by $W_m$ and $W_d$, since that would require
+that $S^{\dagger}$ also be an approximate left inverse. The ray
+conditions assumed throughout include the presumption that all rays
+carrying high frequency energy arriving at the receiver surface
+(within the support of the sampling operator) pass
+over the source surface. Consequently a source supported on the source
+surface exists that produces this data. However it was not assumed
+that all rays passing over the source surface arrive at the receiver
+surface. Therefore high frequency energy can be emitted from the
+source surface without arriving at the receiver surface. We have seen
+examples of this phenomenon already. The extended source shown in Figure
+\ref{fig:ndwdataresrcplbulksm0} generates the diving wave data shown
+in Figure \ref{fig:ndwdata0} to close approximation, even though the
+latter was generated by a point source. The difference between the
+extended source in Figure \ref{fig:ndwdataresrcplbulksm0} and the
+point source depicted in Figure \ref{fig:ooplrays0} is an approximate
+null vector for the modeling operator $S$ as defined for this
+example.
+
+In fact, that is true for the difference between $S^{\dagger}Sh$ and
+$h$ for any extended source $h$:
+\[
+  S(S^{\dagger}Sh - h) = (SS^{\dagger}-I)Sh \approx 0.
+\]
+Suppose that $n$ is an approximate null vector for $S$, and $h$ is any
+other extended source. Then
+\[
+  \langle S^{\dagger}S h, n \rangle_m = \langle Sh, Sn \rangle_d
+  \approx 0.
+\]
+That is, $S^{\dagger}S$ is the (approximate) orthogonal projector onto
+the orthocomplement of the null space of $S$. So iterations such as CG
+based on $S^{\dagger}S$ construct approximation sequences lying close
+to this orthocomplement, as if the null space did not exist. This
+observation allows us to treat $S$ as if it were unitary in discussing
+the behaviour of Krylov space algorithms based on the weighted spaces,
+even though it actually is not.
+
+Similar relations have been derived for other wave-theoretic modeling operators,
 and have been used to accelerate iterative solutions of inverse
 scatering problems: \cite{DafniSymes:SEG18b} review some of this
 literature.
 
-\section{Accelerated Iterative Inversion}
-
-For convenience, in this section write $S$ in place of
-$S^+_{z_s,z_r}$. Also abbreviate the symmetrized $\Lambda$ operators
-using notation suggesting weight
-operators in model and data spaces:
-\begin{eqnarray}
-  W_m^{-1}&=& \frac{1}{2}((\Lambda^+_{z_s})^T+
-              \Lambda^+_{z_s}),\nonumber \\
-  W_d &=& \frac{1}{2}((\Lambda^+_{z_r})^T+ \Lambda^+_{z_r}).
-          \label{eqn:wdef}
-\end{eqnarray}
-The identification of the symmetrized $\Lambda^+_{z_s}$ as the inverse
-of another operator $W_m$ is formal, since the former operator is
-likely to have null (or nearly-null) vectors due to aperture-related
-amplitude loss. Since some version of $W_m$ is essential in the
-formulation for effective preconditioning, I will derive a usable
-candidate to stand in for it below.
-
-Adopting Hilbert norms defined by the operators $W_m$ and $W_d$ in its
-domain and range respectively, the adjoint of $S$ is given by
+Concerning computation, just as for the pressure-to-source operators,
+the weight operators are to be understood as replaced by their
+approximations via equations \ref{eqn:lamnear} and \ref{eqn:lamneartr}:
+\[
+W_m^{-1} = \frac{1}{2}(\Lambda_s +
+\Lambda_s^T)
+\]
 \begin{equation}
-\label{eqn:wadj}
-S^{\dagger} = W_m^{-1}S^TW_d,
+  \label{eqn:winvcomp}
+  -4\Pi_1 {\cal S}_a^T(\Pi_0^T\Pi_1+ \Pi_1^T\Pi_0){\cal S}_a\Pi_0.
 \end{equation}
+with a similar approximate realization of $W_d$.
 
-In this notation, the relation \ref{eqn:unitary} takes the form
+Figure \ref{fig:symmdnshshh0} shows the output of the symmetrized
+approximate pressure-to-source operator per equation \ref{eqn:winvcomp},
+applied once again to the pressure data in Figure
+\ref{fig:dsrcphh0}. Note the resemblance to Figures
+\ref{fig:preddnshshh0} and \ref{fig:preddnshstrhh0}. These are all
+asymptotic approximations of each other. Figure
+\ref{fig:ddiffsymmdnshsll0} shows the
+ the difference between the pressure gather at $z=z_r$ produced from
+ the pressure source output by the symmetrized $\Lambda$, and the point source
+simulation (Figure \ref{fig:dfwdplh0}), plotted on the same scale as
+the latter, in both cases with all propagations in the lens model.
+
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:symmdnshshh0}]{\includegraphics[width=0.45\textwidth]{symmdnshshh0.pdf}}
+  \subfloat[\label{fig:ddiffsymmdnshsll0}]{\includegraphics[width=0.45\textwidth]{ddiffsymmdnshsll0.pdf}}
+  \caption{(a) Pressure source gather = image
+  under symmetrized pressure-to-source operator $W_m^{-1}$ applied to pressure gather
+  shown in Figure \ref{fig:dsrcphh0}, computed using
+  auxiliary receiver surface``near''  at $z=2900$ m and 
+  equation \ref{eqn:winvcomp}, . Compare Figures
+  \ref{fig:dhshh0}, \ref{fig:preddnshshh0} and
+  \ref{fig:preddnshstrhh0}: these are all asymptotic approximations of
+  each other. (b) Difference between pressure gather at the receiver
+  surface $\Sigma_r$  ($z=1000$ m) modeled using symmetrized
+  pressure-to-source gather in (a), and pressure gather shown in Figure \ref{fig:dfwdplh0},
+  propagated in lens model from 
+  source gather shown in Figure \ref{fig:dhshh0} (inferred from vertical velocity at source
+  surface ($z=3000$ m)). Same color scale as
+  Figures \ref{fig:drecplh0} and \ref{fig:dfwdplh0}.}
+\end{figure}
+
+The identity \ref{eqn:winvcomp} shows that only one forward and one adjoint simulation
+are necessary to compute the action of $W_m^{-1}$ or $W_d$, and only
+over the truncated computationa domain between the source or receiver
+surface and its auxiliary, nearby surface. The operator
+in the center of the expression on the right-hand side, $\Pi_0^T\Pi_1
++ \Pi_1^T\Pi_0$, simply exchanges the components of the acoustic
+fields, passing the velocity field as a pressure source and the
+pressure field as a velocity source.
+
+One more computation is required for the full implementation of the
+preconditioning strategy explained in the last section: $W_m$ is
+required, not just $W_m^{-1}$. Note that $W_m$ plays two roles in the
+second term in equation \ref{eqn:norm1}, below: it is the weight matrix for
+both the domain and range norms for $A$. It is perfectly OK for one of
+these to be replaced by an asymptotic approximation, so long as it is
+symmetric and computable (and at least semi-definite). Manipulations
+very similar to those used to obtain equation \ref{eqn:winvcomp} lead
+to the approximation
 \begin{equation}
-  \label{eqn:wunitary}
-  S^{\dagger}S \approx I.
+  \label{wcomp}
+ W_m \approx -\frac{1}{16}\left(\Pi_0 {\cal S}_a^T
+   (\Pi_1^T \Pi_0 + \Pi_0^T \Pi_1) {\cal S}_a \Pi_0^T\right)
 \end{equation}
-That is to say, $S$ is approximately unitary with respect to the
-weighted norms defined by $W_m$ and $W_d$. Therefore a Krylov space
-method employing these norms will converge rapidly, at least for the
-well-determined components of the solution.
+Comparison with the definition \ref{eqn:winvcomp} shows that
+$W_m$ and $W_m^{-1}$ differ only in the initial and
+final projection factors (and overall scale), and in particular either
+can be computed for the cost of a forward/adjoint operator pair. Note
+that $W_m^{-1}$ is inverse to $W_m$ only in an
+approximate (asymptotic, aperture-limited) sense.
+
+\subsection{Preconditioned Conjugate Gradient Iteration}
 
 The most convenient arrangement the Conjugate Gradient (CG) algorithm
 taking advantage of the structure \ref{eqn:wadj} is the {\em
@@ -1399,7 +1893,8 @@ just $Sh \approx d$, but a regularized version:
 
 \noindent {\bf Remark:} recall that the modified data space norm $\|d\|_d^2 = \langle
 d, W_d d\rangle$ has physical meaning: for acoustics, it is
-proportional to the power transmitted to the fluid by the source.
+proportional to the power transmitted to the fluid by the source
+corresponding to $d$. 
 
 The minimizer of the objective defined in equation \ref{eqn:einv}
 solves the normal equation
@@ -1412,26 +1907,6 @@ where the weighted adjoint $S^{\dagger}$ has already been defined in equation \r
   \label{eqn:aadj}
   A^{\dagger} = W_m^{-1}A^TW_m.
 \end{equation}
-
-Note that the normal operator appearing on the left-hand side of
-\ref{eqn:norm0} is not an approximate identity, due to the presence of
-the regularization term: the spectrum increases in spread with
-increasing $\alpha$, leading to slower convergence. Fortunately for
-the present setting, the operators $W_m^{-1}$, $A$, and $W_m$
-approximately commute (they are scalar {\em pseudodifferential}, once
-the difficulties with the definition of $W_m$, mentioned above, are
-taken care of). Scalar pseudodifferential operators approximately
-commute, so $A^{\dagger} \approx A^T$. Therefore
-\begin{equation}
-  \label{eqn:normapprox}
-  S^{\dagger}S + \alpha^2 A^{\dagger}A \approx I + \alpha^2A^TA
-\end{equation}
-Recall that $A$ is simply multiplication by the Euclidean distance to
-the physical source point $\bx_s$: $A u (\bx) = |\bx-\bx_s|u(\bx),
-A^TAu(\bx) = |\bx-\bx_s|^2u(\bx)$. So the equation $(I+\alpha^2
-A^TA)u=b$ is trivial to solve, and this is a key characteristic of a
-good preconditioner. However this observation must be combined with
-the weighted norm structure.
 
 Rewrite the normal equation \ref{eqn:norm0} as
 \begin{equation}
@@ -1485,8 +1960,33 @@ if and only if the symmetrized operator $M^{-1/2}NM^{-1/2} \approx I$,
 which is in turn true if the eigenvalues of $M^{-1/2}NM^{-1/2}$ are
 close to 1 (actually works well is most of these eigenvalues are close
 to 1, and the rest are small - which is the case for the current
-problem)..  Further, PCG is computationally effective is M is easy to
+problem)..  Further, PCG is computationally effective if M is easy to
 invert.
+
+\subsection{Preconditioning with Penalty}
+
+Note that the normal operator appearing on the left-hand side of
+\ref{eqn:norm0} is not an approximate identity, due to the presence of
+the regularization term: the spectrum increases in spread with
+increasing $\alpha$, leading to slower convergence. We have already
+observed that the pressure-to-source operators $\Lambda_s$ and
+$\Lambda_r$ are pseudodifferential, and $A$ is pseudodifferential as
+well. The rules for calculation of
+compositions and inverses for such operators show that the operators
+$W_m^{-1}$ (properly interpreted) and $W_m$ are also pseudodifferential.
+Scalar pseudodifferential operators approximately
+commute, so $A^{\dagger} \approx A^T$. Therefore
+\begin{equation}
+  \label{eqn:normapprox}
+  S^{\dagger}S + \alpha^2 A^{\dagger}A \approx I + \alpha^2A^TA
+\end{equation}
+(restricted to the orthocomplement of the null space of $S$).
+Recall that $A$ is simply multiplication by the Euclidean distance to
+the physical source point $\bx_s$: $A u (\bx) = |\bx-\bx_s|u(\bx),
+A^TAu(\bx) = |\bx-\bx_s|^2u(\bx)$. So the equation $(I+\alpha^2
+A^TA)u=b$ is trivial to solve, and this is a key characteristic of a
+good preconditioner. 
+
 
 From \ref{eqn:normapprox} and \ref{eqn:norm1}, it follows that
 \[
@@ -1504,190 +2004,77 @@ scalar pseudodifferential hence commute, it is equivalent to use of
 With this choice, \ref{eqn:normapprox} implies that
 $M^{-1}N \approx I$, also $M$ is symmetric. As already mentioned,
 powers of $I + \alpha^2A^TA$ are trivial to compute, given the choice
-of $A$ made here. We will examine fast algorithms for computing
-$W_m^{-1}$ = the symmetrized pressure-to-source operator in the next
-section. Note that only $M^{-1}$, hence only $W_m^{-1}$, appears in
-Algorithm 1.
+of $A$ made here. 
 
+\subsection{Example}
+This final subsection shows that result of Conjugate Gradient
+iteration, with and without preconditioning, applied to the source
+estimation problem \ref{eqn:esis}, with zero and non-zero penalty
+weight $\alpha$. The data $d$ is the gather shown in
+\ref{fig:drecplh0}, simulated using the lens model (Figure \ref{fig:ooplrays0}) with source shown
+in Figure \ref{fig:dsrcphh0}, or, alternatively, a point source with
+bandpass filter wavelet located at $x_d=3500$ m, $z_d=3500$ m. In the inversion,
+the material model is taken to be homogeneous, as has been the case in
+all of the previous examples. 
 
-\section{Computing and Symmetrizing $\Lambda$}
+Figure \ref{fig:compnres0lh0} shows the progress of the normal residual
+(Euclidean norm of the difference of the two sides of equation \ref{eqn:norm1}),
+for Conjugate Gradient and Preconditioned Conjugate Gradient
+(Algorithm 1) iterations, applied to solution of the optimization
+problem \ref{eqn:einv} with $\alpha=0$. Because the normal residual is%
+measured in the Euclidean norm for both CG and PCG, the results are
+comparable. For PCG, the preconditioner $M$ is given by equation
+\ref{eqn:defprecond}, with the symmetrized $\Lambda$s computed as
+indicated in the preceding section with auxiliary source and
+receiver surfaces shifted by 100 m. Convergence for the
+preconditioned algorithm is roughly 4 times as fast: this speed
+comparison is much more obvious in a vertically stretched version of
+the figure (Figure \ref{fig:compnrestrunc0lh0}.
 
-Computations of $\Lambda^{\pm}_{z_s}$ and its transpose are clearly critical steps in an
-implementation of the PCG algorithm outlined in the preceding section.
-Direct computation of the pressure-to-source operator $\Lambda^{\pm}_{z_s}$, for instance by solving
-\ref{eqn:awepm} and reading off $P_sv^{\pm}_{z}$, turns out to be
-numerically ill-behaved. The relation \ref{eqn:snull} provides and
-alternative approach, taking advantage of the accurate approximate
-inverse to $S^+_{z_s,z_r}$ constructed above. The first row of
-\ref{eqn:snull}, slightly rearranged, is
-\begin{equation}
-  \label{eqn:lamidea}
-  \Pi_0{\cal S}^+_{z_s,z_r}\Pi_1^T f_s \approx  -\frac{1}{2} S^+_{z_s,z_r}\Lambda^+_{z_s}f_s.
-\end{equation}
-The approximate inverse construction for $S^++_{z_s,z_r}$ permits (approximate)
-solution of this equation for $\Lambda^+_{z_s}f_s$: apply
-$4(V^{+}_{z_s,z_r})^T$ to both sides of equation \ref{eqn:lamidea} and
-use the first equation in the list \ref{eqn:approxinv} to get
-\begin{equation}
-  \label{eqn:lamident}
-  \Lambda^+_{z_s} \approx -8(V^{+}_{z_s,z_r})^T\Pi_0 {\cal S}^+_{z_s,z_r}\Pi_1^T.
-\end{equation}
-This identity is the major result of this section: it shows how
-to compute that action of $\Lambda^+_{z_s}$ by propagating the input
-pressure trace, identified as a source for the velocity evolution,
-forward in time from $z_s$ to $z_r$
-reading off the pressure trace on $z=z_r$, identifying it once more as
-a point load (source for velocity), propagating it backwards in time from $z_r$ to
-$z_s$, and finally reading off the velocity trace, interpreted as a
-pressure evolution source on $z_s$. 
+%\plot{compnres0lh0}{width=\textwidth}{Comparison of normal residual 
+%  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+%  vs. iteration. Data = lens model, point source (Figure 
+%  \ref{fig:drecplh0}), inversion in homogenous model. Penalty weight 
+%  $\alpha=0$.}
 
-The importance of this result lies in the failure of the obvious
-method for computing the action of $\Lambda^{\pm}_{z_s}$, namely to
-employ the pressure trace as a source in the velocity equation ($f_s$,
-in the notation used above) at $z=z_s$, and read off the velocity
-field also at $z=z_s$. This difficulty is related to the existence of
-tangentially propagating waves and the lack of continuity of the trace
-operator. The method implicit in equation \ref{eqn:lamident} avoids
-this difficulty by propagating the fields a positive distance in $z$:
-assuming as always that the causal fields are downgoing, this step
-eliminates any tangentially propagating fields from consideration.
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:compnres0lh0}]{\includegraphics[width=0.45\textwidth]{compnres0lh0.pdf}}
+  \subfloat[\label{fig:compnrestrunc0lh0}]{\includegraphics[width=0.45\textwidth]{compnrestrunc0lh0.pdf}}
+  \caption{(a) Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:drecplh0}), inversion in homogenous model. Penalty weight 
+  $\alpha=0$. (b) Same comparison, with expanded vertical scale, to
+  show more clearly that PCG ir roughly 4-5 times as fast as (in
+  achieving a given normal residual) as CG.}
+\end{figure}
 
+Figure \ref{fig:compnres1lh0} shows the same comparison with non-zero
+penalty weight, $\alpha=10^{-3}$. Convergence for both CG and PCG is
+somewhat slower than in the $\alpha=0$ case. However the relation is
+about the same, still 4-5 times as many iterations to achieve a given
+normal residual level with CG as with PCG.
 
-A deeper study of the pressure-to-source operator (or of the closely
-related Dirichlet-to-Neumann operator for the second order wave
-equation, see \cite{StefUhl:05}) shows that it is approximately
-dependent only on the model coefficients near the source surface
-($z=z_s$ in this case). Since the homogeneous and lens models are
-identical near this surface, it is unsurprising that these figures are
-very close to the previous two.  However an even more useful
-observation is that the calculations in the approximation
-\ref{eqn:lamident} could just as well be carried out in a much smaller
-region around the source surface, and produce a result that is
-functionally identical in that it will serve as a source for the same
-acoustic fields globally, with small error. In effect, equation
-\ref{eqn:lamident} involving propagation from source ($z=z_s$) to
-receiver ($z=z_r$) surfaces is altered by replacing $z_r$ with a
-receiver datum $z_s+\Delta z$ considerably closers to $z_s$:
-\begin{equation}
-  \label{eqn:lamnear}
-  \Lambda^+_{z_s} \approx -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
-    S}^+_{z_s,z_s+\Delta z}\Pi_1^T.
-\end{equation}
-Using a receiver datum closer to the source surface has two favorable consequences:
-\begin{itemize}
-\item The computational domain can be smaller than is necessary to
-  simulate the target data, as it need only contain the source
-  surface and the receiver datum implicit in
-  equation \ref{eqn:lamident}. This shrinkage of the computational
-  domain can lead to substantial improvements in computational
-  efficiency.
-\item Since the receiver data may be chosen much closer to the
-  source surface that is the case for the target data, the effective
-  aperture active in the relation \ref{eqn:lamident} can be much
-  larger, producing an estimated source gather much less affected by
-  aperture limitation.
-\end{itemize}
+\begin{figure}
+  \centering
+  \subfloat[\label{fig:compnres1lh0}]{\includegraphics[width=0.45\textwidth]{compnres1lh0.pdf}}
+  \subfloat[\label{fig:compnrestrunc1lh0}]{\includegraphics[width=0.45\textwidth]{compnrestrunc1lh0.pdf}}
+  \caption{(a) Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:drecplh0}), inversion in homogenous model. Penalty weight 
+  $\alpha=10^{-3}$. (b) Same comparison, with expanded vertical scale, to
+  show more clearly that PCG ir roughly 4-5 times as fast as (in
+  achieving a given normal residual) as CG.}
+\end{figure}
 
+%\plot{compnres1lh0}{width=\textwidth}{Comparison of normal residual 
+%  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+%  vs. iteration. Data = lens model, point source (Figure 
+%  \ref{fig:drecplh0}), inversion in homogenous model. Penalty weight 
+%  $\alpha=10^{-3}$.}
 
-As mentioned in the last section, computation of the transpose of
-$\Lambda^+$ (exact, not approximate in the high frequency sense) is
-critical to the successful construction of the preconditioner. The
-relation \ref{eqn:lamident} does not provide a computation for this
-operator. However set
-\begin{equation}
-  \label{eqn:lamtilde}
-  \tilde{\Lambda}^+_{z_s} = -8(V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
-    S}^+_{z_s,z_s+\Delta z}\Pi_1^T.
-\end{equation}
-Then \ref{eqn:lamnear} can be rewritten
-\[
-  \Lambda^+_{z_s} \approx \tilde{\Lambda}^+_{z_s}.
-\]
-Of course, all of the examples so far show images of
-$\tilde{\Lambda}^+_{z_s}$.
-
-Since successful preconditioning requires only approximate inversion,
-use of $\tilde{\Lambda}^+_{z_s} $ in place of $\Lambda^+_{z_s}$ will
-still yield a working preconditioner, and the former can be transposed
-to machine precision via the definition \ref{eqn:lamtilde} and the adjoint state
-method (equations \ref{eqn:trtr} \ref{eqn:trtrcomp}):
-\begin{equation}
-  \label{eqn:lamtransp}
-  (\tilde{\Lambda}^+_{z_s})^T = -8 \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
-    z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}
-\end{equation}
-
-
-The model space weight operator $W_m^{-1}$ introduced in the last section is
-replaced by its asymptotic approximation
-\[
-\frac{1}{2}(\tilde{\Lambda}^+_{z_s} +
-  (\tilde{\Lambda}^+_{z_s})^T)
-\]
-\[
-  \approx -8 \left((V^{+}_{z_s,z_s+\Delta z})^T\Pi_0 {\cal
-    S}^+_{z_s,z_s+\Delta z}\Pi_1^T \right.+
-\]
-\[
-  \left. \Pi_1 ({\cal S}^+_{z_s,z_s+\Delta
-      z})^T\Pi_0^T V^{+}_{z_s,z_s+\Delta z}\right)
-\]
-\begin{equation}
-  \label{eqn:winvcomp}
-  = -4(\Pi_1 ({\cal S}^+_{z_s,z_s+\Delta z})^T(\Pi_0^T\Pi_1 +
-  \Pi_1^T\Pi_0) {\cal S}^+_{z_s,z_s+\Delta z}\Pi_1^T) = \tilde{W}_m^{-1} .
-\end{equation}
-with a similar definition for the replacement $\tilde{W}_d$ of $W_d$.
-
-This identity shows that only one forward and one adjoint simulation
-are necessary to compute the action of $\tilde{W}_{m,d}$. The operator
-in the center of the expression on the right-hand side, $\Pi_0^T\Pi_1
-+ \Pi_1^T\Pi_0$, simply exchanges the components of the acoustic
-fields, passing the velocity field as a pressure source and the
-pressure field as a velocity source.
-
-
-One more computation is required for the full implementation of the
-preconditioning strategy explained in the last section: $W_m$ is
-required, not just $W_m^{-1}$. Note that $W_m$ plays two roles in the
-second term in equation \ref{eqn:norm1}: it is the weight matrix for
-both the domain and range norms for $A$. It is perfectly OK for one of
-these to be replaced by an asymptotic approximation, so long as it is
-symmetric and computable (and at least semi-definite). The second row
-in equation \ref{eqn:snull} appears as \ref{eqn:snull2} above:
-introducing (formally) the inverse of $\Lambda^+$,
-\begin{equation}
-  \label{eqn:snull2mod}
--\frac{1}{2}\Pi_1{\cal S}^{+}_{z_s,z_r}\Pi_0^T  \approx
-V^{+}_{z_s,z_r}(\Lambda^{+}_{z_s})^{-1}
-\end{equation}
-whence from the second line in display \ref{eqn:approxinv}
-\begin{equation}
-  \label{eqn:laminv}
--\frac{1}{8}(S^+_{z_s,z_r})^T\Pi_1{\cal S}^{+}_{z_s,z_r}\Pi_0^T  
-\approx (\Lambda^{+}_{z_s})^{-1}
-\end{equation} 
-and
-\begin{equation}
-  \label{eqn:laminvtr}
--\frac{1}{8}\Pi_0({\cal S}^{+}_{z_s,z_r})^T\Pi_1^T S^+_{z_s,z_r}
-\approx ((\Lambda^{+}_{z_s})^{-1})^T.
-\end{equation}
-Using the definition \ref{eqn:sdef} of $S^+_{z_s,z_r}$, the
-symmetrized $\Lambda^{-1}$ is
-\begin{equation}
-  \label{wcomp}
- \tilde{W}_m = -\frac{1}{16}\left(\Pi_0 ({\cal S}^{+}_{z_s,z_r})^T
-   (\Pi_1^T \Pi_0 + \Pi_0^T \Pi_1) {\cal S}^{+}_{z_s,z_r} \Pi_0^T\right)
-   \approx \frac{1}{2}((\Lambda^{+}_{z_s})^{-1}
-   +((\Lambda^{+}_{z_s})^{-1})^T) .
-\end{equation}
-Comparison with the definition \ref{eqn:winvcomp} shows that
-$\tilde{W}_m$ and $\tilde{W}_m^{-1}$ differ only in the initial and
-final projection factors (and overall scale), and in particular either
-can be computed for the cost of a forward/adjoint operator pair. Note
-that $\tilde{W}_m^{-1}$ is inverse to $\tilde{W}_m$ only in an
-approximate (asymptotic, aperture-limited) sense.
 
 
 \section{Conclusion}
@@ -1725,8 +2112,8 @@ corresponding constitutive defect, analogous to the elastic
 Dirichlet-to-Neumann map investigated by \cite{Rachele:00}.
 
 The underlying tool in the ideas developed here is geometric optics
-(or ray theory), without which the very concept of downgoing waves
-would be meaningless. The physics of actual earth materials includes
+(or ray theory), without which the very concept of incoming/outgoing waves
+(on which these results rest) would be meaningless. The physics of actual earth materials includes
 material heterogeneity on all scales, which appears to leave little
 room for the assumption of scale separation underlying geometric
 optics. Moreover, earth materials are anelastic, with elastic wave
@@ -1735,68 +2122,9 @@ motion, and so on. A truly satisfactory understanding of inverse wave
 problems will eventually need to accommodate heterogenity and
 anelasticity beyond the current capabilities of the ray-based theory.
 
-\append{Adjoint Computation}
-
-The adjoint of ${\cal S}^+_{z_s,z_r}$ can be computed by a variant of
-the adjoint state method, in this case a by-product of the
-conservation of energy. This calculation leads to equation
-\ref{eqn:sadj1}, from which the other statements about adjoints made in the second
-section of the paper follow.
-
-Suppose that $p^-,\bv^-$ solve \ref{eqn:awepm}
-with $(h_s,f_s\bf{e}_z)\delta(z-z_s)$ replaced by
-$ (h_r,f_r\bf{e}_z) \delta(z-z_r)$. Then
-\[
-0 = 
-\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  
-\rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow \infty}
--
-\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)|_{t \rightarrow -\infty}
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \frac{d}{dt}\left(\int\, dx\,dy\,dz\, \frac{p^+ p^-}{\kappa} +  \rho \bv^+ \cdot \bv^- \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \frac{1}{\kappa} \frac{\partial p^+}{\partial t} p^- +  p^+ \frac{1}{\kappa}\frac{\partial p^-}{\partial t} \right.
-\]
-\[
-+
-\left. \rho \frac{\partial \bv^+}{\partial t} \cdot \bv^- + \rho \bv^+ \cdot \frac{\partial \bv^-}{\partial t} \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty} \,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
- h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
- h_r \delta(z-z_r)\right) \right.
-\]
-\[
-+
-\left.  (- \nabla p^++f_s\bf{e}_z) \cdot \bv^- + \bv^+ \cdot (-\nabla
-  p^- + f_r \bf{e_z}) \right)
-\]
-\[
-= 
-\int_{-\infty}^{\infty}\,dt\, \left(\int\, dx\,dy\,dz\, \left(- \nabla \cdot \bv^+ + 
- h_s \delta(z-z_s)\right) p^- + p^+ \left(- \nabla \cdot \bv^- + 
- h_r \delta(z-z_r)\right) \right.
-\]
-\[
-+
-\left.  p^+ (\nabla \cdot \bv^-) + (\nabla \cdot \bv^+) p^- 
-  +f_s \delta(z-z_s) v_z^- + v_z^+f_r \delta(z-z_r) \right)
-\]
-after integration by parts in the last two terms. Most of what is left cancels, leaving 
-\[
-0 = \int_{-\infty}^{\infty}\,dt\,dx\,dy\, (h_sP_sp^-+f_zP_sv_z^-) +
-( h_rP_rp^++f_rP_rv_z^+)
-\]
-\[
-  = \langle (h_s,f_s), {\cal S}^-(h_r,f_r) \rangle+ \langle (h_r,f_r), {\cal S}^+_{z_s,z_r}(h_s,f_s) \rangle
-\]
-whence \ref{eqn:sadj1} follows immediately.
-
+\section{Acknowledgements}
+The author thanks the anonymous reviewers for their very helpful
+comments and suggestions.
 
 \section{Declarations}
 \subsection{Funding}

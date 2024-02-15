@@ -264,4 +264,10 @@ for i in [1, 11]:
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
      			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
-                         	  ' ' + fdpars, stdin=0, stdout=-1)  				 
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+Flow('d11p.su',['h11.su', 'w11.su', 'm.rsf', 'bym.rsf'],
+     ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+     ' ' + fdpars + ' partask=2', stdin=0, stdout=-1)

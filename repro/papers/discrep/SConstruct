@@ -1,5 +1,31 @@
 from rsf.tex import *
 
+Paper('hc',
+lclass='georeport',
+options='notimes',
+use='natbib,graphicx,color,listings,amsmath,amsthm,amssymb,amsbsy,float,wasysym,setspace,bm,algorithm,algpseudocode',
+include=r'''
+      \newcommand{\lW}{W_{\lambda}}
+      \newcommand{\oS}{\bar{S}}
+      \newcommand{\wl}{w_{\lambda}}
+      \newcommand{\dl}{d_{\lambda}}
+      \newcommand{\lE}{E_{\lambda}}
+      \newcommand{\lF}{F_{\lambda}}
+      \newcommand{\lerr}{e_{\lambda}}
+      \newcommand{\Ja}{J_{\alpha}}
+      \newcommand{\tJa}{\tilde{J}_{\alpha}}	
+      \newcommand{\bx}{{\bf x}}
+      \newcommand{\bR}{{\bf R}}
+      \newcommand{\aw}{w_{\alpha}}
+      \newcommand{\krms}{k_{\rm RMS}}
+      \newcommand{\dlam}{\Delta \lambda}
+      \newtheorem{theorem}{Theorem}
+      \newtheorem{corollary}{Corollary}
+      \newtheorem{lemma}{Lemma}
+      \newtheorem{proposition}{Proposition}
+''',
+color='ALL')
+
 Paper('figs',
 lclass='georeport',
 options='notimes',
@@ -53,8 +79,8 @@ include=r'''
 color='ALL')
 
 End(
-lclass='georeport',
-options='notimes',
+lclass='geophysics',
+options='notimes,,manuscript,noblind',
 use='natbib,graphicx,color,listings,amsmath,amsthm,amssymb,amsbsy,float,wasysym,setspace,bm,algorithm,algpseudocode',
 include=r'''
       \newcommand{\lW}{W_{\lambda}}

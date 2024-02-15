@@ -100,7 +100,7 @@ Flow('parapspi.su', ['parastack.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCE
 
 # Jie's filtered version
 Flow('parapspif.su', ['parastackf.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCES[1]} nz=401 dz=10 dx=12.5 tmpdir=/var/tmp | ' + sugain + ' agc=1')
-Flow('parapspif','parapspif.su','suread endian=0  read=data | put d1=10 label1="Depth (m)" d2=12.5 o2=14100 label2="Midpoint (m)" unit1=m unit2=m')
+Flow('parapspif','parapspif.su','suread endian=n suxdr=n  read=data | put d1=10 label1="Depth (m)" d2=12.5 o2=14100 label2="Midpoint (m)" unit1=m unit2=m')
 
 # create RSF files for grid data
 for file in ['paravrmst', 'paravintt']:

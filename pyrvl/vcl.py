@@ -4,7 +4,12 @@ import os
 from abc import ABC, abstractmethod
 
 class Space(ABC):
-
+    '''
+    Abstract vector space class - core of VCL. Guiding principle: provides 
+    access to data objects of vectors and tools to manipulate them, especially 
+    linear combination and inner product.
+    '''
+    
     # returns a data container handle ("data") - pointer, file name, whatever -
     # consistent with the data structure of vectors in this space
     @abstractmethod
@@ -14,6 +19,11 @@ class Space(ABC):
     # returns True if data object is compatible, else False
     @abstractmethod
     def isData(self,x):
+        pass
+
+    # saves data to appropriate container at specified path.
+    # implementation is optional, so not defined as abstract.
+    def saveto(self, x, path):
         pass
     
     # a, b are scalars, x, y are data objects
@@ -112,6 +122,9 @@ class Space(ABC):
         pass
 
 class ProductSpace(Space):
+    '''
+    Decorator class: turns array of Spaces into a Space.
+    '''
 
     def __init__(self,SpaceList):
         if not isinstance(SpaceList,list):
@@ -195,6 +208,12 @@ class ProductSpace(Space):
 
 class Vector:
 
+    '''
+    Combines data object with reference to a space. The latter
+    specifies how data object is to behave to realize behaviour
+    of vector in space.
+    '''
+
     def __init__(self, sp, data=None):
         try:
             self.space = sp
@@ -227,7 +246,9 @@ class Vector:
         except Exception as ex:
             print(str(ex))
             raise Exception('called from vcl.Vector destructor')
-        
+
+    # replaces self.data with argument. Not particularly useful, should
+    # probably be deprecated.
     def link(self,x):
         try:
             if not self.space.isData(x):
@@ -236,11 +257,26 @@ class Vector:
             print(ex)
             raise Exception("called from vcl.Vector.link")
         else:
-            print('in link: x = ' + x)
+       #     print('in link: x = ' + x)
             if self.own:
                 self.space.cleanup(self.data)            
             self.data = x
             self.own = False
+
+    # copies data to appropriate container second argument serves as
+    # container handle: memory location for in-core data (encoded somehoe),
+    # path to disk location for out-of-core data, cloud location,....
+    # Container should admit treatment as data item in constructor,
+    # so that a vector can be constructed on it.
+    # Differs from link in that handle pointdd to by second arg need not
+    # exist on call: it is constructed if it doesn't exist, and overwritten
+    # if it does.
+    def saveto(self, path):
+        try:
+            self.space.saveto(self.data, path)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.Vector.saveto')
         
     def linComb(self,a,x,b=1.0):
         try:
@@ -797,6 +833,11 @@ class ScalarJet(ABC):
 
     @abstractmethod
     def Hessian(self):
+        pass
+
+    # handle for archiving components of jet calculation
+    @abstractmethod
+    def archive(self, name, tag, suf):
         pass
 
     @abstractmethod

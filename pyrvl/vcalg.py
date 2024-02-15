@@ -999,7 +999,8 @@ class btls(LineSearch):
             raise Exception('called from vcalg.btls')
 
 # lsargs - see above
-def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, lsargs=None, jetargs=None, ddargs=None ):
+def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
+              lsargs=None, jetargs=None, ddargs=None, archargs=None ):
     '''
     Line seach optimization algorithm. Two principal components:
     - SD: SearchDir class: Update methodcomputes search direction from 
@@ -1014,9 +1015,12 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, lsargs
     descmax (int):      max number of descent steps
     desceps (float):    terminates if gradient falls below this proportion of initial
     descverbose (int):  verbosity flag
+
+    keyword dictionaries:
     lsargs:             line search params
     jetargs:            jet params
     ddargs:             search direction params
+    archargs:           archive params
 
     Returns:
     Jx (vcl.ScalarJet): final instance of jet class - final state of search
@@ -1061,8 +1065,10 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, lsargs
         
         # descent iteration
         i = 0
-        gtest = Jx.gradient().norm()
-
+        # archive
+        for k in archargs.keys():
+            Jx.archive(k,str(i),archargs[k])
+        
         if descverbose !=0:
             print('initial value = %10.4e'  % (Jx.value()))
             print('initial step  = %10.4e' % (step))
@@ -1089,6 +1095,9 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, lsargs
                 dr = Jx.gradient().dot(ddir)
                 # update counter
                 i += 1
+                # archive
+                for k in archargs.keys():
+                    Jx.archive(k,str(i),archargs[k])
                 
             else:
                 # bail out

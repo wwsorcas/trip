@@ -48,9 +48,9 @@ The last observation leads to a prescription for computing the map from pressure
 
 Note that IWAVE treats every right-hand side point as defining a point source, that is, an amplitude divided by $\Delta x \Delta z$. Since the surface source is a surface $\delta$, that is (numerical approximation) an amplitude divided by $\Delta z$, it is necessary to precondition the source by multiplying the amplitude by $\Delta x$. Since the discontinuity is equal to twice the source amplitude, another factor of 2 is required. Finally, IWAVE does not include the bulk modulus and bulk modulus coefficients in the source injection, so these must also be multiplied in.
 
-The upshot is the cycle represented in the figures \ref{fig:srcvzhh0},  \ref{fig:resrcvzhh0}, \ref{fig:srcvzlh0},  \ref{fig:resrcvzlh0}. Figure \ref{fig:srcvzhh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{fig:ptpwindh0} at $z_r=1$ km, propagation and backpropagation in homogeneous material model with $\kappa = $ 4 Gpa, $\rho = $ 1 g/m$^{-6}$.The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzhh0}. The difference is displayed as figure \ref{fig:dresrcvzhh0}.
+The upshot is the cycle represented in the figures \ref{fig:srcvzhh0},  \ref{fig:resrcvzhh0}, \ref{fig:srcvzlh0},  \ref{fig:resrcvzlh0}. Figure \ref{fig:srcvzhh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{fig:ptpwindhh0} at $z_r=1$ km, propagation and backpropagation in homogeneous material model with $\kappa = $ 4 Gpa, $\rho = $ 1 g/m$^{-6}$.The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzhh0}. The difference is displayed as figure \ref{fig:dresrcvzhh0}.
 
-Similarly, Figure \ref{fig:srcvzlh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{ptpwindl0} at $z_r=1$ km, propagation in the model with the model with bulk modulus displayed in Figure \ref{fig:bml0} and density $\rho = $ 1 g/m$^{-6}$, and backpropagation in the homogeneous model with bulk modulus = 4 GPa. The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzlh0}. The difference is displayed as figure \ref{fig:dresrcvzlh0}.
+Similarly, Figure \ref{fig:srcvzlh0} is the normal component of velocity at $z_s=3$ km of backpropagation, from the field with pressure trace displayed in Figure \ref{ptpwindll0} at $z_r=1$ km, propagation in the model with the model with bulk modulus displayed in Figure \ref{fig:bml0} and density $\rho = $ 1 g/m$^{-6}$, and backpropagation in the homogeneous model with bulk modulus = 4 GPa. The pressure trace at $z=z_s$ was also recorded, and used to recompute the normal velocity trace \ref{fig:resrcvzlh0}. The difference is displayed as figure \ref{fig:dresrcvzlh0}.
 
 %%%%%%%%%%%%%%%%%%%
 
@@ -84,3 +84,32 @@ Similarly, Figure \ref{fig:srcvzlh0} is the normal component of velocity at $z_s
 
 \plot{dresrcptplh0}{width=15cm}{Difference of figures \ref{fig:srcptplh0}, \ref{fig:resrcptplh0}.}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\plot{recphh0}{width=15cm}{Pressure data, homogeneous velocity model}
+
+\plot{rerecphh0}{width=15cm}{Resimulated pressure traces, Input data simulated in homogeneous velocity model (Figure \ref{fig:recphh0}). Resimulation source computed from p traces at receivers only, backpropagated in homogeneous velocity model.}
+
+\plot{reptr21hh0}{width=15cm}{Resimulated pressure trace 21, from data simulated in homogeneous velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr51hh0}{width=15cm}{Resimulated pressure trace 51, from data simulated in homogeneous velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr81hh0}{width=15cm}{Resimulated pressure trace 81, from data simulated in homogeneous velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{recplh0}{width=15cm}{Pressure data, lens velocity model}
+
+\plot{rerecplh0}{width=15cm}{Resimulated pressure traces, Input data simulated in lens velocity model (Figure \ref{fig:recplh0}). Resimulation source computed from p traces at receivers only, backpropagated in homogeneous velocity model.}
+
+\plot{reptr21lh0}{width=15cm}{Resimulated pressure trace 21, from data simulated in lens velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr51lh0}{width=15cm}{Resimulated pressure trace 51, from data simulated in lens velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr81lh0}{width=15cm}{Resimulated pressure trace 81, from data simulated in lens velocity model, backpropagated in homogeneous velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{rerecpll0}{width=15cm}{Resimulated pressure traces, Input data simulated in lens velocity model (Figure \ref{fig:recplh0}). Resimulation source computed from p traces at receivers only, backpropagated in lens velocity model.}
+
+\plot{reptr21ll0}{width=15cm}{Resimulated pressure trace 21, from data simulated in lens velocity model, backpropagated in lens velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr51ll0}{width=15cm}{Resimulated pressure trace 51, from data simulated in lens velocity model, backpropagated in lens velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}
+
+\plot{reptr81ll0}{width=15cm}{Resimulated pressure trace 81, from data simulated in lens velocity model, backpropagated in lens velocity model. Red: target data. Blue: resimulated data, with resimulationsource computed from p traces at receivers only.}

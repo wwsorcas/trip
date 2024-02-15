@@ -1385,7 +1385,12 @@ $\tilde{W}_m$ and $\tilde{W}_m^{-1}$ differ only in the initial and
 final projection factors (and overall scale), and in particular either
 can be computed for the cost of a forward/adjoint operator pair. Note
 that $\tilde{W}_m^{-1}$ is inverse to $\tilde{W}_m$ only in an
-approximate (asymptotic, aperture-limited) sense. 
+approximate (asymptotic, aperture-limited) sense.
+
+%#############
+
+Another figure \ref{fig:ddifffwdaltplh0}
+More figures: \ref{fig:compnrestrunc0lh0}, \ref{fig:compnrestrunc1lh0}.
 
 \section{Figures}
 
@@ -1773,6 +1778,18 @@ in GPa. Positions of point source and receiver line indicated.}
   \ref{fig:recplh0}), inversion in lens model. Penalty weight 
   $\alpha=0$.}
 
+\plot{compnrestrunc0lh0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in homogenous model. Penalty weight 
+  $\alpha=0$.}
+
+\plot{compnrestrunc0ll0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in lens model. Penalty weight 
+  $\alpha=0$.}
+
 \plot{compnres1hh0}{width=\textwidth}{Comparison of normal residual 
   (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
   vs. iteration. Data = homogeneous model, point source (Figure 
@@ -1791,8 +1808,20 @@ in GPa. Positions of point source and receiver line indicated.}
   \ref{fig:recplh0}), inversion in lens model. Penalty weight
   $\alpha=10^{-3}$.}
 
+\plot{compnrestrunc1lh0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in homogenous model. Penalty weight 
+  $\alpha=10^{-3}$.}
 
+\plot{compnrestrunc1ll0}{width=\textwidth}{Comparison of normal residual 
+  (gradient) Euclidean norms: CG (blue), PCG (red), plotted 
+  vs. iteration. Data = lens model, point source (Figure 
+  \ref{fig:recplh0}), inversion in lens model. Penalty weight
+  $\alpha=10^{-3}$.}
 \newpage
+
+\plot{ddifffwdaltplh0}{width=\textwidth}{Diff}
 
 \append{Adjoint Computation}
 
@@ -1880,6 +1909,14 @@ $(-Rh_r\delta(z-z_r), Rf_r\bf{e_z}\delta(z-z_r))$. That is,
 \end{equation}
 Since $R^2 = I$ and ${\cal R}^2 = I$, the identities \ref{eqn:sadj}
 and \ref{eqn:trsadj} imply equation \ref{eqn:trtr}.
+
+\newpage
+
+\section{More plots}
+
+A plot of the model with rays overlain, \ref{fig:olensrays0}.
+
+\plot{olensrays0}{width=\textwidth}{Lens model with rays.}
 
 
 \bibliographystyle{seg}

@@ -6,6 +6,122 @@ goes here.
 \end{abstract}
 
 \section{Introduction}
+\section{A Penalty Version of AWI}
+The adaptive kernel $u_0^{\epsilon}$ appearing in the definition \ref{eqn:tJz} is the solution of a regularized least squares problem. This observation suggests augmenting the regularized least squares objective by a penalty proportional to the right-hand side of \ref{eqn:tJz}:
+\begin{equation}
+  \label{eqn:Ja}
+  \Ja[m,u;d] = \frac{1}{2}\left(\|S[m]u-d\|_d^2 + \epsilon^2\|u\| + \alpha^2\|tu\|_m\right).
+\end{equation}
+Here $\|u\|^2 = \langle u, u \rangle$ is the (unweighted) $L^2$ norm, and $\|\cdot\|_m$ is an $(m,d)$-dependent (weighted) norm: with
+\[
+  u_0^{\epsilon}[m,d] = \mbox{arg min}_u \Jz[m,u;d],
+\]
+define
+\[
+  Wu (\bx_r,t;\bx_s) = \sum_{\bx_r,\bx_s}\frac{1}
+  {\int\,ds\,|u_0^{\epsilon}[m,d](\bx_r,s;\bx_s)|^2}u(\bx_r,t;\bx_s)
+\]
+and
+\begin{equation}
+  \label{eqn:defmnorm}
+  \|u\|^2_m = \langle u, W u \rangle.
+\end{equation}
+With this notation,
+\[
+  \tJz[m;d] = \frac{1}{2}\|tu^{\epsilon}_0[m;d]\|^2_m
+\]
+In the definition of $\tJz$, a quadratic is evaluated at the minimizer of $\Jz[m,u;d]$. This suggests the possibility of evaluating the quadratic objective $\Ja[m,u;d]$ at its own minimizer:
+\begin{equation}
+  \label{eqn:tJa}
+  \tJa[m;d] = \min_u \Ja[m,u,d] = \Ja[m,\ua[m;d];d]
+\end{equation}
+This is the so-called variable projection reduction of the quadratic $\Ja$.
+Note that the right-hand side of the definition of $\tJz$ is the last term on the right-hand side of $\Ja$, scaled by $\alpha^{-2}$ and evaluated at the minimizer of the sum of the first two terms, that is, $\Ja$ for $\alpha=0$.
+
+\begin{theorem}
+  \label{thm:basic}
+Suppose that $S \in {\cal L}(U,D)$, the is a bounded linear maps from (Hilbert space) domain $U$ (``model space'') with inner product $\langle \cdot, \cdot \rangle_m$ to range $D$ with inner product $\langle \cdot, \cdot \rangle_d$. Assume that $S$ is coercive, that is, there exists $\epsilon >0$ so that $\|Su\|_d \ge \epsilon\|u\|_m$ for $u \in U$.
+Suppose also that $A \in {\cal L}(U,U)$, and that $d \in D$. Define the function $J_{\alpha}$ on $U$ by 
+\begin{equation}
+  \label{eqn:eq1}
+  J_{\alpha}(u) = \frac{1}{2}(\|Su-d\|^2_d + \alpha^2\|Au\|_m^2).
+\end{equation}
+Then for $\alpha \ge 0$, $J_{\alpha}$ possesses a unique minimizer $u_{\alpha} \in U$, for which
+\begin{equation}
+  \label{eqn:eq0}
+  \tilde{J}_{\alpha} = \min_{u \in U} J_{\alpha}(u) = J_{\alpha}(u_{\alpha}),
+\end{equation}
+and
+\begin{equation}
+  \label{eqn:eq4}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tilde{J}_{\alpha}-\tilde{J}_0).= \frac{1}{2}\|Au_0\|^2
+\end{equation}
+This limit is uniform over bounded sets of $(S, A) \in {\cal L}(U,D) \times {\cal L}(U, U)$.
+\end{theorem}
+
+For completeness, the proof is given in an appendix.
+
+This relation will be applied in the context of a model space $U$ possessing a reference Hilbert norm $\|\cdot\|$ and a family of equivalent norms $\|\cdot\|_m$ depending on a parameter $m \in M$, in which $M$ is an open subset of a Banach space $X$. The dependence is through a an operator-valued function $W$ on $M$, taking values in cone ${\cal B}(U)$ of bounded self-adjoint positive-definite operators on $U$. On the other hand, we assume that the norm on $D$ is fixed, independent of $M$, and treat it as a reference norm.
+
+\begin{theorem}
+  \label{thm:uniform}
+Assume that $W: M \rightarrow {\cal B}(U)$ is of class $C^1$ and uniformly positive definite, and that the norm $\|\cdot\|_m$ is given by
+\begin{equation}
+  \label{eqn:normdef}
+  \|u\|_m^2 = \langle u, W[m] u \rangle.
+\end{equation}
+Suppose also that $S: M \rightarrow {\cal L}(U,D)$ is of class $C^1$ and uniformly coercive, and that $A \in {\cal L}(U,U)$ as before. For $\alpha \ge 0$, define $\tJa: M \rightarrow \bR$ by
+\[
+  \tilde{J}_{\alpha}[m] = \min_{u \in U}\frac{1}{2}(\|S[m]u-d\|^2_d + \alpha^2\|Au\|_m^2)
+\]
+\begin{equation}
+  \label{eqn:tjadef}
+  = \frac{1}{2}(\|S[m]u_{\alpha}[m]-d\|^2_d + \alpha^2\|Au_{\alpha}[m]\|_m^2)
+\end{equation}
+where
+\begin{equation}
+  \label{eqn:ua}
+  u_{\alpha}[m] = \mbox{arg min}_{u \in U}\frac{1}{2}(\|S[m]u-d\|^2_d + \alpha^2\|Au\|_m^2)
+\end{equation}
+for $m \in M$. Then $\tilde{J}_{\alpha}$ is of class $C^1(M)$, and
+\begin{equation}
+  \label{eqn:lim}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tJa[m]-\tJz[m]).= \frac{1}{2}\|A\uz[m]\|_m^2.
+\end{equation}
+The limit is in the sense of $C^1(M)$, that is, both the left-hand side and its $m$ derivative converge to the right-hand side and its $m$ derivative, respectively. Moreover $u_{\alpha}$ is of class $C^1(M,U)$.
+\end{theorem}
+
+\begin{proof} All conclusions but the last follow immediately from Theorem \ref{thm:basic} and the uniformity assumptions on $S$ and $W$.
+
+Since the norm in $D$ is fixed for the discussion, drop the subscript and treat it as a reference norm. Denote the adjoint with respect to the norms $\|\cdot\|_m$ on $U$, $\|\cdot\|_d = \|\cdot\|$ on $D$ by a superscript $*$, and with respect to $\|\cdot\|$ on $U$ by a superscript $T$. The normal equation defining $\ua$ is
+  \[
+    (S[m]^*S[m] + \alpha^2 A[m]^*A) \ua[m] = S[m]^*d
+  \]
+  \begin{equation}
+    \label{eqn:normal}
+= (W[m]^{-1}S[m]^TS[m] + \alpha^2 W[m]^{-1}A^TW[m]A)\ua[m]= W[m]^{-1}S[m]^Td
+\end{equation}
+or equivalently
+\begin{equation}
+  \label{eqn:normal1}
+  (S[m]^TS[m] + \alpha^2 A^TW[m]A)\ua[m] = S[m]^Td
+\end{equation}
+Since $S$ is uniformly coercive, and both $S$ and $W$ are of class $C^1$, the normal operator on the left hand side is boundedly invertible and of class $C^1$. Therefore the solution $\ua$ is of class $C^1$.
+
+[need to add proof of $C^1$ convergence.]
+\end{proof}
+
+Apply this relation in the context of the AWI penalty problem defined earlier. $M$ is an open set in $C^k(\Omega, \bR^2)$. $U$ is $\oplus_{\bx_r,\bx_s}L^2([-T_u,T_u])$, $D$ is the data space $\oplus_{\bx_r,\bx_s}L^2([0,T])$,. $S$ is the regularized modeling operator $(S[m],\epsilon I)^T$, $d$ is replaced by the $(d,0) \in D \times U$,  $W$ is the weight operator on $U$ defined in \ref{eqn:defmnorm}.
+
+As noted before [but it wasn't - fix!], stationary points of $\tJz$
+are $\lambda(w_*)$-close to stationary points of the travel time
+mean-square error, in the single-arrival case. The result of this
+section implies that stationary points of $\tJa$ are close to those of
+$\tJz$. Therefore, at least for small $\alpha$, minimization of $\tJa$
+produces acoustic models that closely match the traveltimes predicted
+in single-arrival data.
+
+
 
 \section{Preliminaries}
 
@@ -350,7 +466,7 @@ equation \ref{eqn:basederiv} to obtain
   DF[m]^T\{ K[u_{\alpha,\sigma}[m]]^T (S[m]u_{\alpha,\sigma}[m]-d)
 \]
 \begin{equation}
-  \label{eqn:deriv}
+  \label{eqn:tildejgrad}
   + \alpha^2 (
   K[v_{0,\sigma}[m, u_{\alpha,\sigma}[m]]]^T(S[m]u_{0,\sigma}[m]-d)
 + K[u_{0,\sigma}[m]]^T S[m]v_{0,\sigma}[m,u_{\alpha,\sigma}[m]]) \}.
@@ -361,10 +477,10 @@ equation \ref{eqn:basederiv} to obtain
 \subsection{Multiple Traces}
 The general case follows immediately from the single trace case, since
 every operator ($S[m]$, $K[...]$, $W$, $R$) ,appearing in the right-hand side of expression
-\ref{eqn:deriv} is block-diagonal (trace-by-trace), with the exception
+\ref{eqn:tildejgrad} is block-diagonal (trace-by-trace), with the exception
 of $DF[m]^T$. This latter is a reduction operation, i.e. a block-row
 operation, so its expression is also the same. That is, equation
-\ref{eqn:deriv} also correctly expresses the gradient in the
+\ref{eqn:tildejgrad} also correctly expresses the gradient in the
 multi-trace case.
 
 The gradient is unlikely to be needed without the value
@@ -495,9 +611,11 @@ in which
 \]
 The definitions \ref{eqn:defv0} and \ref{eqn:defv1} imply that
 $v_{\sigma}[m]$ is the solution of the linear system
+\[
+    (S[m]^TS[m]+ \sigma^2I) v_{\sigma}[m] =
+\]
 \begin{equation}
   \label{eqn:defvsigma}
-  (S[m]^TS[m]+ \sigma^2I) v_{\sigma}[m] =
   (W(R(W(Ru_{0,\sigma}[m],-2,1)u_{0,\sigma}),2,0) - W(Ru_{0,\sigma}[m],-2,2))
   u_{0,\sigma}[m].
 \end{equation}
@@ -635,7 +753,8 @@ in which $u_{\alpha,\sigma}$ is the solution of the normal equation
   \label{eqn:normalunp}
   (S[m]^TS[m] + \alpha^2T^TT + \sigma^2I)u_{\alpha,\sigma}[m] = S[m]^Td
 \end{equation}
-The only difference between AWI and MSWI lies in the defintiion of the
+The only difference between AWI and MSWI lies in the absence of
+scaling by the reciprocal of $Ru_{0,\sigma}[m]$ in the definition of the MSWI
 penalty operator.
 
 MSWI was introduced in Hua Song's thesis
@@ -655,12 +774,18 @@ of the reduced MSWI objective $\tilde{J}^{\rm unp}_{\alpha,\sigma}$, as
 given by the VPM gradient formula:
 \[
   \nabla \tilde{J}^{\rm unp}_{\alpha,\sigma}[m] =
-  D(S[m]u)^T_{u=u_{\alpha,\sigma}[m]}(S[m]u_{\alpha,\sigma}[m]-d)
+  D_m(S[m]u)^T_{u=u_{\alpha,\sigma}[m]}(S[m]u_{\alpha,\sigma}[m]-d)
 \]
 \begin{equation}
   \label{eqn:tildejunpgrad}
-  = DF[m]^T(K[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d).
+  = DF[m]^TK[u_{\alpha,\sigma}[m]]^T(S[m]u_{\alpha,\sigma}[m]-d).
 \end{equation}
+
+Note that the right-hand side of equation \ref{eqn:tildejunpgrad} is
+exactly the first term in the right-hand side of equation
+\ref{eqn:tildejgrad}. That is, the gradient of the AWI objective
+function is the gradient of the MSWI objective function, modified by
+terms that account for the $m$-dependence of the AWI penalty operator $T_{\sigma}[m]$.
 
 \append{Remarks on VCL Implementation}
 \noindent {\bf 1.} $F$ is the mapping implemented (in finite difference approximation) in {\tt asg.fsbop}, with the additional constraint that the buoyancy field is fixed so that the computational version of ${\cal M}$ consists of (gridded) bulk modulus fields.
@@ -690,7 +815,40 @@ convenient to use to express the action of $R$ and $W$ in AWI penalty operator,
 gradient, and so on.
 
 \noindent {\bf 5.} The implementation {\tt vcalg.conjgrad} of the Conjugate Gradient algorithm for the normal equations optionally returns the residual vector (parameter {\tt e}). The obvious way to use this is to create a 3-component product space for the output of the block-column operator $(S[m],\alpha T[m], \sigma I)^T$, and set the right-hand side vector (parameter {\tt b})
-to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
+to $(d,0,0)^T$. Then on return one-half the norm-squared of {\tt e} is
+precisely the (approximate) value of $\tilde{J}_{\alpha,\sigma}[m]$.
+
+\append{$\alpha \rightarrow 0$ scaled limit of penalty function}
+Define
+\begin{equation}
+  \label{eqn:eq0}
+  \tJa = \min_u J_{\alpha}(u) = J_{\alpha}(\ua)
+\end{equation}
+Since $S$ is positive definite, the minimum is well-defined for any $\alpha \ge 0$, and the minimizer $\ua \in U$ satisfies the normal equation.
+
+The claim to be established is that
+\begin{equation}
+  \label{eqn:eq4}
+  \lim_{\alpha \rightarrow 0} \frac{1}{\alpha^2}  (\tJa-\tJz).= \frac{1}{2}\|A\uz\|_m^2
+\end{equation}
+
+To see this, use the normal equation to write
+\[
+  \ua = (S^TS + \alpha^2 A^TA)^{-1}S^Td = (S^TS + \alpha^2 A^TA)^{-1}S^TS \uz
+\]
+\begin{equation}
+  \label{eqn:eq2}
+  = \uz - \alpha^2 (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz = \uz-\alpha^2 \va
+\end{equation}
+Note that $\va = (S^TS + \alpha^2 A^TA)^{-1}A^TA\uz$ is uniformly bounded in $\alpha \ge 0$.
+
+Stuff the RHS of equation \ref{eqn:eq2} into the definition \ref{eqn:eq1} to obtain
+\begin{equation}
+  \label{eqn:eq3}
+  \tJa = \frac{1}{2}(\|S\uz-d\|_d^2 - 2 \alpha^2\langle S\uz-d, S\va\rangle_d + \alpha^2\|A\uz\|_m^2 + O(\alpha^4))
+\end{equation}
+The second term on the RHS of equation \ref{eqn:eq3} vanishes thanks to the normal equation, and the first term is precisely $\tJz$. The conclusion \ref{eqn:eq4} follows.
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
