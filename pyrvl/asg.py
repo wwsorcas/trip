@@ -356,8 +356,7 @@ class fsbop(vcl.Function):
               ' nl2=' + str(self.nl2) + \
               ' nr2=' + str(self.nr2) + \
               ' pmlampl=' + str(self.pmlampl) + \
-              ' printact=' + str(self.printact) + \
-              ' partask=' + str(self.partask)
+              ' printact=' + str(self.printact)
 
     def getDomain(self):
         return self.dom
@@ -381,13 +380,33 @@ class fsbop(vcl.Function):
             
             #os.system('ls /var/tmp')
             TRIP = os.getenv('TRIP')
-            cmd = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not isinstance(TRIP, str):
+                raise Exception('TRIP not defined in environment')
+            if not os.path.exists(TRIP):
+                raise Exception('TRIP not defined as legal path')
+            SIM = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not os.path.exists(SIM):
+                raise Exception(SIM + ' not found')
+            if self.partask > 1:
+                MPIROOT = os.getenv('MPIROOT')
+                if not isinstance(MPIROOT, str):
+                    raise Exception('MPIROOT not defined in environment')
+                if not os.path.exists(MPIROOT):
+                    raise Exception('MPIROOT not defined as legal path')
+                MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
+                if not os.path.exists(MPIRUN):
+                    raise Exception(MPIRUN + ' not found')
+                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+            else:
+                cmd = SIM
             args = ' bulkmod=' + x.data + \
                    ' buoyancy=' + self.buoyancy + \
                    ' source_p=' + self.source_p + \
                    ' data_p=' + y.data + \
-                   ' deriv=0 adjoint=0' + self.therest
-                   
+                   ' deriv=0 adjoint=0' + self.therest + \
+                   ' partask=' + str(self.partask)
+
+            print(cmd + args)
             ret = os.system(cmd + args)
             if ret != 0:
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
@@ -400,7 +419,7 @@ class fsbop(vcl.Function):
         try:
             return fsbderiv(self.dom,self.rng,x,self.buoyancy,self.source_p,
                                 self.cmin, self.cmax, self.dmin, self.dmax,
-                                self.therest,self.boundstest)
+                                self.therest,self.boundstest, self.partask)
         except Exception as ex:
             print(ex)
             raise Exception('called from asg.fsbop.raw_deriv')
@@ -416,7 +435,7 @@ class fsbderiv(vcl.LinearOperator):
 
     def __init__(self,dom,rng,x,buoyancy,source_p,
                      cmin,cmax,dmin,dmax,
-                     therest,boundstest=True):
+                     therest, boundstest=True, partask=0):
         try:
             if not isinstance(dom, rsfvc.Space):
                 raise Exception('Error: input domain not rsf space')
@@ -441,7 +460,8 @@ class fsbderiv(vcl.LinearOperator):
             self.boundstest = boundstest
             self.boundstested = False
             self.therest = therest
-
+            self.partask = partask
+            
     def getDomain(self):
         return self.dom
 
@@ -450,8 +470,28 @@ class fsbderiv(vcl.LinearOperator):
 
     def applyFwd(self,dx,dy):
         try:
+            
             TRIP = os.getenv('TRIP')
-            cmd = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not isinstance(TRIP, str):
+                raise Exception('TRIP not defined in environment')
+            if not os.path.exists(TRIP):
+                raise Exception('TRIP not defined as legal path')
+            SIM = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not os.path.exists(SIM):
+                raise Exception(SIM + ' not found')
+            if self.partask > 1:
+                MPIROOT = os.getenv('MPIROOT')
+                if not isinstance(MPIROOT, str):
+                    raise Exception('MPIROOT not defined in environment')
+                if not os.path.exists(MPIROOT):
+                    raise Exception('MPIROOT not defined as legal path')
+                MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
+                if not os.path.exists(MPIRUN):
+                    raise Exception(MPIRUN + ' not found')
+                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+            else:
+                cmd = SIM
+                
             bsp = rsfvc.Space(self.buoyancy)
             dbuoyancy = vcl.Vector(bsp)
             dbuoyancy.scale(0.0)
@@ -476,7 +516,9 @@ class fsbderiv(vcl.LinearOperator):
               ' buoyancy_d1=' + dbuoyancy.data + \
               ' source_p=' + self.source_p + \
               ' data_p=' + dy.data + \
-              ' deriv=1 adjoint=0' + self.therest
+              ' deriv=1 adjoint=0' + self.therest + \
+              ' partask=' + str(self.partask)
+
             ret = os.system(cmd + args)
             if ret != 0:
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
@@ -487,7 +529,26 @@ class fsbderiv(vcl.LinearOperator):
     def applyAdj(self,dx,dy):
         try:
             TRIP = os.getenv('TRIP')
-            cmd = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not isinstance(TRIP, str):
+                raise Exception('TRIP not defined in environment')
+            if not os.path.exists(TRIP):
+                raise Exception('TRIP not defined as legal path')
+            SIM = os.path.join(TRIP,'iwave/asg/main/sim.x')
+            if not os.path.exists(SIM):
+                raise Exception(SIM + ' not found')
+            if self.partask > 1:
+                MPIROOT = os.getenv('MPIROOT')
+                if not isinstance(MPIROOT, str):
+                    raise Exception('MPIROOT not defined in environment')
+                if not os.path.exists(MPIROOT):
+                    raise Exception('MPIROOT not defined as legal path')
+                MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
+                if not os.path.exists(MPIRUN):
+                    raise Exception(MPIRUN + ' not found')
+                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+            else:
+                cmd = SIM
+                
             bsp = rsfvc.Space(self.buoyancy)
             dbuoyancy = vcl.Vector(bsp)
 
@@ -511,7 +572,9 @@ class fsbderiv(vcl.LinearOperator):
               ' buoyancy_b1=' + dbuoyancy.data + \
               ' source_p=' + self.source_p + \
               ' data_p=' + dx.data + \
-              ' deriv=1 adjoint=1' + self.therest
+              ' deriv=1 adjoint=1' + self.therest + \
+              ' partask=' + str(self.partask)
+
             ret = os.system(cmd + args)
             if ret != 0:
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
