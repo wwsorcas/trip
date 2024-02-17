@@ -396,7 +396,7 @@ class fsbop(vcl.Function):
                 MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
                 if not os.path.exists(MPIRUN):
                     raise Exception(MPIRUN + ' not found')
-                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+                cmd = MPIRUN + ' -np ' + str(self.partask) + ' ' + SIM
             else:
                 cmd = SIM
             args = ' bulkmod=' + x.data + \
@@ -488,7 +488,7 @@ class fsbderiv(vcl.LinearOperator):
                 MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
                 if not os.path.exists(MPIRUN):
                     raise Exception(MPIRUN + ' not found')
-                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+                cmd = MPIRUN + ' -np ' + str(self.partask) + ' ' + SIM
             else:
                 cmd = SIM
                 
@@ -545,7 +545,7 @@ class fsbderiv(vcl.LinearOperator):
                 MPIRUN = os.path.join(MPIROOT,'bin/mpirun')
                 if not os.path.exists(MPIRUN):
                     raise Exception(MPIRUN + ' not found')
-                cmd = MPIRUN + ' -np=' + str(self.partask) + ' ' + SIM
+                cmd = MPIRUN + ' -np ' + str(self.partask) + ' ' + SIM
             else:
                 cmd = SIM
                 
