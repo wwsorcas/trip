@@ -1,0 +1,95 @@
+
+Line Search Optimization
+
+initialize jet
+compute initial descent direction
+compute initial ascent rate
+sanity check for sufficient ascent
+compute initial step
+initial value = 1.0985e-03
+initial step  = 1.2118e+07
+initial ascent rate = 1.1331e-11
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 1.2118e+07 val = 9.7147e-04
+        actred = 1.2706e-04 predred = 1.3732e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 2.1813e+07 val = 8.8217e-04
+        actred = 2.1637e-04 predred = 2.4717e-04
+        in G-A range
+
+accept new jet and step
+value = 8.8217e-04 step = 2.1813e+07
+update search direction
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 2.1813e+07 val = 7.5427e-04
+        actred = 1.2789e-04 predred = 1.3516e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 3.9263e+07 val = 6.6837e-04
+        actred = 2.1380e-04 predred = 2.4328e-04
+        in G-A range
+
+accept new jet and step
+value = 6.6837e-04 step = 3.9263e+07
+update search direction
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 3.9263e+07 val = 5.3845e-04
+        actred = 1.2992e-04 predred = 1.4343e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 7.0674e+07 val = 4.5161e-04
+        actred = 2.1676e-04 predred = 2.5818e-04
+        in G-A range
+
+accept new jet and step
+value = 4.5161e-04 step = 7.0674e+07
+update search direction
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 7.0674e+07 val = 3.3419e-04
+        actred = 1.1742e-04 predred = 1.3186e-04
+        in G-A range
+
+accept new jet and step
+value = 3.3419e-04 step = 7.0674e+07
+update search direction
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 7.0674e+07 val = 2.6014e-04
+        actred = 7.4044e-05 predred = 8.3695e-05
+        in G-A range
+
+accept new jet and step
+value = 2.6014e-04 step = 7.0674e+07
+update search direction
+
+achieved prescribed ascent rate reduction:
+final value = 2.6014e-04
+final step  = 7.0674e+07
+finial ascent rate = 9.5406e-13
+exit lsopt

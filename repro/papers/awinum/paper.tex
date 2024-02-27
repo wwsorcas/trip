@@ -1,0 +1,230 @@
+\title{Matched Source Waveform Inversion for Transmitted Waves}
+\author{Huiyi Chen, Susan E. Minkoff, and William W. Symes}
+
+\lefthead{Symes}
+
+\righthead{MSWI}
+
+\maketitle
+\parskip 12pt
+
+\begin{abstract}
+Matched Source Waveform Inversion applied to transmission data
+produces an estimate of refractive index similar to the result of
+travel time inversion, but without explicit identification of travel
+times. This paper reviews the theoretical justification of this result
+and its limitations, and exhibits a numerical illustration. 
+\end{abstract}
+\setlength{\parindent}{0cm}
+
+\section{Introduction}
+Matched Source Waveform Inversion (MSWI) is a variant of Full Waveform
+Inversion (FWI) \cite[]{VirieuxOperto:09}, that sometimes overcomes
+one of FWI's impediments, namely its tendency to stagnate at
+suboptimal model estimates.
+
+(...)
+,
+demonstrably far from global optima in controlled settings and often
+uninformative of material structure in field use. It is possible that
+such local descent algorithms are trapped in regions around local,
+\section{Summary}
+The version of MSWI discussed here uses acoustic wave propagation with
+isotropic point sources and receivers.
+The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$, ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$ depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf x})$ (reciprocal of the density $\rho({\bf x})$), and wavelet $w(t;{\bf x}_s)$ through the acoustic system
+\begin{eqnarray}
+  \label{eqn:awe}
+ \frac{\partial p}{\partial t} & = &- \kappa \nabla \cdot {\bf v} +
+w(t;{\bf x}_s) \delta({\bf x}-{\bf x}_s); \nonumber \\
+\frac{\partial {\bf v}}{\partial t} & = & - \beta \nabla p; \\ 
+p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
+\end{eqnarray}
+The model vectors $m=(\kappa,\rho)$ make up the domain of the forward
+map or {\em modeling operator} is $F[m]w = \{p({\bf x}_r,t;{\bf
+  x}_s)\}$, for specified source and receiver positions ${\bf x}_s, {\bf x}_r$ and
+recording interval $[0,t_d]$. 
+
+In this context, FWI means: given source wavelet
+$w(t;\bx_s)$ and data traces $d(\bx_r,\cdot;\bx_s)$, find a model $m$
+so that $F[m]w \approx d$. The
+simplest version of FWI concretizes this task by asking for a model
+$m$ minimizing the mean square error
+\begin{equation}
+  \label{eqn:fwi}
+  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[m]w-d\|^2.
+\end{equation}
+Note that $w$ is assumed known and treated as a parameter in this
+statement of the FWI task. In practice, it is not known (nor are the
+sources and receviers necessarily isotropic), and should be estimated
+along with the model $m$.
+
+The approach to local optimization taken here (and in most work on FWI
+and related topics) is based on the gradient of the objective defined
+in equiation \ref{eqn:fwi}:
+\begin{equation}
+  \label{eqn:fwigrad}
+  g = \nabla  J_{\rm FWI}[m;d] = DF[m]^T(F[m]w-d).
+\end{equation}
+In this formula, $DF[m]$ is the derivative of $F$ at $m$. 
+This is the Euclidean (or $L^2$) gradient, that is, the vector $g$ for
+which the Euclidean inner product
+\begin{equation}
+  \label{eqn:eucip}
+  \langle g, \delta m\rangle = g^T\delta m
+\end{equation}
+with any other vector $\delta m$ gives the
+rate of change in the direction of that vector of $J_{\rm FWI}$ at m.
+
+For optimization within a set of slowly varying models (on the
+wavelength scale),  it is appropriate to penalize oscillation of the
+search vector. A convenient way to accompish this goal is the use of a
+{\em weighted inner product} to define the gradient, rather than the
+Euclidean inner product. A weight operator $W$ should be symmetric and
+positive definite: then
+\begin{equation}
+  \label{eqn:wip}
+  \langle g, \delta m\rangle_W = g^TW\delta m
+\end{equation}
+defines an alternative inner product. Comparing the definitions
+\ref{eqn:fwigrad}, \ref{eqn:eucip}, and \ref{eqn:wip}, clearly the
+vector $g_W$ for which $\langle g_W, \delta m \rangle_W$ gives the
+rate of change of $J_{\rm FWI}$ at $m$ in the direction $\delta m$ is
+\begin{equation}
+  \label{eqn:fwiwgrad}
+  g_W = W^{-1}\nabla  J_{\rm FWI}[m;d] =W^{-1} DF[m]^T(F[m]w-d).
+\end{equation}
+
+If $W$ is chosen to greatly
+amplify oscillatory components of the vector to which it is applied,
+then those components of $g_W$ must be suppressed relative to the
+corresponding components of $g$, hence $g_W$ represents a
+non-oscillatory search direction. Note that only the inverse operator
+$W^{-1}$ appears in the formula \ref{eqn:fwiwgrad}.
+
+As mentioned earlier, application of local optimization methods
+directly to $J_{\rm FWI}$ tends to produce unsatisfactory model
+estimates. MSWI modifies the measure of distance between predicted and
+observed data by inserting an adaptive filter field $u$, consisting of
+one filter per trace. Since only finite time intervals of $u$ and $d$ are available in
+practice, introduce the {\em truncated filter operator} $K[u]$. This
+operator acts by extending its filter $u$ (given on a symmetric
+interval $[-t_u,t_u]$ for each source-receiver pair) and the function to which
+it is applied (given on the data interval $[0,t_d]$ for each
+source-receiver pair) to be zero outside their domains of definition, convolving the
+resulting functions on $\bR$, and finally restricting or truncating
+the result to the time interval of the input function, that is,
+$[0,t_d]$. This operator is applied to the predicted data $F[m]w$ to
+produce the filtered predicted data $K[u]F[m]w$.
+
+It is possible to make the error between filtered predicted data and
+observed data as small as one likes by choosing an appropriate filter
+field $u$, so this error by itself is useless for estimating the
+model. If $u(\bx_s,\bx_r,t)=\delta(t)$, on the other hand the filtered
+predicted data is identical to the predicted data.
+Therefore, some penalty for divergence of the filter $u$ from
+$\delta(t)$ needs to supplement the filtered prediction error.. The works referenced in the Introduction mostly use the
+mean-square of the filter scaled by $t$, and add it to the mean-square
+of the filtered prediction error. This sum is the MSWI objective function:
+\begin{equation}
+  \label{eqn:filtpen}
+  J_{\alpha,\sigma}[m,u;d]=\frac{1}{2}(\|K[u]F[m]w-d\|^2
+  +\alpha^2\|tu\|^2 + \sigma^2\|u\|^2).
+\end{equation}
+
+
+\section{A numerical illustration}
+
+\inputdir{project}
+
+This section presents the inversion of acoustic data with dimensions
+typical of crustal seismic exploration. The target bulk modulus field ($\kappa$)
+is depicted in Figure \ref{fig:m}, and contains an acoustic ``lens''
+positioned in the center between 1000 m and 3000 m depth
+(``$z$''). The background level outside the lens is 4 GPa; at the
+center it is 2 GPa. The
+buoyancy ($\beta$)is spatially homogeneous at 1 cm$^3/g$, so the background
+wave speed is 2000 m/s.
+
+\plot{m}{width=\textwidth}{Lens model.}
+
+This field is sampled on a 20 $\times$ 20 m grid. Acoustic wave
+propagation is simulated via a staggered grid finite difference method
+\cite[]{vir86,lev88,Cohen:01}. The time
+step is chosen to be safely stable, given the parameter fields,
+difference formulae, and
+spatial sampling. 
+
+Receivers are spaced on the line at depth 1000 m, from 2000 m to 6000
+m horizontal coordinate (``$x$''), spaced 20 m apart. Eleven source
+positions lie on the line $z=3000$ m, spaced 200 m apart, from
+$x=3000$ m to $x = 5000$ m. The source wavelet $w$ (the same for every
+source ) is a $[1.0, 2.5, 7.5, 12.5]$ Hz trapezoidal bandpass filter,
+with a median frequency of 5.875 Hz corresponding to a median wavelength of
+$\approx$ 340 m, and shortest wavelength of 160 m. It is centered at
+$t=1$ s.
+
+The discrete pressure field is
+sampled at the externally specified time grid and spatial locations
+via piecewise linear interpolation in space and cubic spline
+interpolation in time. The isotropic point source is added
+into the acoustic fields at each time step via the adjoints of these
+interpolation operations.
+
+Simulated data from this configuration appears as Figure \ref{fig:d11}.
+
+The initial model $m_0$ for inversion is homogeneous, with $\kappa = $ 4 GPa,
+$\beta = $ 1 cm$^3$/g. The corresponding data is depicted in Figure \ref{fig:sim0}.
+These plots show the time shift between the homogeneous model data and
+the target data, for the central source positions.
+
+\multiplot{2}{d11,sim0}{width=0.45\textwidth}{a: Data for target model $m$
+  (Figure \ref{fig:m}). b: Data for homogeneous model $m_0$.}
+
+We apply a version of weighted steepest descent optimization to the
+minimization of $J_{\rm FWI}$. The inverse weight operator ($W^{-1}$
+in formula \ref{eqn:fwiwgrad}) is a
+10-point moving average in both spatial directions, repeated once. As
+noted above, the weight operator itself is not required. The weighted
+gradient is computed via formula \ref{eqn:fwigrad}. The adjoint
+derivative $DF[m]^T$ is computed via the {\em adjoint state method}
+\cite[]{Chavent:74,GauTarVir:86}, with time reversal of the acoustic fields
+implemented via optimal checkpointing
+\cite[]{Griewank:92,Griewank:book,Symes:06a-pub}. The negative of the weighted
+gradient ($g_W$, formula \ref{eqn:fwiwgrad}) is the search direction,
+and the optimal step in this direction is approximated by a simple
+backtracking line search algorithm \cite[]{NocedalWright}.
+
+The value of $J_{\rm FWI}[m_0,d] \approx 3.04$, and the rate of
+increase in the weighted gradient direction at $m_0$ is 1.74 $\times
+10^{-6}$. Note that the rate of increase is the same as the weighted
+gradient norm. After 10 steepest descent steps, the objective value has
+decreased by about 30\%, to 1.9, and the weighted gradient norm by
+more than an order of magnitude, to $\approx 9.6 \times 10^{-8}$. The
+final model appears in Figure \ref{fig:mestfwi0}, and the
+corresponding data in Figure \ref{fig:resimfwi0}.
+
+%\multiplot{2}{mestfwi0,resimfwi0}{width=0.45\textwidth}{a: Bulk
+%  modulus produced by 10 steepest descent steps to minimize the FWI
+%  objective $J_{\rm FWI}[\cdot;d]$ with data $d$ depicted in Figure
+%  \ref{fig:sim11}, starting with homogeneous model. b: Data simulated
+%  from FWI inversion result.}
+
+\plot{mestfwi0}{width=\textwidth}{a: Bulk modulus produced by 10
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:d11}.}
+
+\multiplot{2}{resimfwi0,residfwi0}{width=0.45\textwidth}{a: Data
+  corresponding to FWI inversion result shown in Figure
+  \ref{fig:mestfwi0}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:resimfwi0} and target data
+  \ref{fig:d11}. Note the failure to match the later signal in the
+  central part of the display.}
+
+While the reduction in the (weighted) gradient norm indicates progress
+towards a stationary point, it is not possible to claim that the final
+estimate is in the vicinity of a local minimizer. The fit to data
+obtained is not at all satisfactory. More discussion of this result
+will be found later in the paper.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
