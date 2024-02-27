@@ -38,7 +38,6 @@ def asgsim(bulkmod, data_p, buoyancy, source_p, order=2, sampord=1, nsnaps=20,\
 
 if __name__ == '__main__':
     args = ", ".join(sys.argv[1:])
-    print(args)
     cmd = 'asgsim(' + args + ')'
     exec(cmd)
 
