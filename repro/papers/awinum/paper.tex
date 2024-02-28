@@ -21,14 +21,75 @@ and its limitations, and exhibits a numerical illustration.
 Matched Source Waveform Inversion (MSWI) is a variant of Full Waveform
 Inversion (FWI) \cite[]{VirieuxOperto:09}, that sometimes overcomes
 one of FWI's impediments, namely its tendency to stagnate at
-suboptimal model estimates.
+suboptimal model estimates (``cycle-skip''), demonstrably far from global optima in
+controlled settings and often uninformative of material structure in
+field use. It is possible that such local descent algorithms are
+trapped in regions around local minima, though such trapping, or even
+the existance of local, non-global minima, are seldom established with
+any rigor. MSWI
+loosens the bond between predicted and observed data by interposing a
+filter, adapted to map one to the other trace-by-trace, and penalizes
+deviation of the filter from the Dirac delta. This soft penalty
+effectively relaxes the FWI data-fitting problem and permits local
+optimization methods to approximate data kinematics.
 
-(...)
-,
-demonstrably far from global optima in controlled settings and often
-uninformative of material structure in field use. It is possible that
-such local descent algorithms are trapped in regions around local,
-\section{Summary}
+The aim of this paper is to review the theoretical basis of MSWI,
+describe a practical computational framework for MSWI, and use it to
+solve a synthetic acoustic inversion problem for which FWI fails. In
+contrast, MSWI starting at the same initial estimate delivers a
+improved velocity from which FWI succeeds in approaching the global
+minimizer. The example is representative of a case (single arrival or
+simple wavefront transmitted wave data) in which the MSWI objective
+function is demonstrably close to mean square travel time error. Since
+travel time inversion is generally not subject to cycle-skipping,
+successful inversion is expected, and that is what we observe.
+
+MSWI in the form described here was introduced by
+\cite{HuangSymes2015SEG,HuangSymes:Geo17}. It is mathematically
+equivalent to an {\em extended} formulation of the inverse problem, in
+which acoustic point sources are allowed to depend on the receiving
+sensors - a non-physical expansion of the simulation domain. A number
+of other variants of FWI have been based on essentially the same
+extension of acoustic modeling
+\cite[]{Song:94c,Symes:94c,Plessix:00,LuoSava:11,LiAlkhalifah:21}. In
+particular it is the basis of Adaptive Waveform Inversion (AWI) \cite[]{Warner:16,
+  GuaschWarnerRavaut:GEO19,Warneretal:SEG21, Guaschetal:NPJDM20}. MSWI
+is closely related to AWI, but not identical: AWI includes a
+normalization of the adaptive filter, which makes the AWI objective
+function an even closer approximation to travel time mean square error
+than is MSWI, at least for transmitted wave data with a single
+arriving wavefront \cite[]{Symes:24a}.
+
+Transmission data with a single arrival is not just a case in which
+MSWI and AWI are known to closely approximate travel time inversion:
+it is the only case in which this link occurs. In particular, the link
+is broken for transmission data exhibiting multiple arrivals: in the
+presence of complex wavefronts, methods based on the source-receiver
+extension are no less likely than FWI to cycle-skip
+\cite[]{Symes:94c,HuangSymes:Geo17,Symes:24a}. However, the
+source-receiver extension is not the only possible route to FWI
+modification by artificially expanding the definition of energy
+source. \cite{HuangNammourSymesDollizal:SEG19} overview modifications
+of FWI based on various source extensions; some more recent advances
+are described by
+\cite{MetivierBrossier:SEG20,PladysBrossierLiMetivier:GEO21,LiAlkhalifah:21,Yongetal:GJI23,Opertoetal:GEO23}.
+Numerical examples suggest that some of these extensions may avoid
+cycle-skipping for transmitted wave data with complex wavefronts.
+
+The next section describes versions of FWI and MSWI based on
+acoustic wave propagation. The theoretical connection between MSWI and
+travel time inversion is reviewed. The computations required to apply local
+optimization to the objective functions of these inversion methods are
+detailed, as is the variable projection reduction of MSWI and the use
+of weighted norms in the domain of the simulation operator (wave
+velocity or bulk modulus fields, in the setting developed here). The
+third section presents an example, along with a detailed description
+of the numerical methods for simulation and optimization methods used
+in treating this example. The final section discusses some of the many
+unresolved questions around MSWI and similar approaches to inverse
+problems in wave propagation.
+
+\section{Background}
 The version of MSWI discussed here uses acoustic wave propagation with
 isotropic point sources and receivers.
 The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$, ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$ depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf x})$ (reciprocal of the density $\rho({\bf x})$), and wavelet $w(t;{\bf x}_s)$ through the acoustic system
@@ -42,7 +103,10 @@ p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 The model vectors $m=(\kappa,\rho)$ make up the domain of the forward
 map or {\em modeling operator} is $F[m]w = \{p({\bf x}_r,t;{\bf
   x}_s)\}$, for specified source and receiver positions ${\bf x}_s, {\bf x}_r$ and
-recording interval $[0,t_d]$. 
+recording interval $[0,t_d]$.
+
+In the discussion that follows, the buoyancy $\beta$ will be regarded
+as a fixed parameter. Thus $m$ is effectively the bulk modulus field $\kappa$.
 
 In this context, FWI means: given source wavelet
 $w(t;\bx_s)$ and data traces $d(\bx_r,\cdot;\bx_s)$, find a model $m$
@@ -63,9 +127,10 @@ and related topics) is based on the gradient of the objective defined
 in equiation \ref{eqn:fwi}:
 \begin{equation}
   \label{eqn:fwigrad}
-  g = \nabla  J_{\rm FWI}[m;d] = DF[m]^T(F[m]w-d).
+  g = \nabla  J_{\rm FWI}[m;d] = D_m(F[m]w)^T(F[m]w-d).
 \end{equation}
-In this formula, $DF[m]$ is the derivative of $F$ at $m$. 
+In this formula, $D_m(F[m]w)$ is the derivative of $F[m]w$ with
+respect to $m$. 
 This is the Euclidean (or $L^2$) gradient, that is, the vector $g$ for
 which the Euclidean inner product
 \begin{equation}
@@ -91,7 +156,7 @@ vector $g_W$ for which $\langle g_W, \delta m \rangle_W$ gives the
 rate of change of $J_{\rm FWI}$ at $m$ in the direction $\delta m$ is
 \begin{equation}
   \label{eqn:fwiwgrad}
-  g_W = W^{-1}\nabla  J_{\rm FWI}[m;d] =W^{-1} DF[m]^T(F[m]w-d).
+  g_W = W^{-1}\nabla  J_{\rm FWI}[m;d] =W^{-1} D_m(F[m]w)^T(F[m]w-d).
 \end{equation}
 
 If $W$ is chosen to greatly
@@ -116,6 +181,19 @@ the result to the time interval of the input function, that is,
 $[0,t_d]$. This operator is applied to the predicted data $F[m]w$ to
 produce the filtered predicted data $K[u]F[m]w$.
 
+Note that the filtered predicted data may be viewed as the predicted
+data for an {\em extended source}, with the source wavelet at location
+$\bx_s$ replaced by $u(\bx_s,\bx_r,\cdot) * w(\bx_s,\cdot)$. That is,
+the adaptive filter construction is equivalent to allowing the source
+to depend on receiver position as well as source position - one source
+wavelet for each source-receiver pair. This is an extension of
+standard modeling, in that the domain (bulk modulus buoyancy, wavelet)
+is larger than in the conventional formulation, and coincides with it
+under the special condition that the source wavelet is independent of
+the receiver location. This  {\em
+  source-receiver extension}\cite[]{HuangSymes2015SEG} is a key ingredient in a number of
+other papers on modifications of FWI, as mentioned in the Introduction.
+
 It is possible to make the error between filtered predicted data and
 observed data as small as one likes by choosing an appropriate filter
 field $u$, so this error by itself is useless for estimating the
@@ -130,7 +208,126 @@ of the filtered prediction error. This sum is the MSWI objective function:
   J_{\alpha,\sigma}[m,u;d]=\frac{1}{2}(\|K[u]F[m]w-d\|^2
   +\alpha^2\|tu\|^2 + \sigma^2\|u\|^2).
 \end{equation}
+As with all penalty methods, this definition involves a choice of
+weight ($\alpha$). A second weight ($\sigma$) scales the norm-squared
+of the filter, that is, a Tihonov regularization term, added for
+technical reasons explained by \cite{Warner:16,Symes:24a}. Choice of
+parameters is a critical step in the use of any penalty method. We
+offer some remarks about this choice in the Discussion section.
 
+The domain space (pairs of bulk modulus fields and adaptive filters)
+is very high-dimensional, compared with the domain space for FWI (bulk
+modulus fields alone, in the present context). It is possible to
+optimize $J_{\alpha,\sigma}[m,u;d]$ by alternating updates of $m$ and
+$u$  \cite[]{LiAlkhalifah:21}. However the {\em variable projection} \cite[]{GolubPereyra:73,GolubPereyra:03}
+reduction is generally much more efficient than the altrnating, or
+coordinate search, approach. In this instance, variable projection
+consists in minimizing $J_{\alpha,\sigma}[m,u;d]$ over $u$ (a
+quadratic optimization) to produce an optimal choice
+$u_{\alpha,\sigma}[m:d]$. The reduced objective is
+\begin{equation}
+  \label{eqn:redfiltpen}
+  \tilde{J}_{\alpha,\sigma}[m;d]=\frac{1}{2}(\|K[u_{\alpha,\sigma}[m;d]]F[m]w-d\|^2
+  +\alpha^2\|tu_{\alpha,\sigma}[m;d]\|^2 + \sigma^2\|u_{\alpha,\sigma}[m;d]\|^2).
+\end{equation}
+Note that like the FWI objective, $\tilde{J}_{\alpha,\sigma}[m;d]$
+depends only on $m$, with $d$ as a parameter.
+
+\cite{Symes:24a} explains the relation between the reduced MSWI
+objective and travel time inversion. This relation follows from the
+geometric asymptotics approximation to solutions of the point radiator
+problem \ref{eqn:awe} \cite[]{Friedlander:75}. Presuming that the
+coefficients $\kappa, \beta$ are smooth, there are smooth functions
+$\tau[m](\bx_s,\bx)$ (travel time) and $a[m](\bx_s,\bx)$ (geometric
+amplitude) depending on the model $m$, so that
+\begin{equation}
+  \label{eqn:pwa}
+  p(\bx,t;\bx_s) = a[m](\bx,\bx_s)w(t-\tau[m](\bx,\bx_s),\bx_s) + ...
+\end{equation}
+The elided terms are smoother than $w$, and become small with the
+dominant wavelength in $w$ (\cite{Symes:94a} explains the precise
+meaning of this condition). Thus we can write
+\[
+  F[m]w(\bx_r,t;\bx_s) \approx
+  a[m](\bx_r,\bx_s)w(t-\tau[m](\bx_r,\bx_s))
+\]
+Supposing that the data $d$ is noise-free,
+\[
+  d(\bx_r,t;\bx_s) = F[m^*]w(\bx_r,t;\bx_s) \approx
+  a[m^*](\bx_r,\bx_s)w(t-\tau[m^*](\bx_r,\bx_s))
+\]
+it follows that
+\begin{equation}
+  \label{eqn:tomo}
+  \lim_{\alpha \rightarrow 0}\frac{1}{\alpha^2} (\tilde{J}_{\alpha,\sigma}[m;d]
+  -\tilde{J}_{0,\sigma}) \approx \sum_{\bx_s,\bx_r} \frac{a[m^*]^2}{a[m]^2} (\tau[m^*]-\tau[m])^2\|g_{\frac{a[m^*]}{a[m]}\sigma}\|^2
+\end{equation}
+Here $g_{\sigma}$ is an approximate delta. Its Fourier transform of
+is
+\begin{equation}
+  \label{eqn:gsig}
+  \hat{g}_{\sigma} = \frac{a[m^*]^2 |\hat{w}|^2}{a[m^*]^2 |\hat{w}|^2
+    + \sigma^2}
+\end{equation}
+whence $g_{\sigma}(\bx_s,\bx_r,t) \rightarrow \delta(t)$ in
+the sense of distributions as $\sigma \rightarrow 0$.
+
+If $\alpha$ and $\sigma$ are sufficiently small, then
+$\tilde{J}_{\alpha,\sigma}$ is close to the right-hand side, which is bounded above and below by multiples of the the mean square travel time error between $m$ and
+$m^*$.  This is the relation mentioned in the introduction. 
+It does not
+show that the only stationary points are those of the mean square
+travel time error, even approximately. However if the amplitudes are
+relatively insensive to changes in model, as is true if the
+source-receiver distance is well away from developing multiple
+arrivals, then the difference of stationary points gets small as $m$
+approaches a stationary point of $\tilde{J}_{\alpha,\sigma}$. So we
+would expect minimization $\tilde{J}_{\alpha,\sigma}$ to produce a
+model that closely matches the travel times inherent in the data
+($\tau[m^*]$ in the notation used here).
+
+AWI adds one more feature, namely scaling by the trace norm of the
+filter. This normalization can be interpreted as a choice of weighted
+norm on the space of adaptive filters. It leads to a very similar
+relation to \ref{eqn:tomo} for the AWI penalty function, but without
+the amplitude factors: that is, the right-hand side of \ref{eqn:tomo}
+is {\em just} the mean-square traveltime error. See \cite{Symes:24a}
+for details.
+    
+The reduced adaptive filter $u_{\alpha,\sigma}[m;d]$ is the solution
+of the {\em normal equation}
+\begin{equation}
+  \label{eqn:normal}
+  (S[m]^TS[m] + \alpha^2 t^2 + \sigma^2 I)u = S[m]^Td,
+\end{equation}
+in which $S[m]u = K[u]F[m]w$. This positive definite symmetric linear
+system may be solved by various efficient numerical methods. Having
+computed $u_{\alpha,\sigma}[m;d]$ hence the value of 
+$\tilde{J}_{\alpha,\sigma}[m;d]$, its (Euclidean) gradient is given by
+\begin{equation}
+  \label{eqn:gradredfiltpen}
+  \nabla \tilde{J}_{\alpha,\sigma}[m;d] =
+  D_m(F[m]w)^TK[u_{\alpha,\sigma}[m;d]]^T(K[u_{\alpha,\sigma}[m;d]]F[m]w-d)
+\end{equation}
+Apart from the appearance of the truncated filter operator
+$K[u_{\alpha,\sigma}[m;d]]$, this is almost identical to the FWI
+gradient \ref{eqn:fwigrad}. In particular, the last step in the
+computation on the right hand side, the application of the adjoint
+$m$-derivative of F, is exactly the same.
+
+Use of a weighted norm in the model space goes exactly as before: with
+weight operator $W$, the weighted gradient is
+\begin{equation}
+  \label{eqn:wgradredfiltpen}
+  \nabla_W \tilde{J}_{\alpha,\sigma}[m;d] =
+  W^{-1}D_m(F[m]w)^TK[u_{\alpha,\sigma}[m;d]]^T(K[u_{\alpha,\sigma}[m;d]]F[m]w-d)
+\end{equation}
+
+The gradient (or weighted gradient), together with the value, are the
+inputs to first-order methods such as steepest descent and
+Limited-Memory Broyden-Fletcher-Goldfarb-Shanno
+iterations. Methods more closely related to Newton iteration require
+more involved computations (see for instance \cite{Kaufman:75}. 
 
 \section{A numerical illustration}
 
@@ -224,7 +421,88 @@ While the reduction in the (weighted) gradient norm indicates progress
 towards a stationary point, it is not possible to claim that the final
 estimate is in the vicinity of a local minimizer. The fit to data
 obtained is not at all satisfactory. More discussion of this result
-will be found later in the paper.
+will be found below.
+
+Now apply the same algorithm to the MSWI objective
+$J_{\alpha,\sigma}$. Of course, to do so requires a choice of the
+parameters $\alpha$ and $\sigma$. The purpose of the regularization
+parameter $\sigma > 0$ is
+simply to assure that the system \ref{eqn:normal} is positive
+definite, so it can be chosen quite small - whatever that means. The
+penalty parameter $\alpha > 0$ is the link between the filtered
+residual and the spread in time of the filter: the performance of the
+algorithm depends primarily on its choice. The next section will
+discuss rational approaches to this choice. For now, we use the values
+$\alpha=0.0001, \sigma=0.00001$ based on numerical exploration of the
+objective.
+
+The system \ref{eqn:normal} is far larger than is convenient to solve
+by any variant of Gaussian Elimination, so iterative methods are 
+necessary. We choose the Conjugate Gradient (CG.) method
+\cite[]{Dan:67,Steihaug:83,NocedalWright}, and stop the
+iteration by monitoring the reduction in length of the normal residual
+(the gradient of $J_{\alpha,\sigma}[m,u;d]$ with respect to $u$). The
+reduction threshhold $\rho$ is thus another necessary input parameter:
+we choose $\rho = 0.001$ (note that unlike $\alpha$ and $\sigma$,
+$\rho$ is dimensionless). We use the same inverse weight operator as
+in the FWI example, namely a 10 $\times$ 10 moving average, repeated
+once.
+
+The initial bulk modulus field is once again homogeneous at 4 GPa. The
+initial value of the reduced MSWI objective is $\approx 1.32 \times 10^{-2}$,
+and the length of the (weighted) gradient is $\approx 6.37 \times
+10^{-10}$. After 7 iterations, the normal residual reduction criterion
+is satisfied. The value has decreased to $\approx 9.2 \times 10^{-4}$,
+or a bit more than an order of magnitude reduction. The gradient
+length is $\approx 4.33 \times 10^{-12}$, a reduction of more than two
+orders of magnitude. The resulting bulk modulus is shown in Figure \ref{fig:mest11}.
+
+\plot{mest11}{width=\textwidth}{a: Bulk modulus produced by 7
+  steepest descent steps to minimize the reduced MSWI objective \ref{eqn:redfiltpen},
+  using the data shown in \ref{fig:d11}.}
+
+\multiplot{2}{sim11,resid11}{width=0.45\textwidth}{a: Data
+  corresponding to MSWI result shown in Figure
+  \ref{fig:mest11}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:sim11} and target data
+  \ref{fig:d11}. Note that the later signal in the central portion is
+  still shifted, but by much less than in Figure \ref{fig:residfwi0}.}
+
+Inspection of the residual plot \ref{fig:resid11} suggests that the
+data predicted from the MSWI result is in many places within a
+half-wavelength travel time shift of the data in Figure \ref{fig:d11}.
+A half-wavelength is the conventional threshhold for FWI initial fit
+error: below that it works, above that it doesn't. Thus it is tempting
+to attempt FWI from using the MSWI result as initial estimate.
+
+We applied 11 iterations of steepest descent to the FWI objective,
+with initial estimate of $m$ equal to the final estimate from the MSWI
+inversion just described (Figure \ref{fig:mest11}). The initial FWI
+objective value was $\approx 4.3$, and the weighted gradient norm was
+$\approx 2.15 \times 10^{-5}$.  After 11 steps of steepest descent,
+the prescribed reduction ($10^{-2}$) of the weighted gradient norm was achieved,
+and the objective value had decreased to $\approx 4.41 \times
+10^{-2}$. The resulting bulk modulus field is depicted in Figure
+\ref{fig:mestfwi}. The predicted data at this model, and the residual
+data, are shown in Figures \ref{fig:resimfwi} and \ref{fig:residfwi}
+respectively.
+
+The FWI iteration starting at the MSWI result has effectively achieved
+the global minimum of the FWI objective function: the data match is
+very close. This type of result could perhaps have been achieved by
+systematically increasing $\alpha$, as will be discussed in the next
+section. However, the current result has a remarkable corollary,
+provided that we are willing to assume that the intermediate values of
+the FWI objective between steepest descent iterates are monotonically
+decreasing. This condition could in principle be checked
+computationally. However, for the moment let us accept that it is
+so. Then we can conclude that the homogeneous model at which the first
+FWI inversion was started must lie in a basin of attraction of a
+non-global minimizer, since the value of the objective function at the
+homogeneous model is actually {\em smaller} than that at the result of
+MSWI inversion. However the descent sequence starting at that initial
+estimate arrives at essentially zero residual. No descent path from
+the homogeneous model can  
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
