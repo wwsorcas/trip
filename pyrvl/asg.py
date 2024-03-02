@@ -406,7 +406,7 @@ class fsbop(vcl.Function):
                    ' deriv=0 adjoint=0' + self.therest + \
                    ' partask=' + str(self.partask)
 
-            print(cmd + args)
+            # print(cmd + args)
             ret = os.system(cmd + args)
             if ret != 0:
                 raise Exception('Error: return ' + str(ret) + ' from sim.x')
