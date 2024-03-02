@@ -540,7 +540,28 @@ def trgn(x, b, F, imax, eps, kmax, rho, Delta, mured=0.5, muinc=1.8, \
 #    2 - (or more) print it, res at every it
 
 def bcgstep(x, A, k, p, r, gamma, Delta=None, verbose=0):
-#    os.system('echo top; ls /var/tmp')
+    '''
+    Iteration step, basic CG algorithm for SPD systemts.
+
+    Parameters:
+    x (vcl.Vector):           solution estimate to be updated
+    A (vcl.LinearOperator):   SPD operator
+    k (int):                  iteration number
+    p (vcl.Vector):           update direction
+    r (vcl.Vector):           residual on return (optional)
+    gamma (float):            residual norm squared
+    Delta (float):            optional trust radius constraint
+    verbose (int):            verbosity level
+                              0 - no print output
+                              1 - print number of its performed, residual norm
+                              2 - (or more) print it number, res at every it
+
+    Return: [x, k, p, r, gamma, cgend]
+    all updated parameters except
+    cgend (Boolean):          True if trust region transgressed, else False
+
+    '''
+
     try:
             
         # print('#2. $s = A^Tq$')
@@ -880,10 +901,13 @@ class LineSearch(ABC):
     dir (vcl.Vector):     search direction
     step (float):         initial step
     J (vcl.ScalarJet):    objective jet (class)
+    jetargs (dict):       kwargs for jet
+    verbose (int)         verbosity flag (silent = 0)
+    fout (iofile):        output unit, or none for stdout
 #    lsargs:               additional arguments (keyword)
     '''
 
-    def __init__(self, x, val, grad, dir, step, J, jetargs):
+    def __init__(self, x, val, grad, dir, step, J, jetargs, verbose, fout):
         self.x = x
         self.val = val
         self.grad = grad
@@ -891,8 +915,9 @@ class LineSearch(ABC):
         self.step = step
         self.J = J
         self.jetargs = jetargs
-#        self.lsargs = lsargs
-
+        self.verbose = verbose
+        self.fout = fout
+            
     # returns updated jet instance and step
 #    @abstractmethod
     def search(self):
@@ -903,7 +928,7 @@ class btls(LineSearch):
     '''
     Simple acktracking line search. 
 
-    Generic Parameters:
+    Base class parameters:
     x (vcl.Vector):       current solution estimate
     val (float):          current objective value
     grad (vcl.Vector):    current gradient
@@ -911,23 +936,23 @@ class btls(LineSearch):
     step (float):         initial step
     J (vcl.ScalarJet):    objective jet (class)
     jetargs (dict):       keyword args for jet constructor
+    lsverbose (int):      verbosity flag
+    fout (file):          output file - always appended!!!
 
-    
+    Parameters:
     lsmax (int):          max steps
-    mured (float):        (remaining args doc'd in lsopt)
-    muinc (float):
-    gammared (float):
-    gammainc (float):
-    lsverbose (int):
+    mured (float):        try shorter step if actred < mured*predred
+    muinc (float):        try longer step if actred > muinc*predred
+    gammared (float):     step reduction factor
+    gammainc (float):     step increase factor
 
     return from search():
     Jx (vcl.ScalarJet):   evaluated jet at final step, or None for failure
     step (float):         updated step
     '''
     
-    def __init__(self, x, val, grad, dir, step, J, jetargs=None,
-             lsmax=1, mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9,
-             lsverbose=0):
+    def __init__(self, x, val, grad, dir, step, J, jetargs=None, lsverbose=0, fout=None,
+             lsmax=1, mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9):
 
 #        self.x = x
 #        self.val = val
@@ -939,14 +964,15 @@ class btls(LineSearch):
 
 # note explicit invokation of superclass constructor with self pointer
 # quite different from C++!
-        LineSearch.__init__(self,x, val, grad, dir, step, J, jetargs)
+        if fout is None:
+            raise Exception('output file object not provided (fout)')
+        LineSearch.__init__(self,x, val, grad, dir, step, J, jetargs, lsverbose, fout)
 
         self.lsmax = lsmax
         self.mured = mured
         self.muinc = muinc
         self.gammared = gammared
         self.gammainc = gammainc
-        self.lsverbose = lsverbose
 
     def search(self):
         try:
@@ -954,37 +980,38 @@ class btls(LineSearch):
             takestep = 0
         
             while k < self.lsmax and takestep==0:
-                if self.lsverbose > 0:
-                    print('\n    Line Search Step ' + str(k))
-                    print('        update step, jet')
+                if self.verbose > 0:
+                    print('\n    Line Search Step ' + str(k), file=self.fout)
+                    print('        update step, jet', file=self.fout)
                 xtest = vcl.Vector(self.x.space)
                 xtest.copy(self.x)
                 xtest.linComb(-self.step,self.dir)
                 Jx = self.J(xtest, **self.jetargs)
                 vtest = Jx.value()
-                if self.lsverbose > 0:
-                    print('        step = %10.4e val = %10.4e' % (self.step, vtest))
+                if self.verbose > 0:
+                    print('        step = %10.4e val = %10.4e' % (self.step, vtest), file=self.fout)
                 # G-A test
                 actred = self.val-vtest
                 predred = self.step*self.dir.dot(self.grad)
-                print('        actred = %10.4e predred = %10.4e' % (actred,predred))
+                if self.verbose > 0:
+                    print('        actred = %10.4e predred = %10.4e' % (actred,predred), file=self.fout)
                 if self.gammainc*predred < actred and k < self.lsmax-1:
-                    if self.lsverbose > 0:
-                        print('        try longer step')
+                    if self.verbose > 0:
+                        print('        try longer step', file=self.fout)
                     takestep = 0
                     self.step *= self.muinc
                     k += 1
                 elif self.gammared*predred < actred:
-                    if self.lsverbose > 0:
-                        print('        in G-A range')
+                    if self.verbose > 0:
+                        print('        in G-A range', file=self.fout)
                     takestep = 1
                 elif k == self.lsmax-1:
-                    if self.lsverbose > 0:
-                        print('        last allowed step - save estimate')
+                    if self.verbose > 0:
+                        print('        last allowed step - save estimate', file=self.fout)
                     takestep = 1
                 else:
-                    if self.lsverbose > 0:
-                        print('        try shorter step')
+                    if self.verbose > 0:
+                        print('        try shorter step', file=self.fout)
                     takestep = 0
                     self.step *= self.mured
                     k += 1
@@ -998,9 +1025,11 @@ class btls(LineSearch):
             print(ex)
             raise Exception('called from vcalg.btls')
 
+import sys
+
 # lsargs - see above
-def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
-              lsargs=None, jetargs=None, ddargs=None, archargs=None ):
+def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descout=None,
+              lsverbose=0, lsargs=None, jetargs=None, ddargs=None, archargs=None ):
     '''
     Line seach optimization algorithm. Two principal components:
     - SD: SearchDir class: Update methodcomputes search direction from 
@@ -1014,7 +1043,8 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
     LS (LineSearch):    class: implements line search 
     descmax (int):      max number of descent steps
     desceps (float):    terminates if gradient falls below this proportion of initial
-    descverbose (int):  verbosity flag
+    descverbose (int):  verbosity flag (default = 0)
+    descout (string):   output file (default = None)
 
     keyword dictionaries:
     lsargs:             line search params
@@ -1034,14 +1064,23 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
         #
         initprop = 0.125
 
-        if descverbose != 0:
-            print('\nLine Search Optimization')
-            print('\ninitialize jet')
+        if descout is not None:
+            # check for legit
+            if not isinstance(descout, str):
+                raise Exception('descout arg not string')
+#            print('vcalg.lsopt: decout = ' + descout)
+            fout   = open(descout, 'w')
+        else:
+            fout   = sys.stdout
             
+        if descverbose != 0:
+            print('\nLine Search Optimization', file=fout)
+            print('\ninitialize jet', file=fout)
+
         Jx = J(x, **jetargs)
 
         if descverbose != 0:
-            print('compute initial descent direction')
+            print('compute initial descent direction', file=fout)
         if SD is None:
             raise Exception('Descent Direction generator not provided')
         SDinstance = SD(x.space, **ddargs)
@@ -1049,17 +1088,17 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
         gtot += 1
 
         if descverbose != 0:
-            print('compute initial ascent rate')
+            print('compute initial ascent rate', file=fout)
         dr = Jx.gradient().dot(ddir)
 
         if descverbose != 0:
-            print('sanity check for sufficient ascent')
+            print('sanity check for sufficient ascent', file=fout)
         if 1.0 + dr <= 1.0:
             raise Exception('ascent rate = ' + str(dr) + ' insufficient or negative')
 
         # initial step calculation
         # assumes target value = 0
-        print('compute initial step')
+        print('compute initial step', file=fout)
         step = initprop*Jx.value()/dr
         jtot += 1
         
@@ -1070,26 +1109,29 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
             Jx.archive(k,str(i),archargs[k])
         
         if descverbose !=0:
-            print('initial value = %10.4e'  % (Jx.value()))
-            print('initial step  = %10.4e' % (step))
-            print('initial ascent rate = %10.4e' % (dr))
+            print('initial value = %10.4e'  % (Jx.value()), file=fout)
+            print('initial step  = %10.4e' % (step), file=fout)
+            print('initial ascent rate = %10.4e' % (dr), file=fout)
+            fout.flush()
+            
         more = True
         drinit = dr
         while i < descmax and dr > desceps*drinit and more:
             if descverbose > 0:
-                print('\nIteration ' + str(i))
-            LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step, J, jetargs=jetargs, **lsargs)
+                print('\nIteration ' + str(i), file=fout)
+            LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step, J, jetargs=jetargs, lsverbose=lsverbose,
+                                fout=fout, **lsargs)
             [Jxtest, steptest] = LSinstance.search()
             # test for successful step
             if Jxtest is not None:
                 if descverbose > 0:
-                    print('\naccept new jet and step')
+                    print('\naccept new jet and step', file=fout)
                 Jx = Jxtest
                 step = steptest
                 if descverbose > 0:
-                    print('value = %10.4e step = %10.4e' % (Jx.value(),step))
+                    print('value = %10.4e step = %10.4e' % (Jx.value(),step), file=fout)
                 if descverbose > 0:
-                    print('update search direction')
+                    print('update search direction', file=fout)
                 ddir = SDinstance.Update(Jx.gradient())
                 # update ascent rate
                 dr = Jx.gradient().dot(ddir)
@@ -1098,24 +1140,25 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0,
                 # archive
                 for k in archargs.keys():
                     Jx.archive(k,str(i),archargs[k])
-                
+                fout.flush()
             else:
                 # bail out
                 more = False
                 if descverbose > 0:
-                    print('line search failed, exit lsopt')
+                    print('line search failed, exit lsopt', file=fout)
                     
         if more == True:
             if descverbose > 0:
                 if dr <= drinit:
-                    print('\nachieved prescribed ascent rate reduction:')
+                    print('\nachieved prescribed ascent rate reduction:', file=fout)
                 if i==descmax:
-                    print('\nreached iteration limit')
-                print('final value = %10.4e'  % (Jx.value()))
-                print('final step  = %10.4e' % (step))
-                print('finial ascent rate = %10.4e' % (dr))
-                print('exit lsopt')
-                
+                    print('\nreached iteration limit', file=fout)
+                print('final value = %10.4e'  % (Jx.value()), file=fout)
+                print('final step  = %10.4e' % (step), file=fout)
+                print('finial ascent rate = %10.4e' % (dr), file=fout)
+                print('exit lsopt', file=fout)
+
+        fout.close()
         return Jx
     
     except Exception as ex:
