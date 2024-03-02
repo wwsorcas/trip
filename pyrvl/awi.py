@@ -687,8 +687,9 @@ class mswi(vcl.ScalarJet):
                      archivepath=None, pointname=None, gradname=None,
                      filtername=None, dataerrname=None):
         try:
-            if verbose != 0:
-                print('mswi constructor')
+
+#            if verbose != 0:
+            print('mswi constructor: verbose = ' + str(verbose))
             # sanity checks
             if data is None:
                 raise Exception('data vector not provided')
