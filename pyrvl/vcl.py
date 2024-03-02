@@ -883,11 +883,109 @@ class StandardJet(ScalarJet):
     def Hessian(self):
         return self.f.Hessian(self.x)
 
+    # null implementation - temporary
+    def archive(self, name, tag, suf):
+        pass
+
     def myNameIs(self):
         print('StandardJet: jet based on ScalarFunction')
         print('Function:')
         self.f.myNameIs()
         print('Evaluation point:')
+        self.x.myNameIs()
+
+class LeastSquaresJet(ScalarJet):
+
+    '''
+    Jet for Least Squares function 0.5*|F(x)-b|^2. Eliminates some intermediate computations
+    necessary in the general case by saving the residuaal vector. Default implementation of 
+    Hessian returns G-N approximation - can be overridden in subclasses
+
+    Constructor parameters:
+    F (Function): map
+    x (Vector): at this point in its domain
+    b (Vector): data vector
+    '''
+
+    def __init__(self, x, F=None, b=None):
+        try:
+            if F is None:
+                raise Exception('second arg is None - cannot have a jet without a function!')
+            if not isinstance(F, Function):
+                raise Exception('second arg not ScalarFunction')
+            if not isinstance(x, Vector):
+                raise Exception('first arg not Vector')
+            if x.space != F.getDomain():
+                raise Exception('first arg not in domain of second arg')
+            if b is None:
+                raise Exception('third arg is None - data vector of least squares function')
+            if not isinstance(b, Vector):
+                raise Exception('third arg not Vector')
+            if b.space != F.getRange():
+                raise Exception('third arg not in range of second arg')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from StandardJet constructor')
+        else:
+            self.F = F
+            self.x = x
+            self.b = b
+            self.res = None
+            self.resn = None
+            self.grad = None
+            self.DF = None
+            self.hess = None
+
+    def point(self):
+        return self.x
+
+    def value(self):
+        try:
+            if self.res is None:
+                self.res = self.F(self.x)
+                self.res.linComb(-1,self.b)
+                self.resn = self.res.norm()
+            return 0.5*self.resn*self.resn
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LeastSquaresJet.value')
+
+    def gradient(self):
+        try:
+            if self.grad is None:
+                if self.res is None:
+                    self.res = self.F(self.x)
+                    self.res.linComb(-1,self.b)
+                    self.resn = self.res.norm()
+                if self.DF is None:
+                    self.DF=self.F.deriv(self.x)
+                self.grad = transp(self.DF)*self.res
+            return self.grad
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LeastSquaresJet.gradient')
+        
+    def Hessian(self):
+        try:
+            if self.hsss is None:
+                if self.DF is None:
+                    self.DF = self.F.deriv(self.x)
+                self.hess = NormalOp(self.DF)
+            return self.hess
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from LeastSquaresJet.Hessian')
+        
+    # null implementation - temporary
+    def archive(self, name, tag, suf):
+        pass
+
+    def myNameIs(self):
+        print('LeastSquaresJet: jet based on function')
+        self.F.myNameIs()
+        print('and data vector')
+        self.b.myNameIs()
+        print('at evaluation point:')
         self.x.myNameIs()
 
 import typing
