@@ -854,37 +854,45 @@ def trnewt(x, J, newtmax, newteps, cgmax, cgeps, Delta, mured=0.5, muinc=1.8, \
 
 class SearchDir(ABC):
 
-     # accepts vector in space as gradient,
+     # accepts Jet instance,
      # returns search direction
      @abstractmethod
-     def Update(self, g):
+     def Update(self, Jx):
          pass
 
 class SDwgrad(SearchDir):
         
-    def __init__(self,sp, Winv=None):
+    def __init__(self, Winv=None):
         '''
         Weghted gradient ascent direction.
 
         Parameters:
-        g (vcl.Vector):            gradient
         Winv (vcl.LinearOperator): SPD operator (inverse of weight defining inner product)
         
-        Returns:
+        Update method Returns:
         Winv*g:                    weighted gradient = gradient in weighted norm
         '''
-        self.sp = sp
-        self.Winv = Winv
-
-    def Update(self, g):
         try:
-            if not isinstance(g, vcl.Vector):
-                raise Exception('input gradient object not vcl.Vector')
-            if not g.space == self.sp:
-                raise Exception('input gradient not in search space')
+            if not Winv is None:
+                if not isinstance(Winv, vcl.LinearOperator):
+                    raise Exception('input Winv not LinOp')
+                if not Winv.getDomain() == Winv.getRange():
+                    raise Exception('Winv not square')
+            self.Winv = Winv
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcalg.SDwgrad constructor')
+
+    def Update(self, Jx):
+        try:
+            if not isinstance(Jx, vcl.ScalarJet):
+                raise Exception('input arg not vcl.ScalarJet')
             if self.Winv is None:
-                return g;
-            return self.Winv*g
+                return Jx.gradient()
+            else:
+                if Jx.gradient().space != self.Winv.getDomain():
+                    raise Exception('gradient not in domain of Winv')
+                return self.Winv*Jx.gradient()
         except Exception as ex:
             print(ex)
             raise Exception('called from vcalg.SDwgrad.Update')
@@ -1082,9 +1090,9 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         if descverbose != 0:
             print('compute initial descent direction', file=fout)
         if SD is None:
-            raise Exception('Descent Direction generator not provided')
-        SDinstance = SD(x.space, **ddargs)
-        ddir = SDinstance.Update(Jx.gradient())
+            raise Exception('Descent Direction class not provided')
+        SDinstance = SD(**ddargs)
+        ddir = SDinstance.Update(Jx)
         gtot += 1
 
         if descverbose != 0:
@@ -1119,7 +1127,8 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         while i < descmax and dr > desceps*drinit and more:
             if descverbose > 0:
                 print('\nIteration ' + str(i), file=fout)
-            LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step, J, jetargs=jetargs, lsverbose=lsverbose,
+            LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step,
+                                J, jetargs=jetargs, lsverbose=lsverbose,
                                 fout=fout, **lsargs)
             [Jxtest, steptest] = LSinstance.search()
             # test for successful step
@@ -1132,7 +1141,7 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
                     print('value = %10.4e step = %10.4e' % (Jx.value(),step), file=fout)
                 if descverbose > 0:
                     print('update search direction', file=fout)
-                ddir = SDinstance.Update(Jx.gradient())
+                ddir = SDinstance.Update(Jx)
                 # update ascent rate
                 dr = Jx.gradient().dot(ddir)
                 # update counter
@@ -1164,8 +1173,38 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
     except Exception as ex:
         print(ex)
         raise Exception('called from vcalg.lsopt')
+
+def alphaupdate(alpha=0.0, e=0.0, ap=1.0, eplus=1.1, eminus=0.9):
+    '''
+    alpha update rule for implementing discrepancy principle, following
+    Fu & Symes Geophysics 2017 and Symes et al. IP 2023. Assumes that 
+    (in notation of Symes et al.) e = 0.5*\|F(x)-d\|^2/\|d\|^2 is 
+    relative data fit error, and ap = 0.5*alpha^2*\|Ax\|^2/\|d\|^2 is 
+    relative regularization error (both squared, of course). eplus is 
+    upper permitted half relative fit error squared, eminus is lower. 
+    alpha is current value of alpha.
+
+    return value is [alpha, update], with alpha = updated value, update
+    = True if update performed, False is alpha unchanged
+
+    alpha <- sqrt(alpha^2 + (eplus - e)/(2*p))
+
+    (Symes et al. equation 17)
+
+    where p = ap/alpha. Rearranging,
+
+    alpha <- alpha*sqrt(1 + (eplus - e)/(2*ap))
+    '''
+
+    if e < eminus or e > eplus:
+        try:
+            recip = 1.0/(2.0*ap)
+        except ZeroDivisionError as e:
+            raise Exception('zerodivide in alpha update formula')
     
-        
+        return alpha*sqrt(1 + (eplus - e)*recip)
+    else:
+        return [alpha, False]
         
 
     
