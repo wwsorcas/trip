@@ -934,7 +934,7 @@ class LineSearch(ABC):
 class btls(LineSearch):
 
     '''
-    Simple acktracking line search. 
+    Simple backtracking line search. 
 
     Base class parameters:
     x (vcl.Vector):       current solution estimate
@@ -1087,6 +1087,20 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
 
         Jx = J(x, **jetargs)
 
+        # test for update:
+        if descverbose > 0:
+            print('\ntest for parameter update', file=fout)
+        newargs = Jx.update()
+        if newargs is not None:
+            if descverbose > 0:
+                print('record updated parameters', file=fout)                    
+            jetargs = newargs
+            print(jetargs)
+            Jx = J(x,**jetargs)
+        else:
+            if descverbose > 0:
+                print('no parameter update')                                        
+
         if descverbose != 0:
             print('compute initial descent direction', file=fout)
         if SD is None:
@@ -1133,9 +1147,22 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
             [Jxtest, steptest] = LSinstance.search()
             # test for successful step
             if Jxtest is not None:
+                # test for update:
+                if descverbose > 0:
+                    print('\ntest for parameter update', file=fout)
+                newargs = Jxtest.update()
+                if newargs is not None:
+                    if descverbose > 0:
+                        print('record updated parameters', file=fout)                    
+                    jetargs = newargs
+                    print(jetargs)
+                    Jx = J(Jxtest.point(), **jetargs)
+                else:
+                    if descverbose > 0:
+                        print('no parameter update')                                        
+                    Jx = Jxtest
                 if descverbose > 0:
                     print('\naccept new jet and step', file=fout)
-                Jx = Jxtest
                 step = steptest
                 if descverbose > 0:
                     print('value = %10.4e step = %10.4e' % (Jx.value(),step), file=fout)
@@ -1174,7 +1201,9 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         print(ex)
         raise Exception('called from vcalg.lsopt')
 
-def alphaupdate(alpha=0.0, e=0.0, ap=1.0, eplus=1.1, eminus=0.9):
+import math
+
+def alphaupdate(alpha=0.0, e=0.0, ap=1.0, p=None, eplus=1.1, eminus=0.9):
     '''
     alpha update rule for implementing discrepancy principle, following
     Fu & Symes Geophysics 2017 and Symes et al. IP 2023. Assumes that 
@@ -1183,6 +1212,14 @@ def alphaupdate(alpha=0.0, e=0.0, ap=1.0, eplus=1.1, eminus=0.9):
     relative regularization error (both squared, of course). eplus is 
     upper permitted half relative fit error squared, eminus is lower. 
     alpha is current value of alpha.
+
+    Parameters:
+    alpha (float):       current alpha
+    e (float):           current half-rel-error-squared
+    eplus (float)        max half-rel-error-squared
+    eminus (float)       min half-rel-error-squared
+    ap (float)           current alpha * half penalty / norm of data
+    p (float)            half penalty / norm of data - needed only in alpha=0 case
 
     return value is [alpha, update], with alpha = updated value, update
     = True if update performed, False is alpha unchanged
@@ -1194,17 +1231,26 @@ def alphaupdate(alpha=0.0, e=0.0, ap=1.0, eplus=1.1, eminus=0.9):
     where p = ap/alpha. Rearranging,
 
     alpha <- alpha*sqrt(1 + (eplus - e)/(2*ap))
+
+    In the special case alpha = 0, use first version - required ex post facto 
+    of Ax, so use only in that case. 
     '''
 
-    if e < eminus or e > eplus:
-        try:
-            recip = 1.0/(2.0*ap)
-        except ZeroDivisionError as e:
-            raise Exception('zerodivide in alpha update formula')
-    
-        return alpha*sqrt(1 + (eplus - e)*recip)
-    else:
-        return [alpha, False]
+    try:
+        if e < eminus or e > eplus:
+            try:
+                recip = 1.0/(2.0*ap)
+                return [alpha*math.sqrt(1 + (eplus - e)*recip), True]
+            except ZeroDivisionError as err:
+                if p is not None and isinstance(p, float) and p > 0:
+                    return [math.sqrt(alpha*alpha + (eplus - e)/(2*p)), True]
+                else:
+                    raise Exception('alpha=0 case, must supply p > 0')
+        else:
+            return [alpha, False]
+    except Exception as ex:
+        print(ex)
+        raise Exception('called from vcalg.alphaupdate')
         
 
     
