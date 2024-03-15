@@ -95,6 +95,52 @@ class Space(vcl.Space):
         #cmd = os.path.join(self.rsfroot,'bin/sfin')
         #os.system(cmd + ' < ' + self.filename)
 
+class smoother(vcl.LinearOperator):
+    '''
+    smoothing op based on sfsmooth. Constructed to be SPD, regardless of m8r's non-symmetric implementation.
+    '''
+
+    def __init__(self, dom, rect1=10, rect2=10, repeat=2):
+        RSFROOT = os.getenv('RSFROOT')
+        smoother = os.path.join(RSFROOT,'bin/sfsmooth')
+        self.dom = dom
+        if not isinstance(self.dom,Space):
+            raise Exception('grid smoother: provided domain not rsfvc.Space')
+        self.cmdf = smoother + ' rect1=' + str(rect1) + ' rect2=' + str(rect2) + ' repeat=' +str(repeat)
+        self.cmda = smoother + ' rect1=' + str(rect1) + ' rect2=' + str(rect2) + ' repeat=' +str(repeat)\
+          + ' adj=y'
+          
+    def getDomain(self):
+        return self.dom
+
+    def getRange(self):
+        return self.dom
+
+    def applyFwd(self,x,y):
+        try:
+            tmp = vcl.Vector(self.dom)
+            ret = os.system(self.cmdf + ' < ' + x.data + ' > ' + tmp.data)
+            if ret != 0:
+                raise Exception('command failed: ' + self.cmdf)
+            ret = os.system(self.cmda + ' < ' + tmp.data + ' > ' + y.data)
+            if ret != 0:
+                raise Exception('command failed: ' + self.cmda)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from smoother.applyFwd')
+
+    def applyAdj(self,x,y):
+        try:
+            self.applyFwd(x,y)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from smoother.applyAdj')
+
+    def myNameIs():
+        print('2D SPD Grid Smoother using sfsmooth')
+        print('rect1=10 rect2=10 repeat=2')
+
+
         
     
     
