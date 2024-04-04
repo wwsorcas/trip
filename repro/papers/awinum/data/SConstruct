@@ -153,6 +153,23 @@ Flow('h1.su', None,
      suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
      stdin=0)
 
+Flow('sh1.su', None,
+     sunull +   ' nt=' + str(376) + \
+                ' ntr=' + str(NR) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ', 1000 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+     
+# 11 shot data sets
+
 Flow('w11.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=' + str(NS) + ', sxstart=' + str(SX) + ',szstart=' + str(SZ) + ',dsx=' + str(DSX) + ',dsz=0.0)'), stdin=0, stdout=-1)
      
 Flow('u11.su', None,
@@ -182,6 +199,119 @@ Flow('h11.su', None,
                 ' j=' + str(NR) + ' | ' + \
      sushw +    ' key=gelev,selev,delrt' + \
                 ' a=' + str(-RZ) + ',' + str(-SZ) + ', 0 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('sh11.su', None,
+     sunull +   ' nt=' + str(376) + \
+                ' ntr=' + str(NR*NS) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',1000 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+# 20 shot data sets
+
+Flow('w20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=2500, szstart=3000, dsx=150, dsz=0.0)'), stdin=0, stdout=-1)
+     
+Flow('u20.su', None,
+     sunull +   ' nt=' + str(NTU) + \
+                ' ntr=' + str(NR*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=2500 ' + \
+                ' c=150 ' + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(DELRT) + ' | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('h20.su', None,
+     sunull +   ' nt=' + str(NTD) + \
+                ' ntr=' + str(NR*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=2500 ' + \
+                ' c=150 ' + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ', 0 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('sh20.su', None,
+     sunull +   ' nt=' + str(376) + \
+                ' ntr=' + str(NR*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=2500 ' + \
+                ' c=150 ' + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ', 1000 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+     
+
+Flow('cww20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=3000, szstart=500, dsx=0, dsz=150)'), stdin=0, stdout=-1)
+     
+Flow('cwu20.su', None,
+     sunull +   ' nt=' + str(NTU) + \
+                ' ntr=' + str(181*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gelev a=-200 b=-20 j=181 | ' + \
+     sushw +    ' key=selev a=-500 c=-150 j=181 | ' + \
+     sushw +    ' key=gx,sx,delrt' + \
+                ' a=5000,3000,-1000 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('cwh20.su', None,
+     sunull +   ' nt=' + str(NTD) + \
+                ' ntr=' + str(181*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gelev a=-200 b=-20 j=181 | ' + \
+     sushw +    ' key=selev a=-500 c=-150 j=181 | ' + \
+     sushw +    ' key=gx,sx,delrt' + \
+                ' a=5000,3000,0 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('fcww20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=2000, szstart=500, dsx=0, dsz=150)'), stdin=0, stdout=-1)
+     
+Flow('fcwu20.su', None,
+     sunull +   ' nt=' + str(NTU) + \
+                ' ntr=' + str(181*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gelev a=-200 b=-20 j=181 | ' + \
+     sushw +    ' key=selev a=-500 c=-150 j=181 | ' + \
+     sushw +    ' key=gx,sx,delrt' + \
+                ' a=6000,2000,-1000 | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('fcwh20.su', None,
+     sunull +   ' nt=' + str(NTD) + \
+                ' ntr=' + str(181*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gelev a=-200 b=-20 j=181 | ' + \
+     sushw +    ' key=selev a=-500 c=-150 j=181 | ' + \
+     sushw +    ' key=gx,sx,delrt' + \
+                ' a=6000,2000,0 | ' + \
      suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
      stdin=0)
      
@@ -245,6 +375,16 @@ Flow(['m.rsf', 'bym.rsf', 'm0.rsf'], None,
      sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
      sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[2]}', stdin=0, stdout=-1)
 
+####### nondimensional velocity repn for CofV constraint handling
+Flow('cx.rsf', 'm.rsf',
+      sfput + ' label=Real unit=None')
+
+### camembert sort-of ###
+
+campars = 'rad=800 inner=2.0 outer=4.0 n1=201 n2=401 d1=20 d2=20'
+Flow(['cambulk.rsf', 'cambuoy.rsf'], None,
+		     python + ' cam.py ' + campars,
+		     stdin=0, stdout=-1)
 
 ################################ finite diffeence simulation ####################################
 
@@ -252,10 +392,16 @@ Flow(['m.rsf', 'bym.rsf', 'm0.rsf'], None,
 # boundstest - test for bounds, exit in error condition if violated
 # noisy - if True, print standard message and active task numbers (for parallel tasks)
 fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0' + \
-       	 	   ' ' + 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 boundstest=True noisy=True'
+       	 	   ' ' + 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 boundstest=True' +\
+		   ' noisy=True partask=3'
 
-for i in [1, 11]:
+for i in [1, 11, 20]:
     Flow('d' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+    Flow('sd' + str(i) + '.su',['sh' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
      			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
@@ -266,8 +412,21 @@ for i in [1, 11]:
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 
-Flow('d11p.su',['h11.su', 'w11.su', 'm.rsf', 'bym.rsf'],
-     ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
-     r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
-     ' ' + fdpars + ' partask=2', stdin=0, stdout=-1)
+Flow('cwd20.su',['cwh20.su', 'cww20.su', 'm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+Flow('fcwd20.su',['fcwh20.su', 'fcww20.su', 'm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+				  
+Flow('camdata20.su',['h20.su', 'w20.su', 'cambulk.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
