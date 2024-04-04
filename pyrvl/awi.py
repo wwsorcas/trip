@@ -5,6 +5,7 @@ import vpm
 import segyvc
 import rsfvc
 import os
+import sys
 import tempfile
 
 TRIP = os.getenv('TRIP')
@@ -673,6 +674,9 @@ class mswi(vcl.ScalarJet):
         kmax (int): CG iteration limit
         rho (float): CG residual tolerance
         verbose (int): if not = 0, then print current action messages
+        etar (float): target relative error for discrepancy update
+        ratminus (float): min rel error ratio
+        ratplus (float): max rel error ratio
         archivedir (string): path to archive directory
         pointname (string): filename root for model
         gradname (string): filename root for gradient
@@ -684,12 +688,15 @@ class mswi(vcl.ScalarJet):
     def __init__(self, mod=None,
                      dom=None, sim=None, data=None,
                      alpha=0.0, sigma=0.0, kmax=20, rho=0.01, verbose=0,
+                     etar=None, ratminus=None, ratplus=None,
                      archivepath=None, pointname=None, gradname=None,
                      filtername=None, dataerrname=None):
         try:
 
-#            if verbose != 0:
+            #if verbose != 0:
             print('mswi constructor: verbose = ' + str(verbose))
+            print('alpha=' + str(alpha) + ' sigma=' + str(sigma) + ' rho=' + str(rho))
+            print('etar=' + str(etar) + ' ratminus=' + str(ratminus) + ' ratplus=' + str(ratplus))
             # sanity checks
             if data is None:
                 raise Exception('data vector not provided')
@@ -726,14 +733,17 @@ class mswi(vcl.ScalarJet):
             self.kmax = kmax
             self.rho = rho
             self.verbose = verbose
+            self.etar = etar
+            self.ratminus = ratminus
+            self.ratplus = ratplus
             self.archivepath = archivepath
             self.pointname = pointname
             self.gradname = gradname
             self.filtername = filtername
             self.dataerrname = dataerrname
             
-            if self.verbose != 0:
-                print('mswi constructor: compute predicted data')
+#            if self.verbose != 0:
+#                print('mswi constructor: compute predicted data')
             self.p = self.sim(self.mod)
 
             # other internals
@@ -752,7 +762,7 @@ class mswi(vcl.ScalarJet):
 
         except Exception as ex:
             print(ex)
-            raise Exception('called from awipen constructor')
+            raise Exception('called from mswi constructor')
 
     # auxiliary method - solves inner least squares problem 
     def resid(self):
@@ -778,8 +788,8 @@ class mswi(vcl.ScalarJet):
                 self.ep = vcl.Vector(L.getRange())
                 dp[0].copy(self.d)
             
-                if self.verbose != 0:
-                    print('mswi constructor: decon observed by predicted')
+#                if self.verbose != 0:
+#                    print('mswi constructor: decon observed by predicted')
                 eps=0.0
                 vcalg.conjgrad(self.u, dp, L, self.kmax, eps,
                                 self.rho, e=self.ep, verbose=self.verbose)
@@ -860,6 +870,90 @@ class mswi(vcl.ScalarJet):
         except Exception as ex:
             print(ex)
             raise Exception('called from awi.mswi.archive')
+
+    def update(self, file=None):
+        '''
+        enables discrepancy-based update of alpha - see docs
+        for vcalg.alphaupdate explanation of computation. If 
+        the parameters etar, ratplus, and ratminus are non-void 
+        and sane, then the updated alpha is computed, embedded in 
+        a dict with the other kwargs for the constructor, and 
+        returned. Otherwise, None is returned.
+
+        Argumments:
+        file            alternate output file for summary
+        
+        Return values: args, cont
+        args            jet argument dictionary for updated alpha,
+                        None if alpha unchanged,
+                        Empty if alpha update failed
+
+        '''
+
+        try:
+#            print('mswi.update:')
+#            print('etar=%10.4e ratplus=%10.4e ratminus=%10.4e verbose=%3.1d' % (self.etar, self.ratplus, self.ratminus, self.verbose))
+
+            # choose file
+            if file is None:
+                outfile=sys.stdout
+            else:
+                outfile=file
+                
+            if self.etar is not None and\
+                self.ratplus is not None and\
+                self.ratminus is not None and\
+                isinstance(self.etar, float) and\
+                isinstance(self.ratplus, float) and\
+                isinstance(self.ratminus, float) and\
+                self.etar > 0 and\
+                self.ratminus > 0 and\
+                self.ratminus < 1 and\
+                self.ratplus > 1:
+
+                dn = self.d.norm()
+                if self.alpha==0.0:
+                    if self.ep is None:
+                        self.resid()
+                    A = awipensol(self.dom)
+                    if not isinstance(A, vcl.LinearOperator):
+                        raise Exception('construction of penalty operator failed')
+                    pn = (A*self.u).norm()
+                    p = 0.5*pn*pn/(dn*dn)
+                    #print('in mswi.update: p = ' + str(p))
+                else:
+                    p = None
+                if self.ep is None:
+                    self.resid()
+                en = self.ep[0].norm()
+                apn = self.ep[1].norm()
+                e = 0.5*en*en/(dn*dn)
+                ap = 0.5*apn*apn/(dn*dn)
+                eplus = 0.5*self.ratplus*self.etar*self.ratplus*self.etar
+                eminus = 0.5*self.ratminus*self.etar*self.ratminus*self.etar
+                [newalpha, isnew] = vcalg.alphaupdate(self.alpha, e, ap, p, eplus, eminus, file=outfile)
+                
+                if newalpha is None:
+                    print('alpha update failed, terminate', file=outfile)
+                    return dict(alpha=None)
+
+                if isnew:
+                    if self.verbose > 0:
+                        print('\nmswi jet: update alpha', file=outfile)
+                        print('rel err = %10.4e etar = %10.4e tar rng = [%10.4e, %10.4e], alpha = %10.4e' %\
+                                (en/dn, self.etar, self.ratminus*self.etar, self.ratplus*self.etar, \
+                                    self.alpha), file=outfile)
+                        print('updated alpha = %10.4e\n' % (newalpha), file=outfile)
+                    # create new args list
+                    return dict(dom=self.dom, sim=self.sim, data=self.d,
+                                    alpha=newalpha, sigma=self.sigma, kmax=self.kmax,
+                                    rho=self.rho, verbose=self.verbose,
+                                    etar=self.etar, ratminus=self.ratminus, ratplus=self.ratplus)
+            return None
+
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from awi.mswi.update')
                 
     def myNameIs(self):
         print('MSWI function')

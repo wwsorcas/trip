@@ -890,8 +890,9 @@ class SDwgrad(SearchDir):
             if self.Winv is None:
                 return Jx.gradient()
             else:
-                if Jx.gradient().space != self.Winv.getDomain():
-                    raise Exception('gradient not in domain of Winv')
+# redundant
+#                if Jx.gradient().space != self.Winv.getDomain():
+#                    raise Exception('gradient not in domain of Winv')
                 return self.Winv*Jx.gradient()
         except Exception as ex:
             print(ex)
@@ -998,6 +999,7 @@ class btls(LineSearch):
                 vtest = Jx.value()
                 if self.verbose > 0:
                     print('        step = %10.4e val = %10.4e' % (self.step, vtest), file=self.fout)
+                    self.fout.flush()
                 # G-A test
                 actred = self.val-vtest
                 predred = self.step*self.dir.dot(self.grad)
@@ -1013,10 +1015,6 @@ class btls(LineSearch):
                     if self.verbose > 0:
                         print('        in G-A range', file=self.fout)
                     takestep = 1
-                elif k == self.lsmax-1:
-                    if self.verbose > 0:
-                        print('        last allowed step - save estimate', file=self.fout)
-                    takestep = 1
                 else:
                     if self.verbose > 0:
                         print('        try shorter step', file=self.fout)
@@ -1024,6 +1022,11 @@ class btls(LineSearch):
                     self.step *= self.mured
                     k += 1
 
+            if k == self.lsmax-1:
+                if self.verbose > 0:
+                    print('        reached end of line step loop', file=self.fout)
+                return [None, None]
+                
             if takestep == 1:
                 return [Jx, self.step]
             else:
@@ -1065,6 +1068,8 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
     '''
     
     try:
+        # descent iteration
+        i = 0
         # total function evals
         jtot = 0
         # total gradient evals
@@ -1084,90 +1089,161 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         if descverbose != 0:
             print('\nLine Search Optimization', file=fout)
             print('\ninitialize jet', file=fout)
+            fout.flush()
 
         Jx = J(x, **jetargs)
+
+        # continuation flag
+        more = True
 
         # test for update:
         if descverbose > 0:
             print('\ntest for parameter update', file=fout)
-        newargs = Jx.update()
+            fout.flush()
+        newargs = Jx.update(file=fout)
+        fout.flush()
+        
         if newargs is not None:
-            if descverbose > 0:
-                print('record updated parameters', file=fout)                    
-            jetargs = newargs
-            print(jetargs)
-            Jx = J(x,**jetargs)
+            if "alpha" in newargs:
+                if newargs['alpha'] is None:
+                    if descverbose !=0:
+                        print('alpha update failed', file=fout)
+                        fout.flush()
+                    raise Exception('alpha update failed')
+                            
+                else:
+                    if descverbose > 0:
+                        print('record updated parameters', file=fout)
+                        fout.flush()
+                    jetargs = newargs
+                    Jx = J(x, **jetargs)                
+            else:
+                if descverbose !=0:
+                    print('alpha update failed', file=fout)
+                    fout.flush()
+                raise Exception('alpha update failed')
         else:
-            if descverbose > 0:
-                print('no parameter update')                                        
-
+            if descverbose > 0 and more == True:
+                print('no parameter update', file=fout)                                        
+                fout.flush()
+            
         if descverbose != 0:
             print('compute initial descent direction', file=fout)
+            fout.flush()
+            
         if SD is None:
+            if descverbose != 0:
+                print('Descent Direction class not provided', file=fout)
+                fout.flush()
             raise Exception('Descent Direction class not provided')
+            
         SDinstance = SD(**ddargs)
         ddir = SDinstance.Update(Jx)
         gtot += 1
 
         if descverbose != 0:
             print('compute initial ascent rate', file=fout)
+            fout.flush()
+            
         dr = Jx.gradient().dot(ddir)
 
         if descverbose != 0:
             print('sanity check for sufficient ascent', file=fout)
+            fout.flush()
+            
         if 1.0 + dr <= 1.0:
+            if descverbose !=0:
+                print('ascent rate = ' + str(dr) + ' insufficient or negative', file=fout)
+                fout.flush()
             raise Exception('ascent rate = ' + str(dr) + ' insufficient or negative')
+        else:
+            print('    passed', file=fout)
 
         # initial step calculation
         # assumes target value = 0
-        print('compute initial step', file=fout)
+        if descverbose !=0:
+            print('compute initial step', file=fout)
+            fout.flush()
+            
         step = initprop*Jx.value()/dr
         jtot += 1
         
-        # descent iteration
-        i = 0
         # archive
         for k in archargs.keys():
             Jx.archive(k,str(i),archargs[k])
-        
+            
         if descverbose !=0:
             print('initial value = %10.4e'  % (Jx.value()), file=fout)
             print('initial step  = %10.4e' % (step), file=fout)
             print('initial ascent rate = %10.4e' % (dr), file=fout)
             fout.flush()
-            
-        more = True
+
         drinit = dr
+        
         while i < descmax and dr > desceps*drinit and more:
+            
             if descverbose > 0:
                 print('\nIteration ' + str(i), file=fout)
+                fout.flush()
+
             LSinstance = LS(Jx.point(), Jx.value(), Jx.gradient(), ddir, step,
-                                J, jetargs=jetargs, lsverbose=lsverbose,
-                                fout=fout, **lsargs)
+                            J, jetargs=jetargs, lsverbose=lsverbose,
+                            fout=fout, **lsargs)
             [Jxtest, steptest] = LSinstance.search()
+            
             # test for successful step
-            if Jxtest is not None:
-                # test for update:
+            if steptest is None:
+                # bail out
                 if descverbose > 0:
-                    print('\ntest for parameter update', file=fout)
-                newargs = Jxtest.update()
-                if newargs is not None:
+                    print('line search failed', file=fout)
+                    fout.flush()
+                raise Exception('line search failed')
+            else:
+                if Jxtest is not None:
+                    # test for update:
                     if descverbose > 0:
-                        print('record updated parameters', file=fout)                    
-                    jetargs = newargs
-                    print(jetargs)
-                    Jx = J(Jxtest.point(), **jetargs)
-                else:
-                    if descverbose > 0:
-                        print('no parameter update')                                        
-                    Jx = Jxtest
+                        print('\ntest for parameter update', file=fout)
+                        fout.flush()
+                    newargs = Jxtest.update(file=fout)
+                    fout.flush()
+                
+                    if newargs is not None:
+                        if "alpha" in newargs:
+                            if newargs['alpha'] is None:
+                                if descverbose !=0:
+                                    print('alpha update failed', file=fout)
+                                    fout.flush()
+                                raise Exception('alpha update failed')
+                            else:
+                                if descverbose > 0:
+                                    print('record updated parameters', file=fout)
+                                    fout.flush()
+                                jetargs = newargs
+                                Jx = J(Jxtest.point(), **jetargs)
+                        else:
+                            if descverbose !=0:
+                                print('alpha update failed', file=fout)
+                                fout.flush()
+                            raise Exception('alpha update failed')
+                        
+                    else:
+                        if descverbose > 0 and more == True:
+                            print('no parameter update', file=fout)                                        
+                            fout.flush()
+
+                        Jx = Jxtest
+
                 if descverbose > 0:
                     print('\naccept new jet and step', file=fout)
+                    fout.flush()
+
+                        
                 step = steptest
                 if descverbose > 0:
                     print('value = %10.4e step = %10.4e' % (Jx.value(),step), file=fout)
-                if descverbose > 0:
                     print('update search direction', file=fout)
+                    fout.flush()
+                    
                 ddir = SDinstance.Update(Jx)
                 # update ascent rate
                 dr = Jx.gradient().dot(ddir)
@@ -1176,23 +1252,21 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
                 # archive
                 for k in archargs.keys():
                     Jx.archive(k,str(i),archargs[k])
-                fout.flush()
-            else:
-                # bail out
-                more = False
-                if descverbose > 0:
-                    print('line search failed, exit lsopt', file=fout)
                     
-        if more == True:
+        if descverbose > 0:
+            if dr <= drinit:
+                print('\nachieved prescribed ascent rate reduction:', file=fout)
+            if i==descmax:
+                print('\nreached iteration limit', file=fout)
+            print('final value = %10.4e'  % (Jx.value()), file=fout)
+            print('final step  = %10.4e' % (step), file=fout)
+            print('finial ascent rate = %10.4e' % (dr), file=fout)
+            print('exit lsopt', file=fout)
+                            
+            
+        if more==False:
             if descverbose > 0:
-                if dr <= drinit:
-                    print('\nachieved prescribed ascent rate reduction:', file=fout)
-                if i==descmax:
-                    print('\nreached iteration limit', file=fout)
-                print('final value = %10.4e'  % (Jx.value()), file=fout)
-                print('final step  = %10.4e' % (step), file=fout)
-                print('finial ascent rate = %10.4e' % (dr), file=fout)
-                print('exit lsopt', file=fout)
+                print('update failed, exit', file=fout)
 
         fout.close()
         return Jx
@@ -1203,7 +1277,7 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
 
 import math
 
-def alphaupdate(alpha=0.0, e=0.0, ap=1.0, p=None, eplus=1.1, eminus=0.9):
+def alphaupdate(alpha=0.0, e=0.0, ap=1.0, p=None, eplus=1.1, eminus=0.9, file=None):
     '''
     alpha update rule for implementing discrepancy principle, following
     Fu & Symes Geophysics 2017 and Symes et al. IP 2023. Assumes that 
@@ -1220,6 +1294,7 @@ def alphaupdate(alpha=0.0, e=0.0, ap=1.0, p=None, eplus=1.1, eminus=0.9):
     eminus (float)       min half-rel-error-squared
     ap (float)           current alpha * half penalty / norm of data
     p (float)            half penalty / norm of data - needed only in alpha=0 case
+    file                 alternate verbose output file
 
     return value is [alpha, update], with alpha = updated value, update
     = True if update performed, False is alpha unchanged
@@ -1237,12 +1312,27 @@ def alphaupdate(alpha=0.0, e=0.0, ap=1.0, p=None, eplus=1.1, eminus=0.9):
     '''
 
     try:
+        # choose output file
+        if file is None:
+            outfile = sys.stdout
+        else:
+            outfile = file
+            
+        #if isinstance(p, float):
+        #    print('p=' + str(p))
+        #else:
+        #    print('p not given')
         if e < eminus or e > eplus:
             try:
+         #       print('ap branch')
                 recip = 1.0/(2.0*ap)
                 return [alpha*math.sqrt(1 + (eplus - e)*recip), True]
             except ZeroDivisionError as err:
+         #       print('p branch')
                 if p is not None and isinstance(p, float) and p > 0:
+                    if eplus < e:
+                        print('rel error = %10.4e > upper lim eplus = %10.4e\n  must choose larger target or reduce rel error' % (e,eplus), file=outfile)
+                        return [None, False]
                     return [math.sqrt(alpha*alpha + (eplus - e)/(2*p)), True]
                 else:
                     raise Exception('alpha=0 case, must supply p > 0')

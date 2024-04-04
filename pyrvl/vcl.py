@@ -820,6 +820,7 @@ class ScalarJet(ABC):
     unlikely.
     '''
 
+    @abstractmethod
     def point(self):
         pass
 
@@ -836,10 +837,16 @@ class ScalarJet(ABC):
         pass
 
     # handle for archiving components of jet calculation
-    @abstractmethod
+    # vacuous implementation, override for content
     def archive(self, name, tag, suf):
         pass
 
+    # handle parameter update - for example return dictionary of constructor
+    # parameters with updated values
+    # vacuous implementation, override fof content
+    def update(self, file=None):
+        pass
+    
     @abstractmethod
     def myNameIs(self):
         pass
@@ -882,10 +889,6 @@ class StandardJet(ScalarJet):
 
     def Hessian(self):
         return self.f.Hessian(self.x)
-
-    # null implementation - temporary
-    def archive(self, name, tag, suf):
-        pass
 
     def myNameIs(self):
         print('StandardJet: jet based on ScalarFunction')
@@ -976,10 +979,6 @@ class LeastSquaresJet(ScalarJet):
             print(ex)
             raise Exception('called from LeastSquaresJet.Hessian')
         
-    # null implementation - temporary
-    def archive(self, name, tag, suf):
-        pass
-
     def myNameIs(self):
         print('LeastSquaresJet: jet based on function')
         self.F.myNameIs()
