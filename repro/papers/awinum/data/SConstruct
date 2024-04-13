@@ -5,7 +5,6 @@ from rsf.proj import *
 
 import os
 import scenv
-import datasim
 
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
@@ -338,10 +337,16 @@ LENSRADD = 0.4
 # vertical diameter of lens (proportion of z extent)
 LENSRADT = 0.2
 
+# horizontal diameter of lens (proportion of x extent)
+CWLENSRADD = 0.6
+
+# vertical diameter of lens (proportion of z extent)
+CWLENSRADT = 0.15
+
 # value at center (proportion of background)
 LENSFAC = 0.5
 
-Flow(['m.rsf', 'bym.rsf', 'm0.rsf'], None,
+Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf'], None,
      sfmakevel+' n1=' + str(NZ) + \
                ' n2=' + str(NX) + \
                ' d1=' + str(DX) + \
@@ -373,7 +378,21 @@ Flow(['m.rsf', 'bym.rsf', 'm0.rsf'], None,
      sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
      sfput +   ' unit1=m unit2=m' + ' | ' +\
      sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
-     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[2]}', stdin=0, stdout=-1)
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[2]} && ' +\
+     sfmakevel+' n1=' + str(NZ) + \
+               ' n2=' + str(NX) + \
+               ' d1=' + str(DX) + \
+               ' d2=' + str(DX) + \
+               ' v000=' + str(BULK) + \
+               ' x1lens=' + str(NZ*DX/2.0) + \
+               ' x2lens=' + str(NX*DX/2.0) + \
+               ' dlens=' + str(NZ*DX*CWLENSRADD) + \
+               ' tlens=' + str(NX*DX*CWLENSRADT) + \
+               ' vlens=' + str(BULK*(LENSFAC-1.0)) + ' | ' +\
+     sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+     sfput +   ' unit1=m unit2=m' + ' | ' +\
+     sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[3]}', stdin=0, stdout=-1)
 
 ####### nondimensional velocity repn for CofV constraint handling
 Flow('cx.rsf', 'm.rsf',
@@ -398,35 +417,44 @@ fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.
 for i in [1, 11, 20]:
     Flow('d' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
     Flow('sd' + str(i) + '.su',['sh' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
     Flow('dh' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm0.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
+
+# cross-well data
 
 Flow('cwd20.su',['cwh20.su', 'cww20.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
+				  
+# create box data by cp, cat
+Flow('boxd20.su', ['d20.su', 'cwd20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
+Flow('boxu20.su', ['u20.su', 'cwu20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
+Flow('boxw20.su', ['w20.su', 'cww20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
 
-Flow('fcwd20.su',['fcwh20.su', 'fcww20.su', 'm.rsf', 'bym.rsf'],
+# long offset cross-well data
+
+Flow('fcwd20.su',['fcwh20.su', 'fcww20.su', 'cwm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 				  
 Flow('camdata20.su',['h20.su', 'w20.su', 'cambulk.rsf', 'cambuoy.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 

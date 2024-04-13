@@ -1,5 +1,5 @@
 # build dict of data to import
-dd = dict(DATA='d11.su', FILT='u11.su', SRC='w11.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
+dd = dict(DATA='boxd20.su', FILT='boxu20.su', SRC='boxw20.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
 
 ############################### generic ##################################
 
@@ -13,9 +13,6 @@ sfcp            = os.path.join(RSFROOT,'bin/sfcp')
 
 MYAPPS          = os.getenv("MYAPPS")
 python          = os.path.join(MYAPPS,'conda/miniconda/bin/python')
-
-# build dict of data to import
-dd = dict(DATA='d11.su', FILT='u11.su', SRC='w11.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
 
 BASIC='../data'
 
