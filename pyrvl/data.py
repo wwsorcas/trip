@@ -1,6 +1,5 @@
 import os
 import tempfile
-import scenv
 
 def bpfilt(file,nt,dt,s,f1,f2,f3,f4,sx,sz):
     '''
@@ -25,6 +24,8 @@ def bpfilt(file,nt,dt,s,f1,f2,f3,f4,sx,sz):
     '''
 
     try:
+
+        #print(os.environ)
         
         CWPROOT = os.getenv('CWPROOT')
         suspike = os.path.join(CWPROOT,'bin/suspike')
