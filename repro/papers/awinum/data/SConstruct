@@ -4,7 +4,7 @@
 from rsf.proj import *
 
 import os
-import scenv
+
 
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
@@ -16,6 +16,17 @@ import scenv
 #          ...
 #          sunull          = os.path.join(CWPROOT,'bin/sunull')
 CWPROOT         = os.getenv('CWPROOT')
+RSFROOT         = os.getenv('RSFROOT')
+TRIP            = os.getenv('TRIP')
+MPIROOT         = os.getenv('MPIROOT')
+
+#Flow('scenv.py', None, '/bin/echo "import os" > ${TARGET};' + \
+#		 r'/bin/echo os.environ[\'CWPROOT\'] = \'' + CWPROOT + r'\' >> ${TARGET};' + \
+#		 r'/bin/echo os.environ[\'RSFROOT\'] = \'' + RSFROOT + r'\' >> ${TARGET};' + \
+#		 r'/bin/echo os.environ[\'TRIP\']    = \'' + TRIP    + r'\' >> ${TARGET};' + \
+#		 r'/bin/echo os.environ[\'MPIROOT\'] = \'' + MPIROOT + r'\' >> ${TARGET}', \
+#		 stdin=0, stdout=-1)
+
 a2b             = os.path.join(CWPROOT,'bin/a2b')
 b2a             = os.path.join(CWPROOT,'bin/b2a')
 farith          = os.path.join(CWPROOT,'bin/farith')
@@ -38,7 +49,6 @@ suop            = os.path.join(CWPROOT,'bin/suop')
 sunull          = os.path.join(CWPROOT,'bin/sunull')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 sumean          = os.path.join(CWPROOT,'bin/sumean')
-RSFROOT         = os.getenv('RSFROOT')
 sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
 sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
 sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
@@ -48,9 +58,7 @@ sfput           = os.path.join(RSFROOT,'bin/sfput')
 sfspray         = os.path.join(RSFROOT,'bin/sfspray')
 sfcp            = os.path.join(RSFROOT,'bin/sfcp')
 sfmakevel       = os.path.join(RSFROOT,'bin/sfmakevel')
-MYAPPS          = os.getenv("MYAPPS")
-python          = os.path.join(MYAPPS,'conda/miniconda/bin/python')
-mfexec          = os.path.join(MYAPPS,'trip/pyrvl/mfexec.py')
+mfexec          = os.path.join(TRIP,'pyrvl/mfexec.py')
 
 ################################## S/R GEOMETRY ##################################
 
@@ -169,8 +177,8 @@ Flow('sh1.su', None,
      
 # 11 shot data sets
 
-Flow('w11.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=' + str(NS) + ', sxstart=' + str(SX) + ',szstart=' + str(SZ) + ',dsx=' + str(DSX) + ',dsz=0.0)'), stdin=0, stdout=-1)
-     
+Flow('w11.su', None, mfexec + r' data.bpfiltgather file=\'${TARGET}\' nt=' + str(NTU) + ' dt=' + str(DT) + ' s=' + str(WSC) + ' f1=' + str(F1) + ' f2=' + str(F2) + ' f3=' + str(F3) + ' f4=' + str(F4) + ' ntr=' + str(NS) + ' sxstart=' + str(SX) + ' szstart=' + str(SZ) + ' dsx=' + str(DSX) + ' dsz=0.0', stdin=0, stdout=-1)
+
 Flow('u11.su', None,
      sunull +   ' nt=' + str(NTU) + \
                 ' ntr=' + str(NR*NS) + \
@@ -218,8 +226,9 @@ Flow('sh11.su', None,
 
 # 20 shot data sets
 
-Flow('w20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=2500, szstart=3000, dsx=150, dsz=0.0)'), stdin=0, stdout=-1)
+Flow('w20.su', None, mfexec + r' data.bpfiltgather file=\'${TARGET}\' nt=' + str(NTU) + ' dt=' + str(DT) + ' s=' + str(WSC) + ' f1=' + str(F1) + ' f2=' + str(F2) + ' f3=' + str(F3) + ' f4=' + str(F4) + ' ntr=20  sxstart=2500  szstart=3000  dsx=150  dsz=0.0', stdin=0, stdout=-1)
      
+
 Flow('u20.su', None,
      sunull +   ' nt=' + str(NTU) + \
                 ' ntr=' + str(NR*20) + \
@@ -232,6 +241,21 @@ Flow('u20.su', None,
                 ' j=' + str(NR) + ' | ' + \
      sushw +    ' key=gelev,selev,delrt' + \
                 ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(DELRT) + ' | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+
+Flow('lu20.su', None,
+     sunull +   ' nt=' + str(3*NTU) + \
+                ' ntr=' + str(NR*20) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=2500 ' + \
+                ' c=150 ' + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(3*DELRT) + ' | ' + \
      suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
      stdin=0)
 
@@ -266,7 +290,7 @@ Flow('sh20.su', None,
      stdin=0)
      
 
-Flow('cww20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=3000, szstart=500, dsx=0, dsz=150)'), stdin=0, stdout=-1)
+Flow('cww20.su', None, mfexec + r' data.bpfiltgather file=\'${TARGET}\' nt=' + str(NTU) + ' dt=' + str(DT) + ' s=' + str(WSC) + ' f1=' + str(F1) + ' f2=' + str(F2) + ' f3=' + str(F3) + ' f4=' + str(F4) + ' ntr=20  sxstart=3000  szstart=500  dsx=0  dsz=150', stdin=0, stdout=-1)
      
 Flow('cwu20.su', None,
      sunull +   ' nt=' + str(NTU) + \
@@ -290,7 +314,7 @@ Flow('cwh20.su', None,
      suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
      stdin=0)
 
-Flow('fcww20.su', None, mfexec + ' ' + repr('data.bpfiltgather(file=' + "'${TARGET}'" + ',nt=' + str(NTU) + ',dt=' + str(DT) + ',s=' + str(WSC) + ',f1=' + str(F1) + ',f2=' + str(F2) + ',f3=' + str(F3) + ',f4=' + str(F4) + ',ntr=20, sxstart=2000, szstart=500, dsx=0, dsz=150)'), stdin=0, stdout=-1)
+Flow('fcww20.su', None, mfexec + r' data.bpfiltgather file=\'${TARGET}\' nt=' + str(NTU) + ' dt=' + str(DT) + ' s=' + str(WSC) + ' f1=' + str(F1) + ' f2=' + str(F2) + ' f3=' + str(F3) + ' f4=' + str(F4) + ' ntr=20  sxstart=2000  szstart=500  dsx=0  dsz=150', stdin=0, stdout=-1)
      
 Flow('fcwu20.su', None,
      sunull +   ' nt=' + str(NTU) + \
@@ -402,7 +426,7 @@ Flow('cx.rsf', 'm.rsf',
 
 campars = 'rad=800 inner=2.0 outer=4.0 n1=201 n2=401 d1=20 d2=20'
 Flow(['cambulk.rsf', 'cambuoy.rsf'], None,
-		     python + ' cam.py ' + campars,
+		     mfexec + ' awinum.cam ' + campars,
 		     stdin=0, stdout=-1)
 
 ################################ finite diffeence simulation ####################################
@@ -417,44 +441,85 @@ fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.
 for i in [1, 11, 20]:
     Flow('d' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
     Flow('sd' + str(i) + '.su',['sh' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
     Flow('dh' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm0.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 
-# cross-well data
+# cross-well data for smooth lens model
 
 Flow('cwd20.su',['cwh20.su', 'cww20.su', 'm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
-				  
+			  
 # create box data by cp, cat
 Flow('boxd20.su', ['d20.su', 'cwd20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
 Flow('boxu20.su', ['u20.su', 'cwu20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
 Flow('boxw20.su', ['w20.su', 'cww20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
 
+# cross-well data for camembert
+
+Flow('camcwd20.su',['cwh20.su', 'cww20.su', 'cambulk.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+				  
+# horizontal well data for camembert
+
+Flow('camd20.su',['h20.su', 'w20.su', 'cambulk.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+# create box data for camembert by cp, cat (just data traces - adaptive filter, source vector same)
+
+Flow('camboxd20.su', ['camd20.su', 'camcwd20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
+
+# data for horizontal smoothings of cam
+
+Flow('cambulksm1.rsf', 'cambulk.rsf','smooth rect1=2 rect2=2 repeat=2')
+Flow('cambulksm2.rsf', 'cambulk.rsf','smooth rect1=4 rect2=4 repeat=4')
+Flow('cambulksm3.rsf', 'cambulk.rsf','smooth rect1=8 rect2=8 repeat=8')
+
+Flow('camd20sm1.su',['h20.su', 'w20.su', 'cambulksm1.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+Flow('camd20sm2.su',['h20.su', 'w20.su', 'cambulksm2.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+Flow('camd20sm3.su',['h20.su', 'w20.su', 'cambulksm3.rsf', 'cambuoy.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+
 # long offset cross-well data
 
 Flow('fcwd20.su',['fcwh20.su', 'fcww20.su', 'cwm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 				  
-Flow('camdata20.su',['h20.su', 'w20.su', 'cambulk.rsf', 'cambuoy.rsf'],
-    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     			   python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
-                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
-                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
 
