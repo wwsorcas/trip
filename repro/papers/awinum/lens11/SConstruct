@@ -1,21 +1,20 @@
 # build dict of data to import
-dd = dict(DATA='d11.su', FILT='u11.su', SRC='w11.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
+dd = dict(DATA='d11.su', FILT='u11.su', LFILT='lu11.su', SRC='w11.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
 
-############################### generic ##################################
+############################### generic sconstruct ##################################
 
 from rsf.proj import *
 
 import os
 import scenv
 
+CWPROOT         = os.getenv('CWPROOT')
 RSFROOT         = os.getenv('RSFROOT')
+TRIP            = os.getenv('TRIP')
+MPIROOT         = os.getenv('MPIROOT')
+
 sfcp            = os.path.join(RSFROOT,'bin/sfcp')
-
-MYAPPS          = os.getenv("MYAPPS")
-python          = os.path.join(MYAPPS,'conda/miniconda/bin/python')
-
-# build dict of data to import
-dd = dict(DATA='d11.su', FILT='u11.su', SRC='w11.su', HOM='m0.rsf', BUOY='bym.rsf', COV='cx.rsf')
+mfexec          = os.path.join(TRIP,'pyrvl/mfexec.py')
 
 BASIC='../data'
 
@@ -38,24 +37,24 @@ fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.
 
 # weight operator parameters
 smpars = 'rect1=10 rect2=10 repeat=2'
+smpars0 = 'rect1=1 rect2=1 repeat=0'
 
 # mswi parameters - fixed alpha, updated alpha
-mswipars = 'alpha=0.0001 sigma=0.00001 rho=0.01 kmax=1000 verbose=2'
-mswipars_aup0 = 'alpha=0.0 sigma=0.00001 rho=0.01 kmax=1000 verbose=2 etar=0.02 ratminus=0.75 ratplus=1.25'
-mswipars_aup1 = 'alpha=0.0 sigma=0.00001 rho=0.01 kmax=1000 verbose=2 etar=0.04 ratminus=0.75 ratplus=1.25'
+mswipars = 'alpha=3.8364925120362634e-05 sigma=0.00001 rho=0.01 kmax=1000 verbose=2'
+mswipars0 = 'alpha=0.0001 sigma=0.00001 rho=0.01 kmax=1000 verbose=2 precond=1'
 
 # line search parameters
 lspars = 'lsmax=10 mured=0.5 muinc=1.8 gammared=0.1 gammainc=0.9'
 
 # MSWI m0 - produce filter at homog model
 descpars0 = r'descmax=0 desceps=0.01 descverbose=1 descout=\'outfile0.txt\' lsverbose=1'
-pars = ' ' + fdpars + ' ' + smpars + ' ' + mswipars + ' ' + descpars0 + ' ' + lspars
+pars = ' ' + fdpars + ' ' + smpars + ' ' + mswipars0 + ' ' + descpars0 + ' ' + lspars
 
 Flow(['mest0.rsf', 'uest0.su'],
-     [dd['HOM'], dd['DATA'] , dd['FILT'], dd['SRC'], dd['BUOY']],
+     [dd['HOM'], dd['DATA'] , dd['LFILT'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
-     python + r' -u ../pysrc/msmswi.py bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     mfexec + r'  awinum.mswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
      r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars, stdin=0, stdout=-1)
     
@@ -68,13 +67,13 @@ Flow(['mestmswi.rsf', 'uestmswi.su'],
      [dd['HOM'], dd['DATA'], dd['FILT'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
-     python + r' -u ../pysrc/msmswi.py bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     mfexec + r'  awinum.mswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
      r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars, stdin=0, stdout=-1)
 
 Flow('resimmestmswi.su',[dd['DATA'], dd['SRC'], 'mestmswi.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
@@ -86,13 +85,13 @@ Flow(['cmestmswi.rsf', 'cuestmswi.su'],
      [dd['HOM'], dd['DATA'], dd['FILT'], dd['SRC'], dd['BUOY'], dd['COV']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
-     python + r' -u ../pysrc/modmsmswi.py bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     mfexec + r'  awinum.modmswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
      r' bulkmodin=\'${SOURCES[0]}\' cmodin=\'${SOURCES[4]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
      r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars_cov, stdin=0, stdout=-1)
 
 Flow('resimcmestmswi.su',[dd['DATA'], dd['SRC'], 'cmestmswi.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
      
@@ -103,19 +102,20 @@ fwipars = ' ' + fdpars + ' ' + smpars + ' ' + descparsfwi + ' ' + lspars
 Flow('mestmswifwi.rsf',
     ['mestmswi.rsf', dd['DATA'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' -u ../pysrc/fwi.py bulkmodout=\'${TARGETS[0]}\'' + \
+     mfexec + r'  awinum.fwiopt bulkmodout=\'${TARGETS[0]}\'' + \
      	      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\'' + \
               r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
 	      fwipars, stdin=0, stdout=-1)
 
 Flow('resimmestmswifwi.su',[dd['DATA'], dd['SRC'], 'mestmswifwi.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
 # MSWI with alpha update, starting at alpha=0, etar=0.02
 
+mswipars_aup0 = 'alpha=0.0 sigma=0.00001 rho=0.01 kmax=25 verbose=2 etar=0.04 ratminus=0.5 ratplus=1.5 upmax=10 precond=0'
 descpars_aup0 = r'descmax=12 desceps=0.01 descverbose=1 descout=\'outfilemswiaup0.txt\' lsverbose=1'
 pars_aup0 = ' ' + fdpars + ' ' + smpars + ' ' + mswipars_aup0 + ' ' + descpars_aup0 + ' ' + lspars
 
@@ -123,13 +123,13 @@ Flow(['mestmswiaup0.rsf', 'uestmswiaup0.su'],
      [dd['HOM'], dd['DATA'], dd['FILT'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
-     python + r' -u ../pysrc/msmswi.py bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     mfexec + r'  awinum.mswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
      r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars_aup0, stdin=0, stdout=-1)
 
 Flow('resimmestmswiaup0.su',[dd['DATA'], dd['SRC'], 'mestmswiaup0.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
@@ -140,19 +140,20 @@ fwipars = ' ' + fdpars + ' ' + smpars + ' ' + descparsfwi + ' ' + lspars
 Flow('mestmswiaup0fwi.rsf',
     ['mestmswiaup0.rsf', dd['DATA'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' -u ../pysrc/fwi.py bulkmodout=\'${TARGETS[0]}\'' + \
+     mfexec + r'  awinum.fwiopt bulkmodout=\'${TARGETS[0]}\'' + \
      	      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\'' + \
               r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
 	      fwipars, stdin=0, stdout=-1)
 
 Flow('resimmestmswiaup0fwi.su',[dd['DATA'], dd['SRC'], 'mestmswiaup0fwi.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
 # MSWI with alpha update, starting at alpha=0, etar=0.04
 
+mswipars_aup1 = 'alpha=0.0 sigma=0.00001 rho=0.01 kmax=25 verbose=2 etar=0.04 ratminus=0.5 ratplus=1.5 upmax=10 precond=1'
 descpars_aup1 = r'descmax=12 desceps=0.01 descverbose=1 descout=\'outfilemswiaup1.txt\' lsverbose=1'
 pars_aup1 = ' ' + fdpars + ' ' + smpars + ' ' + mswipars_aup1 + ' ' + descpars_aup1 + ' ' + lspars
 
@@ -160,31 +161,69 @@ Flow(['mestmswiaup1.rsf', 'uestmswiaup1.su'],
      [dd['HOM'], dd['DATA'], dd['FILT'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
      ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
-     python + r' -u ../pysrc/msmswi.py bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     mfexec + r'  awinum.mswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
      r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars_aup1, stdin=0, stdout=-1)
 
 Flow('resimmestmswiaup1.su',[dd['DATA'], dd['SRC'], 'mestmswiaup1.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
 # FWI from final MSWI estimate with alpha update
-descparsfwi = r'descmax=12 desceps=0.01 descverbose=1 descout=\'outfilemswiaup0fwi.txt\' lsverbose=1'
+descparsfwi = r'descmax=12 desceps=0.01 descverbose=1 descout=\'outfilemswiaup1fwi.txt\' lsverbose=1'
 fwipars = ' ' + fdpars + ' ' + smpars + ' ' + descparsfwi + ' ' + lspars
 
 Flow('mestmswiaup1fwi.rsf',
     ['mestmswiaup1.rsf', dd['DATA'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' -u ../pysrc/fwi.py bulkmodout=\'${TARGETS[0]}\'' + \
+     mfexec + r'  awinum.fwiopt bulkmodout=\'${TARGETS[0]}\'' + \
      	      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\'' + \
               r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
 	      fwipars, stdin=0, stdout=-1)
 
 Flow('resimmestmswiaup1fwi.su',[dd['DATA'], dd['SRC'], 'mestmswiaup1fwi.rsf', dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+     ' ' + fdpars, stdin=0, stdout=-1)
+
+# MSWI with alpha update, starting at alpha=0, etar=0.04
+
+mswipars_aup2 = 'alpha=0.0 sigma=0.00001 rho=0.0025 kmax=1000 verbose=2 etar=0.04 ratminus=0.5 ratplus=1.5 upmax=10 precond=0'
+descpars_aup2 = r'descmax=25 desceps=0.01 descverbose=1 descout=\'outfilemswiaup2.txt\' lsverbose=1'
+pars_aup2 = ' ' + fdpars + ' ' + smpars + ' ' + mswipars_aup2 + ' ' + descpars_aup2 + ' ' + lspars
+
+Flow(['mestmswiaup2.rsf', 'uestmswiaup2.su'],
+     [dd['HOM'], dd['DATA'], dd['FILT'], dd['SRC'], dd['BUOY']],
+     sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     ' /bin/cp ${SOURCES[2]} ${TARGETS[1]} && ' + \
+     mfexec + r'  awinum.mswiopt bulkmodout=\'${TARGETS[0]}\' filterout=\'${TARGETS[1]}\'' + \
+     r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\' filterin=\'${SOURCES[2]}\'' + \
+     r' buoyancy=\'${SOURCES[4]}\' source=\'${SOURCES[3]}\'' + pars_aup2, stdin=0, stdout=-1)
+
+Flow('resimmestmswiaup2.su',[dd['DATA'], dd['SRC'], 'mestmswiaup2.rsf', dd['BUOY']],
+     ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+     ' ' + fdpars, stdin=0, stdout=-1)
+
+# FWI from final MSWI estimate with alpha update, no smoothing
+descparsfwi = r'descmax=12 desceps=0.01 descverbose=1 descout=\'outfilemswiaup2fwi.txt\' lsverbose=1'
+fwipars = ' ' + fdpars + ' ' + smpars0 + ' ' + descparsfwi + ' ' + lspars
+
+Flow('mestmswiaup2fwi.rsf',
+    ['mestmswiaup2.rsf', dd['DATA'], dd['SRC'], dd['BUOY']],
+     sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     mfexec + r'  awinum.fwiopt bulkmodout=\'${TARGETS[0]}\'' + \
+     	      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\'' + \
+              r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
+	      fwipars, stdin=0, stdout=-1)
+
+Flow('resimmestmswiaup2fwi.su',[dd['DATA'], dd['SRC'], 'mestmswiaup2fwi.rsf', dd['BUOY']],
+     ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
@@ -195,14 +234,14 @@ fwi0pars = ' ' + fdpars + ' ' + smpars + ' ' + descparsfwi0 + ' ' + lspars
 Flow('mestfwi0.rsf',
     [dd['HOM'], dd['DATA'], dd['SRC'], dd['BUOY']],
      sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' -u ../pysrc/fwi.py bulkmodout=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.fwiopt bulkmodout=\'${TARGETS[0]}\'' + \
      	      r' bulkmodin=\'${SOURCES[0]}\' datain=\'${SOURCES[1]}\'' + \
               r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
 	      fwipars, stdin=0, stdout=-1)
 
 Flow('resimmestfwi0.su',[dd['DATA'], dd['SRC'], 'mestfwi0.rsf',dd['BUOY']],
      ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
-     python + r' ../pysrc/datasim.py bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
      r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
      ' ' + fdpars, stdin=0, stdout=-1)
 
