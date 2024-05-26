@@ -9,11 +9,11 @@
 \parskip 12pt
 
 \begin{abstract}
-Matched Source Waveform Inversion applied to transmission data
+Matched Source Waveform Inversion applied to acoustic transmission data
 produces an estimate of refractive index similar to the result of
 travel time inversion, but without explicit identification of travel
 times. This paper reviews the theoretical justification of this result
-and its limitations, and exhibits a numerical illustration. 
+and its limitations, and with 2D numerical illustrations. 
 \end{abstract}
 \setlength{\parindent}{0cm}
 
@@ -25,7 +25,7 @@ suboptimal model estimates (``cycle-skip''), demonstrably far from global optima
 controlled settings and often uninformative of material structure in
 field use. It is possible that such local descent algorithms are
 trapped in regions around local minima, though such trapping, or even
-the existance of local, non-global minima, are seldom established with
+the existence of local, non-global minima, are seldom established with
 any rigor. MSWI
 loosens the bond between predicted and observed data by interposing a
 filter, adapted to map one to the other trace-by-trace, and penalizes
@@ -36,7 +36,7 @@ optimization methods to approximate data kinematics.
 The aim of this paper is to review the theoretical basis of MSWI,
 describe a practical computational framework for MSWI, and use it to
 solve a synthetic acoustic inversion problem for which FWI fails. In
-contrast, MSWI starting at the same initial estimate delivers a
+contrast, MSWI starting at the same initial estimate delivers an
 improved velocity from which FWI succeeds in approaching the global
 minimizer. The example is representative of a case (single arrival or
 simple wavefront transmitted wave data) in which the MSWI objective
@@ -89,7 +89,7 @@ in treating this example. The final section discusses some of the many
 unresolved questions around MSWI and similar approaches to inverse
 problems in wave propagation.
 
-\section{Background}
+\section{Theory}
 The version of MSWI discussed here uses acoustic wave propagation with
 isotropic point sources and receivers.
 The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$, ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$ depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf x})$ (reciprocal of the density $\rho({\bf x})$), and wavelet $w(t;{\bf x}_s)$ through the acoustic system
@@ -138,7 +138,7 @@ which the Euclidean inner product
   \langle g, \delta m\rangle = g^T\delta m
 \end{equation}
 with any other vector $\delta m$ gives the
-rate of change in the direction of that vector of $J_{\rm FWI}$ at m.
+rate of change in the direction of that vector of $J_{\rm FWI}$ at $m$.
 
 For optimization within a set of slowly varying models (on the
 wavelength scale),  it is appropriate to penalize oscillation of the
@@ -191,7 +191,7 @@ standard modeling, in that the domain (bulk modulus buoyancy, wavelet)
 is larger than in the conventional formulation, and coincides with it
 under the special condition that the source wavelet is independent of
 the receiver location. This  {\em
-  source-receiver extension}\cite[]{HuangSymes2015SEG} is a key ingredient in a number of
+  source-receiver extension} \cite[]{HuangSymes2015SEG} is a key ingredient in a number of
 other papers on modifications of FWI, as mentioned in the Introduction.
 
 It is possible to make the error between filtered predicted data and
@@ -245,7 +245,7 @@ amplitude) depending on the model $m$, so that
   p(\bx,t;\bx_s) = a[m](\bx,\bx_s)w(t-\tau[m](\bx,\bx_s),\bx_s) + ...
 \end{equation}
 The elided terms are smoother than $w$, and become small with the
-dominant wavelength in $w$ (\cite{Symes:94a} explains the precise
+dominant wavelength in $w$ (\cite{Symes:24a} explains the precise
 meaning of this condition). Thus we can write
 \[
   F[m]w(\bx_r,t;\bx_s) \approx
@@ -280,8 +280,8 @@ show that the only stationary points are those of the mean square
 travel time error, even approximately. However if the amplitudes are
 relatively insensive to changes in model, as is true if the
 source-receiver distance is well away from developing multiple
-arrivals, then the difference of stationary points gets small as $m$
-approaches a stationary point of $\tilde{J}_{\alpha,\sigma}$. So we
+arrivals, then any stationary point of $\tilde{J}_{\alpha,\sigma}$ is
+either close to a tomographic stationary point, or far from $m^*$. So we
 would expect minimization $\tilde{J}_{\alpha,\sigma}$ to produce a
 model that closely matches the travel times inherent in the data
 ($\tau[m^*]$ in the notation used here).
@@ -290,10 +290,23 @@ AWI adds one more feature, namely scaling by the trace norm of the
 filter. This normalization can be interpreted as a choice of weighted
 norm on the space of adaptive filters. It leads to a very similar
 relation to \ref{eqn:tomo} for the AWI penalty function, but without
-the amplitude factors: that is, the right-hand side of \ref{eqn:tomo}
-is {\em just} the mean-square traveltime error. See \cite{Symes:24a}
+the amplitude factors: that is, the right-hand side of the AWI
+analogue of \ref{eqn:tomo}
+is {\em just} the mean-square traveltime error, up to controllable
+error, for single-arrival transmission data. See \cite{Symes:24a}
 for details.
-    
+
+\cite{Symes:24a} also shows that if energetic multiple arrivals are
+present in the data, for any reason, then cross-talk between travel
+time branches destroys the relation between MSWI (or AWI) and any
+version of the mean-square travel time error. The next sections of
+this paper will illustrate the
+success of MSWI for single-arrival data, and its failure for data with
+multiple arrivals.
+
+We end this section by overviewing the computations required for
+minimization of $\tilde{J}_{\alpha,\sigma}$.
+
 The reduced adaptive filter $u_{\alpha,\sigma}[m;d]$ is the solution
 of the {\em normal equation}
 \begin{equation}
@@ -329,59 +342,70 @@ Limited-Memory Broyden-Fletcher-Goldfarb-Shanno
 iterations. Methods more closely related to Newton iteration require
 more involved computations (see for instance \cite{Kaufman:75}. 
 
-\section{A numerical illustration}
+\section{Numerical Illustration}
 
 \inputdir{project}
 
-This section presents the inversion of acoustic data with dimensions
-typical of crustal seismic exploration. The target bulk modulus field ($\kappa$)
-is depicted in Figure \ref{fig:m}, and contains an acoustic ``lens''
-positioned in the center between 1000 m and 3000 m depth
-(``$z$''). The background level outside the lens is 4 GPa; at the
-center it is 2 GPa. The
-buoyancy ($\beta$)is spatially homogeneous at 1 cm$^3/g$, so the background
-wave speed is 2000 m/s.
+This section presents application of MSWI to simulated acoustic data with dimensions
+typical of crustal seismic exploration. We use several configurations
+to illustrate the capabilities and limitations of this approach. In
+all cases, we use MSWI to generate an initial bulk modulus estimate
+input to FWI.
 
-\plot{m}{width=\textwidth}{Lens model.}
+\subsection{Experimental setup}
 
-This field is sampled on a 20 $\times$ 20 m grid. Acoustic wave
+The several experiments to be described below share a number of
+features, set out in this section. 
+
+Acoustic wave
 propagation is simulated via a staggered grid finite difference method
-\cite[]{vir86,lev88,Cohen:01}. The time
-step is chosen to be safely stable, given the parameter fields,
-difference formulae, and
-spatial sampling. 
+\cite[]{vir86,lev88,Cohen:01} of order 2 in time and 8 in space. The time
+step is an internal detail of the simulation, chosen to be safely
+stable, given the parameter fields, difference formulae, and 
+spatial sampling. The discrete pressure field is
+output over the time range $0 < t < 5$ s with sample interval $0.008$
+s at externally specified receiver locations
+via piecewise linear interpolation in space and cubic spline
+interpolation in time. Isotropic point sources are added
+into the acoustic fields at each time step via the adjoints of these
+interpolation operations. These and other details of the simulator are
+discussed in \cite{GeoPros:11}.
 
-Receivers are spaced on the line at depth 1000 m, from 2000 m to 6000
-m horizontal coordinate (``$x$''), spaced 20 m apart. Eleven source
-positions lie on the line $z=3000$ m, spaced 200 m apart, from
-$x=3000$ m to $x = 5000$ m. The source wavelet $w$ (the same for every
-source ) is a $[1.0, 2.5, 7.5, 12.5]$ Hz trapezoidal bandpass filter,
-with a median frequency of 5.875 Hz corresponding to a median wavelength of
+Spatial fields (bulk modulus, buoyancy, gradients) occupy a
+rectangular region of 8 km horizontal (``x'') extent and 4 km vertical
+(``z'') extent, sampled on a 20 $\times$ 20 m grid. For all except the
+third example, receivers are located on the vertical line at
+horizontal coordinate $x$= 5000 m, spaced 20 m apart, starting at
+depth $z$ = 200 m. Twenty isotropic point sources occupy positions lie
+on the line $x=3000$ m, spaced 150 m apart, starting at depth = 500
+m. For the third example, source and receiver lines are moved 2000 m
+further apart, to $x=2000$ m and $x=6000$ m respectively, other
+parameters remaining the same. [Note that this geometry is a 2D
+cartoon of that used in cross-well seismic data acquisition.] The
+source wavelet $w$ (the same for every source ) is a
+$[1.0, 2.5, 7.5, 12.5]$ Hz trapezoidal bandpass filter, with a median
+frequency of 5.875 Hz corresponding to a median wavelength of
 $\approx$ 340 m, and shortest wavelength of 160 m. It is centered at
 $t=1$ s.
 
-The discrete pressure field is
-sampled at the externally specified time grid and spatial locations
-via piecewise linear interpolation in space and cubic spline
-interpolation in time. The isotropic point source is added
-into the acoustic fields at each time step via the adjoints of these
-interpolation operations.
+The initial model $m_0$ for MSWI is homogeneous, with $\kappa = $ 4
+GPa, $\beta = $ 1 cm$^3$/g. As noted earlier, we regard $\beta$ as
+fixed in this series of experiments, so mention of it will be
+suppressed. The corresponding data for isotropic point sources at $x=3000$ m,
+point receivers at $x=5000$ m, and the bandpass filter time dependence
+described earlier, is depicted in
+Figure \ref{fig:chwd20}. We use both $m_0$ and the output of MSWI as
+initial models for FWI..
 
-Simulated data from this configuration appears as Figure \ref{fig:d11}.
-
-The initial model $m_0$ for inversion is homogeneous, with $\kappa = $ 4 GPa,
-$\beta = $ 1 cm$^3$/g. The corresponding data is depicted in Figure \ref{fig:sim0}.
-These plots show the time shift between the homogeneous model data and
-the target data, for the central source positions.
-
-\multiplot{2}{d11,sim0}{width=0.45\textwidth}{a: Data for target model $m$
-  (Figure \ref{fig:m}). b: Data for homogeneous model $m_0$.}
+\plot{chwd20}{width=\textwidth}{Data for homogeneous model $m_0$: 20
+  sources at $x=3000$ m, 201 receivers at $x=5000$ m.}
 
 We apply a version of weighted steepest descent optimization to the
-minimization of $J_{\rm FWI}$. The inverse weight operator ($W^{-1}$
+minimization of both $J_{\rm FWI}$ and $\tilde{J}_{\alpha,\sigma}$.
+The inverse weight operator ($W^{-1}$
 in formula \ref{eqn:fwiwgrad}) is a
-10-point moving average in both spatial directions, repeated once. As
-noted above, the weight operator itself is not required. The weighted
+10-point moving average in both spatial directions, repeated once,
+except in the fourth example as discussed below. Recall that the weight operator itself is not required. The weighted
 gradient is computed via formula \ref{eqn:fwigrad}. The adjoint
 derivative $DF[m]^T$ is computed via the {\em adjoint state method}
 \cite[]{Chavent:74,GauTarVir:86}, with time reversal of the acoustic fields
@@ -389,16 +413,65 @@ implemented via optimal checkpointing
 \cite[]{Griewank:92,Griewank:book,Symes:06a-pub}. The negative of the weighted
 gradient ($g_W$, formula \ref{eqn:fwiwgrad}) is the search direction,
 and the optimal step in this direction is approximated by a simple
-backtracking line search algorithm \cite[]{NocedalWright}.
+backtracking line search algorithm \cite[]{NocedalWright}. The
+iteration is terminate either when the gradient norm has fallen below
+1\% of its initial value, or when a maximum number of iterations
+(usually 12) is reached.
 
-The value of $J_{\rm FWI}[m_0,d] \approx 3.04$, and the rate of
-increase in the weighted gradient direction at $m_0$ is 1.74 $\times
-10^{-6}$. Note that the rate of increase is the same as the weighted
-gradient norm. After 10 steepest descent steps, the objective value has
-decreased by about 30\%, to 1.9, and the weighted gradient norm by
-more than an order of magnitude, to $\approx 9.6 \times 10^{-8}$. The
-final model appears in Figure \ref{fig:mestfwi0}, and the
-corresponding data in Figure \ref{fig:resimfwi0}.
+The MSWI objective $\tilde{J}_{\alpha,\sigma}$ requires choices of the
+parameters $\alpha$ and $\sigma$, and solution of the normal equation
+\ref{eqn:normal}. This system is far larger than is convenient to solve
+by any variant of Gaussian Elimination, even for our small 2D
+examples, so iterative methods are 
+necessary. We choose the Conjugate Gradient (CG.) method
+\cite[]{Dan:67,Steihaug:83,NocedalWright}, and stop the
+iteration by monitoring the reduction in length of the normal residual
+(the gradient of $J_{\alpha,\sigma}[m,u;d]$ with respect to $u$). The
+reduction threshhold $\rho$ is thus another necessary input
+parameter. For all calculations in this paper, we use
+we choose $\rho = 0.01$ (note that unlike $\alpha$ and $\sigma$,
+$\rho$ is dimensionless).
+
+Choice of regularization weights like $\alpha$ and $\sigma$ is a
+widely studied topic; we mention some methods for this task in the
+discussion section. For the set of examples presented here, we take a
+simpler approach. Since the purpose of $\sigma>0$ is to avoid singularity
+in the system \ref{eqn:normal} even for $\alpha=0$, we choose it a bit
+bigger than floating point tolerance for single precision:
+$\sigma = 10^{-5}$. We choose $\alpha$ by computing the solution
+$u_{\alpha,\sigma}[m_0;d]$ for the data $d$ used in the first example
+below, and several powers of 10 for $\alpha$. The largest such
+$\alpha$ that yields an RMS predicted data error
+($\|S[m_0]u_{\alpha,\sigma}[m_0;d] - d\|$) less than $0.05 \|d\|$ is
+$\alpha = 10^{-4}$. We take this relation as representative, and use
+this value for all MSWI computations.
+
+\subsection{Recovering a circular lens}
+
+The target bulk modulus field ($\kappa$) for the first example 
+is depicted in Figure \ref{fig:m}. It contains an acoustic ``lens''
+positioned in the center between 1000 m and 3000 m depth
+(``$z$''). The background level outside the lens is 4 GPa; at the
+center it is 2.4 GPa. The
+buoyancy ($\beta$)is spatially homogeneous at 1 cm$^3/g$, so the background
+wave speed is 2000 m/s.
+
+\plot{m}{width=\textwidth}{Lens model.}
+
+Simulated data from this configuration appears as Figure
+\ref{fig:cwd20}.
+
+\plot{cwd20}{width=\textwidth}{Data for circular lens model (\ref{fig:m}): 20
+  sources at $x=3000$ m, 201 receivers at $x=5000$ m.}
+
+The value of $J_{\rm FWI}[m_0,d] \approx 4.6$, and the rate of
+increase in the weighted gradient direction at $m_0$ is 4.2 $\times
+10^{-6 }$. Note that the rate of increase is the same as the weighted
+gradient norm. After 12 steepest descent steps, the objective value has
+decreased to 2.6, and the
+weighted gradient norm by more than an order of magnitude, to $\approx 2.5 \times 10^{-7}$. The
+final model appears in Figure \ref{fig:cwlens20mestfwi0}, and the
+corresponding data in Figure \ref{fig:cwlens20resimmestfwi0}.
 
 %\multiplot{2}{mestfwi0,resimfwi0}{width=0.45\textwidth}{a: Bulk
 %  modulus produced by 10 steepest descent steps to minimize the FWI
@@ -406,15 +479,15 @@ corresponding data in Figure \ref{fig:resimfwi0}.
 %  \ref{fig:sim11}, starting with homogeneous model. b: Data simulated
 %  from FWI inversion result.}
 
-\plot{mestfwi0}{width=\textwidth}{a: Bulk modulus produced by 10
+\plot{cwlens20mestfwi0}{width=\textwidth}{a: Bulk modulus produced by 10
   steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
-  using the data shown in \ref{fig:d11}.}
+  using the data shown in \ref{fig:cwd20}.}
 
-\multiplot{2}{resimfwi0,residfwi0}{width=0.45\textwidth}{a: Data
+\multiplot{2}{cwlens20resimmestfwi0,cwlens20residmestfwi0}{width=0.45\textwidth}{a: Data
   corresponding to FWI inversion result shown in Figure
-  \ref{fig:mestfwi0}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:resimfwi0} and target data
-  \ref{fig:d11}. Note the failure to match the later signal in the
+  \ref{fig:cwlens20mestfwi0}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cwlens20resimmestfwi0} and target data
+  \ref{fig:cwd20}. Note the failure to match arrival times of the later signal in the
   central part of the display.}
 
 While the reduction in the (weighted) gradient norm indicates progress
@@ -423,86 +496,427 @@ estimate is in the vicinity of a local minimizer. The fit to data
 obtained is not at all satisfactory. More discussion of this result
 will be found below.
 
-Now apply the same algorithm to the MSWI objective
-$J_{\alpha,\sigma}$. Of course, to do so requires a choice of the
-parameters $\alpha$ and $\sigma$. The purpose of the regularization
-parameter $\sigma > 0$ is
-simply to assure that the system \ref{eqn:normal} is positive
-definite, so it can be chosen quite small - whatever that means. The
-penalty parameter $\alpha > 0$ is the link between the filtered
-residual and the spread in time of the filter: the performance of the
-algorithm depends primarily on its choice. The next section will
-discuss rational approaches to this choice. For now, we use the values
-$\alpha=0.0001, \sigma=0.00001$ based on numerical exploration of the
-objective.
+This example is the one on which we based the choice $\alpha =
+10^{-4}$. We did this by minimizing $J_{\alpha,\sigma}[m_0, u; d]$
+over $u$ to identify a filter that outputs a good fit to the data
+\ref{fig:cwd20} from the input \ref{fig:chwd20} (simulated from
+$m_0$), and choosing $\alpha$ just small enough to obtain an RMS error
+under 5\%.  The resulting adaptive filter $u_{\alpha,\sigma}[m_0;d]$
+is shown in Figure \ref{fig:cwlens20uest0}. This filter exhibits a lot
+of energy at non-zero times, as is necessary to move the events in
+\ref{fig:chwd20} near those in \ref{fig:cwd20}. Thus the penalty term
+is rather large. We will use the apparent dispersion of energy away
+from $t=0$ in these adaptive filters to judge the quality of
+inversions.
 
-The system \ref{eqn:normal} is far larger than is convenient to solve
-by any variant of Gaussian Elimination, so iterative methods are 
-necessary. We choose the Conjugate Gradient (CG.) method
-\cite[]{Dan:67,Steihaug:83,NocedalWright}, and stop the
-iteration by monitoring the reduction in length of the normal residual
-(the gradient of $J_{\alpha,\sigma}[m,u;d]$ with respect to $u$). The
-reduction threshhold $\rho$ is thus another necessary input parameter:
-we choose $\rho = 0.001$ (note that unlike $\alpha$ and $\sigma$,
-$\rho$ is dimensionless). We use the same inverse weight operator as
-in the FWI example, namely a 10 $\times$ 10 moving average, repeated
-once.
+\plot{cwlens20uest0}{width=\textwidth}{Adaptive filter to match
+  initial model data (Figure \ref{fig:chwd20}) to circular lens
+  data (Figure \ref{fig:cwd20}). Note considerable energy dispersion
+  away from $t=0$.}
 
-The initial bulk modulus field is once again homogeneous at 4 GPa. The
-initial value of the reduced MSWI objective is $\approx 1.32 \times 10^{-2}$,
-and the length of the (weighted) gradient is $\approx 6.37 \times
-10^{-10}$. After 7 iterations, the normal residual reduction criterion
-is satisfied. The value has decreased to $\approx 9.2 \times 10^{-4}$,
-or a bit more than an order of magnitude reduction. The gradient
-length is $\approx 4.33 \times 10^{-12}$, a reduction of more than two
-orders of magnitude. The resulting bulk modulus is shown in Figure \ref{fig:mest11}.
+We applied the same steepest descent algorithm to the MSWI objective
+$J_{\alpha,\sigma}$. The initial bulk modulus field is once again
+homogeneous at 4 GPa. The initial value of the reduced MSWI objective
+is $\approx 1.49 \times 10^{-2}$, and the length of the (weighted)
+gradient is $\approx 4.7 \times 10^{-10}$. After 12 iterations, the value has
+decreased to $\approx 3.25 \times 10^{-3}$, or roughly a factor of 4.5.
+reduction. The gradient length is
+$\approx 5.6 \times 10^{-12}$, a reduction of almost two orders of
+magnitude. The resulting bulk modulus is shown in Figure
+\ref{fig:cwlens20mestmswi}.
 
-\plot{mest11}{width=\textwidth}{a: Bulk modulus produced by 7
+\plot{cwlens20mestmswi}{width=\textwidth}{a: Bulk modulus produced by 12
   steepest descent steps to minimize the reduced MSWI objective \ref{eqn:redfiltpen},
-  using the data shown in \ref{fig:d11}.}
+  using the data shown in \ref{fig:cwd20}.}
 
-\multiplot{2}{sim11,resid11}{width=0.45\textwidth}{a: Data
-  corresponding to MSWI result shown in Figure
-  \ref{fig:mest11}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:sim11} and target data
-  \ref{fig:d11}. Note that the later signal in the central portion is
-  still shifted, but by much less than in Figure \ref{fig:residfwi0}.}
+The final adaptive filter is shown in Figure
+\ref{fig:cwlens20uestmswi}. Note that energy in the filter has
+migrated towards $t=0$, compared to the adaptive filter produced from
+the homogenous bulk modulus \ref{fig:cwlens20uest0}, and the bulk of
+it is within an apparent half-wavelength of $t=0$. This suggests that
+the MSWI result may be an adequate initial estimate for a successful
+FWI.
 
-Inspection of the residual plot \ref{fig:resid11} suggests that the
+\plot{cwlens20uestmswi}{width=\textwidth}{Adaptive filter to match
+  data for MSWI model (Figure \ref{fig:cwlens20resimmestmswi}) to circular lens
+  data (Figure \ref{fig:cwd20}). Note considerable less energy dispersion
+  away from $t=0$ than is evident in Figure \ref{fig:cwlens20uest0}.}
+
+Another way to look at the improved data kinematics of the MSWI result
+is via the simulate data from the model shown in
+\ref{fig:cwlens20mestmswi}. Figures \ref{fig:cwlens20resimmestmswi},
+\ref{fig:cwlens20residmestmswi} suggest that the
 data predicted from the MSWI result is in many places within a
-half-wavelength travel time shift of the data in Figure \ref{fig:d11}.
+half-wavelength travel time shift of the data in Figure \ref{fig:cwd20}.
 A half-wavelength is the conventional threshhold for FWI initial fit
-error: below that it works, above that it doesn't. Thus it is tempting
-to attempt FWI from using the MSWI result as initial estimate.
+error: below that it works, above that it doesn't.
+
+\multiplot{2}{cwlens20resimmestmswi,cwlens20residmestmswi}{width=0.45\textwidth}{a:
+  Data corresponding to MSWI result shown in Figure
+  \ref{fig:cwlens20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cwlens20resimmestmswi} and target data
+  \ref{fig:cwd20}. Note that the later signal in the central portion is
+  still shifted, but by much less than in Figure \ref{fig:cwlens20residmestfwi0}.}
 
 We applied 11 iterations of steepest descent to the FWI objective,
 with initial estimate of $m$ equal to the final estimate from the MSWI
-inversion just described (Figure \ref{fig:mest11}). The initial FWI
-objective value was $\approx 4.3$, and the weighted gradient norm was
-$\approx 2.15 \times 10^{-5}$.  After 11 steps of steepest descent,
+inversion just described (Figure \ref{fig:cwlens20mestmswi}). The initial FWI
+objective value was $\approx 2.9$, and the weighted gradient norm was
+$\approx 2.0 \times 10^{-4}$.  After 11 steps of steepest descent,
 the prescribed reduction ($10^{-2}$) of the weighted gradient norm was achieved,
-and the objective value had decreased to $\approx 4.41 \times
+and the objective value had decreased to $\approx 9.1 \times
 10^{-2}$. The resulting bulk modulus field is depicted in Figure
-\ref{fig:mestfwi}. The predicted data at this model, and the residual
-data, are shown in Figures \ref{fig:resimfwi} and \ref{fig:residfwi}
+\ref{fig:cwlens20mestmswifwi}. The predicted data at this model, and the residual
+data, are shown in Figures \ref{fig:cwlens20resimmestmswifwi} and \ref{fig:cwlens20residmestmswifwi}
 respectively.
+
+\plot{cwlens20mestmswifwi}{width=\textwidth}{a: Bulk modulus produced by 11
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:cwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:cwlens20mestmswi}. Reduction in
+  gradient norm of 2 orders of magnitude.}
+
+\multiplot{2}{cwlens20resimmestmswifwi,cwlens20residmestmswifwi}{width=0.45\textwidth}{a: Data
+  corresponding to FWI result shown in Figure
+  \ref{fig:cwlens20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cwlens20resimmestmswifwi} and target data
+  \ref{fig:cwd20}.}
+
+Yet another way to examine the kinematic fit between the target data
+and the resimulated data (Figure \ref{fig:cwlens20resimmestmswifwi})
+is via the adaptive filter computed with the FWI + MSWI model (Figure
+\ref{fig:cwlens20mestmswifwi}).  Figure \ref{fig:cwlens20uest1}
+shows how precisely the kinematics of the resimulation match those of
+the target data.
+
+\plot{cwlens20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:cwlens20resimmestmswi}) to circular lens
+  data (Figure \ref{fig:cwd20}). Dispersion away from 
+  away from $t=0$ has almost disappeared, showing that the resimulated
+  data is nearly a perfect kinematic match with the target data.}
 
 The FWI iteration starting at the MSWI result has effectively achieved
 the global minimum of the FWI objective function: the data match is
-very close. This type of result could perhaps have been achieved by
-systematically increasing $\alpha$, as will be discussed in the next
-section. However, the current result has a remarkable corollary,
-provided that we are willing to assume that the intermediate values of
-the FWI objective between steepest descent iterates are monotonically
-decreasing. This condition could in principle be checked
-computationally. However, for the moment let us accept that it is
-so. Then we can conclude that the homogeneous model at which the first
-FWI inversion was started must lie in a basin of attraction of a
-non-global minimizer, since the value of the objective function at the
-homogeneous model is actually {\em smaller} than that at the result of
-MSWI inversion. However the descent sequence starting at that initial
-estimate arrives at essentially zero residual. No descent path from
-the homogeneous model can  
+very close. The combination of MSWI followed by FWI has fit the data
+starting from the homogeneous initial model, a result that cannot be
+reached by FWI alone.
+
+\subsection{Oblate lens: single vs. multiple arrivals}
+
+Our next two examples use another lens model, somewhat deeper (with a
+minimum bulk modulus of 2 GPa in the center), therefore more
+refractive, and extended in the
+horizontal direction. See Figure \ref{fig:cwm}. As is the case with
+the circular lens, this oblate lens is smooth to adequate numerical
+approximation.
+
+\plot{cwm}{width=\textwidth}{Oblate lens model.}
+
+The first example using this model has exactly the same acquisition
+geometry as was used in the circular lens example: 20 sources at x =
+3000 m, 201 receivers at x = 5000 m, spaced as described in the
+previous section. The data is shown in Figure \ref{fig:cowd20}. 
+
+\plot{cowd20}{width=\textwidth}{Data using model shown in Figure
+  \ref{fig:cwm}, same source-receiver geometry as for circular lens
+  data (Figure \ref{fig:cwd20}).}
+
+The stronger refraction produced by this model produces a near-focus in
+the center of the source-receiver line. In fact, the ray field is
+triplicated, but the smearing effect of finite bandwidth obscures this
+detail, and the data can be (just!) regarded as exhibiting a single
+arrival on an identifiable wavefront.
+
+In this and subsequent examples, FWI initiated from the homogeneous
+model fails in the same way as shown in the  previous section. So
+there is no point in showing the results, and we don't.
+
+Application of steepest descent to the MSWI objective (with the same
+parameters as in the previoius example) results in the model depicted
+in Figure \ref{fig:nqcaustic20mestmswi}, and reduces the objective by
+almost a factor of 7 (from 2.76 $\times 10^{-2}$ to 4.1 $\times
+10^{-3}$ and the gradient norm by two full orders of magnitude. Data
+simulated with this model is shown in Figure
+\ref{fig:nqcaustic20resimmestmswi}, and the residual in Figure
+\ref{fig:nqcaustic20residmestmswi}.
+
+\plot{nqcaustic20mestmswi}{width=\textwidth}{Result of 8 MSWI
+  iterations applied to the data in Figure \ref{fig:cowd20}, beginning
+  at the homogeneous model.}
+
+\multiplot{2}{nqcaustic20resimmestmswi,nqcaustic20residmestmswi}{width=0.45\textwidth}{a: Data
+  corresponding to MSWI result shown in Figure
+  \ref{fig:nqcaustic20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:nqcaustic20resimmestmswi} and target data
+  \ref{fig:cowd20}.}
+
+
+The change in adaptive filters between the homogenous initial model
+and the MSWI inversion is shown in Figures
+\ref{fig:nqcaustic20uest0} and \ref{fig:nqcaustic20uestmswi}. The
+reduction in energy dispersion is evident.
+
+\multiplot{2}{nqcaustic20uest0,nqcaustic20uestmswi}{width=0.45\textwidth}{a:
+  adaptive filter estimate for homogeneous initial model, data of
+  Figure \ref{fig:cowd20}; b: adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:nqcaustic20mestmswi}.}
+
+These results render the MSWI inversion result a plausible initial
+estimate for FWI. Twelve FWI iterations applied to the data in Figure \ref{fig:cowd20}, starting at the model of
+Figure \ref{fig:nqcaustic20mestmswi}, result in the
+model shown in Figure \ref{fig:nqcaustic20mestmswifwi}, at which the
+FWI objective has decreased from $\approx 5.5$ to $\approx 0.13$, that
+is, by more than 97\%. The gradient decreases by approximately the
+same factor. This is evident in the plots of simulated data and
+residual (Figures \ref{fig:nqcaustic20resimmestmswifwi} and
+\ref{fig:nqcaustic20residmestmswifwi}). Finally, energy dispresion
+from $t=0$ has nearly disappeared from the adaptive filter computed
+from this FWI +MSWI result (Figure \ref{fig:nqcaustic20uest1}).
+
+\plot{nqcaustic20mestmswifwi}{width=\textwidth}{a: Bulk modulus produced by 12
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:cowd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:nqcaustic20mestmswi}.}
+
+\multiplot{2}{nqcaustic20resimmestmswifwi,nqcaustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
+  corresponding to FWI + MSWI result shown in Figure
+  \ref{fig:nqcaustic20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:nqcaustic20resimmestmswifwi} and target data
+  \ref{fig:cowd20}.}
+
+\plot{nqcaustic20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:nqcaustic20resimmestmswi}) to oblate lens
+  data (Figure \ref{fig:cowd20}). Dispersion away from 
+  away from $t=0$ has almost disappeared, showing that the resimulated
+  data is nearly a perfect kinematic match with the target data.}
+
+The second example based on the target model in Figure \ref{fig:cwm}
+differs from the first {\em only} in that the sources and receivers
+have been moved further away from each other: the sources lie on the
+line $x=2000$, the receivers on $x=6000$. That is, the source-receiver
+offset has been doubled. Otherwise, all aspects of data generation are
+the same, and produce the data shown in Figure \ref{fig:fcwd20}.
+
+\plot{fcwd20}{width=\textwidth}{Data generated using the same inputs
+  as in Figure \ref{fig:cowd20}, but with sources moved to $x=2000$
+  and receivers to $x=6000$.}
+
+Notice that the additional offset has allowed distinct energetic later
+arrivals to appear in the data.
+
+As before, we compute the adaptive filter required to produce the data
+of Figure \ref{fig:fcwd20} from the corresponding homogeneous medium data (Figure
+\ref{fig:chwd20}). This filter, displayed in \ref{fig:caustic20uest0},
+shows that for most traces, two or more energy peaks appear in the
+adaptive filter, forced by the need to match multiple energy peaks in
+the target data with the single energy peak in the homogeneous medium
+data.
+
+Using the same parameters (tolerance of 0.01 for the normal residual
+in the CG iteration, 12 steps of steepest descent) produces the model
+estimate depicted in Figure \ref{fig:caustic20mestmswi}. The overall
+shape suggests decrease in bulk modulus in more or less the right
+place, but the minimum bulk modulus attained (3.15 GPa) is considerably larger
+than the target's, suggesting that the amount of refraction is
+considerably less. That guess is verified by resimulating the data
+(Figure \ref{fig:caustic20resimmestmswi}): the predicted data does not
+exhibit triplication. The computed adaptive filter (Figure 
+\ref{fig:caustic20uestmswi}) appears to attempt a compromise between
+earlier and later arrivals. Most importantly, the final gradient norm
+is approximately 5\% of the initial, suggesting that the minimizer has
+not been approximated as well as was the case in the previous
+examples. FWI initiated at the MSWI estimate gives an evidently
+cycle-skipped model estimate (Figure \ref{fig:caustic20mestmswifwi}),
+with unsatisfactory resimulation and residual (Figures
+\ref{fig:caustic20resimmestmswifwi},
+\ref{fig:caustic20residmestmswifwi}), and considerable energy spread
+ion the estimated adaptive filter (Figure \ref{fig:caustic20uest1}.
+
+\plot{caustic20uest0}{width=\textwidth}{Adaptive filter required to produce the data
+of Figure \ref{fig:fcwd20} from corresponding homogeneous medium data (Figure
+\ref{fig:chwd20}).}
+
+
+\plot{caustic20mestmswi}{width=\textwidth}{Result of 12 MSWI
+  iterations applied to the data in Figure \ref{fig:fcwd20}, beginning
+  at the homogeneous model.}
+
+\multiplot{2}{caustic20resimmestmswi,caustic20residmestmswi}{width=0.45\textwidth}{a: Data
+  corresponding to MSWI result shown in Figure
+  \ref{fig:caustic20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:caustic20resimmestmswi} and target data
+  \ref{fig:fcwd20}.}
+
+\plot{caustic20uestmswi}{width=\textwidth}{Adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:caustic20mestmswi}.}
+
+\plot{caustic20mestmswifwi}{width=\textwidth}{Bulk modulus produced by 12
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:fcwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:caustic20mestmswi}.}
+
+\multiplot{2}{caustic20resimmestmswifwi,caustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
+  corresponding to FWI + MSWI result shown in Figure
+  \ref{fig:caustic20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:caustic20resimmestmswifwi} and target data
+  \ref{fig:fcwd20}.}
+
+\plot{caustic20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:caustic20resimmestmswi}) to oblate lens
+  data (Figure \ref{fig:fcwd20}). Considerable energy dispersion away
+  from $t=0$ remains, showing that the inverted model does not match
+  data kinematics well.}
+
+As noted above, the reduction in gradient norm achieved in 12 steepest
+descent iterations for this example is not as great as was the case in
+the two previous exmaples: this appears to be a more difficult
+optimization. Accordingly, we perform 12 additional iterations of
+steepest descent. The final gradient norm is $\approx 1.1 \times
+10^{-11}$, an order of magnitude less than the final norm achieved in
+the first 12 iterations and well over two orders of magnitude less
+than the initial gradient norm of $\approx 5.24 \times 10^{-9}$. The
+depression in the center of the estimated bulk modulus has deepened
+(Figure \ref{fig:caustic20mestmswicont}) (2.53 GPa, vs 3.15 GPa at the
+end of the first 12 iterations). While it is stiil insufficiently
+refractive to produce triplication, the resulting resimulation has
+increased in magnitude for the central tracess, indicating approach to a focus, and delayed by
+roughly a half-wavelength compared to the corresponding result at the
+end of the first MSWI iteration. As the remaining figures show, FWI
+starting from this result is much more satisfactory. The latest
+arrival for the central traces still does not have quite correct
+amplitude, but all data phases are correct.
+
+
+
+\plot{caustic20mestmswicont}{width=\textwidth}{Result of 24 MSWI
+  iterations applied to the data in Figure \ref{fig:fcwd20}, beginning
+  at the homogeneous model.}
+
+\multiplot{2}{caustic20resimmestmswicont,caustic20residmestmswicont}{width=0.45\textwidth}{a: Data
+  corresponding to MSWI result shown in Figure
+  \ref{fig:caustic20mestmswicont}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:caustic20resimmestmswicont} and target data
+  \ref{fig:fcwd20}.}
+
+\plot{caustic20uestmswicont}{width=\textwidth}{Adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:caustic20mestmswicont}.}
+
+\plot{caustic20mestmswifwicont}{width=\textwidth}{Bulk modulus produced by 25
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:fcwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:caustic20mestmswicont}.}
+
+\multiplot{2}{caustic20resimmestmswifwicont,caustic20residmestmswifwicont}{width=0.45\textwidth}{a: Data
+  corresponding to FWI + MSWI result shown in Figure
+  \ref{fig:caustic20mestmswifwicont}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:caustic20resimmestmswifwicont} and target data
+  \ref{fig:fcwd20}.}
+
+\plot{caustic20uest2}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:caustic20resimmestmswicont}) to oblate lens
+  data (Figure \ref{fig:fcwd20}). Dispersion away from 
+  away from $t=0$ has almost disappeared, showing that the resimulated
+  data is nearly a perfect kinematic match with the target data.}
+
+\subsection{Non-smooth models: the Camembert}
+
+\subsection{Noise}
+
+
+
+\section{Discussion}
+Several matters deserve attention: character of the FWI result; choice of parameters in the
+definition of the MSWI objective; and application to inverse problems
+defined by other types of wave physics.
+
+\subsection{FWI failure - local mins?}
+The result shown in Figure \ref{fig:cwlens20mestfwi0} is certainly
+unsatisfactory, as is evident from the residual plot (Figure
+\ref{fig:cwlens20residmestfwi0}). However one cannot conclude {\em
+  from this result alone} that further
+iterations of steepest descent, or of a more sophisticated local
+optimization algorithm, starting at the same homogeneous initial
+estimate, would not eventually meander to a global
+minimizer, fitting the data - most importantly, the arrival times -
+with the same sort of accuracy that FWI achieves when started at the
+MSWI result (Figure \ref{fig:cwlens20mestmswi}). Actually, further iterations don't help
+in this instance - at least, not O(10) or O(100) additional
+iterations (we tried!). On the other hand, if O($10^6$)
+additional iterations {\em would} yield a good invertion, it doesn't matter: such vast amount of computational
+work is simply not practical. Nor is it sensible, since alternatives
+exist (FWI + MSWI) that accomplish the inversion goal with far less
+work.
+
+So: we don't know whether Figure \ref{fig:cwlens20mestfwi0} represents an
+approximation to a non-global local minimizer, or not - but it doesn't matter.
+
+\subsection{Parameters}
+The roles of parameters $\sigma$ and $\alpha$ are quite
+different. Regularization, that is, avoidance of singularity in the
+normal equation \ref{eqn:normal}, is the purpose of setting $\sigma >
+0$. As formulated here, $\sigma$ is a dimensional parameter. It is
+simple to make it dimensionless, and that should be done, so that a
+``small'' choice is meaningful.
+
+The penalty parameter $\alpha$ however plays a very different role. In
+principle, $\alpha \rightarrow \infty$ should force the adaptive
+filter to become ``physical'', which in this case means the identity
+operator, i.e. with kernel $\delta(t)$ regardless of source and
+receiver, so that the penalty problem becomes identical to FWI.
+
+There are a variety of rules for setting penalty parameters like
+$\alpha$, of varying degrees of rigor. The discrepancy concept is one
+of these: it is simple to implement, auto-starting for problems like
+MSWI, and steers the penalty problem towards its limit. No magic
+however: this approach requires the assertion of data error. $\alpha$
+is adjusted so that the data error term in \ref{eqn:redfiltpen} or
+similar function is close to the posited size. Doing so is quite
+simple - see \cite{Fu:Geo17b,SymesMinkoffChen:IP22}. It might be objected that
+then one opaque parameter ($\alpha$) has been exchanged for another
+unknown one (data error), however it is even possible to turn this
+construction around to estimate data error
+\cite[]{ChenSymesMinkoff:IMAGE22}. In any case, data error has an
+obvious meaning, whether it is a known quantity or not, whereas
+$\alpha$ is merely a Lagrange multiplier.
+
+\subsection{Other Physics, Other Data}
+Acoustics is seldom exactly the right choice of physics for mechanical
+vibration modeling; in many settings, some variant of elastodynamics,
+perhaps coupled with acoustics in some regions, is the right
+choice. Elastic waves travel at several speeds, intrinsically
+providing multiple wavefronts. Extension of MSWI and similar
+approahces to elastodynamic inverse problems, either by data mode
+separation or some more intrinsic construction, would appear to be a
+very important next step, as would application to electromagnetic imaging.
+
+Sensors (and energy sources) are seldom punctual and/or
+isotropic. Actual source encountered in lab and field can exhibit
+non-trivial radiation patterns or even physical extent non-negligible
+on the wavelength scale. Inclusion of more realistic source modeling
+also seems a very important next step, even for those problems
+admitting a successful approach via source-receiver extension.
+
+As has been emphasized several times, wavefront complexity can prevent
+successful application of inversion methods based on source-receiver
+extension. A variety of other source extension approaches have been
+explored, some with positive numerical results
+\cite[]{HuangNammourSymesDollizal:SEG19}. For many of these
+approaches, the missing piece is a theoretical justification like that
+summarized in equation \ref{eqn:tomo} for MSWI.
+
+Finally, the assumption of smooth material parameter variation is
+unlikely to be justified in actual physical media. Sedimentary rocks,
+human tissue, manufactured objects all exhibit juxtaposition of
+structure at all scales, from long scales modeled by smooth variation,
+to sub-wavelength oscillations. Most likely, settings in which
+ballistic transmitted waves dominate data energetics will permit more
+or less unmodified application of techniques like MSWI, at least to
+gain a low-resolution image of wave velocity, bulk modulus,.... However
+theoretical results in this direction are absent, as are results on
+the related question of applicability of algorithms like MSWI to
+predominantly reflected wave data.
+
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
