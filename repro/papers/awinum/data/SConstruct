@@ -194,6 +194,21 @@ Flow('u11.su', None,
      suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
      stdin=0)
 
+Flow('lu11.su', None,
+     sunull +   ' nt=' + str(3*NTU) + \
+                ' ntr=' + str(NR*NS) + \
+                ' dt=' + str(0.001*DT) + ' | ' + \
+     sushw +    ' key=gx a=' + str(RX) + \
+                ' b=' + str(DRX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=sx a=' + str(SX) + \
+                ' c=' + str(DSX) + \
+                ' j=' + str(NR) + ' | ' + \
+     sushw +    ' key=gelev,selev,delrt' + \
+                ' a=' + str(-RZ) + ',' + str(-SZ) + ',' + str(3*DELRT) + ' | ' + \
+     suchw +    ' key1=offset key2=gx key3=sx c=-1 ',
+     stdin=0)
+     
 Flow('h11.su', None,
      sunull +   ' nt=' + str(NTD) + \
                 ' ntr=' + str(NR*NS) + \
@@ -368,7 +383,10 @@ CWLENSRADD = 0.6
 CWLENSRADT = 0.15
 
 # value at center (proportion of background)
-LENSFAC = 0.5
+LENSFAC = 0.6
+
+# value at center (proportion of background)
+CWLENSFAC = 0.5
 
 Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf'], None,
      sfmakevel+' n1=' + str(NZ) + \
@@ -412,7 +430,7 @@ Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf'], None,
                ' x2lens=' + str(NX*DX/2.0) + \
                ' dlens=' + str(NZ*DX*CWLENSRADD) + \
                ' tlens=' + str(NX*DX*CWLENSRADT) + \
-               ' vlens=' + str(BULK*(LENSFAC-1.0)) + ' | ' +\
+               ' vlens=' + str(BULK*(CWLENSFAC-1.0)) + ' | ' +\
      sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
      sfput +   ' unit1=m unit2=m' + ' | ' +\
      sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
@@ -424,7 +442,7 @@ Flow('cx.rsf', 'm.rsf',
 
 ### camembert sort-of ###
 
-campars = 'rad=800 inner=2.0 outer=4.0 n1=201 n2=401 d1=20 d2=20'
+campars = 'rad=800 inner=5.0 outer=4.0 n1=201 n2=401 d1=20 d2=20'
 Flow(['cambulk.rsf', 'cambuoy.rsf'], None,
 		     mfexec + ' awinum.cam ' + campars,
 		     stdin=0, stdout=-1)
@@ -463,6 +481,22 @@ Flow('cwd20.su',['cwh20.su', 'cww20.su', 'm.rsf', 'bym.rsf'],
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
 			  
+# cross-well data for oblate lens model
+
+Flow('cowd20.su',['cwh20.su', 'cww20.su', 'cwm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+# cross-well data for homogeneous model
+
+Flow('chwd20.su',['cwh20.su', 'cww20.su', 'm0.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
 # create box data by cp, cat
 Flow('boxd20.su', ['d20.su', 'cwd20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
 Flow('boxu20.su', ['u20.su', 'cwu20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; /bin/cat ${SOURCES[1]} >> ${TARGETS[0]}', stdin=0, stdout=-1)
