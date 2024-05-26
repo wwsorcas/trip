@@ -45,83 +45,82 @@ sfadd           = os.path.join(RSFROOT,'bin/sfadd')
 sfget           = os.path.join(RSFROOT,'bin/sfget')
 sfspray         = os.path.join(RSFROOT,'bin/sfspray')
 sfcp            = os.path.join(RSFROOT,'bin/sfcp')
-MYAPPS          = os.getenv("MYAPPS")
-python          = os.path.join(MYAPPS,'conda/miniconda/bin/python')
+
+HERE            = os.getcwd()
+PROJ            = os.path.dirname(HERE)
 
 ########### archive - unarchive ##############
 
-DATA='../data'
+# generic result directory
+res = {'mestfwi0': ['.rsf','m'], 'resimmestfwi0': ['.su','d'], 'uest0': ['.su', 'u'], 'uest1': ['.su', 'u'], 'mestmswi': ['.rsf', 'm'], 'uestmswi': ['.su', 'u'], 'mestmswifwi': ['.rsf', 'm'], 'resimmestmswi': ['.su', 'd'], 'resimmestmswifwi': ['.su', 'd'], 'residmestfwi0': ['.su','d'], 'residmestmswi': ['.su', 'd'], 'residmestmswifwi': ['.su', 'd']}
 
-# build list of data to import
-srclist=[]
-srclist.append('d11.su')
-srclist.append('u11.su')
-srclist.append('w11.su')
-srclist.append('m.rsf')
+# data dictionaries
+dat = {'cwd20': '.su', 'chwd20': '.su', 'cowd20': '.su', 'fcwd20': '.su', 'm': '.rsf', 'cwm': '.rsf'}
 
-# retrieve data
-if not os.path.exists(DATA):
-    print('cannot find data source directory ' + DATA)
+# result list
+reslist = ['cwlens20', 'nqcaustic20',  'caustic20']
+
+# retrieve and plot data
+
+DATADIR = os.path.join(PROJ,'data')
+if not os.path.exists(DATADIR):
+    print('cannot find data source directory ' + DATADIR)
     Exit(1)
 else:
-    for i in srclist:
-        SRC = os.path.join(DATA,i)
-        if not os.path.exists(SRC):
-            print('you must build the target ' + SRC)
+    for d in dat.keys():
+        SRC = os.path.join(DATADIR, d + dat[d])
+        print('SRC = ' + SRC)
+        if not os.path.exists(SRC):        
+            print('source data: you must build the target ' + SRC)
             print('before building this project') 
             Exit(1)
-        Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
+        if dat[d] == '.su':
+             if d == 'fcwd20':   
+                 Result(d, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+             else:
+                 Result(d, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+        else:
+            Result(d, SRC, 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-MSWI='../mswi'
+for d in reslist:
+    RESDIR = os.path.join(PROJ,d)
+    if not os.path.exists(RESDIR):
+        print('cannot find result directory ' + RESDIR)
+        Exit(1)
+    else:
+        for k in res.keys():
+            SRC = os.path.join(RESDIR,k + res[k][0])
+            if not os.path.exists(SRC):        
+                print('source data: you must build the target ' + SRC)
+                print('before building this project') 
+                Exit(1)
+            if res[k][0] == '.su':
+                if res[k][1] == 'd':
+                    if d == 'caustic20':
+                        Result(d + k, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+                    else: 
+                        Result(d + k, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+                else:
+                    Result(d + k, SRC, 'suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 d2num=0.1 color=j xinch=10 yinch=6 wanttitle=n')
+            else:
+                Result(d + k, SRC, 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-# build list of data to import
-reslist=[]
-reslist.append('uest0.su')
-reslist.append('uest11.su')
-reslist.append('sim0.su')
-reslist.append('sim11.su')
-reslist.append('resimfwi.su')
-reslist.append('resimfwi0.su')
-reslist.append('mest11.rsf')
-reslist.append('mestfwi.rsf')
-reslist.append('mestfwi0.rsf')
+######################## extra plots for caustic20 #######################
 
-# retrieve data
-if not os.path.exists(MSWI):
-    print('cannot find data source directory ' + MSWI)
-    Exit(1)
-else:
-    for i in reslist:
-        RES = os.path.join(MSWI,i)
-        if not os.path.exists(RES):
-            print('you must build the target ' + RES)
-            print('before building this project') 
-            Exit(1)
-        Flow(i,RES,'/bin/cp ' + RES + ' ' + i, stdin=0, stdout=-1)
+Result('caustic20mestmswicont','../caustic20/mestmswicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-Flow('residfwi.su', ['d11.su', 'resimfwi.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
-Flow('residfwi0.su', ['d11.su', 'resimfwi0.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
-Flow('resid0.su', ['d11.su', 'sim0.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
-Flow('resid11.su', ['d11.su', 'sim11.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
+Result('caustic20resimmestmswicont', '../caustic20/resimmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('m','grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
-Result('mest11','grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
-Result('mestfwi','grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
-Result('mestfwi0','grey minval=2.0 maxval=6.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+Result('caustic20residmestmswicont', '../caustic20/residmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('d11','d11.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('sim0','sim0.su','suread endian=0 read=data | window min1=1.8 max1=3.2 |grey clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('resid0','resid0.su','suread endian=0 read=data | window min1=1.8 max1=3.2 |grey clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('sim11','sim11.su','suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('resid11','resid11.su','suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('resimfwi', 'resimfwi.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 |grey 2.0 clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('residfwi', 'residfwi.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 |grey 2.0 clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('residfwi0', 'residfwi0.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 |grey 2.0 clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
-Result('resimfwi0', 'resimfwi0.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 |grey 2.0 clip=0.008 color=j xinch=10 yinch=4 wanttitle=n')
+Result('caustic20uestmswicont', '../caustic20/uestmswicont.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
 
-Result('uest11','uest11.su',
-        'suread endian=0 read=data |grey clip=0.02 wanttitle=n')
-Result('uest0','uest0.su',
-        'suread endian=0 read=data |grey clip=0.02 wanttitle=n')	
+Result('caustic20mestmswifwicont','../caustic20/mestmswifwicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('caustic20resimmestmswifwicont', '../caustic20/resimmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('caustic20residmestmswifwicont', '../caustic20/residmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('caustic20uest2', '../caustic20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+
 End()
-
