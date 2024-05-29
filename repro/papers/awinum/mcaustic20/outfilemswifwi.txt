@@ -1,0 +1,259 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+record updated parameters
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+compute initial descent direction
+compute initial ascent rate
+rate of ascent = 4.4708e-06
+sanity check for sufficient ascent
+    passed
+compute initial step
+value = 3.1705e+00, dr = 4.4708e-06, initprop = 1.2500e-01
+initial step = 8.8644e+04
+initial value = 3.1705e+00
+initial step  = 8.8644e+04
+initial ascent rate = 4.4708e-06
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 8.8644e+04 val = 2.8019e+00
+        actred = 3.6856e-01 predred = 3.9631e-01
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.5956e+05 val = 2.6120e+00
+        actred = 5.5851e-01 predred = 7.1336e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 2.6120e+00 step = 1.5956e+05
+update search direction
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 1.5956e+05 val = 2.4516e+00
+        actred = 1.6043e-01 predred = 8.6541e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 2.4516e+00 step = 1.5956e+05
+update search direction
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 1.5956e+05 val = 2.7690e+00
+        actred = -3.1748e-01 predred = 1.5736e+00
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 7.9779e+04 val = 2.0199e+00
+        actred = 4.3170e-01 predred = 7.8682e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 2.0199e+00 step = 7.9779e+04
+update search direction
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 7.9779e+04 val = 1.8863e+00
+        actred = 1.3351e-01 predred = 3.3014e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.8863e+00 step = 7.9779e+04
+update search direction
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 7.9779e+04 val = 1.7719e+00
+        actred = 1.1441e-01 predred = 3.8653e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.7719e+00 step = 7.9779e+04
+update search direction
+
+Iteration 5
+
+    Line Search Step 0
+        update step, jet
+        step = 7.9779e+04 val = 1.7492e+00
+        actred = 2.2745e-02 predred = 5.9167e-01
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 3.9890e+04 val = 1.6206e+00
+        actred = 1.5136e-01 predred = 2.9583e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.6206e+00 step = 3.9890e+04
+update search direction
+
+Iteration 6
+
+    Line Search Step 0
+        update step, jet
+        step = 3.9890e+04 val = 1.5449e+00
+        actred = 7.5715e-02 predred = 8.7301e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.5449e+00 step = 3.9890e+04
+update search direction
+
+Iteration 7
+
+    Line Search Step 0
+        update step, jet
+        step = 3.9890e+04 val = 1.4774e+00
+        actred = 6.7435e-02 predred = 6.9182e-02
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 7.1802e+04 val = 1.4267e+00
+        actred = 1.1821e-01 predred = 1.2453e-01
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 1.2924e+05 val = 1.3450e+00
+        actred = 1.9986e-01 predred = 2.2415e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.3450e+00 step = 1.2924e+05
+update search direction
+
+Iteration 8
+
+    Line Search Step 0
+        update step, jet
+        step = 1.2924e+05 val = 1.2802e+00
+        actred = 6.4835e-02 predred = 2.4402e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.2802e+00 step = 1.2924e+05
+update search direction
+
+Iteration 9
+
+    Line Search Step 0
+        update step, jet
+        step = 1.2924e+05 val = 2.2266e+00
+        actred = -9.4642e-01 predred = 1.2026e+00
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 6.4621e+04 val = 1.3431e+00
+        actred = -6.2950e-02 predred = 6.0132e-01
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 3.2311e+04 val = 1.1476e+00
+        actred = 1.3252e-01 predred = 3.0066e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.1476e+00 step = 3.2311e+04
+update search direction
+
+Iteration 10
+
+    Line Search Step 0
+        update step, jet
+        step = 3.2311e+04 val = 1.1084e+00
+        actred = 3.9215e-02 predred = 5.1957e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.1084e+00 step = 3.2311e+04
+update search direction
+
+Iteration 11
+
+    Line Search Step 0
+        update step, jet
+        step = 3.2311e+04 val = 1.0774e+00
+        actred = 3.1035e-02 predred = 3.2511e-02
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 5.8159e+04 val = 1.0547e+00
+        actred = 5.3690e-02 predred = 5.8520e-02
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 1.0469e+05 val = 1.0190e+00
+        actred = 8.9455e-02 predred = 1.0534e-01
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'F': <asg.fsbop object at 0x7f96e8f89a00>, 'b': <vcl.Vector object at 0x7f96e8f89a90>}
+value = 1.0190e+00 step = 1.0469e+05
+update search direction
+
+reached iteration limit
+initial value = 3.1705e+00, final value = 1.0190e+00
+initial step = 8.8644e+04,final step  = 1.0469e+05
+initial ascent rate = 4.4708e-06, finial ascent rate = 1.2879e-06
+exit lsopt

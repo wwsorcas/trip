@@ -1,0 +1,238 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+compute initial descent direction
+compute initial ascent rate
+rate of ascent = 9.2234e-10
+sanity check for sufficient ascent
+    passed
+compute initial step
+value = 1.7899e-02, dr = 9.2234e-10, initprop = 1.2500e-01
+initial step = 2.4258e+06
+initial value = 1.7899e-02
+initial step  = 2.4258e+06
+initial ascent rate = 9.2234e-10
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 2.4258e+06 val = 1.5894e-02
+        actred = 2.0053e-03 predred = 2.2374e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 1.5894e-02 step = 2.4258e+06
+update search direction
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 2.4258e+06 val = 1.4430e-02
+        actred = 1.4641e-03 predred = 1.5425e-03
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 4.3664e+06 val = 1.3374e-02
+        actred = 2.5198e-03 predred = 2.7764e-03
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 7.8596e+06 val = 1.1856e-02
+        actred = 4.0384e-03 predred = 4.9976e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 1.1856e-02 step = 7.8596e+06
+update search direction
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8596e+06 val = 1.0348e-02
+        actred = 1.5076e-03 predred = 1.8807e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 1.0348e-02 step = 7.8596e+06
+update search direction
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8596e+06 val = 9.7036e-03
+        actred = 6.4443e-04 predred = 9.1366e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 9.7036e-03 step = 7.8596e+06
+update search direction
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8596e+06 val = 8.8238e-03
+        actred = 8.7983e-04 predred = 7.6697e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.4147e+07 val = 8.3956e-03
+        actred = 1.3080e-03 predred = 1.3805e-03
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 2.5465e+07 val = 7.4837e-03
+        actred = 2.2199e-03 predred = 2.4850e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 7.4837e-03 step = 2.5465e+07
+update search direction
+
+Iteration 5
+
+    Line Search Step 0
+        update step, jet
+        step = 2.5465e+07 val = 6.5642e-03
+        actred = 9.1947e-04 predred = 1.2766e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 6.5642e-03 step = 2.5465e+07
+update search direction
+
+Iteration 6
+
+    Line Search Step 0
+        update step, jet
+        step = 2.5465e+07 val = 5.5610e-03
+        actred = 1.0032e-03 predred = 8.7214e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 4.5837e+07 val = 5.1030e-03
+        actred = 1.4612e-03 predred = 1.5699e-03
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 8.2507e+07 val = 4.1370e-03
+        actred = 2.4272e-03 predred = 2.8257e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 4.1370e-03 step = 8.2507e+07
+update search direction
+
+Iteration 7
+
+    Line Search Step 0
+        update step, jet
+        step = 8.2507e+07 val = 3.9869e-03
+        actred = 1.5009e-04 predred = 8.2506e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 3.9869e-03 step = 8.2507e+07
+update search direction
+
+Iteration 8
+
+    Line Search Step 0
+        update step, jet
+        step = 8.2507e+07 val = 1.0453e-02
+        actred = -6.4660e-03 predred = 2.1678e-03
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 4.1253e+07 val = 3.6444e-03
+        actred = 3.4251e-04 predred = 1.0839e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 3.6444e-03 step = 4.1253e+07
+update search direction
+
+Iteration 9
+
+    Line Search Step 0
+        update step, jet
+        step = 4.1253e+07 val = 3.6870e-03
+        actred = -4.2600e-05 predred = 5.4385e-04
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 2.0627e+07 val = 3.5431e-03
+        actred = 1.0131e-04 predred = 2.7193e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 3.5431e-03 step = 2.0627e+07
+update search direction
+
+Iteration 10
+
+    Line Search Step 0
+        update step, jet
+        step = 2.0627e+07 val = 3.4956e-03
+        actred = 4.7480e-05 predred = 2.7018e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+internal state of updated jet
+{'dom': <segyvc.Space object at 0x7fb548179190>, 'sim': <asg.fsbop object at 0x7fb558a09b80>, 'data': <vcl.Vector object at 0x7fb558a09b20>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+value = 3.4956e-03 step = 2.0627e+07
+update search direction
+
+achieved prescribed ascent rate reduction:
+initial value = 1.7899e-02, final value = 3.4956e-03
+initial step = 2.4258e+06,final step  = 2.0627e+07
+initial ascent rate = 9.2234e-10, finial ascent rate = 5.3126e-12
+exit lsopt

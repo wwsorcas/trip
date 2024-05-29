@@ -1,0 +1,25 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+record updated parameters
+{'dom': <segyvc.Space object at 0x7f8410179190>, 'sim': <asg.fsbop object at 0x7f8410a21b80>, 'data': <vcl.Vector object at 0x7f8410a21a90>, 'alpha': 0.0001, 'sigma': 1e-05, 'kmax': 1000, 'rho': 0.01, 'verbose': 2, 'etar': None, 'ratminus': None, 'ratplus': None, 'upmax': 1, 'precond': 0}
+compute initial descent direction
+compute initial ascent rate
+rate of ascent = 1.1978e-08
+sanity check for sufficient ascent
+    passed
+compute initial step
+value = 3.6144e-02, dr = 1.1978e-08, initprop = 1.2500e-01
+initial step = 3.7717e+05
+initial value = 3.6144e-02
+initial step  = 3.7717e+05
+initial ascent rate = 1.1978e-08
+
+reached iteration limit
+initial value = 3.6144e-02, final value = 3.6144e-02
+initial step = 3.7717e+05,final step  = 3.7717e+05
+initial ascent rate = 1.1978e-08, finial ascent rate = 1.1978e-08
+exit lsopt
