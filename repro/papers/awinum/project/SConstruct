@@ -55,10 +55,11 @@ PROJ            = os.path.dirname(HERE)
 res = {'mestfwi0': ['.rsf','m'], 'resimmestfwi0': ['.su','d'], 'uest0': ['.su', 'u'], 'uest1': ['.su', 'u'], 'mestmswi': ['.rsf', 'm'], 'uestmswi': ['.su', 'u'], 'mestmswifwi': ['.rsf', 'm'], 'resimmestmswi': ['.su', 'd'], 'resimmestmswifwi': ['.su', 'd'], 'residmestfwi0': ['.su','d'], 'residmestmswi': ['.su', 'd'], 'residmestmswifwi': ['.su', 'd']}
 
 # data dictionaries
-dat = {'cwd20': '.su', 'chwd20': '.su', 'cowd20': '.su', 'fcwd20': '.su', 'm': '.rsf', 'cwm': '.rsf'}
+#dat = {'cwd20': '.su', 'chwd20': '.su', 'cowd20': '.su', 'fcwd20': '.su', 'm': '.rsf', 'dcwm': '.rsf'}
+dat = {'cwd20': '.su', 'chwd20': '.su', 'dcowd20': '.su', 'dcwd20': '.su', 'm': '.rsf', 'dcwm': '.rsf'}
 
 # result list
-reslist = ['cwlens20', 'nqcaustic20',  'caustic20']
+reslist = ['cwlens20', 'mnqcaustic20',  'mcaustic20']
 
 # retrieve and plot data
 
@@ -75,7 +76,8 @@ else:
             print('before building this project') 
             Exit(1)
         if dat[d] == '.su':
-             if d == 'fcwd20':   
+#             if d == 'fcwd20':
+             if d == 'dcwd20':   
                  Result(d, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
              else:
                  Result(d, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
@@ -96,7 +98,8 @@ for d in reslist:
                 Exit(1)
             if res[k][0] == '.su':
                 if res[k][1] == 'd':
-                    if d == 'caustic20':
+#                    if d == 'caustic20':
+                    if d == 'mcaustic20':
                         Result(d + k, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
                     else: 
                         Result(d + k, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
@@ -105,22 +108,22 @@ for d in reslist:
             else:
                 Result(d + k, SRC, 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-######################## extra plots for caustic20 #######################
+######################## extra plots for mcaustic20 #######################
 
-Result('caustic20mestmswicont','../caustic20/mestmswicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20mestmswicont','../mcaustic20/mestmswicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20resimmestmswicont', '../caustic20/resimmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20resimmestmswicont', '../mcaustic20/resimmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20residmestmswicont', '../caustic20/residmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20residmestmswicont', '../mcaustic20/residmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20uestmswicont', '../caustic20/uestmswicont.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+Result('mcaustic20uestmswicont', '../mcaustic20/uestmswicont.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
 
-Result('caustic20mestmswifwicont','../caustic20/mestmswifwicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20mestmswifwicont','../mcaustic20/mestmswifwicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20resimmestmswifwicont', '../caustic20/resimmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20resimmestmswifwicont', '../mcaustic20/resimmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20residmestmswifwicont', '../caustic20/residmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20residmestmswifwicont', '../mcaustic20/residmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
-Result('caustic20uest2', '../caustic20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+Result('mcaustic20uest2', '../mcaustic20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
 
 End()
