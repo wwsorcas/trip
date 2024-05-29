@@ -598,33 +598,33 @@ the target data.
 The FWI iteration starting at the MSWI result has effectively achieved
 the global minimum of the FWI objective function: the data match is
 very close. The combination of MSWI followed by FWI has fit the data
-starting from the homogeneous initial model, a result that cannot be
-reached by FWI alone.
+starting from the homogeneous initial model, a result that was not obtained
+by FWI alone with the algorithmic choices made here.
 
 \subsection{Oblate lens: single vs. multiple arrivals}
 
 Our next two examples use another lens model, somewhat deeper (with a
 minimum bulk modulus of 2 GPa in the center), therefore more
 refractive, and extended in the
-horizontal direction. See Figure \ref{fig:cwm}. As is the case with
+horizontal direction. See Figure \ref{fig:dcwm}. As is the case with
 the circular lens, this oblate lens is smooth to adequate numerical
 approximation.
 
-\plot{cwm}{width=\textwidth}{Oblate lens model.}
+\plot{dcwm}{width=\textwidth}{Oblate lens model.}
 
 The first example using this model has exactly the same acquisition
 geometry as was used in the circular lens example: 20 sources at x =
 3000 m, 201 receivers at x = 5000 m, spaced as described in the
-previous section. The data is shown in Figure \ref{fig:cowd20}. 
+previous section. The data is shown in Figure \ref{fig:dcowd20}. 
 
-\plot{cowd20}{width=\textwidth}{Data using model shown in Figure
-  \ref{fig:cwm}, same source-receiver geometry as for circular lens
+\plot{dcowd20}{width=\textwidth}{Data using model shown in Figure
+  \ref{fig:dcwm}, same source-receiver geometry as for circular lens
   data (Figure \ref{fig:cwd20}).}
 
-The stronger refraction produced by this model produces a near-focus in
-the center of the source-receiver line. In fact, the ray field is
-triplicated, but the smearing effect of finite bandwidth obscures this
-detail, and the data can be (just!) regarded as exhibiting a single
+The stronger refraction produced by this model produces a visible triplication
+the center of the source-receiver line, and in fact in all parts of
+the data, although the smearing effect of finite bandwidth obscures this
+detail in many placed. So most of the data can be (just!) regarded as exhibiting a single
 arrival on an identifiable wavefront.
 
 In this and subsequent examples, FWI initiated from the homogeneous
@@ -633,190 +633,212 @@ there is no point in showing the results, and we don't.
 
 Application of steepest descent to the MSWI objective (with the same
 parameters as in the previoius example) results in the model depicted
-in Figure \ref{fig:nqcaustic20mestmswi}, and reduces the objective by
-almost a factor of 7 (from 2.76 $\times 10^{-2}$ to 4.1 $\times
-10^{-3}$ and the gradient norm by two full orders of magnitude. Data
+in Figure \ref{fig:mnqcaustic20mestmswi}, and reduces the objective to
+roughly 20\% of its initial value, and the gradient norm to 7.5\%. Data
 simulated with this model is shown in Figure
-\ref{fig:nqcaustic20resimmestmswi}, and the residual in Figure
-\ref{fig:nqcaustic20residmestmswi}.
+\ref{fig:mnqcaustic20resimmestmswi}, and the residual in Figure
+\ref{fig:mnqcaustic20residmestmswi}.
 
-\plot{nqcaustic20mestmswi}{width=\textwidth}{Result of 8 MSWI
-  iterations applied to the data in Figure \ref{fig:cowd20}, beginning
+\plot{mnqcaustic20mestmswi}{width=\textwidth}{Result of 8 MSWI
+  iterations applied to the data in Figure \ref{fig:dcowd20}, beginning
   at the homogeneous model.}
 
-\multiplot{2}{nqcaustic20resimmestmswi,nqcaustic20residmestmswi}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mnqcaustic20resimmestmswi,mnqcaustic20residmestmswi}{width=0.45\textwidth}{a: Data
   corresponding to MSWI result shown in Figure
-  \ref{fig:nqcaustic20mestmswi}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:nqcaustic20resimmestmswi} and target data
-  \ref{fig:cowd20}.}
-
+  \ref{fig:mnqcaustic20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mnqcaustic20resimmestmswi} and target data
+  \ref{fig:dcowd20}.}
 
 The change in adaptive filters between the homogenous initial model
 and the MSWI inversion is shown in Figures
-\ref{fig:nqcaustic20uest0} and \ref{fig:nqcaustic20uestmswi}. The
+\ref{fig:mnqcaustic20uest0} and \ref{fig:mnqcaustic20uestmswi}. The
 reduction in energy dispersion is evident.
 
-\multiplot{2}{nqcaustic20uest0,nqcaustic20uestmswi}{width=0.45\textwidth}{a:
+\multiplot{2}{mnqcaustic20uest0,mnqcaustic20uestmswi}{width=0.45\textwidth}{a:
   adaptive filter estimate for homogeneous initial model, data of
-  Figure \ref{fig:cowd20}; b: adaptive filter estimate for MSWI
-  inversion shown in Figure \ref{fig:nqcaustic20mestmswi}.}
+  Figure \ref{fig:dcowd20}; b: adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:mnqcaustic20mestmswi}.}
 
 These results render the MSWI inversion result a plausible initial
-estimate for FWI. Twelve FWI iterations applied to the data in Figure \ref{fig:cowd20}, starting at the model of
-Figure \ref{fig:nqcaustic20mestmswi}, result in the
-model shown in Figure \ref{fig:nqcaustic20mestmswifwi}, at which the
-FWI objective has decreased from $\approx 5.5$ to $\approx 0.13$, that
-is, by more than 97\%. The gradient decreases by approximately the
-same factor. This is evident in the plots of simulated data and
-residual (Figures \ref{fig:nqcaustic20resimmestmswifwi} and
-\ref{fig:nqcaustic20residmestmswifwi}). Finally, energy dispresion
+estimate for FWI. Twelve FWI iterations applied to the data in Figure \ref{fig:dcowd20}, starting at the model of
+Figure \ref{fig:mnqcaustic20mestmswi}, result in the
+model shown in Figure \ref{fig:mnqcaustic20mestmswifwi}, at which the
+FWI objective has decreased to 4\% of its initial value. That is, the
+RMS error between data and predicted data has been reduced to
+approximately 20\% of its initial value; the gradient
+decreases by a slightly larger factor. The reduction obtained is evident in the plots of simulated data and
+residual (Figures \ref{fig:mnqcaustic20resimmestmswifwi} and
+\ref{fig:mnqcaustic20residmestmswifwi}). Residual energy is
+concentrated in later arrivals in the
+central zone, suggesting that the model shown in Figure
+\ref{fig:mnqcaustic20mestmswifwi} may lie in the basin of global minimization. Finally, energy dispresion
 from $t=0$ has nearly disappeared from the adaptive filter computed
-from this FWI +MSWI result (Figure \ref{fig:nqcaustic20uest1}).
+from this FWI +MSWI result, again except for some traces in the
+central zone (Figure \ref{fig:mnqcaustic20uest1}).
 
-\plot{nqcaustic20mestmswifwi}{width=\textwidth}{a: Bulk modulus produced by 12
+\plot{mnqcaustic20mestmswifwi}{width=\textwidth}{a: Bulk modulus produced by 12
   steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
-  using the data shown in \ref{fig:cowd20}, and starting at the MSWI
-  result shown in Figure \ref{fig:nqcaustic20mestmswi}.}
+  using the data shown in \ref{fig:dcowd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:mnqcaustic20mestmswi}.}
 
-\multiplot{2}{nqcaustic20resimmestmswifwi,nqcaustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mnqcaustic20resimmestmswifwi,mnqcaustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
   corresponding to FWI + MSWI result shown in Figure
-  \ref{fig:nqcaustic20mestmswifwi}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:nqcaustic20resimmestmswifwi} and target data
-  \ref{fig:cowd20}.}
+  \ref{fig:mnqcaustic20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mnqcaustic20resimmestmswifwi} and target data
+  \ref{fig:dcowd20}.}
 
-\plot{nqcaustic20uest1}{width=\textwidth}{Adaptive filter to match
-  data for FWI + MSWI model (Figure \ref{fig:nqcaustic20resimmestmswi}) to oblate lens
-  data (Figure \ref{fig:cowd20}). Dispersion away from 
+\plot{mnqcaustic20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:mnqcaustic20resimmestmswi}) to oblate lens
+  data (Figure \ref{fig:dcowd20}). Dispersion away from 
   away from $t=0$ has almost disappeared, showing that the resimulated
   data is nearly a perfect kinematic match with the target data.}
 
-The second example based on the target model in Figure \ref{fig:cwm}
+The second example based on the target model in Figure \ref{fig:dcwm}
 differs from the first {\em only} in that the sources and receivers
 have been moved further away from each other: the sources lie on the
 line $x=2000$, the receivers on $x=6000$. That is, the source-receiver
 offset has been doubled. Otherwise, all aspects of data generation are
-the same, and produce the data shown in Figure \ref{fig:fcwd20}.
+the same, and produce the data shown in Figure \ref{fig:dcwd20}.
 
-\plot{fcwd20}{width=\textwidth}{Data generated using the same inputs
-  as in Figure \ref{fig:cowd20}, but with sources moved to $x=2000$
+\plot{dcwd20}{width=\textwidth}{Data generated using the same inputs
+  as in Figure \ref{fig:dcowd20}, but with sources moved to $x=2000$
   and receivers to $x=6000$.}
 
 Notice that the additional offset has allowed distinct energetic later
 arrivals to appear in the data.
 
 As before, we compute the adaptive filter required to produce the data
-of Figure \ref{fig:fcwd20} from the corresponding homogeneous medium data (Figure
-\ref{fig:chwd20}). This filter, displayed in \ref{fig:caustic20uest0},
-shows that for most traces, two or more energy peaks appear in the
+of Figure \ref{fig:dcwd20} from the corresponding homogeneous medium data (Figure
+\ref{fig:chwd20}). This filter, displayed in \ref{fig:mcaustic20uest0},
+shows that for most traces, two or more major energy peaks appear in the
 adaptive filter, forced by the need to match multiple energy peaks in
 the target data with the single energy peak in the homogeneous medium
 data.
 
 Using the same parameters (tolerance of 0.01 for the normal residual
-in the CG iteration, 12 steps of steepest descent) produces the model
-estimate depicted in Figure \ref{fig:caustic20mestmswi}. The overall
-shape suggests decrease in bulk modulus in more or less the right
-place, but the minimum bulk modulus attained (3.15 GPa) is considerably larger
-than the target's, suggesting that the amount of refraction is
+in the CG iteration, same smoothing operator as inverse weight
+defining norm in model space) 12 steps of steepest descent applied to
+the MSWI objective produces the model
+estimate depicted in Figure \ref{fig:mcaustic20mestmswi}. The overall
+decrease in bulk modulus is correct, but the minimum bulk modulus attained (2.8 GPa) is considerably larger
+than the target's, and moreover is concentrated around the source
+line, suggesting that the amount of refraction produced by this model is
 considerably less. That guess is verified by resimulating the data
-(Figure \ref{fig:caustic20resimmestmswi}): the predicted data does not
+(Figure \ref{fig:mcaustic20resimmestmswi}): the predicted data does not
 exhibit triplication. The computed adaptive filter (Figure 
-\ref{fig:caustic20uestmswi}) appears to attempt a compromise between
+\ref{fig:mcaustic20uestmswi}) appears to attempt a compromise between
 earlier and later arrivals. Most importantly, the final gradient norm
-is approximately 5\% of the initial, suggesting that the minimizer has
+is approximately 18\% of the initial, suggesting that the minimizer has
 not been approximated as well as was the case in the previous
 examples. FWI initiated at the MSWI estimate gives an evidently
-cycle-skipped model estimate (Figure \ref{fig:caustic20mestmswifwi}),
+cycle-skipped model estimate (Figure \ref{fig:mcaustic20mestmswifwi}),
 with unsatisfactory resimulation and residual (Figures
-\ref{fig:caustic20resimmestmswifwi},
-\ref{fig:caustic20residmestmswifwi}), and considerable energy spread
-ion the estimated adaptive filter (Figure \ref{fig:caustic20uest1}.
+\ref{fig:mcaustic20resimmestmswifwi},
+\ref{fig:mcaustic20residmestmswifwi}), and considerable energy spread
+ion the estimated adaptive filter (Figure \ref{fig:mcaustic20uest1}.
 
-\plot{caustic20uest0}{width=\textwidth}{Adaptive filter required to produce the data
-of Figure \ref{fig:fcwd20} from corresponding homogeneous medium data (Figure
+\plot{mcaustic20uest0}{width=\textwidth}{Adaptive filter required to produce the data
+of Figure \ref{fig:dcwd20} from corresponding homogeneous medium data (Figure
 \ref{fig:chwd20}).}
 
 
-\plot{caustic20mestmswi}{width=\textwidth}{Result of 12 MSWI
-  iterations applied to the data in Figure \ref{fig:fcwd20}, beginning
+\plot{mcaustic20mestmswi}{width=\textwidth}{Result of 12 MSWI
+  iterations applied to the data in Figure \ref{fig:dcwd20}, beginning
   at the homogeneous model.}
 
-\multiplot{2}{caustic20resimmestmswi,caustic20residmestmswi}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mcaustic20resimmestmswi,mcaustic20residmestmswi}{width=0.45\textwidth}{a: Data
   corresponding to MSWI result shown in Figure
-  \ref{fig:caustic20mestmswi}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:caustic20resimmestmswi} and target data
-  \ref{fig:fcwd20}.}
+  \ref{fig:mcaustic20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mcaustic20resimmestmswi} and target data
+  \ref{fig:dcwd20}.}
 
-\plot{caustic20uestmswi}{width=\textwidth}{Adaptive filter estimate for MSWI
-  inversion shown in Figure \ref{fig:caustic20mestmswi}.}
+\plot{mcaustic20uestmswi}{width=\textwidth}{Adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:mcaustic20mestmswi}.}
 
-\plot{caustic20mestmswifwi}{width=\textwidth}{Bulk modulus produced by 12
+\plot{mcaustic20mestmswifwi}{width=\textwidth}{Bulk modulus produced by 12
   steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
-  using the data shown in \ref{fig:fcwd20}, and starting at the MSWI
-  result shown in Figure \ref{fig:caustic20mestmswi}.}
+  using the data shown in \ref{fig:dcwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:mcaustic20mestmswi}.}
 
-\multiplot{2}{caustic20resimmestmswifwi,caustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mcaustic20resimmestmswifwi,mcaustic20residmestmswifwi}{width=0.45\textwidth}{a: Data
   corresponding to FWI + MSWI result shown in Figure
-  \ref{fig:caustic20mestmswifwi}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:caustic20resimmestmswifwi} and target data
-  \ref{fig:fcwd20}.}
+  \ref{fig:mcaustic20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mcaustic20resimmestmswifwi} and target data
+  \ref{fig:dcwd20}.}
 
-\plot{caustic20uest1}{width=\textwidth}{Adaptive filter to match
-  data for FWI + MSWI model (Figure \ref{fig:caustic20resimmestmswi}) to oblate lens
-  data (Figure \ref{fig:fcwd20}). Considerable energy dispersion away
+\plot{mcaustic20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:mcaustic20resimmestmswi}) to oblate lens
+  data (Figure \ref{fig:dcwd20}). Considerable energy dispersion away
   from $t=0$ remains, showing that the inverted model does not match
   data kinematics well.}
 
-As noted above, the reduction in gradient norm achieved in 12 steepest
+As noted above, the reduction in MSWI gradient norm achieved in 12 steepest
 descent iterations for this example is not as great as was the case in
 the two previous exmaples: this appears to be a more difficult
 optimization. Accordingly, we perform 12 additional iterations of
-steepest descent. The final gradient norm is $\approx 1.1 \times
-10^{-11}$, an order of magnitude less than the final norm achieved in
-the first 12 iterations and well over two orders of magnitude less
-than the initial gradient norm of $\approx 5.24 \times 10^{-9}$. The
-depression in the center of the estimated bulk modulus has deepened
-(Figure \ref{fig:caustic20mestmswicont}) (2.53 GPa, vs 3.15 GPa at the
-end of the first 12 iterations). While it is stiil insufficiently
-refractive to produce triplication, the resulting resimulation has
-increased in magnitude for the central tracess, indicating approach to a focus, and delayed by
-roughly a half-wavelength compared to the corresponding result at the
-end of the first MSWI iteration. As the remaining figures show, FWI
-starting from this result is much more satisfactory. The latest
-arrival for the central traces still does not have quite correct
-amplitude, but all data phases are correct.
+steepest descent applied to the MSWI objective, starting withe the
+result (Figure \ref{fig:mcaustic20mestmswi}) of the first 12
+iterations. The objective decreases by roughly 0.8, the gradient by
+0.5. Inspection of the model so obtained (Figure
+\ref{fig:mcaustic20mestmswicont}) shows that the minimum bulk modulus
+has decreased (2.09 GPa, vs 2.8  GPa at the
+end of the first 12 iterations), however the smallest values are even
+more concentrated around the source locations, and the resimulated
+data with this model is if anything less similar to the data than was
+the case at the end of the first 12 iterations (Figures
+\ref{fig:mcaustic20resimmestmswicont},
+\ref{fig:mcaustic20residmestmswicont}). The adaptive filter is no more
+focused at $t=0$ than was the case at the end of the first 12
+iterations: it appears to have adjusted the compromise between shifts
+to fit early and late arrivals, nothing more (Figure \ref{fig:mcaustic20uestmswicont}). 
 
-
-
-\plot{caustic20mestmswicont}{width=\textwidth}{Result of 24 MSWI
-  iterations applied to the data in Figure \ref{fig:fcwd20}, beginning
+\plot{mcaustic20mestmswicont}{width=\textwidth}{Result of 24 MSWI
+  iterations applied to the data in Figure \ref{fig:dcwd20}, beginning
   at the homogeneous model.}
 
-\multiplot{2}{caustic20resimmestmswicont,caustic20residmestmswicont}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mcaustic20resimmestmswicont,mcaustic20residmestmswicont}{width=0.45\textwidth}{a: Data
   corresponding to MSWI result shown in Figure
-  \ref{fig:caustic20mestmswicont}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:caustic20resimmestmswicont} and target data
-  \ref{fig:fcwd20}.}
+  \ref{fig:mcaustic20mestmswicont}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mcaustic20resimmestmswicont} and target data
+  \ref{fig:dcwd20}.}
 
-\plot{caustic20uestmswicont}{width=\textwidth}{Adaptive filter estimate for MSWI
-  inversion shown in Figure \ref{fig:caustic20mestmswicont}.}
+\plot{mcaustic20uestmswicont}{width=\textwidth}{Adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:mcaustic20mestmswicont}.}
 
-\plot{caustic20mestmswifwicont}{width=\textwidth}{Bulk modulus produced by 25
+This result (Figure \ref{fig:mcaustic20mestmswicont}) is actually a
+{\em worse} initial estimate for FWI than was the model obtained after
+12 steepet descent iterations. We
+performed 25 steps of steepest descent applied to the FWI objective
+with the model in Figure \ref{fig:mcaustic20mestmswicont} as initial
+estimate, resulting in the obviously cycle-skipped model displayed in
+Figure \ref{fig:mcaustic20mestmswifwicont}. The residual (Figure
+\ref{fig:mcaustic20residmestmswifwicont} and adaptive filter (Figure
+\ref{fig:mcaustic20uest2}) have actually deteriorated relative to
+those obtained before.
+
+\plot{mcaustic20mestmswifwicont}{width=\textwidth}{Bulk modulus produced by 25
   steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
-  using the data shown in \ref{fig:fcwd20}, and starting at the MSWI
-  result shown in Figure \ref{fig:caustic20mestmswicont}.}
+  using the data shown in \ref{fig:dcwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:mcaustic20mestmswicont}.}
 
-\multiplot{2}{caustic20resimmestmswifwicont,caustic20residmestmswifwicont}{width=0.45\textwidth}{a: Data
+\multiplot{2}{mcaustic20resimmestmswifwicont,mcaustic20residmestmswifwicont}{width=0.45\textwidth}{a: Data
   corresponding to FWI + MSWI result shown in Figure
-  \ref{fig:caustic20mestmswifwicont}. b: Residual or data error - difference between
-  data shown in Figure \ref{fig:caustic20resimmestmswifwicont} and target data
-  \ref{fig:fcwd20}.}
+  \ref{fig:mcaustic20mestmswifwicont}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:mcaustic20resimmestmswifwicont} and target data
+  \ref{fig:dcwd20}.}
 
-\plot{caustic20uest2}{width=\textwidth}{Adaptive filter to match
-  data for FWI + MSWI model (Figure \ref{fig:caustic20resimmestmswicont}) to oblate lens
-  data (Figure \ref{fig:fcwd20}). Dispersion away from 
+\plot{mcaustic20uest2}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:mcaustic20resimmestmswicont}) to oblate lens
+  data (Figure \ref{fig:dcwd20}). Dispersion away from 
   away from $t=0$ has almost disappeared, showing that the resimulated
   data is nearly a perfect kinematic match with the target data.}
+
+The meaning of this result will be discussed further below. For now
+merely note that the first example based on the oblate lens model in
+Figure \ref{fig:dcwm} appeared to require more computational effort
+than the cirular lens example to achieve a successful inversion,
+whereas the second was an inversion failure even with considerably
+more effort.
 
 \subsection{Non-smooth models: the Camembert}
 
