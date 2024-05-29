@@ -382,13 +382,22 @@ CWLENSRADD = 0.6
 # vertical diameter of lens (proportion of z extent)
 CWLENSRADT = 0.15
 
+# horizontal diameter of lens (proportion of x extent)
+DCWLENSRADD = 0.6
+
+# vertical diameter of lens (proportion of z extent)
+DCWLENSRADT = 0.1
+
 # value at center (proportion of background)
 LENSFAC = 0.6
 
 # value at center (proportion of background)
 CWLENSFAC = 0.5
 
-Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf'], None,
+# value at center (proportion of background)
+DCWLENSFAC = 0.5
+
+Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf', 'dcwm.rsf'], None,
      sfmakevel+' n1=' + str(NZ) + \
                ' n2=' + str(NX) + \
                ' d1=' + str(DX) + \
@@ -434,7 +443,21 @@ Flow(['m.rsf', 'bym.rsf', 'm0.rsf', 'cwm.rsf'], None,
      sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
      sfput +   ' unit1=m unit2=m' + ' | ' +\
      sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
-     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[3]}', stdin=0, stdout=-1)
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[3]} && ' +\
+     sfmakevel+' n1=' + str(NZ) + \
+               ' n2=' + str(NX) + \
+               ' d1=' + str(DX) + \
+               ' d2=' + str(DX) + \
+               ' v000=' + str(BULK) + \
+               ' x1lens=' + str(NZ*DX/2.0) + \
+               ' x2lens=' + str(NX*DX/2.0) + \
+               ' dlens=' + str(NZ*DX*DCWLENSRADD) + \
+               ' tlens=' + str(NX*DX*DCWLENSRADT) + \
+               ' vlens=' + str(BULK*(DCWLENSFAC-1.0)) + ' | ' +\
+     sfput +   ' dim=2 gdim=2 id1=0 id2=1 ' + ' | ' +\
+     sfput +   ' unit1=m unit2=m' + ' | ' +\
+     sfput +   ' label1=Depth label2=Distance ' + ' | ' +\
+     sfput +   ' label=Bulk_modulus unit=GPa > ${TARGETS[4]}', stdin=0, stdout=-1)
 
 ####### nondimensional velocity repn for CofV constraint handling
 Flow('cx.rsf', 'm.rsf',
@@ -454,7 +477,7 @@ Flow(['cambulk.rsf', 'cambuoy.rsf'], None,
 # noisy - if True, print standard message and active task numbers (for parallel tasks)
 fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0' + \
        	 	   ' ' + 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 boundstest=True' +\
-		   ' noisy=True partask=3'
+		   ' noisy=True partask=5'
 
 for i in [1, 11, 20]:
     Flow('d' + str(i) + '.su',['h' + str(i) + '.su', 'w' + str(i) + '.su', 'm.rsf', 'bym.rsf'],
@@ -484,6 +507,14 @@ Flow('cwd20.su',['cwh20.su', 'cww20.su', 'm.rsf', 'bym.rsf'],
 # cross-well data for oblate lens model
 
 Flow('cowd20.su',['cwh20.su', 'cww20.su', 'cwm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+# cross-well data for deep oblate lens model
+
+Flow('dcowd20.su',['cwh20.su', 'cww20.su', 'dcwm.rsf', 'bym.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
      			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
@@ -557,3 +588,10 @@ Flow('fcwd20.su',['fcwh20.su', 'fcww20.su', 'cwm.rsf', 'bym.rsf'],
 				  
 
 
+# long offset cross-well data
+
+Flow('dcwd20.su',['fcwh20.su', 'fcww20.su', 'dcwm.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
