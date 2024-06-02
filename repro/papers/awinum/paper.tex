@@ -840,7 +840,68 @@ than the cirular lens example to achieve a successful inversion,
 whereas the second was an inversion failure even with considerably
 more effort.
 
-\subsection{Non-smooth models: the Camembert}
+\subsection{Recovering a Camembert: effect of non-smoothness}
+
+\plot{cambulk}{width=\textwidth}{A model resembling the ``camembert''
+  of \cite{GauTarVir:86}. Diameter of circular inclusion = 2500 m,
+  approximately 8 wavelengths at median frequency. Interior value 20\%
+above exterior (4.8 GPa vs 4.0 GPa).}
+
+\plot{camcwd20}{width=\textwidth}{Data generated using ``camembert''
+  model (Figure \ref{fig:cambulk}), same source-receiver geometry as
+  in Figure \ref{fig:dcwd20}: 20 sources located at $x=2000$ m, spaced
+  150 m apart, starting at $z=500$ m; 201 receivers located at $x=6000$ m,
+  spaced 20 m apart, starting at $z=200$ m.}
+
+\plot{cam20uest0}{width=\textwidth}{Adaptive filter required to produce the data
+of Figure \ref{fig:camcwd20} from corresponding homogeneous medium data (Figure
+\ref{fig:chwd20}).}
+
+\plot{cam20mestmswi}{width=\textwidth}{Result of 12 MSWI
+  iterations applied to the data in Figure \ref{fig:camcwd20}, beginning
+  at the homogeneous model.}
+
+\multiplot{2}{cam20resimmestmswi,cam20residmestmswi}{width=0.45\textwidth}
+{a: Data  corresponding to MSWI result shown in Figure
+  \ref{fig:cam20mestmswi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cam20resimmestmswi} and target data
+  \ref{fig:camcwd20}.}
+
+\plot{cam20uestmswi}{width=\textwidth}{Adaptive filter estimate for MSWI
+  inversion shown in Figure \ref{fig:cam20mestmswi}.}
+
+\plot{cam20mestmswifwi}{width=\textwidth}{Bulk modulus produced by 12
+  steepest descent steps to minimize the FWI objective \ref{eqn:fwi},
+  using the data shown in \ref{fig:camcwd20}, and starting at the MSWI
+  result shown in Figure \ref{fig:cam20mestmswi}.}
+
+\multiplot{2}{cam20resimmestmswifwi,cam20residmestmswifwi}{width=0.45\textwidth}{a: Data
+  corresponding to FWI + MSWI result shown in Figure
+  \ref{fig:cam20mestmswifwi}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cam20resimmestmswifwi} and target data
+  \ref{fig:camcwd20}.}
+
+\plot{cam20uest1}{width=\textwidth}{Adaptive filter to match
+  data for FWI + MSWI model (Figure \ref{fig:cam20resimmestmswi}) to ``camembert'' 
+  data (Figure \ref{fig:camcwd20}).}
+
+\plot{cam20mestmswifwifine}{width=\textwidth}{``Hi-res'' bulk modulus produced by
+  25 additional steepest descent steps, with inverse weight operator =
+  2 point moving average in both directions, repeated once, and
+  initial bulk modulus = output of first FWI + MSWI cycle (Figure
+  \ref{fig:cam20mestmswifwi}). Note that top and bottom edges of disk
+  shown in Figure \ref{fig:cambulk} are clearly visible.}
+
+\multiplot{2}{cam20resimmestmswifwifine,cam20residmestmswifwifine}{width=0.45\textwidth}{a: Data
+  corresponding to hi-res FWI + MSWI result shown in Figure
+  \ref{fig:cam20mestmswifwifine}. b: Residual or data error - difference between
+  data shown in Figure \ref{fig:cam20resimmestmswifwifine} and target data
+  \ref{fig:camcwd20}.}
+
+\plot{cam20uest2}{width=\textwidth}{Adaptive filter to match
+  data for hi-res FWI + MSWI model (Figure \ref{fig:cam20resimmestmswi}) to ``camembert'' 
+  data (Figure \ref{fig:camcwd20}).}
+
 
 \subsection{Noise}
 
