@@ -52,14 +52,16 @@ PROJ            = os.path.dirname(HERE)
 ########### archive - unarchive ##############
 
 # generic result directory
-res = {'mestfwi0': ['.rsf','m'], 'resimmestfwi0': ['.su','d'], 'uest0': ['.su', 'u'], 'uest1': ['.su', 'u'], 'mestmswi': ['.rsf', 'm'], 'uestmswi': ['.su', 'u'], 'mestmswifwi': ['.rsf', 'm'], 'resimmestmswi': ['.su', 'd'], 'resimmestmswifwi': ['.su', 'd'], 'residmestfwi0': ['.su','d'], 'residmestmswi': ['.su', 'd'], 'residmestmswifwi': ['.su', 'd']}
+#res = {'mestfwi0': ['.rsf','m'], 'resimmestfwi0': ['.su','d'], 'uest0': ['.su', 'u'], 'uest1': ['.su', 'u'], 'mestmswi': ['.rsf', 'm'], 'uestmswi': ['.su', 'u'], 'mestmswifwi': ['.rsf', 'm'], 'resimmestmswi': ['.su', 'd'], 'resimmestmswifwi': ['.su', 'd'], 'residmestfwi0': ['.su','d'], 'residmestmswi': ['.su', 'd'], 'residmestmswifwi': ['.su', 'd']}
+res = {'uest0': ['.su', 'u'], 'uest1': ['.su', 'u'], 'mestmswi': ['.rsf', 'm'], 'uestmswi': ['.su', 'u'], 'mestmswifwi': ['.rsf', 'm'], 'resimmestmswi': ['.su', 'd'], 'resimmestmswifwi': ['.su', 'd'], 'residmestmswi': ['.su', 'd'], 'residmestmswifwi': ['.su', 'd']}
 
 # data dictionaries
 #dat = {'cwd20': '.su', 'chwd20': '.su', 'cowd20': '.su', 'fcwd20': '.su', 'm': '.rsf', 'dcwm': '.rsf'}
-dat = {'cwd20': '.su', 'chwd20': '.su', 'dcowd20': '.su', 'dcwd20': '.su', 'm': '.rsf', 'dcwm': '.rsf'}
+dat = {'cwd20': '.su', 'chwd20': '.su', 'dcowd20': '.su', 'dcwd20': '.su', 'm': '.rsf', 'dcwm': '.rsf', 'camcwd20': '.su', 'cambulk': '.rsf'}
 
 # result list
-reslist = ['cwlens20', 'mnqcaustic20',  'mcaustic20']
+# reslist = ['cwlens20', 'mnqcaustic20',  'mcaustic20', 'cam20']
+reslist = ['cam20']
 
 # retrieve and plot data
 
@@ -77,12 +79,12 @@ else:
             Exit(1)
         if dat[d] == '.su':
 #             if d == 'fcwd20':
-             if d == 'dcwd20':   
+             if d == 'dcwd20' or d == 'camcwd20':   
                  Result(d, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
              else:
                  Result(d, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
         else:
-            Result(d, SRC, 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+            Result(d, SRC, 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
 for d in reslist:
     RESDIR = os.path.join(PROJ,d)
@@ -99,18 +101,32 @@ for d in reslist:
             if res[k][0] == '.su':
                 if res[k][1] == 'd':
 #                    if d == 'caustic20':
-                    if d == 'mcaustic20':
+                    if d == 'mcaustic20' or d == 'cam20':
                         Result(d + k, SRC, 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
                     else: 
                         Result(d + k, SRC, 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
                 else:
                     Result(d + k, SRC, 'suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 d2num=0.1 color=j xinch=10 yinch=6 wanttitle=n')
             else:
-                Result(d + k, SRC, 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+                Result(d + k, SRC, 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+
+
+######################### extra plots for cam20 ###########################
+
+Result('cam20mestmswifwifine','../cam20/mestmswifwifine.rsf', 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('cam20resimmestmswifwifine', '../cam20/resimmestmswifwifine.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('cam20residmestmswifwifine', '../cam20/residmestmswifwifine.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('cam20uest2', '../cam20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+
+Result('cam20uest2', '../cam20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+
 
 ######################## extra plots for mcaustic20 #######################
 
-Result('mcaustic20mestmswicont','../mcaustic20/mestmswicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20mestmswicont','../mcaustic20/mestmswicont.rsf', 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
 Result('mcaustic20resimmestmswicont', '../mcaustic20/resimmestmswicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
@@ -118,12 +134,20 @@ Result('mcaustic20residmestmswicont', '../mcaustic20/residmestmswicont.su', 'sur
 
 Result('mcaustic20uestmswicont', '../mcaustic20/uestmswicont.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
 
-Result('mcaustic20mestmswifwicont','../mcaustic20/mestmswifwicont.rsf', 'grey minval=2.0 maxval=4.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+Result('mcaustic20mestmswifwicont','../mcaustic20/mestmswifwicont.rsf', 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
 
 Result('mcaustic20resimmestmswifwicont', '../mcaustic20/resimmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
 Result('mcaustic20residmestmswifwicont', '../mcaustic20/residmestmswifwicont.su', 'suread endian=0 read=data | window min1=2.5 max1=4.0 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
 Result('mcaustic20uest2', '../mcaustic20/uest2.su','suread endian=0 read=data | window min1=-0.4 max1=0.4 | grey clip=0.02 color=j xinch=10 yinch=6 wanttitle=n')
+
+######################### extra plots for cwlens20 ######################
+
+Result('cwlens20mestfwi0', '../cwlens20/mestfwi0.rsf', 'grey minval=2.0 maxval=5.0 scalebar=y color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('cwlens20resimmestfwi0', '../cwlens20/resimmestfwi0.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
+
+Result('cwlens20residmestfwi0', '../cwlens20/residmestfwi0.su', 'suread endian=0 read=data | window min1=1.8 max1=3.2 | grey clip=0.005 color=j xinch=10 yinch=4 wanttitle=n')
 
 End()
