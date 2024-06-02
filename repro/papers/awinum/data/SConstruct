@@ -58,7 +58,10 @@ sfput           = os.path.join(RSFROOT,'bin/sfput')
 sfspray         = os.path.join(RSFROOT,'bin/sfspray')
 sfcp            = os.path.join(RSFROOT,'bin/sfcp')
 sfmakevel       = os.path.join(RSFROOT,'bin/sfmakevel')
+sfsmooth        = os.path.join(RSFROOT,'bin/sfsmooth')
 mfexec          = os.path.join(TRIP,'pyrvl/mfexec.py')
+grand           = os.path.join(TRIP,'iwave/grid/main/GridRand.x')
+glincomb        = os.path.join(TRIP,'iwave/grid/main/GridLinComb.x')
 
 ################################## S/R GEOMETRY ##################################
 
@@ -465,7 +468,7 @@ Flow('cx.rsf', 'm.rsf',
 
 ### camembert sort-of ###
 
-campars = 'rad=800 inner=5.0 outer=4.0 n1=201 n2=401 d1=20 d2=20'
+campars = 'rad=1250 inner=4.8 outer=4.0 n1=201 n2=401 d1=20 d2=20'
 Flow(['cambulk.rsf', 'cambuoy.rsf'], None,
 		     mfexec + ' awinum.cam ' + campars,
 		     stdin=0, stdout=-1)
@@ -535,7 +538,7 @@ Flow('boxw20.su', ['w20.su', 'cww20.su'], '/bin/cp ${SOURCES[0]} ${TARGETS[0]}; 
 
 # cross-well data for camembert
 
-Flow('camcwd20.su',['cwh20.su', 'cww20.su', 'cambulk.rsf', 'cambuoy.rsf'],
+Flow('camcwd20.su',['fcwh20.su', 'fcww20.su', 'cambulk.rsf', 'cambuoy.rsf'],
     			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
      			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
@@ -595,3 +598,18 @@ Flow('dcwd20.su',['fcwh20.su', 'fcww20.su', 'dcwm.rsf', 'bym.rsf'],
      			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
                            	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
                          	  ' ' + fdpars, stdin=0, stdout=-1)
+
+###
+Flow('nb.rsf', 'm0.rsf', sfcp + ' ${SOURCE} ${TARGET} && ' + grand + ' in=${TARGET}', stdin=0, stdout=-1)
+
+Flow('snb.rsf', 'nb.rsf', sfsmooth + ' rect1=5 rect2=5 repeat=1')
+
+Flow('mnb.rsf', ['snb.rsf', 'm.rsf'], sfcp + ' ${SOURCES[1]} ${TARGETS[0]} && ' + glincomb + ' in1=${SOURCES[0]} a=2 in2=${TARGETS[0]} b=1.0', stdin=0, stdout=-1)
+
+Flow('n0.su', ['cwh20.su', 'cww20.su', 'mnb.rsf', 'bym.rsf'],
+    			   ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     			   mfexec + r' awinum.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+                           	  r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+                         	  ' ' + fdpars, stdin=0, stdout=-1)
+
+Flow('ns.su',['n0.su', 'cwd20.su'], suop2 + ' ${SOURCES[0]} ${SOURCES[1]} op=diff', stdin=0)
