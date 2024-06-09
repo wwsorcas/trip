@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 
 ############## CONJUGATE GRADIENT ITERATION FOR THE NORMAL EQUATION ##############
 
-def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0):
+def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0, M=None):
     ''' 
     Single step of CG iteration for solution of normal equations, with
     optional regularization. See doc for function conjgrad.
@@ -46,17 +46,23 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0):
         
         # print('#6. $r \leftarrow r-\alpha s$')
         r.linComb(-alpha,s)
-        
-        # print('#7. $\delta = \langle r, r \rangle$')  
-        delta = r.dot(r)
+
+        if M is not None:
+            g = M*r
+            delta = g.dot(r)
+        else:
+            delta = r.dot(r)
         rnorm = math.sqrt(delta)
         
         # print('#8. $\beta = \delta / \gamma$')
         beta = delta/gamma
         
         # print('#9. $p \leftarrow r + \beta p$')
-        p.linComb(1.0,r,beta)
-        
+        if M is not None:
+            p.linComb(1.0,g,beta)
+        else:
+            p.linComb(1.0,r,beta)
+            
         # print('#10. $\gamma \leftarrow delta$')
         gamma=delta
         
@@ -74,6 +80,8 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0):
         # reference created by invoking the constructor 
         del q
         del s
+        if M is not None:
+            del g
         # force garbage collection
         n=gc.collect()
 
@@ -83,7 +91,7 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0):
         print(ex)
         raise Exception('called from cgstep')
                 
-def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
+def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None, M=None):
     '''
     conjugate gradient iteration for the normal equation, with optional
     Tihonov regularization. Approximate minimization of
@@ -117,6 +125,7 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
                                               2 = step-by-step
     e (vcl.Vector):           optional return, residual
     r (vcl.Vector):           optional return, normal residual
+    M (vcl.LinearOperator):   optional preconditioner
 
     NOTE: e here is b-Ax, not Ax-b.
     '''
@@ -132,29 +141,30 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
             e = vcl.Vector(b.space)
         e.copy(b)
         
-        # print('#3. $r = A^Tb$')
-        #print('vcalg.conjgrad')
-        #print('|b|=' + str(b.norm()))
-        p=transp(A)*b
-        #print('|p|=' + str(p.norm()))
-        #p.myNameIs()
-        
-        # print('#4. $p = r$')
         if r is None:
-            r = vcl.Vector(p.space)
-        r.copy(p)
-        #print('|r|=' + str(r.norm()))
-        
-        # print('#7. $\gamma_0 = \langle r, r \rangle$')
-        gamma0 = r.dot(r)
-        
+            r = vcl.Vector(A.getDomain())
+
+        r.copy(transp(A)*b)
+
+        p = vcl.Vector(r.space)
+        if M is not None:
+            g = M*r
+            p.copy(g)
+        else:
+            p.copy(r)
+
+        if M is None:
+            gamma0 = r.dot(r)
+        else:
+            gamma0 = r.dot(g)
+            
         # print('#8. $\gamma = \gamma_0$')
         gamma=gamma0
         
         # print('#9. $k=0$')
         k=0
         enorm0=e.norm()
-        rnorm0=r.norm()
+        rnorm0=math.sqrt(gamma0)
         enorm=enorm0
         rnorm=rnorm0
     
@@ -170,7 +180,7 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None):
         #Repeat while $k<k_{\rm max}$, $\|e\|>\epsilon \|d\|$:
         while k<kmax and enorm>eps*enorm0 and rnorm>rho*rnorm0:
 
-            [k, enorm, rnorm, gamma] = cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq, verbose)
+            [k, enorm, rnorm, gamma] = cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq, verbose, M)
             
         if verbose > 0:
             print('----------------------------------------------------')
@@ -1062,7 +1072,7 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
               lsverbose=0, lsargs=None, jetargs=None, ddargs=None, archargs=None ):
     '''
     Line seach optimization algorithm. Two principal components:
-    - SD: SearchDir class: Update methodcomputes search direction from 
+    - SD: SearchDir class: Update method computes search direction from 
     current gradient and other parameters (ddargs)
     - LS: line search function, uses direction from SD and other parameters (lsargs)
     
@@ -1072,7 +1082,7 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
     SD (SearchDir):     class: returns search direction based on gradient and other params (ddargs)
     LS (LineSearch):    class: implements line search 
     descmax (int):      max number of descent steps
-    desceps (float):    terminates if gradient falls below this proportion of initial
+    desceps (float):    terminates if gradient norm falls below this proportion of initial
     descverbose (int):  verbosity flag (default = 0)
     descout (string):   output file (default = None)
 
@@ -1087,13 +1097,15 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
     '''
     
     try:
+        
         # descent iteration
         i = 0
         # total function evals
         jtot = 0
         # total gradient evals
         gtot = 0
-        #
+        # proportion of linear initial step to zero to use
+        # as initial step
         initprop = 0.125
 
         if descout is not None:
@@ -1112,34 +1124,38 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
 
         Jx = J(x, **jetargs)
 
-        # continuation flag
-        more = True
-
         # test for update:
         if descverbose > 0:
             print('\ntest for parameter update', file=fout)
             fout.flush()
+        
         newargs = Jx.update(file=fout)
-        fout.flush()
-
         if newargs is not None:
             if descverbose > 0:
                 print('record updated parameters', file=fout)
                 print(newargs, file=fout)
                 fout.flush()
-                        
             jetargs = newargs
-            Jx = J(Jx.point(), **jetargs)
-                    
+            Jx = J(x, **jetargs)
         else:
-            if descverbose > 0 and more == True:
-                print('no parameter update', file=fout)
-                print('accept new jet and step', file=fout)
+            if descverbose > 0:
+                print('no parameter updates', file=fout)
                 fout.flush()
-
+                        
         if descverbose != 0:
             print('compute initial descent direction', file=fout)
             fout.flush()
+
+        # determine if a weight operator for gradient is supplied -
+        # in ddargs key=Winv
+        Winv = None
+        if 'Winv' in ddargs:
+            Winv = ddargs['Winv']
+            if not isinstance(Winv,vcl.LinearOperator):
+                if descverbose != 0:
+                    print('supplied inv weight op not vcl.LinearOperator', file=fout)
+                    fout.flush()
+                raise Exception('supplied inv weight op not vcl.LinearOperator')
             
         if SD is None:
             if descverbose != 0:
@@ -1148,16 +1164,30 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
             raise Exception('Descent Direction class not provided')
             
         SDinstance = SD(**ddargs)
+        print('made SD')
         ddir = SDinstance.Update(Jx)
         gtot += 1
 
         if descverbose != 0:
-            print('compute initial ascent rate', file=fout)
+            print('compute initial ascent rate, gradient norm', file=fout)
             fout.flush()
-            
+
         dr = Jx.gradient().dot(ddir)
+        if Winv is None:
+            gnsq = Jx.gradient().dot(Jx.gradient())
+        else:
+            wg = Winv * Jx.gradient()
+            gnsq = Jx.gradient().dot(wg)
+        if gnsq > 0.0:
+            gn = math.sqrt(gnsq)
+        else:
+            if descverbose !=0:
+                print('grad norm squared = ' + str(gnsq) + ' negative', file=fout)
+                fout.flush()
+            raise Exception('grad norm squared = ' + str(gnsq) + ' negative')
 
         if descverbose != 0:
+            print('rate of ascent (initial search direction) = %10.4e' % (dr), file=fout)
             print('sanity check for sufficient ascent', file=fout)
             fout.flush()
             
@@ -1169,28 +1199,34 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         else:
             print('    passed', file=fout)
 
+        step = initprop*Jx.value()/dr
+        jtot += 1
+        
         # initial step calculation
         # assumes target value = 0
         if descverbose !=0:
             print('compute initial step', file=fout)
+            print('value = %10.4e, dr = %10.4e, initprop = %10.4e' % (Jx.value(), dr, initprop), file=fout)
             fout.flush()
             
-        step = initprop*Jx.value()/dr
-        jtot += 1
-        
         # archive
         for k in archargs.keys():
             Jx.archive(k,str(i),archargs[k])
-            
+
+        initval = Jx.value()
+        initstep = step
+        initgn = gn
+        
         if descverbose !=0:
-            print('initial value = %10.4e'  % (Jx.value()), file=fout)
-            print('initial step  = %10.4e' % (step), file=fout)
-            print('initial ascent rate = %10.4e' % (dr), file=fout)
+            print('initial value = %10.4e'  % (initval), file=fout)
+            print('initial step  = %10.4e' % (initstep), file=fout)
+            print('initial gradient norm = %10.4e' % (initgn), file=fout)
             fout.flush()
 
-        drinit = dr
+        # line search failure flag
+        LSfailure = False
         
-        while i < descmax and dr > desceps*drinit and more:
+        while i < descmax and gn > desceps*initgn and not LSfailure:
             
             if descverbose > 0:
                 print('\nIteration ' + str(i), file=fout)
@@ -1204,75 +1240,72 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
             # test for successful step
             if Jxtest is None:
                 # bail out
-                if descverbose > 0:
-                    print('lsalg: line search failed', file=fout)
-                    fout.flush()
-                more = False
+                LSfailure = True
                 
             else:
-                    
-                # test for update:
-                if descverbose > 0:
-                    print('\ntest for parameter update', file=fout)
-                    fout.flush()
-                newargs = Jxtest.update(file=fout)
-                fout.flush()
-
-                # if get this far have successfully computed alpha
-                # update
 
                 step = steptest
-                
+                Jx = Jxtest
+
+                # test for update:
+                newargs = Jx.update(file=fout)
                 if newargs is not None:
-                    if descverbose > 0:
-                        print('record updated parameters', file=fout)
-                        print(newargs, file=fout)
-                        fout.flush()
-                        
                     jetargs = newargs
-                    Jx = J(Jxtest.point(), **jetargs)
-                    
-                else:
-                    if descverbose > 0 and more == True:
-                        print('no parameter update', file=fout)
-                        print('accept new jet and step', file=fout)
+                    # update search point, jet
+                    x = Jx.point()
+                    Jx = J(x, **jetargs)
+                    if descverbose > 0:
+                        print('\ninternal state of updated jet', file=fout)
+                        print(jetargs, file=fout)
                         fout.flush()
 
-                    Jx = Jxtest
-                    
                 if descverbose > 0:
-                    print('value = %10.4e step = %10.4e'
-                              % (Jx.value(),step), file=fout)
-                    fout.flush()
-
-            if more:
-                if descverbose > 0:
-                    print('update search direction', file=fout)
+                    print('        update search direction, gradient norm', file=fout)
                 ddir = SDinstance.Update(Jx)
-                # update ascent rate
-                dr = Jx.gradient().dot(ddir)
-                if dr <= desceps*drinit:
-                    more = False
-                    if descverbose > 0:
-                        print('\nachieved prescribed ascent rate reduction:',
-                                file=fout)
-            
+                if Winv is None:
+                    gnsq = Jx.gradient().dot(Jx.gradient())
+                else:
+                    wg = Winv * Jx.gradient()
+                    gnsq = Jx.gradient().dot(wg)
+                if gnsq > 0.0:
+                    gn = math.sqrt(gnsq)
+                else:
+                    if descverbose !=0:
+                        print('grad norm squared = ' + str(gnsq) + ' negative', file=fout)
+                        fout.flush()
+                    raise Exception('grad norm squared = ' + str(gnsq) + ' negative')
+
+                if descverbose > 0:
+                    print('        value = %10.4e grad norm = %10.4e step = %10.4e'
+                              % (Jx.value(), gn, step), file=fout)
+                    fout.flush()
+                
                 # update counter
                 i += 1
+                
                 # archive
                 for k in archargs.keys():
                     Jx.archive(k,str(i),archargs[k])
 
 # out of loop
-        
+        if descverbose > 0:
+            print('\nlsalg: termination', file=fout)
+        if LSfailure:
+            if descverbose > 0:
+                    print('\nline search failed', file=fout)
+                
+        if gn <= desceps*initgn:
+            if descverbose > 0:
+                print('\nachieved prescribed gradient norm reduction:',
+                          file=fout)
+            
         if i==descmax:
             if descverbose > 0:
                 print('\nreached iteration limit', file=fout)
         
-        print('final value = %10.4e'  % (Jx.value()), file=fout)
-        print('final step  = %10.4e' % (step), file=fout)
-        print('finial ascent rate = %10.4e' % (dr), file=fout)
-        print('exit lsopt', file=fout)
+        print('initial value = %10.4e, final value = %10.4e'  % (initval, Jx.value()), file=fout)
+        print('initial step = %10.4e,final step  = %10.4e' % (initstep, step), file=fout)
+        print('initial gradient norm = %10.4e, finial gradient norm = %10.4e' % (initgn, gn), file=fout)
         
         fout.close()
         return Jx
