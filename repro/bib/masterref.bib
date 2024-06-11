@@ -16208,7 +16208,7 @@ note={arXiv}
 }
 
 @misc{HCSMWS:23b,
-title={A penalty appraoch to {A}daptive {W}aveform {I}nversion: implementation and examples}
+title={A penalty appraoch to {A}daptive {W}aveform {I}nversion: implementation and examples},
 author={Chen, H. and Minkoff, S. and Symes, W.},
 year={2023},
 note={arXiv}
@@ -16238,6 +16238,7 @@ journal={Geophysics},
 volume={88},
 number={6},
 pages={R671-R702},
+year={2023},
 doi={10.1190/geo2022-0758.1}
 }
 
@@ -16257,4 +16258,32 @@ journal={Journal of Computational Physics},
 volume={497},
 pages={112637},
 year={2024}
+}
+
+@article{SymesMinkoffChen:IP22,
+doi = {10.1088/1361-6420/ac8c8c},
+url = {https://dx.doi.org/10.1088/1361-6420/ac8c8c},
+year = {2022},
+month = {sep},
+publisher = {IOP Publishing},
+volume = {38},
+number = {11},
+pages = {115003},
+author = {Symes, W. and Chen, H. and Minkoff, S.},
+title = {Solution of an acoustic transmission inverse problem by extended inversion},
+journal = {Inverse Problems},
+abstract = {Study of a simple single-trace transmission example shows how an extended source formulation of full-waveform inversion can produce an optimization problem without spurious local minima (‘cycle skipping’), hence efficiently solvable via Newton-like local optimization methods. The data consist of a single trace extracted from a causal pressure field, propagating in a homogeneous fluid according to linear acoustics, and recorded at a given distance from a transient point energy source. The source intensity (‘wavelet’) is presumed quasi-impulsive, with zero energy for time lags greater than a specified maximum lag. The inverse problem is: from the recorded trace, recover both the sound velocity or slowness and source wavelet with specified support, so that the data is fit with prescribed RMS relative error. The least-squares objective function has multiple large residual minimizers. The extended inverse problem permits source energy to spread in time, and replaces the maximum lag constraint by a weighted quadratic penalty. A companion paper shows that for proper choice of weight operator, any stationary point of the extended objective produces a good approximation of the global minimizer of the least squares objective, with slowness error bounded by a multiple of the maximum lag and the assumed noise level. This paper summarizes the theory developed in the companion paper and presents numerical experiments demonstrating the accuracy of the predictions in concrete instances. We also show how to dynamically adjust the penalty scale during iterative optimization to improve the accuracy of the slowness estimate.}
+}
+
+@inproceedings{ChenSymesMinkoff:IMAGE22,
+author = {Chen, H. and Symes, W. and Minkoff, S.},
+title = {Use of extended source inversion for estimating the noise level in seismic data},
+publisher={Society of Exploration Geophysicists},
+meeting={Second International Meeting for Applied Geoscience and Energy},
+pages = {887-891},
+year={2022},
+doi = {10.1190/image2022-3749692.1},
+URL = {https://library.seg.org/doi/abs/10.1190/image2022-3749692.1},
+eprint = {https://library.seg.org/doi/pdf/10.1190/image2022-3749692.1},
+    abstract = { Modeled and recorded seismic data is contaminated by noise due to a variety of factors including geophones recording ambient noise unrelated to seismic exploration, equipment malfunction and limitations, and restrictive modeling assumptions. The level of noise in seismic data is not known a priori, hence being able to estimate the noise level in the data is a valuable tool for assessing the quality of mechanical Earth parameter estimates, especially resulting from inversion. Full waveform inversion (FWI) is a promising tool for estimating subsurface parameters such as wave velocity, but users of FWI encounter their own challenges. Specifically, commonly-used gradient based local optimization techniques are well known to stall in geologically uninformative models if the starting guess for the optimization is not close enough to the desired global optimum. Extension-based methods relax physical constraints on model parameters to enlarge the search space of acceptable solutions, helping to reduce the impact of a poor initial guess and potentially convexifying the objective function. These extended inversion methods involve a penalty term that is added to the FWI least squares misfit. Then the challenge of performing the optimization shifts to adjusting the penalty weight to balance the reduction of data misfit with driving the penalty term towards physically-meaningful solutions. The source extended objective function minimized using the discrepancy algorithm requires an estimate of the noise level in the data to proceed. In this work we illustrate an automated algorithm for simultaneously updating this noise estimate so that we bypass the cycle-skipping problem experienced by FWI and converge towards geologically meaningful parameter estimates. }
 }
