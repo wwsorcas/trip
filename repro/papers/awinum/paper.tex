@@ -340,7 +340,7 @@ The gradient (or weighted gradient), together with the value, are the
 inputs to first-order methods such as steepest descent and
 Limited-Memory Broyden-Fletcher-Goldfarb-Shanno
 iterations. Methods more closely related to Newton iteration require
-more involved computations (see for instance \cite{Kaufman:75}. 
+more involved computations (see for instance \cite{Kaufman:75}). 
 
 \section{Numerical Illustration}
 
@@ -397,8 +397,16 @@ described earlier, is depicted in
 Figure \ref{fig:chwd20}. We use both $m_0$ and the output of MSWI as
 initial models for FWI..
 
-\plot{chwd20}{width=\textwidth}{Data for homogeneous model $m_0$: 20
-  sources at $x=3000$ m, 201 receivers at $x=5000$ m.}
+\begin{figure}[H]   
+\begin{center}
+\includegraphics[width=\textwidth]{project/Fig/chwd20}
+\caption{Data from the homogeneous model $m_0$ acquired using 20 sources located along a vertical line at $x=3000$ m and 181 receivers at $x=5000$ m.}
+\label{fig:chwd20}
+\end{center}
+\end{figure}
+
+%\plot{chwd20}{width=\textwidth}{Data for homogeneous model $m_0$: 20
+%sources at $x=3000$ m, 201 receivers at $x=5000$ m.}
 
 We apply a version of weighted steepest descent optimization to the
 minimization of both $J_{\rm FWI}$ and $\tilde{J}_{\alpha,\sigma}$.
