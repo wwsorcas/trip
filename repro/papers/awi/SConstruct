@@ -20,16 +20,15 @@ include=r'''
 \newcommand{\of}{\bar{f}}
 \newcommand{\ofa}{\bar{f}_{\alpha,\lambda}}
 \newcommand{\oNa}{\bar{N}_{\alpha}}
-\newcommand{\Ja}{J_{\alpha,\epsilon}}
-\newcommand{\Jz}{J_{0,\epsilon}}
+\newcommand{\Ja}{J_{\alpha}}
+\newcommand{\Jz}{J_{0,\sigma}}
 \newcommand{\Ml}{M + \lambda^2I}
 \newcommand{\Mld}{M_{\lambda}^{\dagger}}
 \newcommand{\ua}{u_{\alpha}}
 \newcommand{\va}{v_{\alpha}}
 \newcommand{\uz}{u_0}
-\newcommand{\tJa}{\tilde{J}_{\alpha,\epsilon}}
+\newcommand{\tJa}{\tilde{J}_{\alpha}}
 \newcommand{\tJz}{\tilde{J}_{0}}
-\newcommand{\tJe}{\tilde{J}_{0,\epsilon}}
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 \newtheorem{alg}{Algorithm}
