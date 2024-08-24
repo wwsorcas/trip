@@ -1,0 +1,24 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+no parameter updates
+compute initial descent direction
+compute initial ascent rate, gradient norm
+rate of ascent (initial search direction) = 7.0757e-06
+sanity check for sufficient ascent
+    passed
+compute initial step
+value = 3.2165e-03, dr = 7.0757e-06, initprop = 1.2500e-01
+initial value = 3.2165e-03
+initial step  = 5.6824e+01
+initial gradient norm = 5.6055e-06
+
+lsalg: termination
+
+reached iteration limit
+initial value = 3.2165e-03, final value = 3.2165e-03
+initial step = 5.6824e+01,final step  = 5.6824e+01
+initial gradient norm = 5.6055e-06, finial gradient norm = 5.6055e-06

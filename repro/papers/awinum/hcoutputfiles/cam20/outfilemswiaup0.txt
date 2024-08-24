@@ -1,0 +1,10 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 3.1415e-02 p=4.4010e+02 eminus=1.5000e-02 etar=2.0000e-02 eplus=2.5000e-02
+mswi.update: rel error = 3.1415e-02 > ratplus*etar = 2.5000e-02
+  must choose ratplus or etar, or reduce rel error

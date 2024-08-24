@@ -1,0 +1,234 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+no parameter update
+accept new jet and step
+compute initial descent direction
+compute initial ascent rate
+sanity check for sufficient ascent
+    passed
+compute initial step
+initial value = 2.4105e-01
+initial step  = 1.0408e+01
+initial ascent rate = 2.8949e-03
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 1.0408e+01 val = 2.1202e-01
+        actred = 2.9027e-02 predred = 3.0131e-02
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.8735e+01 val = 1.9039e-01
+        actred = 5.0655e-02 predred = 5.4235e-02
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 3.3722e+01 val = 1.5503e-01
+        actred = 8.6012e-02 predred = 9.7623e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.5503e-01 step = 3.3722e+01
+update search direction
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 9.1929e-02
+        actred = 6.3105e-02 predred = 7.4094e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 9.1929e-02 step = 3.3722e+01
+update search direction
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 5.0564e-02
+        actred = 4.1365e-02 predred = 5.1423e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 5.0564e-02 step = 3.3722e+01
+update search direction
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 2.8549e-02
+        actred = 2.2015e-02 predred = 3.0744e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 2.8549e-02 step = 3.3722e+01
+update search direction
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 2.1541e-02
+        actred = 7.0072e-03 predred = 1.3512e-02
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 2.1541e-02 step = 3.3722e+01
+update search direction
+
+Iteration 5
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 1.7609e-02
+        actred = 3.9320e-03 predred = 6.3211e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.7609e-02 step = 3.3722e+01
+update search direction
+
+Iteration 6
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 1.5354e-02
+        actred = 2.2549e-03 predred = 3.6892e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.5354e-02 step = 3.3722e+01
+update search direction
+
+Iteration 7
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 1.4027e-02
+        actred = 1.3278e-03 predred = 2.1896e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.4027e-02 step = 3.3722e+01
+update search direction
+
+Iteration 8
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 1.3283e-02
+        actred = 7.4415e-04 predred = 1.6465e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.3283e-02 step = 3.3722e+01
+update search direction
+
+Iteration 9
+
+    Line Search Step 0
+        update step, jet
+        step = 3.3722e+01 val = 1.3332e-02
+        actred = -4.9500e-05 predred = 1.8076e-03
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.6861e+01 val = 1.2845e-02
+        actred = 4.3765e-04 predred = 9.0380e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.2845e-02 step = 1.6861e+01
+update search direction
+
+Iteration 10
+
+    Line Search Step 0
+        update step, jet
+        step = 1.6861e+01 val = 1.2443e-02
+        actred = 4.0140e-04 predred = 8.3344e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.2443e-02 step = 1.6861e+01
+update search direction
+
+Iteration 11
+
+    Line Search Step 0
+        update step, jet
+        step = 1.6861e+01 val = 1.2057e-02
+        actred = 3.8630e-04 predred = 5.3784e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+no parameter update
+accept new jet and step
+value = 1.2057e-02 step = 1.6861e+01
+update search direction
+
+achieved prescribed ascent rate reduction:
+
+reached iteration limit
+final value = 1.2057e-02
+final step  = 1.6861e+01
+finial ascent rate = 1.9895e-05
+exit lsopt

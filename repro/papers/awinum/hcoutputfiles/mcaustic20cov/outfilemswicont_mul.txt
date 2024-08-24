@@ -1,0 +1,450 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+no parameter updates
+compute initial descent direction
+compute initial ascent rate, gradient norm
+rate of ascent (initial search direction) = 1.5373e-05
+sanity check for sufficient ascent
+    passed
+compute initial step
+value = 5.3749e-03, dr = 1.5373e-05, initprop = 1.2500e-01
+initial value = 5.3749e-03
+initial step  = 4.3704e+01
+initial gradient norm = 1.1949e-05
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 5.2198e-03
+        actred = 1.5510e-04 predred = 6.7186e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 5.2198e-03 grad norm = 2.1275e-05 step = 4.3704e+01
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.9098e-03
+        actred = 3.0992e-04 predred = 8.8285e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.9098e-03 grad norm = 2.0413e-05 step = 4.3704e+01
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.6529e-03
+        actred = 2.5692e-04 predred = 6.0869e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.6529e-03 grad norm = 1.5472e-05 step = 4.3704e+01
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.4233e-03
+        actred = 2.2961e-04 predred = 3.4562e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.4233e-03 grad norm = 1.1681e-05 step = 4.3704e+01
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.2247e-03
+        actred = 1.9859e-04 predred = 2.5219e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.2247e-03 grad norm = 9.8646e-06 step = 4.3704e+01
+
+Iteration 5
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.0712e-03
+        actred = 1.5350e-04 predred = 2.2883e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.0712e-03 grad norm = 8.4662e-06 step = 4.3704e+01
+
+Iteration 6
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 4.0373e-03
+        actred = 3.3965e-05 predred = 2.1072e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 4.0373e-03 grad norm = 9.8903e-06 step = 4.3704e+01
+
+Iteration 7
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3704e+01 val = 3.7388e-03
+        actred = 2.9853e-04 predred = 2.0765e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 7.8667e+01 val = 3.7359e-03
+        actred = 3.0138e-04 predred = 3.7377e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.7359e-03 grad norm = 1.0258e-05 step = 7.8667e+01
+
+Iteration 8
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 3.5503e-03
+        actred = 1.8559e-04 predred = 3.1449e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.5503e-03 grad norm = 9.6027e-06 step = 7.8667e+01
+
+Iteration 9
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 3.4644e-03
+        actred = 8.5880e-05 predred = 3.1480e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.4644e-03 grad norm = 9.3199e-06 step = 7.8667e+01
+
+Iteration 10
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 3.3303e-03
+        actred = 1.3415e-04 predred = 3.5149e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.3303e-03 grad norm = 9.1237e-06 step = 7.8667e+01
+
+Iteration 11
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 3.1202e-03
+        actred = 2.1014e-04 predred = 3.3151e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.1202e-03 grad norm = 1.1453e-05 step = 7.8667e+01
+
+Iteration 12
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 3.0187e-03
+        actred = 1.0149e-04 predred = 3.0280e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 3.0187e-03 grad norm = 9.5329e-06 step = 7.8667e+01
+
+Iteration 13
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.8546e-03
+        actred = 1.6403e-04 predred = 2.9777e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.8546e-03 grad norm = 1.0339e-05 step = 7.8667e+01
+
+Iteration 14
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.7277e-03
+        actred = 1.2697e-04 predred = 2.3618e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.7277e-03 grad norm = 7.9130e-06 step = 7.8667e+01
+
+Iteration 15
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.6437e-03
+        actred = 8.3960e-05 predred = 1.6162e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.6437e-03 grad norm = 6.3837e-06 step = 7.8667e+01
+
+Iteration 16
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.6318e-03
+        actred = 1.1945e-05 predred = 1.0684e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.6318e-03 grad norm = 5.9692e-06 step = 7.8667e+01
+
+Iteration 17
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.5788e-03
+        actred = 5.2980e-05 predred = 9.7898e-05
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.5788e-03 grad norm = 6.2695e-06 step = 7.8667e+01
+
+Iteration 18
+
+    Line Search Step 0
+        update step, jet
+        step = 7.8667e+01 val = 2.4752e-03
+        actred = 1.0355e-04 predred = 1.0859e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.4160e+02 val = 2.4201e-03
+        actred = 1.5864e-04 predred = 1.9547e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4201e-03 grad norm = 7.0624e-06 step = 1.4160e+02
+
+Iteration 19
+
+    Line Search Step 0
+        update step, jet
+        step = 1.4160e+02 val = 2.5163e-03
+        actred = -9.6120e-05 predred = 2.1271e-04
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 7.0801e+01 val = 2.5082e-03
+        actred = -8.8100e-05 predred = 1.0636e-04
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 3.5400e+01 val = 2.4528e-03
+        actred = -3.2660e-05 predred = 5.3178e-05
+        try shorter step
+
+    Line Search Step 3
+        update step, jet
+        step = 1.7700e+01 val = 2.5018e-03
+        actred = -8.1655e-05 predred = 2.6589e-05
+        try shorter step
+
+    Line Search Step 4
+        update step, jet
+        step = 8.8501e+00 val = 2.5275e-03
+        actred = -1.0734e-04 predred = 1.3294e-05
+        try shorter step
+
+    Line Search Step 5
+        update step, jet
+        step = 4.4250e+00 val = 2.4076e-03
+        actred = 1.2580e-05 predred = 6.6472e-06
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4076e-03 grad norm = 6.9649e-06 step = 4.4250e+00
+
+Iteration 20
+
+    Line Search Step 0
+        update step, jet
+        step = 4.4250e+00 val = 2.5280e-03
+        actred = -1.2040e-04 predred = 6.8384e-06
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 2.2125e+00 val = 2.5342e-03
+        actred = -1.2665e-04 predred = 3.4192e-06
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 1.1063e+00 val = 2.5374e-03
+        actred = -1.2979e-04 predred = 1.7096e-06
+        try shorter step
+
+    Line Search Step 3
+        update step, jet
+        step = 5.5313e-01 val = 2.5389e-03
+        actred = -1.3135e-04 predred = 8.5480e-07
+        try shorter step
+
+    Line Search Step 4
+        update step, jet
+        step = 2.7656e-01 val = 2.4068e-03
+        actred = 7.5500e-07 predred = 4.2740e-07
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4068e-03 grad norm = 6.9594e-06 step = 2.7656e-01
+
+Iteration 21
+
+    Line Search Step 0
+        update step, jet
+        step = 2.7656e-01 val = 2.5389e-03
+        actred = -1.3207e-04 predred = 4.7401e-07
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.3828e-01 val = 2.4064e-03
+        actred = 4.0000e-07 predred = 2.3701e-07
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4064e-03 grad norm = 6.9560e-06 step = 1.3828e-01
+
+Iteration 22
+
+    Line Search Step 0
+        update step, jet
+        step = 1.3828e-01 val = 2.5389e-03
+        actred = -1.3247e-04 predred = 2.4209e-07
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 6.9141e-02 val = 2.5391e-03
+        actred = -1.3267e-04 predred = 1.2104e-07
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 3.4571e-02 val = 2.4063e-03
+        actred = 9.5000e-08 predred = 6.0522e-08
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4063e-03 grad norm = 6.9554e-06 step = 3.4571e-02
+
+Iteration 23
+
+    Line Search Step 0
+        update step, jet
+        step = 3.4571e-02 val = 2.5391e-03
+        actred = -1.3277e-04 predred = 6.1276e-08
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.7285e-02 val = 2.5391e-03
+        actred = -1.3282e-04 predred = 3.0638e-08
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 8.6427e-03 val = 2.5392e-03
+        actred = -1.3285e-04 predred = 1.5319e-08
+        try shorter step
+
+    Line Search Step 3
+        update step, jet
+        step = 4.3213e-03 val = 2.4063e-03
+        actred = 1.5000e-08 predred = 7.6595e-09
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4063e-03 grad norm = 6.9551e-06 step = 4.3213e-03
+
+Iteration 24
+
+    Line Search Step 0
+        update step, jet
+        step = 4.3213e-03 val = 2.5392e-03
+        actred = -1.3286e-04 predred = 7.6624e-09
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 2.1607e-03 val = 2.5392e-03
+        actred = -1.3287e-04 predred = 3.8312e-09
+        try shorter step
+
+    Line Search Step 2
+        update step, jet
+        step = 1.0803e-03 val = 2.5392e-03
+        actred = -1.3287e-04 predred = 1.9156e-09
+        try shorter step
+
+    Line Search Step 3
+        update step, jet
+        step = 5.4017e-04 val = 2.4063e-03
+        actred = 5.0000e-09 predred = 9.5779e-10
+        large decrease after step redn
+        so take it
+        BTLS: line search succeeded
+        return jet and step
+        update search direction, gradient norm
+        value = 2.4063e-03 grad norm = 6.9552e-06 step = 5.4017e-04
+
+lsalg: termination
+
+reached iteration limit
+initial value = 5.3749e-03, final value = 2.4063e-03
+initial step = 4.3704e+01,final step  = 5.4017e-04
+initial gradient norm = 1.1949e-05, finial gradient norm = 6.9552e-06

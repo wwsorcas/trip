@@ -1,0 +1,311 @@
+
+Line Search Optimization
+
+initialize jet
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 1.4822e-02 p=5.0334e+02 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 1.4822e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 1.4822e-02 etar=5.0000e-02 alpha = 8.5297e-05
+mswi.update: reached update limit    01, rel error = 1.4822e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 8.529714758186137e-05, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+compute initial descent direction
+compute initial ascent rate
+sanity check for sufficient ascent
+    passed
+compute initial step
+initial value = 1.6025e-03
+initial step  = 2.9310e+01
+initial ascent rate = 6.8341e-06
+
+Iteration 0
+
+    Line Search Step 0
+        update step, jet
+        step = 2.9310e+01 val = 1.4355e-03
+        actred = 1.6700e-04 predred = 2.0031e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 1.1943e-02 p=2.8857e+02 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 1.1943e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 1.1943e-02 etar=5.0000e-02 alpha = 1.7284e-04
+mswi.update: reached update limit    01, rel error = 1.1943e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.00017284161454205211, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 4.0702e-03 step = 2.9310e+01
+update search direction
+
+Iteration 1
+
+    Line Search Step 0
+        update step, jet
+        step = 2.9310e+01 val = 3.4749e-03
+        actred = 5.9527e-04 predred = 5.9579e-04
+        try longer step
+
+    Line Search Step 1
+        update step, jet
+        step = 5.2758e+01 val = 3.0399e-03
+        actred = 1.0303e-03 predred = 1.0724e-03
+        try longer step
+
+    Line Search Step 2
+        update step, jet
+        step = 9.4964e+01 val = 2.4453e-03
+        actred = 1.6249e-03 predred = 1.9304e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 1.4312e-02 p=1.8927e+02 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 1.4312e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 1.4312e-02 etar=5.0000e-02 alpha = 2.8554e-04
+mswi.update: reached update limit    01, rel error = 1.4312e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.0002855438356751477, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 4.8506e-03 step = 9.4964e+01
+update search direction
+
+Iteration 2
+
+    Line Search Step 0
+        update step, jet
+        step = 9.4964e+01 val = 2.8090e-03
+        actred = 2.0416e-03 predred = 3.3117e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 1.7631e-02 p=1.1896e+02 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 1.7631e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 1.7631e-02 etar=5.0000e-02 alpha = 4.5669e-04
+mswi.update: reached update limit    01, rel error = 1.7631e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.0004566941388648597, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 4.7028e-03 step = 9.4964e+01
+update search direction
+
+Iteration 3
+
+    Line Search Step 0
+        update step, jet
+        step = 9.4964e+01 val = 3.8950e-03
+        actred = 8.0787e-04 predred = 2.8458e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 2.4588e-02 p=8.2697e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 2.4588e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 2.4588e-02 etar=5.0000e-02 alpha = 6.7079e-04
+mswi.update: reached update limit    01, rel error = 2.4588e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.0006707940759616717, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 5.6811e-03 step = 9.4964e+01
+update search direction
+
+Iteration 4
+
+    Line Search Step 0
+        update step, jet
+        step = 9.4964e+01 val = 8.3782e-03
+        actred = -2.6971e-03 predred = 5.0266e-03
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 4.7482e+01 val = 5.2296e-03
+        actred = 4.5147e-04 predred = 2.5133e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 3.0674e-02 p=6.3000e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 3.0674e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 3.0674e-02 etar=5.0000e-02 alpha = 9.0748e-04
+mswi.update: reached update limit    01, rel error = 3.0674e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.0009074838645936331, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 6.4564e-03 step = 4.7482e+01
+update search direction
+
+Iteration 5
+
+    Line Search Step 0
+        update step, jet
+        step = 4.7482e+01 val = 6.3464e-03
+        actred = 1.0995e-04 predred = 3.5954e-03
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 2.3741e+01 val = 5.3238e-03
+        actred = 1.1326e-03 predred = 1.7977e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 3.6949e-02 p=4.1388e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error = 3.6949e-02 < lower limit = 3.7500e-02, update alpha
+mswi.update, step 0
+mswi.update: rel error = 3.6949e-02 etar=5.0000e-02 alpha = 1.2511e-03
+mswi.update: reached update limit    01, rel error = 3.6949e-02 still <= etar = 5.0000e-02
+mswi.update: return jetargs with updated alpha
+record updated parameters
+{'dom': <segyvc.Space object at 0x7fdaa5298f40>, 'sim': <vcl.comp object at 0x7fdaa9d8a220>, 'data': <vcl.Vector object at 0x7fdaa9d667f0>, 'alpha': 0.0012510912745873405, 'sigma': 1e-06, 'kmax': 1000, 'rho': 0.0025, 'verbose': 2, 'etar': 0.05, 'ratminus': 0.75, 'ratplus': 1.25, 'upmax': 1}
+value = 7.0877e-03 step = 2.3741e+01
+update search direction
+
+Iteration 6
+
+    Line Search Step 0
+        update step, jet
+        step = 2.3741e+01 val = 6.0773e-03
+        actred = 1.0104e-03 predred = 1.2584e-03
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 4.2648e-02 p=2.9368e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 6.0773e-03 step = 2.3741e+01
+update search direction
+
+Iteration 7
+
+    Line Search Step 0
+        update step, jet
+        step = 2.3741e+01 val = 5.4854e-03
+        actred = 5.9190e-04 predred = 9.4057e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 4.2177e-02 p=2.6283e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 5.4854e-03 step = 2.3741e+01
+update search direction
+
+Iteration 8
+
+    Line Search Step 0
+        update step, jet
+        step = 2.3741e+01 val = 5.6607e-03
+        actred = -1.7529e-04 predred = 7.1725e-04
+        try shorter step
+
+    Line Search Step 1
+        update step, jet
+        step = 1.1870e+01 val = 5.3360e-03
+        actred = 1.4937e-04 predred = 3.5862e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 4.1723e-02 p=2.5795e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 5.3360e-03 step = 1.1870e+01
+update search direction
+
+Iteration 9
+
+    Line Search Step 0
+        update step, jet
+        step = 1.1870e+01 val = 4.9949e-03
+        actred = 3.4108e-04 predred = 4.7925e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 4.0952e-02 p=2.4341e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 4.9949e-03 step = 1.1870e+01
+update search direction
+
+Iteration 10
+
+    Line Search Step 0
+        update step, jet
+        step = 1.1870e+01 val = 4.8159e-03
+        actred = 1.7903e-04 predred = 2.7775e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 4.0311e-02 p=2.3794e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 4.8159e-03 step = 1.1870e+01
+update search direction
+
+Iteration 11
+
+    Line Search Step 0
+        update step, jet
+        step = 1.1870e+01 val = 4.5839e-03
+        actred = 2.3198e-04 predred = 2.8642e-04
+        in G-A range
+        BTLS: line search succeeded
+        return jet and step
+
+test for parameter update
+mswi.update: check residual comp, execute if necessary
+mswi.update: e = 3.9752e-02 p=2.2747e+01 eminus=3.7500e-02 etar=5.0000e-02 eplus=6.2500e-02
+mswi.update: rel error in accepted range, no alpha update
+no parameter update
+accept new jet and step
+value = 4.5839e-03 step = 1.1870e+01
+update search direction
+
+reached iteration limit
+final value = 4.5839e-03
+final step  = 1.1870e+01
+finial ascent rate = 1.8916e-05
+exit lsopt
