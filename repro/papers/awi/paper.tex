@@ -24,7 +24,7 @@ While widely used in recent years, FWI exhibits a pathology when wave
 velocities or their parametric equivalents are amongst the parameters
 to be estimated: the excessive sensitivity of predicted waveforms to
 changes in velocity leads to oscillations in the difference measures,
-especially for the most commonly used mean-square measure. Local
+especially for the most commonly used square-integral measure. Local
 optimization algorithms (relatives of Newton;'s method) are the only practical
 methods to generate sequences of approximate optimal
 parameters. However the oscillations in the difference measures lead
@@ -46,28 +46,29 @@ so far missing from the literature. In this short note, I show that
 for active sensing of acoustic materials with unique arrival times of
 transmitted waves
 (that is, unique rays of geometric asymptotics between sources and
-receivers), the AWI objective function is an asymptotic (in time
+receivers), and known source wavelet, the AWI objective function is an asymptotic (in time
 frequency) approximation to the
-mean-square time-of-travel misfit. Thus AWI and travel time fitting
+mean-square time-of-travel misfit, a commonly used objective for
+travel time tomography. The error in this approximation is
+proportional to the source mean-square wavelength. Thus AWI and travel time fitting
 lead to similar material parameter estimates. Since the latter is
 widely believed to be a near-optimal method for wave velocity
-estimation, this demonstration explains roughly ``why AWI works'', at
+estimation, this relation explains roughly ``why AWI works'', at
 least within this restricted scope.
 
 The reader will
 note that a normalization component of the AWI objective function
-definition is 
-important in reaching this conclusion. The connection between
-objective normalization and the asymptotic equivalence to travel time
-inversion for transmission data has nothing to do with
-the reasons for normalizing the objective previoiusly advanced in the
+definition is important in reaching this conclusion. The connection
+between objective normalization and the asymptotic equivalence to
+travel time inversion for transmission data has nothing to do with the
+reasons for normalizing the objective previoiusly advanced in the
 literature \cite[]{Warner:16,LiAlkhalifah:21}. Another modification of
 FWI based on similar ideas, Matched Source Waveform Inversion (MSWI)
-(\cite{HuangSymes2015SEG,HuangSymes:Geo17}) lacks the AWI normalization,
-and has a looser relation to travel time inversion. The arguments
-presented here for AWI (and MSWI) are refinements of those given by
-\cite{HuangSymes:Geo17}. which were in turn based on ideas presented in Song's thesis
-\cite[]{Song:94c}.
+(\cite{HuangSymes2015SEG,HuangSymes:Geo17}) lacks the AWI
+normalization, and has a looser relation to travel time inversion. The
+arguments presented here for AWI (and MSWI) are refinements of those
+given by \cite{HuangSymes:Geo17}. which were in turn based on ideas
+presented in Song's thesis \cite[]{Song:94c}.
 
 After establishing the class of problems to be studied and notations
 for their description in the following section, I present the
@@ -90,54 +91,89 @@ section.
 \section{Adaptive Waveform Inversion}
 
 The version of AWI introduced by \cite{Warner:16} is based on an
-active source acoustic model of data generation. Each acoustic source
-is modeled an isotropic point radiator with known location $\bx_s$ and
-wave form (``wavelet'') $w(t;\bx_s)$. Similarly, receivers are modeled
-as isotropic point sensors, recording pressure at points ${\bf x}_r$. The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$, ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$ depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf x})$ (reciprocal of the density $\rho({\bf x})$), and wavelet $w(t;{\bf x}_s)$ through the acoustic system
+active source acoustic model of data generation in Euclidean space
+$\bR^3$. In this section, I will review a version of this model, place
+some useful constraints on energy sources appearing in it, and define
+AWI as an optimization problem.
+
+\subsection{Acoustic Modeling and Waveform Inversion}
+
+Each acoustic source is modeled an isotropic point radiator
+with known location $\bx_s\in \bR^3$ and wave form (``wavelet'')
+$w(t)$ (idealized as independent of $\bx_s$ for simplicity). These
+sources generate acoustic waves traveling through Euclidean space. The
+data are samples of these waves at receivers are modeled as isotropic
+point sensors, recording (excess) pressure at points
+${\bf x}_r \in \bR^3$. The recording takes place over a time interval
+$[0,t_{\rm max}]$ (also idealized as independent of $\bx_s$ and
+$\bx_r$) . I will refer to the recording interval and the
+source-receiver position pairs collectively as the {\em acquisition
+  geometry}.
+
+The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$,
+${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$
+depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf
+  x})$ (reciprocal of the density $\rho({\bf x})$), and source wavelet $w(t)$ through the acoustic system
 \begin{eqnarray}
   \label{eqn:awe}
  \frac{\partial p}{\partial t} & = &- \kappa \nabla \cdot {\bf v} +
-w(t;{\bf x}_s) \delta({\bf x}-{\bf x}_s); \nonumber \\
+                                    \left(\int^t w \right)
+ \delta({\bf x}-{\bf x}_s); \nonumber \\
 \frac{\partial {\bf v}}{\partial t} & = & - \beta \nabla p; \\ 
 p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 \end{eqnarray}
-For sake of brevity, define the model vector $m=(\kappa,\rho)$. The forward map or {\em modeling operator} is $F[m]w = \{p({\bf x}_r,t;{\bf x}_s)\}$, in which source and receiver positions ${\bf x}_s, {\bf x}_r$ define the acquisition geometry.
+The representation of the point source time-dependence as an
+indefinite integral of the source wavelet will prove convenient
+in expressing the asymptotic approximation of $p$.
 
-Acoustic inversion, for present purposes, means: given source and receiver locations $(\bx_s,\bx_r)$, source wavelet
-$w(t;\bx_s)$ and data traces $d(\bx_r,\cdot;\bx_s)$, find a model $m$
-so that $F[m]w \approx d$. The
-simplest version of FWI concretizes this task by asking for a model
-$m$ minimizing the mean square error
-\begin{equation}
-  \label{eqn:fwi}
-  J_{\rm FWI}[m;d] =\frac{1}{2} \sum_{{\bf x}_r,{\bf x}_s} \int\,dt\, |(F[m]w)({\bf x}_r,t;{\bf x}_s) - d({\bf x}_r,t;{\bf x}_s)|^2
-\end{equation}
-It is convenient to introduce the $L^2$ norm $\| \cdot \|$ as
-shorthand for the right-hand side of the definition \ref{eqn:fwi}:
-\[
-  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[m]w-d\|^2.
-\]
-In the sequel I will use the $L^2$ norm notation to stand for
-mean-square over whatever variables make sense.
+For simplicity, I assume that the system \ref{eqn:awe} holds over all of Euclidean
+space-time $(\bx,t) \in \bR^3 \times \bR$, and ignore physical
+boundaries such as the Earth's surface.
+For sake of brevity, define the model vector $m=(\kappa,\rho, w)$. The
+{\em modeling operator} $F$ maps the model $m$ to the corresponding data $\{p({\bf x}_r,t;{\bf
+  x}_s): 0 \le t \le t_{\rm max}\}$.
 
-Note that in actual data acquisition, recording occurs over finite
-time intervals, so the integrals appearing in the definition
-\ref{eqn:fwi} have finite upper and lower limits, as opposed to the
-$\pm \infty$ limits implicit in the notation. It will be assumed that
-wavefield energy is causal (zero before an onset time) and decays
-rapidly enough as $t \rightarrow \infty$ that the difference between
-finite and infinite range of integration can be ignored throughout
-this discussion.
-
-The wavelet $w$ is assumed known in this formulation of the
-FWI problem. In fact, even if actual acoustic sources are
+For the purposes of this paper, the source wavelet $w$ and the density
+$\rho$ will be assumed known. In fact, even if actual acoustic sources are
 well-approximated by isotropic point radiators, their wave forms are
 usually poorly determined and may reasonably be
 included as  parameters to be estimated by inversion of the
-data. However for the present discussion we will regard $w$ as known.
+data. However for the present discussion, $w$ is regarded as
+known.
+
+Acoustic inversion means: given the set of
+source-receiver position pairs $\{(\bx_s,\bx_r)\}$, source wavelet
+$w(t)$, density $\rho(\bx)$,  and data traces
+$\{d(\bx_r,t;\bx_s): 0 \le t \le t_{\rm max}\}$, find a bulk modulus $\kappa$ so that the model
+$m=(\kappa,\rho,w)$ satisfies $F[m] \approx d$ in some sense. The
+simplest version of FWI concretizes this task by asking for a model
+$m$ (that is, a bulk modulus $\kappa$) minimizing the square integral/sum
+error over the recording time interval $[0,t_{\rm max}]$ and
+source-receiver position pairs:
+\begin{equation}
+  \label{eqn:fwi}
+  J_{\rm FWI}[m;d] =\frac{1}{2} \sum_{{\bf x}_r,{\bf x}_s}
+  \int_0^{t_{\rm max}}\,dt\, |F[m]({\bf x}_r,t;{\bf x}_s) - d({\bf x}_r,t;{\bf x}_s)|^2
+\end{equation}
+The definition \ref{eqn:fwi} makes sense only if the predicted and
+observed data traces ($F[m]({\bf x}_r\cdot;{\bf x}_s)$ and $d({\bf
+  x}_r,\cdot;{\bf x}_s)$) are square-integrable functions on $[0,t_{\rm max}]$, for each
+source-receiver position pair $(\bx_r,\bx_s)$. This property is
+assumed for $d$, and follows from additional assumptions on $m$ and the
+acqquisition geometry, to be explained below.
+
+It is convenient to introduce the $L^2$ norm symbol $\| \cdot \|$ as
+shorthand for the right-hand side of the definition \ref{eqn:fwi}:
+\[
+  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[m]-d\|^2.
+\]
+In this notation, the interval $[0,t_{\rm max}]$ and the
+source-receiver position pair set $\{(\bx_r,\bx_s)\}$ are implicit. In
+the sequel, I will use the $L^2$ norm notation to stand for square
+integral/sum over whatever variables make sense in context.
 
 Practical versions of FWI include various types of regularization and
-imposition of constraints on $m$, see the sources cited in the
+imposition of constraints on $m$, see the references cited in the
 Introduction. As mentioned there, local iterative optimization methods
 are the only practical approach to minimizing $J_{\rm FWI}$ due to the
 computational cost of approximating the forward map $F$ and related
@@ -145,59 +181,118 @@ operators, but these tend to stagnate at highly sub-optimal
 (``cycle-skipped'') estimates of $m$ unless the initial estimate is of
 quite high quality, often available only at considerable cost in data
 collection and processing.
-%For now, assume that the data $d({\bf x}_r,t;{\bf x}_s)$ is the output of the modeling operator for "true" model $m^*$, that is, the "true" bulk modulus, buoyancy, and wavelet $\kappa^*, \beta^*, w^*$: that is, $d = F[m^*]w^*$.
 
-AWI is based on extending the modeling operator $F$, that is, enlarging its domain.
-The extended modeling operator ${\bar F}$ maps extended sources
+\subsection{Source Characteristics}
+
+In applications to seismology, medical imaging, and other wave imaging
+technologies, the wavelet $w$ is actually the product of signal
+processing aimed to shape the data $F[m]$ into an approximation of
+data that would have been predicted using a known wavelet. That is, the wavelet is to some extent {\em
+  chosen}. This circumstance justifies several constraints on the
+wavelet, consistent with the properties of observed signals: the
+wavelet is assumed to be of class $H^1_0(\bR)$, that is, square integrable with
+square inttegrable derivative and vanishing for sufficiently large
+$t$, and even in $t$.
+Introduce asymptotics in this setting by assuming that $w = \wl$ is chosen
+from a family $\{\wl:\}$ indexed by the dimensionless parameter
+$0 <\lambda <1\}$, and defined by
+\begin{equation}
+  \label{eqn:wfam}
+  \wl(t) = \lambda^{-1/2}w_1(t/\lambda).
+\end{equation}
+The  ``mother wavelet'' $w_1$ is even and of class $H^1_0(\bR)$, and
+all wavelets $\wl$ in this family
+inherit these properties from $w_1$, along with its dimensions (energy/time$^2$).
+
+It follows from these assumptions that the Fourier transform $\fwl$ is
+real-valued, even, of class $H^1(\bR)$. and its product with frequency $|\omega|$ is also
+square-integrable.
+
+The parameter $\lambda$ is connected to several frequency-related
+characteristics of $\wl$. Suppose that $f \in L^2(\bR)$ is also square-integrable after
+multiplication by $t$ (true if  for instance $f$ has compact
+support). The {\em pulse width} (or {\em RMS width} ) of $f$ is
+\begin{equation}
+  \label{eqn:pw}
+  l(f) = \frac{\|tf\|}{\|f\|}.
+\end{equation}
+The pulse width of $\wl$ is proportional to $\lambda$:
+\begin{equation}
+  \label{eqn:wpw}
+  l(\wl) = \left(\frac{\int dt (t \wl(t))^2}{\int dt (\wl(t))^2}
+  \right)^{1/2} = \lambda l(w_1).
+\end{equation}
+The {\em RMS frequency} of $\wl$ is
+\begin{equation}
+  \label{eqn:freq}
+  k(\wl) = \left(\frac{\int d\omega (\omega \fwl(\omega))^2}{\int dt (w(t))^2} \right)^{1/2} = \lambda^{-1}k(w_1).
+\end{equation}
+Thus the {\em RMS wavelength} $1/k(\wl)$ is proportional to $\lambda$.
+
+The Heisenberg inequality (for example, \cite{Folland:07}, p. 255) bounds the RMS
+wavelength, the reciprocal of the RMS frequency, in terms of the pulse
+width:
+\begin{equation}
+  \label{eqn:heis}
+  l(\wl) k(\wl) = l(w_1)k(w_1) \ge \frac{1}{4\pi}.
+\end{equation}
+Equality is attained for Gaussian $w_1$, and approximated for many other
+commonly used wavelets (Ricker = second derivative of Gaussian,
+trapezoidal bandpass,...).
+
+\subsection{AWI via Optimization}
+
+AWI is based an {\em extension} of the modeling operator $F$, that is,
+an operator ${\bar F}$ with larger domain, coinciding with $F$ on its domain..
+The extended modeling operator ${\bar F}$ maps extended models
+$\bar{m}=(\kappa,\rho,\bar{w})$ incorporating extended sources
 $\bar{w}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
 field. That is, the extended source depends on the receiver location
 as well as the source location - so there is one acoustic system for
 each source {\em and} receiver position - a lot of wave equations! If all
 of the wavelets for each source are the same, that is, ${\bar w}({\bf
   x}_r,t;{\bf x}_s) = w(t;{\bf x}_s)$ is independent of receiver
-position, then ${\bar F}[m]\bar{w} = F[m]w$. That is, $F$ is a special
+position, then ${\bar F}[\bar{m}] = F[m]$. That is, $F$ is a special
 case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
 $F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
 
-AWI assumes that the extended sources are time convolutions of the
+\cite{Warner:16} represent the extended sources $\bar{w}$ as time convolutions of the
 (known) source $w$ with an {\em adaptive filter} $u({\bf
   x}_r,t;{\bf x}_s)$: that is,
 \[
   \bar{w}({\bf x}_r,t;{\bf x}_s) = (u * w)({\bf  x}_r,t;{\bf x}_s)
   = (u({\bf  x}_r,\cdot;{\bf x}_s)*w)(t).
 \]
-The asterisk denotes convolution in time. That is,
-$u*w$ denotes the result of convolving each trace in $u$ by $w$. I
-will also use the asterisk to denote the tracae-by-trace convolution
+Here, $u*w$ denotes the result of convolving each trace in $u$ by $w$. I
+will also use the asterisk to denote the trace-by-trace convolution
 of two data sets with the same set of source and receiver coordinates,
 that is, the data set consisting of time convolutions of traces with the same source
 and receiver coordinates. The meaning will be clear from context.
 
 Since linear acoustics is time-translation invariant, its solution commutes with time convolution, that is,
 \[
- \bar{F}[m]\bar{w} = \bar{F}[m](u* w) = (F[m]w)*u
+ \bar{F}[\bar{m}] = \bar{F}[(\kappa,\rho,,u*w)] = F[m]*u
 \]
-Since the known source $w$ is not adjusted during the inversion, 
-introduce the notation $S[m]$ for the convolution operator with kernel $F[m]w$:
+Introduce the notation $S[m]$ for the convolution operator with kernel $F[m]$:
 \begin{equation}
   \label{eqn:sdef}
-  (F[m]w)*u \equiv S[m]u
+  F[m]*u \equiv S[m]u
 \end{equation}
 \cite{Warner:16} assume (implicitly) that there is always an exact
 solution of the extended inversion problem. That is, they assume that
 for any $m$, there is an extended source $\bar{w}$, or equivalently an
 adaptive filter $u[m;d]$ with $\bar{w}=w*u[m;d]$, for which
 $S[m]u[m;d]= d$. This proposition is dubious, but is easy to work
-around, as will be seen below. Also, \cite{Warner:16} also formulate
+around, as will be seen below. Also, \cite{Warner:16} formulate
 AWI in terms of the inverse filter, that is, $u$ for which
-$u*d = F[m]w$, and in fact recommend that definition. The present
+$u*d = F[m]$, and in fact recommend that definition. The present
 discussion uses only the forward filter.
 
-If $\kappa = \kappa^*, \beta = \beta^*$, then $\bar{w}$ should be $= w$,
+If $\kappa = \kappa^*, \beta = \beta^*$, then the extended source
+$\bar{w}$ that fits the data should be $= w$,
 so the adaptive kernel $u[m;d]$ should be $=\delta(t)$ for all
 ${\bf x}_s,{\bf x}_r$. Such a kernel $u[m;d]$ is in the null space of
 multiplication by $t$.
-
 This observation leads to the definition of the AWI objective function $J_{\rm AWI}$:
 \begin{equation}
   \label{eqn:tJz}
@@ -207,8 +302,8 @@ in which $u[m;d]$ is as defined above, that is, the solution of $S[m]u[m;d]
 = d$.
 
 Adaptive waveform inversion consists in iterative minimization of
-$J_{\rm AWI}$: choose an initial estimate $m_0=(\kappa_0,\beta_0)$ of the
-model, then update $m=(\kappa,\beta)$ repeatedly using a gradient
+$J_{\rm AWI}$: choose an initial estimate $m_0=(\kappa_0,\beta, w)$ of the
+model, then update $m$ (that is, $\kappa$) repeatedly using a gradient
 descent method. \cite{Warner:16} describes the computation of $J_{\rm AWI}$
 and its gradient in detail, and their use in a quasi-Newton
 optimization algorithm.
@@ -219,135 +314,166 @@ $L^2$ norm of the corresponding trace in $u[m;d]$ is quite important, as will be
 
 \section{Why it works}
 
-It may not be obvious at first glance why this approach to estimating
-$m$ should be any more effective than FWI. To see why AWI works, in at
-least some settings, we assume that the spatial dimension is three,
+It may not be obvious at first glance why the AWI approach to estimating
+$m$, described in the last section, should be any more effective than
+FWI. To see why AWI works when FWI does not, in at
+least some settings, assume that the spatial dimension is three,
 and make use of the geometric asymptotics (ray theory) approximation
 to the solution of the wave equation. This approximation is {\em
   local}: it applies when sources and receivers are sufficiently
-close. We will discuss its global failure and the consequences for AWI
-in the final section.
+close. I will discuss its global failure and the consequences for AWI
+in the fifth section of this paper.
 
-Transient acoustic sources have no DC (zero frequency) component and
-are relatively small at low frequencies. One way to enforce these
-characteristics is to assume that the wavelet $w$ is the time
-derivative of another wavelet $v$, also transient ($v(t;{\bf x}_s)=0$
-for $|t| \gg 0$). Set $\lambda(w) = \|v\|/\|w\|$. $\lambda$ is a proxy
-for wavelength: it is the reciprocal of RMS frequency of $v$.
 
-The geometric asymptotics approximation for solution of the point
-radiator problem \ref{eqn:awe} expresses the pressure field in terms
+
+Since the fields $\kappa$ and $\rho$ have been assumed smooth,
+the geometric asymptotics approximation is applicable for solution of the point
+radiator problem \ref{eqn:awe}. This approximation expresses the pressure field in terms
 of $m$-dependent geometric amplitude $a[m]({\bf x}_s,{\bf x}_r)$ and
 travel time $\tau[m]({\bf x}_s,{\bf x}_r)$, and implies that
 \begin{equation}
   \label{eqn:hadamard}
-  (F[m]w)({\bf x}_r,t;{\bf x}_s) \approx a[m]({\bf x}_s,{\bf x}_r) w(t-\tau[m]({\bf x}_s,{\bf x}_r)) 
+  F[m_{\lambda}]({\bf x}_r,t;{\bf x}_s) \approx a[m]({\bf x}_s,{\bf x}_r) \wl(t-\tau[m]({\bf x}_s,{\bf x}_r)). 
 \end{equation}
+Here and in the notation to follow, $m_{\lambda} =
+(\kappa,\rho,\wl)$.
+
 In this approximation, and in other uses of the symbol $\approx$, the
-error is $O(\lambda(w))$.
+error is dominated by data wavelength, that is, RMS wavelength of the
+source wavelet $\wl$, which is proportional to $\lambda$ as mentioned above. In other words, ``$\approx$'' means ``in error by $O(\lambda)$''.
 
 Approximation \ref{eqn:hadamard} follows from a
 ``progressing wave''  expansion of the fundamental
 solution (Green's function) of the wave equation due to Hadamard
 \cite[]{Friedlander:75,Qian:JCP24}. For smooth (slowly varying)
-$m$, it holds for $\bx_r$ sufficiently close to $\bx_s$ that a unique ray of
+$m$, it holds {\em locally}, that is, for $\bx_r$ sufficiently close to $\bx_s$ that a unique ray of
 geometric acoustics connect $\bx_s$ to $\bx_r$. This ``single
 arrival'' condition fails (in
 general) at larger distance. The precise region of validity depends on
 $m$. For the remainder of this section, its validity is assumed.
 
-Applying the approximation \ref{eqn:hadamard}, obtain
+Applying the approximation \ref{eqn:hadamard} to the definition
+\ref{eqn:sdef}, obtain
 \begin{equation}
   \label{eqn:spwe}
-S[m]u({\bf x}_r,t;{\bf x}_s) \approx a[m]({\bf x}_s,{\bf x}_r) (w*u)(t-\tau[m]({\bf x}_s,{\bf x}_r))
+S[m_{\lambda}]u({\bf x}_r,t;{\bf x}_s) \approx a[m]({\bf x}_s,{\bf x}_r) (\wl*u)(t-\tau[m]({\bf x}_s,{\bf x}_r))
 \end{equation}
 Assume that the data is noise-free:
 $$
-d({\bf x}_r,t;{\bf x}_s)=(F[m^*]w) ({\bf x}_r,t;{\bf x}_s) \approx a[m^*]({\bf x}_s,{\bf x}_r) w(t-\tau[m^*]({\bf x}_s,{\bf x}_r))
+d({\bf x}_r,t;{\bf x}_s)=(F[m^*]) ({\bf x}_r,t;{\bf x}_s) \approx a[m^*]({\bf x}_s,{\bf x}_r) \wl(t-\tau[m^*]({\bf x}_s,{\bf x}_r))
 $$
-The (approximate) solution of $S[m]u[m;d]=d$ is obvious by inspection:
+The (approximate) solution of $S[m_{\lambda}]u=d$ is obvious by inspection:
 \begin{equation}
   \label{eqn:notl2}
-  u[m;d]({\bf x}_r,t;{\bf x}_s) = \frac{a[m^*]({\bf x}_s,{\bf x}_r)}{a[m]({\bf x}_s,{\bf x}_r)}\delta(t-\tau[m^*]({\bf x}_s,{\bf x}_r)+\tau[m]({\bf x}_s,{\bf x}_r)).
+  u({\bf x}_r,t;{\bf x}_s) = \frac{a[m^*]({\bf x}_s,{\bf x}_r)}{a[m]({\bf x}_s,{\bf x}_r)}\delta(t-\tau[m^*]({\bf x}_s,{\bf x}_r)+\tau[m]({\bf x}_s,{\bf x}_r)).
 \end{equation}
-There is immediately a big problem: this $u[m;d]$ is not
+There is immediately a big problem: this $u$ is not
 square-integrable, and the AWI objective $J_{\rm AWI}$ is
-undefined. To fix this, it's necessary to replace $u[m;d]$ by
-$u_{0,\sigma}[m;d]$,  the solution of a regularized least squares problem: 
+undefined. It's not surprising that mathematical ill-behaviour arises
+in this context. Since $S[m_{\lambda}]$ is a convolution operator, solving
+$S[m_{\lambda}]u=d$ for $u$ amounts to deconovolving $d$ by the kernel $F[m]$ of
+$S[m_{\lambda}]$. Under the assumed conditions on the wavelet $\wl$, $S[m_{\lambda}]$ does
+not have a continuous (stable) convolution inverse.
+
+
+It is conventional to stabilize deconvolution problems such as the
+equation $S[m_{\lambda}]u=d$ via so-called ``pre-whitening'', as
+mentioned by \cite{Warner:16} ``Pre-whitening'' is a version of
+Tihonov regularization. It  amounts to replacement of the equation
+$S[m_{\lambda}]u=d$ by the regularized least squares problem: 
 \begin{equation}
   \label{eqn:reg}
-  u_{0,\sigma}[m;d] = \mbox{argmin}_u (\|S[m]u-d\|^2 + \sigma^2\|u\|^2)
+  u_0[m_{\lambda};d] = \mbox{argmin}_u (\|S[m_{\lambda}]u-d\|^2 + \lambda\|u\|^2)
 \end{equation}
-$$
-\approx \mbox{argmin}_u (\|a[m](w*u)(\cdot-\tau[m])-a[m^*]w(\cdot-\tau[m^*])\|^2 + \sigma^2\|u\|^2)
-$$
 
-Note that in these expressions, the source and receiver
-coordinates ${\bf x}_s$ and ${\bf x}_r$ act as either passive parameters
-or summation indices. Therefore, to simplify the presentation, drop them from the notation
-temporarily. Also,  use the temporary abbreviations $a^*=a[m^*], a=a[m], \tau^*=\tau[m^*],
-\tau=\tau[m]$.
+The choice of $\lambda$ as the  the regularization weight might seem
+natural, as $\lambda$ is more-or-less the shortest wavelength
+controlled by solution of the least-squares deconvolution problem
+\ref{eqn:reg}. It will be rigorously justified {\em post-hoc} by the
+calculations to follow.
 
-With these conventions, re-write equation \ref{eqn:reg} in terms of the Fourier transforms $\hat{u}[m;d],\hat{w}$ of $u_{0,\sigma}[m;d]$ and $w$:
+Note that in these expressions, the source and receiver coordinates
+${\bf x}_s$ and ${\bf x}_r$ act as either passive parameters or
+summation indices. The right-hand side of equation \ref{eqn:reg} is
+summed over ${\bf x}_s$ and ${\bf x}_r$, for instance. However, the
+quantities on the right-hand side are not coupled: the minimization
+could be regarded as taking place independently for each choice of
+${\bf x}_s$ and ${\bf x}_r$. Therefore, to simplify the presentation,
+drop ${\bf x}_s$ and ${\bf x}_r$ from the notation temporarily: each
+calculation to follow pertains to a single trace, i.e. a single choice
+of ${\bf x}_s$ and ${\bf x}_r$.  Also, use the
+temporary abbreviations
+$a^*=a[m^*], a=a[m], \tau^*=\tau[m^*], \tau=\tau[m]$.
+
+Using the Hadamard progressing wave approximation \ref{eqn:hadamard},
+the right-hand side of equation \ref{eqn:reg} is 
+$$
+\approx \mbox{argmin}_u (\|a[m](\wl*u)(\cdot-\tau[m])-a[m^*]\wl(\cdot-\tau[m^*])\|^2 + \lambda\|u\|^2)
+$$
+Re-write the approximation \ref{eqn:reg} in terms of the Fourier transforms $\hat{u_0}[m_{\lambda};d],\fwl$ of $u_0[m_{\lambda};d]$ and $\wl$:
 \begin{equation}
   \label{eqn:freqreg}
-\hat{u}[m;d] \approx \mbox{argmin}_{\hat{u}}\left(\int d\omega |a\hat{w}\hat{u}e^{i\omega \tau}-a^*\hat{w}e^{i\omega\tau^*}|^2 + \sigma^2 |\hat{u}|^2\right)
+\hat{u}_{0,\sigma}[m;d] \approx \mbox{argmin}_{\hat{u}}\frac{1}{2}\int d\omega \left(|a\hat{w}\hat{u}e^{i\omega \tau}-a^*\hat{w}e^{i\omega\tau^*}|^2 + \lambda |\hat{u}|^2\right)
 \end{equation}
 The normal equation for the least squares problem \ref{eqn:freqreg} is
 \[
-(a^2 |\hat{w}|^2 +\sigma^2)\hat{u} = a a^*|\hat{w}|^2e^{i\omega(\tau^*-\tau)}
+(a^2 |\fwl|^2 +\lambda)\hat{u} = a a^*|\fwl|^2e^{i\omega(\tau^*-\tau)}
 \]
 the solution of which is
-\[
-\hat{u}[m;d] \approx \frac{a^*}{a}\hat{g}_{\frac{\sigma}{a}} e^{i\omega(\tau^*-\tau)}
-\]
+\begin{equation}
+  \label{eqn:hatuf}
+\hat{u}_0[m_{\lambda};d] \approx \frac{a^*}{a}\hat{g}_{\lambda,\frac{\lambda}{a^2}} e^{i\omega(\tau^*-\tau)}
+\end{equation}
 where
-$$ 
-\hat{g}_{\sigma} = \frac{|\hat{w}|^2}{|\hat{w}|^2 + \sigma^2}.
+\begin{equation}
+  \label{eqn:hatgf}
+\hat{g}_{\lambda,\sigma} = \frac{|\fwl|^2}{|\fwl|^2 + \sigma}.
+\end{equation}
+Since $\wl$ vanishes for large $|t|$, $\fwl$ is entire analytic,
+hence vanishes on a set of measure zero, whence $\hat{g}_{\lambda,\sigma}:$ tends to $1$ almost everywhere as $\sigma \rightarrow 0$. Hence the inverse Fourier transform $g_{\lambda,\sigma}$ tends to $\delta$ in the sense of distributions, and 
 $$
-Transient acoustic sources are effectively bandlimited:
-$\hat{w}(\omega) \rightarrow 0$ faster than any negative power of
-$\omega$ as $|\omega| \rightarrow \infty$ and is entire analytic, whence $\hat{g}_{\sigma}:$ tends to $1$ almost everywhere as $\sigma \rightarrow 0$. Hence the inverse Fourier transform $g_{\sigma}$ tends to $\delta$ in the sense of distributions, and 
-$$
-u_{0,\sigma}[m;d](t) \approx \frac{a^*}{a}g_{\frac{\sigma}{a}}(t-(\tau^*-\tau))
+u_0[m_{\lambda};d](t) \approx \frac{a^*}{a}g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))
 $$
 to a multiple of a shifted $\delta$, in fact exactly the distribution
-solution of $\bar{S}[m,w]u=d$ given in equation \ref{eqn:notl2}. However for $\sigma>0$, $u_{0,\sigma}[m;d]$ is square integrable.
+solution of $\bar{S}[m_{\lambda}]u=d$ given in equation \ref{eqn:notl2}. However for $\lambda>0$, $u_0[m_{\lambda};d]$ is square integrable.
 
 \cite{HuangSymes2015SEG} presented an analysis of the Matched Source
-Waveform Inversion (MSWI) objective function, which is essentially the
-numerator of the right hand side in the definition
-\ref{eqn:tJz} of the AWI objective. This analysis was based in turn on ideas presented in Song's thesis
-\cite[]{Song:94c}. MSWI deals with the extended source $\bar{w}$, but
-the same construction applies to the adaptive filter $u$. With $u$ replaced by $u_{0,\sigma}[m;d]$,  the MSWI objective is
+Waveform Inversion (MSWI) objective function, which is the numerator
+of the right hand side in the definition \ref{eqn:tJz} of the AWI
+objective. Note that this definition requires summation over sources and receivers:
 \[
-J_{\rm MSWI}[m;d] = \int dt |tu_{0,\sigma}[m;d]|^2 \approx \frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\frac{\sigma}{a}}(t-(\tau^*-\tau))|^2
+J_{\rm MSWI}[m_{\lambda};d] = \sum_{\bx_s,\bx_r}\int dt |tu_0[m_{\lambda};d]|^2 \approx \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))|^2
 \]
 \[
-=\frac{(a^*)^2}{a^2} \int dt\, (t+(\tau^*-\tau))^2|g_{\frac{\sigma}{a}}(t)|^2
+=\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, (t+(\tau^*-\tau))^2|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
 \]
 \begin{equation}
   \label{eqn:MSWI}
-  =\frac{(a^*)^2}{a^2} \int dt\, (t^2 + 2t
-  (\tau^*-\tau)+(\tau^*-\tau)^2)|g_{\frac{\sigma}{a}}(t)|^2
+  =\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, (t^2 + 2t
+  (\tau^*-\tau)+(\tau^*-\tau)^2)|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
 \end{equation}
-As noted by \cite{HuangSymes2015SEG}, the linear term (in t) on the
-right-hand side of \ref{eqn:MSWI} vanishes,
-since $g$ is necessarily even in time (since its Fourier transform is
-real). So
+
+Since the Fourier transform $\fwl$ is even and real, so is
+$\hat{g}_{\lambda,\sigma}$, therefore $g_{\lambda,\sigma}$ is even, and the linear term (in t) on the
+right-hand side of \ref{eqn:MSWI} vanishes, So
 \begin{equation}
   \label{eqn:MSWIasym}
   J_{\rm MSWI}[m;d] \approx
-\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\frac{\sigma}{a}}(t)|^2
-+(\tau^*-\tau)^2\frac{(a^*)^2}{a^2}\|g_{\frac{\sigma}{a}}\|^2
+\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
++(\tau^*-\tau)^2\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{\lambda}{a^2}}\|^2
 \end{equation}
-The first term tends to zero as $\sigma \rightarrow 0$, since
-$g_{\sigma}$ is a delta-family, so you can make it negligible with
-proper choice of $\sigma$. The second term suggests that this function
-is related to the travel-time error $\tau^*-\tau$.
 
+Recalling the definition \ref{eqn:pw} of pulse width, the
+approximation \ref{eqn:MSWI} can be re-written as
+\begin{equation}
+  J_{\rm MSWI}[m_{\lambda};d] \approx
+  \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{\lambda}{a^2}}\|^2\left(l(g_{\lambda,\frac{\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
+\end{equation}
+
+The second term suggests that this function
+is related to the travel-time error $\tau^*-\tau$.
 The relation is obscured by the presence of of the amplitudes
-$a^*, a$ both in the multiplier and in the scaling of $\sigma$. Since the
+$a^*, a$ both in the multiplier and in the scaling of $\lambda$. Since the
 amplitudes depend on $m$, their presence may influence the location
 (or even the presence) of stationary points of $J_{\rm MSWI}$ for
 models differing in their travel time predictions. So stationary
@@ -358,23 +484,96 @@ cited there, suggest that sometimes this is the case).
 
 Comparing the definitions \ref{eqn:tJz} of $J_{\rm AWI}$ and
 \ref{eqn:MSWI} of $J_{\rm MSWI}$, ones sees
-that the two functions differ only by the factor $\|u_{0,\sigma}[m;d]\|^{-2}$ in
-the former. Using the geometric asymptotics approximation, 
+that the two functions differ only by the factor $\|u_0[m_{\lambda};d]\|^{-2}$ in
+the former, applied trace-by-trace. Using the geometric asymptotics approximation, 
 $$
-\|u_{0,\sigma}[m;d]\| \approx \frac{a^*}{a}\|g_{\frac{\sigma}{a}}\| + O(\sigma^2)
+\|u_0[m_{\lambda};d]\|^2 \approx \frac{(a^*)^2}{a^2}\|g_{\frac{\lambda}{a^2}}\|^2 + O(\lambda)
 $$
-Therefore, multiplication of the MSWI objective by $\|u_{0,\sigma}[m;d]\|^{-2}$
-precisely removes the amplitude factor in the right-hand side of the
-relation \ref{eqn:MSWIasym}. Restoring the source and receiver
-coordinates to the notation,
-$$
+Therefore, multiplication of the MSWI objective by $\|u_0[m_{\lambda};d]\|^{-2}$
+precisely removes the amplitude factor and norm-squared of $g$ in the right-hand side of the
+relation \ref{eqn:MSWIasym}. That is,
+\begin{equation}
+  \label{eqn:preawitt}
+J_{\rm AWI}[m;d] \approx \sum_{\bx_s,\bx_r} (\left(l(g_{\lambda,\frac{\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
+ \end{equation}
+
+
+Note that
+\[
+  \int dt\, t^2|g_{\lambda,\sigma}(t)|^2 = \int d\omega
+  \left|\frac{d\hat{g}_{\lambda,\sigma}}{d\omega}\right|^2
+  \approx \int d\omega  \left(\frac{2 \mbox{Re }\bar{\hat{w}}_{\lambda}\fwl' 
+    \sigma}{(|\fwl|^2 + \sigma)^2}\right)^2
+\]
+\[
+  =\int d\omega \frac{(2 \lambda^{1/2}\hat{w}_1(\lambda
+    \omega)\lambda^{3/2}\hat{w}_1'(\lambda \omega) 
+    \sigma)^2}{(\lambda|\hat{w}_1(\lambda
+    \omega)|^2 + \sigma)^4}
+\]
+\[
+  =\frac{1}{\lambda}\int d\omega_1 \frac{(2 \lambda^2\hat{w}_1(\omega_1)\hat{w}_1'( \omega_1) \sigma)^2}{(\lambda|\hat{w}_1(
+    \omega_1)|^2 + \sigma)^4}
+  =\frac{\sigma^2}{\lambda}\int d\omega_1
+  \frac{(2\hat{w}_1(\omega_1)\hat{w}_1'( \omega_1)
+    )^2}{\left(|\hat{w}_1(\omega_1)|^2 + \frac{\sigma}{\lambda}\right)^4}
+\]
+Substitute $\sigma = \lambda/(a^2)$ to obtain
+\[
+ \int dt\,
+  t^2|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
+  =\frac{\lambda}{a^6}\int d\omega_1
+  \frac{(2\hat{w}_1(\omega_1)\hat{w}_1'( \omega_1)
+    )^2}{\left(|\hat{w}_1(\omega_1)|^2 + \frac{1}{a^2}\right)^4}
+\]
+\begin{equation}
+  \label{eqn:g1}
+ = \frac{\lambda}{a^2} \int d\omega
+  \frac{(2a\hat{w}_1a\hat{w}_1'
+    )^2}{\left(|a\hat{w}_1|^2 + 1\right)^4}
+\end{equation}
+Also
+\[
+  \|g_{\lambda,\sigma}\|^2 = \int d\omega\,
+  \left(\frac{|\fwl|^2(\omega)}{|\fwl|^2(\omega) + \sigma}\right)^2
+= \int d\omega\,
+  \left(\frac{|\lambda^{1/2}\hat{w}_1(\lambda
+      \omega)|^2(\omega)}{|\lambda^{1/2}\hat{w}_1(\lambda
+      \omega)|^2 + \sigma}\right)^2
+\]
+\[
+=\int d\omega\,
+  \left(\frac{|\hat{w}_1(\lambda
+      \omega)|^2}{|\hat{w}_1(\lambda
+      \omega)|^2 + \frac{\sigma}{\lambda}}\right)^2
+=  \frac{1}{\lambda} \int d\omega_1\,
+  \left(\frac{|\hat{w}_1(\omega_1)|^2}{|\hat{w}_1(\omega_1)|^2 + \frac{\sigma}{\lambda}}\right)^2
+\]
+Substitute $\sigma = \lambda/(a^2)$  and rearrange to obtain
+\begin{equation}
+  \label{eqn:g0}
+  \|g_{\lambda,\frac{\lambda}{a^2}}\|^2 \approx \frac{1}{\lambda} \int d\omega\,
+  \left(\frac{|a\hat{w}_1|^2}{|a\hat{w}_1|^2 + 1}\right)^2
+\end{equation}
+Combining the relations \ref{eqn:g0} and \ref{eqn:g1}, obtain
+\begin{equation}
+  \label{eqn:pwg}
+  l(g_{\lambda,\frac{\lambda}{a^2}}) =\lambda W(m,w_1)
+\end{equation}
+in which $W(m,w_1)$ is bounded by the variation of the amplitude
+$a[m](\bx_r,\bx_s)$, and the choice of ``mother wavelet'' $w_1$, but
+independent of $\lambda$.
+
+It follows that
+\begin{equation}
+  \label{eqn:awitt}
 J_{\rm AWI}[m;d] \approx \sum_{{\bf x}_s,{\bf x}_r} (\tau[m^*]({\bf
-  x}_s,{\bf x}_r)-\tau[m]({\bf x}_s,{\bf x}_r))^2 + O(\sigma^2)
-$$
+  x}_s,{\bf x}_r)-\tau[m]({\bf x}_s,{\bf x}_r))^2 + O(\lambda^2)
+\end{equation}
 In other words, the AWI objective is {\em exactly} an approximation to
 the travel-time tomography objective, with errors proportional to the
 ``wavelength'' $\lambda(w)$ and the regularization parameter
-$\sigma^2$.
+$\lambda$.
 
 And that's ``why it works'' - when geometric asymptotics in the form
 given by equation \ref{eqn:hadamard} is an accurate approximation to the Green's function.
@@ -384,7 +583,7 @@ Penalty functions provide a means to convert naively posed
 inverse problems into well-posed problems, with solutions that exist
 and depend stably on proper data. The ``pre-whitening'' construction
 explained in the last section is a classic example, adding a scaled
-mean-square of the adaptive filter to the residual mean-square to
+square-integral of the adaptive filter to the residual square-integral to
 produce an objective with a square-integrable (finite-energy)
 minimizer. This penalty construction if often called {\em Tihonov
   regularization}. The MSWI and AWI objective functions have a deeper
@@ -443,7 +642,7 @@ The second term on the RHS of equation \ref{eqn:eq3} vanishes thanks to the norm
 
 To apply the assertion \ref{eqn:eq4} to the MSWI objective, make the
 following choices, for each $m$ in the domain of $F$: $S$ is the regularized
-modeling operator $(S[m],\sigma I)^T$.  Its domain is $U=L^2(\bR)$, of
+modeling operator $(S[m_{\lambda}],\sigma I)^T$.  Its domain is $U=L^2(\bR)$, of
 which $u$ (the adaptive filter) is a member, and 
 its range is $D = L^2(\bR) \oplus
 L^2(\bR)$. The role of $d$ is played  the
@@ -455,8 +654,8 @@ support of the filter (necessarily bounded in practical calculation)
 to have no effect. Then $\Ja$ becomes $J_{{\rm MSWI},\alpha,\sigma}[m,u;d]$, where
 \begin{equation}
   \label{eqn:eq5}
-   J_{{\rm MSWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S[m]u-d\|^2 +
-   \sigma^2\|u\|^2 + \alpha^2\|Tu\|^2\right)
+   J_{{\rm MSWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S[m_{\lambda}]u-d\|^2 +
+   \lambda\|u\|^2 + \alpha^2\|Tu\|^2\right)
  \end{equation}
 The minimizer $\ua$ over $u$ of $ J_{{\rm MSWI}, \alpha,\sigma}[m,u;d]$ is
 $u_{{\rm MSWI},\alpha,\sigma}[m;d]$, and $\tJa$ becomes
@@ -465,14 +664,14 @@ $u_{{\rm MSWI},\alpha,\sigma}[m;d]$, and $\tJa$ becomes
   \tilde{J}_{{\rm MSWI},\alpha,\sigma}[m;d] =
   J_{{\rm MSWI},\alpha,\sigma}[m,u_{{\rm MSWI},\alpha,\sigma}[m;d];d].
 \end{equation}
-Note that $u_0$ becomes $u_{0,\sigma}[m;d]$, and $\tilde{J}_0$ becomes
+Note that $u_0$ becomes $u_0[m_{\lambda};d]$, and $\tilde{J}_0$ becomes
 $\tilde{J}_{0,\sigma}[m;d]$ which means exactly what
 it did in the previous section. The subscript ${\rm MSWI}$ is left
 off for $\alpha=0$, for reasons that will become apparent shortly.
 
 With these correspondences, equation \ref{eqn:eq4} becomes
 \begin{equation}
-  \label{eq7}
+  \label{eqn:eq7}
   \lim_{\alpha \rightarrow 0}
   \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm MSWI},\alpha,\sigma}[m;d]-\tilde{J}_{0,\sigma}[m;d]\right)=
   J_{\rm MSWI}[m;d]
@@ -484,14 +683,14 @@ dependence on source and receiver coordinates)
 \begin{equation}
   \label{eqn:eq8}
   T[m;d] u(\bx_r,t;\bx_s) = \frac{\max(|t|, t_{\rm max})
-    \mbox{sgn}(t)}{\|u_{0,\sigma}[m;d](\bx_r,\cdot;\bx_s)\|}
+    \mbox{sgn}(t)}{\|u_0[m_{\lambda};d](\bx_r,\cdot;\bx_s)\|}
   u(\bx_r,t;\bx_s).
 \end{equation}
 That is, for AWI, $T$ depends on both model and data. Define
 \begin{equation}
   \label{eqn:eq5a}
-   J_{{\rm AWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S[m]u-d\|^2 +
-   \sigma^2\|u\|^2 + \alpha^2\|T[m;d]u\|^2\right)
+   J_{{\rm AWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S[m_{\lambda}]u-d\|^2 +
+   \lambda\|u\|^2 + \alpha^2\|T[m;d]u\|^2\right)
  \end{equation}
 The minimizer $\ua$ over $u$ of $ J_{{\rm AWI}, \alpha,\sigma}[m,u;d]$ is
 $u_{{\rm AWI},\alpha,\sigma}[m;d]$, and $\tJa$ becomes
@@ -505,14 +704,84 @@ the same as the corresponding definition \ref{eqn:eq5a} and
 \ref{eqn:eq6a} when $\sigma=0$, which is why the subscripts ${\rm
   MSWI}$ and ${\rm AWI}$ are left off in these cases.
 
-Precisely the
-same reasoning then leads to
+With these choices, equation \ref{eqn:eq4} becomes 
 \begin{equation}
-  \label{eq9}
+  \label{eqn:eq9}
   \lim_{\alpha \rightarrow 0}
   \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm AWI},\alpha,\sigma}[m;d]-\tilde{J}_{0,\sigma}[m;d]\right)=
   J_{\rm AWI}[m;d]
 \end{equation}
+
+The intervention of the $\alpha=0$ limit $\tilde{J}_{0,\sigma}$ in the
+relations \ref{eqn:eq7} and \ref{eqn:eq9} obscures the relation
+between the MSWI and AWI objective functions and their penalty
+counterparts. In fact, under the hypotheses used in deriving he
+relations 
+Recall that the wavelet $w$ is assumed essentially bandlimited, that is
+$|\hat{w}(\omega)| \rightarrow 0$ as $\omega \rightarrow \infty$
+faster than any negative power of $\omega$. It follows that $\hat{w}
+\in L^p(\bR)$ for any $p \ge 1$ (and in fact the same is true of
+$\hat{w}$ multiplied by any polynomial in $\omega$). 
+
+Assume as in the last section, that is, that solutions
+of the acoustic system \ref{eqn:awe} is well-approximated by the
+geometric asymptotics as in equation \ref{eqn:hadamard}, and that the
+data is noise-free ($d=F[m^*]$). Together with the properties of $w$
+just listed, these assumptions imply that
+\begin{equation}
+  \label{eqn:eq11}
+  J_{0,\sigma}[m;d] = O(\sigma) + O(\lambda(w)).
+\end{equation}
+To see this, begin with the definition:
+\[
+  \tilde{J}_{0,\sigma}[m;d] = \frac{1}{2}
+  (\|S[m_{\lambda}]u_0[m_{\lambda};d]-d\|^2 + \lambda \|u_0[m_{\lambda};d]\|^2.
+\]
+Using the approximate identities \ref{eqn:hatuf} and \ref{eqn:hatgf} and
+rearranging,
+\[
+\|S[m_{\lambda}]u_0[m_{\lambda};d]-d\|^2 
+  \approx \int d\omega
+  |a\hat{w}\hat{u_0[m_{\lambda};d]}e^{i\omega\tau}-a^*\hat{w}e^{i\omega\tau^*}|^2
+\]
+\[
+  = \int d\omega
+  (a^*)^2|\hat{w}|^2\left(\frac{\lambda}{a^2|\hat{w}|^2 +
+      \lambda}\right)^2   
+\le \int d\omega (a^*)^2|\hat{w}|^2
+  \left(\frac{\lambda}{a^2|\hat{w}|^2 + \lambda}\right)
+\]
+\begin{equation}
+  \label{eqn:eq12}
+  = \lim_{\Omega \rightarrow \infty} \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda
+  \left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
+\end{equation}
+For any $\Omega > 0$,
+\[
+\int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda\left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
+\le \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 \lambda
+  \left(\frac{ a|\hat{w}|}{(a^2|\hat{w}|^2 +
+      \lambda)^{\frac{1}{2}}}\right)
+\]
+\[
+  = \sigma \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 a|\hat{w}|
+  \left(\frac{\sigma }{(a^2|\hat{w}|^2 +\lambda)^{\frac{1}{2}}}\right)
+  \le \sigma \int_{-\Omega}^{\Omega} d\omega \frac{(a^*)^2}{a}
+  |\hat{w}|
+  \le \sigma \frac{(a^*)^2}{a} \|\hat{w}\|_{L^1(\bR)}.
+\]
+Together with the approximate inequality \ref{eqn:eq12}, this
+inequality implies
+that
+\[
+  \|S[m_{\lambda}]u_0[m_{\lambda};d] - d\|^2 = O(\sigma) + O(\lambda(w)).
+\]
+A similar argument leads to the conclusion that
+\[
+  \lambda\|u_0[m_{\lambda};d]\|^2 = O(\sigma) + O(\lambda(w)).
+\]
+Together, these conclusions imply the assertion \ref{eqn:eq11}.
+
 
 \section{Multiple Arrivals and Cycle-Skipping}
 The geometric asymptotics approximation \ref{eqn:hadamard} holds only
@@ -542,7 +811,7 @@ version of MSWI reported here to avoid cycle-skipping in inversion of
 strongly refracting models, and ameliorate the this failure to some
 extent by Tihonov regularization. They observe that the mapping from
 adaptive filter or extended source to data (represented by the opertor
-$S[m]$ in the discussion above) may not have a well-behaved inverse in
+$S[m_{\lambda}]$ in the discussion above) may not have a well-behaved inverse in
 the presence of multiple wavefront arrivals. \cite{Yongetal:GJI23}
 have shown that precisely the same issue afflicts AWI, and have
 proposed a remedy by localizing the definition of the objective to
@@ -558,7 +827,7 @@ pair with connected by multiple rays is (once again suppressing the
 source and receiver coordinates from the notation):
 \begin{equation}
   \label{eqn:multi}
-  F[m]w(t) \approx \sum_{i \ge 0} a_i H^{p_i}w(t-\tau_i).
+  F[m,w](t) \approx \sum_{i \ge 0} a_i H^{p_i}w(t-\tau_i).
 \end{equation}
 The amplitudes $\{a_i\}$ and arrival times $\{\tau_i\}$ depend on $m$, as
 before, through ray-tracing. $H$ is the Hilbert transform, and $p_i$
@@ -580,7 +849,7 @@ in which
 Thus
 \begin{equation}
   \label{eqn:unwrap}
-  (\delta +T_1) * F[m]w \approx  a_0w(t-\tau_0)
+  (\delta +T_1) * F[m,w] \approx  a_0w(t-\tau_0)
 \end{equation}
 where $\delta + T_1$ is the convolution inverse of $\delta + T$,
 defined by 
@@ -590,13 +859,13 @@ defined by
 $T^n$ should be understood as the $n$th convolution power in this
 expression, that is, $T*T*...*T$, $n$ times. $T_1$ is well-defined as a distribution.
 
-Once again, it is possible to write the adaptive filter u for which $S[m]u = (F[m]w)*u = d =
-F[m^*]w$ by inspection. Use the notations $a^*_i, t^*_i, p^*_i$ for
+Once again, it is possible to write the adaptive filter u for which $S[m_{\lambda}]u = F[m]*u = d =
+F[m^*]$ by inspection. Use the notations $a^*_i, t^*_i, p^*_i$ for
 the analogous quantities computed with the ``true'' model $m^*$, and
 $T^*, T_1^*$ defined as above but with $a^*_i$ in place of $a_i$ and so
 on. From the observation \ref{eqn:notl2},
 \[
-  d = F[m_*]w = S[m]u
+  d = F[m_*]= S[m_{\lambda}]u
 \]
 provided that we choose
 \begin{equation}
@@ -635,7 +904,7 @@ Hilbert transform powers $p_1, p_1^*$ are the same as soon as $m$ is
 sufficiently close to $m^*$.
 
 Of courese, the adaptive filter just computed is not square
-integrable, and must be regularized for use in a mean-square
+integrable, and must be regularized for use in a square-integral
 construction like that of AWI or MSWI. That amounts essentially to
 replacing the $\delta$s in the above formulae by a square-integrable
 approximate Dirac function, of roughly a wavelength in width. In the
@@ -679,6 +948,21 @@ is essential: even for purely transmitted waves, the presence of
 multiple arrivals breaks the connection
 with travel time inversion, and AWI and similar algorithms
 become essentially as prone to cycle-skipping as is FWI.
+
+%%%%%%%%%%%%%%%%%%
+Note that this main result effectively bounds the optimal mean-{\em
+  square} traveltime error achieved by AWI by the pulse width,
+hence the RMS traveltime error by the square-root of the pulse
+width. Pulse width is related to RMS wavelength by the Heisenberg
+inequality, and in many examples these differ by a modest factor.
+Thus error estimate is suboptimal from the point of view
+of FWI, which requires something like an initial model estimate
+predicting a half-wavelength traveltime error. This suboptimality
+arises from the use of pre-whitening (Tihonov regularization) in the
+definition of the AWI objecive function \cite[]{Warner:16}. It is
+possible that a different regularization strategy or assumptions on
+the wavelet could yield a more optimal error estimate.
+
 
 The analysis presented here has nothing to say about AWI applied to
 reflected wave data. \cite{Warner:16} and others have
