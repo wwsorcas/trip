@@ -74,6 +74,35 @@ arguments presented here for AWI (and MSWI) are refinements of those
 given by \cite{HuangSymes:Geo17}. which were in turn based on ideas
 presented in Song's thesis \cite[]{Song:94c}.
 
+The conclusions of this study depend on a number of limitations on the
+acoustic model of wave propagation and the formulation of the related
+inverse problem. The principal constraints are:
+\begin{itemize}
+  \item energy sources are modeled as isotropic point radiators, with
+    known time dependence vanishing outside a finite time window;
+  \item mechanical parameter fields (coefficients in the acoustic wave
+    equation) are smooth, that is, infinitely differentiable as
+    functions of position, and the material density is known and
+    position-independent: only the bulk modulus (or wave velocity) is
+    to be determined;
+  \item waves propagate throughout Euclidean space-time - that is, no
+    physical boundaries are modeled;
+  \item the data of the inverse problem are the restrictions of the
+    pressure field to a finite number of points in space (receiver
+    positions), for a finite number of source positions and all time;
+  \item local energy decays exponentially - that is, the pressure and
+    all of its derivatives tend to zero at an exponential rate as $t
+    \rightarrow \infty$,
+    uniformly in any bounded spatial domain.
+  \end{itemize}
+  These constraints are discussed in detail in the next section. Some
+  could certainly be relaxed. For instance, exponential decay of local
+  energy implies that the finite time duration of actual measured data
+  can be treated as a perturbation of the infinite time data setting
+  posed here. However these hypotheses enable a simple and clear
+  analysis of AWI, and seem a reasonable starting point for further
+  investigation.
+  
 After establishing the class of problems to be studied and notations
 for their description in the following section, I present the
 asymptotic analysis leading to the main conclusion in the next. In
@@ -107,24 +136,16 @@ with known location $\bx_s\in \bR^3$. These
 sources generate acoustic waves traveling through Euclidean space. The
 data are samples of these waves at receivers, modeled as isotropic
 point sensors, recording pressure at points
-${\bf x}_r \in \bR^3$. The recording takes place over a time interval
-$[0,t_d]$ (also idealized as independent of $\bx_s$ and
-$\bx_r$) . The collection $X_{sr}$ of source-receiver pairs
+${\bf x}_r \in \bR^3$. The collection $X_{sr}$ of source-receiver pairs
 $(\bx_s,\bx_r)$ for which data is recorded should not intersect the
 diagonal - that is, no receiver should be co-located with a source for
 which it is active. The set of source locations $X_s = \{\bx_s: (\bx_s,\bx_r) \in X_{sr}
 \mbox{ for some } \bx_r \in \bR^3\}$ will also be useful.
 
-In practice, recording takes place over a finite time interval
-$[0,t_d]$. For convenience, assume that this interval is the same for
-all receivers. Let $\phi \in C_0^{\infty}(0,t_d)$ be a window function
-supported in this interval. Additional constraints on $t_d$ and $\phi$
-will be be specified below.
-
 The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$,
 ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$
-depend on the bulk modulus $\kappa({\bf x})$, buoyancy $\beta({\bf
-  x})$ (reciprocal of the density $\rho({\bf x})$), and source wave
+depend on the bulk modulus $\kappa$, buoyancy $\beta$
+(reciprocal of the density $\rho$), and source wave
 form $f(t)$ through the acoustic system
 \begin{eqnarray}
   \label{eqn:awe}
@@ -135,16 +156,24 @@ p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 \end{eqnarray}
 For simplicity, I assume that the system \ref{eqn:awe} holds over all of Euclidean
 space-time $(\bx,t) \in \bR^3 \times \bR$, and ignore physical
-boundaries such as the Earth's surface.
+boundaries such as the Earth's surface. Likewise for simplicity, I
+assume in this study that the material density $\rho$ is spatially
+homogeneous and known. In some settings, eg. the earth's
+upper crust, the material density $\rho$ exhibits substantially less variance than the
+bulk modulus, Density is however spatially variable in most geological
+and biomedical materials, and could be included amongst the parameters
+to be estimated.
 
-As mentioned in the introduction, I will assume that the coefficients
-$\rho$ and $\kappa$ are bounded and smooth:
+The parameter to be determined in the inverse problem studied here is
+the bulk modulus $\kappa$. It is presumed is bounded and smooth:
 \begin{equation}
   \label{eqn:coeff}
-  \log \rho, \log \kappa \in C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
+  \log \kappa \in C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
 \end{equation}
-Then the symmetric hyperbolic system \ref{eqn:awe} has a distribution
-solution if $f \in \cal{E}'(\bR)$ (for example \cite{Lax:PDENotes}). The Propagation of
+Under these hypotheses, the symmetric hyperbolic system \ref{eqn:awe}
+has a unique distribution
+solution if $f \in \cal{E}'(\bR)$ (for example \cite{Lax:PDENotes},
+Theorem 7.4). The Propagation of
 Singularities Theorem (for example, \cite{Tay:81}, Theorem VI.2.1)
 implies that if $f \in \cal{E}'(\bR)$ and $(\bx_s,\bx_r) \in X_{sr}$,
 then the trace $p(\bx_r, \cdot;\bx_s)$ on $\{(\bx_r,t): t \in \bR\}$ is well-defined,
@@ -152,60 +181,30 @@ as a distribution vanishing for sufficiently large
 negative $t$. Define the {\em modeling operator}
 \begin{equation}
   \label{eqn:modop}
-  F: (C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3))^2 
+  F: C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
   \rightarrow X_{sr} \times {\cal D}'(\bR)
 \end{equation}
 by
 \begin{equation}
   \label{eqn:modopdef}
-  F[\kappa,\rho](\bx_r,\bx_s) = \phi p(\bx_r,\cdot;\bx_s).
+  F[\kappa]= p|_{X_{sr} \times \bR}
 \end{equation}
-For sake of brevity, define the model vector $m=(\kappa,\rho)$. 
-
-For the purposes of this paper, the source wavelet $f$ will be assumed
-known, and to satisfy
-\begin{itemize}
-\item[F1. ] $f \in H^1_0(\bR)$,
-\item[F2. ] $f$ is odd, $f(t) = -f(-t)$.
-\end{itemize}
-In fact, even if actual acoustic sources are well-approximated by
-isotropic point radiators, their wave forms are only roughly known
-{\em a priori} and may reasonably be included as parameters to be
-estimated by inversion of the data. On the other hand, in applications
-to seismology, medical imaging, and other wave imaging technologies,
-the source wave form $f$ is actually the product of signal processing
-aimed to shape the data $F[m]$ into an approximation of data that
-would have been predicted using a prescribed $f$. That is, the wavelet
-is to some extent {\em chosen}. This circumstance justifies the
-constraints F1, F2 placed on $f$.
-
-The density $\rho$ will be presumed spatially homogeneous, or at least
-to have the same value at all of the source positions $\bx_s\in X_s$:
-introduce the {\em source density} $\rho_s > 0$ for which
-\begin{equation}
-  \label{eqn:rho}
-  \rho(\bx_s) = \rho_s\mbox{ for any } \bx_s \in X_s.
-\end{equation}
-In some settings, eg. the earth's
-upper crust, density exhibits substantially less variance than the
-bulk modulus, Also, for some acquisition designs, such as marine towed
-streamers and some medical ultrasonic technologies, sources are
-immersed in water and thus in positions with approximately the same
-densities.
-
-In any event, for the present discussion, $f$ is regarded
-as known and subject to F1 and F2, and $\rho$ is subject to the constraint \ref{eqn:rho}.
 
 In this setting, acoustic FWI means: given the set of
 source-receiver position pairs $X_{sr}$, source wavelet
-$f$,  source density $\rho_s$, and data traces
-$d:  X_{sr} \rightarrow \cal{D}(\bR)$, find $\kappa$ and $\rho$
-(subject to the constraint \ref{eqn:rho}) so that the model
-$m=(\kappa,\rho)$ satisfies $F[m] \approx d$ in some sense. If
-$d$ and $F[m]$ lie in a normed subspace of $\cal{D}(\bR)$ for each
+$f$ subject to constraints F1 and F2,  density $\rho$, and data traces
+$d:  X_{sr} \rightarrow \cal{D}(\bR)$, find $\kappa$ (or equivalently
+so that $F[\kappa] \approx d$ in some sense. If
+$d$ and $F[\kappa]$ lie in a normed subspace of $\cal{D}(\bR)$ for each
 $(\bx_s,\bx_r) \in X_{sr}$, then the
 norm provides a straightforward candidate for this sense of
 approximation.
+
+%In practice, recording takes place over a finite time interval
+%$[0,t_d]$. For convenience, assume that this interval is the same for
+%all receivers. Let $\phi \in C_0^{\infty}(0,t_d)$ be a window function
+%supported in this interval. Additional constraints on $t_d$ and $\phi$
+%will be be specified below.
 
 \subsection{Hadamard's Decomposition}
 The Hadamard decomposition of the acoustic Green's function provides a
@@ -219,105 +218,147 @@ rearrange to obtain
   \label{eqn:awe2}
   \frac{\rho}{\kappa}\frac{\partial^2 p}{\partial t^2} - \nabla^2 p -
   \nabla \log \rho \cdot \nabla p = \rho \frac{\partial f}{\partial t}
-  \delta(\bx-\bx_s)
+  \delta(\bx-\bx_s), \nonumber \\
+  p=0, \, t \ll 0.
 \end{equation}
-The pair $(p,\bv)$ is a distribution solutions of the system
-\ref{eqn:awe} if and only if $p$ is a solution of equation
-\ref{eqn:awe2} and vis-versa (with $\bv$ constructed from $p$ in the
-obvious way, preserving causality).
+If $(p,\bv)$ is a distribution solutions of the system
+\ref{eqn:awe} then $p$ is a solution of equation
+\ref{eqn:awe2}, as follows by differentiating the first equation of
+\ref{eqn:awe} with respect to $t$ and eliminating $\bv$ via the second
+equation. Conversely, if $p$ is a solution of the second-order initial
+value problem\ref{eqn:awe2}, it follows from the Hadamard
+decomposition detailed below and condition F1
+that 
+\[
+  \bv = \beta \int_{-\infty}^t p
+\]
+has an
+integrable singularity at $\bx=\bx_s$, hence 
+defines a distribution, and that $(p,\bv)$ solves the system \ref{eqn:awe}.
 
 Hadamard's construction is local, in both space-time and in the set of
 acoustic models. A {\em normal neighborhood} of
 $\bx_s \in \bR^3$ is an open subset of $\bR^3$ 
 within which every point is connected to $\bx_s$ by  a unique ray of
 geometric acoustics (a geodesic for the Riemannian metric associated
-to the equation \ref{eqn:awe2}) (\cite{Friedlander:75}, p. 16). In the
-following, 
-$M \subset (C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3))^2$ and $\Omega
-\subset \bR^3$ are bounded open sets satisfying 
+to the equation \ref{eqn:awe2}) (\cite{Friedlander:75},
+p. 16). Hadamard's decomposition holds in a space-time cylinder
+$\Omega \times \bR$,  and $\Omega\subset \bR^3$ 
+and $M \subset (C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3))^2$ are bounded open sets satisfying 
 \begin{itemize}
   \item[G1. ] for every $(\bx_s,\bx_r) \in X_{sr}$, $\bx_s, \bx_r \in \Omega$;
-  \item[G2. ] for every source point $\bx_s\in X_{s}$ and $(\kappa,\rho) \in M$, $\Omega$ is a
+  \item[G2. ] for every source point $\bx_s\in X_{s}$ and $\kappa \in M$, $\Omega$ is a
     normal neighborhood of $\bx_s$.
   \item[G3. ] for every source point $\bx_s \in X_{s};$
-    $(\kappa,\rho) \in M$, ray ${\bf X}: [0,t_d] \rightarrow \bR^3$
-    with ${\bf X}(0)=\bx_s$, and
-    $t \in [0,t_d]$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
-    or $\{{\bf X}(s): t < s < t_d\} \subset \bR^3 \setminus \Omega$.
+    $\kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
+    with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
+    or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
   \end{itemize}
-The last condition means that once a ray leaves $\Omega$ within the
-recording time interval $[0,t_d]$, it does not return to $\Omega$
-for $t<t_d$.
+Condition G3 (the ``no return'' condition) means that once a ray
+leaves $\Omega$, it does not return to $\Omega$. Conditions G1 - G3
+hold if $\kappa$ is constant, and for small perturbations and some
+large perturbations of constant $\kappa$: these are open conditions in
+the topology of $M$.
 
-Note that for any $X_{sr}$ there exist
-non-empty open sets $M$ and $\Omega$ satisfying these conditions: any convex open set
-$\Omega$ satisfying condition G1 satisfies conditions G2 and G3 for constant
-($\bx$-independent) $\kappa$ and $\rho$, and conditions G2 and G3 are open in
-the sense of the $C^{\infty}$ and $L^{\infty}$ topologies.
-
-Under the conditions just described, the construction described by
-\cite{Friedlander:75} produces for each $m \in M$ functions $\tau[m]$ (travel time) and $a[m]$
-(geometric amplitude) on $X_s \times \Omega$ and $b[m]$ (remainder kernel) on $X_s \times \Omega
-\times \bR$, satisfying
+The arguments to follow depend an additional property of solutions of
+the wave equation \ref{eqn:awe2}:
 \begin{itemize}
-\item[H1. ] $\tau[m], a[m],$ and $b[m]$ are smooth off the diagonal,
-that is, $\tau[m](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus \{\bx_s\})$
-and similarly for $a[m],b[m]$;
-\item[H2. ] there exists $A>0$ so that for any $(\kappa,\rho) \in M$
-  and $(\bx_s,\bx_r) \in X_{sr}$,
-  $|\log a[m](\bx_s,\bx_r)| < A$;
-\item[H3. ] for any $t>0$, there is $B\ge 0$ so that for
-$(\bx_s,\bx_r) \in X_{sr}, -\infty < s \le t$, and $(\kappa,\rho) \in
-M$, $|b[m](\bx_s,\bx_r,s)| +
-|\partial_tb[m](\bx_s,\bx_r,s)| \le B$.
+\item[G4. ] For any $n > 0$, $f \in {\cal E}'(\bR)$, there exists $K, T$ and $\delta>0$ so
+  that for any 4-multiindex ${\bf m}$ of order $\le n$, $(\bx_s,\bx_r) \in
+ X_{sr}, t \in \bR$,
+  and any $\kappa \in M$, the solution $p$ of \ref{eqn:awe2} is smooth
+  for $t>T$ and satisfies
+  \[
+    |D^{\bf m}p(\bx_r,t;\bx_s)| \le K e^{-\delta t}.
+  \]
 \end{itemize}
+Condition G4 is a special case of {\em local energy decay}, a much
+studied topic. Properties which imply G4 are in turn implied by the
+{\em non-trapping} hypothesis on the model $\kappa \in M$: all rays of
+geometric asymptotics escape to infinity (\cite{Hristova:09}, Theorem
+2, \cite{EgorovShubin}, Theorem 2.104, p. 192).
+
+Under conditions G1 - G4, the construction described by
+\cite{Friedlander:75} produces for each $m \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
+(geometric amplitude) on $X_s \times \Omega$ and $b[\kappa]$
+(remainder kernel) on $X_s \times \Omega \times \bR$, satisfying
+\begin{itemize}
+\item[H1. ] $\tau[\kappa], a[\kappa],$ and $b[\kappa]$ are smooth off the diagonal,
+that is, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus \{\bx_s\})$
+and similarly for $a[\kappa],b[\kappa]$;
+\item[H2. ] there exists $A>0$ so that for any $\kappa \in M$
+  and $(\bx_s,\bx_r) \in X_{sr}$,
+  $|\log a[\kappa](\bx_s,\bx_r)| < A$;
+\item[H3. ] there exist $B \ge 0,\delta > 0$ so that for
+$(\bx_s,\bx_r) \in X_{sr}$, and $\kappa \in
+M$,
+\begin{eqnarray}
+  |b[\kappa](\bx_r,t;\bx_r,s)| &\le& B e^{-\delta t} \nonumber \\
+  |\partial_t b[\kappa](\bx_r,t;\bx_r,s)| &\le& B e^{-\delta t}
+  \label{eqn:best}
+\end{eqnarray}
+\end{itemize}
+(The exponential decay estimate in item H3 follows from hypothesis G4.)
 
 The Hadamard
-decomposition of the Green's function $G$, i.e. the solution of the
-equation \ref{eqn:awe2} for $f = H/\rho_s$, is (suppressing the
-dependence on $m \in M$ from the notation)::
+decomposition of the Green's function $G[\kappa]$, i.e. the solution of the
+equation \ref{eqn:awe2} for $f = \beta H$, is::
 \begin{equation}
   \label{eqn:green}
-  G(\bx_s,\bx,t) = a(\bx_s,\bx)\delta(t - \tau(\bx_s,\bx)) +
-  b(\bx_s,\bx,t)H(t - \tau(\bx_s,\bx))
+  G[\kappa](\bx_s,\bx,t) = a[\kappa](\bx_s,\bx)\delta(t - \tau[\kappa](\bx_s,\bx)) +
+  b[\kappa](\bx_s,\bx,t-\tau[\kappa])H(t - \tau[\kappa](\bx_s,\bx))
 \end{equation}
-Under conditions G1 - G3 above, this decomposition is the restriction of
-the Greeen's function to $\Omega \times (-\infty,t_d]$. Accordingly,
-\[
-   F[m](\bx_s,\bx_r)(t) =
-   \phi(t)a(\bx_s,\bx_r)\rho_s\frac{df}{dt}(t-\tau(\bx_s,\bx_r))
- \]
-\begin{equation}
-  \label{eqn:fwdgreen}
- + \phi(t)\rho_s\int
-  \,ds \, \frac{df}{dt}(t-s) b(\bx_s,\bx_r,s)H(s-\tau(\bx_s,\bx_r))
-\end{equation}
+%Under conditions G1 - G3 above, this decomposition is the restriction of
+%the Greeen's function to $\Omega \times (-\infty,t_h]$. This fact
+%implies a decomposition of $F[\kappa]$, provided that the convolution $G*f$
+%restricted to $[0,t_d]$ is determined by the restriction of $G$ to
+%$\Omega \times [0,t_h]$. That is the case if $t_h > t_d + |\mbox{supp
+%|f/2$ (the factor of $1/2$ because $f$ is odd).
+%Making this assumption (which is weaker than assumptions on $t_h$ to be made below),
+%\[
+%   F[\kappa](\bx_s,\bx_r)(t) =
+%   \phi(t)a(\bx_s,\bx_r)\rho_s\frac{df}{dt}(t-\tau[\kappa](\bx_s,\bx_r))
+% \]
+%\begin{equation}
+%  \label{eqn:fwdgreen}
+% + \phi(t)\rho_s\int
+%  \,ds \, \frac{df}{dt}(t-s) b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r))H(s-\tau[\kappa](\bx_s,\bx_%r))
+%\end{equation}
 
 \subsection{FWI via Least Squares}
-It follows from the Hadamard decomposition 
-(equation \ref{eqn:fwdgreen}) that $F[m]$ is
-square-integrable. Indeed, for each $(\bx_s,\bx_r) \in X_{sr}$, the first term on the RHS of equation \ref{eqn:fwdgreen} is clearly
-square-integrable, since $f \in H^1_0(\bR)$.
-An $L^2$ bound on the second (remainder) term follows from the
-pointwise bounds on $b$ described in the last section and Young's
-inequality. In fact, there exists $C>0$ so that for $(\kappa,\rho) \in
-M$,
+Suppose that the source wavelet $f$ satisfies
+\begin{itemize}
+\item[F1. ] $f \in H^1_0(\bR)$, $\mbox{supp } \subset [-t_w,t_w]$;
+\item[F2. ] $f$ is odd, $f(t) = -f(-t)$.
+\end{itemize}
+Then the Hadamard decomposition 
+(equation \ref{eqn:green}) together with local
+energy decay (assumption G4) and Young's inequality  implies that
+\begin{equation}
+  \label{eqn:fwdgreen}
+  F[\kappa] = G[\kappa] * \rho \partial_t f \in L^p(X_{sr} \times \bR)
+\end{equation}
+for any $p \ge 1$, and that
+the corresponding estimates are uniform in $\kappa \in M$:
+there exists $C>0$ so that for $\kappa\in M$, $p \ge 1$,
 \begin{equation}
   \label{eqn:fwdnorm}
-  \|F[m]\|_d \le C
-  \left\|\frac{df}{dt}\right\|_{L^2(\bR)}.
+  \|F[\kappa]\|_{L^p(X_{sr} \times \bR)} \le C \left\|\frac{df}{dt}\right\|_{L^p(\bR)}.
 \end{equation}
-in which the left-hand side uses the abbreviation
-\[
-  \| \cdot \|_d = \| \cdot \|_{L^2(X_{sr} \times \bR)}
-\]
+%\[
+%  \| \cdot \|_d = \| \cdot \|_{L^2(X_{sr} \times \bR)}
+%\]
 
 This observation justfies posing FWI as a least-squares problem: given $d \in
-L^2(X_{sr}\times \bR)$, $f \in H^1_0(\bR)$, and $\rho_s>0$, find $m = (\kappa,\rho)$ to minimize
+L^2(X_{sr}\times \bR)$, $f \in H^1_0(\bR)$, and $\rho_s>0$, find $\kappa$ to minimize
 \begin{equation}
   \label{eqn:fwi}
-  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[m]-d\|_d^2.
+  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[\kappa]-d\|_{L^2(X_{sr} \times \bR)},
 \end{equation}
+%in which we have introduced the abbreviation
+%\[
+%  \| \cdot \|_d = \| \cdot \|_{L^2(X_{sr} \times \bR)}
+%\]
 Practical versions of least-squares FWI include various types of regularization and
 imposition of constraints on $m$, see the references cited in the
 Introduction.
@@ -332,19 +373,22 @@ Introduction.
 \subsection{Source Characteristics and Asymptotics}
 
 Note that in the representation \ref{eqn:fwdgreen}, only the
-derivative $df/dt$ appears. For convenience, introduce
+derivative $\partial_tf$ appears. For convenience, introduce
 \begin{equation}
   \label{eqn:wavelet}
-  w = \rho_s \frac{df}{dt}
+  w = \rho \partial_t f
 \end{equation}
-From the assumed
-properties of $f$, $w \in L^2(\bR)$ and has compact support, has zero
-mean, and is
-even in $t$. Since $f$ with the properties F1 - F3 corresponds
-biuniquely with $w$ with the properties just mentioned, I will also
+The properties F1 and F2 assumed for $f$ are equivalent to these
+properties of $w$:
+\begin{itemize}
+\item[W1. ] $w \in L^2_0(\bR)$, $\mbox{supp }w \subset [-t_w,t_w]$;
+\item[W2. ] $w$ is even;
+\item[W3. ] $\int \, w = 0$.
+\end{itemize}
+I will also
 refer to $w$ as ``the wavelet'', and view $F$ as parametrized by $w$.
 
-Introduce asymptotics in this setting by assuming that $w = \wl$ is chosen
+Introduce asymptotics in this setting by choosing $w = \wl$
 from a family $\{\wl:\}$ indexed by the dimensionless parameter
 $0 <\lambda \le 1\}$, and defined by
 \begin{equation}
@@ -352,10 +396,10 @@ $0 <\lambda \le 1\}$, and defined by
   \wl(t) = \lambda^{-1/2}w_1(t/\lambda).
 \end{equation}
 The  ``mother wavelet'' $w_1$ is square-integrable of compact support
-even, and mean-zero. Define $t_w$ to be the diameter of the support:
+even, and mean-zero. So that property W1 holds for the entire family, 
 \begin{equation}
   \label{eqn:wdiam}
-  \mbox{supp }w_1 = [-t_w,t_w].
+  \mbox{supp }w_1 \subset [-t_w,t_w].
 \end{equation}
 All wavelets $\wl$ in this family
 inherit these properties from $w_1$, along with its dimensions
@@ -367,13 +411,12 @@ given by
   f_{\lambda}(t) = \int_{-\infty}^t\wl =
   \lambda^{1/2}f_1\left(\frac{t}{\lambda}\right).
 \end{equation}
-Note that
+Note that for $p \ge 1$,
 \begin{equation}
   \label{eqn:lambdanorms}
-  \|\wl\|_{L^2(\bR)} = \|w_1\|_{L^2(\bR)},\,\|f_{\lambda}\|_{L^2(\bR)}
-  = \lambda \|f_1\|_{L^2(\bR)}.
+  \|\wl\|_{L^p(\bR)} = \lambda ^{\frac{1}{p}-\frac{1}{2}}\|w_1\|_{L^p(\bR)},\,\|f_{\lambda}\|_{L^p(\bR)}
+  = \lambda ^{\frac{1}{p}+\frac{1}{2} \|f_1\|_{L^p(\bR)}}.
 \end{equation}
-
 
 %and its product with frequency $|\omega|$ is also
 %square-integrable.
@@ -411,109 +454,141 @@ commonly used wavelets (Ricker = second derivative of Gaussian,
 trapezoidal bandpass,...).
 
 The modeling operator with wavelet $\wl$ is denoted $\Fl$. From the
-decomposition \ref{eqn:fwdgreen}, $\Fl$ is the sum of two terms, the second of which is
+decomposition \ref{eqn:fwdgreen}, $\Fl$ is the sum of two terms:
+\begin{equation}
+  \label{eqn:Flamdecomp}
+  \Fl = \Fla + \Flb.
+\end{equation}
+where
+\begin{equation}
+  \label{eqn:Fl0}
+  \Fla[\kappa](\bx_r,t;\bx_s) =
+  a[\kappa](\bx_s,\bx_r)\wl(t-\tau[\kappa](\bx_s,\bx_r))
+\end{equation}
+and
 \[
-   \phi(t)\rho_s\int
-   \,ds \, \frac{df_{\lambda}}{dt}(t-s) b(\bx_s,\bx_r,s)H(s-\tau(\bx_s,\bx_r))
+\Flb[\kappa] = \rho_s\int
+   \,ds \, \frac{df_{\lambda}}{dt}(t-s) b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r))H(s-\tau[\kappa](\bx_s,\bx_r))
 \]
 \[
-  =\phi(t)\rho_s
-  f_{\lambda}(t-\tau(\bx_s,\bx_r))b(\bx_s,\bx_r,\tau(\bx_s,\bx_r))
+  =\rho_s
+  f_{\lambda}(t-\tau(\bx_s,\bx_r))b[\kappa](\bx_s,\bx_r,0)
 \]
-\[
+\begin{equation}
+  \label{eqn:Fl1}
     -
-    \phi(t)\rho_s\int
+    \rho_s\int
    \,ds \, f_{\lambda}(t-s) (\partial_t
-   b(\bx_s,\bx_r,s))H(s-\tau(\bx_s,\bx_r))
-\]
-The $L^2$ norms of the summands are bounded by a multiple of
-$\lambda$, uniform over $(\bx_s,\bx_r) \in X_{sr}, m \in M$, thanks to
-the norm scaling \ref{eqn:lambdanorms}, Young's inequality, and conclusion H3.
-
+   b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r)))H(s-\tau[\kappa](\bx_s,\bx_r))
+\end{equation}
+From hypothesis G4, the bound \ref{eqn:lambdanorms} , and Young's inequality, the $\|\Fl1[\kappa]\|_{ L^p(X_{sr} \times \bR)}$ is bounded by a multiple of
+$\lambda^{\frac{1}{p}+\frac{1}{2}}$, uniformly over $\kappa \in M$.
 I will write ``$+ \Ol$'' to mean an  error uniformly bounded in $L^2$ by
 a multiple of $\lambda$ over $m \in M$. Thus
 \begin{equation}
   \label{eqn:fwdapprox}
-  \Fl[m](\bx_s,\bx_r) = \phi a(\bx_s,\bx_r)\wl(t-\tau(\bx_s,\bx_r)) +
-  \Ol
+  \Fl[\kappa](\bx_s,\bx_r) = \Fla[\kappa] +   \Ol
 \end{equation}
+
 \subsection{AWI via Optimization}
 
 AWI is based an {\em extension} of the modeling operator $F$, that is,
 an operator ${\bar F}$ with larger domain, coinciding with $F$ on its domain..
 The extended modeling operator ${\bar F}$ maps extended models
-$\bar{m}=(\kappa,\rho,\bar{w})$ incorporating extended sources
+$\bar{m}=(\kappa,\bar{w})$ incorporating extended sources
 $\bar{w}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
-field. That is, the extended source depends on the receiver location
-as well as the source location - so there is one acoustic system for
-each source {\em and} receiver position - a lot of wave equations! If all
-of the wavelets for each source are the same, that is, ${\bar w}({\bf
-  x}_r,t;{\bf x}_s) = w(t;{\bf x}_s)$ is independent of receiver
-position, then ${\bar F}[\bar{m}] = F[m]$. That is, $F$ is a special
+field. Denote by $\bar{p}(\bx,t;\bx_s,\bx_r), \bar{\bv}(\bx,t;\bx_s,\bx_r)$
+the solution of the acoustic system \ref{eqn:awe} with $w(t)$ in the
+right-hand side of the first equation replaced by
+$\bar{w}(\bx_r,\cdot;\bx_s)$. Then
+$\bar{F}[\kappa,\bar{w}](\bx_r,t;\bx_s) =
+\bar{p}(\bx_r,t;\bx_s,\bx_r)$. As was the case for $F$, the Hadamard
+decomposition \ref{eqn:green} and conditions G1-G4, W1-W3 imply that
+$\bar{F}[\kappa, \cdot]$ is a bounded map: $L^2(X_{sr} \times \bR)
+\rightarrow L^2(X_{sr} \times \bR)$. If all  
+of the wavelets are the same, that is, ${\bar w}({\bf  
+  x}_r,t;{\bf x}_s) = w(t)$ is independent of source and receiver  
+position, then ${\bar F}[\kappa,\bar{w}] = F[\kappa]$. That is, $F$ is a special
 case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
 $F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
 
 \cite{Warner:16} represent the extended sources $\bar{w}$ as time convolutions of the
-(known) source $w$ with an {\em adaptive filter} $u({\bf
-  x}_r,t;{\bf x}_s)$: that is,
-\[
-  \bar{w}({\bf x}_r,t;{\bf x}_s) = (u * w)({\bf  x}_r,t;{\bf x}_s)
-  = (u({\bf  x}_r,\cdot;{\bf x}_s)*w)(t).
-\]
-Here, $u*w$ denotes the result of convolving each trace in $u$ by $w$. I
+(known) source $w$ with an {\em adaptive filter} $u \in L^2(X_{sr}
+\times \bR)$, that is, $\bar{w}=u * w$.
+Here, $u*w$ denotes the result of convolving each trace in $u$ by $w
+\in L^2(\bR)$. I
 will also use the asterisk to denote the trace-by-trace convolution
 of two data sets with the same set of source and receiver coordinates,
 that is, the data set consisting of time convolutions of traces with the same source
 and receiver coordinates. The meaning will be clear from context.
 
-The adaptive filters $u$ are presumed to vanish for $|t| > t_u$, with
-the same maximum time $t_u>0$ for all $(\bx_s,\bx_r) \in X_{sr}$, and
-to be square integrable: $u \in L^2(X_{sr}\times [-t_u,t_u])$. 
-
-Since linear acoustics is time-translation invariant, its solution commutes with time convolution.
-%\[
-% \bar{F}[\bar{m}] = \bar{F}[(\kappa,\rho,,u*w)] = F[m]*u
-% \]
-Denote by $\bar{p}(\bx,t;\bx_s,\bx_r), \bar{\bv}(\bx,t;\bx_s,\bx_r)$
-the solution of the acoustic system \ref{eqn:awe} with $w(t)$ in the
-right-hand side of the first equation replaced by
-$\bar{w}(\bx_r,\cdot;\bx_s) = u({\bf  x}_r,\cdot;{\bf
-  x}_s)*w$. Then
+For such extended sources,
 \[
-  \bar{p}(\bx,\cdot;\bx_s,\bx_r) = u({\bf  x}_r,\cdot;{\bf
-    x}_s)*p(\bx,\cdot;\bx_s)
+  \bar{F}[\kappa,u*w] = u*F[\kappa]
 \]
-Introduce the notation $S[m]$ for the convolution operator with kernel $F[m]$:
+Introduce the notation $S[\kappa]$ for the operator of convolution
+with $F[\kappa]$, that is,
 \begin{equation}
   \label{eqn:sdef}
-  S[m]u(\bx_r,t;\bx_s) \equiv \phi(t)\bar{p}(\bx_r,t;\bx_s,\bx_r).
+  S[\kappa]u \equiv u*F[\kappa]
 \end{equation}
-
-\cite{Warner:16} assume (implicitly) that there is always an exact
-solution of the extended inversion problem. That is, they assume that
-for any $m$, there is an extended source $\bar{w}$, or equivalently an
-adaptive filter $u[m;d]$ with $\bar{w}=w*u[m;d]$, for which
-$S[m]u[m;d]= d$. This proposition is dubious, but is easy to work
-around, as will be seen below - so for the moment accept it.
-
-Also, \cite{Warner:16} formulate
-AWI in terms of the inverse filter, that is, $u$ for which
-$\phi u*d = F[m]$, and in fact recommend that definition. The present
-discussion uses only the forward filter.
-
-If $\kappa = \kappa^*, \beta = \beta^*$, then the extended source
-$\bar{w}$ that fits the data should be $= w$,
-so the adaptive kernel $u[m;d]$ should be $=\delta(t)$ for all
-${\bf x}_s,{\bf x}_r$. Such a kernel $u[m;d]$ is in the null space of
-multiplication by $t$.
-This observation leads to the definition of the AWI objective function $J_{\rm AWI}$:
+Then $S[\kappa]$ is bounded on $L^2(X_{sr} \times \bR)$, uniformly in
+$\kappa \in M$, thanks to
+the bound \ref{eqn:fwdnorm} for $p=1$. $S$ also represents an
+extension of $F$, in the sense that with the choice
+$u(\bx_r,t;\bx_s)=\delta(t)$, the output of $F$ is recovered:
 \begin{equation}
-  \label{eqn:tJz}
-  J_{\rm AWI}[m;d] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu[m;d](\bx_r,t;\bx_s)|^2}{\int dt |u[m;d](\bx_r,t;\bx_s)|^2}\right)
+  \label{eqn:sconsist}
+  S[\kappa]\delta = F[\kappa].
 \end{equation}
-in which $u[m;d]$ is as defined above, that is, the solution of $S[m]u[m;d]
-= d$.
 
+%Since $S[\kappa]$ involves solution of the wave equation with point source
+%wavelet $u*w$, application of the Hadamard decomposition \ref{eqn:green} requires a furnther
+%constraint on ray geometry, expressed by condition G3. Specifically,
+%\begin{itemize}
+%\item[G4. ]$t_h > t_d + t_w + t_u$.
+%\end{itemize}
+%Then \ref{eqn:green} implies that
+%\begin{equation}
+%  \label{eqn:sop}
+%  S[\kappa]u = \phi w* a[\kappa] T[\kappa] ((\delta + b[\kappa]H)*u)
+%\end{equation}
+%in which $T[\kappa]$ is the time translation operator by $\tau[\kappa]$:
+%\begin{equation}
+%  \label{eqn:Tdef}
+%  T[\kappa]u(\bx_r,t;\bx_s) = u(\bx_r,t-\tau[\kappa](\bx_s,\bx_r);\bx_s),
+%\end{equation}
+%Similarly,
+%\begin{equation}
+ % \label{eqn:fwdgreenop}
+%  F[\kappa] = \phi a[\kappa] T[\kappa]((\delta + b[\kappa]H)*w) 
+%\end{equation}
+
+%Note that values of $b$ for $t > t_d + t_w + t_u$ do not affect the
+%definitions of $S[\kappa]u$ or $F[\kappa]$. Therefore alter $b$ by
+%multiplication by a suitable cutoff function so that its support lies in
+%$(-\infty, t_h]$.
+
+\cite{Warner:16} assume (implicitly) that there is always a unique
+solution of the extended inversion problem, formulated in terms of
+$S$: that is, that
+for any $\kappa$ and any data $d$, there is an
+adaptive filter $u[\kappa;d]$ for which
+$S[\kappa]u[\kappa;d]= d$. If $d$ is noise-free, that is, $d=F[\kappa]$, then the consistency relation \ref{eqn:sconsist}
+suggests that $u[\kappa;d](\bx_r,t;\bx_s) = \delta(t)$. This ideal adaptive filter is in the null
+space of multiplication by $t$, that is, the operator
+$u(\bx_r,t;\bx_s) \mapsto t u(\bx_r,t;\bx_s)$. This
+observation motivates the definition of the AWI objective function
+(\cite{Warner:16}, equation XXXX)::
+\begin{equation}
+  \label{eqn:awidef}
+  J_{\rm AWI}[m;d] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu[\kappa;d](\bx_r,t;\bx_s)|^2}{\int dt |u[\kappa;d](\bx_r,t;\bx_s)|^2}\right) 
+\end{equation}
+in which $u[\kappa;d]$ is as defined above, that is, the solution of $S[\kappa]u[\kappa;d]
+= d$. \cite{Warner:16} also formulate
+AWI in terms of the inverse filter, that is, $u$ for which
+$\phi u*d = F[\kappa]$, and in fact recommend that definition. The present
+discussion uses only the forward filter.
 Adaptive waveform inversion consists in iterative minimization of
 $J_{\rm AWI}$: choose an initial estimate $m_0=(\kappa_0,\beta, w)$ of the
 model, then update $m$ (that is, $\kappa$) repeatedly using a gradient
@@ -521,40 +596,124 @@ descent method. \cite{Warner:16} describes the computation of $J_{\rm AWI}$
 and its gradient in detail, and their use in a quasi-Newton
 optimization algorithm.
 
-The trace-by-trace normalization in definition \ref{eqn:tJz} of each
-trace in $tu[m;d]$ by the
-$L^2$ norm of the corresponding trace in $u[m;d]$ is quite important, as will be explained shortly.
+The same observation motivates the definition of the {\em Matched
+  Source Waveform Inversion} (MSWI) objective studied by
+\cite{HuangSymes2015SEG,HuangSymes:Geo17}:
+\begin{equation}
+  \label{eqn:mswidef}
+  J_{\rm MSWI}[m;d] = \sum_{\bx_s,\bx_r} \int dt |tu[\kappa;d](\bx_r,t;\bx_s)|^2
+\end{equation}
+That is, the two objectives differ only by the trace-by-trace
+normalization featured in the definition of AWI (equation
+\ref{eqn:awidef}). Much of the analysis of $J_{\rm AWI}$ pertains to
+$J_{\rm MSWI}$, as will be explained below.
+The trace-by-trace normalization in the definition of $J_{\rm AWI}$
+will prove quite consequential.
 
 \section{Why it works}
 
-It may not be obvious at first glance why the AWI approach to estimating
-$m$, described in the last section, should be any more effective than
-FWI. Under the smoothness and ray geometry assumptions made above (equation
-\ref{eqn:coeff}, conditions G1 - G3) hold, an asymptotic relation
+It may not be obvious at first glance why AWI (local optimization of
+$J_{\rm AWI}$) should be should be any more effective at estimating
+$\kappa$ from data $d$ than is FWI (local
+optimization of $J_{\rm FWI}$). Under the smoothness and ray geometry assumptions made above (equation
+\ref{eqn:coeff}, conditions G1 - G4), an asymptotic relation
 between AWI and travel time tomography emerges, justifying the notion
-that AWI is more likely to succeed than is FWI. This relation is based
-on the Hadamard decomposition, and therefore is {\em
-  local}: it applies when sources and receivers are sufficiently
-close to lie in a common normal neighborhood of the source locations,
-for all coefficient pairs $(\kappa,\rho)$ in the search set $M$ of the
-inverse problem. The relation to travel time tomography is asymptotic
+that AWI is more likely to succeed than is FWI.
+
+\subsection{TIhonov Regularization}
+Before establishing the relation with travel time tomography, a pair of defects in the definition
+of $J_{\rm AWI}$ must be remedied. First, the objective function is
+not well-defined for the ``ideal'' case, in which $d = F[\kappa]$ and
+$u[\kappa;d]=\delta$: this adaptive filter is not square-integrable, so the
+denominator does not make sense. Second, the equation $S[\kappa]u=d$ does
+not (in general) have a solution $u \in L^2(X_{sr} \times \bR)$. Since $S[\kappa]$ is a convolution operator, solving
+$S[\kappa]u=d$ for $u$ amounts to deconovolving $d$ by $F[\kappa]$..
+Under the conditions W1-W3 on the wavelet $w$, $F[\kappa]$ does
+not have a continuous (stable) convolution inverse, and
+$S[\kappa]$ is not surjective.
+
+In fact, these two defects are really symptoms of the instability of
+deconvolution for kernels with the properties of $F[\kappa]$.  The
+conventional remedy for this instability is so-called ``pre-whitening'', as
+mentioned by \cite{Warner:16} ``Pre-whitening'' is a version of
+Tihonov regularization. It  amounts to replacement of the equation
+$S[\kappa]u=d$ by the regularized least squares problem: 
+\begin{equation}
+  \label{eqn:reg}
+  u_{0,\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|S[\kappa]u-d\|^2 + \sigma\|u\|^2)
+\end{equation}
+For $\sigma > 0$, the Lax-Milgram Theorem (\cite{Yosida}, section
+III.7) implies that this least-squares problem has a unique solution
+$u_{0,\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$. Define the modified AWI objective $J_{\lambda}$ by
+replacing $u$ in the definition \ref{eqn:awidef} with $u_{0,\sigma}$:
+\begin{equation}
+  \label{eqn:awidef}
+  J_{\sigma}[\kappa;d] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu_{0,\sigma}[\kappa;d](\bx_r,t;\bx_s)|^2}{\int dt |u_{0,\sigma}[\kappa;d](\bx_r,t;\bx_s)|^2}\right). 
+\end{equation}
+$J_{\sigma}$ is well-defined on $M \times L^2(X_{sr} \times \bR)$.
+
+A natural choice for the regularization weight $\sigma$ will emerge
+from the calculations to follow.
+
+%The second defect is insufficient constrain on the recording time
+%$t_d$: so far, $t_d$ can be arbitrarily small, and the recorded data
+%can contain arbitrarily little information about the material through%
+%which it propagates. The Hadamard decomposition motivates additional
+%constraints on $t_d$ which (in some cases) imply that the recorded
+%data embody strong constraints on the material model $m$.
+%These conditions on $t_d$  are posed in terms of the extreme
+%traveltimes over $m \in M$. Since all derivatives of the log wave velocity $\log c =
+%(\log \kappa - \log \rho )/2$ are bounded in the closure of $\Omega$,
+%uniformly over $m \in M$, 
+%the ray trace construction of travel time implies that
+%$0 < \tau_{\rm min} < \tau_{\rm max}$ exist for which $\tau_{\rm min}
+%\le \tau[\kappa](\bx_s,\bx_r) \le \tau_{\rm max}$ for $(\bx_s,\bx_r) \in
+%X_{sr}$, $m \in M$.
+%The additional constraints on $t_d$ and $\phi$ are:
+%begin{itemize}
+%\item[T1. ] $t_d >  \tau_{\rm max} + t_w + t_u $ (recording time is
+% sufficient for first arrival generated from any source with
+%waveform $u*w$ to be recorded at all receivers);
+%\item[T2. ] $0 < \tau_{\rm min} - t_w - t_u$ (signal from earliest
+%  part of wavelet $u*w$ arrives in positive time, for any
+%  source-receiver pair);
+%\item[T3. ] $\phi \equiv 1$ on $[\tau_{\rm min} - t_w - t_u,
+%\tau_{\rm max} + t_w + t_u]$ (time cutoff $\phi$ does not modify
+%leading term in Hadamard decomposition \ref{eqn:fwdgreen}, for any
+%source-receiver pair).
+%\end{itemize}
+%These assumptions are physically natural, as
+%they imply that the recording time interval $[0,t_d]$ contains the
+%support of the extended source data, up to an error vanishing with
+%source wavelength.
+
+%The choice of $\lambda$ as the  the regularization weight might seem
+%natural, as $\lambda$ is more-or-less the shortest wavelength
+%controlled by solution of the least-squares deconvolution problem
+%\ref{eqn:reg}. It will be rigorously justified {\em post-hoc} by the
+%calculations to follow. The same conclusions can be reached if
+%$\sigma$ in the definition \ref{eqn:reg}  is replaced by a function $\sigma(\lambda)$ with
+%the constraint that $C_{\rm min} \lambda \le \sigma(\lambda)
+%\le C_{\rm max}\lambda$, for suitable $C_{\rm min}, C_{\rm max}$ with
+%$0 < C_{\rm min} \le C_{\rm max}$. For simplicity, I will use
+%$\sigma(\lambda) = \lambda$.
+
+\subsection{Asymptotics: the leading term}
+The relation to travel time tomography is asymptotic
 in wavelength/frequency, and conveniently expressed via the wavelet
 family $\{\wl\}$ and the associated family of modeling operators
-$\Fl$. With these assumptions, the AWI objective function $J_{\rm AWI}[m;d_{\lambda}$
+$\Fl$.
+
+With these assumptions, I will show that the AWI objective function $J_{\rm AWI}[\kappa;d_{\lambda}]$
 for noise-free data
 \begin{equation}
   \label{eqn:noisefree}
-  d_{\lambda}=\Fl[m^*]
+  d_{\lambda}=\Fl[\kappa^*]
 \end{equation}
 is $\lambda$-asymptotic to the mean-square difference between the
 source-receiver travel times for $m$ and $m*$. 
 
-This relation breaks down if the sources and receivers fail to belong
-to a normal neighborhood (that is, if multiple ray paths exist between
-sources and receivers), as explained in the fifth section of this paper.
-
-With these assumptions,
-the decomposition \ref{eqn:fwdgreen} is applicable for solution of the point
+The decomposition \ref{eqn:fwdgreen} is applicable for solution of the point
 radiator problem \ref{eqn:awe} with extended source
 $u(\bx_r,\cdot;\bx_s)*\wl$, for each source-receiver pair
 $(\bx_s,\bx_r)\in X_{sr}$. Write $\bar{p}_{\lambda}$ for the pressure
@@ -562,84 +721,32 @@ component of the solution, and specialize the definition
 \ref{eqn:sdef} to
 \begin{equation}
   \label{eqn:sdeflam}
-  S_{\lambda}[m]u(\bx_r,t;\bx_s) \equiv \phi(t)\bar{p}_{\lambda}(\bx_r,t;\bx_s,\bx_r).
+  S_{\lambda}[\kappa]u(\bx_r,t;\bx_s) \equiv \phi(t)\bar{p}_{\lambda}(\bx_r,t;\bx_s,\bx_r).
 \end{equation}
 Following the reasoning leading to
 equation\ref{eqn:fwdapprox}, obtain
 \begin{equation}
   \label{eqn:slamapprox}
-  S_{\lambda}[m]u({\bf x}_r,t;{\bf x}_s) = \phi(t)a[m]({\bf x}_s,{\bf
-    x}_r) (u(\bx_r,\cdot;\bx_s)*\wl)(t-\tau[m]({\bf x}_s,{\bf x}_r)) + O(\lambda).
+  S_{\lambda}[\kappa]u({\bf x}_r,t;{\bf x}_s) = \phi(t)a[\kappa]({\bf x}_s,{\bf
+    x}_r) (u(\bx_r,\cdot;\bx_s)*\wl)(t-\tau[\kappa]({\bf x}_s,{\bf x}_r)) + O(\lambda).
 \end{equation}
 
-I promised additional constraints on the data time window $[0,t_d]$
-and cutoff function $\phi$. These are posed in terms of the extreme
-traveltimes over $m \in M$. Since all derivatives of the log wave velocity $\log c =
-(\log \kappa - \log \rho )/2$ are bounded in the closure of $\Omega$,
-uniformly over $m \in M$, 
-the ray trace construction of travel time implies that
-$0 < \tau_{\rm min} < \tau_{\rm max}$ exist for which $\tau_{\rm min}
-\le \tau[m](\bx_s,\bx_r) \le \tau_{\rm max}$ for $(\bx_s,\bx_r) \in
-X_{sr}$, $m \in M$.
-The additional constraints on $t_d$ and $\phi$,
-\begin{itemize}
-\item[T1. ] $t_d >  \tau_{\rm max} + t_w + t_u $,
-\item[T2. ] $0 < \tau_{\rm min} - t_w - t_u$,
-\item[T3. ] $\phi \equiv 1$ on $[\tau_{\rm min} - t_w - t_u,
-\tau_{\rm max} + t_w + t_u]$.
-\end{itemize}
-That is, the support of the leading term in \ref{eqn:slamapprox} is
-contained in $\{t: \phi(t) = 1\}$. These assumptions are physically natural, as
-they imply that the recording time interval $[0,t_d]$ contains the
-support of the extended source data, up to an error vanishing as
-$\lambda \rightarrow 0$.
+
 
 From T3, equation \ref{eqn:slamapprox} can be re-written as
 \begin{equation}
   \label{eqn:slambis}
-  S_{\lambda}[m]u({\bf x}_r,t;{\bf x}_s) = a[m]({\bf x}_s,{\bf
-    x}_r) (u(\bx_r,\cdot;\bx_s)*\wl)(t-\tau[m]({\bf x}_s,{\bf x}_r)) + O(\lambda).
+  S_{\lambda}[\kappa]u({\bf x}_r,t;{\bf x}_s) = a[\kappa]({\bf x}_s,{\bf
+    x}_r) (u(\bx_r,\cdot;\bx_s)*\wl)(t-\tau[\kappa]({\bf x}_s,{\bf x}_r)) + O(\lambda).
 \end{equation}
-
 Similarly, from the definition \ref{eqn:noisefree} and equation
 \ref{eqn:fwdgreen},
 \begin{equation}
   \label{eqn:noisefreeapprox}
-  d_{\lambda}(\bx_r,t;\bx_s) = a[m^*](\bx_s,\bx_r) \wl(t-\tau[m^*](\bx_s,\bx_r)) + O(\lambda).
-  \end{equation}
-
-Inspection of equations \ref{eqn:slamapprox} and
-\ref{eqn:noisefreeapprox} shows that an approximate solution of $S_{\lambda}[m]u=d_{\lambda}$ is 
-\begin{equation}
-  \label{eqn:notl2}
-  u({\bf x}_r,t;{\bf x}_s) = \frac{a[m^*]({\bf x}_s,{\bf
-      x}_r)}{a[m]({\bf x}_s,{\bf x}_r)}\delta(t-\tau[m^*]({\bf
-    x}_s,{\bf x}_r)+\tau[m]({\bf x}_s,{\bf x}_r)) + O(\lambda).
-\end{equation}
-There is immediately a big problem: this $u$ is not
-square-integrable, and the AWI objective $J_{\rm AWI}$ is
-undefined. It's not surprising that mathematical ill-behaviour arises
-in this context. Since $S_{\lambda}[m]$ is a convolution operator, solving
-$S_{\lambda}[m]u=d$ for $u$ amounts to deconovolving $d$ by the kernel $F[m]$ of
-$S_{\lambda}[m]$. Under the assumed conditions on the wavelet $\wl$, $S_{\lambda}[m]$ does
-not have a continuous (stable) convolution inverse.
-
-
-It is conventional to stabilize deconvolution problems such as the
-equation $S_{\lambda}[m]u=d$ via so-called ``pre-whitening'', as
-mentioned by \cite{Warner:16} ``Pre-whitening'' is a version of
-Tihonov regularization. It  amounts to replacement of the equation
-$S_{\lambda}[m]u=d$ by the regularized least squares problem: 
-\begin{equation}
-  \label{eqn:reg}
-  u_0[m_{\lambda};d] = \mbox{argmin}_u (\|S_{\lambda}[m]u-d\|^2 + \lambda\|u\|^2)
+  d_{\lambda}(\bx_r,t;\bx_s) = a[\kappa^*](\bx_s,\bx_r) \wl(t-\tau[\kappa^*](\bx_s,\bx_r)) + O(\lambda).
 \end{equation}
 
-The choice of $\lambda$ as the  the regularization weight might seem
-natural, as $\lambda$ is more-or-less the shortest wavelength
-controlled by solution of the least-squares deconvolution problem
-\ref{eqn:reg}. It will be rigorously justified {\em post-hoc} by the
-calculations to follow.
+
 
 Note that in these expressions, the source and receiver coordinates
 ${\bf x}_s$ and ${\bf x}_r$ act as either passive parameters or
@@ -652,17 +759,17 @@ drop ${\bf x}_s$ and ${\bf x}_r$ from the notation temporarily: each
 calculation to follow pertains to a single trace, i.e. a single choice
 of ${\bf x}_s$ and ${\bf x}_r$.  Also, use the
 temporary abbreviations
-$a^*=a[m^*], a=a[m], \tau^*=\tau[m^*], \tau=\tau[m]$.
+$a^*=a[\kappa^*], a=a[\kappa], \tau^*=\tau[\kappa^*], \tau=\tau[\kappa]$.
 
 Using the Hadamard progressing wave approximation \ref{eqn:hadamard},
 the right-hand side of equation \ref{eqn:reg} is 
 $$
-\approx \mbox{argmin}_u (\|a[m](\wl*u)(\cdot-\tau[m])-a[m^*]\wl(\cdot-\tau[m^*])\|^2 + \lambda\|u\|^2)
+\approx \mbox{argmin}_u (\|a[\kappa](\wl*u)(\cdot-\tau[\kappa])-a[\kappa^*]\wl(\cdot-\tau[\kappa^*])\|^2 + \lambda\|u\|^2)
 $$
-Re-write the approximation \ref{eqn:reg} in terms of the Fourier transforms $\hat{u_0}[m_{\lambda};d],\fwl$ of $u_0[m_{\lambda};d]$ and $\wl$:
+Re-write the approximation \ref{eqn:reg} in terms of the Fourier transforms $\hat{u_0}[\kappa_{\lambda};d],\fwl$ of $u_0[\kappa_{\lambda};d]$ and $\wl$:
 \begin{equation}
   \label{eqn:freqreg}
-\hat{u}_{0,\sigma}[m;d] \approx \mbox{argmin}_{\hat{u}}\frac{1}{2}\int d\omega \left(|a\hat{w}\hat{u}e^{i\omega \tau}-a^*\hat{w}e^{i\omega\tau^*}|^2 + \lambda |\hat{u}|^2\right)
+\hat{u}_{0,\sigma}[\kappa;d] \approx \mbox{argmin}_{\hat{u}}\frac{1}{2}\int d\omega \left(|a\hat{w}\hat{u}e^{i\omega \tau}-a^*\hat{w}e^{i\omega\tau^*}|^2 + \lambda |\hat{u}|^2\right)
 \end{equation}
 The normal equation for the least squares problem \ref{eqn:freqreg} is
 \[
@@ -671,7 +778,7 @@ The normal equation for the least squares problem \ref{eqn:freqreg} is
 the solution of which is
 \begin{equation}
   \label{eqn:hatuf}
-\hat{u}_0[m_{\lambda};d] \approx \frac{a^*}{a}\hat{g}_{\lambda,\frac{\lambda}{a^2}} e^{i\omega(\tau^*-\tau)}
+\hat{u}_0[\kappa_{\lambda};d] \approx \frac{a^*}{a}\hat{g}_{\lambda,\frac{\lambda}{a^2}} e^{i\omega(\tau^*-\tau)}
 \end{equation}
 where
 \begin{equation}
@@ -681,17 +788,17 @@ where
 Since $\wl$ vanishes for large $|t|$, $\fwl$ is entire analytic,
 hence vanishes on a set of measure zero, whence $\hat{g}_{\lambda,\sigma}:$ tends to $1$ almost everywhere as $\sigma \rightarrow 0$. Hence the inverse Fourier transform $g_{\lambda,\sigma}$ tends to $\delta$ in the sense of distributions, and 
 $$
-u_0[m_{\lambda};d](t) \approx \frac{a^*}{a}g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))
+u_0[\kappa_{\lambda};d](t) \approx \frac{a^*}{a}g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))
 $$
 to a multiple of a shifted $\delta$, in fact exactly the distribution
-solution of $\bar{S}[m_{\lambda}]u=d$ given in equation \ref{eqn:notl2}. However for $\lambda>0$, $u_0[m_{\lambda};d]$ is square integrable.
+solution of $\bar{S}[\kappa_{\lambda}]u=d$ given in equation \ref{eqn:notl2}. However for $\lambda>0$, $u_0[\kappa_{\lambda};d]$ is square integrable.
 
 \cite{HuangSymes2015SEG} presented an analysis of the Matched Source
 Waveform Inversion (MSWI) objective function, which is the numerator
 of the right hand side in the definition \ref{eqn:tJz} of the AWI
 objective. Note that this definition requires summation over sources and receivers:
 \[
-J_{\rm MSWI}[m_{\lambda};d] = \sum_{\bx_s,\bx_r}\int dt |tu_0[m_{\lambda};d]|^2 \approx \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))|^2
+J_{\rm MSWI}[\kappa_{\lambda};d] = \sum_{\bx_s,\bx_r}\int dt |tu_0[\kappa_{\lambda};d]|^2 \approx \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{\lambda}{a^2}}(t-(\tau^*-\tau))|^2
 \]
 \[
 =\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, (t+(\tau^*-\tau))^2|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
@@ -707,7 +814,7 @@ $\hat{g}_{\lambda,\sigma}$, therefore $g_{\lambda,\sigma}$ is even, and the line
 right-hand side of \ref{eqn:MSWI} vanishes, So
 \begin{equation}
   \label{eqn:MSWIasym}
-  J_{\rm MSWI}[m;d] \approx
+  J_{\rm MSWI}[\kappa;d] \approx
 \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{\lambda}{a^2}}(t)|^2
 +(\tau^*-\tau)^2\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{\lambda}{a^2}}\|^2
 \end{equation}
@@ -715,7 +822,7 @@ right-hand side of \ref{eqn:MSWI} vanishes, So
 Recalling the definition \ref{eqn:pw} of pulse width, the
 approximation \ref{eqn:MSWI} can be re-written as
 \begin{equation}
-  J_{\rm MSWI}[m_{\lambda};d] \approx
+  J_{\rm MSWI}[\kappa_{\lambda};d] \approx
   \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{\lambda}{a^2}}\|^2\left(l(g_{\lambda,\frac{\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
 \end{equation}
 
@@ -733,17 +840,17 @@ cited there, suggest that sometimes this is the case).
 
 Comparing the definitions \ref{eqn:tJz} of $J_{\rm AWI}$ and
 \ref{eqn:MSWI} of $J_{\rm MSWI}$, ones sees
-that the two functions differ only by the factor $\|u_0[m_{\lambda};d]\|^{-2}$ in
+that the two functions differ only by the factor $\|u_0[\kappa_{\lambda};d]\|^{-2}$ in
 the former, applied trace-by-trace. Using the geometric asymptotics approximation, 
 $$
-\|u_0[m_{\lambda};d]\|^2 \approx \frac{(a^*)^2}{a^2}\|g_{\frac{\lambda}{a^2}}\|^2 + O(\lambda)
+\|u_0[\kappa_{\lambda};d]\|^2 \approx \frac{(a^*)^2}{a^2}\|g_{\frac{\lambda}{a^2}}\|^2 + O(\lambda)
 $$
-Therefore, multiplication of the MSWI objective by $\|u_0[m_{\lambda};d]\|^{-2}$
+Therefore, multiplication of the MSWI objective by $\|u_0[\kappa_{\lambda};d]\|^{-2}$
 precisely removes the amplitude factor and norm-squared of $g$ in the right-hand side of the
 relation \ref{eqn:MSWIasym}. That is,
 \begin{equation}
   \label{eqn:preawitt}
-J_{\rm AWI}[m;d] \approx \sum_{\bx_s,\bx_r} (\left(l(g_{\lambda,\frac{\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
+J_{\rm AWI}[\kappa;d] \approx \sum_{\bx_s,\bx_r} (\left(l(g_{\lambda,\frac{\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
  \end{equation}
 
 
@@ -810,14 +917,14 @@ Combining the relations \ref{eqn:g0} and \ref{eqn:g1}, obtain
   l(g_{\lambda,\frac{\lambda}{a^2}}) =\lambda W(m,w_1)
 \end{equation}
 in which $W(m,w_1)$ is bounded by the variation of the amplitude
-$a[m](\bx_r,\bx_s)$, and the choice of ``mother wavelet'' $w_1$, but
+$a[\kappa](\bx_r,\bx_s)$, and the choice of ``mother wavelet'' $w_1$, but
 independent of $\lambda$.
 
 It follows that
 \begin{equation}
   \label{eqn:awitt}
-J_{\rm AWI}[m;d] \approx \sum_{{\bf x}_s,{\bf x}_r} (\tau[m^*]({\bf
-  x}_s,{\bf x}_r)-\tau[m]({\bf x}_s,{\bf x}_r))^2 + O(\lambda^2)
+J_{\rm AWI}[\kappa;d] \approx \sum_{{\bf x}_s,{\bf x}_r} (\tau[\kappa^*]({\bf
+  x}_s,{\bf x}_r)-\tau[\kappa]({\bf x}_s,{\bf x}_r))^2 + O(\lambda^2)
 \end{equation}
 In other words, the AWI objective is {\em exactly} an approximation to
 the travel-time tomography objective, with errors proportional to the
@@ -891,7 +998,7 @@ The second term on the RHS of equation \ref{eqn:eq3} vanishes thanks to the norm
 
 To apply the assertion \ref{eqn:eq4} to the MSWI objective, make the
 following choices, for each $m$ in the domain of $F$: $S$ is the regularized
-modeling operator $(S_{\lambda}[m],\sigma I)^T$.  Its domain is $U=L^2(\bR)$, of
+modeling operator $(S_{\lambda}[\kappa],\sigma I)^T$.  Its domain is $U=L^2(\bR)$, of
 which $u$ (the adaptive filter) is a member, and 
 its range is $D = L^2(\bR) \oplus
 L^2(\bR)$. The role of $d$ is played  the
@@ -900,21 +1007,21 @@ $Tu(t)=\max(|t|, t_d) \mbox{sgn}(t)u(t)$, with domain $U$ and
 range $E=L^2(\bR)$. The truncation by $t_d > 0$ is necessary
 to make $T$ bounded, but can be chosen large enough relative to the
 support of the filter (necessarily bounded in practical calculation)
-to have no effect. Then $\Ja$ becomes $J_{{\rm MSWI},\alpha,\sigma}[m,u;d]$, where
+to have no effect. Then $\Ja$ becomes $J_{{\rm MSWI},\alpha,\sigma}[\kappa,u;d]$, where
 \begin{equation}
   \label{eqn:eq5}
-   J_{{\rm MSWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S_{\lambda}[m]u-d\|^2 +
+   J_{{\rm MSWI},\alpha,\sigma}[\kappa,u;d] = \frac{1}{2}\left(\|S_{\lambda}[\kappa]u-d\|^2 +
    \lambda\|u\|^2 + \alpha^2\|Tu\|^2\right)
  \end{equation}
-The minimizer $\ua$ over $u$ of $ J_{{\rm MSWI}, \alpha,\sigma}[m,u;d]$ is
-$u_{{\rm MSWI},\alpha,\sigma}[m;d]$, and $\tJa$ becomes
+The minimizer $\ua$ over $u$ of $ J_{{\rm MSWI}, \alpha,\sigma}[\kappa,u;d]$ is
+$u_{{\rm MSWI},\alpha,\sigma}[\kappa;d]$, and $\tJa$ becomes
 \begin{equation}
   \label{eqn:eq6}
-  \tilde{J}_{{\rm MSWI},\alpha,\sigma}[m;d] =
-  J_{{\rm MSWI},\alpha,\sigma}[m,u_{{\rm MSWI},\alpha,\sigma}[m;d];d].
+  \tilde{J}_{{\rm MSWI},\alpha,\sigma}[\kappa;d] =
+  J_{{\rm MSWI},\alpha,\sigma}[\kappa,u_{{\rm MSWI},\alpha,\sigma}[\kappa;d];d].
 \end{equation}
-Note that $u_0$ becomes $u_0[m_{\lambda};d]$, and $\tilde{J}_0$ becomes
-$\tilde{J}_{0,\sigma}[m;d]$ which means exactly what
+Note that $u_0$ becomes $u_0[\kappa_{\lambda};d]$, and $\tilde{J}_0$ becomes
+$\tilde{J}_{0,\sigma}[\kappa;d]$ which means exactly what
 it did in the previous section. The subscript ${\rm MSWI}$ is left
 off for $\alpha=0$, for reasons that will become apparent shortly.
 
@@ -922,8 +1029,8 @@ With these correspondences, equation \ref{eqn:eq4} becomes
 \begin{equation}
   \label{eqn:eq7}
   \lim_{\alpha \rightarrow 0}
-  \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm MSWI},\alpha,\sigma}[m;d]-\tilde{J}_{0,\sigma}[m;d]\right)=
-  J_{\rm MSWI}[m;d]
+  \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm MSWI},\alpha,\sigma}[\kappa;d]-\tilde{J}_{0,\sigma}[\kappa;d]\right)=
+  J_{\rm MSWI}[\kappa;d]
 \end{equation}
 
 To derive the analogous relation for AWI only requires re-definition
@@ -931,22 +1038,22 @@ of the operator $T$: it becomes (taking explicitly into account
 dependence on source and receiver coordinates)
 \begin{equation}
   \label{eqn:eq8}
-  T[m;d] u(\bx_r,t;\bx_s) = \frac{\max(|t|, t_d)
-    \mbox{sgn}(t)}{\|u_0[m_{\lambda};d](\bx_r,\cdot;\bx_s)\|}
+  T[\kappa;d] u(\bx_r,t;\bx_s) = \frac{\max(|t|, t_d)
+    \mbox{sgn}(t)}{\|u_0[\kappa_{\lambda};d](\bx_r,\cdot;\bx_s)\|}
   u(\bx_r,t;\bx_s).
 \end{equation}
 That is, for AWI, $T$ depends on both model and data. Define
 \begin{equation}
   \label{eqn:eq5a}
-   J_{{\rm AWI},\alpha,\sigma}[m,u;d] = \frac{1}{2}\left(\|S_{\lambda}[m]u-d\|^2 +
-   \lambda\|u\|^2 + \alpha^2\|T[m;d]u\|^2\right)
+   J_{{\rm AWI},\alpha,\sigma}[\kappa,u;d] = \frac{1}{2}\left(\|S_{\lambda}[\kappa]u-d\|^2 +
+   \lambda\|u\|^2 + \alpha^2\|T[\kappa;d]u\|^2\right)
  \end{equation}
-The minimizer $\ua$ over $u$ of $ J_{{\rm AWI}, \alpha,\sigma}[m,u;d]$ is
-$u_{{\rm AWI},\alpha,\sigma}[m;d]$, and $\tJa$ becomes
+The minimizer $\ua$ over $u$ of $ J_{{\rm AWI}, \alpha,\sigma}[\kappa,u;d]$ is
+$u_{{\rm AWI},\alpha,\sigma}[\kappa;d]$, and $\tJa$ becomes
 \begin{equation}
   \label{eqn:eq6a}
-  \tilde{J}_{{\rm AWI},\alpha,\sigma}[m;d] =
-  J_{{\rm AWI};\alpha,\sigma}[m,u_{{\rm AWI};\alpha,\sigma}[m;d];d].
+  \tilde{J}_{{\rm AWI},\alpha,\sigma}[\kappa;d] =
+  J_{{\rm AWI};\alpha,\sigma}[\kappa,u_{{\rm AWI};\alpha,\sigma}[\kappa;d];d].
 \end{equation}
 Note that the definitions \ref{eqn:eq5} and \ref{eqn:eq6} are exactly
 the same as the corresponding definition \ref{eqn:eq5a} and
@@ -957,8 +1064,8 @@ With these choices, equation \ref{eqn:eq4} becomes
 \begin{equation}
   \label{eqn:eq9}
   \lim_{\alpha \rightarrow 0}
-  \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm AWI},\alpha,\sigma}[m;d]-\tilde{J}_{0,\sigma}[m;d]\right)=
-  J_{\rm AWI}[m;d]
+  \frac{1}{\alpha^2}\left(\tilde{J}_{{\rm AWI},\alpha,\sigma}[\kappa;d]-\tilde{J}_{0,\sigma}[\kappa;d]\right)=
+  J_{\rm AWI}[\kappa;d]
 \end{equation}
 
 The intervention of the $\alpha=0$ limit $\tilde{J}_{0,\sigma}$ in the
@@ -975,23 +1082,23 @@ $\hat{w}$ multiplied by any polynomial in $\omega$).
 Assume as in the last section, that is, that solutions
 of the acoustic system \ref{eqn:awe} is well-approximated by the
 geometric asymptotics as in equation \ref{eqn:hadamard}, and that the
-data is noise-free ($d=F[m^*]$). Together with the properties of $w$
+data is noise-free ($d=F[\kappa^*]$). Together with the properties of $w$
 just listed, these assumptions imply that
 \begin{equation}
   \label{eqn:eq11}
-  J_{0,\sigma}[m;d] = O(\sigma) + O(\lambda(w)).
+  J_{0,\sigma}[\kappa;d] = O(\sigma) + O(\lambda(w)).
 \end{equation}
 To see this, begin with the definition:
 \[
-  \tilde{J}_{0,\sigma}[m;d] = \frac{1}{2}
-  (\|S_{\lambda}[m]u_0[m_{\lambda};d]-d\|^2 + \lambda \|u_0[m_{\lambda};d]\|^2.
+  \tilde{J}_{0,\sigma}[\kappa;d] = \frac{1}{2}
+  (\|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d]-d\|^2 + \lambda \|u_0[\kappa_{\lambda};d]\|^2.
 \]
 Using the approximate identities \ref{eqn:hatuf} and \ref{eqn:hatgf} and
 rearranging,
 \[
-\|S_{\lambda}[m]u_0[m_{\lambda};d]-d\|^2 
+\|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d]-d\|^2 
   \approx \int d\omega
-  |a\hat{w}\hat{u_0[m_{\lambda};d]}e^{i\omega\tau}-a^*\hat{w}e^{i\omega\tau^*}|^2
+  |a\hat{w}\hat{u_0[\kappa_{\lambda};d]}e^{i\omega\tau}-a^*\hat{w}e^{i\omega\tau^*}|^2
 \]
 \[
   = \int d\omega
@@ -1023,11 +1130,11 @@ Together with the approximate inequality \ref{eqn:eq12}, this
 inequality implies
 that
 \[
-  \|S_{\lambda}[m]u_0[m_{\lambda};d] - d\|^2 = O(\sigma) + O(\lambda(w)).
+  \|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d] - d\|^2 = O(\sigma) + O(\lambda(w)).
 \]
 A similar argument leads to the conclusion that
 \[
-  \lambda\|u_0[m_{\lambda};d]\|^2 = O(\sigma) + O(\lambda(w)).
+  \lambda\|u_0[\kappa_{\lambda};d]\|^2 = O(\sigma) + O(\lambda(w)).
 \]
 Together, these conclusions imply the assertion \ref{eqn:eq11}.
 
@@ -1060,7 +1167,7 @@ version of MSWI reported here to avoid cycle-skipping in inversion of
 strongly refracting models, and ameliorate the this failure to some
 extent by Tihonov regularization. They observe that the mapping from
 adaptive filter or extended source to data (represented by the opertor
-$S_{\lambda}[m]$ in the discussion above) may not have a well-behaved inverse in
+$S_{\lambda}[\kappa]$ in the discussion above) may not have a well-behaved inverse in
 the presence of multiple wavefront arrivals. \cite{Yongetal:GJI23}
 have shown that precisely the same issue afflicts AWI, and have
 proposed a remedy by localizing the definition of the objective to
@@ -1076,7 +1183,7 @@ pair with connected by multiple rays is (once again suppressing the
 source and receiver coordinates from the notation):
 \begin{equation}
   \label{eqn:multi}
-  F[m,w](t) \approx \sum_{i \ge 0} a_i H^{p_i}w(t-\tau_i).
+  F[\kappa,w](t) \approx \sum_{i \ge 0} a_i H^{p_i}w(t-\tau_i).
 \end{equation}
 The amplitudes $\{a_i\}$ and arrival times $\{\tau_i\}$ depend on $m$, as
 before, through ray-tracing. $H$ is the Hilbert transform, and $p_i$
@@ -1098,7 +1205,7 @@ in which
 Thus
 \begin{equation}
   \label{eqn:unwrap}
-  (\delta +T_1) * F[m,w] \approx  a_0w(t-\tau_0)
+  (\delta +T_1) * F[\kappa,w] \approx  a_0w(t-\tau_0)
 \end{equation}
 where $\delta + T_1$ is the convolution inverse of $\delta + T$,
 defined by 
@@ -1108,13 +1215,13 @@ defined by
 $T^n$ should be understood as the $n$th convolution power in this
 expression, that is, $T*T*...*T$, $n$ times. $T_1$ is well-defined as a distribution.
 
-Once again, it is possible to write the adaptive filter u for which $S_{\lambda}[m]u = F[m]*u = d =
-F[m^*]$ by inspection. Use the notations $a^*_i, t^*_i, p^*_i$ for
-the analogous quantities computed with the ``true'' model $m^*$, and
+Once again, it is possible to write the adaptive filter u for which $S_{\lambda}[\kappa]u = F[\kappa]*u = d =
+F[\kappa^*]$ by inspection. Use the notations $a^*_i, t^*_i, p^*_i$ for
+the analogous quantities computed with the ``true'' model $\kappa^*$, and
 $T^*, T_1^*$ defined as above but with $a^*_i$ in place of $a_i$ and so
 on. From the observation \ref{eqn:notl2},
 \[
-  d = F[m_*]= S_{\lambda}[m]u
+  d = F[\kappa_*]= S_{\lambda}[\kappa] u
 \]
 provided that we choose
 \begin{equation}
@@ -1148,9 +1255,9 @@ ones appearing here, so nothing cancels.
 
 Observe that the travel-time differences $\tau^*_1-\tau_0$,
 $\tau_1-\tau_0^*$ do not tend to zero, though they do tend to the same
-limit as $m \rightarrow m^*$ (as do the amplitude quotients), and the
+limit as $m \rightarrow \kappa^*$ (as do the amplitude quotients), and the
 Hilbert transform powers $p_1, p_1^*$ are the same as soon as $m$ is
-sufficiently close to $m^*$.
+sufficiently close to $\kappa^*$.
 
 Of courese, the adaptive filter just computed is not square
 integrable, and must be regularized for use in a square-integral
@@ -1165,7 +1272,7 @@ $\tau^*_1-\tau_0$ and $\tau_1-\tau^*_0$ respectively in the
 definitions \ref{eqn:MSWI} and \ref{eqn:tJz} of the MSWI and AWI
 objectives. For other choices of objective, they contribute similarly
 to the total. They will eventually begin to cancel as $m$ approaches
-$m^*$, however this cancellation happens only when the times are
+$\kappa^*$, however this cancellation happens only when the times are
 within the width of the approximate 
 Dirac waveform $g$ - that is, within a wavelength.
 
