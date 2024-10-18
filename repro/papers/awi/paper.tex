@@ -241,8 +241,9 @@ $\bx_s \in \bR^3$ is an open subset of $\bR^3$
 within which every point is connected to $\bx_s$ by  a unique ray of
 geometric acoustics (a geodesic for the Riemannian metric associated
 to the equation \ref{eqn:awe2}) (\cite{Friedlander:75},
-p. 16). Hadamard's decomposition holds in a space-time cylinder
-$\Omega \times \bR$,  and $\Omega\subset \bR^3$ 
+p. 16).
+
+Throughtout the following discussion, $\Omega\subset \bR^3$ 
 and $M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ are bounded open sets satisfying 
 \begin{itemize}
   \item[G1. ] $X_{sr} \subset \Omega \times \Omega$;
@@ -289,14 +290,12 @@ and similarly for $a[\kappa],b[\kappa]$;
 \item[H2. ] there exists $A>0$ so that for any $\log \kappa \in M$
   and $(\bx_s,\bx_r) \in X_{sr}$,
   $|\log a[\kappa](\bx_s,\bx_r)| < A$;
-\item[H3. ] there exist $B \ge 0,\delta > 0$ so that for
-$(\bx_s,\bx_r) \in X_{sr}$, and $\kappa \in
-M$,
-\begin{eqnarray}
-  |b[\kappa](\bx_r,t;\bx_r,s)| &\le& B e^{-\delta t} \nonumber \\
-  |\partial_t b[\kappa](\bx_r,t;\bx_r,s)| &\le& B e^{-\delta t}
+\item[H3. ] for any $k \ge 0$, there exists $B \ge 0,\delta > 0$ so
+  that for any $(\bx_s,\bx_r) \in X_{sr}$, $\kappa \in M$, 
+\begin{equation}
+  |\partial^k_t b[\kappa](\bx_r,t;\bx_r,s)| \le B e^{-\delta t}
   \label{eqn:best}
-\end{eqnarray}
+\end{equation}
 \end{itemize}
 (The exponential decay estimate in item H3 follows from hypothesis G4.)
 
@@ -333,6 +332,21 @@ space-time coordinates, is
 % + \phi(t)\rho_s\int
 %  \,ds \, \frac{df}{dt}(t-s) b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r))H(s-\tau[\kappa](\bx_s,\bx_%r))
 %\end{equation}
+
+\subsection{Notational Conventions for Norms and Bounds}
+The Banach spaces
+$l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
+\bR)$. The norm in a Banach space $B$ will be denoted
+$\|\cdot\|_{B}$. The norm symbol
+$\|\cdot\|$ without subscript will be understood to mean either
+$\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
+  \bR)}$, as context indicates.
+
+In a statement pertaining to all
+$\kappa \in M$, the letter $C$, or sometimes $C_k,
+k=0,1,2,...$ or
+$C_*,C^*$, will designate a constant (or constants) independent of
+$\kappa$.
 
 \subsection{FWI via Least Squares}
 For $f \in {\cal E}'(\bR)$, the Hadamard decomposition 
@@ -413,7 +427,7 @@ Introduce the notation $S[\kappa]$ for the operator of convolution
 with $F[\kappa]$, that is,
 \begin{equation}
   \label{eqn:sdef}
-  S[\kappa]u \equiv u*F[\kappa]
+  S[\kappa]u = u*F[\kappa]
 \end{equation}
 Then $S[\kappa]$ is bounded on $L^2(X_{sr} \times \bR)$, uniformly in
 $\log \kappa \in M$, thanks to
@@ -523,14 +537,30 @@ W1-W3 on the wavelet $w$, $F[\kappa]$ does not have a continuous
 In fact, these two defects are really symptoms of the instability of
 deconvolution for kernels with the properties of $F[\kappa]$.  To
 begin with, $S[\kappa] = F[\kappa]*$ defines a bounded map on
-$L^2(X_{sr}\times \bR)$, since from \ref{eqn:fwdgreen} and the definition of
-  $S[\kappa]$,
+$L^2(X_{sr}\times \bR)$, since from \ref{eqn:fwdgreen} and the
+definition \ref{eqn:sdef} of  $S[\kappa]$,
 \[
-  S[\kappa]u = \rho( a[\kappa]\delta    +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f. *u,
+  S[\kappa]u = \rho( a[\kappa]\delta    +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f *u,
 \]
-The bounds \ref{eqn:best} yield $bH \in
-  L^1(X_{sr}\times \bR)$, and property F1, $\partial_t f \in
-  L^1(\bR)$.
+\begin{equation}
+  \label{eqn:sgood}
+  = \rho(a[\kappa]\delta_{\tau[\kappa]}*\partial_t f +
+  (b[\kappa](0)\delta + (\partial_t b[\kappa])H)
+  *\delta_{\tau[\kappa]}*f) * u
+\end{equation}
+The key properties of $S$ follow directly from Young's inequality and
+the representation \ref{eqn:fwdgreen}:
+\begin{lemma}
+  \label{thm:snorm}
+  Under the assumptions leading to \ref{eqn:fwdgreen} and
+  the properties F1 and F2, $S[\kappa]$ is a bounded operator on
+  $L^2(X_{sr} \times \bR)$, and there exists $C>0$ so
+  that for any $\kappa \in M$,
+  \begin{equation}
+    \label{eqn:snorm}
+    \|S[\kappa]\| \le C\|\partial_t f\|_{L^1(\bR)}.
+  \end{equation}
+\end{lemma}
 
 The conventional remedy for instability in a deconvolution problem of
 this type is so-called ``pre-whitening'', as
@@ -541,9 +571,24 @@ $S[\kappa]u=d$ by the regularized least squares problem:
   \label{eqn:reg}
   u_{\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|S[\kappa]u-d\|^2 + \sigma\|u\|^2)
 \end{equation}
+
+\begin{prop}
+  \label{thm:unorm}
+  Under the assumptions G1 - G4 and F1, F2 justifying the
+  representation \ref{eqn:fwdgreen}, the least squares problem
+  \ref{eqn:reg} with $\sigma > 0$ has a unique solution
+  $u_{\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$ satisfying
+  \begin{equation}
+    \label{eqn:unorm}
+    \|u_{\sigma}[\kappa;d]\| \le \frac{C}{\sigma}\|\partial_t f\|_{L^1(\bR)}\|d\|.
+  \end{equation}
+\end{prop}
+\begin{proof}
 For $\sigma > 0$, the Lax-Milgram Theorem (\cite{Yosida}, section
-III.7) implies that this least-squares problem has a unique solution
-$u_{\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$. Define the modified
+III.7) assures the existence of unique solution. 
+\end{proof}
+
+Define the modified
 AWI objective $J_{\rm AWI,\sigma}$ by
 replacing $u$ in the definition \ref{eqn:awideforig} with $u_{\sigma}$:
 \begin{equation}
@@ -579,7 +624,17 @@ guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times
 \begin{prop}
   \label{thm:tl2}
   Suppose that $d, Td \in L^2(X_{sr} \times \bR)$. Then
-  $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$.
+  $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$, and
+  \[
+    \|Tu_{\sigma}[\kappa;d]\| \le
+  \]
+  \begin{equation}
+    \label{eqn:tunorm}
+    \frac{C}{\sigma}\left(\left(
+        \frac{\|\partial_t f\|^2_{L^1(\bR)}}{\sigma}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
+      \right)\|d\| \\ 
+    + \|\partial_t  f\|_{L^1(\bR)}(\|d\| +\|Td\|)\right).
+  \end{equation}
 \end{prop}
 
 \begin{proof}
@@ -602,45 +657,84 @@ guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times
     (bH))*+ (a\delta  +  (\check{b}\check{H}))*(TbH))*\partial_t f
     *\partial_t f*
   \]
+  \[
+    +2\rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
+    (bH)))* \partial_t f  *T\partial_t f*
+  \]
+  \[
+    =\rho^2((T\partial_t\check{b}\check{H}) *(a\delta  +
+    (bH))*+ (a\delta  +  (\check{b}\check{H}))*(T\partial bH))* f
+    *\partial_t f*
+   \]
   \begin{equation}
     \label{eqn:tsscomm}
-    +2\rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
+     +2\rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
     (bH)))* \partial_t f  *T\partial_t f*.
   \end{equation}
+  
   Referring to the exponential decay assumption \ref{eqn:best}
   and properties F1, F2 of $f$, 
   observe that all summands on the RHS of identity \ref{eqn:tsscomm} are in
   $L^1(X_{sr} \times \bR)$, so $[T,S^TS]$ restricts to a bounded
-  operator on $L^2(X_{sr}\times \bR)$. A similar computation shows the
-  same property for $[T,S^T]$. Since $u_{\sigma} \in L^2(X_{sr}\times
-  \bR)$,
+  operator on $L^2(X_{sr}\times \bR)$, with
+  \begin{equation}
+    \label{eqn:tsscommnorm}
+    \|[T,S^TS]\| \le C\|\partial_t f\|_{L^1(\bR)}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
+  \end{equation}
+  
+  Similarly,
   \[
-    T(S^TS+\sigma I)u_{\sigma} =  [T,(S^TS+\sigma I)]u_{\sigma} +
-    (S^TS+\sigma I)Tu_{\sigma}
+    [T,S]=T(\partial_t b)H*\delta_{\tau}*f + \tau(a\delta +
+    bH)*\delta_{\tau}*\partial_t f + (a\delta +
+    bH)*\delta_{\tau}*T\partial_t f.
   \]
+  Young's inequality shows that the RHS lies in $L^1(X_{sr}\times
+  \bR)$, and that there exists $C$ independent of $\kappa$ so that
+  $[T,S^T]$ obeys the same estimate as does $S$ (Lemma
+  \ref{thm:snorm}), that is,
+  \begin{equation}
+    \label{eqn:tcommst}  
+    \|[T,S^T]\| = \|[T,S]\| \le C\|\partial_t f\|_{L^1(\bR)}
+  \end{equation}
+  
+  Multiplying the normal equation for $u_{\sigma}$Rearranging,
   \[
-    = [T,S^T]d + S^TTd,
-  \]
-  that is,
-  \[
-    (S^TS+\sigma I)Tu_{\sigma} = e \in L^2(X_{sr} \times \bR).
+    (S^TS+\sigma I)Tu_{\sigma} = -[T,S^TS]u_{\sigma} + [T,S^T]d + S^TTd.
   \]
   A theorem of von Neumann (\cite{Yosida}, VII.3, Theorem 2) implies
   that $S^TS+\sigma I$ has a bounded inverse, so the distribution
-  $Tu_{\sigma} \in L^2(X_{sr} \times \bR)$.
+  $Tu_{\sigma} \in L^2(X_{sr} \times \bR)$. The inverse is bounded by
+  $1/\sigma$, so the estimates \ref{eqn:snorm}, \ref{eqn:unorm},
+  \ref{eqn:tcommst}, and \ref{eqn:tsscommnorm} combine to yield the
+  bound \ref{eqn:tunorm}.
+  
 \end{proof}
 
 The following fact will be useful later on:
 
 \begin{prop}
   \label{thm:noisefree}
-  Suppose that $\kappa \in M$ and $d = F[\kappa]$. Then $Td
-  \in L^2(X_{sr} \times \bR)$.
+  Suppose that $\kappa \in M$. Then for $p \ge 1$, $F[\kappa], TF[\kappa]
+  \in L^p(X_{sr} \times \bR)$, and there exist $C_0, C_1, C_2 >0$ so that
+  \begin{eqnarray}
+    \label{eqn:dnorms}
+    C_1\|\partial_tf\|_{L^p(\bR)} - C_2\|f\|_{L^p(\bR)} \le \|F[\kappa]\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}, \nonumber \\
+    \|TF[\kappa]\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}.
+  \end{eqnarray}
 \end{prop}
 
 \begin{proof}
   A simple estimate shows that $F[\kappa]$ satisfies an exponential
-  decay estimate of the form G4, whence the conclusion follows.
+  decay estimate of the form G4, whence the first estimate
+  follows. Since $TbH \in W^{1,1}(\bR)$,
+  \[
+    T\rho(a\delta + bH)*\delta_{\tau}*\partial_t f = \partial_t TbH *
+    \delta_{\tau} * f + \tau \rho (a\delta +
+    bH)*\delta_{\tau}*\partial_t f  + (a\delta +
+    bH)*\delta_{\tau}*T\partial_t f.
+  \]
+  All terms involve convolution of $f$ or $\partial_t f$ with kernels
+  uniformly $L^1$-bounded in $\kappa \in M$, so the second estimate follows. 
 \end{proof}
 
 {\bf Remark:} It is conventional to call data in the range of the
@@ -818,8 +912,9 @@ From the bound \ref{eqn:Frembd} for $p=1$, there is $C \ge 0$ so that
 for all $\log \kappa \in M$, $u \in L^2(X_{sr} \times \bR)$,
 \begin{eqnarray}
   \label{eqn:Srembd}
-  \|\Sl[\kappa]u\| &\le&  C\lambda^{\frac{1}{2}}\|u\|,\nonumber \\
-  \|\Slb[\kappa]u\| & \le& C\lambda^{\frac{3}{2}}\|u\|.
+  \|\Sl[\kappa]\| &\le&  C\lambda^{\frac{1}{2}},\nonumber \\
+  \|\Sla[\kappa]\|& \le& C\lambda^{\frac{1}{2}}. \nonumber \\
+  \|\Slb[\kappa]\| & \le& C\lambda^{\frac{3}{2}}.
 \end{eqnarray}
 
 \subsection{Linking Regularization and Wavelength}
@@ -836,13 +931,13 @@ objective functions obtained by
 That is,
 \begin{equation}
   \label{eqn:mswideflam}
-  J_{\rm MSWI,\lambda}[\kappa;\dl] =  \|T\ul[\kappa;d]\|^2
+  J_{\rm MSWI,\lambda}[\kappa;\dl] =  \|T\ul[\kappa;\dl]\|^2
 \end{equation}
 and 
 \begin{equation}
   \label{eqn:awideflam}
   J_{\rm AWI,\lambda}[\kappa;\dl] = \sum_{(\bx_s,\bx_r) \in X_{sr}} 
-  \frac{\|T\ul[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}{\|\ul[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}.
+  \frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|^2}{\|\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|^2}.
 \end{equation}
 In both definitions, $\ul$ solves the least-squares problem \ref{eqn:reg} with
 $\sigma = \lambda$.
@@ -1111,8 +1206,68 @@ wavelength proxy $\lambda$.
 
 \subsection{Estimating the Remainder}
 
+\begin{prop} Under the hypotheses of Proposition \ref{thm:leading},
+  \begin{eqnarray}
+    \label{eqn:diffests}
+    \|\ul-\uzl\| &\le& C \nonumber \\
+    \|T(\ul-\uzl)\| &\le& C
+  \end{eqnarray}
+\end{prop}
 
+\begin{proof}
+  A little algebra yields
+  \begin{equation}
+    \label{eqn:step1}
+    ((\Sla)^T\Sla + \lambda I) (u_{\lambda}-\uzl) = (\Slb)^T d_{\lambda} + (\Sla)^T(d_{\lambda}-d_{0,\lambda})- 
+    ((\Sla)^T\Slb + (\Slb)^T\Sla + (\Slb)^T\Slb)u_{\lambda}
+  \end{equation}
+  Note that the bounds \ref{eqn:Srembd} imply
+\[
+  \|(\Sla)^T (\dl-\dzl)\| = \|(\Sla)^T(\rho \fl b^*(0)\delta +
+  \rho \fl*(\partial_tb^*H)*\delta_{\tau^*}\|
+\]
+\[
+  = \rho \|a \wl * \fl * (b^*(0)\delta - \partial_tb^*H)\|
+  \le C \lambda^{\frac{3}{2}}\|\dl\|
+\]
+and similarly
+\[
+ \| (\Slb)^T\dl \| \le C \lambda^{3/2}\|\dl\|.
+\]
+A bit more algebra gives
+\[
+  (\Sla)^T\Slb + (\Slb)^T\Sla + (\Slb)^T\Slb = \rho^2 (c \delta + g) *
+  \fl * \fl *,
+\]
+in which
+\[
+  c = 2a \partial t b(0) - b(0)^2)
+\]
+and
+\[
+  g = a(\partial^2_t b H + \partial^2_t \check{b}\check{H}) -
+  b((0)((\partial_t \check{b}) \check{H} + (\partial_t b) H +
+  ((\partial_t \check{b}) \check{H})*((\partial_t b)H)) 
+\]
+According to Young's inequality and the bounds \ref{eqn:best}, $g$ is integrable with a 
+$L^1(X_{sr}\times \bR)$ bound independent of $\log \kappa \in
+M$. Therefore from the bounds \ref{eqn:lambdanorms}, obtain
+\begin{equation}
+  \label{eqn:step2}
+\|(\Sla)^T\Slb + (\Slb)^T\Sla + (\Slb)^T\Slb\} \le C \lambda^3
+\end{equation}
+From the bounds \ref{eqn:unorm} and \ref{eqn:lambdanorms},
+\[
+  \|\ul\| \le C \lambda^{-\frac{1}{2}}\|\dl\|
+\]
+Combining the preceding results in the first estimate
+\ref{eqn:diffests}.
 
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%
+
+over in the expression for $g$ is exponentially decaying, hence
 %And that's ``why it works'' - when geometric asymptotics in the form
 %given by equation \ref{eqn:hadamard} is an accurate approximation to
 %the Green's function.
@@ -1273,8 +1428,61 @@ C\|\dl\|$. Thus the estimate \ref{eqn:step6} implies
   \label{eqn:step7}
   \|T(\Slb)^T\dl\| \le C \lambda^{3/2}\|\dl\|.
 \end{equation}
-                
-  
+
+On the other hand,
+\[
+  T(\dl - \dzl) = T(b^*H*\delta_{\tau^*}*\wl = T(b^*(0)\delta +
+  \partial_t b^*H)*\delta_{\tau^*} *\fl
+\]
+\[
+  (T\partial_tb^*H)*\delta_{\tau^*}*\fl+(b^*(0)\delta +
+  \partial_t b^*H)\tau^*\delta_{\tau^*}*\fl +( b^*(0)\delta +
+  \partial_t b^*H)*\delta_{\tau^*}T\fl
+\]
+From the second relation \ref{eqn:lambdanorms},
+\begin{equation}
+  \label{eqn:step7.5}
+  \|T(\dl-\dzl)\| \le C \lambda
+\end{equation}
+in which $C$ depends on $M$ and on the support of $f_1$ (which
+contains the support of $\fl$). The second bound \ref{eqn:rembd}
+gives
+\begin{equation}
+  \label{step8}
+  \Slb T(\dl-\dzl) \le C\lambda^{\frac{3}{2}}
+\end{equation}
+Also,
+\[
+  [T,\Slb] = ((Tb)H) *\wl * \delta_{\tau}* + (bH) * T\wl *
+delta_{\tau} * + \tau (bH)* \wl * \delta_{\tau}*
+\]
+\[
+  = ((\partial_t Tb) H * \delta_{\tau}*\fl* +  \tau(b(0)\delta + \partial_t bH)*\fl*\delta_{\tau}*
+\]
+\[
+  +( b(0)\delta + \partial_t bH)*T\fl*\delta_{\tau} -
+  Bh*\delta_{\tau}*\fl*
+\]
+SInce $\|\fl\|_{L^1(\bR)} =\lambda^{\frac{3}{2}} \|f_1\|_{L^1(\bR)}$ and
+$\| T\fl\|_{L^1(\bR)} = \lambda^{\frac{5}{2}} \|f_1\|_{L^1(\bR)}$, every term in
+the preceding expression is $O(\lambda^{\frac{3}{2}})$. Since $T$ is symmetric,
+\begin{equation}
+  \label{eqn:step9}
+  \|[T,\Slb]\| = \|[T,(\Slb)^T]\| \le C\lambda^{\frac{3}{2}}.
+\end{equation}
+Note that by reasoning almost identical to that leading to the bound
+\ref{eqn:step7.5},
+\begin{equation}
+  \label{eqn:step9.5}
+  \|\dl-\dzl\| \le C\lambda.
+\end{equation}
+so
+\begin{equation}
+  \label{eqn:step10}
+  \|T (\Slb)^T(\dl-\dzl)\| \le \|[ T, (\Slb)^T](\dl-\dzl)\| +
+  \|(Slb)^TT (\dl-\dzl)\| \le C\lambda^{\frac{5}{2}}\|\dl\|
+\end{equation}
+
 
 %%%%%%%%%%%%%%%
 
