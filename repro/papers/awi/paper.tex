@@ -1,4 +1,4 @@
-\title{Adaptive Waveform Inversion for Transmitted Wavefields}
+\title{Adaptive Waveform Inversion for Transmitted Wave Data}
 \author{William W. Symes}
 
 \begin{abstract}
@@ -12,43 +12,33 @@ inversion, provided that the data contain a single smooth wavefront.
 Full waveform inversion (FWI) refers to the inference of mechanical
 parameter distribution within a material object  (the earth, a human
 body, a manufactured artifact,...) from remote measurements of waves
-propagating through it. Over the last several decades, this task has come to
-be carried out by minimizing a measure of the difference between computational
-prediction of wave data versus actual observed
-data. The mechanical parameters to be inferred appear as
+propagating through it. These mechanical parameters appear as
 coefficients in systems of partial differential equations governing
-the wave motion, and discrete representations of these parameters form
-the unknown vectors in the optimization problems thus generated.
+wave propagation, and numerical solutions of these wave equations can
+be used to predict experimental data {\em ab initio}. FWI consists in
+updating the parameters to minimize a numerical measure of  the difference between computationally
+predicted wave data and actual observed
+data. If wave velocities or their parametric equivalents are amongst the parameters
+to be estimated, such numerical measures tend to oscillate, due to:
+the excessive sensitivity of predicted waveforms to changes in wave velocity.
+%especially for the most commonly used square-integral measure ($L^2$
+%norm).
+These oscillations cause iterative local optimization algorithms (relatives of
+Newton;'s method, the only practical algorithmic choices) to stagnate
+far from good data fit \cite[]{VirieuxOperto:09}, unless the initial
+parameter estimates are of very high quality.
 
-While widely used in recent years, FWI exhibits a pathology when wave
-velocities or their parametric equivalents are amongst the parameters
-to be estimated: the excessive sensitivity of predicted waveforms to
-changes in velocity leads to oscillations in the difference measures,
-especially for the most commonly used square-integral measure. Local
-optimization algorithms (relatives of Newton;'s method) are the only practical
-methods to generate sequences of approximate optimal
-parameters. However the oscillations in the difference measures lead
-these sequences to stagnate at parameter distributions
-far from the optimum, and thus do not extract the maximum information
-from the data \cite[]{VirieuxOperto:09}. 
+Adaptive Waveform
+Inversion \cite[]{Warner:16} (AWI) is a modification of FWI, designed to overcome this
+``cycle-skipping'' pathology. AWI has been successfully applied to
+industry-scale seismic data
+\cite[]{GuaschWarnerRavaut:GEO19,Warneretal:SEG21} and shows promise
+for ultrasonic imaging of the the human brain
+\cite[]{Guaschetal:NPJDM20}. These and other works discuss heuristic justifications for AWI
+and many details of implementation. However, a clear explanation for its
+effectiveness is so far missing from the literature.
 
-Various modifications of straighforward best-fit FWI have been
-suggested to overcome this ``cycle-skipping'' pathology. Many of these
-modifications employ {\em model extension}, that is, the introduction
-of a larger space of model parameters than derives from basic
-physics. An example is the {\em source-receiver} extension \cite[]{HuangSymes:17}, in which
-source waveforms are permitted to depend (unphysically) on receiver
-locations. The focus of this paper is Adaptive Waveform Inversion
-\cite[]{Warner:16} (AWI), a modification of FWI using the
-source-receiver extension. AWI has been successfully applied to industry-scale seismic data
-\cite[]{GuaschWarnerRavaut:GEO19,Warneretal:SEG21} and shows promise for
-ultrasonic imaging of the the human brain
-\cite[]{Guaschetal:NPJDM20}.
-
-While these and other works discuss heuristic justifications for AWI
-and many details of implementation, a clear explanation for its
-effectiveness is so far missing from the literature. In this short
-note, I treat a special case of FWI, the recovery of smooth acoustic
+This paper supplies such an explanation for a special case of AWI, the recovery of smooth acoustic
 medium parameters from data generated at localized energy sources,
 propagated through a fluid, and recorded at receiver locations remote
 from the sources. I show that the AWI objective function is an
@@ -71,64 +61,19 @@ definition is important in reaching this conclusion. The connection
 between objective normalization and the asymptotic equivalence to
 travel time inversion for transmission data has nothing to do with the
 reasons for normalizing the objective previoiusly advanced in the
-literature \cite[]{Warner:16,LiAlkhalifah:21}. Another modification of
-FWI based on source-receiver extension, Matched Source Waveform Inversion (MSWI)
+literature \cite[]{Warner:16,LiAlkhalifah:21}. Another similar modification of
+FWI, Matched Source Waveform Inversion (MSWI)
 \cite[]{HuangSymes2015SEG,HuangSymes:Geo17} lacks the AWI
 normalization, and has a looser relation to travel time inversion. The
 arguments presented here for AWI (and MSWI) are refinements of those
 given by \cite{HuangSymes:Geo17}. which were in turn based on ideas
 presented in Song's thesis \cite[]{Song:94c}.
 
-The conclusions of this study depend on a number of limitations on the
-acoustic model of wave propagation and the formulation of the related
-inverse problem. The principal constraints are:
-\begin{itemize}
-\item energy sources are modeled as isotropic point radiators, with
-  known time dependence vanishing outside a finite time window;
-\item mechanical parameter fields (coefficients in the acoustic wave
-  equation) are smooth, that is, infinitely differentiable as
-  functions of position, and the material density is known and
-  position-independent: only the bulk modulus (or wave velocity) is
-  to be determined;
-\item waves propagate throughout Euclidean space-time - that is, no
-  physical boundaries are modeled;
-\item the data of the inverse problem are the restrictions of the
-  pressure field to a finite number of points in space (receiver
-  positions), for a finite number of source positions and all time;
-\item local energy decays exponentially - that is, the pressure and
-  all of its derivatives tend to zero at an exponential rate as $t
-  \rightarrow \infty$,
-  uniformly in any bounded spatial domain.
-\item only one ray of geometric
-  acoustics connects each source-receiver location pair (single arrivals)
-\end{itemize}
 
-These constraints are discussed in detail in the next section. Some
-could certainly be relaxed. For instance, exponential decay of local
-energy implies that the finite time duration of actual measured data
-can be treated as a perturbation of the infinite time data setting
-posed here. The exception is the single-arrival hypothesis: it is
-essential, as without it, the link between the travel time and
-extended waveform inversion is lost. This is a feature of the
-source-receiver extension, not of a particular objective function
-(MSWI, AWI,...) formulated in terms of it. This extension treats each receiver signal
-independently. If only a single identifiable waveform arrives at
-each receiver, AWI (and similar approaches) can implicitly identify
-its arrival time, and the link to travel time inversion is
-established. If distinct waveforms are present at multiple times,
-the single receiver signal does not determine which waveform in the
-predicted signal should align with which waveform in the data to be
-fitted. This ``crosstalk'' ambiguity is analyzed in the fifth
-section, and afflicts all approaches based on the source-receivre
-extension.
-
-In any case, these hypotheses enable a simple and clear
-analysis of AWI, and seem a reasonable starting point for further
-investigation.
-
-After establishing the class of problems to be studied and notations
-for their description in the following section, I present the
-asymptotic analysis leading to the main conclusion in the next. In
+The next section establishes the class of problems to be studied and notations
+for their description, defines the AWI and MSWI objective functions,
+and states the main results of this paper. in the following section, I present the
+asymptotic analysis leading to the main results. In
 effect, AWI regularizes or relaxes the FWI problem. For many inverse
 problems, regularization has been accomplished via additive penalty
 functions. In section four, I explain the relation between AWI and a
@@ -144,15 +89,11 @@ inversion of data modeled by acoustic wave propagation. I discuss
 these and other aspects of AWI and related approaches in a brief final
 section.
 
-\section{Adaptive Waveform Inversion}
+\section{Main Results}
 
 The version of AWI introduced by \cite{Warner:16} is based on an
 active source acoustic model of data generation in Euclidean space
-$\bR^3$. In this section, I will review a version of this model, place
-some useful constraints on energy sources appearing in it, and define
-AWI as an optimization problem.
-
-\subsection{Acoustic Modeling of Transmitted Waves}
+$\bR^3$. 
 
 Each acoustic source is modeled an isotropic point radiator
 with known location $\bx_s\in \bR^3$. These
@@ -165,11 +106,14 @@ diagonal - that is, no receiver should be co-located with a source for
 which it is active. The set of source locations $X_s = \{\bx_s: (\bx_s,\bx_r) \in X_{sr}
 \mbox{ for some } \bx_r \in \bR^3\}$ will also be useful.
 
+Throughtout the following discussion, it is assumed that
+$X_{sr}$ is finite. 
+  
 The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$,
 ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$
 depend on the bulk modulus $\kappa$, buoyancy $\beta$
 (reciprocal of the density $\rho$), and source wave
-form $f(t)$ through the acoustic system
+form $f \in C_0^{\infty}(\bR)$ through the acoustic system
 \begin{eqnarray}
   \label{eqn:awe}
  \frac{\partial p}{\partial t} & = &- \kappa \nabla \cdot {\bf v} +
@@ -181,11 +125,12 @@ For simplicity, I assume that the system \ref{eqn:awe} holds over all of Euclide
 space-time $(\bx,t) \in \bR^3 \times \bR$, and ignore physical
 boundaries such as the Earth's surface. Likewise for simplicity, I
 assume in this study that the material density $\rho$ is spatially
-homogeneous and known. In some settings, eg. the earth's
-upper crust, the material density $\rho$ exhibits substantially less variance than the
-bulk modulus, Density is however spatially variable in most geological
-and biomedical materials, and could be included amongst the parameters
-to be estimated.
+homogeneous and known.
+%In some settings, eg. the earth's
+%upper crust, the material density $\rho$ exhibits substantially less variance than the
+%bulk modulus, Density is however spatially variable in most geological
+%and biomedical materials, and could reasonabliy be included amongst the parameters
+%to be estimated.
 
 The parameter to be determined in the inverse problem studied here is
 the bulk modulus $\kappa$. It is presumed is bounded and smooth:
@@ -194,19 +139,19 @@ the bulk modulus $\kappa$. It is presumed is bounded and smooth:
   \log \kappa \in C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
 \end{equation}
 Under these hypotheses, the symmetric hyperbolic system \ref{eqn:awe}
-has a unique distribution
-solution if $f \in \cal{E}'(\bR)$ (for example \cite{Lax:PDENotes},
+has a unique distribution solution (for example \cite{Lax:PDENotes},
 Theorem 7.4). The Propagation of
-Singularities Theorem (\cite{Tay:81}, Theorem VI.2.1) and
-the pull-back property of distributions (\cite{Dui:95}, Proposition 1.3.3)
-imply that if $f \in \cal{E}'(\bR)$ and $(\bx_s,\bx_r) \in X_{sr}$,
-then the trace $p(\bx_r, \cdot;\bx_s)$ on $\{(\bx_r,t): t \in \bR\}$ is well-defined,
-as a distribution vanishing for sufficiently large
-negative $t$. Define the {\em modeling operator}
+Singularities Theorem (\cite{Tay:81}, Theorem VI.2.1) %and
+%the pull-back property of distributions (\cite{Dui:95}, Proposition
+%1.3.3)
+imply that $p(\cdot,\cdot;\bx_s)$ is smooth away from $\{\bx_s\}
+\times \bR$, so that the traces $p(\bx_r, \cdot;\bx_s)$ on
+$\{(\bx_r,t): t \in \bR\}$ are well-defined.
+
+Define the {\em modeling operator}
 \begin{equation}
   \label{eqn:modop}
-  F: C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
-  \rightarrow X_{sr} \times {\cal D}'(\bR)
+  F: exp(M)  \rightarrow \Pi_{X_{sr}} {\cal D}'(\bR)
 \end{equation}
 by
 \begin{equation}
@@ -216,20 +161,168 @@ by
 
 In this setting, acoustic FWI means: given the set of
 source-receiver position pairs $X_{sr}$, source wavelet
-$f \in {\cal E}'(\bR)$,  density $\rho$, and data traces
-$d:  X_{sr} \rightarrow \cal{D}(\bR)$, find a bulk modulus $\kappa$
+$f \in C_0^{\infty}(\bR)$,  density $\rho$, and data traces
+$d \in \Pi_{X_{sr}} C^{\infty}(\bR)$, find a bulk modulus $\log
+\kappa$
 (or equivalently wave velocity $c=\sqrt{\kappa/\rho}$)
 so that $F[\kappa] \approx d$ in some sense. If
-$d$ and $F[\kappa]$ lie in a normed subspace of ${\cal D}'(\bR)$ for each
+$d(\bx_r,\cdot;\bx_s)$ and $F[\kappa](\bx_r,\cdot;\bx_s)$ lie in a normed subspace of ${\cal D}'(\bR)$ for each
 $(\bx_s,\bx_r) \in X_{sr}$, then the
 norm provides a straightforward candidate for this sense of
 approximation.
 
-%In practice, recording takes place over a finite time interval
-%$[0,t_d]$. For convenience, assume that this interval is the same for
-%all receivers. Let $\phi \in C_0^{\infty}(0,t_d)$ be a window function
-%supported in this interval. Additional constraints on $t_d$ and $\phi$
-%will be be specified below.
+The analysis to follow requires two further constraints on the domain
+$M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ of $F$. The first is
+the {\em Exponential Decay} assumption:
+\begin{quote}
+  For any $n > 0$, $f \in {\cal E}'(\bR)$,
+  there exist $K >
+  0, T \in \bR,$ and $\delta>0$ so
+  that for any $k$ with $0 \le k \le n$, $(\bx_s,\bx_r) \in
+ X_{sr},$ and any $\log \kappa \in M$, the solution $(p,\bv)$ of \ref{eqn:awe} is smooth
+  for $t>T$ and satisfies
+  \[
+    |\partial_t^k p(\bx_r,t;\bx_s)| \le K e^{-\delta t}, \, t > T.
+  \]
+\end{quote}
+SInce $X_{sr}$ is bounded, the property described in this assumption
+is a special case of {\em local energy decay}, a much studied topic. The {\em
+  non-trapping} hypothesis is sufficient to ensure local energy decay:
+all rays of geometric asymptotics (that is, geodesics for the Riemannian metric associated
+to the system \ref{eqn:awe}) escape to infinity (\cite{Hristova:09},
+Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). That is,
+exponential decay follows from a characteristic of $\kappa$.
+
+The second assumption explicitly involves a constraint on ray geometry
+(therefore on $\kappa$). A {\em normal neighborhood} of
+$\bx_s \in \bR^3$ is an open subset $\Omega$ of $\bR^3$ 
+within which every point is connected to $\bx_s$ by  a unique ray  (\cite{Friedlander:75},
+p. 16). Therefore, to every point $\bx \in \Omega$ is associated a
+unique time of travel (geodesic distance) $\tau(\bx_s,\bx)$ from $\bx_s$ to $\bx$.
+The {\em Single Arrival} assumption is
+\begin{quote}
+  $\Omega\subset \bR^3$ 
+and $M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ are bounded open sets satisfying 
+\begin{itemize}
+  \item[G1. ] $X_{sr} \subset \Omega \times \Omega$;
+  \item[G2. ] for every source point $\bx_s\in X_{s}$ and $\log \kappa \in M$, $\Omega$ is a
+    normal neighborhood of $\bx_s$.
+  \item[G3. ] for every source point $\bx_s \in X_{s};$
+    $\log \kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
+    with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
+    or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
+  \end{itemize}
+\end{quote}
+Assertion G3 is the {\em no-return} assumption: once a ray leaves
+$\Omega$, its subsequent intersection with $\Omega$ is null.
+
+Thanks to exponential decay, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
+\ge 1$.
+Denote by $L^p(X_{sr} \times \bR)$ the product space $l^p(X_{sr},L^p(\bR))$
+with the usuall product norm. 
+
+Accordingly, FWI may be posed as a least-squares
+problem: given data $d \in
+L^2(X_{sr}\times \bR)$, find $\kappa$ to minimize
+\begin{equation}
+  \label{eqn:fwi}
+  J_{\rm FWI}[\kappa;d]= \frac{1}{2}\|F[\kappa]-d\|^2_{L^2(X_{sr} \times \bR)},
+\end{equation}
+As mentioned earlier, optimization algorithms related to Newton's method, applied to
+$J_{\rm FWI}$, tend to stagnate far from global minimizers if
+the initial choice of $\kappa$ does not predict the arrival times of
+waves correctly within a half-wavelength or so (the meaning of
+``wavelength'' in this context will be explained below)
+\cite[]{GauTarVir:86,VirieuxOperto:09}.
+
+AWI modifies the least-squares FWI problem by interposing a convolution operator or
+{\em filter} $u \in L^2(X_{sr} \times \bR)$. That is, the residual
+data $F[\kappa]-d$ is replaced by the filtered residual data $F[m]*u-d$.
+Since $F[\kappa] \in L^1(X_{sr}\times \bR)$, the filtererd residual
+makes sense.
+The filter $u$ is intended to shift localized wave energy in $F[m]$ to
+match that present in $d$. If on the other hand $u(\bx_r,t;\bx_s) =
+\delta(t)$ for each $(\bx_x,\bx_r) \in X_{sr}$, then $tu = 0$. This
+observation motivates the definition of the AWI objective function
+\begin{equation}
+  \label{eqn:awidefmain}
+  J_{\rm AWI,\sigma}[\kappa;d] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
+  \frac{\|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}.
+\end{equation}
+in which $Tu(\bx_r,t;\bx_s) = tu(\bx_r,t;\bx_s)$ and
+\begin{equation}
+  \label{eqn:reg}
+  u_{\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|F[\kappa]*u-d\|^2 + \sigma\|u\|^2)
+\end{equation}
+The objective function for the closely related MSWI approach,
+mentioned in the introduction, is  
+\begin{equation}
+  \label{eqn:mswidefmain}
+  J_{\rm MSWI,\sigma}[\kappa;d] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
+  \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2.
+\end{equation}
+Note that while the Lax-Milgram Theorem (\cite{Yosida}, section
+III.7) ensures that $u_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$,
+it is not immediiately obvious that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$.
+
+Asymptotic analysis of AWI and MSWI is based on a family of source
+wavelet: for $\lambda > 0$,
+\begin{equation}
+  \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
+\end{equation}
+The relation between the dimensionless scale parameter $\lambda$ and
+RMS wavelength will be explained below. Correspondingly, denote the
+modeling operator with $f=\fl$ by $\Fl$.
+
+The main result of this analysis is
+
+\begin{theorem}
+  \label{thm:main}
+  Assume that the Exponential Decay and Single Arrival assumptions
+  hold for $X_{sr} \subset \Omega \times \Omega, M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$.
+  Select $r >0$ with units of
+  pressure$^2 \times$time$^2$ and $\log \kappa^* \in M$. For $0 <
+  \lambda $, set
+  $\dl=\Fl[\kappa^*]$ (``noise-free data''), and  define $\ul[\kappa,\dl]$
+  to be the solution of 
+  equation \ref{eqn:reg} with  $\sigma=r\lambda$, $F=\Fl$ and $d=\dl$..
+  There exist $0 < C_* \le C^*$, $0 < C$, and $W: M \times X_{sr}
+  \rightarrow \bR^+$ with $C_* \le
+  W \le C^*$ so that for
+  $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$, $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in L^2(\bR)$, and 
+  \begin{equation}
+    \label{eqn:mswitt}
+    |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa^*,\kappa](\bx_s,\bx_r))^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
+  \lambda^{\frac{1}{2}}
+\end{equation}
+and for sufficiently small $\lambda$, 
+\begin{equation}
+  \label{eqn:awitt}
+  \left|\frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|}{\|\ul[\kappa,\dl](\bx_r,\cdot;\bx_s)\|}-
+    |\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|\right| \le C \lambda
+  \end{equation}
+\end{theorem}
+
+Summation over the source-receiver positions in $X_{sr}$ yields
+\begin{cor}
+  \label{thm:cor1}
+  In addition to the assumptions of Theorem \ref{thm:main}, define $J_{\rm
+    AWI,\sigma}$ and $J_{\rm MSWI,\sigma}$ by equations
+  \ref{eqn:awidefmain}, \ref{eqn:mswidefmain} respectively. Then
+\begin{equation}
+\label{eqn:cor1mswi}   
+\lim_{\lambda \rightarrow 0} \lambda J_{\rm MSWI,r\lambda}[\kappa;\dl]
+= \sum_{(\bx_s,\bx_r) \in X_{sr}} W[\kappa^*,\kappa^*]^2(\bx_s,\bx_r) |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
+\end{equation}
+and
+\begin{equation}
+\label{eqn:cor1awi}   
+\lim_{\lambda \rightarrow 0} J_{\rm AWI,r\lambda}[\kappa;\dl]
+= \sum_{(\bx_s,\bx_r) \in X_{sr}}  |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
+\end{equation}
+\end{cor}
+
+
 
 \subsection{Hadamard's Decomposition}
 The Hadamard decomposition of the acoustic Green's function \cite[]{Friedlander:75,Qian:JCP24} provides a
@@ -283,24 +376,7 @@ hold for any convex open set $\Omega$ if $\kappa$ is constant, and for small per
 large perturbations of constant $\kappa$: these are open conditions in
 the topology of $M$.
 
-The arguments to follow depend an additional assumption about solutions of
-the wave equation \ref{eqn:awe2}, restricted to $X_{sr}\times \bR$:
-\begin{itemize}
-\item[G4. ] For any $n > 0$, $f \in {\cal E}'(\bR)$, there exist $K >
-  0, T \in \bR,$ and $\delta>0$ so
-  that for any $k$ with $0 \le k \le n$, $(\bx_s,\bx_r) \in
- X_{sr},$
-  and any $\log \kappa \in M$, the solution $p$ of \ref{eqn:awe2} is smooth
-  for $t>T$ and satisfies
-  \[
-    |\partial_t^k p(\bx_r,t;\bx_s)| \le K e^{-\delta t}, \, t > T.
-  \]
-\end{itemize}
-Condition G4 is a special case of {\em local energy decay}, a much
-studied topic. Properties which imply G4 are in turn implied by the
-{\em non-trapping} hypothesis on the model $\log \kappa \in M$: all rays of
-geometric asymptotics escape to infinity (\cite{Hristova:09}, Theorem
-2, \cite{EgorovShubin}, Theorem 2.104, p. 192).
+
 
 Under conditions G1 - G4, the construction described by
 \cite{Friedlander:75} produces for each $m \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
@@ -362,27 +438,6 @@ space-time coordinates, is
 %  \,ds \, \frac{df}{dt}(t-s) b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r))H(s-\tau[\kappa](\bx_s,\bx_%r))
 %\end{equation}
 
-\subsection{Notational Conventions for Norms and Bounds}
-The Banach spaces
-$l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
-\bR)$. The norm in a Banach space $B$ will be denoted
-$\|\cdot\|_{B}$. The norm symbol
-$\|\cdot\|$ without subscript will be understood to mean either
-$\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
-  \bR)}$, as context indicates.
-
-In a statement pertaining to all
-$\kappa \in M$, the letter $C$, or sometimes $C_k,
-k=0,1,2,...$ or
-$C_*,C^*$, will designate a constant (or constants) independent of
-$\kappa$.
-
-Generally, constants denoted $C$ etc. will absorb any dimensional
-scale factors necessary to make sense of the expressions in which they
-appear. I will call out those few cases in which explicit use of
-dimensinoal scale factors is necessary to avoid irretrievable
-dimensional confusion.
-
 \subsection{FWI via Least Squares}
 For $f \in {\cal E}'(\bR)$, the Hadamard decomposition 
 (equation \ref{eqn:regreen}) gives:
@@ -391,12 +446,18 @@ For $f \in {\cal E}'(\bR)$, the Hadamard decomposition
   F[\kappa] = G[\kappa] * \rho \partial_t f  = \rho( a[\kappa]\delta
   +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f.
 \end{equation}
-Suppose that the source wavelet $f$ satisfies
-\begin{itemize}
-\item[F1. ] $f \in C^{\infty}_0(\bR)$;
-\item[F2. ] $f$ is odd, $f(t) = -f(-t)$.
-\end{itemize}
-Then equation \ref{eqn:fwdgreen}, assumptions F1, F2, bounds
+
+For the remainder of this paper, source wavelet $f$ will be assumed
+smooth, of compact support: $f \in C^{\infty}_0(\bR)$. Less stringent constraints on $f$ would
+support the results below, but this is the simplest choice. Also, with
+a few notable exceptions \cite[]{SondRes:83}, source wavelets that
+adequately model physical experimentss may be take to be smooth of
+compact support, because the physical phenomena that inject energy
+into the acoustic field are transient, and the data is sampled at a
+finite rate and either analog
+or digitally filtered (or both) to well below Nyquist frequency.
+
+Then equation \ref{eqn:fwdgreen}, bounds
 \ref{eqn:best} and Young's inequality implies that $F[\kappa] \in
 L^p(X_{sr} \times \bR)$ for any $p \ge 1$. Moreover there exists
 $C>0$ so that for $\log \kappa\in M$, $p \ge 1$,
@@ -405,7 +466,7 @@ $C>0$ so that for $\log \kappa\in M$, $p \ge 1$,
   \|F[\kappa]\|_{L^p(X_{sr} \times \bR)} \le C \left\|\partial_t f\right\|_{L^p(\bR)}.
 \end{equation}
 This observation justfies posing FWI as a least-squares problem: given $d \in
-L^2(X_{sr}\times \bR)$, $f \in H^1_0(\bR)$, and $\rho_s>0$, find $\kappa$ to minimize
+L^2(X_{sr}\times \bR)$, $f \in H^1_0(\bR)$, find $\kappa$ to minimize
 \begin{equation}
   \label{eqn:fwi}
   J_{\rm FWI}[m;d]= \frac{1}{2}\|F[\kappa]-d\|_{L^2(X_{sr} \times \bR)},
@@ -553,6 +614,27 @@ that AWI is more likely to succeed than is FWI.
 %{\em noise-free}, that is, $d = F[\kappa^*]$ for a target bulk modulus
 %$\kappa^* \in M$.
 
+\subsection{A Note on Notations  for Norms and Bounds}
+The Banach spaces
+$l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
+\bR)$. The norm in a Banach space $B$ will be denoted
+$\|\cdot\|_{B}$. The norm symbol
+$\|\cdot\|$ without subscript will be understood to mean either
+$\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
+  \bR)}$, as context indicates.
+
+In a statement pertaining to all
+$\kappa \in M$, the letter $C$, or sometimes $C_k,
+k=0,1,2,...$ or
+$C_*,C^*$, will designate a constant (or constants) independent of
+$\kappa$.
+
+Generally, constants denoted $C$ etc. will absorb any dimensional
+scale factors necessary to make sense of the expressions in which they
+appear. I will call out those few cases in which explicit use of
+dimensinoal scale factors is necessary to avoid irretrievable
+dimensional confusion.
+
 \subsection{Tihonov Regularization}
 Before establishing the relation with travel time tomography, several
 defects in the definition \ref{eqn:awideforig} of $J_{\rm AWI}$ must be
@@ -562,8 +644,8 @@ this adaptive filter is not square-integrable, so the denominator does
 not make sense. Second, the equation $S[\kappa]u=d$ does not (in
 general) have a solution $u \in L^2(X_{sr} \times \bR)$. Since
 $S[\kappa]$ is a convolution operator, solving $S[\kappa]u=d$ for $u$
-amounts to deconovolving $d$ by $F[\kappa]$..  Under the conditions
-W1-W3 on the wavelet $w$, $F[\kappa]$ does not have a continuous
+amounts to deconovolving $d$ by $F[\kappa]$..  Under the standing
+assumption that $f \in C^{\infty}_0(\bR)$, $F[\kappa]$ does not have a continuous
 (stable) convolution inverse, and $S[\kappa]$ is not surjective.
 
 In fact, these two defects are really symptoms of the instability of
@@ -589,8 +671,8 @@ The key properties of $S$ follow directly from Young's inequality and
 the representation \ref{eqn:sgood}:
 \begin{lemma}
   \label{thm:snorm}
-  Under the assumptions G1-G4 leading to \ref{eqn:fwdgreen} and
-  the properties F1 and F2, the expressions \ref{eqn:sgood} and \ref{eqn:sadjgood} define 
+  Under the assumptions G1-G4 leading to \ref{eqn:fwdgreen}, the
+  expressions \ref{eqn:sgood} and \ref{eqn:sadjgood} define
   bounded operators on
   $\Pi_{X_{sr}} {\cal S}(\bR)$ and on
   $L^2(X_{sr} \times \bR)$, and there exists $C>0$ so
@@ -628,7 +710,7 @@ pressure$^2 \times$  time$^2$.
 
 \begin{prop}
   \label{thm:unorm}
-  Under the assumptions G1 - G4 and F1, F2 justifying the
+  Under the assumptions G1 - G4 justifying the
   representation \ref{eqn:fwdgreen}, the least squares problem
   \ref{eqn:reg} with $\sigma > 0$ has a unique solution
   $u_{\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$ satisfying
@@ -675,35 +757,38 @@ guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times\bR)$.
 \begin{prop}
   \label{thm:tl2}
   Suppose that $d, Td \in L^2(X_{sr} \times \bR)$. Then
-  $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$, and
+  $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$, and for each
+  $(\bx_s,\bx_r) \in X_{sr}$,
   \[
-    \|Tu_{\sigma}[\kappa;d]\| \le
+    \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\| \le
   \]
   \begin{equation}
     \label{eqn:tunorm}
     \frac{C}{\sigma}\left(\left(
         \frac{\|\partial_t f\|^2_{L^1(\bR)}}{\sigma}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
       \right)\|d\| \\ 
-    + \|\partial_t  f\|_{L^1(\bR)}(\|d\| +\|Td\|)\right).
+    + \|\partial_t  f\|_{L^1(\bR)}(\|d (\bx_r,\cdot;\bx_s)\| +\|Td (\bx_r,\cdot;\bx_s)\|)\right).
   \end{equation}
 \end{prop}
 
 \begin{proof}
   Since $\kappa$ is the argument of $S$ and $u_{\sigma}$ throughout, drop it
   temporarily, also from the ingredients $\tau, a, $ and $b$ of the
-  Hadamard decomposition.
+  Hadamard decomposition. The expressions to follow pertain to
+  each trace, that is, for each $(\bx_s,\bx_r) \in X_{sr}$, so also drop these
+  from the notation also.
   
   Thus
   \[
-    S^TS =
+    S^TS u=
     \rho^2(a\delta  +  (\check{b}\check{H})) *\delta_{-\tau}*\partial_t
-    f * (a\delta  +  (bH)) *\delta_{\tau}*\partial_t f*
+    f * (a\delta  +  (bH)) *\delta_{\tau}*\partial_t f*u
   \]
   \[
     = \rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
     (bH))*\partial_t f *\partial_t f*.
   \]
-  $T$ is also a bounded map on $\Pi_{X_{sr}} {\cal S}(\bR)$, as is
+  $T$ is also a bounded map on $ {\cal S}(\bR)$, as is
   its commutator with $S^TS$, and 
   \[
     [T,S^TS] = \rho^2((T\check{b}\check{H}) *(a\delta  +
@@ -726,10 +811,10 @@ guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times\bR)$.
   \end{equation}
   
   Referring to the exponential decay assumption \ref{eqn:best}
-  and properties F1, F2 of $f$, 
+  and the standing assumption $f\in C_0^{\infty}(\bR)$, 
   observe that all summands on the RHS of identity \ref{eqn:tsscomm} are in
-  $L^1(X_{sr} \times \bR)$, so $[T,S^TS]$ extends to a bounded
-  operator on $L^2(X_{sr}\times \bR)$, with
+  $L^1(\bR)$, so $[T,S^TS]$ extends to a bounded
+  operator on $L^2(\bR)$, with
   \begin{equation}
     \label{eqn:tsscommnorm}
     \|[T,S^TS]\| \le C\|\partial_t f\|_{L^1(\bR)}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
@@ -741,8 +826,7 @@ guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times\bR)$.
     bH)*\delta_{\tau}*\partial_t f + (a\delta +
     bH)*\delta_{\tau}*T\partial_t f.
   \]
-  Young's inequality shows that the RHS lies in $L^1(X_{sr}\times
-  \bR)$, and that there exists $C$ independent of $\kappa$ so that
+  Young's inequality shows that the RHS lies in $L^1(\bR)$, and that there exists $C$ independent of $\kappa$ so that
   $[T,S^T]$ obeys the same estimate as does $S$ (Lemma
   \ref{thm:snorm}), that is,
   \begin{equation}
@@ -768,11 +852,12 @@ The following fact will be useful later on:
 \begin{prop}
   \label{thm:noisefree}
   Suppose that $\kappa \in M$. Then for $p \ge 1$, $F[\kappa], TF[\kappa]
-  \in L^p(X_{sr} \times \bR)$, and there exist $C_0, C_1, C_2 >0$ so that
+  \in L^p(X_{sr} \times \bR)$, and there exist $C_0, C_1, C_2 >0$ so
+  that for each $(\bx_s,\bx_r) \in X_{sr}$,
   \begin{eqnarray}
     \label{eqn:dnorms}
-    C_1\|\partial_tf\|_{L^p(\bR)} - C_2\|f\|_{L^p(\bR)} \le \|F[\kappa]\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}, \nonumber \\
-    \|TF[\kappa]\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}.
+    C_1\|\partial_tf\|_{L^p(\bR)} - C_2\|f\|_{L^p(\bR)} \le \|F[\kappa](\bx_r,\cdot;\bx_s)\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}, \nonumber \\
+    \|TF[\kappa](\bx_r,\cdot;\bx_s)\|_{L^p(\bR)} & \le & C_0\|\partial_tf\|_{L^p(\bR)}.
   \end{eqnarray}
 \end{prop}
 
@@ -844,12 +929,10 @@ derivative $\partial_tf$ appears. For convenience, introduce
   \label{eqn:wavelet}
   w = \rho \partial_t f
 \end{equation}
-The properties F1 and F2 assumed for $f$ are equivalent to these
-properties of $w$:
+Then
 \begin{itemize}
 \item[W1. ] $w \in C^{\infty}_0(\bR)$;;
-\item[W2. ] $w$ is even;
-\item[W3. ] $\int \, w = 0$.
+\item[W2. ] $\int \, w = 0$.
 \end{itemize}
 I will also
 refer to $w$ as ``the wavelet'', and view $F$ as parametrized by $w$.
@@ -861,7 +944,7 @@ $\lambda$, and defined by
   \label{eqn:wfam}
   \wl(t) = \lambda^{-1/2}w_1(t/\lambda).
 \end{equation}
-The  ``mother wavelet'' $w_1$ is assumed to have properties W1 - W3, and
+The  ``mother wavelet'' $w_1$ is assumed to have properties W1, W2, and
 all wavelets $\wl$ in this family
 inherit these properties from $w_1$, along with its dimensions
 (energy/time$^2$). It follows from these assumptions that the Fourier transform $\fwl$ is
@@ -997,51 +1080,7 @@ error. The argument is slightly cleaner if $\sigma$ is simply
 proportional to (non-dimensional) $\lambda$ by a necessarily
 dimensional constant..
 
-The main result of this investigation is the
 
-\begin{theorem}
-  \label{thm:main}
-  Assume assertions G1 - G4 on $M$ and $X_{sr}$, W1 - W3 on the
-  ``mother wavelet'' $w_1$. Select $r >0$ with units of
-  pressure$^2 \times$time$^2$ and $\log \kappa^* \in M$. For $0 <
-  \lambda \le 1$, set
-  $\dl=\Fl[\kappa^*]$ (noise-free data), and  define $\ul[\kappa,\dl]$ by
-  equation \ref{eqn:reg} with  $\sigma=r\lambda$, $S=\Sl$ and $d=\dl$..
-  There exist $0 < C_* \le C^*$, $0 < C$, and $W: M \times X_{sr}
-  \rightarrow \bR^+$ with $C_* \le
-  W \le C^*$ so that for
-  $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$,, 
-  \begin{equation}
-    \label{eqn:mswitt}
-    |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa])^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
-  \lambda^{\frac{1}{2}}
-\end{equation}
-and for sufficiently small $\lambda$, 
-\begin{equation}
-  \label{eqn:awitt}
-  \left|\frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|}{\|\ul[\kappa,\dl](\bx_r,\cdot;\bx_s)\|}-
-    |\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|\right| \le C \lambda
-  \end{equation}
-\end{theorem}
-
-Sum over the source-receiver positions in $X_{sr}$ to obtain
-\begin{cor}
-  \label{thm:cor1}
-  In addition to the assumptions of Theorem \ref{thm:main}, define $J_{\rm
-    AWI,\sigma}$ and $J_{\rm MSWI,\sigma}$ by equations
-  \ref{eqn:awidefbis}, \ref{eqn:mswidef} respectively. Then
-\begin{equation}
-\label{eqn:cor1mswi}   
-\lim_{\lambda \rightarrow 0} \lambda J_{\rm MSWI,r\lambda}[\kappa;\dl]
-= \sum_{(\bx_s,\bx_r) \in X_{sr}} M[m,m^*,w_1]^2(\bx_s,\bx_r) |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
-\end{equation}
-and
-\begin{equation}
-\label{eqn:cor1awi}   
-\lim_{\lambda \rightarrow 0} J_{\rm AWI,r\lambda}[\kappa;\dl]
-= \sum_{(\bx_s,\bx_r) \in X_{sr}}  |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
-\end{equation}
-\end{cor}
 
 \subsection{The leading term and travel time}
 
@@ -1052,7 +1091,7 @@ through a further simplification:
   \label{thm:leading}
 In the definitions \ref{eqn:mswidef} of $J_{\rm MSWI,\sigma}$ and
 \ref{eqn:awidefbis} of $J_{\rm AWI,\sigma}$, set $\sigma = r\lambda$
-and replace the data $\dl$ with
+and replace the data $d$ with
 $\dla = \Fla[\kappa^*]$, $S[\kappa]$ with $\Sla[\kappa]$, and $\ul$
 with the solution $\uzl$ of the corresponding least squares problem. That is,
 \begin{eqnarray}
@@ -1114,10 +1153,11 @@ The normal equation for the least squares problem \ref{eqn:leadingft} is
 \[
 (a^2 |\fwl|^2 +r\lambda)\hat{u} = a a^*|\fwl|^2e^{i\omega(\tau^*-\tau)}
 \]
-the solution of which is
+the solution of which is (omitting $\kappa, \dl$ from the arguments,
+as well as $\bx_s,\bx_r$):
 \begin{equation}
   \label{eqn:hatuf}
-\hat{u}_{0,\lambda}[\kappa;\dla] = \frac{a^*}{a}\hat{g}_{\lambda,\frac{r\lambda}{a^2}} e^{i\omega(\tau^*-\tau)}
+\hat{u}_{0,\lambda} = \frac{a^*}{a}\hat{g}_{\lambda,\frac{r\lambda}{a^2}} e^{i\omega(\tau^*-\tau)}
 \end{equation}
 where
 \begin{equation}
@@ -1131,51 +1171,45 @@ inverse Fourier transform $g_{\lambda,\frac{r\lambda}{a^2}}$ tends to $\delta$ i
 the sense of distributions, and
 \begin{equation}
   \label{eqn:u0s}
-\uzl[\kappa,\dla](t) = \frac{a^*}{a}g_{\lambda,\frac{r\lambda}{a^2}}(t-(\tau^*-\tau))
+\uzl(t) = \frac{a^*}{a}g_{\lambda,\frac{r\lambda}{a^2}}(t-(\tau^*-\tau))
 \end{equation}
 to a multiple of a shifted $\delta$, in fact exactly the
 non-square-integrable distribution
 solution of $\bar{\Sla}[\kappa]u=\dla$. However for $\lambda>0$, $\uzl[\kappa;\dla]$ is square integrable.
 
-Since $\fwl$ along with all of its derivatives
-tends to zero faster than any polynomial at $\infty$, $\fwl' \in
-L^2(\bR)$.
-Therefore $\hat{g}_{\lambda,\frac{r\lambda}{a^2}}$
-and $\hat{g}_{\lambda,\frac{r\lambda}{a^2}}'$ are also square-integrable, 
-from equation \ref{eqn:hatuf} $(\hat{u}^0_{\lambda})'$ is also square
-integrable. Consequently $t \uzl$ is square integrable. Therefore
-$J_{\rm MSWI,r\lambda}$, the result of substituting in the
-right-hand side of the definition \ref{eqn:mswidef} $\uzl$ for
-$\ul$, is well-defined. \cite{HuangSymes2015SEG} presented an analysis of
-$J_{\rm MSWI,r\lambda}$, as follows:
+Since $\wl \in C_0^{\infty}(\bR)$, $\hat{g}_{\lambda,\frac{r\lambda}{a^2}}$
+and $\hat{g}_{\lambda,\frac{r\lambda}{a^2}}'$ are square-integrable, whence
+from equation \ref{eqn:hatuf} $(\hat{u}^0_{r\lambda})'$ is also square
+integrable. Consequently $t \uzl$ is square integrable.
+
+The following argument is a variant of one presented
+by\cite{HuangSymes2015SEG}, using ideas from Song's thesis \cite[]{Song:94}. Observe that
 \[
-J_{\rm MSWI,r\lambda}[\kappa;\dla] = \sum_{\bx_s,\bx_r}\int dt
-|t\uzl[\kappa;\dla]|^2 =  \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{r\lambda}{a^2}}(t-(\tau^*-\tau))|^2
+\|T\uzl[\kappa;\dla]\|^2 =  \frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{r\lambda}{a^2}}(t-(\tau^*-\tau))|^2
 \]
 \[
-=\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, (t+(\tau^*-\tau))^2|g_{\lambda,\frac{r\lambda}{a^2}}(t)|^2
+=\frac{(a^*)^2}{a^2} \int dt\, (t+(\tau^*-\tau))^2|g_{\lambda,\frac{r\lambda}{a^2}}(t)|^2
 \]
 \begin{equation}
   \label{eqn:MSWI}
-  =\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, (t^2 + 2t
+  =\frac{(a^*)^2}{a^2} \int dt\, (t^2 + 2t
   (\tau^*-\tau)+(\tau^*-\tau)^2)|g_{\lambda,\frac{r\lambda}{a^2}}(t)|^2
 \end{equation}
-
-Since the Fourier transform $\fwl$ is even and real, so is
+Since $\wl$ is real, $|\fwl|$ is even, therefore
+so is
 $\hat{g}_{\lambda,\frac{r\lambda}{a^2}}$, therefore $g_{\lambda,\frac{r\lambda}{a^2}}$ is even, and the linear term (in t) on the
 right-hand side of \ref{eqn:MSWI} vanishes, So
 \begin{equation}
   \label{eqn:MSWIasym}
-  J^0_{\rm MSWI,r\lambda}[\kappa;\dla] =
-\sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{r\lambda}{a^2}}(t)|^2
+  \|T\uzl\|^2 =
+\frac{(a^*)^2}{a^2} \int dt\, t^2|g_{\lambda,\frac{r\lambda}{a^2}}(t)|^2
 +(\tau^*-\tau)^2\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{r\lambda}{a^2}}\|^2
 \end{equation}
-
 Recalling the definition \ref{eqn:pw} of pulse width, \ref{eqn:MSWIasym} can be re-written as
 \begin{equation}
   \label{eqn:MSWIasym2}
-  J^0_{\rm MSWI,\lambda}[\kappa;\dla] = 
-  \sum_{\bx_s,\bx_r}\frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{r\lambda}{a^2}}\|^2\left(l(g_{\lambda,\frac{r\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
+ \|T\uzl\|^2 =
+  \frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{r\lambda}{a^2}}\|^2\left(l(g_{\lambda,\frac{r\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
 \end{equation}
 
 %The second term suggests that this function
@@ -1207,7 +1241,7 @@ From the result \ref{eqn:u0s}, for each
 $(\bx_s,\bx_r) \in X_{sr}$,
 \begin{equation}
   \label{eqn:u0snorm}
-  \|\uzl[\kappa;\dla]\|^2=
+  \|\uzl\|^2=
   \frac{(a^*)^2}{a^2}\|g_{\lambda,\frac{r\lambda}{a^2}}\|^2.
 \end{equation}
 Combine equations \ref{eqn:awittz} and \ref{eqn:u0snorm} to obtain
@@ -1216,10 +1250,13 @@ Combine equations \ref{eqn:awittz} and \ref{eqn:u0snorm} to obtain
   \frac{\|T\uzl\|^2}{\|\uzl\|^2}= \sum_{\bx_s,\bx_r} \left(l(g_{\lambda,\frac{r\lambda}{a^2}})^2  + (\tau^*-\tau)^2\right)
  \end{equation}
 
-So the leading-term modification of $J_{\rm AWI}$ differs from mean square
+So the leading-term modification of each summand in the definition of $J_{\rm AWI}$ differs from mean square
 travel time error by the pulse width of
 $g_{\lambda,\frac{r\lambda}{a^2}}$. The analogous relation for $_{\rm
-  MSWI}$ involves the norm-squared as well. To assess these
+  MSWI}$ involves the norm-squared as well.
+
+
+To assess these
 quantities, note first that
 \[
   \|g_{\lambda,\frac{r\lambda}{a^2}}\|^2 =\frac{1}{2\pi} \int d\omega\,
@@ -1381,9 +1418,10 @@ M$. Therefore from the bounds \ref{eqn:lambdanorms}, obtain
 \|(\Sla)^T\Slb + (\Slb)^T\Sla + (\Slb)^T\Slb\} \le C \lambda^3
 \end{equation}
 From the bounds \ref{eqn:unorm} and \ref{eqn:lambdanorms},
-\[
+\begin{equation}
+  \label{eqn:ulnorm}
   \|\ul\| \le C \lambda^{-\frac{1}{2}}\|\dl\|
-\]
+\end{equation}
 Combining the preceding results in thet estimate in display
 \ref{eqn:diffu}.
 
@@ -1729,6 +1767,16 @@ An argument precisely analogous to the proof of Corollary
   \end{equation}
 \end{cor}
 
+\noindent {\bf Remark:} From inequalities \ref{eqn:ulnorm},
+\ref{eqn:Srembd}, $\tilde{J}_{r\lambda}[\kappa;\dl] \le C$. That
+suggests that the contribution of the second term on the
+left-hand-side of the limit \ref{eqn:cor2} is insignificant for small
+$\lambda$, whereas it is comparable to the first term in
+\ref{eqn:cor3}. 
+
+
+%%%%%%%%
+
 \section{Multiple Arrivals and Cycle-Skipping}
 The geometric asymptotics approximation \ref{eqn:fwdgreen} holds only
 in the ``single arrival'' case, that is, when sources and receivers
@@ -1881,6 +1929,54 @@ based on these extensions also fail to avoid cycle-skipping in the presence of
 geometrical ray complexity \cite[]{geoprosp:2008}.
 
 \section{Conclusion}
+
+The conclusions of this study depend on a number of limitations on the
+acoustic model of wave propagation and the formulation of the related
+inverse problem. The principal constraints are:
+\begin{itemize}
+\item energy sources are modeled as isotropic point radiators, with
+  known time dependence vanishing outside a finite time window;
+\item mechanical parameter fields (coefficients in the acoustic wave
+  equation) are smooth, that is, infinitely differentiable as
+  functions of position, and the material density is known and
+  position-independent: only the bulk modulus (or wave velocity) is
+  to be determined;
+\item waves propagate throughout Euclidean space-time - that is, no
+  physical boundaries are modeled;
+\item the data of the inverse problem are the restrictions of the
+  pressure field to a finite number of points in space (receiver
+  positions), for a finite number of source positions and all time;
+\item local energy decays exponentially - that is, the pressure and
+  all of its derivatives tend to zero at an exponential rate as $t
+  \rightarrow \infty$,
+  uniformly in any bounded spatial domain.
+\item only one ray of geometric
+  acoustics connects each source-receiver location pair (single arrivals)
+\end{itemize}
+
+These constraints are discussed in detail in the next section. Some
+could certainly be relaxed. For instance, exponential decay of local
+energy implies that the finite time duration of actual measured data
+can be treated as a perturbation of the infinite time data setting
+posed here. The exception is the single-arrival hypothesis: it is
+essential, as without it, the link between the travel time and
+extended waveform inversion is lost. This is a feature of the
+source-receiver extension, not of a particular objective function
+(MSWI, AWI,...) formulated in terms of it. This extension treats each receiver signal
+independently. If only a single identifiable waveform arrives at
+each receiver, AWI (and similar approaches) can implicitly identify
+its arrival time, and the link to travel time inversion is
+established. If distinct waveforms are present at multiple times,
+the single receiver signal does not determine which waveform in the
+predicted signal should align with which waveform in the data to be
+fitted. This ``crosstalk'' ambiguity is analyzed in the fifth
+section, and afflicts all approaches based on the source-receivre
+extension.
+
+In any case, these hypotheses enable a simple and clear
+analysis of AWI, and seem a reasonable starting point for further
+investigation.
+
 In this paper, I have shown that AWI is a good approximation to least
 squares travel time inversion of transmitted wave data, up to errors proportional to a typical
 data wavelength and to a regularization (``pre-whitening'')
