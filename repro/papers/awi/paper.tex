@@ -18,19 +18,17 @@ wave propagation, and numerical solutions of these wave equations can
 be used to predict experimental data {\em ab initio}. FWI consists in
 updating the parameters to minimize a numerical measure of  the difference between computationally
 predicted wave data and actual observed
-data. If wave velocities or their parametric equivalents are amongst the parameters
-to be estimated, such numerical measures tend to oscillate, due to:
-the excessive sensitivity of predicted waveforms to changes in wave velocity.
-%especially for the most commonly used square-integral measure ($L^2$
-%norm).
-These oscillations cause iterative local optimization algorithms (relatives of
+data. This data is typicallyl oscillatory. If wave velocities or their parametric equivalents are amongst the parameters
+to be estimated, then updates cause shifts in the arrival times of
+data oscillations, which in turn causes commonly used numerical error measures
+to oscillate. This ``cycle skipping'' phenomenon may cause iterative local optimization algorithms (relatives of
 Newton;'s method, the only practical algorithmic choices) to stagnate
-far from good data fit \cite[]{VirieuxOperto:09}, unless the initial
-parameter estimates are of very high quality.
+far from good data fit, unless the initial
+parameter estimates accurately predict the arrival times of waves \cite[]{GauTarVir:86,VirieuxOperto:09,HuetalIEEE:18}.
 
 Adaptive Waveform
-Inversion \cite[]{Warner:16} (AWI) is a modification of FWI, designed to overcome this
-``cycle-skipping'' pathology. AWI has been successfully applied to
+Inversion \cite[]{Warner:16} (AWI) is a modification of FWI, designed to overcome the
+cycle-skipping pathology. AWI has been successfully applied to
 industry-scale seismic data
 \cite[]{GuaschWarnerRavaut:GEO19,Warneretal:SEG21} and shows promise
 for ultrasonic imaging of the the human brain
@@ -38,37 +36,33 @@ for ultrasonic imaging of the the human brain
 and many details of implementation. However, a clear explanation for its
 effectiveness is so far missing from the literature.
 
-This paper supplies such an explanation for a special case of AWI, the recovery of smooth acoustic
-medium parameters from data generated at localized energy sources,
-propagated through a fluid, and recorded at receiver locations remote
-from the sources. I show that the AWI objective function is an
-asymptotic (in time frequency) approximation to the mean-square
-time-of-travel misfit, provided that arrival times of transmitted
-waves are single, that is, unique rays of geometric asymptotics
-connect sources and receivers. The error in this approximation is
-proportional to the source mean-square wavelength. Thus AWI and
-minimization of mean-square travel time error (travel time tomography)
-lead to similar material parameter estimates. Travel time tomography
-appears to be much less sensitive to choice of initial model than is
-FWI, and in fact is commonly used to construct an initial model for
-FWI \cite[]{Bordingetal:87,SirguePratt:04,VirieuxOperto:09}. At least
-in the special case treated here, AWI implicitly combines travel time
-tomography with FWI.
+This paper supplies such an explanation for a special case of AWI, the
+recovery of smooth acoustic medium parameters from data generated at
+localized energy sources, propagated through a fluid, and recorded at
+receiver locations remote from the sources (transmission data). I show that the AWI
+objective function is an asymptotic (in time frequency) approximation
+to the mean-square time-of-travel misfit, provided that arrival times
+of transmitted waves are single. That is, a unique ray of geometric
+asymptotics connects each sources-receiver pair, as is the case if the associated
+Riemannian metric is simple in a domain containing the sources and
+receivers \cite[]{PestovUhlmann:05,StefanovUhlmann:05}. The error in
+this approximation is proportional to the source mean-square
+wavelength. I also show that this relation fails if arrival times have
+higher multiplicity. Travel time tomography (minimization of
+mean-square travel time error) appears to be much less sensitive to
+choice of initial model than is FWI. In fact, it is commonly used to
+construct an initial model for FWI
+\cite[]{Bordingetal:87,SirguePratt:04,VirieuxOperto:09}. At least for
+acoustic transmission data with single arrivals, AWI implicitly
+combines travel time tomography with FWI.
 
-The reader will
-note that a normalization component of the AWI objective function
-definition is important in reaching this conclusion. The connection
-between objective normalization and the asymptotic equivalence to
-travel time inversion for transmission data has nothing to do with the
-reasons for normalizing the objective previoiusly advanced in the
-literature \cite[]{Warner:16,LiAlkhalifah:21}. Another similar modification of
-FWI, Matched Source Waveform Inversion (MSWI)
-\cite[]{HuangSymes2015SEG,HuangSymes:Geo17} lacks the AWI
-normalization, and has a looser relation to travel time inversion. The
-arguments presented here for AWI (and MSWI) are refinements of those
-given by \cite{HuangSymes:Geo17}. which were in turn based on ideas
-presented in Song's thesis \cite[]{Song:94c}.
-
+The arguments presented here for AWI are refinements of those given by
+\cite{HuangSymes:Geo17} for Matched Source Waveform Inversion (MSWI),
+a similar modification of FWI
+\cite[]{HuangSymes2015SEG,HuangSymes:Geo17}. which were in turn based
+on ideas presented in Song's thesis \cite[]{Song:94c}. Since it
+involves no additional effort, I state results for MSWI in parallel
+with those for AWI.
 
 The next section establishes the class of problems to be studied and notations
 for their description, defines the AWI and MSWI objective functions,
@@ -76,12 +70,12 @@ and states the main results of this paper. in the following section, I present t
 asymptotic analysis leading to the main results. In
 effect, AWI regularizes or relaxes the FWI problem. For many inverse
 problems, regularization has been accomplished via additive penalty
-functions. In section four, I explain the relation between AWI and a
-penalty formulation of the wave inverse problem. The close relation
+functions. In section four, I explain the relation between AWI, MSWI, and 
+penalty formulations of the wave inverse problem. The close relation
 between AWI objective and travel time misfit is limited in scope: in
 the fifth section, I show that it does not hold in general for
 transmitted wave data in which multiple rays connect source and
-receiver.
+receiver (multiiple wave arrivals, non-simple metric).
 
 The analysis explained here sheds no light on the effectiveness of AWI
 for reflected wave data, and the approach has so far been limited
@@ -144,14 +138,14 @@ Theorem 7.4). The Propagation of
 Singularities Theorem (\cite{Tay:81}, Theorem VI.2.1) %and
 %the pull-back property of distributions (\cite{Dui:95}, Proposition
 %1.3.3)
-imply that $p(\cdot,\cdot;\bx_s)$ is smooth away from $\{\bx_s\}
+imples that $p(\cdot,\cdot;\bx_s)$ is smooth away from $\{\bx_s\}
 \times \bR$, so that the traces $p(\bx_r, \cdot;\bx_s)$ on
 $\{(\bx_r,t): t \in \bR\}$ are well-defined.
 
 Define the {\em modeling operator}
 \begin{equation}
   \label{eqn:modop}
-  F: exp(M)  \rightarrow \Pi_{X_{sr}} {\cal D}'(\bR)
+  F: exp(M)  \rightarrow \Pi_{X_{sr}} C^{\infty}(\bR)
 \end{equation}
 by
 \begin{equation}
@@ -171,11 +165,12 @@ $(\bx_s,\bx_r) \in X_{sr}$, then the
 norm provides a straightforward candidate for this sense of
 approximation.
 
-The analysis to follow requires two further constraints on the domain
+The analysis to follow requires three further constraints on the set
+of source-receiver location pairs $X_{sr}$ and the domain
 $M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ of $F$. The first is
 the {\em Exponential Decay} assumption:
 \begin{quote}
-  For any $n > 0$, $f \in {\cal E}'(\bR)$,
+  For any $n > 0$, $f \in C_0^{\infty}(\bR)$,
   there exist $K >
   0, T \in \bR,$ and $\delta>0$ so
   that for any $k$ with $0 \le k \le n$, $(\bx_s,\bx_r) \in
@@ -193,7 +188,7 @@ to the system \ref{eqn:awe}) escape to infinity (\cite{Hristova:09},
 Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). That is,
 exponential decay follows from a characteristic of $\kappa$.
 
-The second assumption explicitly involves a constraint on ray geometry
+The second and third assumptions explicitly involves a constraint on ray geometry
 (therefore on $\kappa$). A {\em normal neighborhood} of
 $\bx_s \in \bR^3$ is an open subset $\Omega$ of $\bR^3$ 
 within which every point is connected to $\bx_s$ by  a unique ray  (\cite{Friedlander:75},
@@ -201,22 +196,23 @@ p. 16). Therefore, to every point $\bx \in \Omega$ is associated a
 unique time of travel (geodesic distance) $\tau(\bx_s,\bx)$ from $\bx_s$ to $\bx$.
 The {\em Single Arrival} assumption is
 \begin{quote}
-  $\Omega\subset \bR^3$ 
-and $M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ are bounded open sets satisfying 
-\begin{itemize}
-  \item[G1. ] $X_{sr} \subset \Omega \times \Omega$;
-  \item[G2. ] for every source point $\bx_s\in X_{s}$ and $\log \kappa \in M$, $\Omega$ is a
-    normal neighborhood of $\bx_s$.
-  \item[G3. ] for every source point $\bx_s \in X_{s};$
-    $\log \kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
-    with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
-    or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
-  \end{itemize}
+  $\Omega\subset \bR^3$ and $M \subset C^{\infty}(\bR^3) \cap
+  L^{\infty}(\bR^3)$ are bounded open sets for which $X_{sr} \subset
+  \Omega \times \Omega$, and for every source point $\bx_s\in X_{s}$
+  and $\log \kappa \in M$, $\Omega$ is a normal neighborhood of
+  $\bx_s$.
 \end{quote}
-Assertion G3 is the {\em no-return} assumption: once a ray leaves
-$\Omega$, its subsequent intersection with $\Omega$ is null.
 
-Thanks to exponential decay, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
+The {\em No Return} assumption is
+\begin{quote}
+  for every source point $\bx_s \in X_{s}$, $\log \kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
+  with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
+  or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
+\end{quote}
+This assumption states that once a ray leaves
+$\Omega$, its subsequent intersection with $\Omega$ is null (hence the name).
+
+Thanks to Exponential Decay, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
 \ge 1$.
 Denote by $L^p(X_{sr} \times \bR)$ the product space $l^p(X_{sr},L^p(\bR))$
 with the usuall product norm. 
@@ -262,11 +258,13 @@ mentioned in the introduction, is
   \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2.
 \end{equation}
 Note that while the Lax-Milgram Theorem (\cite{Yosida}, section
-III.7) ensures that $u_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$,
+III.7) ensures the existence of a unique solution
+$u_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$ of the least squares
+problem \ref{eqn:reg},
 it is not immediiately obvious that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$.
 
 Asymptotic analysis of AWI and MSWI is based on a family of source
-wavelet: for $\lambda > 0$,
+wavelets: for $\lambda > 0$,
 \begin{equation}
   \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
 \end{equation}
@@ -278,7 +276,7 @@ The main result of this analysis is
 
 \begin{theorem}
   \label{thm:main}
-  Assume that the Exponential Decay and Single Arrival assumptions
+  Assume that Exponential Decay, Single Arrival, and No Return
   hold for $X_{sr} \subset \Omega \times \Omega, M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$.
   Select $r >0$ with units of
   pressure$^2 \times$time$^2$ and $\log \kappa^* \in M$. For $0 <
@@ -289,18 +287,23 @@ The main result of this analysis is
   There exist $0 < C_* \le C^*$, $0 < C$, and $W: M \times X_{sr}
   \rightarrow \bR^+$ with $C_* \le
   W \le C^*$ so that for
-  $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$, $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in L^2(\bR)$, and 
-  \begin{equation}
-    \label{eqn:mswitt}
-    |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa^*,\kappa](\bx_s,\bx_r))^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
-  \lambda^{\frac{1}{2}}
-\end{equation}
-and for sufficiently small $\lambda$, 
-\begin{equation}
-  \label{eqn:awitt}
-  \left|\frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|}{\|\ul[\kappa,\dl](\bx_r,\cdot;\bx_s)\|}-
-    |\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|\right| \le C \lambda
-  \end{equation}
+  $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$,
+  \begin{itemize}
+  \item[1. ] $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
+    L^2(\bR)$;
+  \item[2. ] for $\lambda > 0$,
+    \begin{equation}
+      \label{eqn:mswitt}
+      |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa^*,\kappa](\bx_s,\bx_r))^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
+      \lambda^{\frac{1}{2}};
+    \end{equation}
+  \item[3. ]for sufficiently small $\lambda$, 
+    \begin{equation}
+      \label{eqn:awitt}
+      \left|\frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|}{\|\ul[\kappa,\dl](\bx_r,\cdot;\bx_s)\|}-
+        |\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|\right| \le C \lambda
+    \end{equation}
+  \end{itemize}
 \end{theorem}
 
 Summation over the source-receiver positions in $X_{sr}$ yields
@@ -312,21 +315,53 @@ Summation over the source-receiver positions in $X_{sr}$ yields
 \begin{equation}
 \label{eqn:cor1mswi}   
 \lim_{\lambda \rightarrow 0} \lambda J_{\rm MSWI,r\lambda}[\kappa;\dl]
-= \sum_{(\bx_s,\bx_r) \in X_{sr}} W[\kappa^*,\kappa^*]^2(\bx_s,\bx_r) |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
+= \sum_{(\bx_s,\bx_r) \in X_{sr}} W[\kappa^*,\kappa]^2(\bx_s,\bx_r) |\tau[\kappa](\bx_s,\bx_r) - \tau[\kappa^*](\bx_s,\bx_r)|^2.
 \end{equation}
 and
 \begin{equation}
 \label{eqn:cor1awi}   
 \lim_{\lambda \rightarrow 0} J_{\rm AWI,r\lambda}[\kappa;\dl]
-= \sum_{(\bx_s,\bx_r) \in X_{sr}}  |\tau[m](\bx_s,\bx_r) - \tau[m^*](\bx_s,\bx_r)|^2.
+= \sum_{(\bx_s,\bx_r) \in X_{sr}}  |\tau[\kappa](\bx_s,\bx_r) - \tau[\kappa^*](\bx_s,\bx_r)|^2.
 \end{equation}
 \end{cor}
 
+\section{Analysis of AWI and MSWI}
+THis section is devoted to the proofs of the main result, Theorem
+\ref{thm:main}.  The principal tool in the analysis is Hadamard's
+decomposition of the acoustic Green's function, described in the
+second
+subsection below, along with some of its consequences, the chief being the
+square-integrability of the time-scaled regularized filter
+$tu_{\sigma}$. The next subsection reveals the link to travel time via
+an approximate solution of the regularized least squares problem
+\ref{eqn:reg}, based on the leading term in Hadamard[s decomposition.
+The final subsection estimates the remainder and finishes the proof of
+the main result.
 
+\subsection{A Note on Notations  for Norms and Bounds}
+The Banach spaces
+$l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
+\bR)$. The norm in a Banach space $B$ will be denoted
+$\|\cdot\|_{B}$. The norm symbol
+$\|\cdot\|$ without subscript will be understood to mean either
+$\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
+  \bR)}$, as context indicates.
+
+In a statement pertaining to all
+$\kappa \in M$, the letter $C$, or sometimes $C_k,
+k=0,1,2,...$ or
+$C_*,C^*$, will designate a constant (or constants) independent of
+$\kappa$.
+
+Generally, constants denoted $C$ etc. will absorb any dimensional
+scale factors necessary to make sense of the expressions in which they
+appear. I will call out those few cases in which explicit use of
+dimensinoal scale factors is necessary to avoid irretrievable
+dimensional confusion.
 
 \subsection{Hadamard's Decomposition}
 The Hadamard decomposition of the acoustic Green's function \cite[]{Friedlander:75,Qian:JCP24} provides a
-basis for a norm-based formulation of FWI. As presented by
+basis for analysis of AWI and MSWI. As presented by
 \cite{Friedlander:75}, for instance, this construction applies to
 second-order wave equations, but the system \ref{eqn:awe} is
 equivalent fo a second-order problem: differentiate the first equation
@@ -344,65 +379,39 @@ If $(p,\bv)$ is a distribution solutions of the system
 \ref{eqn:awe2}, as follows by differentiating the first equation of
 \ref{eqn:awe} with respect to $t$ and eliminating $\bv$ via the second
 equation. Conversely, if $p$ is a solution of the second-order initial
-value problem\ref{eqn:awe2}, then under suitable conditions (including
-those to be imposed below),
+value problem\ref{eqn:awe2}, then under the conditions imposed in the
+previous section, those to be imposed below),
 \[
   \bv = \beta \int_{-\infty}^t p
 \]
-defines a distribution, and $(p,\bv)$ solves the system \ref{eqn:awe}.
+defines a distribution, and $(p,\bv)$ is a weak solutino of the system \ref{eqn:awe}.
 
 Hadamard's construction is local, in both space-time and in the set of
-acoustic models. A {\em normal neighborhood} of
-$\bx_s \in \bR^3$ is an open subset of $\bR^3$ 
-within which every point is connected to $\bx_s$ by  a unique ray of
-geometric acoustics (a geodesic for the Riemannian metric associated
-to the equation \ref{eqn:awe2}) (\cite{Friedlander:75},
-p. 16).
+acoustic models. In the present context, it requires the Single
+Arrival hypothesis, and for global time validity the No Return
+assumption. 
 
-Throughtout the following discussion, $\Omega\subset \bR^3$ 
-and $M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ are bounded open sets satisfying 
-\begin{itemize}
-  \item[G1. ] $X_{sr} \subset \Omega \times \Omega$;
-  \item[G2. ] for every source point $\bx_s\in X_{s}$ and $\log \kappa \in M$, $\Omega$ is a
-    normal neighborhood of $\bx_s$.
-  \item[G3. ] for every source point $\bx_s \in X_{s};$
-    $\log \kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
-    with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
-    or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
-  \end{itemize}
-Condition G3 (the ``no return'' condition) means that once a ray
-leaves $\Omega$, it does not return to $\Omega$. Conditions G1 - G3
-hold for any convex open set $\Omega$ if $\kappa$ is constant, and for small perturbations and some
-large perturbations of constant $\kappa$: these are open conditions in
-the topology of $M$.
-
-
-
-Under conditions G1 - G4, the construction described by
-\cite{Friedlander:75} produces for each $m \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
+\cite{Friedlander:75} produces for each $\log \kappa \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
 (geometric amplitude) on $X_s \times \Omega$ and $b[\kappa]$
-(remainder kernel) on $X_s \times \Omega \times \bR$, satisfying
-\begin{itemize}
-\item[H1. ] $\tau[\kappa], a[\kappa],$ and $b[\kappa]$ are smooth off the diagonal,
-  that is,
-  (i) for each $\bx_s \in X_s$, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus
-  \{\bx_s\})$, and similarly for $a[\kappa],b[\kappa]$; $\tau$
+(remainder kernel) on $X_s \times \Omega \times \bR$, smooth off the
+diagonal - that is, for each $\bx_s \in X_s$, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus
+  \{\bx_s\})$, and similarly for $a[\kappa],b[\kappa]$; The traveltime $\tau$
   satisfies the eikonal equation
   \[
     \sqrt{\frac{\kappa}{\rho}} |\nabla \tau(\bx_s,\cdot)| = 1 \mbox{ in } \Omega \setminus
     \{\bx_s\}, \, \lim_{\bx \rightarrow \bx_s} \tau(\bx_s,\bx) = 0.
   \]
-\item[H2. ] there exists $A>0$ so that for any $\log \kappa \in M$
-  and $(\bx_s,\bx_r) \in X_{sr}$,
-  $|\log a[\kappa](\bx_s,\bx_r)| < A$;
-\item[H3. ] for any $k \ge 0$, there exists $B \ge 0,\delta > 0$ so
-  that for any $(\bx_s,\bx_r) \in X_{sr}$, $\kappa \in M$, 
+A by-product of the construction is a bound $A>0$ so that for any $\log \kappa \in M$
+  and $(\bx_s,\bx_r) \in X_{sr}$,  $|\log a[\kappa](\bx_s,\bx_r)| <
+  A$;  With no further assumptionss, there is also a uniform bound on $b(\bx_r,t;\bx_s)$ and
+  its derivatives over any finite $t$-interval. However, with the
+  addition of the Exponetial Decay assumption, the bound becomes
+  global in time: for any $k \ge 0$, there exists $B \ge 0,\delta > 0$ so
+  that for any $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$, 
 \begin{equation}
   |\partial^k_t b[\kappa](\bx_r,t;\bx_r,s)| \le B e^{-\delta t}
   \label{eqn:best}
 \end{equation}
-\end{itemize}
-(The exponential decay estimate in item H3 follows from hypothesis G4.)
 
 The Hadamard
 decomposition of the Green's function $G[\kappa]$, i.e. the solution of the
@@ -421,93 +430,6 @@ space-time coordinates, is
   G[\kappa] = (a[\kappa]\delta +  (b[\kappa]H))*\delta_{\tau[\kappa]}.
 \end{equation}
 
-%Under conditions G1 - G3 above, this decomposition is the restriction of
-%the Greeen's function to $\Omega \times (-\infty,t_h]$. This fact
-%implies a decomposition of $F[\kappa]$, provided that the convolution $G*f$
-%restricted to $[0,t_d]$ is determined by the restriction of $G$ to
-%$\Omega \times [0,t_h]$. That is the case if $t_h > t_d + |\mbox{supp
-%|f/2$ (the factor of $1/2$ because $f$ is odd).
-%Making this assumption (which is weaker than assumptions on $t_h$ to be made below),
-%\[
-%   F[\kappa](\bx_s,\bx_r)(t) =
-%   \phi(t)a(\bx_s,\bx_r)\rho_s\frac{df}{dt}(t-\tau[\kappa](\bx_s,\bx_r))
-% \]
-%\begin{equation}
-%  \label{eqn:fwdgreen}
-% + \phi(t)\rho_s\int
-%  \,ds \, \frac{df}{dt}(t-s) b[\kappa](\bx_s,\bx_r,s-\tau[\kappa](\bx_s,\bx_r))H(s-\tau[\kappa](\bx_s,\bx_%r))
-%\end{equation}
-
-\subsection{FWI via Least Squares}
-For $f \in {\cal E}'(\bR)$, the Hadamard decomposition 
-(equation \ref{eqn:regreen}) gives:
-\begin{equation}
-  \label{eqn:fwdgreen}
-  F[\kappa] = G[\kappa] * \rho \partial_t f  = \rho( a[\kappa]\delta
-  +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f.
-\end{equation}
-
-For the remainder of this paper, source wavelet $f$ will be assumed
-smooth, of compact support: $f \in C^{\infty}_0(\bR)$. Less stringent constraints on $f$ would
-support the results below, but this is the simplest choice. Also, with
-a few notable exceptions \cite[]{SondRes:83}, source wavelets that
-adequately model physical experimentss may be take to be smooth of
-compact support, because the physical phenomena that inject energy
-into the acoustic field are transient, and the data is sampled at a
-finite rate and either analog
-or digitally filtered (or both) to well below Nyquist frequency.
-
-Then equation \ref{eqn:fwdgreen}, bounds
-\ref{eqn:best} and Young's inequality implies that $F[\kappa] \in
-L^p(X_{sr} \times \bR)$ for any $p \ge 1$. Moreover there exists
-$C>0$ so that for $\log \kappa\in M$, $p \ge 1$,
-\begin{equation}
-  \label{eqn:fwdnorm}
-  \|F[\kappa]\|_{L^p(X_{sr} \times \bR)} \le C \left\|\partial_t f\right\|_{L^p(\bR)}.
-\end{equation}
-This observation justfies posing FWI as a least-squares problem: given $d \in
-L^2(X_{sr}\times \bR)$, $f \in H^1_0(\bR)$, find $\kappa$ to minimize
-\begin{equation}
-  \label{eqn:fwi}
-  J_{\rm FWI}[m;d]= \frac{1}{2}\|F[\kappa]-d\|_{L^2(X_{sr} \times \bR)},
-\end{equation}
-
-Practical versions of least-squares FWI include various types of regularization and
-imposition of constraints on $m$, see the references cited in the
-Introduction.
-%As mentioned there, local iterative optimization methods
-%are the only practical approach to minimizing $J_{\rm FWI}$ due to the
-%computational cost of approximating the forward map $F$ and related
-%operators, but these tend to stagnate at highly sub-optimal
-%(``cycle-skipped'') estimates of $m$ unless the initial estimate is of
-%quite high quality, often available only at considerable cost in data
-%collection and processing.
-
-\subsection{AWI via Optimization}
-
-AWI is based an {\em extension} of the modeling operator $F$, that is,
-an operator ${\bar F}$ with larger domain, coinciding with $F$ on its domain..
-The extended modeling operator ${\bar F}$ maps extended models
-$\bar{m}=(\kappa,\bar{f})$ incorporating extended sources
-$\bar{f}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
-field. Denote by $\bar{p}(\bx,t;\bx_s,\bx_r), \bar{\bv}(\bx,t;\bx_s,\bx_r)$
-the solution of the acoustic system \ref{eqn:awe} with $f(t)$ in the
-right-hand side of the first equation replaced by
-$\bar{f}(\bx_r,\cdot;\bx_s)$. Then
-$\bar{F}[\kappa,\bar{f}](\bx_r,t;\bx_s) =
-\bar{p}(\bx_r,t;\bx_s,\bx_r)$. As was the case for $F$, the Hadamard
-decomposition \ref{eqn:green} and conditions G1-G4, W1-W3 imply that
-$\bar{F}[\kappa, \cdot]$ is a bounded map: $L^2(X_{sr} \times \bR)
-\rightarrow L^2(X_{sr} \times \bR)$. If all  
-of the wavelets are the same, that is, ${\bar f}({\bf  
-  x}_r,t;{\bf x}_s) = f(t)$ is independent of source and receiver  
-position, then ${\bar F}[\kappa,\bar{f}] = F[\kappa]$. That is, $F$ is a special
-case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
-$F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
-
-\cite{Warner:16} represent the extended sources $\bar{f}$ as time convolutions of the
-(known) source $f$ with an {\em adaptive filter} $u \in L^2(X_{sr}
-\times \bR)$, that is, $\bar{f}=u * f$.
 Here, $u*f$ denotes the result of convolving each trace in $u$ by $f$. I
 will also use the asterisk to denote the trace-by-trace convolution
 of two data sets with the same set of source and receiver coordinates,
@@ -532,32 +454,6 @@ $u(\bx_r,t;\bx_s)=\delta(t)$, the output of $F$ is recovered:
   S[\kappa]\delta = F[\kappa].
 \end{equation}
 
-%Since $S[\kappa]$ involves solution of the wave equation with point source
-%wavelet $u*w$, application of the Hadamard decomposition \ref{eqn:green} requires a furnther
-%constraint on ray geometry, expressed by condition G3. Specifically,
-%\begin{itemize}
-%\item[G4. ]$t_h > t_d + t_w + t_u$.
-%\end{itemize}
-%Then \ref{eqn:green} implies that
-%\begin{equation}
-%  \label{eqn:sop}
-%  S[\kappa]u = w* a[\kappa] T[\kappa] ((\delta + b[\kappa]H)*u)
-%\end{equation}
-%in which $T[\kappa]$ is the time translation operator by $\tau[\kappa]$:
-%\begin{equation}
-%  \label{eqn:Tdef}
-%  T[\kappa]u(\bx_r,t;\bx_s) = u(\bx_r,t-\tau[\kappa](\bx_s,\bx_r);\bx_s),
-%\end{equation}
-%Similarly,
-%\begin{equation}
- % \label{eqn:fwdgreenop}
-%  F[\kappa] = \phi a[\kappa] T[\kappa]((\delta + b[\kappa]H)*w) 
-%\end{equation}
-
-%Note that values of $b$ for $t > t_d + t_w + t_u$ do not affect the
-%definitions of $S[\kappa]u$ or $F[\kappa]$. Therefore alter $b$ by
-%multiplication by a suitable cutoff function so that its support lies in
-%$(-\infty, t_h]$.
 
 \cite{Warner:16} assume (implicitly) that there is always a unique
 solution of the extended inversion problem, formulated in terms of
@@ -614,26 +510,7 @@ that AWI is more likely to succeed than is FWI.
 %{\em noise-free}, that is, $d = F[\kappa^*]$ for a target bulk modulus
 %$\kappa^* \in M$.
 
-\subsection{A Note on Notations  for Norms and Bounds}
-The Banach spaces
-$l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
-\bR)$. The norm in a Banach space $B$ will be denoted
-$\|\cdot\|_{B}$. The norm symbol
-$\|\cdot\|$ without subscript will be understood to mean either
-$\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
-  \bR)}$, as context indicates.
 
-In a statement pertaining to all
-$\kappa \in M$, the letter $C$, or sometimes $C_k,
-k=0,1,2,...$ or
-$C_*,C^*$, will designate a constant (or constants) independent of
-$\kappa$.
-
-Generally, constants denoted $C$ etc. will absorb any dimensional
-scale factors necessary to make sense of the expressions in which they
-appear. I will call out those few cases in which explicit use of
-dimensinoal scale factors is necessary to avoid irretrievable
-dimensional confusion.
 
 \subsection{Tihonov Regularization}
 Before establishing the relation with travel time tomography, several
@@ -1930,6 +1807,15 @@ geometrical ray complexity \cite[]{geoprosp:2008}.
 
 \section{Conclusion}
 
+The reader will
+note that a normalization component of the AWI objective function
+definition is important in reaching this conclusion. The connection
+between objective normalization and the asymptotic equivalence to
+travel time inversion for transmission data has nothing to do with the
+reasons for normalizing the objective previoiusly advanced in the
+literature \cite[]{Warner:16,LiAlkhalifah:21}.
+
+
 The conclusions of this study depend on a number of limitations on the
 acoustic model of wave propagation and the formulation of the related
 inverse problem. The principal constraints are:
@@ -1997,7 +1883,36 @@ become essentially as prone to cycle-skipping as is FWI.
 The analysis presented here has nothing to say about AWI applied to
 reflected wave data. \cite{Warner:16} and others have
 suggested that AWI is effective in that context. If so, the underlying
-mechanism remains to be explained. 
+mechanism remains to be explained.
+
+%%%%%%%%%%%%%%%%%%%%
+
+\subsection{AWI via Optimization}
+
+AWI is based an {\em extension} of the modeling operator $F$, that is,
+an operator ${\bar F}$ with larger domain, coinciding with $F$ on its domain..
+The extended modeling operator ${\bar F}$ maps extended models
+$\bar{m}=(\kappa,\bar{f})$ incorporating extended sources
+$\bar{f}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
+field. Denote by $\bar{p}(\bx,t;\bx_s,\bx_r), \bar{\bv}(\bx,t;\bx_s,\bx_r)$
+the solution of the acoustic system \ref{eqn:awe} with $f(t)$ in the
+right-hand side of the first equation replaced by
+$\bar{f}(\bx_r,\cdot;\bx_s)$. Then
+$\bar{F}[\kappa,\bar{f}](\bx_r,t;\bx_s) =
+\bar{p}(\bx_r,t;\bx_s,\bx_r)$. As was the case for $F$, the Hadamard
+decomposition \ref{eqn:green} and conditions G1-G4, W1-W3 imply that
+$\bar{F}[\kappa, \cdot]$ is a bounded map: $L^2(X_{sr} \times \bR)
+\rightarrow L^2(X_{sr} \times \bR)$. If all  
+of the wavelets are the same, that is, ${\bar f}({\bf  
+  x}_r,t;{\bf x}_s) = f(t)$ is independent of source and receiver  
+position, then ${\bar F}[\kappa,\bar{f}] = F[\kappa]$. That is, $F$ is a special
+case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
+$F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
+
+\cite{Warner:16} represent the extended sources $\bar{f}$ as time convolutions of the
+(known) source $f$ with an {\em adaptive filter} $u \in L^2(X_{sr}
+\times \bR)$, that is, $\bar{f}=u * f$.
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
