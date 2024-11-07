@@ -233,7 +233,7 @@ waves correctly within a half-wavelength or so (the meaning of
 
 AWI modifies the least-squares FWI problem by interposing a convolution operator or
 {\em filter} $u \in L^2(X_{sr} \times \bR)$. That is, the residual
-data $F[\kappa]-d$ is replaced by the filtered residual data $F[m]*u-d$.
+data $F[\kappa]-d$ is replaced by the filtered residual data $F[\kappa]*u-d$.
 Since $F[\kappa] \in L^1(X_{sr}\times \bR)$, the filtererd residual
 makes sense.
 The filter $u$ is intended to shift localized wave energy in $F[m]$ to
@@ -636,7 +636,7 @@ The following fact will be useful later on:
 \begin{prop}
   \label{thm:noisefree}
   Assume Exponential Decay, Single Arrival, and No Return. Then for
-  $\log \kappa \in M$,r $p \ge 1$, $F[\kappa], TF[\kappa]
+  $\log \kappa \in M$, $p \ge 1$, $F[\kappa], TF[\kappa]
   \in L^p(X_{sr} \times \bR)$, and there exist $C_0, C_1, C_2 >0$ so
   that for each $(\bx_s,\bx_r) \in X_{sr}$,
   \begin{eqnarray}
@@ -648,7 +648,7 @@ The following fact will be useful later on:
 
 \begin{proof}
   A simple estimate shows that $F[\kappa]$ satisfies an exponential
-  decay estimate of the form G4, whence the first estimate
+  decay estimate of the form \ref{eqn:best} whence the first estimate
   follows. Since $TbH \in W^{1,1}(\bR)$,
   \[
     T\rho(a\delta + bH)*\delta_{\tau}*\partial_t f = \partial_t TbH *
@@ -834,34 +834,50 @@ for all $\log \kappa \in M$, $u \in L^2(X_{sr} \times \bR)$,
   \|\Slb[\kappa]\| & \le& C\lambda^{\frac{3}{2}}.
 \end{eqnarray}
 
-\subsection{Linking Regularization and Wavelength; Statement of the
-  Main Result}
-In the remainder of this section, I will examine the $\lambda$-parametrized families of
-objective functions obtained by
-\begin{itemize}
-\item[1. ] choosing the Tihonov regularization weight in the least
-  square problem \ref{eqn:reg} as $\sigma = r\lambda$, in which $r$ is
-  a positive constant with dimensions pressure$^2 \times $ time$^2$.
-\item[2. ]replacing $S$, $d$ with $\Sl$, $\dl =\Fl[\kappa^*]$
-  (noise-free data) in the definition of $\ul$ (equation \ref{eqn:reg}).
-\end{itemize}
+\subsection{Linking Regularization and Wavelength}
+Note that noise-free data $\dl = \Fl[\kappa]$ is bounded in $L^2(X_{sr}
+\times \bR)$ uniformly in $\kappa$ and $\lambda$  (Proposition
+\ref{eqn:noisefree}, estimates \ref{eqn:Frembd}). 
+The minimum value of the right-hand side in equation \ref{eqn:regs} is
+the length of the projection of $(\dl,0)^T$ onto the range of
+$(\Sl[\kappa[],\sigma I)^T$, so is less than $\|\dl^2\|$.
 
-Justification for choosing the regularization weight $\sigma$ to be
-proportional to
-the wavelength proxy $\lambda$ will emerge from the analysis relating
-$\|T\ul[\kappa;\dl]\|$ to the travel
-time error $|\tau[\kappa]-\tau[\kappa^*]$. The necessary units for the
-proportionality constant $r$ follow from the discussion after equation
-\ref{eqn:reg}. It will be clear that choosing $\sigma$ a function of
+Suppose conversely that $\Sl[\kappa]\ul[\kappa;d]\| \ge
+\frac{1}{2}\|d\|$. Then
+\[
+  \|d\| \le 2\|\Fl[\kappa]*\ul[\kappa;d] \le
+  2\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
+\]
+from Young's inequality, and from the bound \ref{eqn:unorm} this is in
+turn
+\[
+  \le C \frac{\lambda}{\sigma} \|d\|
+\]
+whence
+\[
+  \sigma \le C \lambda.
+\]
+This inequality suggests that in order to expect filtered predicted data
+$\Sl[\kappa]\ul[\kappa;d\|$ to remian uniformly (in $\lambda$) close to the data to be
+inverted, as the heuristic justification for AWI suggests, the
+regularization weight $\sigma$ must be coupled to the wavelength proxy
+$\lambda$.  It will be clear from the discussion to follow that choosing $\sigma$ a function of
 $\lambda$ roughly proportional to $\lambda$, that is, $C_*\lambda \le
 \sigma(\lambda) \le C^*\lambda$ for $C_*,C^*$ satisfying $0 < C_* \le
-C^*$, would lead to the same asymptotic estimates for the relation
-between the adaptive filter $\ul$ and travel time
-error. The argument is slightly cleaner if $\sigma$ is simply
+C^*$, would suffice. The argument is slightly cleaner if $\sigma$ is simply
 proportional to (non-dimensional) $\lambda$ by a necessarily
-dimensional constant..
+dimensional constant.. Therefore we assume from now on that
+\begin{equation}
+  \label{eqn:lamsig}
+  \sigma = r \lambda
+\end{equation}
+in which $r$ is a positive constant with dimensions pressure$^2 \times
+$ time$^2$.
 
-
+This choice will eventually be justified by a converse estimate, that
+is, showing that under the condition \ref{eqn:lamsig}, the filtered
+predicted data $\Sl[\kappa]\ul[\kappa;d]$ has norm at least half that
+of $\|\dl\|$ for all $\lambda \in (0,1]$, for properly chosen $r$. 
 
 \subsection{The leading term and travel time}
 
@@ -1816,6 +1832,107 @@ $F$. This is the {\em source-receiver} extension, in the terminology of \cite{Hu
 \cite{Warner:16} represent the extended sources $\bar{f}$ as time convolutions of the
 (known) source $f$ with an {\em adaptive filter} $u \in L^2(X_{sr}
 \times \bR)$, that is, $\bar{f}=u * f$.
+
+
+\section{BLAH BLAH}
+
+
+Assume as in the last section, that is, that solutions
+of the acoustic system \ref{eqn:awe} is well-approximated by the
+geometric asymptotics as in equation \ref{eqn:hadamard}, and that the
+data is noise-free ($d=F[\kappa^*]$). Together with the properties of $w$
+just listed, these assumptions imply that
+\begin{equation}
+  \label{eqn:eq11}
+  J_{0,\sigma}[\kappa;d] = O(\sigma) + O(\lambda(w)).
+\end{equation}
+
+
+\begin{proof}
+  Since the arguments of $\Sl$,... are just along for the ride
+  suppress them, as before.
+  First analyse the leading order approximation: from equations
+  \ref{eqn:hatuf} and \ref{eqn:hatgf},
+  \[
+  \|\Sla \uzl -\dzl\|^2 = \frac{(a^*)^2}{2\pi} \int d\omega \left| \fwl(\omega) \frac{|\fwl(\omega)|^2}{|\fwl(\omega)|^2 + \frac{r\lambda}{a^2}}
+    - \fwl(\omega)\right|^2
+\]
+\[
+  =r^2\lambda^2\left(\frac{(a^*)^2}{2\pi a^4}\right) \int d\omega \frac{| \fwl(\omega)|^2}
+  {(|\fwl(\omega)|^2 + \frac{r\lambda}{a^2})^2}
+\]
+\[
+  =r^2\lambda^2\left(\frac{(a^*)^2}{2\pi a^4}\right) \int d\omega
+  \frac{| \lambda^{\frac{1}{2}}w_1(\lambda \omega)|^2}
+  {(|\lambda^{\frac{1}{2}}w_1(\lambda \omega)|^2 + \frac{r\lambda}{a^2})^2}
+\]
+\[
+  = \frac{1}{2\pi}\left(\frac{ra^*}{a}\right)^2 \int d\omega
+  \frac{|aw_1(\omega)|^2}
+  {(|aw_1(\omega)|^2 + r)^2}
+\]
+which depends on $M$ (and $r$) but not on $\lambda$. From the result
+\ref{eqn:u0snormlam}, the same is true of the second term in the
+objective function defined in the third equation  of the display
+\ref{eqn:leading}: that is,
+\begin{equation}
+  \label{eqn:leadingconst}
+  \|\Sla \uzl -\dzl\|^2 + r\lambda \|\uzl\|^2 = C
+\end{equation}
+
+\end{proof}
+To see this, begin with the definition:
+\[
+  \tilde{J}_{0,\sigma}[\kappa;d] = \frac{1}{2}
+  (\|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d]-d\|^2 + \lambda \|u_0[\kappa_{\lambda};d]\|^2.
+\]
+Using the approximate identities \ref{eqn:hatuf} and \ref{eqn:hatgf} and
+rearranging,
+\[
+\|\Sl[\kappa]u_0[\kappa_;d]-d\|^2 
+  \approx \int d\omega
+  |a\hat{w}\hat{u_0[\kappa_{\lambda};d]}e^{i\omega\tau}-a^*\hat{w}e^{i\omega\tau^*}|^2
+\]
+\[
+  = \int d\omega
+  (a^*)^2|\hat{w}|^2\left(\frac{\lambda}{a^2|\hat{w}|^2 +
+      \lambda}\right)^2   
+\le \int d\omega (a^*)^2|\hat{w}|^2
+  \left(\frac{\lambda}{a^2|\hat{w}|^2 + \lambda}\right)
+\]
+\begin{equation}
+  \label{eqn:eq12}
+  = \lim_{\Omega \rightarrow \infty} \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda
+  \left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
+\end{equation}
+For any $\Omega > 0$,
+\[
+\int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda\left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
+\le \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 \lambda
+  \left(\frac{ a|\hat{w}|}{(a^2|\hat{w}|^2 +
+      \lambda)^{\frac{1}{2}}}\right)
+\]
+\[
+  = \sigma \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 a|\hat{w}|
+  \left(\frac{\sigma }{(a^2|\hat{w}|^2 +\lambda)^{\frac{1}{2}}}\right)
+  \le \sigma \int_{-\Omega}^{\Omega} d\omega \frac{(a^*)^2}{a}
+  |\hat{w}|
+  \le \sigma \frac{(a^*)^2}{a} \|\hat{w}\|_{L^1(\bR)}.
+\]
+Together with the approximate inequality \ref{eqn:eq12}, this
+inequality implies
+that
+\[
+  \|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d] - d\|^2 = O(\sigma) + O(\lambda(w)).
+\]
+A similar argument leads to the conclusion that
+\[
+  \lambda\|u_0[\kappa_{\lambda};d]\|^2 = O(\sigma) + O(\lambda(w)).
+\]
+Together, these conclusions imply the assertion \ref{eqn:eq11}.
+
+%%%%%%%%%%%%%%%%%%%%
+
 
 
 \bibliographystyle{seg}
