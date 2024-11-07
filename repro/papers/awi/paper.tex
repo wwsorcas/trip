@@ -430,16 +430,7 @@ space-time coordinates, is
   G[\kappa] = (a[\kappa]\delta +  (b[\kappa]H))*\delta_{\tau[\kappa]}.
 \end{equation}
 
-Here, $u*f$ denotes the result of convolving each trace in $u$ by $f$. I
-will also use the asterisk to denote the trace-by-trace convolution
-of two data sets with the same set of source and receiver coordinates,
-that is, the data set consisting of time convolutions of traces with the same source
-and receiver coordinates. The meaning will be clear from context.
-
-For such extended sources,
-\[
-  \bar{F}[\kappa,u*f] = u*F[\kappa]
-\]
+\subsection{Tihonov Regularization}
 Introduce the notation $S[\kappa]$ for the operator of convolution
 with $F[\kappa]$, that is,
 \begin{equation}
@@ -453,80 +444,36 @@ $u(\bx_r,t;\bx_s)=\delta(t)$, the output of $F$ is recovered:
   \label{eqn:sconsist}
   S[\kappa]\delta = F[\kappa].
 \end{equation}
-
-
-\cite{Warner:16} assume (implicitly) that there is always a unique
-solution of the extended inversion problem, formulated in terms of
-$S$: that is, that
-for any $\kappa$ and any data $d$, there is an
-adaptive filter $u[\kappa;d]$ for which
-$S[\kappa]u[\kappa;d]= d$. If $d$ is noise-free, that is, $d=F[\kappa]$, then the consistency relation \ref{eqn:sconsist}
-suggests that $u[\kappa;d](\bx_r,t;\bx_s) = \delta(t)$. This ideal adaptive filter is in the null
-space of multiplication by $t$, that is, the operator
-$u(\bx_r,t;\bx_s) \mapsto t u(\bx_r,t;\bx_s)$. This
-observation motivates the definition of the AWI objective function
-(\cite{Warner:16}, equation 4)::
+The regularized least-squares problem \ref{eqn:reg} can be re-written
 \begin{equation}
-  \label{eqn:awideforig}
-  J_{\rm AWI}[\kappa;d] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu[\kappa;d](\bx_r,t;\bx_s)|^2}{\int dt |u[\kappa;d](\bx_r,t;\bx_s)|^2}\right) 
-\end{equation}
-in which $u[\kappa;d]$ is as defined above, that is, the solution of $S[\kappa]u[\kappa;d]
-= d$. \cite{Warner:16} also formulate
-AWI in terms of the inverse filter, that is, $u$ for which
-$u*d = F[\kappa]$, and in fact recommend that definition. The present
-discussion uses only the forward filter.
-Adaptive waveform inversion consists in iterative minimization of
-$J_{\rm AWI}$: choose an initial estimate $\kappa_0$ of the
-model, then update $\kappa$ repeatedly using a gradient
-descent method. \cite{Warner:16} describes the computation of $J_{\rm AWI}$
-and its gradient in detail, and their use in a quasi-Newton
-optimization algorithm.
+  \label{eqn:regs}
+    u_{\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|S[\kappa]u-d\|^2 + \sigma\|u\|^2)
+  \end{equation}
+\cite{Warner:16} present the definition of the AWI objective function
+\ref{eqn:awidefmain} initially as if $\sigma=0$, in fact presuming a
+zero-residual solution (that is, $S[\kappa]u=d$) but later note that
+``pre-whitening'' is necessary for a well-behaved filter construction.
+``Pre-whitening'' is a synonym for Tihonov regularization, that is,
+the least-squares minimization \ref{eqn:regs} with $\sigma>0$.
 
-The same observation motivates the definition of the {\em Matched
-  Source Waveform Inversion} (MSWI) objective studied by
-\cite{HuangSymes2015SEG,HuangSymes:Geo17}:
-\begin{equation}
-  \label{eqn:mswideforig}
-  J_{\rm MSWI}[\kappa;d] = \sum_{\bx_s,\bx_r} \int dt |tu[\kappa;d](\bx_r,t;\bx_s)|^2
-\end{equation}
-That is, the two objectives differ only by the trace-by-trace
-normalization featured in the definition of AWI (equation
-\ref{eqn:awideforig}). Much of the analysis of $J_{\rm AWI}$ pertains to
-$J_{\rm MSWI}$, as will be explained below.
-The trace-by-trace normalization in the definition of $J_{\rm AWI}$
-will prove quite consequential.
+Regularization has another benefit, in that it makes the objective
+well-defined. Indeed, if the data is noise-free, that is,
+$d=F[\kappa]=S[\kappa]\delta$, then $u_0[\kappa,d]=\delta$, but the
+denominator in the definition \ref{eqn:awidefmain} is not defined.
+Of course, the numerator vanishes, motivating the definition of AWI,
+but the objective function is nonsense.
 
-\section{Why it works}
+For future reference, examine the implications of definition
+\ref{eqn:regs} for the units of the regularization weight $\sigma$,
+which is necessarily dimensional. Since the data $d$ has dimensions of
+pressure, so must $S[m]u = F[m]*u$. Of course $F[m]$ is also sampled
+pressure, and convolution is a $t$ integration, so for $S[m]u$ to be a
+pressure, $u$ must have dimensions of 1/time. Therefore
+$\|S[m]u-d\|^2$ has dimensions of pressure$^2 \times $time, $\|u\|^2$
+has dimensions of 1/time, whence $\sigma$ must be dimensioned as
+pressure$^2 \times$ time$^2$.
 
-It may not be obvious at first glance why AWI (local optimization of
-$J_{\rm AWI}$) should be should be any more effective at estimating
-$\kappa$ from data $d$ than is FWI (local
-optimization of $J_{\rm FWI}$). Under the smoothness and ray geometry assumptions made above (equation
-\ref{eqn:coeff}, conditions G1 - G4), an asymptotic relation
-between AWI and travel time tomography emerges, justifying the notion
-that AWI is more likely to succeed than is FWI.
-%In addition all of the
-%previously mentioned assumptions, I will assume that the data $d$ is
-%{\em noise-free}, that is, $d = F[\kappa^*]$ for a target bulk modulus
-%$\kappa^* \in M$.
-
-
-
-\subsection{Tihonov Regularization}
-Before establishing the relation with travel time tomography, several
-defects in the definition \ref{eqn:awideforig} of $J_{\rm AWI}$ must be
-remedied. First, the objective function is not well-defined for the
-``ideal'' case, in which $d = F[\kappa]$ and $u[\kappa;d]=\delta$:
-this adaptive filter is not square-integrable, so the denominator does
-not make sense. Second, the equation $S[\kappa]u=d$ does not (in
-general) have a solution $u \in L^2(X_{sr} \times \bR)$. Since
-$S[\kappa]$ is a convolution operator, solving $S[\kappa]u=d$ for $u$
-amounts to deconovolving $d$ by $F[\kappa]$..  Under the standing
-assumption that $f \in C^{\infty}_0(\bR)$, $F[\kappa]$ does not have a continuous
-(stable) convolution inverse, and $S[\kappa]$ is not surjective.
-
-In fact, these two defects are really symptoms of the instability of
-deconvolution for kernels with the properties of $F[\kappa]$.  From \ref{eqn:fwdgreen} and the
+From \ref{eqn:green} and the
 definition \ref{eqn:sdef} of  $S[\kappa]$,
 \[
   S[\kappa]u = \rho( a[\kappa]\delta    +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f *u,
@@ -537,19 +484,19 @@ definition \ref{eqn:sdef} of  $S[\kappa]$,
   (b[\kappa](0)\delta + (\partial_t b[\kappa])H)
   *\delta_{\tau[\kappa]}*f) * u.
 \end{equation}
-Since $\partial_t f$ is even, the formal adjoint $S[\kappa]^T$ is given by
+The formal adjoint $S[\kappa]^T$ is given by
 \begin{equation}
   \label{eqn:sadjgood}
-  S[\kappa]^Tu = \rho( a[\kappa]\delta    +  (\check{b}[\kappa]\check{H}))
-  *\delta_{-\tau[\kappa]}*\partial_t f *u,
+  S[\kappa]^Tu = \rho( a[\kappa]\delta    -  (\check{b}[\kappa]\check{H}))
+ *\delta_{-\tau[\kappa]}*\partial_t \check{f} *u,
 \end{equation}
 in which $\check{u}(t) = u(-t)$.
 The key properties of $S$ follow directly from Young's inequality and
 the representation \ref{eqn:sgood}:
 \begin{lemma}
   \label{thm:snorm}
-  Under the assumptions G1-G4 leading to \ref{eqn:fwdgreen}, the
-  expressions \ref{eqn:sgood} and \ref{eqn:sadjgood} define
+  Under the Exponential Decay, Single Arrival, and No Return assumptions, the
+  expression \ref{eqn:sgood} define
   bounded operators on
   $\Pi_{X_{sr}} {\cal S}(\bR)$ and on
   $L^2(X_{sr} \times \bR)$, and there exists $C>0$ so
@@ -559,37 +506,17 @@ the representation \ref{eqn:sgood}:
     \|S[\kappa]\| \le C\|\partial_t f\|_{L^1(\bR)}.
   \end{equation}
 \end{lemma}
-\begin{proof} From the estimates H3, $b[\kappa](\bx_r,\cdot;\bx_s)H *
+\begin{proof} From the assumptions about $f$ and bounds
+  \ref{eqn:best},  $b[\kappa](\bx_r,\cdot;\bx_s)H *
   \partial_tf \in {\cal S}(\bR)$ for all $(\bx_s,\bx_r) \in X_{sr}$,
   whence the first conclusion. Bounded extension to $L^2(X_{sr} \times
   \bR)$ follows from Young's inequality.
 \end{proof}
-  
-The conventional remedy for instability in a deconvolution problem of
-this type is so-called ``pre-whitening'', as
-mentioned by \cite{Warner:16} ``Pre-whitening'' is a version of
-Tihonov regularization. It  amounts to replacement of the equation
-$S[\kappa]u=d$ by the regularized least squares problem: 
-\begin{equation}
-  \label{eqn:reg}
-  u_{\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|S[\kappa]u-d\|^2 + \sigma\|u\|^2)
-\end{equation}
-For future reference, examine the
-implications of definition \ref{eqn:reg} for the units of the regularization weight $\sigma$,
-which  is
-necessarily dimensional. Since the data $d$ has dimensions of
-pressure, so must $S[m]u = F[m]*u$. Of course $F[m]$ is also sampled
-pressure, and convolution is a $t$ integration, so for $S[m]u$ to be a
-pressure, $u$ must have dimensions of 1/time. Therefore
-$\|S[m]u-d\|^2$ has dimensions of pressure$^2 \times $time, $\|u\|^2$ has
-dimensions of 1/time, whence $\sigma$ must be dimensioned as
-pressure$^2 \times$  time$^2$.
 
 \begin{prop}
   \label{thm:unorm}
-  Under the assumptions G1 - G4 justifying the
-  representation \ref{eqn:fwdgreen}, the least squares problem
-  \ref{eqn:reg} with $\sigma > 0$ has a unique solution
+  Under the assumptions of Lemma \ref{thm:snorm}, the least squares problem
+  \ref{eqn:regs} with $\sigma > 0$ and $d\in L^2(X_{sr} \times \bR)$ has a unique solution
   $u_{\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$ satisfying
   \begin{equation}
     \label{eqn:unorm}
@@ -598,52 +525,32 @@ pressure$^2 \times$  time$^2$.
 \end{prop}
 \begin{proof}
 For $\sigma > 0$, the Lax-Milgram Theorem (\cite{Yosida}, section
-III.7) assures the existence of unique solution. 
+III.7) assures the existence of unique minimizer
+$u_{\sigma}[\kappa;d]$ satisfying the  normal
+equation
+\begin{equation}
+  \label{eqn:normal}
+  (S[\kappa]^TS[\kappa] + \sigma I) u_{\sigma}[\kappa;d] = S[\kappa]^Td,
+\end{equation}
+and the bound follows from the inequality \ref{eqn:snorm}.
 \end{proof}
-
-Define the modified
-AWI objective $J_{\rm AWI,\sigma}$ by
-replacing $u$ in the definition \ref{eqn:awideforig} with $u_{\sigma}$:
-\begin{equation}
-  \label{eqn:awidef}
-  J_{\rm AWI,\sigma}[\kappa;d] = \sum_{\bx_s,\bx_r} \left(\frac{\int dt |tu_{\sigma}[\kappa;d](\bx_r,t;\bx_s)|^2}{\int dt |u_{\sigma}[\kappa;d](\bx_r,t;\bx_s)|^2}\right). 
-\end{equation}
-To make this definition a bit more concise, introduce the operator $T$ on
-${\cal D}'(X_{sr} \times \bR)$ by
-\[
-  Tp(\bx_r,t;\bx_s) = tp(\bx_r,t;\bx_s).
-\]
-Then
-\begin{equation}
-  \label{eqn:awidefbis}
-  J_{\rm AWI,\sigma}[\kappa;d] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
-  \frac{\|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}.
-\end{equation}
-Here $\| \cdot \|$ is the norm in $L^2(\bR)$.
-
-Define a regularized version of the MSWI objective function $J_{\rm
-  MSWI}$ (definition \ref{eqn:mswideforig}) similarly:
-\begin{equation}
-  \label{eqn:mswidef}
-  J_{\rm MSWI,\sigma}[\kappa;d] = \|Tu_{\sigma}[\kappa;d]\|^2.
-\end{equation}
-
-The definitions \ref{eqn:awidefbis} and \ref{eqn:mswidef} have introduced a new defect: there is no
-guarantee that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr} \times\bR)$.
 
 \begin{prop}
   \label{thm:tl2}
-  Suppose that $d, Td \in L^2(X_{sr} \times \bR)$. Then
+  In addition to the Exponential Decay, Single Arrival, and No Return assumptions, uppose that $ Td \in L^2(X_{sr} \times \bR)$. Then
   $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$, and for each
   $(\bx_s,\bx_r) \in X_{sr}$,
   \[
     \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\| \le
   \]
-  \begin{equation}
-    \label{eqn:tunorm}
+  \[
     \frac{C}{\sigma}\left(\left(
         \frac{\|\partial_t f\|^2_{L^1(\bR)}}{\sigma}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
-      \right)\|d\| \\ 
+      \right)\|d\|\right.
+  \]
+  \begin{equation}
+    \label{eqn:tunorm}
+    \left.
     + \|\partial_t  f\|_{L^1(\bR)}(\|d (\bx_r,\cdot;\bx_s)\| +\|Td (\bx_r,\cdot;\bx_s)\|)\right).
   \end{equation}
 \end{prop}
@@ -728,7 +635,8 @@ The following fact will be useful later on:
 
 \begin{prop}
   \label{thm:noisefree}
-  Suppose that $\kappa \in M$. Then for $p \ge 1$, $F[\kappa], TF[\kappa]
+  Assume Exponential Decay, Single Arrival, and No Return. Then for
+  $\log \kappa \in M$,r $p \ge 1$, $F[\kappa], TF[\kappa]
   \in L^p(X_{sr} \times \bR)$, and there exist $C_0, C_1, C_2 >0$ so
   that for each $(\bx_s,\bx_r) \in X_{sr}$,
   \begin{eqnarray}
@@ -800,18 +708,13 @@ modeling operator ``noise-free'', and I will adopt this usage.
 
 \subsection{Source Characteristics and Asymptotics}
 
-Note that in the representation \ref{eqn:fwdgreen}, only the
+Note that in the first of the two representations in display \ref{eqn:sgood}, only the
 derivative $\partial_tf$ appears. For convenience, introduce
 \begin{equation}
   \label{eqn:wavelet}
   w = \rho \partial_t f
 \end{equation}
-Then
-\begin{itemize}
-\item[W1. ] $w \in C^{\infty}_0(\bR)$;;
-\item[W2. ] $\int \, w = 0$.
-\end{itemize}
-I will also
+Then  $w \in C^{\infty}_0(\bR)$ and $\int \, w = 0$. I will also
 refer to $w$ as ``the wavelet'', and view $F$ as parametrized by $w$.
 
 Introduce asymptotics in this setting by choosing $w = \wl$
@@ -881,8 +784,9 @@ Equality is attained for Gaussian $w_1$, and approximated for many other
 commonly used wavelets (Ricker = second derivative of Gaussian,
 trapezoidal bandpass,...).
 
-The modeling operator with wavelet $\wl$ is denoted $\Fl$. From the
-decomposition \ref{eqn:fwdgreen}, $\Fl$ is the sum of two terms:
+The modeling operator with wavelet $\wl$ is denoted $\Fl$
+(consistently with the prior definition using $\fl$).. From the
+decomposition \ref{eqn:green}, $\Fl$ is the sum of two terms:
 \begin{equation}
   \label{eqn:Flamdecomp}
   \Fl = \Fla + \Flb.
