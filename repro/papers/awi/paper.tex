@@ -881,7 +881,7 @@ Suppose conversely that $\|\Sl[\kappa]\ul[\kappa;d] - \dl\| \le
   2\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
 \]
 from Young's inequality, Proposition \ref{thm:noisefree}, and
-inequalities \ref{\eqn:lambdanorms}. From the bound \ref{eqn:unorm} this is in
+inequalities \ref{eqn:lambdanorms}. From the bound \ref{eqn:unorm} this is in
 turn
 \[
   \le R^* \frac{\lambda}{\sigma} \|d\|
@@ -1342,7 +1342,7 @@ which together with preceding inequalities establishes the second estimate \ref{
 \begin{proof} {\em of Theorem \ref{thm:main}}:
 Conclusions 1 and 2a have already been established. Conclusion 2b
 follows from equation \ref{eqn:Sutz} in Proposition \ref{thm:leading},
-combined with the first estimate in \ref{eqn:remest} and the bounds
+combined with the first estimate in \ref{thm:remest} and the bounds
 \ref{eqn:Srembd}.
 
   From the inequality \ref{eqn:mswittz}
@@ -1519,7 +1519,7 @@ Suppose that $\kappa^* \in M$ and $\dl=\Fl[\kappa^*]$.
 \end{equation}
 in which $\ul$ is the solution of the least squares problem
 \ref{eqn:reg} with $S=\Sl$, $d=\dl$, and $J_{\rm MSWI,\sigma}$ is as
-defined in equation \ref{eqn:mswidef}.
+defined in equation \ref{eqn:mswidefmain}.
 \end{prop}
 
 \begin{proof}
@@ -1608,7 +1608,7 @@ An argument precisely analogous to the proof of Corollary
 \noindent {\bf Remark:} From inequalities \ref{eqn:ulnorm},
 \ref{eqn:Srembd}, $\tilde{J}_{r\lambda}[\kappa;\dl] \le C$. That
 suggests that the contribution of the second term on the
-left-hand-side of the limit \ref{eqn:cor2} is insignificant for small
+left-hand-side of the limit \ref{eqn:cor1mswi} is insignificant for small
 $\lambda$, whereas it is comparable to the first term in
 \ref{eqn:cor3}. 
 
@@ -1616,7 +1616,7 @@ $\lambda$, whereas it is comparable to the first term in
 %%%%%%%%
 
 \section{Multiple Arrivals and Cycle-Skipping}
-The geometric asymptotics approximation \ref{eqn:fwdgreen} holds only
+The geometric asymptotics approximation \ref{eqn:green} holds only
 in the ``single arrival'' case, that is, when sources and receivers
 are close enough together relative to the length scale of significant
 variation in the wave velocity $((\kappa\beta)^{1/2})$ that a unique ray of
@@ -1642,7 +1642,7 @@ single arrivals. \cite{HuangSymes:Geo17} and
 \cite{SymesChenMinkoff:24} illustrate the failure of the
 version of MSWI reported here to avoid cycle-skipping in inversion of
 strongly refracting models, using frequency-domain implementation of
-the basic definition \ref{eqn:mswidef} and time-domain implementation
+the basic definition \ref{eqn:mswidefmain} and time-domain implementation
 of the reduced penalty function \ref{eqn:mswipenred} respectively. \cite{Yongetal:GJI23}
 have shown that precisely the same issue afflicts AWI, and have
 proposed a remedy by localizing the definition of the objective to
@@ -1746,7 +1746,7 @@ notation here. The regularized version of $u(t)$ (solution of the
 least squares problem \ref{eqn:reg}) contains summands with multiples of $g(t-(\tau^*_1-\tau_0))$
 and $g(t-(\tau_1-\tau^*_0))$. These are approximately scaled by
 $\tau^*_1-\tau_0$ and $\tau_1-\tau^*_0$ respectively in the
-definitions \ref{eqn:mswidef} and \ref{eqn:awidefbis} of the MSWI and AWI
+definitions \ref{eqn:mswidefmain} and \ref{eqn:awidefmain} of the MSWI and AWI
 objectives. For other choices of objective, they contribute similarly
 to the total. They will eventually begin to cancel as $m$ approaches
 $\kappa^*$, however this cancellation happens only when the times are
@@ -1801,11 +1801,13 @@ inverse problem. The principal constraints are:
   acoustics connects each source-receiver location pair (single arrivals)
 \end{itemize}
 
-These constraints are discussed in detail in the next section. Some
+Some of these constraints
 could certainly be relaxed. For instance, exponential decay of local
 energy implies that the finite time duration of actual measured data
 can be treated as a perturbation of the infinite time data setting
-posed here. The exception is the single-arrival hypothesis: it is
+posed here. The conclusions of this paper likely hold in some form
+even for non-smooth sets of models, provided that the data for such models is
+dominated by ballistic transmitted waves. The exception is the single-arrival hypothesis: it is
 essential, as without it, the link between the travel time and
 extended waveform inversion is lost. This is a feature of the
 source-receiver extension, not of a particular objective function
@@ -1820,161 +1822,11 @@ fitted. This ``crosstalk'' ambiguity is analyzed in the fifth
 section, and afflicts all approaches based on the source-receivre
 extension.
 
-In any case, these hypotheses enable a simple and clear
-analysis of AWI, and seem a reasonable starting point for further
-investigation.
-
-In this paper, I have shown that AWI is a good approximation to least
-squares travel time inversion of transmitted wave data, up to errors proportional to a typical
-data wavelength and to a regularization (``pre-whitening'')
-weight. However, the argument leading to this conclusion works only if
-the material model is assumed slowly varying so that geometric
-acoustics accurately describes the solution of the wave equation, and if
-sources and receivers are sufficiently close to one another to be
-connected by unique rays. The first condition may be ignored to some
-extent - the conclusion of this paper likely holds if the data is
-dominated by ballistic transmitted waves. The second condition
-is essential: even for purely transmitted waves, the presence of
-multiple arrivals breaks the connection
-with travel time inversion, and AWI and similar algorithms
-become essentially as prone to cycle-skipping as is FWI.
-
-%%%%%%%%%%%%%%%%%%
 
 The analysis presented here has nothing to say about AWI applied to
 reflected wave data. \cite{Warner:16} and others have
 suggested that AWI is effective in that context. If so, the underlying
 mechanism remains to be explained.
-
-%%%%%%%%%%%%%%%%%%%%
-
-\subsection{AWI via Optimization}
-
-AWI is based an {\em extension} of the modeling operator $F$, that is,
-an operator ${\bar F}$ with larger domain, coinciding with $F$ on its domain..
-The extended modeling operator ${\bar F}$ maps extended models
-$\bar{m}=(\kappa,\bar{f})$ incorporating extended sources
-$\bar{f}({\bf x}_r,t;{\bf x}_s)$ to the same sampling of the pressure
-field. Denote by $\bar{p}(\bx,t;\bx_s,\bx_r), \bar{\bv}(\bx,t;\bx_s,\bx_r)$
-the solution of the acoustic system \ref{eqn:awe} with $f(t)$ in the
-right-hand side of the first equation replaced by
-$\bar{f}(\bx_r,\cdot;\bx_s)$. Then
-$\bar{F}[\kappa,\bar{f}](\bx_r,t;\bx_s) =
-\bar{p}(\bx_r,t;\bx_s,\bx_r)$. As was the case for $F$, the Hadamard
-decomposition \ref{eqn:green} and conditions G1-G4, W1-W3 imply that
-$\bar{F}[\kappa, \cdot]$ is a bounded map: $L^2(X_{sr} \times \bR)
-\rightarrow L^2(X_{sr} \times \bR)$. If all  
-of the wavelets are the same, that is, ${\bar f}({\bf  
-  x}_r,t;{\bf x}_s) = f(t)$ is independent of source and receiver  
-position, then ${\bar F}[\kappa,\bar{f}] = F[\kappa]$. That is, $F$ is a special
-case, or restriction, of ${\bar F}$, so ${\bar F}$ is an extension of
-$F$. This is the {\em source-receiver} extension, in the terminology of \cite{HuangSymes2015SEG}.
-
-\cite{Warner:16} represent the extended sources $\bar{f}$ as time convolutions of the
-(known) source $f$ with an {\em adaptive filter} $u \in L^2(X_{sr}
-\times \bR)$, that is, $\bar{f}=u * f$.
-
-
-\section{BLAH BLAH}
-
-
-Assume as in the last section, that is, that solutions
-of the acoustic system \ref{eqn:awe} is well-approximated by the
-geometric asymptotics as in equation \ref{eqn:hadamard}, and that the
-data is noise-free ($d=F[\kappa^*]$). Together with the properties of $w$
-just listed, these assumptions imply that
-\begin{equation}
-  \label{eqn:eq11}
-  J_{0,\sigma}[\kappa;d] = O(\sigma) + O(\lambda(w)).
-\end{equation}
-
-
-\begin{proof}
-  Since the arguments of $\Sl$,... are just along for the ride
-  suppress them, as before.
-  First analyse the leading order approximation: from equations
-  \ref{eqn:hatuf} and \ref{eqn:hatgf},
-  \[
-  \|\Sla \uzl -\dzl\|^2 = \frac{(a^*)^2}{2\pi} \int d\omega \left| \fwl(\omega) \frac{|\fwl(\omega)|^2}{|\fwl(\omega)|^2 + \frac{r\lambda}{a^2}}
-    - \fwl(\omega)\right|^2
-\]
-\[
-  =r^2\lambda^2\left(\frac{(a^*)^2}{2\pi a^4}\right) \int d\omega \frac{| \fwl(\omega)|^2}
-  {(|\fwl(\omega)|^2 + \frac{r\lambda}{a^2})^2}
-\]
-\[
-  =r^2\lambda^2\left(\frac{(a^*)^2}{2\pi a^4}\right) \int d\omega
-  \frac{| \lambda^{\frac{1}{2}}w_1(\lambda \omega)|^2}
-  {(|\lambda^{\frac{1}{2}}w_1(\lambda \omega)|^2 + \frac{r\lambda}{a^2})^2}
-\]
-\[
-  = \frac{1}{2\pi}\left(\frac{ra^*}{a}\right)^2 \int d\omega
-  \frac{|aw_1(\omega)|^2}
-  {(|aw_1(\omega)|^2 + r)^2}
-\]
-which depends on $M$ (and $r$) but not on $\lambda$. From the result
-\ref{eqn:u0snormlam}, the same is true of the second term in the
-objective function defined in the third equation  of the display
-\ref{eqn:leading}: that is,
-\begin{equation}
-  \label{eqn:leadingconst}
-  \|\Sla \uzl -\dzl\|^2 + r\lambda \|\uzl\|^2 = C
-\end{equation}
-
-\end{proof}
-To see this, begin with the definition:
-\[
-  \tilde{J}_{0,\sigma}[\kappa;d] = \frac{1}{2}
-  (\|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d]-d\|^2 + \lambda \|u_0[\kappa_{\lambda};d]\|^2.
-\]
-Using the approximate identities \ref{eqn:hatuf} and \ref{eqn:hatgf} and
-rearranging,
-\[
-\|\Sl[\kappa]u_0[\kappa_;d]-d\|^2 
-  \approx \int d\omega
-  |a\hat{w}\hat{u_0[\kappa_{\lambda};d]}e^{i\omega\tau}-a^*\hat{w}e^{i\omega\tau^*}|^2
-\]
-\[
-  = \int d\omega
-  (a^*)^2|\hat{w}|^2\left(\frac{\lambda}{a^2|\hat{w}|^2 +
-      \lambda}\right)^2   
-\le \int d\omega (a^*)^2|\hat{w}|^2
-  \left(\frac{\lambda}{a^2|\hat{w}|^2 + \lambda}\right)
-\]
-\begin{equation}
-  \label{eqn:eq12}
-  = \lim_{\Omega \rightarrow \infty} \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda
-  \left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
-\end{equation}
-For any $\Omega > 0$,
-\[
-\int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2\lambda\left(\frac{a^2|\hat{w}|^2}{a^2|\hat{w}|^2 + \lambda}\right)
-\le \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 \lambda
-  \left(\frac{ a|\hat{w}|}{(a^2|\hat{w}|^2 +
-      \lambda)^{\frac{1}{2}}}\right)
-\]
-\[
-  = \sigma \int_{-\Omega}^{\Omega} d\omega \left(\frac{a^*}{a}\right)^2 a|\hat{w}|
-  \left(\frac{\sigma }{(a^2|\hat{w}|^2 +\lambda)^{\frac{1}{2}}}\right)
-  \le \sigma \int_{-\Omega}^{\Omega} d\omega \frac{(a^*)^2}{a}
-  |\hat{w}|
-  \le \sigma \frac{(a^*)^2}{a} \|\hat{w}\|_{L^1(\bR)}.
-\]
-Together with the approximate inequality \ref{eqn:eq12}, this
-inequality implies
-that
-\[
-  \|S_{\lambda}[\kappa]u_0[\kappa_{\lambda};d] - d\|^2 = O(\sigma) + O(\lambda(w)).
-\]
-A similar argument leads to the conclusion that
-\[
-  \lambda\|u_0[\kappa_{\lambda};d]\|^2 = O(\sigma) + O(\lambda(w)).
-\]
-Together, these conclusions imply the assertion \ref{eqn:eq11}.
-
-%%%%%%%%%%%%%%%%%%%%
-
-
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
