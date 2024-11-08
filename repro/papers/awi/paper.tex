@@ -269,7 +269,8 @@ wavelets: for $\lambda > 0$,
   \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
 \end{equation}
 The relation between the dimensionless scale parameter $\lambda$ and
-RMS wavelength will be explained below. Correspondingly, denote the
+RMS wavelength will be explained below: $\lambda$ may be regarded as a
+proxy for wavelength. Correspondingly, denote the
 modeling operator with $f=\fl$ by $\Fl$.
 
 The main result of this analysis is
@@ -278,20 +279,37 @@ The main result of this analysis is
   \label{thm:main}
   Assume that Exponential Decay, Single Arrival, and No Return
   hold for $X_{sr} \subset \Omega \times \Omega, M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$.
-  Select $r >0$ with units of
-  pressure$^2 \times$time$^2$ and $\log \kappa^* \in M$. For $0 <
-  \lambda $, set
+  Select $\log \kappa^* \in M$. For $0 <
+  \lambda \le 1$, set
   $\dl=\Fl[\kappa^*]$ (``noise-free data''), and  define $\ul[\kappa,\dl]$
   to be the solution of 
-  equation \ref{eqn:reg} with  $\sigma=r\lambda$, $F=\Fl$ and $d=\dl$..
-  There exist $0 < C_* \le C^*$, $0 < C$, and $W: M \times X_{sr}
+  equation \ref{eqn:reg} with $F=\Fl$ and $d=\dl$..
+  
+  \begin{itemize}
+  \item[1. ] $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
+    L^2(\bR)$;
+  \item[2. ] There exist $R_*,R^*,\lambda_*$ with $0<R_*\le R^*, 0 <
+    \lambda_*\le 1$ depending on
+    $M, X_{sr}$ so that
+    \begin{itemize}
+    \item[a. ] $\|\Sl[\kappa]\ul[\kappa;\dl]-\dl\| \le
+      \frac{1}{2}\|\dl\|$ implies that $\sigma \le R^*\lambda$;
+    \item[b. ] $\sigma \le R_*\lambda$ and $\lambda \le \lambda_*$
+      implies that $\|\Sl[\kappa]\ul[\kappa;\dl]-\dl\| \le
+      \frac{1}{2}\|\dl\|$.
+    \end{itemize}
+  \end{itemize}
+  Choose $r > 0$ and assume that
+  \begin{equation}
+    \label{eqn:lamsig}
+    \sigma = r \lambda.
+  \end{equation}.
+  Then there exist $0 < C_* \le C^*$, $0 < C$, and $W: M \times X_{sr}
   \rightarrow \bR^+$ with $C_* \le
   W \le C^*$ so that for
   $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$,
   \begin{itemize}
-  \item[1. ] $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
-    L^2(\bR)$;
-  \item[2. ] for $\lambda > 0$,
+  \item[2. ] for $0 <  \lambda \le 1$, 
     \begin{equation}
       \label{eqn:mswitt}
       |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa^*,\kappa](\bx_s,\bx_r))^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
@@ -305,6 +323,15 @@ The main result of this analysis is
     \end{equation}
   \end{itemize}
 \end{theorem}
+\noindent{\bf Remark:} The heuristic justification for AWI is the possibility of keeping the
+filtered predicted data $\Fl[\kappa]*\ul[\kappa;d]$ close to the data
+$d$ while updating the bulk modulus $\kappa$. The conclusions 2a and
+2b show that for this to be the case, the regularization parameter $\sigma$
+must be dominated by the wavelength proxy $\lambda$. This observation underlies the choice
+$\sigma = r\lambda$ used in conclusions 3 and 4. A looser relation
+would clearly suffice, however the argument lis slightly cleaner if
+$\sigma$ is simply held proportional to $\lambda$ as $\lambda
+\rightarrow 0$. Note that the units of $r$ and $\sigma$ are pressure$^2 \times$time$^2$.
 
 Summation over the source-receiver positions in $X_{sr}$ yields
 \begin{cor}
@@ -386,12 +413,12 @@ previous section, those to be imposed below),
 \]
 defines a distribution, and $(p,\bv)$ is a weak solutino of the system \ref{eqn:awe}.
 
-Hadamard's construction is local, in both space-time and in the set of
+Hadamard's decomposition is local, in both space-time and in the set of
 acoustic models. In the present context, it requires the Single
 Arrival hypothesis, and for global time validity the No Return
 assumption. 
 
-\cite{Friedlander:75} produces for each $\log \kappa \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
+The construction described by \cite{Friedlander:75} produces for each $\log \kappa \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
 (geometric amplitude) on $X_s \times \Omega$ and $b[\kappa]$
 (remainder kernel) on $X_s \times \Omega \times \bR$, smooth off the
 diagonal - that is, for each $\bx_s \in X_s$, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus
@@ -402,12 +429,17 @@ diagonal - that is, for each $\bx_s \in X_s$, $\tau[\kappa](\bx_s,\cdot) \in C^{
     \{\bx_s\}, \, \lim_{\bx \rightarrow \bx_s} \tau(\bx_s,\bx) = 0.
   \]
 A by-product of the construction is a bound $A>0$ so that for any $\log \kappa \in M$
-  and $(\bx_s,\bx_r) \in X_{sr}$,  $|\log a[\kappa](\bx_s,\bx_r)| <
-  A$;  With no further assumptionss, there is also a uniform bound on $b(\bx_r,t;\bx_s)$ and
-  its derivatives over any finite $t$-interval. However, with the
-  addition of the Exponetial Decay assumption, the bound becomes
-  global in time: for any $k \ge 0$, there exists $B \ge 0,\delta > 0$ so
-  that for any $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$, 
+and $(\bx_s,\bx_r) \in X_{sr}$,
+\begin{equation}
+  \label{eqn:aest}
+  |\log a[\kappa](\bx_s,\bx_r)| <  A.
+\end{equation}
+With no further assumptionss, there is also a uniform bound on
+$b(\bx_r,t;\bx_s)$ and
+its derivatives over any finite $t$-interval. However, with the
+addition of the Exponetial Decay assumption, the bound becomes
+global in time: for any $k \ge 0$, there exists $B \ge 0,\delta > 0$
+so that for any $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$,
 \begin{equation}
   |\partial^k_t b[\kappa](\bx_r,t;\bx_r,s)| \le B e^{-\delta t}
   \label{eqn:best}
@@ -722,7 +754,7 @@ from a family $\{\wl:0 <\lambda \le 1\}$ indexed by the dimensionless parameter
 $\lambda$, and defined by
 \begin{equation}
   \label{eqn:wfam}
-  \wl(t) = \lambda^{-1/2}w_1(t/\lambda).
+  \wl(t) = \lambda^{-1/2}w_1\left(\frac{t}{\lambda}\right).
 \end{equation}
 The  ``mother wavelet'' $w_1$ is assumed to have properties W1, W2, and
 all wavelets $\wl$ in this family
@@ -761,9 +793,8 @@ The pulse width of $\wl$ is proportional to $\lambda$:
   \right)^{1/2} = \lambda l(w_1).
 \end{equation}
 
-Note that the AWI objective defined in \ref{eqn:awideforig} and its
-modification \ref{eqn:awidef} are actually
-squared pulse widths of the adaptive filters $u[\kappa;d]$ and
+Note that the AWI objective defined in \ref{eqn:awidefmain} is actually
+squared pulse width of the adaptive filter 
 $u_{\sigma}[\kappa;d]$ respectively.
 
 The {\em RMS frequency} of $\wl$ is
@@ -837,47 +868,38 @@ for all $\log \kappa \in M$, $u \in L^2(X_{sr} \times \bR)$,
 \subsection{Linking Regularization and Wavelength}
 Note that noise-free data $\dl = \Fl[\kappa]$ is bounded in $L^2(X_{sr}
 \times \bR)$ uniformly in $\kappa$ and $\lambda$  (Proposition
-\ref{eqn:noisefree}, estimates \ref{eqn:Frembd}). 
+\ref{thm:noisefree}, estimates \ref{eqn:Frembd}). 
 The minimum value of the right-hand side in equation \ref{eqn:regs} is
 the length of the projection of $(\dl,0)^T$ onto the range of
 $(\Sl[\kappa[],\sigma I)^T$, so is less than $\|\dl^2\|$.
 
-Suppose conversely that $\Sl[\kappa]\ul[\kappa;d]\| \ge
-\frac{1}{2}\|d\|$. Then
+Suppose conversely that $\|\Sl[\kappa]\ul[\kappa;d] - \dl\| \le
+\frac{1}{2}\|d\|$. Then $\|\Sl[\kappa]\ul[\kappa;d] \| \ge
+\frac{1}{2}\|d\|$, so
 \[
   \|d\| \le 2\|\Fl[\kappa]*\ul[\kappa;d] \le
   2\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
 \]
-from Young's inequality, and from the bound \ref{eqn:unorm} this is in
+from Young's inequality, Proposition \ref{thm:noisefree}, and
+inequalities \ref{\eqn:lambdanorms}. From the bound \ref{eqn:unorm} this is in
 turn
 \[
-  \le C \frac{\lambda}{\sigma} \|d\|
+  \le R^* \frac{\lambda}{\sigma} \|d\|
 \]
 whence
 \[
-  \sigma \le C \lambda.
+  \sigma \le R^* \lambda.
 \]
-This inequality suggests that in order to expect filtered predicted data
+for a suitable $R^*>0$ independent of $\log \kappa \in M$ and $\lambda
+\in (0,1]$. This establishes conclusion 2a in Theorem \ref{thm:main}, and
+suggests that in order to expect filtered predicted data
 $\Sl[\kappa]\ul[\kappa;d\|$ to remian uniformly (in $\lambda$) close to the data to be
 inverted, as the heuristic justification for AWI suggests, the
 regularization weight $\sigma$ must be coupled to the wavelength proxy
-$\lambda$.  It will be clear from the discussion to follow that choosing $\sigma$ a function of
-$\lambda$ roughly proportional to $\lambda$, that is, $C_*\lambda \le
-\sigma(\lambda) \le C^*\lambda$ for $C_*,C^*$ satisfying $0 < C_* \le
-C^*$, would suffice. The argument is slightly cleaner if $\sigma$ is simply
-proportional to (non-dimensional) $\lambda$ by a necessarily
-dimensional constant.. Therefore we assume from now on that
-\begin{equation}
-  \label{eqn:lamsig}
-  \sigma = r \lambda
-\end{equation}
-in which $r$ is a positive constant with dimensions pressure$^2 \times
+$\lambda$. Therefore we assume from now on that equation
+\ref{eqn:lamsig} holds,  
+in which $r$ is a positive constant with dimensions pressure$^2 \times 
 $ time$^2$.
-
-This choice will eventually be justified by a converse estimate, that
-is, showing that under the condition \ref{eqn:lamsig}, the filtered
-predicted data $\Sl[\kappa]\ul[\kappa;d]$ has norm at least half that
-of $\|\dl\|$ for all $\lambda \in (0,1]$, for properly chosen $r$. 
 
 \subsection{The leading term and travel time}
 
@@ -886,8 +908,9 @@ through a further simplification:
 
 \begin{prop}
   \label{thm:leading}
-In the definitions \ref{eqn:mswidef} of $J_{\rm MSWI,\sigma}$ and
-\ref{eqn:awidefbis} of $J_{\rm AWI,\sigma}$, set $\sigma = r\lambda$
+In the definitions \ref{eqn:mswidefmain} of $J_{\rm MSWI,\sigma}$ and
+\ref{eqn:awidefmain} of $J_{\rm AWI,\sigma}$, set $\sigma = r\lambda$
+(equation \ref{eqn:lamsig}
 and replace the data $d$ with
 $\dla = \Fla[\kappa^*]$, $S[\kappa]$ with $\Sla[\kappa]$, and $\ul$
 with the solution $\uzl$ of the corresponding least squares problem. That is,
@@ -922,10 +945,14 @@ and
 \begin{equation}
   \label{eqn:awittz}
   \left| \frac{\|T\uzl[\kappa;\dla] (\bx_r,\cdot;\bx_r)\|^2}{
-        \|\uzl[\kappa;\dla] (\bx_r,\cdot;\bx_r)\|^2} - (\tau[\kappa^*]({\bf
-  x}_s,{\bf x}_r)-\tau[\kappa]({\bf x}_s,{\bf x}_r))^2\right|  \le C\lambda^2.
+        \|\uzl[\kappa;\dla] (\bx_r,\cdot;\bx_r)\|^2} - (\tau[\kappa^*](\bx_s,\bx_r)-\tau[\kappa]({\bf x}_s,{\bf x}_r))^2\right|  \le C\lambda^2.
 \end{equation}
-m\end{prop}
+Finally, for $\sigma = r\lambda$ with $r$ sufficiently small,
+\begin{equation}
+  \label{eqn:Sutz}
+  \Sla[\kappa]\uzl[\kappa;\dzl] \ge \frac{1}{2}\|\dzl\|
+\end{equation}
+\end{prop}
 
 \begin{proof}
   The abbreviations
@@ -1138,28 +1165,36 @@ The conclusions \ref{eqn:mswittz} and \ref{eqn:awittz} follow directly
 from these observations and equations \ref{eqn:MSWIasym2} and
 \ref{eqn:AWIasym2}.
 
-%It follows that
-%\begin{equation}
-%  \label{eqn:mswitt}
-%  J_{\rm MSWI,\lambda,\lambda}[\kappa;\dla] =
-%  \frac{1}{\lambda} \sum_{{\bf x}_s,{\bf x}_r} C[\kappa](\bx_s,\bx_r)(\tau[\kappa^*]({\bf
-%  x}_s,{\bf x}_r)-\tau[\kappa]({\bf x}_s,{\bf x}_r))^2 + O(\lambda)
-%\end{equation}
-%  
-%\begin{equation}
-%  \label{eqn:awitt}
-%J_{\rm AWI,\lambda,\lambda}[\kappa;\dla] = \sum_{{\bf x}_s,{\bf x}_r} (\tau[\kappa^*]({\bf
-%  x}_s,{\bf x}_r)-\tau[\kappa]({\bf x}_s,{\bf x}_r))^2 + O(\lambda^2)
-%\end{equation}
-
+Similar reasoning establishes the inequality \ref{eqn:Sutz}:
+\[
+  \Sla[\kappa]\uzl[\kappa;\dla](\omega) = a^* \wl(\omega) \left(\frac{|\wl(\omega)|^2}{|\wl(\omega)|^2
+      + \frac{\sigma}{a^2}}\right)
+\]
+\[
+  = a^* \lambda^{\frac{1}{2}}w_1(\lambda \omega) \left(\frac{a^2|w_1(\lambda\omega)|^2}{a^2|w_1(\lambda\omega)|^2
+      + \frac{\sigma}{\lambda}}\right),
+\]
+so
+\[
+  \|\Sla[\kappa]\uzl[\kappa;\dla]\|^2 = \left(\frac{a*}{a}\right)^2
+  \int a^2|w_1|^2\left(\frac{a^2|w_1|^2}{a^2|w_1|^2 +
+      \frac{\sigma}{\lambda}}\right)^2 \ge \frac{\lambda}{\sigma}
+  (a^*)^2a^2 \int |w_1|^4 
+\]
+By virtue of the bound \ref{eqn:aest}, $(a^*)^2a^2 \int |w_1|^4$ is bounded below
+by a positive constant independent of $\log \kappa \in M,
+(\bx_s,\bx_r) \in X_{sr}$. Since $\dl$ is bounded above by a similar
+constant, conclude if $r = \sigma/\lambda$ is sufficiently small, the
+inequality \ref{eqn:Sutz} holds.
 \end{proof}
 
-\noindent {\bf Remark:} Note that the homogeneity in $\lambda$ of the
-expressions in equations \ref{eqn:g0} and \ref{eqn:g1} results from
-the proportionality between $\lambda$ and the regularization weight in
-the definitions \ref{eqn:reg} and \ref{eqn:leading}. Otherwise, such
-simple asymptotic relations as the conclusions
-of Proposition \ref{thm:leading} would not obtain.
+\noindent {\bf Remark:} Inequality \ref{eqn:Sutz} is the converse
+promised earlier to the observation that requiring the filtered
+predicted data $\Sl[\kappa]u_{\sigma}[\kappa;\dl]$, hence the filtered
+data residual, to be comparable in norm to the data $d$ implied that
+$\sigma$ should be dominated by $\lambda$, as the relation
+$\sigma=r\lambda$ ensures. Of course, this is an analogue, with $\Sl$
+replaced by its leading approximation $\Sla$, and $\dl$ replaced by $\dla$. 
 
 \subsection{Estimating the Remainder}
 
@@ -1304,7 +1339,13 @@ which together with preceding inequalities establishes the second estimate \ref{
 
 \end{proof}
 
-\begin{proof} {\em of Theorem \ref{thm:main}}: From the inequality \ref{eqn:mswittz}
+\begin{proof} {\em of Theorem \ref{thm:main}}:
+Conclusions 1 and 2a have already been established. Conclusion 2b
+follows from equation \ref{eqn:Sutz} in Proposition \ref{thm:leading},
+combined with the first estimate in \ref{eqn:remest} and the bounds
+\ref{eqn:Srembd}.
+
+  From the inequality \ref{eqn:mswittz}
   (suppressing the arguments $\bx_s,\bx_r$),
   \[
    | \|T\uzl[\kappa;\dla] \|- 
