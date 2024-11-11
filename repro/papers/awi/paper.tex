@@ -80,7 +80,7 @@ The arguments presented here for AWI are refinements of those given by
 \cite{HuangSymes:Geo17} for Matched Source Waveform Inversion (MSWI),
 a similar modification of FWI
 \cite[]{HuangSymes2015SEG,HuangSymes:Geo17}. which were in turn based
-on ideas presented in Song's thesis \cite[]{Song:94c}. Since it
+on ideas presented in Song's thesis \cite[]{Song:94}. Since it
 involves no additional effort, I state results for MSWI in parallel
 with those for AWI.
 
@@ -306,7 +306,8 @@ The main result of this analysis is
   equation \ref{eqn:reg} with $F=\Fl$ and $d=\dl$..
   
   \begin{itemize}
-  \item[1. ] $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
+  \item[1. ] for $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$, and
+    $\sigma, \lambda >0$, $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
     L^2(\bR)$;
   \item[2. ] There exist $R_*,R^*,\lambda_*$ with $0<R_*\le R^*, 0 <
     \lambda_*\le 1$ depending on
@@ -1763,88 +1764,110 @@ Dirac waveform $g$ - that is, within a wavelength.
 %literature \cite[]{Warner:16,LiAlkhalifah:21}.
 
 This paper has explained the behaviour of AWI (and MSWI) applied to
-acoustic transmission data. For data exhibiting a single smooth
-wavefront, these formulatios produce objective function that converge
+acoustic transmission through smoothly varying material models. For
+isotropic point source/receiver data exhibiting a single smooth
+wavefront, these formulations produce objective functions that converge
 to versions of travel time mean-square error, in the limit of hgh
-data frequency. For 
+data frequency. 
 
-The conclusions of this study depend on a number of limitations on the
-acoustic model of wave propagation and the formulation of the related
-inverse problem. The principal constraints are:
-\begin{itemize}
-\item energy sources are modeled as isotropic point radiators, with
-  known time dependence vanishing outside a finite time window;
-\item mechanical parameter fields (coefficients in the acoustic wave
-  equation) are smooth, that is, infinitely differentiable as
-  functions of position, and the material density is known and
-  position-independent: only the bulk modulus (or wave velocity) is
-  to be determined;
-\item waves propagate throughout Euclidean space-time - that is, no
-  physical boundaries are modeled;
-\item the data of the inverse problem are the restrictions of the
-  pressure field to a finite number of points in space (receiver
-  positions), for a finite number of source positions and all time;
-\item local energy decays exponentially - that is, the pressure and
-  all of its derivatives tend to zero at an exponential rate as $t
-  \rightarrow \infty$,
-  uniformly in any bounded spatial domain.
-\item only one ray of geometric
-  acoustics connects each source-receiver location pair (single arrivals)
-\end{itemize}
+%The conclusions of this study depend on a number of limitations on the
+%acoustic model of wave propagation and the formulation of the related
+%inverse problem. The principal constraints are:
+%\begin{itemize}
+%\item energy sources are modeled as isotropic point radiators, with
+%  known time dependence vanishing outside a finite time window;
+%\item mechanical parameter fields (coefficients in the acoustic wave
+%  equation) are smooth, that is, infinitely differentiable as
+%  functions of position, and the material density is known and
+%  position-independent: only the bulk modulus (or wave velocity) is
+%  to be determined;
+%\item waves propagate throughout Euclidean space-time - that is, no
+%  physical boundaries are modeled;
+%\item the data of the inverse problem are the restrictions of the
+%  pressure field to a finite number of points in space (receiver
+%  positions), for a finite number of source positions and all time;
+%\item local energy decays exponentially - that is, the pressure and
+%  all of its derivatives tend to zero at an exponential rate as $t
+%  \rightarrow \infty$,
+%  uniformly in any bounded spatial domain.
+%\item only one ray of geometric
+%  acoustics connects each source-receiver location pair (single arrivals)
+%\end{itemize}
 
-Some of these constraints
-could certainly be relaxed. For instance, exponential decay of local
-energy implies that the finite time duration of actual measured data
-can be treated as a perturbation of the infinite time data setting
-posed here. The conclusions of this paper likely hold in some form
-even for non-smooth sets of models, provided that the data for such models is
-dominated by ballistic transmitted waves. The exception is the single-arrival hypothesis: it is
+Some of the assumptions leading to this conclusion 
+could certainly be relaxed. For instance, neither absence of boundary effects
+nor exponential decay of local energy are essential. Instead
+the finite time duration of actual measured data, together with more
+elaborate ray geometry assumptions, can replace the infinite time data setting
+posed here,. The conclusions of this paper likely hold in some form
+even for non-smooth material parameter variation, provided that the data for such models is
+dominated by ballistic transmitted waves. Similar conclusions should
+hold for multipole point sources and
+receivers, modeling non-isotropic experimental devices that are small on the
+wavelength scale.
+
+The exception is the single-arrival hypothesis: it is
 essential, as without it, the link between the travel time and
 extended waveform inversion is lost.
+%This disconnect is a fearure of the adaptive filter construction, not of a particular objective function
+%(MSWI, AWI,...) formulated in terms of it. The introduction of the
+%adaptive filter $u$ in the filtered data prediction $F[\kappa]*u$ is equivalent
+%to permitting the source wavelet to depend on the receiver location,
+%which in the basic physical model of point source acoustics it does
+%not. Therefore this construction {\em extends} basic physical modeling
+%of acoustic wave transmission. \cite{HuangSymes:SEG15} call this is the {\em source-receiver
+%  extension}.  This ``crosstalk'' ambiguity analyzed in the previous
+%section afflicts all approaches based on the source-receiver
+%extension.
+A number of authors have illustrated this disconnect via numerical
+example. The first such examples for a version of MSWI appeared in
+\cite{Symes:94c}. Crosswell seismic surveys often generate multiple
+arrivals near low-velocity sedimentary layers that are natural targets
+of seismic exploration and act as wave guides. \cite{Plessix:00}
+successfully applied a version of MSWI to crosswell waveform inversion
+by removing traces with close source and receiver depths, thus leaving
+only data that tended to be dominated by single arrivals.
+\cite{HuangSymes:Geo17} and \cite{SymesChenMinkoff:24} illustrate the
+failure of the version of MSWI reported here to avoid cycle-skipping
+in inversion of strongly refracting models, using frequency-domain
+implementation of the basic definition \ref{eqn:mswidefmain} and
+time-domain implementation of the reduced penalty function
+\ref{eqn:mswipenred}, respectively. \cite{Yongetal:GJI23} show that
+precisely the same shortcoming afflicts AWI.
 
-This disconnect is a fearure of the adaptive filter construction, not of a particular objective function
-(MSWI, AWI,...) formulated in terms of it. The introduction of the
-adaptive filter $u$ in the filtered data prediction $F[\kappa]*u$ is equivalent
-to permitting the source wavelet to depend on the receiver location,
-which in the basic physical model of point source acoustics it does
-not. Therefore this construction {\em extends} basic physical modeling
-of acoustic wave transmission. \cite{HuangSymes:SEG15} call this is the {\em source-receiver
-  extension}.  This ``crosstalk'' ambiguity analyzed in the previous
-section afflicts all approaches based on the source-receiver
-extension.
+Overcoming this limitation requires substantial change in the
+extension of basic acoustic modeling underlying AWI. For example,
+\cite{Yongetal:GJI23} have proposed localizing the definition of the
+AWI objective to short time intervals, within which multiple wavefront
+arrrivals are unlikely to appear, and illustrated the effectiveness of
+this approach by numerical example. \cite{Symes:23} constructs an
+extension based on surface sources, as opposed to the trace-by-trace
+extension which is the basis of MSWI and AWI. This surface source
+extension separates events by infinitesimal slope, information not
+available in the trace-by-trace construction..
 
-A number of authors have presented numerical illustrations of the
-divergence between source-receiver extension methods and traveltime
-tomography, and some have proposed remedies. \cite{Symes:94c}
-illustrated the crosstalk phenomenon for a version of MSWI. Crosswell
-source-receiver geometry often generates multiple arrivals,
-particularly near low-velocity sedimentary layers that are natural
-targets of seismic exploration and act as wave guides.
-\cite{Plessix:00} successfully applied a version of MSWI to crosswell
-waveform inversion by removing traces with close source and receiver
-depths, thus leaving only data that tended to be dominated by single
-arrivals. \cite{HuangSymes:Geo17} and \cite{SymesChenMinkoff:24}
-illustrate the failure of the version of MSWI reported here to avoid
-cycle-skipping in inversion of strongly refracting models, using
-frequency-domain implementation of the basic definition
-\ref{eqn:mswidefmain} and time-domain implementation of the reduced
-penalty function \ref{eqn:mswipenred}, respectively.
-\cite{Yongetal:GJI23} have shown that precisely the same issue arises
-in AWI, and have proposed a remedy by localizing the definition of the
-objective to short time intervals, within which multiple wavefront
-arrrivals are unlikely to appear. \cite{Symes:23} constructs an
-extension based on surface sources, as opposed to the point source -
-point receiver extension which is the basis of MSWI and AWI. This
-surface source extension separates events by infinitesimal slope,
-information not available to the source-receiver extension.
-
-Many open questions remain about MSWI, AWI, and other extension-based
-approaches to transmitted wave data inversion. In particular, 
-the analysis presented here has nothing to say about AWI applied to
+The analysis presented here has nothing to say about AWI applied to
 reflected wave data. \cite{Warner:16} and others have
 suggested that AWI is effective in that context. If so, the underlying
-mechanism remains to be explained. The application of extended model
-inversion to of elastodynamic transmission data remains to be investigated.
+mechanism remains to be explained.
+
+Linear elasticity is a much better model for mechanical waves
+propagating in some human tissue (notably bone) and the solid earth
+than is acoustodynamics. Least-squares FWI of elastodynamic
+transmission data also tends to stagnate due to cycle-skipping, and it
+is tempting to think that extension approaches such as AWI should
+ameliorate that obstacle. It will be necessary extract wave speed
+informaiton in the presence of potential interference of cross-talk
+between wave modes, similar to cross-talk between multiple arrivals in
+the acoustic case.
+
+Finally, virtually all materials supporting wave propagation also
+attenuate energy through various physical mechanisms, which act per
+cycle and therefore suppress high frequency components. Analysis such
+as that presented here, relying on the infinite-frequency limit
+(geometric optics), is {\em a priori} impossible for such attenuative
+wave physics without fundamental
+reformulation..
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
