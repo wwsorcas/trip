@@ -1,12 +1,32 @@
 \title{Adaptive Waveform Inversion for Transmitted Wave Data}
 \author{William W. Symes}
 
-\begin{abstract}
-Adaptive Waveform Inversion
-applied to transient transmitted wave data yields estimates of index of
-refraction (or wave velocity) similar to those obtained by travel time
-inversion, provided that the data contain a single smooth wavefront.
-\end{abstract}
+\begin{abstract} Adaptive Waveform Inversion (AWI) applied to
+  transient transmitted wave data can yield estimates of index of
+  refraction (or wave velocity) similar to those obtained by travel
+  time inversion. The AWI objective function measures normalized
+  mean-square dispersion about zero time of a family of filters, one
+  filter for each source-reeciver pair, designed to match predicted
+  data to observed data. Provided that the data contain a single
+  smooth wavefront, this function approaches the mean square
+  traveltime error as data wavelength tends to zero. The scaling of
+  each filter to have unit norm is responsible for the simple relation
+  with travel time tomography. A similar approach, Matched Source
+  Waveform Inversion (MSWI), does not normalize the filters and has a
+  looser relation with mean-square travel time error. If substantial
+  energy is spread amongst multiple arrivals, on the other hand,
+  neither AWI nor MSWI objectives approximate the travel time mean
+  square erorr, and attempts to minimize them by local
+  (Newton-related) optimization are as likely to stagnate at models
+  predicting erroneous travel times as is least-square Full Waveform
+  Inversion (FWI). The matching filter at the heart of this approach
+  must be ``pre-whitened'', that is, computed by solving a regularized
+  least squares problem for filtered data misfit. In order for the
+  relation to traveltime tomography to hold, and for the filtered data
+  misfit to stay relatively small, the regularization weight must be
+  coupled to data wavelength. These objective functions can also be
+  used as penalty terms in a homotopy of objectives connecting AWI or
+  MSWI with FWI. \end{abstract}
 
 \section{Introduction}
 Full waveform inversion (FWI) refers to the inference of mechanical
@@ -18,7 +38,7 @@ wave propagation, and numerical solutions of these wave equations can
 be used to predict experimental data {\em ab initio}. FWI consists in
 updating the parameters to minimize a numerical measure of  the difference between computationally
 predicted wave data and actual observed
-data. This data is typicallyl oscillatory. If wave velocities or their parametric equivalents are amongst the parameters
+data. Such data is typically oscillatory. If wave velocities or their parametric equivalents are amongst the parameters
 to be estimated, then updates cause shifts in the arrival times of
 data oscillations, which in turn causes commonly used numerical error measures
 to oscillate. This ``cycle skipping'' phenomenon may cause iterative local optimization algorithms (relatives of
@@ -37,7 +57,7 @@ and many details of implementation. However, a clear explanation for its
 effectiveness is so far missing from the literature.
 
 This paper supplies such an explanation for a special case of AWI, the
-recovery of smooth acoustic medium parameters from data generated at
+recovery of smooth acoustic medium parameters from waves generated at
 localized energy sources, propagated through a fluid, and recorded at
 receiver locations remote from the sources (transmission data). I show that the AWI
 objective function is an asymptotic (in time frequency) approximation
@@ -312,7 +332,7 @@ The main result of this analysis is
   \item[2. ] for $0 <  \lambda \le 1$, 
     \begin{equation}
       \label{eqn:mswitt}
-      |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} (W[\kappa^*,\kappa](\bx_s,\bx_r))^{\frac{1}{2}}|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
+      |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} W[\kappa^*,\kappa]^{\frac{1}{2}}(\bx_s,\bx_r)|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
       \lambda^{\frac{1}{2}};
     \end{equation}
   \item[3. ]for sufficiently small $\lambda$, 
@@ -342,7 +362,7 @@ Summation over the source-receiver positions in $X_{sr}$ yields
 \begin{equation}
 \label{eqn:cor1mswi}   
 \lim_{\lambda \rightarrow 0} \lambda J_{\rm MSWI,r\lambda}[\kappa;\dl]
-= \sum_{(\bx_s,\bx_r) \in X_{sr}} W[\kappa^*,\kappa]^2(\bx_s,\bx_r) |\tau[\kappa](\bx_s,\bx_r) - \tau[\kappa^*](\bx_s,\bx_r)|^2.
+= \sum_{(\bx_s,\bx_r) \in X_{sr}} W[\kappa^*,\kappa](\bx_s,\bx_r) |\tau[\kappa](\bx_s,\bx_r) - \tau[\kappa^*](\bx_s,\bx_r)|^2.
 \end{equation}
 and
 \begin{equation}
@@ -1627,30 +1647,7 @@ the analysis presented in the last section no longer applies, and the
 relation established there between AWI and travel-time inversion is
 case into doubt.
 
-In fact, the behaviour inherited from travel-time inversion in the
-single arrival case, namely the absence of spurious stationary points
-(``cycle-skipping''), generally fails when multiple arrivals with
-significant energy are present in the data. \cite{Symes:94c}
-illustrated this phenomenon for a version of MSWI. Crosswell
-source-receiver geometry often generates multiple arrivals,
-particularly near low-velocity sedimentary layers that are natural
-targets of seismic exploration and act as wave
-guides. \cite{Plessix:00} successfully applied a version of MSWI to
-crosswell waveform inversion by removing traces with close source and
-receiver depths, thus leaving only data that tended to be dominated by
-single arrivals. \cite{HuangSymes:Geo17} and
-\cite{SymesChenMinkoff:24} illustrate the failure of the
-version of MSWI reported here to avoid cycle-skipping in inversion of
-strongly refracting models, using frequency-domain implementation of
-the basic definition \ref{eqn:mswidefmain} and time-domain implementation
-of the reduced penalty function \ref{eqn:mswipenred} respectively. \cite{Yongetal:GJI23}
-have shown that precisely the same issue afflicts AWI, and have
-proposed a remedy by localizing the definition of the objective to
-short time intervals, within which multiple wavefront arrrivals are
-unlikely. \cite{Symes:23} constructs an extension based on surface
-sources, as opposed to the source-receiver extension which is the
-basis of MSWI and AWI. This surface source extension generates an
-invertible map from extended source to data.
+
 
 A simple calculation reveals the phenomenon discussed in all of these
 works. I will argue formally, via the leading term in the Hadamard
@@ -1748,34 +1745,28 @@ and $g(t-(\tau_1-\tau^*_0))$. These are approximately scaled by
 $\tau^*_1-\tau_0$ and $\tau_1-\tau^*_0$ respectively in the
 definitions \ref{eqn:mswidefmain} and \ref{eqn:awidefmain} of the MSWI and AWI
 objectives. For other choices of objective, they contribute similarly
-to the total. They will eventually begin to cancel as $m$ approaches
+to the total. They will eventually begin to cancel as $\kappa$ approaches
 $\kappa^*$, however this cancellation happens only when the times are
 within the width of the approximate 
 Dirac waveform $g$ - that is, within a wavelength.
 
-This argument shows that when multiple arrivals carry significant energy, any
-inversion approach based on the source-receiver extension, similar to
-AWI or MSWI, will cycle-skip, that is, change rapidly when the
-estimated model approaches its optimal value.
 
-It should be emphasized that this phenomenon is primarily a feature of the
-source-receiver extension, rather than of the specific objective
-function defined in terms of it. In that respect, the source-receiver
-extension is similar to the common surface parameter extensions that
-have been studied for inversion of reflection data. Inversion methods
-based on these extensions also fail to avoid cycle-skipping in the presence of
-geometrical ray complexity \cite[]{geoprosp:2008}.
 
 \section{Conclusion}
 
-The reader will
-note that a normalization component of the AWI objective function
-definition is important in reaching this conclusion. The connection
-between objective normalization and the asymptotic equivalence to
-travel time inversion for transmission data has nothing to do with the
-reasons for normalizing the objective previoiusly advanced in the
-literature \cite[]{Warner:16,LiAlkhalifah:21}.
+%The reader will
+%note that a normalization component of the AWI objective function
+%definition is important in reaching this conclusion. The connection
+%between objective normalization and the asymptotic equivalence to
+%travel time inversion for transmission data has nothing to do with the
+%reasons for normalizing the objective previoiusly advanced in the
+%literature \cite[]{Warner:16,LiAlkhalifah:21}.
 
+This paper has explained the behaviour of AWI (and MSWI) applied to
+acoustic transmission data. For data exhibiting a single smooth
+wavefront, these formulatios produce objective function that converge
+to versions of travel time mean-square error, in the limit of hgh
+data frequency. For 
 
 The conclusions of this study depend on a number of limitations on the
 acoustic model of wave propagation and the formulation of the related
@@ -1809,24 +1800,51 @@ posed here. The conclusions of this paper likely hold in some form
 even for non-smooth sets of models, provided that the data for such models is
 dominated by ballistic transmitted waves. The exception is the single-arrival hypothesis: it is
 essential, as without it, the link between the travel time and
-extended waveform inversion is lost. This is a feature of the
-source-receiver extension, not of a particular objective function
-(MSWI, AWI,...) formulated in terms of it. This extension treats each receiver signal
-independently. If only a single identifiable waveform arrives at
-each receiver, AWI (and similar approaches) can implicitly identify
-its arrival time, and the link to travel time inversion is
-established. If distinct waveforms are present at multiple times,
-the single receiver signal does not determine which waveform in the
-predicted signal should align with which waveform in the data to be
-fitted. This ``crosstalk'' ambiguity is analyzed in the fifth
-section, and afflicts all approaches based on the source-receivre
+extended waveform inversion is lost.
+
+This disconnect is a fearure of the adaptive filter construction, not of a particular objective function
+(MSWI, AWI,...) formulated in terms of it. The introduction of the
+adaptive filter $u$ in the filtered data prediction $F[\kappa]*u$ is equivalent
+to permitting the source wavelet to depend on the receiver location,
+which in the basic physical model of point source acoustics it does
+not. Therefore this construction {\em extends} basic physical modeling
+of acoustic wave transmission. \cite{HuangSymes:SEG15} call this is the {\em source-receiver
+  extension}.  This ``crosstalk'' ambiguity analyzed in the previous
+section afflicts all approaches based on the source-receiver
 extension.
 
+A number of authors have presented numerical illustrations of the
+divergence between source-receiver extension methods and traveltime
+tomography, and some have proposed remedies. \cite{Symes:94c}
+illustrated the crosstalk phenomenon for a version of MSWI. Crosswell
+source-receiver geometry often generates multiple arrivals,
+particularly near low-velocity sedimentary layers that are natural
+targets of seismic exploration and act as wave guides.
+\cite{Plessix:00} successfully applied a version of MSWI to crosswell
+waveform inversion by removing traces with close source and receiver
+depths, thus leaving only data that tended to be dominated by single
+arrivals. \cite{HuangSymes:Geo17} and \cite{SymesChenMinkoff:24}
+illustrate the failure of the version of MSWI reported here to avoid
+cycle-skipping in inversion of strongly refracting models, using
+frequency-domain implementation of the basic definition
+\ref{eqn:mswidefmain} and time-domain implementation of the reduced
+penalty function \ref{eqn:mswipenred}, respectively.
+\cite{Yongetal:GJI23} have shown that precisely the same issue arises
+in AWI, and have proposed a remedy by localizing the definition of the
+objective to short time intervals, within which multiple wavefront
+arrrivals are unlikely to appear. \cite{Symes:23} constructs an
+extension based on surface sources, as opposed to the point source -
+point receiver extension which is the basis of MSWI and AWI. This
+surface source extension separates events by infinitesimal slope,
+information not available to the source-receiver extension.
 
-The analysis presented here has nothing to say about AWI applied to
+Many open questions remain about MSWI, AWI, and other extension-based
+approaches to transmitted wave data inversion. In particular, 
+the analysis presented here has nothing to say about AWI applied to
 reflected wave data. \cite{Warner:16} and others have
 suggested that AWI is effective in that context. If so, the underlying
-mechanism remains to be explained.
+mechanism remains to be explained. The application of extended model
+inversion to of elastodynamic transmission data remains to be investigated.
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
