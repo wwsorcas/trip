@@ -35,7 +35,7 @@ body, a manufactured artifact,...) from remote measurements of waves
 propagating through it. These mechanical parameters appear as
 coefficients in systems of partial differential equations governing
 wave propagation, and numerical solutions of these wave equations can
-be used to predict experimental data {\em ab initio}. FWI consists in
+be used to predict experimental data. FWI consists in
 updating the parameters to minimize a numerical measure of  the difference between computationally
 predicted wave data and actual observed
 data. Such data is typically oscillatory. If wave velocities or their parametric equivalents are amongst the parameters
@@ -86,7 +86,7 @@ with those for AWI.
 
 The next section establishes the class of problems to be studied and notations
 for their description, defines the AWI and MSWI objective functions,
-and states the main results of this paper. in the following section, I present the
+and states the main results of this paper. In the following section, I present the
 asymptotic analysis leading to the main results. In
 effect, AWI regularizes or relaxes the FWI problem. For many inverse
 problems, regularization has been accomplished via additive penalty
@@ -98,7 +98,7 @@ transmitted wave data in which multiple rays connect source and
 receiver (multiiple wave arrivals, non-simple metric).
 
 The analysis explained here sheds no light on the effectiveness of AWI
-for reflected wave data, and the approach has so far been limited
+for reflected wave data, and the approach has so far been limited to
 inversion of data modeled by acoustic wave propagation. I discuss
 these and other aspects of AWI and related approaches in a brief final
 section.
@@ -132,7 +132,7 @@ form $f \in C_0^{\infty}(\bR)$ through the acoustic system
   \label{eqn:awe}
  \frac{\partial p}{\partial t} & = &- \kappa \nabla \cdot {\bf v} +
                                     f(t) \delta({\bf x}-{\bf x}_s); \nonumber \\
-\frac{\partial {\bf v}}{\partial t} & = & - \beta \nabla p; \\ 
+\frac{\partial {\bf v}}{\partial t} & = & - \beta \nabla p, \nonumber \\ 
 p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 \end{eqnarray}
 For simplicity, I assume that the system \ref{eqn:awe} holds over all of Euclidean
@@ -208,7 +208,7 @@ to the system \ref{eqn:awe}) escape to infinity (\cite{Hristova:09},
 Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). That is,
 exponential decay follows from a characteristic of $\kappa$.
 
-The second and third assumptions explicitly involves a constraint on ray geometry
+The second and third assumptions explicitly involve constraints on ray geometry
 (therefore on $\kappa$). A {\em normal neighborhood} of
 $\bx_s \in \bR^3$ is an open subset $\Omega$ of $\bR^3$ 
 within which every point is connected to $\bx_s$ by  a unique ray  (\cite{Friedlander:75},
@@ -374,7 +374,7 @@ and
 \end{cor}
 
 \section{Analysis of AWI and MSWI}
-THis section is devoted to the proofs of the main result, Theorem
+This section is devoted to the proofs of the main result, Theorem
 \ref{thm:main}.  The principal tool in the analysis is Hadamard's
 decomposition of the acoustic Green's function, described in the
 second
@@ -458,7 +458,7 @@ and $(\bx_s,\bx_r) \in X_{sr}$,
 With no further assumptionss, there is also a uniform bound on
 $b(\bx_r,t;\bx_s)$ and
 its derivatives over any finite $t$-interval. However, with the
-addition of the Exponetial Decay assumption, the bound becomes
+addition of the Exponential Decay assumption, the bound becomes
 global in time: for any $k \ge 0$, there exists $B \ge 0,\delta > 0$
 so that for any $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$,
 \begin{equation}
@@ -777,11 +777,11 @@ $\lambda$, and defined by
   \label{eqn:wfam}
   \wl(t) = \lambda^{-1/2}w_1\left(\frac{t}{\lambda}\right).
 \end{equation}
-The  ``mother wavelet'' $w_1$ is assumed to have properties W1, W2, and
+The  ``mother wavelet'' $w_1$ is assumed to have zero mean and
 all wavelets $\wl$ in this family
-inherit these properties from $w_1$, along with its dimensions
-(energy/time$^2$). It follows from these assumptions that the Fourier transform $\fwl$ is
-real-valued, even, and real-analytic. The corresponding source waveform $f_{\lambda}$ is
+inherit this property.
+It follows from these assumptions that the Fourier transform $\fwl$ is
+even and real-analytic. The corresponding source waveform $f_{\lambda}$ is
 given by
 \begin{equation}
   \label{eqn:flambda}
@@ -898,7 +898,7 @@ Suppose conversely that $\|\Sl[\kappa]\ul[\kappa;d] - \dl\| \le
 \frac{1}{2}\|d\|$. Then $\|\Sl[\kappa]\ul[\kappa;d] \| \ge
 \frac{1}{2}\|d\|$, so
 \[
-  \|d\| \le 2\|\Fl[\kappa]*\ul[\kappa;d] \le
+  \|d\| \le 2\|\Fl[\kappa]*\ul[\kappa;d] \| \le
   2\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
 \]
 from Young's inequality, Proposition \ref{thm:noisefree}, and
@@ -931,7 +931,7 @@ through a further simplification:
   \label{thm:leading}
 In the definitions \ref{eqn:mswidefmain} of $J_{\rm MSWI,\sigma}$ and
 \ref{eqn:awidefmain} of $J_{\rm AWI,\sigma}$, set $\sigma = r\lambda$
-(equation \ref{eqn:lamsig}
+(equation \ref{eqn:lamsig})
 and replace the data $d$ with
 $\dla = \Fla[\kappa^*]$, $S[\kappa]$ with $\Sla[\kappa]$, and $\ul$
 with the solution $\uzl$ of the corresponding least squares problem. That is,
@@ -1349,7 +1349,7 @@ integrable after multiplication by $t$, and
 Since $\|T\dl\| \le C\|\dl\|$, the estimates \ref{eqn:step2} and \ref{eqn:step3} implies
 \[
   \|T ((\Sla)^T\Slb + (\Slb)^T\Sla + (\Slb)^T\Slb)\ul\| \le
-  C\lambda^{3}\|\ul\| \le C\lambda^{\frac{5}{2}} \|dl\|
+  C\lambda^{3}\|\ul\| \le C\lambda^{\frac{5}{2}} \|\dl\|
 \]
 Adding up, the right-hand side of equation \ref{eqn:step4} is bounded
 by
