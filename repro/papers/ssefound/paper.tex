@@ -1,0 +1,331 @@
+\title{Mapping Properties of Surface Source Extension}
+\author{William W. Symes}
+
+\begin{abstract}
+  Abstract goes here.
+\end{abstract}
+
+\section{Symmetric Hyperbolic Systems}
+$k \times  k$ symmetric hyperbolic system: in $\bR^{n+1}$. Suppose that $u \in L^2_{\rm loc}(\bR^{n+1},\bR^k)$ is a weak solution of
+\begin{equation}
+  \label{eqn:shs}
+  (\sum_{i=0}^n A_i\partial_i ) u \in L^2_{\rm loc}(\bR^{n+1},\bR^k)
+\end{equation}
+The coefficieent matrices $A_i \in C^{\infty}(\bR^n, \bR^{k \times k}), i=0,...,n$ are symmetric. 
+
+If $A_j$ is positive definite, then $x_j$ can play the role of time, and the Cauchy problem with initial data $u_0 \in L^2(\bR^n,\bR^k)$  on $x_j=$ constant has a unique weak solution $u \in L^2(\bR^{n+1})^k$ with well-defined $L^2$ traces on any $x_j$ level set (Lax, Taylor). Want to understand traces on other hypersurfaces, to begin with coordinate hypersurfaces, wlog $x_0=0$.
+
+Notation:$x_0=t$, $\partial_t=\partial_0$, $\bx = (x_1,...,x_n)$, $D=(\partial_1,...\partial_n)$
+\[
+  K(t,\bx,D)= \sum_{i=1}^n A_i(t,\bx)\partial_i, \, M(t,\bx) = A_0(t,\bx).
+\]
+If $M$ is positive definite, trace properties coverd by standard theory (above). Let $\Pi_0(t,\bx)$ = projection on null space $V_0$ of $M(t,\bx)$, $\Pi_1=I-\Pi_0$ = projection on range $V_1$. Denote the rank of $M$ by $l={\rm dim} V_1$ Then
+\[
+  M\partial_t u + Ku = \Pi_1 M \partial_t \Pi_1 u + \sum_{\alpha,\beta=0,1} \Pi_{\alpha}K\pi_{\beta}u + \mbox{ l.o.t. }
+\]
+Since the ranges are orthogonal,
+\begin{eqnarray}
+  \Pi_1 M \partial_t \Pi_1 u + \Pi_1 K \Pi_1 u + \Pi_1 K \Pi_0 u & \in & L^2_{\rm loc}(\bR^{n+1},V_1),
+  \label{eqn:decomp1} \\
+  \Pi_0 K \Pi_0 u + \Pi_0 K \Pi_1 u & \in & L^2_{\rm loc}(\bR^{n+1},V_0)
+  \label{eqn:decomp0}
+\end{eqnarray}
+Set $K_{\alpha,\beta} = \Pi_{\alpha}K\Pi_{\beta}$.
+
+Main assumption: for all $t \in \bR, (\bx,\xi) \in T^*(\bR^n)\setminus \{0\}$, $K_{0,0}(t,\bx,\xi)$ is invertible on $V_0$.
+
+% Suppose that $E \in OPS^1(\bR^{n+1})$ is scalar, $Eu \in H^1_{\rm loc}(\bR^{n+1})$. Denote by $i(t):\{t\} \times \bR^n \rightarrow \bR^{n+1}$ the embedding. contained in $i(0)^*(ES(E))$, and that and
+
+% Suppose that $\Gamma_0, \Gamma \subset T^*(\bR^n)$ are conic open sets with $\overbar{\Gamma_0 \subset \Gamma$ and $\delta t >0$. Assume that  that for $|t|\le \delta t$ and $(\bx,\xi) \in Gamma$, $K_{00}(0,\bx,\xi)$ is invertible as a map $V_0 \rightarrow V_0$.
+Let  $L_{00}(t,\bx,\xi) \in C^{\infty}(\bR, S^{-1}(\bR^n))$ be inverse to $K_{0,0}(t,\bx,\xi)$ on $V_0$: that is,
+\[
+  K_{0,0}(t,\bx,\xi)L_{0,0}(t,\bx,\xi) v=v=L_{0,0}(t,\bx,\xi)K_{0,0}(t,\bx,\xi)v
+\]
+for all $v \in V_0$. Construct $L_{0,0}$ to be homogeneous of degree -1 outside of a neighborhood of $\xi=0$, with $V_1$ an invariant subspace for $L_{0,0}(t,\bx,\xi)$ on which it vanishes. It follows that $L_{0,0}$ is symmetric, and that
+\[
+  \Pi_0 u - L_{0,0}K_{0,0}\Pi_u = \Pi_0 u - L_{0,0}K_{0,0}u = \Pi_0 u + L_{0,0}K_{0,1}u \in H^{-1}_{\rm loc}(\bR^{n+1})^k
+\]
+so
+\[
+  K_{1,0}u + K_{1,0}L_{0,0}K_{0,1}u \in L^2 _{\rm loc}(\bR^{n+1})^k
+\]
+Define
+\[
+  \tilde{K} = K_{11} - K_{10}L_{00}K_{01}.
+\]
+Then \ref{eqn:decomp1} can be rewritten
+\begin{equation}
+  \label{eqn:shs1}
+  M\partial_t u_1 + \tilde{K}u_1 \in L^2_{\rm loc}(\bR^{n+1},V_1)
+\end{equation}
+Note that for each $t \in \bR, (\bx,\xi) \in T^*(\bR^n)$, both $V_0$ and $V_1$ are invariant subspaces of $\tilde{K}(t,\bx,\xi)$, and $V_0 \subset {\rm ker}(\tilde{K}(t,\bx,\xi)$. Also, $M$ is invertible when restricted to $V_1 = {\rm Rng} M = {\rm Rng } \Pi_1$ , but not (necessarily) positive definite.
+  
+Diagonalization: for $(t,\bx,\tau,\xi) \in T^*(\bR^n)$, define the restricted characteristic polynomial
+\[
+  {\cal C}(t,\bx,\tau,\xi) = \det (M(t,\bx)\tau + \tilde{K}(t,\bx,\xi) )= 0
+\]
+Since $V_0$ and $V_1$ are invariant subspaces of the matrix in parentheses, and $V_0$ is (contained in) its null space, there are at most $l={\rm dim}V_1$ non-zero roots in $\tau$ for $\xi \ne 0$.
+
+Choose a conic submanifold $\gamma \subset T^*(\bR^n)$, so that for $|t| \le \delta t, (\bx,\xi) \in \gamma$ there are exactly $m \le l$ distinct real roots $\tau$ of ${\cal C}(t,\bx,\tau,\xi)$. Denote these by $\tau_i(t,\bx,\xi), i=1,...,m$.
+
+Choose a conic $\gamma_1 \subset T^*(\bR^n)$ so that $\bar{\gamma_1} \subset \gamma$, and $Q \in OPS^0(\bR^n)$ with $ES(Q) \subset \gamma$, $Q(\bx,\xi) =1$ for $(\bx,\xi)\in \gamma_1$.
+
+Let ${\cal N} = $ normal bundle of $x_0=0$ and $\Gamma \subset T^*(\bR^n)$ for which $\Gamma \cap {\cal N} = \emptyset$.
+
+Assume that $u \in L^2(\bR^{n+1}) \cap H^1_{\rm loc}(\Gamma \cap \Pi_{\cal N}^{-1}(\gamma_1^C))$.
+
+
+
+For each $\tau_i, i =1,...m$, choose $U_i(t,\bx,\xi) \in C^{\infty}(\bR \times T^*(\bR^n),V_1(t,\bx))$,  so that
+\[
+  \tau_i M(\bx) U_i(t,\bx,\xi) + \tilde{K}(t,\bx,\xi) U_i(t,\bx,\xi)=0, \, i=1,..,m.
+\]
+$U_1,...,U_m$ span a subspace $\tilde{V}_1(t,\bx,\xi)$. Scale $U_i$ so that $|U_i(t,\bx,\xi)| = |\xi|$.
+
+Note that $\tau_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 1 in $\xi$ and smooth in $\bx$, $U_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 0 in $\xi$, smooth in $\bx$. So both are symbol-valued functions, of orders 1 and 0 respectively. Since the $U$'s must be orthogonal, $U_i^TU_j = |\xi|^2\delta_{ij}$.
+
+Suppose first that $m=l$, that is, that $\tilde{V}_1=V_1$. Then $\{U_i(t,\bx,\xi):i=1,..,l\}$ is a basis for $V_1(t,\bx)$ for each $(t,\bx,\xi \in \Gamma$. Set $u_{1,i}(t,\bx) = U_i(t,\bx,D_x)^Tu_1$. Then for any $w \in L^2(\bR^{n+1},V_1)$
+\[
+  \sum_{i=1}^l U_i(t,\bx,D)U_i(t,\bx,D)^Tw(t,\bx) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi} U_i(t,\bx,\xi)U_i(t,\bx,\xi)^T\hat{w}(t,\xi) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi}
+\]
+\[
+  \tilde{K}(t,\bx,D)u_{1,i} = \tilde{K}(t,\bx,D)U_i(t,\bx,D)^T
+\]
+\[
+  M(\bx)\partial_t u_{1,i}(t,\bx) = -\tilde{K}(t,\bx,D)
+\]
+
+
+
+
+
+\section{2D Acoustics}
+
+\begin{eqnarray}
+  \frac{1}{\kappa}\partial_t p + \nabla \cdot \bv & = & 0, \nonumber \\
+  \rho \partial_t \bv + \nabla p & = & 0.
+  \label{eqn:awe}                                     
+\end{eqnarray}
+
+Set $u=(p,v_x,v_z), \bx=(t,x), \xi=(\omega,\xi_x), z \mapsto t$. Then \ref{eqn:awe} takes the form \ref{eqn:shs} with
+\[
+  M =
+  \left(
+    \begin{array}{ccc}
+      0 & 0 & 1\\
+      0 & 0 & 0\\
+      1 & 0 & 0
+    \end{array}
+  \right),
+  A_1 ={\rm diag}\left(\frac{1}{\kappa},\rho,\rho\right),
+  A_2 =
+ \left(
+    \begin{array}{ccc}
+      0 & 1 & 0\\
+      1 & 0 & 0\\
+      0 & 0 & 0
+    \end{array}
+  \right),
+\]
+So $V_0={\rm span}(\{e2\}),\, V_1={\rm span}(\{e1,e3\}), \Pi_0 = {\rm diag}(0,1,0)$ 
+\[
+  K(t,\bx,\xi) =  A_1(\bx) \xi_1 + A_2(\bx) \xi_2 =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & \xi_x & 0 \\
+      \xi_x & \rho(\bx) \omega & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right)
+\]
+whence $K_{0,0} = {\rm diag}(0, \rho(\bx) \omega, 0)$.
+\[
+  K_{1,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & 0 & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right),
+\]
+\[
+  K_{0,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      0 & \xi_x & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & 0
+    \end{array}
+  \right)
+\]
+and $K_{1,0} = K_{0,1}^T$.
+  
+Choose $\omega_0>0$, $\phi \in C^{\infty}(\bR)$ so that $\phi(\omega) = 1$ for $\omega> 2\omega_0$, $=0$ for $\omega < \omega_0$. Set
+\[
+  L_{0,0}= {\rm diag}\left(0, \frac{\phi(|\omega|)}{\rho(\bx) \omega}, 0\right)
+\]
+Then $L_{0,0}K_{0,0} = I$ restricted to $V_0$ and away from zero frequency, and
+\[
+  \tilde{K} = K_{1,1} - K_{1,0}L_{0,0}K_{0,1} =
+  \left(
+    \begin{array}{ccc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} & 0 & 0\\
+      0 & 0  & 0 \\
+      0 & 0 & \rho \omega
+    \end{array}
+  \right).
+\]
+Since $V_1={\rm span}(e_1,e_3)$, the determinant of the restricted characteristic polynomial is obtained by dropping the second row and column:
+\[
+  \det
+  \left(
+    \begin{array}{cc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} &  \xi_z\\
+      \xi_z &  \rho \omega
+    \end{array}
+  \right).
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2\phi(|\omega|) - \xi_z^2
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2 - \xi_z^2 \mbox{ mod }  S^{-\infty}
+\]  
+as expected. So a maximal choice for $\Gamma$ would be
+\[
+  \Gamma = \{(z,(t,x),(\omega,\xi_x)): c(z,x)|\xi_x| < |\omega|\}.
+\]
+\section{2D Elasticity}
+
+Velocity, stress, state vector:
+\[
+  \bv = \left(
+    \begin{array}{c}
+      v_1 \\
+      v_2
+    \end{array}
+  \right), \,
+  \sigma = \left(
+    \begin{array}{c}
+      \sigma_{11} \\
+      \sigma_{12} \\
+      \sigma_{21} \\
+      \sigma_{22}
+    \end{array}
+  \right), \, 
+  u = \left(
+    \begin{array}{c}
+      \sigma\\
+      \bv
+    \end{array}
+  \right)
+\]
+Symmetry of stress: $\sigma_{12}=\sigma_{21}$. Compliance tensor (inverse of Hooke tensor):
+\[
+  C =\left(
+    \begin{array}{cccc}
+      c_{1111} &  c_{1112} &  c_{1121} &  c_{1122} \\
+      c_{1211} &  c_{1212} &  c_{1221} &  c_{1222} \\
+      c_{2111} &  c_{2112} &  c_{2121} &  c_{2122} \\
+      c_{2211} &  c_{2212} &  c_{2221} &  c_{2222} \\
+    \end{array}
+  \right)
+\]
+Symmetries: $C_{ijkl}=C_{klij}, C_{ijkl}=C_{jikl}=C_{ijlk}$. Density = $\rho$
+
+Elastodynamics:
+\begin{eqnarray}
+  \label{eqn:const}
+  C \partial_ t \sigma & = & \frac{1}{2}(\nabla \bv + \nabla \bv^T) \\
+  \label{eqn:mombal}
+  \rho \partial_t \bv & = & \nabla \cdot \sigma
+\end{eqnarray}
+
+Matrix representation: set
+\[
+  B_1=\left(
+    \begin{array}{cccc}
+      1 & 0 & 0 & 0 \\
+      0 & \frac{1}{2} & \frac{1}{2} & 0
+    \end{array}
+  \right),\,
+  B_2=\left(
+    \begin{array}{cccc}
+      0 & \frac{1}{2} & \frac{1}{2} & 0 \\
+      0 & 0 & 0 & 1
+    \end{array}
+  \right)
+\]
+and
+\[
+  A_0 = \left(
+    \begin{array}{cc}
+      C & 0 \\
+      0 & \rho I
+    \end{array}
+  \right), \,
+  A_j = -\left(
+    \begin{array}{cc}
+      0 & B_j^T \\
+      B_j & 0
+    \end{array}
+  \right), \, j=1,2
+\]
+
+Then the elastodynamics equations \ref{eqn:const}, \ref{eqn:mombal} are equivalent to
+\[
+  (A_0\partial_0 + A_1 \partial_1 + A_2 \partial_2)u =0.
+\]
+
+$u = (\sigma, \bv)^T \in \bR^6$ is a null vector for $A_2$ iff $B_2\bv = 0$ and $B_2^T \sigma=$, that is, $\bv=0$ and $\sigma_{12}=\sigma_{21}=\sigma_{22} = 0$. Thus $U_0= \mbox{ker }A_2 = \mbox{span } \{\be_1\}$ and  $U_1 = \mbox{rng }A_2 = \mbox{span }\{\be_j: 2\le j \le 6\}$, and $\Pi_0 = \mbox{diag}(1,0,0,0,0,0)$, $\Pi_1 = I-\Pi_0$.
+
+Eliminating zero rows and columns, equation \ref{eqn:shsnull1} for $u_1 = (\sigma_{12}, \sigma_{21}, \sigma_{22}, v_1, v_2)^T$ reads
+\begin{eqnarray}
+  \frac{1}{2}\partial_2v_1 &=& -((C \partial_0 \sigma)_{21} + \frac{1}{2}\partial_1v_2)\\
+  \partial_2 v_2 &=& -(C \partial_0 \sigma)_{41}\\
+  \partial_2 \sigma_{12} &=& -(\rho \partial_0v_1)
+\end{eqnarray}
+
+Thus
+\begin{eqnarray}
+  A_{000} &=& \Pi_0 A_0 \Pi_0 = \mbox{ diag}(c_{1111},0,0,0,0,0) \nonumber \\
+  A_{100} &=& \Pi_0 A_1 \Pi_0 = 0 \nonumber \\
+  A_{001} &=& \Pi_0 A_0 \Pi_1 =
+              \left(
+              \begin{array}{cccccc}
+                0 & c_{1112} & c_{1121} & c_{1122} & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\                
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0
+              \end{array}
+                                    \right) \nonumber \\
+  A_{101} &=& \Pi_0 A_1 \Pi_1 =
+                            \left(
+              \begin{array}{cccccc}
+                0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\                
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0
+              \end{array}
+                                    \right)
+                                    \label{eqn:ela0}
+\end{eqnarray}
+So equation \ref{eqn:rel01} reduces to
+\[
+  c_{1111}\sigma_{11} = -(c_{1112}\sigma_{12} + c_{1121}\sigma_21 + c_{1122}\sigma_{22} + \partial_1 \int_{-\infty}^t v_1)
+\]
+This is just the first row of equation \ref{eqn:const}, integrated in time! Now apply $\partial_2$ to both sides to obtain the missing equation.
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}
