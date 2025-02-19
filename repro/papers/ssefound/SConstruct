@@ -18,15 +18,19 @@ include=r'''
 \newcommand{\by}{\mathbf{y}}
 \newcommand{\bz}{\mathbf{z}}
 \newcommand{\bh}{\mathbf{h}}
+\newcommand{\be}{\mathbf{e}}
 \newcommand{\bR}{\mathbf{R}}
+\newcommand{\lxr}{\langle \xi \rangle}
+\newcommand{\ldr}{\lambda D \rangle}
 
 \newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
 \newtheorem{theorem}{Theorem}
 \newtheorem{alg}{Algorithm}
 \newtheorem{remark}{Remark}
 \newtheorem{cor}{Corollary}
 \newtheorem{example}{Example}
-\newtheorem{definition}{Defenition}
+\newtheorem{definition}{Definition}
 
 ''',
 color='ALL'
