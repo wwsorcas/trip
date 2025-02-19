@@ -327,5 +327,102 @@ So equation \ref{eqn:rel01} reduces to
 \]
 This is just the first row of equation \ref{eqn:const}, integrated in time! Now apply $\partial_2$ to both sides to obtain the missing equation.
 
+\append{G\r{a}rding Interlude}
+
+In the following $U$ is an open set in $\bR^n$.
+
+\begin{definition}
+  A $k \times k$ valued symbol $M(\bx,\xi) \in OPS^m(U)$ is {\em elliptic} iff $|\xi|^{-m}M(\bx,\xi)$ is uniformly invertible for $(\bx,\xi) \in T^*(U) \setminus \{0\}$. That is, there exists $C>0$ so that for all  $(\bx,\xi) \in T^*(U) \setminus \{0\}$, $v \in \bR^k$,
+  \[
+    |M(\bx,\xi)v| \ge C|\xi|^m|v|.
+  \]
+\end{definition}
+
+Connection to defintion V.1.1 in \cite{Tay:81}: concerns the first order system
+\[
+  (\frac{\partial}{\partial y} - K(y,x,D_x))u = 0
+\]
+where $u=u(y,x) \in \bR^k$, $K(y,\cdot,\cdot) \in C^{\infty}(\bR,OPS^1(U))$. According to the cited definition, this system is elliptic iff the principal symbol $K_1(y,x,\xi)$ has no purely imaginary eigenvalues. The symbol of the operator on the LHS above is $i\eta I - K(y,x,\xi)$, which is not the symbol of a $\Psi$DO unless $K$ is differential. However $K$ having no purely imaginary eigenvalues iz equivalent to  $i\eta I - K(y,x,\xi)$ being invertible.
+
+
+\begin{lemma} \label{thm:lema1}
+``Interpolation'' inequality: for any $m, N \in {\bf Z}_+, 0 < \epsilon < 1$,
+\[
+  \lxr^{\frac{m}{2}-1} \le \epsilon^2 \lxr^{\frac{m}{2}} + C^2_{\epsilon,N,m}\lxr^{-N}. 
+\]
+\end{lemma}
+
+\begin{proof}
+ Equivalent to
+\[
+  \lxr^{-1} \le \epsilon^2 + C^2_{\epsilon,N,m}\lxr^{-N-\frac{m}{2}}. 
+\]
+Holds trivially if $\lxr \ge \epsilon^{-2}$. Otherwise $\lxr^{N+\frac{m}{2}-1} \le \epsilon^{-2(N+\frac{m}{2}-1)} \equiv C_{\epsilon,N,m}$.
+\end{proof}
+
+\begin{proposition}
+\label{thm:propa1}(clone of V.6.2 in \cite{Tay:81}): Suppose that $p \in OPS^0(U,\bR^k)$ has a SPD principal symbol $p_0$: there is $C > 0$ so that for sufficiently large $|\xi|$,
+  \[
+    p_0(x,\xi) = p_0(x,\xi)^T, p_0(x,\xi) \ge C
+  \]
+  Then there existss $B \in OPS^0(U,\bR^k)$ so that $P = B^*B \mbox{ mod } OPS^{-\infty}$.
+\end{proposition}
+
+\begin{proof}
+  From the spectral theorem, for each $(x,\xi) \in T^*(U)$, can construct SPD $b_0(x,\xi)$ for which $p_0(x,\xi) = b_0(x,\xi)^2$. Suppose that we have built $b_0,...,b_{j-1}$ with $b_i \in S^{-i}$ homogeneous of degree $-i$ for large $|\xi|$ so that
+  $r_{j}(x,D) = p(x,D) - (b_0(x,D) +...+ b_{j-1}(x,D))^2 \in OPS^{-j}$. Want $b_j \in S^{-j}$ homogeneous of degree $j$ so that
+  \[
+    p(x,D)-(b_0 +...+ b_{j-1}+b_j)^2 = r_{j-1} -  (b_0 +...+ b_{j-1})b_j - b_j((b_0 +...+ b_{j-1}) - b_j^2
+  \]
+  \[
+    = r_{j-1} - (b_0 b_j+b_j b_0) \mbox{ mod } OPS^{-j-1}
+  \]
+  is in $OPS^{j-1}$. This will be the case if the principal symbols match: denoting the principal symbol of $r_{j-1}$ by $r_{j-1,0}$, this requires that
+  \[
+    r_{j-1,0}(x,\xi) = b_0(x,\xi)b_j(x,\xi) + b_j(x,\xi)b_0(x,\xi).
+  \]
+  Since $b_0$ is SPD, the map $a \mapsto b_0a+ab_0$ on $k \times k$ symmetric matrices $a$ is invertible, as its eigenvalues are sums of the eigenvalues of $b_0$. So the above equation has a unique symmetric solution, and the inductive step in the construction of $b \in OPS^0$ is finished.
+\end{proof}
+  
+\begin{theorem}
+  \label{thm:garding}
+  ``G\r{a}rding for systems'': Suppose that $P \in OPS^m(U,\bR^k)$ is elliptic, that is, its principal symbol $p_0$ satisfies 
+\[
+  p_0^*(x,\xi)p_0(x,\xi) \ge C|\xi|^{2m}, \, (x,\xi) \in T^*(U).
+\]
+Then for any $K \subset \subset U$, $N \ge 1$ there exists $C_{K,N} > 0$ so that for $u \in C^{\infty}_0(K)$, 
+\[
+  \|Pu\|^2_0 \ge \frac{C}{2}\|u\|^2_m - C_{K,N}\|u\|^2_{-N}.
+\]
+\end{theorem}
+
+\begin{proof}
+  For any $alpha \in [0,1)$, $\ldr^{-m}P^*P\ldr^{-m} - \frac{C}{2} \in OPS^0$ is self-adjoint  and its principal symbol $\lxr^{-,m}p_0^Tp_0\lxr^{-m} - \frac{C}{2} \in S^0$ is positive semi-definite. Therefore from Proposition \ref{thm:propa1} there exists $B \in OPS^0$ for which
+  \[
+    \ldr^{-m}P^*P\ldr^{-1} - \frac{C}{2} = B^*B \mbox{ mod } OPS^{-\infty}
+  \]
+  or
+  \[
+    P^*P -\frac{C}{2} \ldr^{2m} = \ldr B^*B \ldr \mbox{ mod } OPS^{-\infty}
+  \]
+  So for every $N  \in {\bf Z}_+$ there is $C_{K,N} > 0$ so that for $u \in C_0^{\infty}(K)$,  
+  \[
+    \langle u,P^*P u \rangle \ge \frac{C}{2}\|u\|_m^2 -   C_{K,N}\|u\|^2_{-N}
+  \]
+  
+\end{proof}
+
+\begin{definition} $P \in OPS^m(U,\bR^k)$ is (microlocally) elliptic in the closed conic set $\Gamma \subset T^*(U)$ iff for some $C>0$ its principal symbol $p_0$ satisfies
+  \[
+    p(x,\xi)^*p(x,\xi) \ge C|\xi|^m
+  \]
+\end{definition}
+
+\begin{theorem} Suppose that $P \in OPS^m(U,\bR^k)$ is elliptic in the closed conic $\Gamma \subset T^*(U)$. Then for any $Q \in OPS^m(U,\bR)$ with $ES(Q) \subset \Gamma$, $N \in {\bf Z}_+$, and compact $K \subset \subset U$, there exists $C_Q > 0$ and $C_{Q,K,N} \ge 0$ so that for any $u \in C_0^{\infty}(K)$, 
+  \[
+    \|P(x,D)u\|^2_0  \ge C_Q\|Q(x,D)u\|_0^2 - C_{Q,K,N}\|u\|^2_{-N}.
+  \]
+\end{theorem}
+
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
