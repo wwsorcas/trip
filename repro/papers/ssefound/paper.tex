@@ -397,13 +397,13 @@ Then for any $K \subset \subset U$, $N \ge 1$ there exists $C_{K,N} > 0$ so that
 \end{theorem}
 
 \begin{proof}
-  For any $alpha \in [0,1)$, $\ldr^{-m}P^*P\ldr^{-m} - \frac{C}{2} \in OPS^0$ is self-adjoint  and its principal symbol $\lxr^{-,m}p_0^Tp_0\lxr^{-m} - \frac{C}{2} \in S^0$ is positive semi-definite. Therefore from Proposition \ref{thm:propa1} there exists $B \in OPS^0$ for which
+$\ldr^{-m}P^*P\ldr^{-m} - \frac{C}{2} \in OPS^0$ is self-adjoint  and its principal symbol $\lxr^{-m}p_0^Tp_0\lxr^{-m} - \frac{C}{2} \in S^0$ is positive semi-definite. Therefore from Proposition \ref{thm:propa1} there exists $B \in OPS^0$ for which
   \[
-    \ldr^{-m}P^*P\ldr^{-1} - \frac{C}{2} = B^*B \mbox{ mod } OPS^{-\infty}
+    \ldr^{-m}P^*P\ldr^{-m} - \frac{C}{2} = B^*B \mbox{ mod } OPS^{-\infty}
   \]
   or
   \[
-    P^*P -\frac{C}{2} \ldr^{2m} = \ldr B^*B \ldr \mbox{ mod } OPS^{-\infty}
+    P^*P -\frac{C}{2} \ldr^{2m} = \ldr^m B^*B \ldr^m \mbox{ mod } OPS^{-\infty}
   \]
   So for every $N  \in {\bf Z}_+$ there is $C_{K,N} > 0$ so that for $u \in C_0^{\infty}(K)$,  
   \[
@@ -412,17 +412,109 @@ Then for any $K \subset \subset U$, $N \ge 1$ there exists $C_{K,N} > 0$ so that
   
 \end{proof}
 
-\begin{definition} $P \in OPS^m(U,\bR^k)$ is (microlocally) elliptic in the closed conic set $\Gamma \subset T^*(U)$ iff for some $C>0$ its principal symbol $p_0$ satisfies
+\begin{definition} $P \in OPS^m(U,\bR^k)$ is (microlocally) elliptic in the open conic set $\Gamma \subset T^*(U)$ iff for some $C>0$ and conic neighborhood $\Gamma_1 \supset \bar{\Gamma}$, its principal symbol $p_0$ satisfies
   \[
-    p(x,\xi)^*p(x,\xi) \ge C|\xi|^m
+    p(x,\xi)^*p(x,\xi) \ge C|\xi|^m, \, \xi \in \Gamma_1, \, |\xi| \ge 1.
   \]
 \end{definition}
 
-\begin{theorem} Suppose that $P \in OPS^m(U,\bR^k)$ is elliptic in the closed conic $\Gamma \subset T^*(U)$. Then for any $Q \in OPS^m(U,\bR)$ with $ES(Q) \subset \Gamma$, $N \in {\bf Z}_+$, and compact $K \subset \subset U$, there exists $C_Q > 0$ and $C_{Q,K,N} \ge 0$ so that for any $u \in C_0^{\infty}(K)$, 
+Some results from \cite{BaoSy:91b}. Here $0 \le m \le n$, ${\cal N}$ is the normal bundle of the foliation $\bR^n = \bR^{n-m} \times \bR^m$, typically $x \in \bR^{n-m}$ is the parameter, $y \in \bR^m$ is the trace coordinate.
+
+\begin{lemma}
+\label{thm:prebao}
+Suppose that $k \in {\bf Z}_+$, $n > 0$. Then there exists $C_{k} \ge 0$ so that for $\xi, \eta \in \bR^n$,
+\begin{equation}
+  \label{eqn:pre}
+  (1 + |\xi + \eta|)^{k} \le (1 + |\xi|)^{k} (1 + |\eta|)^{k}
+\end{equation}
+\end{lemma}
+\begin{proof}
+  Obvious for $k = 0$. If equation \ref{eqn:pre} holds for $k \in {\bf Z}_+$, then
   \[
-    \|P(x,D)u\|^2_0  \ge C_Q\|Q(x,D)u\|_0^2 - C_{Q,K,N}\|u\|^2_{-N}.
+    (1 + |\xi + \eta|)^{k+1} \le (1 + |\xi)^{k}(1+ \eta|)^{k}(1+|\xi| + |\eta|)
   \]
-\end{theorem}
+  Since $1+|\xi| + |\eta| \le (1+|\xi|)(1 + |\eta|)$, the induction step is done.
+\end{proof}
+
+\begin{proposition}
+  \label{thm:bao1}
+  Suppose that $B \in \Ci(\bR^{n-m},OPS^0(\bR^m)), H \in OPS^0(\bR^n)$, $H$ is a convolution operator, $\phi \in \Ciz(\bR^n)$,
+  \[
+    ES(H) \cap {\cal N} = \emptyset.
+  \]
+  Then
+  \[
+    B\phi H \in OPS^0(\bR^n)
+  \]
+  and
+  \[
+    ES(B\phi H) \subset \Pi_2^{-1}(ES(B)) \cap ES(H)
+  \]
+\end{proposition}
+
+\begin{proof}
+  For $u \in \Ciz(\bR^n)$,
+  \[
+    {\cal F}_x(Hu)(\xi',y) = \int  d\eta H(\xi',\eta')\hat{u}(\xi',\eta)e^{ i y \eta}
+  \]
+  So
+  \[
+    (P\phi H)u(x,y) = \int d \xi P(x,y,\xi) {\cal F}_x(\phi Hu)(\xi,y)e^{i x\xi}
+  \]
+  \[
+    =\int d \xi' \int d \xi P(x,y,\xi) {\cal F}_x\phi(\xi-\xi',y) {\cal F}_x(Hu)(\xi',y)e^{i x\xi}
+  \]
+  \[
+   =\int d \xi' \int d \xi \int d\eta P(x,y,\xi) {\cal F}_x\phi(\xi-\xi',y) H(\xi',\eta)\hat{u}(\xi',\eta)e^{i x\xi + i y\eta }
+  \]
+  \[
+    =\int d \xi' \int d \xi \int d\eta P(x,y,\xi) {\cal F}_x\phi(\xi-\xi',y) e^{ix(\xi-\xi')}H(\xi',\eta)\hat{u}(\xi',\eta)e^{i x\xi' + i y\eta }
+  \]
+  So the symbol of $Q = P \phi H$ is
+  \[
+    Q(x,y,\xi,\eta) = \int d\xi' P(x,y,\xi') {\cal F}_x\phi(\xi'-\xi,y) e^{i x(\xi'-\xi)}H(\xi,\eta)
+  \]
+  \[
+    = \left(\int d\xi' P(x,y,\xi+\xi') {\cal F}_x\phi(\xi',y) e^{i x\xi'}\right) H(\xi,\eta)
+  \]
+  From the definition of $S^0_{1,0}$, for $(x,y)$ ranging over a compact $K \subset \bR^n$ , and any $\alpha \in {\bf Z}_+^m$, there is $C_{K,|\alpha|} > 0$ so that
+  \[
+    |\partial^{\alpha}_{\xi} P(x,y,\xi)| \le C_{K,|\alpha|}(1 + |\xi|)^{-|\alpha|}
+  \]
+  so for $(x,y) \in K, \alpha=(\alpha_1,\alpha_2) \in {\bf Z}_+^m \times {\bf Z}_+^{n-m}$,
+  \[
+    |\partial_{\xi,\eta}^{\alpha} Q(x,y,\xi,\eta)|
+  \]
+  \[
+    \le \sum_{\alpha_1' \le \alpha_1} \left|\left(\partial_{\xi}^{\alpha_1'}  \int d\xi' P(x,y,\xi+\xi') {\cal F}_x\phi(\xi',y) e^{i x\xi'}\right)\partial_{\xi}^{\alpha_1-\alpha_1'} \partial_{\eta}^{\alpha_2}H(\xi,\eta)       \right|
+  \]
+  \[
+    \le C \sum_{\alpha_1' \le \alpha_1} \left|\left(  \int d\xi' (1 + |\xi+\xi'|)^{-|\alpha_1'|} {\cal F}_x\phi(\xi',y) e^{i x\xi'}\right)\partial_{\xi}^{\alpha_1-\alpha_1'} \partial_{\eta}^{\alpha_2}H(\xi,\eta)       \right|
+  \]
+  Rearranging the conclusion of Lemma \ref{thm:prebao},
+  \[
+    (1 + |\xi + \xi'|)^{-k} \le (1+|\xi|)^k(1+|\xi'|)^{-k},
+  \]
+  so
+  \[
+    |\partial_{\xi,\eta}^{\alpha} Q(x,y,\xi,\eta)| \le C \sum_{\alpha_1' \le \alpha_1} (1 + |\xi|)^{-|\alpha_1'|}|\partial_{\xi}^{\alpha_1-\alpha_1'}\partial_{\eta}^{\alpha_2}H(\xi,\eta) |
+  \]
+  \[
+    \le C \sum_{\alpha_1' \le \alpha_1} (1 + |\xi|)^{-|\alpha_1'|}(1 + |(\xi,\eta)|)^{-|\alpha_1|+|\alpha_1'|-\alpha_2}
+  \]
+  since $H \in S^0_{1,0}(\bR^n)$. From norm equivalence, can replace $|(\xi,\eta)|$ with $|\xi| + |\eta|$   for the price of changing $C$.  So the above is
+  \[
+    \le C \sum_{\alpha_1' \le \alpha_1} (1 + |\xi|)^{-|\alpha_1'|}(1 + |\xi| + |\eta|)^{-|\alpha_1|+|\alpha_1'|-|\alpha_2|}
+  \]
+  \[
+    \le C \sum_{\alpha_1' \le \alpha_1} (1 + |\xi|+ |\eta|)^{-|\alpha_1'|}(1 + |\xi| + |\eta|)^{-|\alpha_1|+|\alpha_1'|-|\alpha_2|}
+  \]
+  \[
+    \le C (1 + |\xi| + |\eta|)^{-|\alpha_1|-|\alpha_2|} \le C(1 + |(\xi,\eta)|)^{-|\alpha|}
+  \]
+  whence $Q \in S^{0}_{1,0}(\bR^n)$.
+    
+\end{proof}
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
