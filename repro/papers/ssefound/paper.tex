@@ -6,166 +6,137 @@
 \end{abstract}
 
 \section{Local Analysis of Surface Source Field}
-$k \times  k$ symmetric hyperbolic system: in $\bR^{n+1}$. Suppose that $u \in L^2_{\rm loc}(\bR^{n+1},\bR^k)$ is a weak solution of
+$k \times  k$ symmetric hyperbolic system: in $\bR^{n+1}$, $\Omega
+\subset \bR^n, \Gamma_r, \Gamma_s \subset \partial \Omega$. $\Gamma_r$
+is receiver locus, $\Gamma_s$ is sourcee locus. Assume that $\Gamma_s$
+is a subset of a coordinate neighborhood in  which coordinates
+$(z,\bx) \in \bR^{n-1} \times \bR$ are
+chosen so that $\Gamma_i\subset \{(z,\bx): z=z_i\}, i=s,r$ with $z_s <
+z_r$.
+
+Assume $M, A_1,...,A_{n-1}, L \in C^{\infty}(\bR^n, \bR^{k\times k})$
+are symmetric and $M$ is positive-definite.
+
+Let $\chi \in C^{\infty}(\Gamma_s \times \bR, \bR^k)$.
+Develop an asymptotic solution of
 \begin{equation}
   \label{eqn:shs}
-  (\sum_{i=0}^n A_i\partial_i ) u \in L^2_{\rm loc}(\bR^{n+1},\bR^k)
+  (M\partial_t + \sum_{i=1}^{n-1}A_i \partial_{x_i} + L \partial_z)
+  u = 0,\, u(t,z,\bx_s) = \chi(t,\bx)e^{i\omega(t + \bx \cdot \xi_0)}
 \end{equation}
-The coefficieent matrices $A_i \in C^{\infty}(\bR^n, \bR^{k \times
-  k}), i=0,...,n$ are symmetric, $A_0$ is positive definite.
+of the form
+\begin{equation}
+  \label{eqn:hfa}
+  u(t,z,\bx) \approx e^{i\omega(t + \psi(z,\bx))} \sum_{n=0}^{\infty}
+  (i\omega)^{-n}a^n(t,z,\bx) U^n(z,\bx)
+\end{equation}
+in which $a^n, n=0,...$ is scalar and $U^n, n=0,...$ is in $\bR^k$. 
 
-Notation:$x_0=t$, $\partial_t=\partial_0$, $\bx = (x_1,...,x_{n-1})$,
-$\partial_x=(\partial_1,...\partial_{n-1})$, $x_n=z$, $\partial_z =
-\partial_{n}$, $M=A_0(\bx)$, $A = (A_1,...,A_{n-1}$, $L=A_{n}$.
-
-Asymptotic solution 
-\[
-u(t,\bx,z) \approx e^{i\omega(t + \psi(\bx,z))} U(\bx,z)\sum_{n=0}^{\infty}
-a_n(t,\bx,z)
-\]
 Substitute first term in equation \ref{eqn:shs}, obtain
 \[
-(M\partial_t + A\cdot \partial_x + L \partial_z)u(t,\bx,z) =
+(M\partial_t + A\cdot \partial_x + L \partial_z)u(t,z,\bx) =
 \]
 \[
- e^{i\omega(t + \psi(\bx,z))}\left[ i\omega (M + A
-\cdot \partial_x \psi(\bx,z) + L \partial_z
-\psi(t,\bx,z))U(\bx,z)a_0(t,\bx,z) \right.
+ e^{i\omega(t + \psi(z,\bx))}\left[ i\omega (M + A
+\cdot \partial_x \psi(z,\bx) + L \partial_z
+\psi(z,\bx))U(z,\bx)a^0(t,z,\bx) \right.
 \]
 \[
-\left. + M(\bx,z) U(\bx,z) \partial_t a_0(t,\bx,z) + \partial_x
-(a_0(t,\bx,z) U(\bx,z))\cdot A + L\partial_z (a_0(t,\bx,z)U(\bx,z))\right]= 0
++ M(z,\bx) U^0(z,\bx) \partial_t a^0(t,z,\bx) + A(z,\bx)\cdot \partial_x
+(a^0(t,z,\bx) U^0(z,\bx))
 \]
-Assume $\Gamma$ is an open neighborhood of $0$ in $\bR^{n-1}$, $Z>0$ so that for each
-$\xi \in \Gamma, |\xi|=1$ and $|z| < Z$, there are $l$ independent
-solutions
-$(\zeta_1(\bx,z,\xi),U_1(\bx,z,\xi)),...,(\zeta_l(\bx,z,\xi), U_l(\bx,z,\xi))$ of
 \[
- (M(\bx,z) + A\cdot \xi + L \zeta) U=0.
+ \left.   + L(z,\bx)\partial_z (a^0(t,z,\bx)U^0(z,\bx))\right]
 \]
-The $U$s are orthogonal, and might as well normalize by
-$|U|=1$. For each $\xi \in \Gamma$, construct by method of characteristics solutions
+\[
++  e^{i\omega(t + \psi(z,\bx))}\left[ (M + A
+\cdot \partial_x \psi(z,\bx) + L \partial_z
+\psi(z,\bx))U^1(z,\bx)a^1(t,z,\bx) \right.
+\]
+\[
+  + (i\omega)^{-1} (M(z,\bx) U^1(z,\bx) \partial_t a^1(t,z,\bx)
+    + A(z,\bx)\cdot \partial_x  (a^1(t,z,\bx) U^1(z,\bx))
+\]
+\begin{equation}
+  \label{eqn:series}
+  \left.   + L(z,\bx)\partial_z (a^1(t,z,\bx)U^1(z,\bx)))\right]
++...
+\end{equation}
+
+Assume $\Sigma$ is an open neighborhood of the zero section in
+$T^*\Gamma_s$, so that for each $(\bx,\xi) \in \Sigma$, $|\xi|$ is
+sufficiently small that $M + A\cdot \xi$ is positive
+definite. Further, for $z$ sufficiently small,
+there are $l$ independent solutions of 
+$(\zeta_1(z,\bx,\xi),U^0_1(z,\bx,\xi)),...,(\zeta_l(z,\bx,\xi), U^0_l(z,\bx,\xi))$ of
+\begin{equation}
+  \label{eqn:nullsp}
+ (M + A\cdot \xi + L \zeta) U^0=0, \, \zeta\ne 0.
+\end{equation}
+The $U^0$s are orthogonal, and might as well normalize by
+$|U^0|=1$. For each $(\bx,\xi) \in \Gamma$, construct by method of characteristics solutions
 $\psi_1,...,\psi_l$ of 
-\[
-\partial_z \psi_i(\bx,z,\xi) = \zeta_i(\bx,z,\partial_x\psi(\bx,z,\xi))
-\]
+\begin{equation}
+  \label{eqn:eik}
+\partial_z \psi_i(z,\bx,\xi) = \zeta_i(z,\bx,\partial_x\psi(z,\bx,\xi))
+\end{equation}
 with $\psi_l(\bx,0,\xi) =\xi \cdot x$. The corresponding Hamiltonian
 system for $(\bx_i(z;\bx_0,\xi_0),\xi_i(z;\bx_0,\xi_0))$ with
 $(\bx_0,\xi_0) \in \Gamma$ is
 \begin{equation}
   \label{eqn:zetahe1}
-  \frac{d\bx_i}{dz} = - \partial_{\xi}\zeta_i(\bx_i,z,\xi_i),\,
+  \frac{d\bx_i}{dz} = - \partial_{\xi}\zeta_i(z,\bx_i,\xi_i),\,
   \bx_i(0;\bx_0,\xi_0) = \bx_0;
 \end{equation}
+
 \begin{equation}
   \label{eqn:zetahe2}
   \frac{d\xi_i}{dz}
-  = \partial_x\zeta_i(\bx_i,z,\xi_i),\, \xi_i(0;\bx_0,\xi_0) = \xi_0.
+ = \partial_x\zeta_i(z,\bx_i,\xi_i),\, \xi_i(0;\bx_0,\xi_0) = \xi_0.
 \end{equation}
-and
+
+From the relation \ref{eqn:hsol}, 
 \[
-  \psi_l(\bx_i(z;\bx_0,\xi_0),z,\xi_i(z;\bx_0,\xi_0))= \bx_0\cdot\xi_0
+  \psi_l(\bx_i(z;\bx_0,\xi_0),z,\xi_i(z;\bx_0,\xi_0))= \bx_0\cdot\xi_0 
 \]
 \begin{equation}
   \label{eqn:psihe}
-- \int_0^z ds \xi(s;\bx_0,\xi_0)\cdot \partial_{\xi}\zeta_i(\bx_i(s;\bx_0,\xi_0),s,\xi_i(s;\bx_0,\xi_0))
++ \int_{z_s}^z ds [\zeta(\bx_i(s;\bx_0,\xi_0),s, \xi(s;\bx_0,\xi_0)) - \xi(s;\bx_0,\xi_0)\cdot \partial_{\xi}\zeta_i(\bx_i(s;\bx_0,\xi_0),s,\xi_i(s;\bx_0,\xi_0))]
 \end{equation}
 
+As previously noted, $\zeta_i \ne 0$ if $\Sigma$ is chosen
+sufficiently small. Enumerate the $\zeta$s so that $zeta_1,.../\zeta_m
+< 0, \zeta_{m+1},...,\zeta_l > 0$. Then from the eikonal equation
+\ref{eqn:eik}, the time $t$ along equal phase surfaces $t +
+\psi_i(z,\bx_i(z,\bx_0,\xi_0),\xi_i(z,\bx_0,\xi_0)) = \mbox{ const}$
+increases for $i=1,...,m$, decreases for $i=m+1,...,l$.
 
-$\Pi_0$ = projection on null space $V_0$ of $M(t,\bx)$, $\Pi_1=I-\Pi_0$ = projection on range $V_1$. Denote the rank of $M$ by $l={\rm dim} V_1$ Then
-
-\section{Symmetric Hyperbolic Systems}
-
-If $A_j$ is positive definite, then $x_j$ can play the role of time, and the Cauchy problem with initial data $u_0 \in L^2(\bR^n,\bR^k)$  on $x_j=$ constant has a unique weak solution $u \in L^2(\bR^{n+1})^k$ with well-defined $L^2$ traces on any $x_j$ level set (Lax, Taylor). Want to understand traces on other hypersurfaces, to begin with coordinate hypersurfaces, wlog $x_0=0$.
-
-Notation:$x_0=t$, $\partial_t=\partial_0$, $\bx = (x_1,...,x_n)$, $D=(\partial_1,...\partial_n)$
+% Suppose that $supp \chi \subset \{(\bx,t): t > 0\}$.
+So much for the first term in the RHS of equation
+\ref{eqn:series}. The second and third terms are of order zero in
+$i\omega$, hence should cancel. However the matrix in the third term
+is not invertible in view of the relation \ref{eqn:nullsp}. Therefore
+the second term must be orthogonal to the kernel of this matrix, which
+since the matrix is symmetric simply means in its orthogonal to $U^0$.
+That is,
 \[
-  K(t,\bx,D)= \sum_{i=1}^n A_i(t,\bx)\partial_i, \, M(t,\bx) = A_0(t,\bx).
+U^0(z,\bx) \cdot (M(z,\bx) U^0(z,\bx) \partial_t a^0(t,z,\bx) + A(z,\bx)\cdot \partial_x
+(a^0(t,z,\bx) U^0(z,\bx))
 \]
-If $M$ is positive definite, trace properties coverd by standard theory (above). Let $\Pi_0(t,\bx)$ = projection on null space $V_0$ of $M(t,\bx)$, $\Pi_1=I-\Pi_0$ = projection on range $V_1$. Denote the rank of $M$ by $l={\rm dim} V_1$ Then
+\[+ L(z,\bx)\partial_z
+  (a^0(t,z,\bx)U^0(z,\bx))) = 0,
+\]
+or
 \[
-  M\partial_t u + Ku = \Pi_1 M \partial_t \Pi_1 u + \sum_{\alpha,\beta=0,1} \Pi_{\alpha}K\Pi_{\beta}u + \mbox{ l.o.t. }
+ (b_t \partial_t + b_x \cdot \partial_x + b_z \partial_z)
+ a^0 + c a^0 = 0
 \]
-Since the ranges are orthogonal,
-\begin{eqnarray}
-  \Pi_1 M \partial_t \Pi_1 u + \Pi_1 K \Pi_1 u + \Pi_1 K \Pi_0 u & \in & L^2_{\rm loc}(\bR^{n+1},V_1),
-  \label{eqn:decomp1} \\
-  \Pi_0 K \Pi_0 u + \Pi_0 K \Pi_1 u & \in & L^2_{\rm loc}(\bR^{n+1},V_0)
-  \label{eqn:decomp0}
-\end{eqnarray}
-Set $K_{\alpha,\beta} = \Pi_{\alpha}K\Pi_{\beta}$.
-
-Main assumption: for all $t \in \bR, (\bx,\xi) \in T^*(\bR^n)\setminus \{0\}$, $K_{0,0}(t,\bx,\xi)$ is invertible on $V_0$.
-
-% Suppose that $E \in OPS^1(\bR^{n+1})$ is scalar, $Eu \in H^1_{\rm loc}(\bR^{n+1})$. Denote by $i(t):\{t\} \times \bR^n \rightarrow \bR^{n+1}$ the embedding. contained in $i(0)^*(ES(E))$, and that and
-
-% Suppose that $\Gamma_0, \Gamma \subset T^*(\bR^n)$ are conic open sets with $\overbar{\Gamma_0 \subset \Gamma$ and $\delta t >0$. Assume that  that for $|t|\le \delta t$ and $(\bx,\xi) \in Gamma$, $K_{00}(0,\bx,\xi)$ is invertible as a map $V_0 \rightarrow V_0$.
-Let  $L_{00}(t,\bx,\xi) \in C^{\infty}(\bR, S^{-1}(\bR^n))$ be inverse to $K_{0,0}(t,\bx,\xi)$ on $V_0$: that is,
+where
 \[
-  K_{0,0}(t,\bx,\xi)L_{0,0}(t,\bx,\xi) v=v=L_{0,0}(t,\bx,\xi)K_{0,0}(t,\bx,\xi)v
+  b_t = U^0 \cdot M U^0, b_{x,i} = U^0 \cdot A_i U^0, b_z = U^0 \cdot
+  L U_0
 \]
-for all $v \in V_0$. Construct $L_{0,0}$ to be homogeneous of degree -1 outside of a neighborhood of $\xi=0$, with $V_1$ an invariant subspace for $L_{0,0}(t,\bx,\xi)$ on which it vanishes. It follows that $L_{0,0}$ is symmetric, and that
-\[
-  \Pi_0 u - L_{0,0}K_{0,0}\Pi_u = \Pi_0 u - L_{0,0}K_{0,0}u = \Pi_0 u + L_{0,0}K_{0,1}u \in H^{1}_{\rm loc}(\bR^{n+1})^k
-\]
-so
-\[
-  K_{1,0}u + K_{1,0}L_{0,0}K_{0,1}u \in L^2 _{\rm loc}(\bR^{n+1})^k
-\]
-Define
-\[
-  \tilde{K} = K_{11} - K_{10}L_{00}K_{01}.
-\]
-Then equation \ref{eqn:decomp1} can be rewritten
-\begin{equation}
-  \label{eqn:shs1}
-  M\partial_t u_1 + \tilde{K}u_1 \in L^2_{\rm loc}(\bR^{n+1},V_1)
-\end{equation}
-Note that for each $t \in \bR, (\bx,\xi) \in T^*(\bR^n)$, both $V_0$ and $V_1$ are invariant subspaces of $\tilde{K}(t,\bx,\xi)$, and $V_0 \subset {\rm ker}\tilde{K}(t,\bx,\xi)$. Also, $M$ is invertible when restricted to $V_1 = {\rm Rng} M = {\rm Rng } \Pi_1$ , but not (necessarily) positive definite.
-  
-Restricted determinant: if $V$ is an invariant subspace of $A$, then ${\rm det}_{V} A$ is the determinant of the matrix of $A$ in any orthonormal basis of $V$.
-For $(t,\bx,\tau,\xi) \in T^*(\bR^n)$, define the restricted characteristic polynomial
-\[
-  {\cal C}(t,\bx,\tau,\xi) = {\rm det}_{V_1} (M(t,\bx)\tau + \tilde{K}(t,\bx,\xi) )= 0
-\]
-Since $V_0$ and $V_1$ are invariant subspaces of the matrix in parentheses, and $V_0$ is (contained in) its null space, there are at most $l={\rm dim}V_1$ non-zero roots in $\tau$ for $\xi \ne 0$.
-
-Choose a conic submanifold $\gamma \subset T^*(\bR^n)$, so that for $|t| \le \delta t, (\bx,\xi) \in \gamma$ there are exactly $m \le l$ distinct real roots $\tau$ of ${\cal C}(t,\bx,\tau,\xi)$. Denote these by $\tau_i(t,\bx,\xi), i=1,...,m$.
-
-Choose a conic $\gamma_1 \subset T^*(\bR^n)$ so that $\bar{\gamma_1} \subset \gamma$, and $Q \in OPS^0(\bR^n)$ with $ES(Q) \subset \gamma$, $Q(\bx,\xi) =1$ for $(\bx,\xi)\in \gamma_1$.
-
-Let ${\cal N} = $ normal bundle of $x_0=0$ and $\Gamma \subset T^*(\bR^n)$ for which $\Gamma \cap {\cal N} = \emptyset$.
-
-Assume that $u \in L^2(\bR^{n+1}) \cap H^1_{\rm loc}(\Gamma \cap \Pi_{\cal N}^{-1}(\gamma_1^C))$.
-
-
-
-For each $\tau_i, i =1,...m$, choose $U_i(t,\bx,\xi) \in C^{\infty}(\bR \times T^*(\bR^n),V_1(t,\bx))$,  so that
-\[
-  \tau_i M(\bx) U_i(t,\bx,\xi) + \tilde{K}(t,\bx,\xi) U_i(t,\bx,\xi)=0, \, i=1,..,m.
-\]
-$U_1,...,U_m$ span a subspace $\tilde{V}_1(t,\bx,\xi)$. Scale $U_i$ so that $|U_i(t,\bx,\xi)| = 1$.
-
-Note that $\tau_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 1 in $\xi$ and smooth in $\bx$, $U_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 0 in $\xi$, smooth in $\bx$. So both are symbol-valued functions, of orders 1 and 0 respectively. Since the $U$'s must be orthogonal, $U_i^TU_j = \delta_{ij}$.
-
-Suppose first that $m=l$, that is, that $\tilde{V}_1=V_1$. Then $\{U_i(t,\bx,\xi):i=1,..,l\}$ is a basis for $V_1(t,\bx)$ for each $(t,\bx,\xi \in \Gamma$. Set $u_{1,i}(t,\bx) = U_i(t,\bx,D_x)^Tu_1$. Then for any $w \in L^2(\bR^{n+1},V_1)$
-\[
-  \sum_{i=1}^l U_i(t,\bx,D)U_i(t,\bx,D)^Tw(t,\bx) \approx
-\]
-\[
-  \int \, d\xi \, e^{i \bx \cdot \xi} U_i(t,\bx,\xi)U_i(t,\bx,\xi)^T\hat{w}(t,\xi) \approx
-\]
-\[
-  \int \, d\xi \, e^{i \bx \cdot \xi}
-\]
-\[
-  \tilde{K}(t,\bx,D)u_{1,i} = \tilde{K}(t,\bx,D)U_i(t,\bx,D)^T
-\]
-\[
-  M(\bx)\partial_t u_{1,i}(t,\bx) = -\tilde{K}(t,\bx,D)
-\]
-
-
+and $c$ is the rest, not involving derivatives of $a^0$.
 
 
 
@@ -211,80 +182,31 @@ Determinant is
 \[
   {\rm det} = \rho\left(\frac{\rho}{\kappa} - \xi^2 - \zeta^2\right)
 \]
-Therefore take $\Gamma = \{\xi: |\xi| \lt \mbox{inf
-}\{\sqrt{\rho(\bx,z)/kappa(\bx,z)}, \mbox{ all } |z| < Z\}$. For $\xi
-\in \Gamma$, there are two roots $\zeta = \pm \sqrt{\rho/\kappa - \xi^2}.
+Therefore choose $\epsilon > 0$ and define $\Gamma = \{(\bx,\xi): |\xi| < \mbox{ inf}\{\sqrt{\rho(\bx,0)/\kappa(\bx,0)}, \mbox{ all } |z| < Z\}$. For $\xi
+\in \Gamma$, there are two roots $\zeta_{\pm} = \pm \sqrt{\rho/\kappa - \xi^2}.$
+Accordingly there are two solutions of equation \ref{eqn:eik},
+\[
+  \psi_{\pm}(\bx_{\pm}(z;\bx_0,\xi_0),z,\xi_{\pm}(z;\bx_0,\xi_0))= \bx_0\cdot\xi_0
+\]
+\[
+ +\int_0^z ds \zeta_{\pm}(\bx_{\pm}(s;\bx_0,\xi_0),s,\xi_{\pm}(s;\bx_0,\xi_0))-\xi_{\pm}(s;\bx_0,\xi_0)\cdot \partial_{\xi}\zeta_{\pm}(\bx_{\pm}(s;\bx_0,\xi_0),s,\xi_{\pm}(s;\bx_0,\xi_0))
+\]
+\[
+  =\bx_0 \cdot \xi_0 \pm \int_0^z
+  \frac{ds}{c(\bx_{\pm}(s;\bx_0,\xi_0),z)
+    \sqrt{(1-\xi_{\pm}(s;\bx_0,\xi_0),z)^2
+    c(\bx_{\pm}(s;\bx_0,\xi_0),z)^2}}
+\]
+where $c = \sqrt{\kappa/\rho}$ is the sound velocity.
 
 
-So $V_0={\rm span}(\{e2\}),\, V_1={\rm span}(\{e1,e3\}), \Pi_0 = {\rm diag}(0,1,0)$ 
-\[
-  K(t,\bx,\xi) =  A_1(\bx) \xi_1 + A_2(\bx) \xi_2 =
-  \left(
-    \begin{array}{ccc}
-      \frac{1}{\kappa(\bx)}\omega & \xi_x & 0 \\
-      \xi_x & \rho(\bx) \omega & 0 \\
-      0 & 0 & \rho(\bx) \omega
-    \end{array}
-  \right)
-\]
-whence $K_{0,0} = {\rm diag}(0, \rho(\bx) \omega, 0)$.
-\[
-  K_{1,1}(t,\bx,\xi) =
-  \left(
-    \begin{array}{ccc}
-      \frac{1}{\kappa(\bx)}\omega & 0 & 0 \\
-      0 & 0 & 0 \\
-      0 & 0 & \rho(\bx) \omega
-    \end{array}
-  \right),
-\]
-\[
-  K_{0,1}(t,\bx,\xi) =
-  \left(
-    \begin{array}{ccc}
-      0 & \xi_x & 0 \\
-      0 & 0 & 0 \\
-      0 & 0 & 0
-    \end{array}
-  \right)
-\]
-and $K_{1,0} = K_{0,1}^T$.
-  
-Choose $\omega_0>0$, $\phi \in C^{\infty}(\bR)$ so that $\phi(\omega) = 1$ for $\omega> 2\omega_0$, $=0$ for $\omega < \omega_0$. Set
-\[
-  L_{0,0}= {\rm diag}\left(0, \frac{\phi(|\omega|)}{\rho(\bx) \omega}, 0\right)
-\]
-Then $L_{0,0}K_{0,0} = I$ restricted to $V_0$ and away from zero frequency, and
-\[
-  \tilde{K} = K_{1,1} - K_{1,0}L_{0,0}K_{0,1} =
-  \left(
-    \begin{array}{ccc}
-      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} & 0 & 0\\
-      0 & 0  & 0 \\
-      0 & 0 & \rho \omega
-    \end{array}
-  \right).
-\]
-Since $V_1={\rm span}(e_1,e_3)$, the determinant of the restricted characteristic polynomial is obtained by dropping the second row and column:
-\[
-  \det
-  \left(
-    \begin{array}{cc}
-      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} &  \xi_z\\
-      \xi_z &  \rho \omega
-    \end{array}
-  \right).
-\]
-\[
-  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2\phi(|\omega|) - \xi_z^2
-\]
-\[
-  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2 - \xi_z^2 \mbox{ mod }  S^{-\infty}
-\]  
-as expected. So a maximal choice for $\Gamma$ would be
-\[
-  \Gamma = \{(z,(t,x),(\omega,\xi_x)): c(z,x)|\xi_x| < |\omega|\}.
-\]
+
+
+
+
+
+
+
 \section{2D Elasticity}
 
 Velocity, stress, state vector:
@@ -639,7 +561,25 @@ Suppose that $k \in {\bf Z}_+$, $n > 0$. Then there exists $C_{k} \ge 0$ so that
 \end{equation}
 
 \subsection{PsiDO RHS}
-Suppose that $K \in OPS^1$ is skew-adjoint, at least in principal part: $K_1^*=-K_1$. Then there is unitary $U \in OPS^0$ so that $U(x,\xi)^*K_1(x,\xi)U(x,\xi) = i\Lambda(x,\xi) = i\mbox{diag}(\lambda_1(x,\xi),...\lambda_k(x,\xi))$, with scalar $\lambda_j \in OPS^1, j=1,...,k$ (in fact, homogeneous of degree 1). Hence
+Suppose that $K \in OPS^1$ is skew-adjoint, at least in principal
+part: $K_1^*=-K_1$. Then there is unitary $U \in OPS^0$ so that
+$U(x,\xi)^*K_1(x,\xi)U(x,\xi) = i\Lambda(x,\xi) =
+i\mbox{diag}(\lambda_1(x,\xi),...\lambda_k(x,\xi))$, with scalar
+$\lambda_j \in OPS^1, j=1,...,k$ (in fact, homogeneous of degree
+1). Also,
+\begin{equation}
+  \label{eqn:ortho}
+  U(x,D)^*U(x,D) = U(x,d)U(x,D)^* = I \mbox{ mod } OPS^{-1}
+\end{equation}
+Define $S(t)$ to be the one-parameter group satisfying
+\[
+  \partial_t S(t) = -K S(t), S(0)=I
+\]
+Note that $S(-t)$ is inverse to $S(t)$, and 
+\[
+  \partial_t S(-t) = -S(-t) \partial_t S(t) S(-t) = S(-t)K
+\]
+Hence
 \[
   \partial_t S(t) = -iU \Lambda U^*S(t) + RS(t), R \in OPS^0 
 \]
@@ -656,9 +596,10 @@ so $\tilde{u}_i$ solves
   \partial_t \tilde{u}_i(t) = -i\lambda_i \tilde{u}_i(t), \, i=1,...,k
 \]
 Let $\tilde{S}_i$ solve
-\[
+\begin{equation}
+  \label{eqn:stilde}
   \partial_t \tilde{S}_i(t) = - i\lambda_i \tilde{S}_i(t)
-\]
+\end{equation}
 Then
 \[
   \tilde{u}_i(t) = \tilde{S}_i(t) u^0_i = (\tilde{S}(t)u^0)_i 
@@ -667,26 +608,136 @@ whence
 \[
   \tilde{S} = \mbox{diag}(\tilde{S}_1,....,\tilde{S}_k).
 \]
+and
+\begin{equation}
+  \label{eqn:spec}
+  S(t) = \sum_{i=1}^k U_i \tilde{S}_i(t)U_i^*
+\end{equation}
 
+Define
+\[
+  F = \phi_r S(T) \phi_s
+\]
+in which $\phi_,r \in C_0^{\infty}(\bR^{n+1})$ and $T>0$. Suppose that $K$
+is perturbed by $\delta K \in OPS^1$, also essentially skew. Then
+$\Lambda$, $U$, $S$, $\tilde{S}$ and $F$ undergo perturbations
+$\delta \Lambda$, $\delta U$, $\delta S$, $\delta \tilde{S}$, and
+$\delta F$. Our object is to understand the structure of $\delta F$, under the
+assumption that $\phi_r \delta K \in OPS^{-\infty}$. 
 
-From equation \ref{eqn:qevol1},
+This assumption on $\delta K$ implies that $\phi_r \delta U \in
+OPS^{-\infty}$. 
 \[
-  \tilde{Q}_i(t) = \tilde{S}_i(-t)\delta \tilde{S}_i(t)
+  \delta F =  \phi_r \delta S(T)  = \phi_r \left(\sum _{j=1}^k \delta U_j \tilde{S}_j(T) U_j^*
+\right.
 \]
-satisfies
 \[
-  \partial \tilde{Q}_i(t) = -i\tilde{S}_i(-t)\delta \lambda_i \tilde{S}_i(t), \, i=1,,,.k.
+ +  \left. \sum_{j=1}^k U_j \delta\tilde{S}_j(T)U_j^* + \sum_{J=1}^k U_j
+    \tilde{S}_j(T)\delta U_j^*\right) 
 \]
-and $\tilde{Q} = \mbox{diag}(\tilde{Q}_1,...,\tilde{Q}_k)$.
-From \cite{Tay:81}, Egorov's Theorem (Section VIII.1),
+Every term in the first sum on the RHS is bounded $H^s \rightarrow H^{s-1}$ since
+$\phi_r \delta U_i \in OPS^{-\infty}$.  Since $[\phi_rU_i], \in OPS^{-1}$, 
 \[
-  \tilde{Q}_i(t; x,\xi) = -i \int_0^t ds \,\delta \lambda_i(y_i(s;x,\xi),\eta_i(s;x,\xi))
+  \phi_r  U_j \delta \tilde{S}_j(T)  U_j^*  = U_j \phi_r
+  \tilde{S}_j(T) U_j^*
+  +...
 \]
-in which $(y_i(s;x,\xi),\eta_i(s;x,\xi))$ is the integral curve of the Hamiltonian vector field
+where the elided terms are operators mapping $H^s$ to $H^{s-1}$, any
+$s$. So,
+\[
+ \delta F = \sum_{j=1}^k U_j \phi_r \left( \delta\tilde{S}_j(T) U_i^*
+   + \tilde{S}_j(T) \delta U_j^*\right)
+  + ...
+\]
+and
+\[
+ S(-T)\delta F =\left(\sum_{i=1}^k U_i \tilde{S}_i(T)
+    U_i^*\right) \left(\sum_{j=1}^k U_j \phi_r ( \delta\tilde{S}_j(T) U_i^*
+    + \tilde{S}_j(T) \delta U_j^*)\right)
+\]  
+Using the relation \ref{eqn:ortho},
+The first order perturbation of the definition \ref{eqn:stilde} is
+\begin{equation}
+  \label{eqn:dstilde}
+  \partial_t \delta \tilde{S}_i(t) = - i\lambda_i \delta
+  \tilde{S}_i(t) - i\delta \lambda_i \tilde{S}_i(t)
+\end{equation}
+Since $\tilde{S_i}(-t)$ is inverse to $\tilde{S}_i(t)$,
+\[
+  \partial_t \tilde{S}_i(-t)= -\tilde{S}_i(-t) (\partial_t \tilde{S}_i(t)) \tilde{S}_i(-t)
+\]
+\begin{equation}
+  \label{eqn:stildeinv}
+= -\tilde{S}_i(-t)(-i\lambda_i \tilde{S}_i(t)) \tilde{S}_i(-t) = i\tilde{S}_i(-t)\lambda_i 
+\end{equation}
+So
+%\[
+% \partial_t (\tilde{S}_i(-t) \phi_r \delta \tilde{S}_i(t) \phi_s) 
+%\]
+%\[
+%  = i\tilde{S}_i(-t)\lambda_i \phi_r \delta \tilde{S}_i(t) \phi_s +
+%  \tilde{S}_i(-t) \phi_r (- i\lambda_i \delta
+%  \tilde{S}_i(t) - i\delta \lambda_i \tilde{S}_i(t)) \phi_s
+%\]
+%\[
+%  = -i\tilde{S}_i(-t)[\lambda_i,\phi_r] \delta \tilde{S}(t) \phi_s -i
+%  \tilde{S}_i(-t)\phi_r\delta\lambda_i\tilde{S}_i(t) \phi_s
+%\]
+%\begin{equation}
+%  \label{eqn:qevol1}
+%  = -i\tilde{S}_i(-t)[\lambda_i,\phi_r]\tilde{S}_i(t) \tilde{S}_i(-t)\delta \tilde{S}(t) \phi_s %-i
+%  \tilde{S}_i(-t)\phi_r\delta\lambda_i\tilde{S}_i(t) \phi_s.
+%\end{equation}
+%Similarly,
+\begin{equation}
+  \label{eqn:dstildeconj}
+  \partial_t\tilde{S}_i(-t)\delta \tilde{S}_i(t) = -i\tilde{S}_i(-t)\delta \lambda_i \tilde{S}_i(t).
+\end{equation}
+From \cite{Tay:81}, Egorov's Theorem (Section VIII.1), for $p \in OPS^s(\bR^n)$,
+\begin{equation}
+  \label{eqn:egorov}
+   \tilde{S}_i(-t) p \tilde{S}_i(t)=  p \circ C_i(t),\, p\tilde{S}_i(t) =
+   \tilde{S}_i(t)p \circ C_i(t)
+\end{equation}
+in which $C_i$ is the one-paraimeter family of symplectic maps given by
+\begin{equation}
+  \label{eqn:canon}
+  C_i(t)(x,\xi)=(y_i(t;x,\xi),\eta_i(t;x,\xi))
+\end{equation}
+Here $t \rightarrow y_i(t;x,\xi),\eta_i(t;x,\xi) $is the integral curve of the
+Hamiltonian vector field
 \[
   H_i(x,\xi) = (\partial_{\xi}\lambda_i(x,\xi), - \partial_x\lambda_i(x,\xi))
 \]
 with $y_i(0;x,\xi)=x, \eta_i(0;x,\xi)=\xi$.
+
+For $p \in OPS^{\infty}$, define
+\[
+  \Gamma_i[p] = \int_0^T dt \, p \circ C_i(t)
+\]
+Then from the identity \ref{eqn:dstildeconj} follows
+\[
+  \delta\tilde{S}_i(T) = \tilde{S}_i(T) \Gamma_i[ -i \delta \lambda_i]
+\] 
+so
+\[
+  \delta F = \sum_{i=1}^k U_i \phi_r \delta \tilde{S}_i \phi_s U_i^*
+\]
+\[
+  =\sum_{i=1}^k U_i \phi_r \tilde{S}_i(T) \Gamma_i[ -i \delta \lambda_i]\phi_s U_i^*
+\]
+\[
+ Q = -i\sum_{i=1}^k U_i \tilde{S}_i(-T) \phi_r \tilde{S}_i(T) \Gamma_i[\delta \lambda_i] U_i^*\phi_s
+  + ...
+\]
+\[
+  = -i \sum_{i=1}^k U_i (\Gamma_i[\phi_r] \Gamma_i[\delta \lambda_i] )
+  U_i^*
+\]
+
+ 
+The right hand side of equation \ref{eqn:qevol1} contains three
+expressions of the form appearing on the LHS of \ref{eqn:egorov}.
 
 \subsection{Generic H-J}
 Generic 1st order PDE:
@@ -749,9 +800,201 @@ This observation implies a similar result for the H-J system
   \label{eqn:hjdef}
   0 = \partial_t u + H(t,\bx,\partial u).
 \end{equation}
-Replace $x$ by $(t,x)$, $F(x,\partial_x u)$ by the RHS of equation
-\ref{eqn:hjdef}.  Then precisely the same results obtain, with $F$ is
-replaced by $H$.
+Set $X=(t,x)$, $P=(q,p)$ (with $q$ dual to $t$, $F(X,\partial_X u) =
+\partial_t u + H(t,x,\partial_x u)$, so the Hamiltonian is $F(X,P) =
+q+H(t,x.p)$.  Thus
+\begin{eqnarray*}
+  \frac{dt}{ds} & = & \partial_q F = 1 \\
+  \frac{dx}{ds} & = & \partial_p F = \partial_p H \\
+  \frac{dq}{ds} & = & -\partial_t F = -\partial_t H \\
+  \frac{dp}{ds} & = & -\partial_x F = -\partial_x H
+\end{eqnarray*}
+From the first equation, $t=s$ up to a constant shift. From the third,
+\[
+  q(t) = -\int_0^t ds \partial_tH(s,x(s),p(s))
+\]
+\[
+  = -\int_0^t ds \frac{d}{ds}H(s,x(s),p(s)) - \frac{dx}{ds}(s)\cdot
+  \partial_x H(s,x(s),p(s)) -\frac{dp}{ds}(s)\cdot \partial_p
+  H(s,x(s),p(s))
+\]
+\[
+  = -H(t,x(t),p(t)) + H(0,x(0),p(0))
+\]
+in view of the 2nd and 4th equations.
+Note that these are the Hamiltonian system with Hamiltonian $H$.
+
+The result \ref{eqn:sol} becomes
+\begin{equation}
+  \label{eqn:hsol}
+  u(t,x(t))=u(0,x(0)) +tH(0,x(0),p(0))+ \int_0^t ds (-H(s,x(s),p(s)) + p(s)\cdot (\partial_p H)(s,x(s),p(s))).
+\end{equation}
+
+\section{Symmetric Hyperbolic Systems}
+
+If $A_j$ is positive definite, then $x_j$ can play the role of time, and the Cauchy problem with initial data $u_0 \in L^2(\bR^n,\bR^k)$  on $x_j=$ constant has a unique weak solution $u \in L^2(\bR^{n+1})^k$ with well-defined $L^2$ traces on any $x_j$ level set (Lax, Taylor). Want to understand traces on other hypersurfaces, to begin with coordinate hypersurfaces, wlog $x_0=0$.
+
+Notation:$x_0=t$, $\partial_t=\partial_0$, $\bx = (x_1,...,x_n)$, $D=(\partial_1,...\partial_n)$
+\[
+  K(t,\bx,D)= \sum_{i=1}^n A_i(t,\bx)\partial_i, \, M(t,\bx) = A_0(t,\bx).
+\]
+If $M$ is positive definite, trace properties coverd by standard theory (above). Let $\Pi_0(t,\bx)$ = projection on null space $V_0$ of $M(t,\bx)$, $\Pi_1=I-\Pi_0$ = projection on range $V_1$. Denote the rank of $M$ by $l={\rm dim} V_1$ Then
+\[
+  M\partial_t u + Ku = \Pi_1 M \partial_t \Pi_1 u + \sum_{\alpha,\beta=0,1} \Pi_{\alpha}K\Pi_{\beta}u + \mbox{ l.o.t. }
+\]
+Since the ranges are orthogonal,
+\begin{eqnarray}
+  \Pi_1 M \partial_t \Pi_1 u + \Pi_1 K \Pi_1 u + \Pi_1 K \Pi_0 u & \in & L^2_{\rm loc}(\bR^{n+1},V_1),
+  \label{eqn:decomp1} \\
+  \Pi_0 K \Pi_0 u + \Pi_0 K \Pi_1 u & \in & L^2_{\rm loc}(\bR^{n+1},V_0)
+  \label{eqn:decomp0}
+\end{eqnarray}
+Set $K_{\alpha,\beta} = \Pi_{\alpha}K\Pi_{\beta}$.
+
+Main assumption: for all $t \in \bR, (\bx,\xi) \in T^*(\bR^n)\setminus \{0\}$, $K_{0,0}(t,\bx,\xi)$ is invertible on $V_0$.
+
+% Suppose that $E \in OPS^1(\bR^{n+1})$ is scalar, $Eu \in H^1_{\rm loc}(\bR^{n+1})$. Denote by $i(t):\{t\} \times \bR^n \rightarrow \bR^{n+1}$ the embedding. contained in $i(0)^*(ES(E))$, and that and
+
+% Suppose that $\Gamma_0, \Gamma \subset T^*(\bR^n)$ are conic open sets with $\overbar{\Gamma_0 \subset \Gamma$ and $\delta t >0$. Assume that  that for $|t|\le \delta t$ and $(\bx,\xi) \in Gamma$, $K_{00}(0,\bx,\xi)$ is invertible as a map $V_0 \rightarrow V_0$.
+Let  $L_{00}(t,\bx,\xi) \in C^{\infty}(\bR, S^{-1}(\bR^n))$ be inverse to $K_{0,0}(t,\bx,\xi)$ on $V_0$: that is,
+\[
+  K_{0,0}(t,\bx,\xi)L_{0,0}(t,\bx,\xi) v=v=L_{0,0}(t,\bx,\xi)K_{0,0}(t,\bx,\xi)v
+\]
+for all $v \in V_0$. Construct $L_{0,0}$ to be homogeneous of degree -1 outside of a neighborhood of $\xi=0$, with $V_1$ an invariant subspace for $L_{0,0}(t,\bx,\xi)$ on which it vanishes. It follows that $L_{0,0}$ is symmetric, and that
+\[
+  \Pi_0 u - L_{0,0}K_{0,0}\Pi_u = \Pi_0 u - L_{0,0}K_{0,0}u = \Pi_0 u + L_{0,0}K_{0,1}u \in H^{1}_{\rm loc}(\bR^{n+1})^k
+\]
+so
+\[
+  K_{1,0}u + K_{1,0}L_{0,0}K_{0,1}u \in L^2 _{\rm loc}(\bR^{n+1})^k
+\]
+Define
+\[
+  \tilde{K} = K_{11} - K_{10}L_{00}K_{01}.
+\]
+Then equation \ref{eqn:decomp1} can be rewritten
+\begin{equation}
+  \label{eqn:shs1}
+  M\partial_t u_1 + \tilde{K}u_1 \in L^2_{\rm loc}(\bR^{n+1},V_1)
+\end{equation}
+
+Note that for each $t \in \bR, (\bx,\xi) \in T^*(\bR^n)$, both $V_0$ and $V_1$ are invariant subspaces of $\tilde{K}(t,\bx,\xi)$, and $V_0 \subset {\rm ker}\tilde{K}(t,\bx,\xi)$. Also, $M$ is invertible when restricted to $V_1 = {\rm Rng} M = {\rm Rng } \Pi_1$ , but not (necessarily) positive definite.
+  
+Restricted determinant: if $V$ is an invariant subspace of $A$, then ${\rm det}_{V} A$ is the determinant of the matrix of $A$ in any orthonormal basis of $V$.
+For $(t,\bx,\tau,\xi) \in T^*(\bR^n)$, define the restricted characteristic polynomial
+\[
+  {\cal C}(t,\bx,\tau,\xi) = {\rm det}_{V_1} (M(t,\bx)\tau + \tilde{K}(t,\bx,\xi) )= 0
+\]
+Since $V_0$ and $V_1$ are invariant subspaces of the matrix in parentheses, and $V_0$ is (contained in) its null space, there are at most $l={\rm dim}V_1$ non-zero roots in $\tau$ for $\xi \ne 0$.
+
+Choose a conic submanifold $\gamma \subset T^*(\bR^n)$, so that for $|t| \le \delta t, (\bx,\xi) \in \gamma$ there are exactly $m \le l$ distinct real roots $\tau$ of ${\cal C}(t,\bx,\tau,\xi)$. Denote these by $\tau_i(t,\bx,\xi), i=1,...,m$.
+
+Choose a conic $\gamma_1 \subset T^*(\bR^n)$ so that $\bar{\gamma_1} \subset \gamma$, and $Q \in OPS^0(\bR^n)$ with $ES(Q) \subset \gamma$, $Q(\bx,\xi) =1$ for $(\bx,\xi)\in \gamma_1$.
+
+Let ${\cal N} = $ normal bundle of $x_0=0$ and $\Gamma \subset T^*(\bR^n)$ for which $\Gamma \cap {\cal N} = \emptyset$.
+
+Assume that $u \in L^2(\bR^{n+1}) \cap H^1_{\rm loc}(\Gamma \cap \Pi_{\cal N}^{-1}(\gamma_1^C))$.
+
+
+
+For each $\tau_i, i =1,...m$, choose $U_i(t,\bx,\xi) \in C^{\infty}(\bR \times T^*(\bR^n),V_1(t,\bx))$,  so that
+\[
+  \tau_i M(\bx) U_i(t,\bx,\xi) + \tilde{K}(t,\bx,\xi) U_i(t,\bx,\xi)=0, \, i=1,..,m.
+\]
+$U_1,...,U_m$ span a subspace $\tilde{V}_1(t,\bx,\xi)$. Scale $U_i$ so that $|U_i(t,\bx,\xi)| = 1$.
+
+Note that $\tau_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 1 in $\xi$ and smooth in $\bx$, $U_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 0 in $\xi$, smooth in $\bx$. So both are symbol-valued functions, of orders 1 and 0 respectively. Since the $U$'s must be orthogonal, $U_i^TU_j = \delta_{ij}$.
+
+Suppose first that $m=l$, that is, that $\tilde{V}_1=V_1$. Then $\{U_i(t,\bx,\xi):i=1,..,l\}$ is a basis for $V_1(t,\bx)$ for each $(t,\bx,\xi \in \Gamma$. Set $u_{1,i}(t,\bx) = U_i(t,\bx,D_x)^Tu_1$. Then for any $w \in L^2(\bR^{n+1},V_1)$
+\[
+  \sum_{i=1}^l U_i(t,\bx,D)U_i(t,\bx,D)^Tw(t,\bx) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi} U_i(t,\bx,\xi)U_i(t,\bx,\xi)^T\hat{w}(t,\xi) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi}
+\]
+\[
+  \tilde{K}(t,\bx,D)u_{1,i} = \tilde{K}(t,\bx,D)U_i(t,\bx,D)^T
+\]
+\[
+  M(\bx)\partial_t u_{1,i}(t,\bx) = -\tilde{K}(t,\bx,D)
+\]
+
+\subsection{2D Acoustics}
+%###################
+So $V_0={\rm span}(\{e2\}),\, V_1={\rm span}(\{e1,e3\}), \Pi_0 = {\rm diag}(0,1,0)$ 
+\[
+  K(t,\bx,\xi) =  A_1(\bx) \xi_1 + A_2(\bx) \xi_2 =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & \xi_x & 0 \\
+      \xi_x & \rho(\bx) \omega & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right)
+\]
+whence $K_{0,0} = {\rm diag}(0, \rho(\bx) \omega, 0)$.
+\[
+  K_{1,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & 0 & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right),
+\]
+\[
+  K_{0,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      0 & \xi_x & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & 0
+    \end{array}
+  \right)
+\]
+and $K_{1,0} = K_{0,1}^T$.
+  
+Choose $\omega_0>0$, $\phi \in C^{\infty}(\bR)$ so that $\phi(\omega) = 1$ for $\omega> 2\omega_0$, $=0$ for $\omega < \omega_0$. Set
+\[
+  L_{0,0}= {\rm diag}\left(0, \frac{\phi(|\omega|)}{\rho(\bx) \omega}, 0\right)
+\]
+Then $L_{0,0}K_{0,0} = I$ restricted to $V_0$ and away from zero frequency, and
+\[
+  \tilde{K} = K_{1,1} - K_{1,0}L_{0,0}K_{0,1} =
+  \left(
+    \begin{array}{ccc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} & 0 & 0\\
+      0 & 0  & 0 \\
+      0 & 0 & \rho \omega
+    \end{array}
+  \right).
+\]
+Since $V_1={\rm span}(e_1,e_3)$, the determinant of the restricted characteristic polynomial is obtained by dropping the second row and column:
+\[
+  \det
+  \left(
+    \begin{array}{cc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} &  \xi_z\\
+      \xi_z &  \rho \omega
+    \end{array}
+  \right).
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2\phi(|\omega|) - \xi_z^2
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2 - \xi_z^2 \mbox{ mod }  S^{-\infty}
+\]  
+as expected. So a maximal choice for $\Gamma$ would be
+\[
+  \Gamma = \{(z,(t,x),(\omega,\xi_x)): c(z,x)|\xi_x| < |\omega|\}.
+\]
+
+
 
 \bibliographystyle{seg}
 \bibliography{../../bib/masterref}
