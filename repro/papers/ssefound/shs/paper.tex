@@ -1,0 +1,229 @@
+\title{Mapping Properties of Surface Source Extension}
+\author{William W. Symes}
+
+\begin{abstract}
+  Abstract goes here.
+\end{abstract}
+
+\section{Symmetric Hyperbolic Systems}
+
+If $A_j$ is positive definite, then $x_j$ can play the role of time, and the Cauchy problem with initial data $u_0 \in L^2(\bR^n,\bR^k)$  on $x_j=$ constant has a unique weak solution $u \in L^2(\bR^{n+1})^k$ with well-defined $L^2$ traces on any $x_j$ level set (Lax, Taylor). Want to understand traces on other hypersurfaces, to begin with coordinate hypersurfaces, wlog $x_0=0$.
+
+Notation:$x_0=t$, $\partial_t=\partial_0$, $\bx = (x_1,...,x_n)$, $D=(\partial_1,...\partial_n)$
+\[
+  K(t,\bx,D)= \sum_{i=1}^n A_i(t,\bx)\partial_i, \, M(t,\bx) = A_0(t,\bx).
+\]
+If $M$ is positive definite, trace properties coverd by standard theory (above). Let $\Pi_0(t,\bx)$ = projection on null space $V_0$ of $M(t,\bx)$, $\Pi_1=I-\Pi_0$ = projection on range $V_1$. Denote the rank of $M$ by $l={\rm dim} V_1$ Then
+\[
+  M\partial_t u + Ku = \Pi_1 M \partial_t \Pi_1 u + \sum_{\alpha,\beta=0,1} \Pi_{\alpha}K\Pi_{\beta}u + \mbox{ l.o.t. }
+\]
+Since the ranges are orthogonal,
+\begin{eqnarray}
+  \Pi_1 M \partial_t \Pi_1 u + \Pi_1 K \Pi_1 u + \Pi_1 K \Pi_0 u & \in & L^2_{\rm loc}(\bR^{n+1},V_1),
+  \label{eqn:decomp1} \\
+  \Pi_0 K \Pi_0 u + \Pi_0 K \Pi_1 u & \in & L^2_{\rm loc}(\bR^{n+1},V_0)
+  \label{eqn:decomp0}
+\end{eqnarray}
+Set $K_{\alpha,\beta} = \Pi_{\alpha}K\Pi_{\beta}$.
+
+Main assumption: for all $t \in \bR, (\bx,\xi) \in T^*(\bR^n)\setminus \{0\}$, $K_{0,0}(t,\bx,\xi)$ is invertible on $V_0$.
+
+% Suppose that $E \in OPS^1(\bR^{n+1})$ is scalar, $Eu \in H^1_{\rm loc}(\bR^{n+1})$. Denote by $i(t):\{t\} \times \bR^n \rightarrow \bR^{n+1}$ the embedding. contained in $i(0)^*(ES(E))$, and that and
+
+% Suppose that $\Gamma_0, \Gamma \subset T^*(\bR^n)$ are conic open sets with $\overbar{\Gamma_0 \subset \Gamma$ and $\delta t >0$. Assume that  that for $|t|\le \delta t$ and $(\bx,\xi) \in Gamma$, $K_{00}(0,\bx,\xi)$ is invertible as a map $V_0 \rightarrow V_0$.
+Let  $L_{00}(t,\bx,\xi) \in C^{\infty}(\bR, S^{-1}(\bR^n))$ be inverse to $K_{0,0}(t,\bx,\xi)$ on $V_0$: that is,
+\[
+  K_{0,0}(t,\bx,\xi)L_{0,0}(t,\bx,\xi) v=v=L_{0,0}(t,\bx,\xi)K_{0,0}(t,\bx,\xi)v
+\]
+for all $v \in V_0$. Construct $L_{0,0}$ to be homogeneous of degree -1 outside of a neighborhood of $\xi=0$, with $V_1$ an invariant subspace for $L_{0,0}(t,\bx,\xi)$ on which it vanishes. It follows that $L_{0,0}$ is symmetric, and that
+\[
+  \Pi_0 u - L_{0,0}K_{0,0}\Pi_u = \Pi_0 u - L_{0,0}K_{0,0}u = \Pi_0 u + L_{0,0}K_{0,1}u \in H^{1}_{\rm loc}(\bR^{n+1})^k
+\]
+so
+\[
+  K_{1,0}u + K_{1,0}L_{0,0}K_{0,1}u \in L^2 _{\rm loc}(\bR^{n+1})^k
+\]
+Define
+\[
+  \tilde{K} = K_{11} - K_{10}L_{00}K_{01}.
+\]
+Then equation \ref{eqn:decomp1} can be rewritten
+\begin{equation}
+  \label{eqn:shs1}
+  M\partial_t u_1 + \tilde{K}u_1 \in L^2_{\rm loc}(\bR^{n+1},V_1)
+\end{equation}
+
+Note that for each $t \in \bR, (\bx,\xi) \in T^*(\bR^n)$, both $V_0$ and $V_1$ are invariant subspaces of $\tilde{K}(t,\bx,\xi)$, and $V_0 \subset {\rm ker}\tilde{K}(t,\bx,\xi)$. Also, $M$ is invertible when restricted to $V_1 = {\rm Rng} M = {\rm Rng } \Pi_1$ , but not (necessarily) positive definite.
+  
+Restricted determinant: if $V$ is an invariant subspace of $A$, then ${\rm det}_{V} A$ is the determinant of the matrix of $A$ in any orthonormal basis of $V$.
+For $(t,\bx,\tau,\xi) \in T^*(\bR^n)$, define the restricted characteristic polynomial
+\[
+  {\cal C}(t,\bx,\tau,\xi) = {\rm det}_{V_1} (M(t,\bx)\tau + \tilde{K}(t,\bx,\xi) )= 0
+\]
+Since $V_0$ and $V_1$ are invariant subspaces of the matrix in parentheses, and $V_0$ is (contained in) its null space, there are at most $l={\rm dim}V_1$ non-zero roots in $\tau$ for $\xi \ne 0$.
+
+Choose a conic submanifold $\gamma \subset T^*(\bR^n)$, so that for
+$|t| \le \delta t, (\bx,\xi) \in \gamma$ there are exactly $m \le l$
+distinct pure imaginary roots $i\tau$ of ${\cal C}(t,\bx,i\tau,\xi)$. Denote these by $i\tau_i(t,\bx,\xi), i=1,...,m$.
+
+%Choose a conic $\gamma_1 \subset T^*(\bR^n)$ so that $\bar{\gamma_1} \subset \gamma$, and $Q \in OPS^0(\bR^n)$ with $ES(Q) \subset \gamma$, $Q(\bx,\xi) =1$ for $(\bx,\xi)\in \gamma_1$.
+
+%Let ${\cal N} = $ normal bundle of $x_0=0$ and $\Gamma \subset T^*(\bR^n)$ for which $\Gamma \cap {\cal N} = \emptyset$.
+
+%Assume that $u \in L^2(\bR^{n+1}) \cap H^1_{\rm loc}(\Gamma \cap \Pi_{\cal N}^{-1}(\gamma_1^C))$.
+
+
+
+For each $\tau_i, i =1,...m$, choose $U_i(t,\bx,\xi) \in C^{\infty}(\bR \times T^*(\bR^n),V_1(t,\bx))$,  so that
+\[
+  i\tau_i(t\bx,\xi) M(\bx) U_i(t,\bx,\xi) + \tilde{K}(t,\bx,\xi) U_i(t,\bx,\xi)=0, \, i=1,..,m.
+\]
+$U_1,...,U_m$ span a subspace $\tilde{V}_1(t,\bx,\xi)$. 
+
+Note that $\tau_i(t,\bx,\xi), i=1,...,m$ are homogeneous of order 1 in
+$\xi$ and smooth in $\bx$, $U_i(t,\bx,\xi), i=1,...,m$ are homogeneous
+of order 0 in $\xi$, smooth in $\bx$. So both are symbol-valued
+functions, of orders 1 and 0 respectively. The $U$'s are
+$M$-orthogonal, $U_i^TMU_j = \delta_{ij}$.
+
+The corresponding operators satisfy
+\begin{equation}
+  \label{eqn:ortho}
+  U(x,D)^*M(x) U(x,D) = U(x,d)M(x)U(x,D)^* = I \mbox{ mod } OPS^{-1}
+\end{equation}
+
+Extend the $\tau$s and $U$s to $t \in \bR$ smoothly, so that the above 
+properties are preserved for all $t$. 
+
+The evolution equation
+\[
+  \partial_t \tilde{u}(t,\bx) =
+  i\tau_i(\t,\bx,\partial_x)\\tilde{u}(t,\bx)
+\]
+has a solution in $C^0(\bR,L^2(\bR^n))$, uniquely determined
+by $\tilde{u}(0,\bx)$. Let $\tilde{S}_i(t)$ denote the one-parameter
+group defined by this evolution equation. Then (weakly)
+\[
+  \partial_t \tilde{S}_i(t,\bx) =
+  i\tau_i(\t,\bx,\partial_x)tilde{S}_i(t,\bx),\,S(0) = I.
+\]
+Note that $\tilde{S}_i(t)$ is invertible and $\tilde{S}_i(t)^{-1} =
+\tilde{S}_i(-t)$.
+
+From \cite{Tay:81}, Egorov's Theorem (Section VIII.1), for $p \in OPS^s(\bR^n)$,
+\begin{equation}
+  \label{eqn:egorov}
+   \tilde{S}_i(-t) p \tilde{S}_i(t)=  p \circ C_i(t),\, p\tilde{S}_i(t) =
+   \tilde{S}_i(t)p \circ C_i(t)
+\end{equation}
+in which $C_i$ is the one-paraimeter family of symplectic maps given by
+\begin{equation}
+  \label{eqn:canon}
+  C_i(t)(x,\xi)=(y_i(t;x,\xi),\eta_i(t;x,\xi))
+\end{equation}
+Here $t \rightarrow y_i(t;x,\xi),\eta_i(t;x,\xi) $is the integral curve of the
+Hamiltonian vector field
+\[
+  H_i(t,x,\xi) = (\partial_{\xi}\tau_i(t,x,\xi), - \partial_x\tau_i(t,x,\xi))
+\]
+with $y_i(0;x,\xi)=x, \eta_i(0;x,\xi)=\xi$.
+
+For $p \in OPS^{\infty}$, define
+\[
+  \Gamma_i[p] = \int_0^T dt \, p \circ C_i(t)
+\]
+
+
+Suppose first that $m=l$, that is, that $\tilde{V}_1=V_1$. Then $\{U_i(t,\bx,\xi):i=1,..,l\}$ is a basis for $V_1(t,\bx)$ for each $(t,\bx,\xi \in \Gamma$. Set $u_{1,i}(t,\bx) = U_i(t,\bx,D_x)^Tu_1$. Then for any $w \in L^2(\bR^{n+1},V_1)$
+\[
+  \sum_{i=1}^l U_i(t,\bx,D)U_i(t,\bx,D)^Tw(t,\bx) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi} U_i(t,\bx,\xi)U_i(t,\bx,\xi)^T\hat{w}(t,\xi) \approx
+\]
+\[
+  \int \, d\xi \, e^{i \bx \cdot \xi}
+\]
+\[
+  \tilde{K}(t,\bx,D)u_{1,i} = \tilde{K}(t,\bx,D)U_i(t,\bx,D)^T
+\]
+\[
+  M(\bx)\partial_t u_{1,i}(t,\bx) = -\tilde{K}(t,\bx,D)
+\]
+
+\subsection{2D Acoustics}
+%###################
+So $V_0={\rm span}(\{e2\}),\, V_1={\rm span}(\{e1,e3\}), \Pi_0 = {\rm diag}(0,1,0)$ 
+\[
+  K(t,\bx,\xi) =  A_1(\bx) \xi_1 + A_2(\bx) \xi_2 =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & \xi_x & 0 \\
+      \xi_x & \rho(\bx) \omega & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right)
+\]
+whence $K_{0,0} = {\rm diag}(0, \rho(\bx) \omega, 0)$.
+\[
+  K_{1,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      \frac{1}{\kappa(\bx)}\omega & 0 & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & \rho(\bx) \omega
+    \end{array}
+  \right),
+\]
+\[
+  K_{0,1}(t,\bx,\xi) =
+  \left(
+    \begin{array}{ccc}
+      0 & \xi_x & 0 \\
+      0 & 0 & 0 \\
+      0 & 0 & 0
+    \end{array}
+  \right)
+\]
+and $K_{1,0} = K_{0,1}^T$.
+  
+Choose $\omega_0>0$, $\phi \in C^{\infty}(\bR)$ so that $\phi(\omega) = 1$ for $\omega> 2\omega_0$, $=0$ for $\omega < \omega_0$. Set
+\[
+  L_{0,0}= {\rm diag}\left(0, \frac{\phi(|\omega|)}{\rho(\bx) \omega}, 0\right)
+\]
+Then $L_{0,0}K_{0,0} = I$ restricted to $V_0$ and away from zero frequency, and
+\[
+  \tilde{K} = K_{1,1} - K_{1,0}L_{0,0}K_{0,1} =
+  \left(
+    \begin{array}{ccc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} & 0 & 0\\
+      0 & 0  & 0 \\
+      0 & 0 & \rho \omega
+    \end{array}
+  \right).
+\]
+Since $V_1={\rm span}(e_1,e_3)$, the determinant of the restricted characteristic polynomial is obtained by dropping the second row and column:
+\[
+  \det
+  \left(
+    \begin{array}{cc}
+      \frac{\omega}{\kappa} - \frac{\xi_x^2\phi(|\omega|)}{\rho \omega} &  \xi_z\\
+      \xi_z &  \rho \omega
+    \end{array}
+  \right).
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2\phi(|\omega|) - \xi_z^2
+\]
+\[
+  = \frac{\rho \omega^2 }{\kappa} - \xi_x^2 - \xi_z^2 \mbox{ mod }  S^{-\infty}
+\]  
+as expected. So a maximal choice for $\Gamma$ would be
+\[
+  \Gamma = \{(z,(t,x),(\omega,\xi_x)): c(z,x)|\xi_x| < |\omega|\}.
+\]
+
+
+
+\bibliographystyle{seg}
+\bibliography{../../bib/masterref}

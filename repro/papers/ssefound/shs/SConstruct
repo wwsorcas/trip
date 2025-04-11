@@ -1,0 +1,44 @@
+from rsf.tex import *
+
+End(
+
+options='georeport,12pt',
+
+use='amsmath,amssymb,amsthm,amscd,setspace,wasysym,algorithm,algpseudocode',
+
+include=r'''
+\newcommand{\mb}{\mathbf}
+\newcommand{\ba}{\mathbf{a}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bxi}{\mathbf{\xi}}
+\newcommand{\bk}{\mathbf{k}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bff}{\mathbf{f}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\bR}{\mathbf{R}}
+\newcommand{\Ci}{C^{\infty}}
+\newcommand{\Ciz}{C^{\infty}_0}
+\newcommand{\lxr}{\langle \xi \rangle}
+\newcommand{\ldr}{\langle D\rangle}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{alg}{Algorithm}
+\newtheorem{remark}{Remark}
+\newtheorem{cor}{Corollary}
+\newtheorem{example}{Example}
+\newtheorem{definition}{Definition}
+
+''',
+color='ALL'
+)
+
+
+
+
+
