@@ -439,8 +439,8 @@ class comp(Function):
         except Exception as ex:
             print(ex)
             raise Exception('called from vcl.comp.apply')
-        else:
-            return y
+#        else:
+#            return y
 
     def raw_deriv(self,x):
         try:
@@ -459,6 +459,7 @@ class comp(Function):
         print('and output function (f)')
         self.f.myNameIs()
     
+
 class LinearOperator(Function):
 
     def apply(self,x,y):
@@ -514,8 +515,8 @@ class transp(LinearOperator):
         except Exception as ex:
             print(ex)
             raise Exception('called from transp:applyFwd')
-        else:
-            return y
+#        else:
+#            return y
 
     def applyAdj(self,x,y):
         try:
@@ -523,15 +524,18 @@ class transp(LinearOperator):
         except Exception as ex:
             print(ex)
             raise Exception('called from transp:raw_applyFwd')
-        else:
-            return y
+#        else:
+#            return y
 
     def myNameIs(self):
         print('adjoint operator of:')
         self.op.myNameIs()
     
 class lopcomp(LinearOperator):
-
+    '''
+    builds composition of linear ops: a \circ b
+    '''
+    
     def __init__(self,a,b):
         try:
 #            print('lopcomp constructor')
@@ -576,13 +580,64 @@ class lopcomp(LinearOperator):
         self.b.myNameIs()
         print('and output lin op (a)')
         self.a.myNameIs()
-           
-# makes a list of linear ops with same range act like a linear op on product
-# space
-# row of linear ops, acts on a column of vectors (vector in product space)
-# to-do: make 1x1 case transparent
-class RowLinearOperator(LinearOperator):
 
+class loplinComb(LinearOperator):
+    '''
+    builds linear comb of linear ops: a*f + g
+    '''
+    
+    def __init__(self,a,f,g):
+        try:
+            if f.getDomain() != g.getDomain():
+                raise Exception('Error: domains of input lops differ')
+            if f.getRange() != g.getRange():
+                raise Exception('Error: ranges of input lops differ')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.loplinComb constructor')
+        else:
+            self.a = a
+            self.f = f
+            self.g = g
+    
+    def getDomain(self):
+        return self.f.getDomain()
+
+    def getRange(self):
+        return self.f.getRange()
+
+    def applyFwd(self,x,y):
+        try:
+            y.copy(self.g*x)
+            y.linComb(self.a,self.f*x)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.loplinComb.applyFwd')
+
+    def applyAdj(self,x,y):
+        try:
+            y.copy(transp(self.g)*x)
+            y.linComb(self.a, transp(self.f)*x)
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.loplinComb.applyAdj')
+
+    def myNameIs(self):
+        print('vcl.loplinComb object: a*f + g')
+        print('input lop f:')
+        self.f.myNameIs()
+        print('input lop g:')
+        self.g.myNameIs()
+        print('input scalar a = ' + str(a))
+           
+
+class RowLinearOperator(LinearOperator):
+    '''
+    makes a list of linear ops with same range act like a linear 
+    op on the product space of their domains. To-do: make 1x1 case 
+    transparent.
+    '''
+    
     def __init__(self,dom,rng,oplist):
         try:
             self.prod = True
@@ -652,7 +707,53 @@ class RowLinearOperator(LinearOperator):
             print('*** Component ' + str(i) + ':')
             self.oplist[i].myNameIs()
 
+class fcnlinComb(Function):
+    '''
+    For scalar a and Functions f,g, builds a*f + g
+    '''
+    def __init__(self,a,f,g):
+        try:
+            if f.getDomain() != g.getDomain():
+                raise Exception('vcl.fcnlinComb: domains of input fcns differ')
+            if f.getRange() != g.getRange():
+                raise Exception('vcl.fcnlinComb: domains of input fcns differ')
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.comp constructor')
+        else:
+            self.f = f
+            self.g = g
+            self.a = a
+    
+    def getDomain(self):
+        return self.f.getDomain()
 
+    def getRange(self):
+        return self.f.getRange()
+
+    def apply(self,x,y):
+        try:
+            y = self.g(x).linComb(self.a,self.f(x))
+            return y
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.fcnlinComb.apply')
+
+    def raw_deriv(self,x):
+        try:
+            return loplinComb(self.a,self.f.deriv(x),self.g.deriv(x)) 
+        except Exception as ex:
+            print(ex)
+            raise Exception('called from vcl.fcnlinComb.raw_deriv')
+
+    def myNameIs(self):
+        print('vcl.fcnlinComb object: a*f + g')
+        print('vcl.Function g')
+        self.g.myNameIs()
+        print('vcl.Function f')
+        self.f.myNameIs()
+        print('scalar a = ' + str(a))
+        
 class Jet:
 
     def __init__(self,f,x):
