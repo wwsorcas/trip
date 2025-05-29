@@ -1,0 +1,60 @@
+4.2-git	sfmakevel	papers/ssevelan/data:	root@MacBook-Pro.local	Mon May  5 13:01:16 2025
+
+	o1=0
+	d2=20
+	n2=401
+	o2=0
+	d3=1
+	n3=1
+	data_format="native_float"
+	o3=0
+	esize=4
+	in="stdout"
+	d1=20
+	n1=201
+	in="stdin"
+
+4.2-git	sfput	papers/ssevelan/data:	root@MacBook-Pro.local	Mon May  5 13:01:16 2025
+
+	data_format="native_float"
+	label1=Depth
+	dim=2
+	label2=m
+	gdim=2
+	unit=GPa
+	id1=0
+	id2=1
+	label=Bulk_modulus
+	unit1=m
+	in="/var/tmp/papers/ssevelan/data/bmh0.rsf@"
+4.2-git	sfcp	papers/ssevelan/mswi:	root@MacBook-Pro.local	Wed May  7 15:36:16 2025
+
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/papers/ssevelan/mswi/covmestfwi0.rsf@"
+4.2-git	sfcp	papers/ssevelan/mswi:	root@MacBook-Pro.local	Wed May  7 16:11:41 2025
+
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/papers/ssevelan/mswi/covmestfwi1.rsf@"
+4.2-git	sfcp	papers/ssevelan/mswi:	root@MacBook-Pro.local	Wed May  7 16:46:54 2025
+
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/papers/ssevelan/mswi/covmestfwi2.rsf@"
+4.2-git	sfwindow	ssevelan/slides/Fig:	root@MacBook-Pro.local	Tue May 27 10:08:47 2025
+
+	d2=20
+	n2=301
+	o1=0
+	o2=1000
+	label1="Depth"
+	data_format="native_float"
+	label2="m"
+	min2=1000
+	esize=4
+	in="/var/tmp/covmestfwi2_wind.rsf@"
+	max2=7000
+	unit1="m"
+	d1=20
+	n1=201

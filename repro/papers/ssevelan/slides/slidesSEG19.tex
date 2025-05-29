@@ -1,0 +1,586 @@
+\documentclass[xcolor=dvipsnames,12pt,aspectratio=169]{beamer}
+\usecolortheme[named=violet]{structure} 
+
+%\usetheme{umbc2} 
+\usepackage{pgf}
+%\usepackage[pdftex]{graphicx}
+\usepackage{color}
+\usepackage{amssymb,amsmath}
+\usepackage[english]{babel}
+\mode<presentation>
+
+ \usepackage{multimedia}
+\usefonttheme{structurebold}
+
+%\useinnertheme{umbcboxes}
+
+%\setbeamercolor{umbcboxes}{bg=violet!15,fg=black}  
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}
+\input{./math-macros}
+\setlength{\parskip}{2ex}   % place a blank line between paragraphs
+\def\Logo{\@ifnextchar(\beamer@Logo\logo}
+\def\beamer@Logo(#1,#2){\logo}
+
+\AtBeginSection[]{
+{\setbeamertemplate{logo}{}
+ \begin{frame}<beamer>
+    \frametitle{Agenda}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+}
+% Images
+% Macros
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\bm}{\bar{m}}
+\newcommand{\dm}{\delta m}
+\newcommand{\dom}{\delta \bar{m}}
+\newcommand{\doma}{\delta \bar{m}_{\alpha}}
+\newcommand{\om}{\bar{m}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bcF}{{\bar{\cal F}}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\of}{\bar{f}}
+\newcommand{\ou}{\bar{u}}
+\newcommand{\odF}{\bar{F}^{\dagger}}
+\newcommand{\oS}{\bar{S}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oJa}{\bar{J}_{\alpha}}
+\newcommand{\Na}{N_{\alpha}}
+\newcommand{\dd}{\delta d}
+\newcommand{\ddl}{\delta d_{\alpha}}
+\title[]{Waveform Inversion via Source Extension}
+\author[]{Guanghui Huang \inst{1} \and Rami Nammour \inst{2} \and \\William W. Symes \inst{3} \and Mohamed Dolliazal \inst{2}}
+\institute[]{\inst{1} Michigan State University \and \inst{2} Total $E\&P$ $R\&T$ USA \and \inst{3} Rice University}
+\date{September 2019}
+
+\begin{document}
+\frame{
+\titlepage
+}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+%\begin{frame}\frametitle{The Plan}
+%\begin{itemize}
+%\item What is ``extended modeling", and why bother
+%\item FWI via surface source extension - examples
+%\item Theory: why \& when it works
+%\item Zoology of source extensions
+%\end{itemize}
+%\end{frame}
+
+\section{What is ``extended modeling'', and why bother}
+
+\begin{frame}%\frametitle{Conventional FWI}
+FWI: adjust model to minimize data misfit (observed - modeled) 
+
+Wave equation:
+\[
+L[m]u = f 
+\]
+$m$ = model parameters, $L$ = wave operator, $u$ = modeled wavefield(s), $f$ = energy source model
+
+FWI objective: 
+\[
+J_{\rm FWI}[m] = \sum (R u - d)^2
+\]
+$R$ = sampling operator, $Ru$ = modeled data, $d$ = observed data, $\sum$ = sum over all components
+
+Note: Wave equation $\Rightarrow$ $u = u[m,f]$
+\end{frame}
+
+\begin{frame}
+A simple example: acoustic transmission inversion w/ isotropic point source @ $\bx_s$: $f = w(t)\delta(\bx-\bx_s)$
+%\[
+%\frac{1}{\kappa}\frac{\partial p}{\partial t} = -\nabla \cdot {\bf v} + w(t)\delta(\bx-\bx_s), \,\rho \frac{\partial {\bf v}}{\partial t} = - \nabla p; \,p,{\bf v}=0, t \ll 0
+%\]
+\vspace{-1.25in}
+%\vspace{-0.5in}
+\begin{center}
+\hspace{-0.5in}\includegraphics[height=4.0in]{Fig/bml0c.pdf}\\
+%\includegraphics[height=2.0in}{Fig/bml0.pdf}\\
+\vspace{-1in}
+target bulk modulus $\kappa$, source at $x_s=3500$ m, $z_s=3000$ m, receivers at $x_r=2000-6000$ m, $z_r=1000$ m
+\end{center}
+\end{frame}
+
+\begin{frame}
+%Modeling operator $(S[\kappa]f)(t,x_r) = \phi(x_r) p(t,x_r,z_r)$ - linear in $f$, nonlinear in $\kappa$
+Model $m=[\kappa]$, wavefield $u=[p,\bv]$, $L[m]u=$ acoustic wave system, $R$ = sample $p$ at receivers, 
+\begin{center}
+\includegraphics[height=1.5in]{Fig/pulse00.pdf} \includegraphics[height=1.5in]{Fig/ptpwindl0.pdf}\\
+\vspace{0.25in}
+Left: [1.0, 2.0, 7.5, 12.5] Hz trapzoidal bandpass filter pulse $w$; Right: pressure traces $Ru$ at $z_r=1000 m$ for source at $x_s=3500 m, z_s=3000 m$. 
+\end{center}
+\end{frame}
+
+\begin{frame}
+Minimizing $J_{\rm FWI}[m] = \sum (R u - d)^2$:
+
+\begin{itemize}
+\item Modeling (computing $u$ etc.): time-domain Finite Difference
+\vspace{0,5cm}
+\item Efficient comp'n of $\nabla J_{\rm FWI}$ = ``adjoint state method'' (Chavent-Lemmonier 74,...) - $\sim$ RTM
+\vspace{0.5cm}
+\item Iteratively update $m$ to reduce $J_{\rm FWI}$ - Newton's or related gradient/descent method, plus smoothing regularization
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=1.25in]{Fig/bml0.pdf}\includegraphics[height=1.25in]{Fig/fwitrbulkmodinvlh0.pdf}\\
+\vspace{0.5cm}
+Left: target model; 
+Right: FWI estimate of $m$ = bulk modulus: initial model $\kappa_0 \equiv 4.0$ GPa, 20 iterations trust region Krylov-Gauss-Newton with smoothing preconditioner. Each KGN step =  up to ``inner'' 20 CG steps $\approx$ 400 fwd models
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=1.2in]{Fig/ptpwindl0.pdf}\includegraphics[height=1.2in]{Fig/fwitrreslh0wind.pdf}\\
+\vspace{0.5cm}
+Left: target data; 
+Right: data residual after 20 KGN steps - final RMS residual reduction = 0.26
+%\|d\|=9.72 \|S-d\|=2.51
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+Big problem: "cycle skipping"
+\begin{itemize}
+\item $J[m]$ appears to have many (local) minima
+\item to avoid getting stuck at wrong estimates, initial $m$ (and $f$) must predict event times in $u$ ``correct within a wavelength''
+\end{itemize}
+
+OK with sufficiently low frequency data with high S/N, but not always available
+\end{frame}
+
+\begin{frame}\frametitle{An Analogy}
+%\vspace{0.5cm}
+Task: Given latitude of Vancouver ($49^{\circ} 15' N$), find its longitude by traveling there from somewhere in Canadian Rockies ($\approx 121^{\circ} W$)
+
+Algorithm: start at correct latitude (eg. Sunshine Valley, $49^{\circ} 16' N$, $121^{\circ} 11' W$) and go {\color{blue} downhill and due west} until altitude minimized 
+\vspace{-3cm}
+\begin{center}
+\includegraphics[width=0.6\textwidth,angle=270]{Fig/bc.pdf}
+\end{center}
+\vspace{-3cm}
+\footnotetext{\tiny{https://www.google.com/maps/@49.2332511,-122.8181263,9z, 2019.08.18}}
+\end{frame}
+
+\begin{frame}
+You, looking west. Now, {\color{blue} go downhill and due west}... oops.
+\vspace{-1.5cm}
+\begin{center}
+\includegraphics[width=0.6\textwidth,angle=270]{Fig/mtns.pdf}
+\end{center}
+\vspace{-1cm}
+%\tiny{{https://www.dreamingandwandering.com/2016/01/10/25-photos-of-the-canadian-rockies-that-will-make-you-pack-your-bags-and-go/}, 2019.08.21}
+\footnotetext{\tiny{\noindent https://www.dreamingandwandering.com/2016/01/10/25-photos-of-the-canadian-rockies-that-will-make-you-pack-your-bags-and-go/}, 2019.08.21}
+\end{frame}
+
+\begin{frame}
+Analogy w/ FWI: altitude $\sim$ $J_{\rm FWI}[m] =$ mean square error
+
+Can't reduce to desired min = 0 while going downhill ($\sim$ using descent method) {\color{blue} and} maintaining latitude of Vancouver ($\sim$ known physical properties of solution) 
+
+Descent methods - mandatory because of computational size, can't drop
+
+Alternative: drop ``physical constraint'' (latitude), search in larger ``unphysical'' space 
+\end{frame}
+
+\begin{frame}
+With full 2D search available, can go to local creek, then float down to local river, join Fraser River near Hope ($49^{\circ} 23' N$) ... float your boat to Vancouver, downhill all the way!
+\vspace{-2.8cm}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{Fig/fraser.pdf}
+\end{center}
+\vspace{-3cm}
+Moral: dropping some known properties (physical constraints) of solution {\color{blue} during search} may make descent search feasible
+
+\footnotetext{\tiny{https://images.search.yahoo.com/yhs/search?p=fraser+river}, 2019.08.21}
+
+\end{frame}
+
+\section{FWI via source extension}
+\begin{frame}
+
+{\color{blue} Extended modeling:} allow interim models to violate known ``physical'' constraints on true solution
+
+Active source data (usually) involves {\em localized} source model with known location, eg. ($\bx=(x,y,z)$)
+\[
+f(\bx,t;x_s,y_s) = w(t) \delta(\bx-\bx_s) = \mbox{ isotropic point source at }\bx=\bx_s
+\]
+{\color{blue} Source Extension}: replace $f$ with {\em non-localized} source model $\of$ 
+
+Extended wavefield $\ou$  solves $L[m]\ou = \of$, data prediction = $R\ou$ - computational complexity similar to FWI
+
+
+\end{frame}
+
+\begin{frame}
+Source extension methods:
+\begin{itemize}
+\item
+Wavefield Reconstruction Inversion (WRI):
+van Leeuwen and Herrmann GJI 2013, Inv. Probs. 2016, Wang \& Yingst SEG 2016, Aghamiry et al GEO 2019 
+\item Adaptive Waveform Inversion (AWI): Warner \& Guatsch, GEO 2014, 2016
+\item ... (see abstract)
+\item {\color{blue} surface source extension (SSE):} $\of(\bx,t;x_s,y_s) = w(x,y,t; x_s,y_s)\delta(z-z_s)$
+\end{itemize} 
+
+Common feature: additional source degrees of freedom permit good fit to data {\em for large set of $m$}
+\end{frame}
+
+\begin{frame}
+Detailed Formulation:
+
+At solution, must recover known constraints on model (``get closer to Vancouver's latitude as you get close to the sea''): 
+
+$\Rightarrow$ introduce {\color{blue} annihilator} $A$, vanishing on models obeying these constraints - minimize output jointly with data residual
+
+%Many possibilities - MS difference w/ known source (WRI), mean time lag (AWI)
+
+Many choices. For SSE: scale by offset 
+\[
+A\of(\bx,t;x_s,y_s) = \sqrt{(x-x_s)^2+(y-y_s)^2}w(x,y,t;x_s,y_s)
+\]
+
+{\color {blue} Extension Principle:} $m,\of$ so  that $R\bar{u} \approx d$, $A\of \approx 0$ $\Rightarrow$ approx FWI solution
+\end{frame}
+
+
+
+%\begin{frame}
+%Extended objective function: data misfit + annihilator output, 
+
+%\[
+%J_{\rm SSE}[m] = \min_{\of} \,\frac{1}{2} \sum (R\ou - d)^2 + \alpha^2 \sum (A\of)^2
+%\]
+
+%Reduced: ``pre-minimized'' over source
+
+%FWI via surface source extension: given $d$ and initial $m_0$, use numerical optimization method to find minimizer $m$ of
+%$J_{\rm SSE}[m]$.
+%\end{frame}
+
+%\begin{frame}
+%Examples: 
+
+%(1) diving wave data (sampling op may include window in defn)
+
+%(2) reflection data
+
+%In both cases, method is [??? VPM, CG for inner problem, steepest descent for outer???]
+%\end{frame}
+
+%\begin{frame}
+%Mohamed's examples 
+%\begin{itemize}
+%\item include straight FWI for both
+%\item also some info about objective values, residuals, convergence, etc.
+%\item plots of models, but also sources, residuals - especially want to show extended source from early iteration
+%\end{itemize}
+%\end{frame}
+
+\begin{frame}
+FWI via SSE: given $d$ and initial $m_0$, use numerical optimization method to find minimizer $m$ of
+\[
+J_{\rm SSE}[m] = \mbox{ min}_{\of}\frac{1}{2} \sum (R\ou - d)^2 + \alpha^2 \sum (A\of)^2
+\]
+over $m$ 
+
+\begin{itemize}
+\item time-domain FD, gradient via adjoint state
+\item update $\of$ using Conjugate Gradient Iteration (inner loop)
+\item update $m$ using steepest descent, line search (outer loop) plus smoothing regularization
+\item update $\alpha$ using Discrepancy Principle (keep data residual $\in (e_-, e_+)$) - {\color{blue} can always choose $\of$ to fit data} $\Rightarrow$ can start with $\alpha=0$ (Fu \& S. GEO 2017)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Example 1: Lens model
+\end{center}
+\begin{center}
+\includegraphics[height=1.25in]{Fig/cgw1bulkupdlh0.pdf}\includegraphics[height=1.25in]{Fig/cgw30bulkupdlh0.pdf}\\
+\vspace{0.25in}
+Start at $\kappa_0=4.0$ GPa, use $e_-=0.1\|d\|, e_+=0.2\|d\|$. \\
+Left: Iteration 1 ($\alpha=4.83 \times 10^{-6}$)\\
+Right: Iteration 30 ($\alpha = 9.1\times 10^{-5}$)
+\end{center}
+\end{frame}
+
+\begin{frame}
+$m=[\kappa]$ converges $\leftrightarrow$ $\alpha$ increases, extended source $\of$ (initially spread over $z=z_s=1000$ m) {\color{blue} focuses} at $x=x_s=3500$ m.
+\begin{center}
+\hspace{-1cm}\includegraphics[height=1.25in]{Fig/cgw1estsourceplh0.pdf}\includegraphics[height=1.25in]{Fig/cgw7estsourceplh0.pdf}\includegraphics[height=1.25in]{Fig/cgw29estsourceplh0.pdf}\\
+\vspace{0.25in}
+Left to right: $\of$ at Iterations 1 ($\alpha=4.83 \times 10^{-6}, r=2000$ m), 8 ($\alpha= 1.32 \times 10^{-5}, r=1000$ m) and 30 ($\alpha=9.1 \times 10^{-5}, r=250$ m).
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=1.25in]{Fig/fwitrsse1bulkmodinvlh0.pdf}\includegraphics[height=1.25in]{Fig/bml0.pdf}\\
+\vspace{0.25in}
+Left: ``Jump to $\alpha=\infty$": bulk modulus estimated by FWI, starting with iteration 30 of SSE. 18 steps KGN, each $\le$ inner 20 CG steps, final RMS residual reduction = 0.012;
+Right: Target bulk modulus field
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\vspace{-0.7in}
+\includegraphics[height=4.5in]{HMC1.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}
+HMC Salt/Carbonate Acoustic Model
+
+Streamer acquisition $z_s = 7$ m, $\Delta x_s=37.5$ m, 315 shots, $z_r=15$ m, $\Delta x_r=12.5$ m, 475 recvs, max offset = $6$ km
+
+Pulse for data generation = [2, 3, 6, 10] Hz trapezoidal bandpass filter
+
+Free surface @ $z=0$, other boundaries absorbing, 2-8 staggered FD scheme
+
+Regularization: penalize MS velocity gradient, weight (also $\alpha$) via several trials
+
+Data contains diving waves, pre- \& post-critical reflections, multiple reflections, refracted multiple reflections, head waves, free surface multiples, .... 
+
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\vspace{-0.7in}
+\includegraphics[height=4.5in]{HMC2.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\vspace{-0.7in}
+\includegraphics[height=4.5in]{HMC3.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\vspace{-0.7in}
+\includegraphics[height=4.5in]{HMC4.pdf}
+\end{center}
+\end{frame}
+
+\section{Theory: why \& when it works}
+
+\begin{frame}
+FWI vs. SSE for transmission (diving wave, crosswell) data:
+
+$J_{\rm FWI}[m]$ and $J_{\rm SSE}[m]$ = regular functions of $m$, locally close to quadratic approximations.
+
+$d$ consistent: $d=Ru[m,f]$, $\of = f = w(t)\delta(\bx-\bx_s)$, $A\of=0$ $\Rightarrow$
+
+\begin{itemize}
+\item  $J_{\rm FWI}[m]=J_{\rm SSE}[m]=0$
+\vspace{0.5cm}
+\item $J_{\rm FWI}[m + \delta m] \approx \mbox{const. }\omega^2 \|\delta m\|^2$ for some $\delta m$ (kinematic perturbations), $\omega$ = center frequency in source pulse $w(t)$
+\vspace{0.5cm}
+\item $J_{\rm SSE}[m+\delta m] \le \mbox{const. }\|\delta m\|^2$ independent of $\omega, \delta m$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+$\Rightarrow$ radius of convexity region:
+\begin{itemize}
+\item $J_{\rm FWI}: O(1/\omega)$, must initialize ``within a wavelength''
+\item $J_{\rm SSE}: O(1)$, converges even with (rel.) poor initial guess, HF data
+\end{itemize}
+
+Method of proof: ray theory (``mocrolocal analysis'')
+
+More detailed analysis: minimizing $J_{\rm SSE}$ equivalent to a form of transmission travel time tomography: {\color{blue} tomography without picking} 
+
+NB: for reflection data... ???
+\end{frame}
+
+\begin{frame}\frametitle{Late Breaking News}
+Theory for special reflection case: layered ($\kappa(z)$) medium, dip filter to eliminate postcritical/diving wave energy
+
+Explicit computation of $\nabla J_{\rm SSE}$ for 
+\begin{itemize}
+\item homogenous background 
+\item data from single reflector in otherwise slowly varying $\kappa$, wavelet with central frequency $\omega$
+\end{itemize}
+$\Rightarrow$ $\nabla J_{\rm SSE} \rightarrow 0$ as $\omega \rightarrow \infty$
+
+Same behavior as $\nabla J_{\rm FWI}$!!!
+
+Upshot: for pure reflection data, SSE may not provide constructive velocity updates
+\end{frame}
+
+\begin{frame}
+{\color{blue} {\bf Summary:}} Surface Source Extension 
+
+\begin{itemize}
+\item overcomes cycle-skipping for transmission data, solid theoretical foundation
+\item same computational complexity as FWI
+\item open question: theory for reflections {\color{blue} (initial result not positive)}
+\end{itemize}
+%\end{frame}
+
+%\begin{frame}
+Other source extension methods (WRI, AWI, ...)
+
+\begin{itemize}
+\item Many promising examples 
+\item Little known theoretically - connection to travel time tomography???
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Model Extension}
+Add degrees of freedom to $v$, $\kappa$, instead of source
+
+Annihilator: flatten/focus gathers
+
+{\color{blue}Extracts velocity updates from reflection and refraction events} (S. 86, Kern \& S. 94, S. GP 08, Shen \& S. GEO 08, Shen EAGE 12, Biondi \& Almomin 12, 14, Chauris \& Cocher GEO 17, Hou \& S. GEO 18, Barnier \& Biondi SEG 19)
+
+Chief challenge: expense(model extension) $\gg$ expense(FWI) (Note: expense(source extension) $\approx$ expense(FWI))
+\end{frame}
+
+
+\begin{frame}\frametitle{Acknowledgements}
+\begin{itemize}
+\item Total E\&P USA
+\item Sponsors of The Rice Inversion Project
+\item Organizers of SS 1 (Recent Advances and Road Ahead) at SEG 2019
+\end{itemize}
+\end{frame}
+
+\end{document} 
+
+\begin{frame}
+Matched Source Waveform Inversion (Hua \& Symes 1993, 4, Huang \& Symes 2017) 
+
+\begin{itemize}
+\item similar to AWI (source wavelet for each trace), w/o normalization
+\item if
+\begin{itemize}
+\item transmission data (crosswell, diving wave)
+\item unique ray paths
+\end{itemize}
+then mean square moment $\approx$ mean square travel time misfit: {\color{blue} tomography without picking} 
+
+\item relation with tomography fails ($\approx$ FWI) if multiple rays connect sources and receivers - contrast SSE
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Example 2: Deep Water Marmousi
+\end{center}
+\begin{center}
+\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmVt.pdf}\\
+Modified Marmousi Model: 2 km water layer added to minimize non-reflected energy, also box-snaped target
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81}\\
+Data: isotropic point source with 8 Hz Ricker wavelet, $z_r=0.04$ km, $x_r=$ 0.05 km to 9.15 km, $\Delta x_r=$ 0.05 km, $z_s=0.08$ km, $x_s=0.6$ km to $x_s=8.6$, $\Delta x_s$ = 0.1 km. Shots at $x_s=0.6$ km and $x_s=8.6$ km displayed.
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmV0.pdf}\\
+Initial $v(z)$ model for both FWI and SSE
+\end{center}
+\end{frame}
+
+\begin{frame}
+\vspace{-0.1cm}
+\begin{center}
+\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmFWI.pdf}\\
+FWI estimate of $v$: 200 iterations LBFGS, frequency domain FD 5-8 Hz
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmSurf.pdf}\\
+SSE estimate of $v$: 150 iterations LBFGS, frequency domain FD 5-8 Hz, fixed $\alpha$ set by trial
+\end{center}
+\end{frame}
+
+\begin{frame}
+%\vspace{0.07cm}
+\begin{center}
+\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmVt.pdf}\\
+Modified Marmousi Model: 2 km water layer added to minimize non-reflected energy, also box-snaped target
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1Inv}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81Inv}\\
+Data predicted from SSE inverted model: shots at $x_s=0.6$ km and $x_s=8.6$ km.
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81}\\
+Target data:\\ shots at $x_s=0.6$ km and $x_s=8.6$ km.
+\end{center}
+\end{frame}
+
+\begin{frame}
+Wavefield Reconstruction Inversion: $\of(\bx,t;\bx_s)$ distributed throughout space-time
+
+van Leeuwen and Herrmann 2013, 2016, Wang \& Yingst 2016 
+
+similar: space-time extension Huang \& S. 2018 
+
+\begin{itemize}
+\item[+ ]many good examples, convincing numerical evidence
+\item[+ ]3D field data - Wang \& Yingst 2016
+\item[- ]basic form: store complete space-time (or space-frequency) fields (6D)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Adaptive Waveform Inversion (Warner \& Guatsch, 2014, 2016): $\of(\bx,t;\bx_r,\bx_s) = w(t;\bx_r)\delta(\bx-\bx_s)$ localized but depends on receiver coordinate $\bx_r$ - one wavelet per data trace
+
+similar: source-receiver extension Hua \& S. 1994, Huang \& S. 2017
+
+\begin{itemize}
+\item[+ ]additional storage: $\approx$ data volume (5D)
+\item[+ ]minor mod of standard FWI workflow
+\item[- ]source-receiver: loses advantage over FWI when sources, receivers connected by multiple ray paths (fails for lens model, above)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Intermediate: source distributed over space-time surface
+\begin{itemize}
+\item const. t surface = volume source extension - Huang \& S. 2018
+\item const z surface = {\color{blue} surface source extension (SSE):} 
+\[
+\of(\bx,t;x_s,y_s) = w(x,y; x_s,y_s)\delta(z-z_s)
+\]
+\end{itemize}
+\begin{itemize}
+\item[+ ]additional storage = O(data volume) (5D)
+\item[+ ]no problem with multiple ray paths
+\item[+ ]theory for transmission data (eg. diving wave): {\color{blue} tomography w/o picking}
+\end{itemize} 
+\end{frame}
+

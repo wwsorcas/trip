@@ -60,7 +60,7 @@ for i in range(1):
     SRCLIST.append('ptpl'+str(i)+'.su')
     SRCLIST.append('ptpt'+str(i)+'.su')    
     for j in range(4):
-    	SRCLIST.append('ptsrc'+str(j)+str(i)+'.su')
+        SRCLIST.append('ptsrc'+str(j)+str(i)+'.su')
 
 print(SRCLIST)
 
@@ -72,7 +72,7 @@ else:
         SRC = os.path.join(BASIC,i)
         if not os.path.exists(SRC):
             print('you must build the target ' + SRC)
-            print('before building this project') 
+            print('before building this project')
             Exit(1)
         Flow(i,SRC,'/bin/cp ' + SRC + ' ' + i, stdin=0, stdout=-1)
           
@@ -88,63 +88,65 @@ it=100
 # taper parameters - taper in gx only
 TP = 'gx:2000,2500,5500,6000'
 
+# iteration over resolution: 0=20m grid, 1=10m grid,...
 #for i in range(3):
 for i in [0]:
 
-
+# iteration over data/init medium params
+# lh = lens data, init homog med
 #    for med in ['hh', 'wh', 'lh', 'll']:
     for med in ['lh']:
         exp = med + str(i)
 
-	Flow('cgw0_weight'+exp+'.txt', None, 'echo 0.0')
-	Flow('cgw0_bulkupd'+exp, 'bm'+exp[1]+exp[2],'cp')
+        Flow('cgw0_weight'+exp+'.txt', None, 'echo 0.0')
+        Flow('cgw0_bulkupd'+exp, 'bm'+exp[1]+exp[2],'cp')
 
-# eighth full range
-        j=3
+# half range
+        j=1
 
-	w=0
-	winit=0.0
-	wupdate=10
-	bulkupdates=[18,19,20,21,22,23]
-	
-	for w in bulkupdates:
-    	    Flow(['cgw' + str(w) + '_est_source_p' + exp + '.su',
+        w=0
+        winit=0.0
+        wupdate=10
+        bulkupdates=[18,19,20,21,22,23]
+
+        for w in bulkupdates:
+            Flow(['cgw' + str(w) + '_est_source_p' + exp + '.su',
                   'cgw' + str(w) + '_est_data_p' + exp + '.su',
-	      	  'cgw' + str(w) + '_res_data_p' + exp + '.su',
-	      	  'cgw' + str(w) + '_res_anni_p' + exp + '.su',
-	      	  'cgw' + str(w) +    '_bulkgrad' + exp,
-	      	  'cgw' + str(w) + '_bulkpgrad' + exp,
-	      	  'cgw' + str(w+1) + '_bulkupd' + exp,
-	      	  'cgw' + str(w) + exp + '.rpt',
-	      	  'cgw' + str(w+1) + '_weight' + exp +'.txt'],
-	     	 ['cgw' + str(w) + '_bulkupd' + exp,
-              	  'byh' + exp[2],
-      	      	  'ptsrc' + str(j) + exp[2] + '.su',
-      	      	  'ptp' + exp[0] + exp[2] + '.su',
-	      	  'cgw' + str(w) + '_weight' + exp +'.txt'],
-       	      	  sugain + '< ${SOURCES[2]} >${TARGETS[0]} scale=0.0 && ' +
-	      	  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[4]} && ' +
-	      	  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[5]} && ' +
-	      	  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[6]} && ' +	  	  
-       	      	  asg0cgne + 
-       	      	  '''
-       	      	  bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
-       	      	  source_p=${TARGETS[0]} data_p=${SOURCES[3]}
-	      	  est_data_p=${TARGETS[1]} res_data_p=${TARGETS[2]}
-	      	  res_anni_p=${TARGETS[3]}
-	      	  bulkmod_grad=${TARGETS[4]} bulkmod_pgrad=${TARGETS[5]}
-	      	  bulkmod_upd=${TARGETS[6]}
-	      	  rect1=5 rect2=5 repeat=10 nsnaps=20
-		  weightout=${TARGETS[8]}
-	      	  weightin=${SOURCES[4]}''' +
-		  ' MaxAlphaUpdate=' + str(wupdate) + ' ' + 
-	      	  '''
-	      	  MaxSubSteps=5 MinDecrease=0.01
-	      	  RelResUpperBnd=0.2 RelResLowerBnd=0.1 AlphaDecrFac=0.1
-       	      	  order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
-       	      	  dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
-     	      	  ResidualTol=0.01 GradientTol=0.01 MaxIter=
-       	      	  '''  + str(it) + ' taperpars=' + TP +
-	      	  ' outfile=${TARGETS[7]}',
-	      	  stdin=0, stdout=-1)
-	
+                  'cgw' + str(w) + '_res_data_p' + exp + '.su',
+                  'cgw' + str(w) + '_res_anni_p' + exp + '.su',
+                  'cgw' + str(w) +    '_bulkgrad' + exp,
+                  'cgw' + str(w) + '_bulkpgrad' + exp,
+                  'cgw' + str(w+1) + '_bulkupd' + exp,
+                  'cgw' + str(w) + exp + '.rpt',
+                  'cgw' + str(w+1) + '_weight' + exp +'.txt'],
+                 ['cgw' + str(w) + '_bulkupd' + exp,
+                  'byh' + exp[2],
+                  'ptsrc' + str(j) + exp[2] + '.su',
+                  'ptp' + exp[0] + exp[2] + '.su',
+                  'cgw' + str(w) + '_weight' + exp +'.txt'],
+                  sugain + '< ${SOURCES[2]} >${TARGETS[0]} scale=0.0 && ' +
+                  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[4]} && ' +
+                  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[5]} && ' +
+                  'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[6]} && ' +                    
+                  asg0cgne + 
+                  '''
+                  bulkmod=${SOURCES[0]} buoyancy=${SOURCES[1]} 
+                  source_p=${TARGETS[0]} data_p=${SOURCES[3]}
+                  est_data_p=${TARGETS[1]} res_data_p=${TARGETS[2]}
+                  res_anni_p=${TARGETS[3]}
+                  bulkmod_grad=${TARGETS[4]} bulkmod_pgrad=${TARGETS[5]}
+                  bulkmod_upd=${TARGETS[6]}
+                  rect1=5 rect2=5 repeat=2 nsnaps=20
+                  weightout=${TARGETS[8]}
+                  weightin=${SOURCES[4]}''' +
+                  ' MaxAlphaUpdate=' + str(wupdate) + ' ' + 
+                  '''
+                  MaxSubSteps=5 MinDecrease=0.01
+                  RelResUpperBnd=0.2 RelResLowerBnd=0.1 AlphaDecrFac=0.1
+                  order=2 cfl=0.5 cmin=1.0 cmax=3.0 sampord=1
+                  dmin=0.8 dmax=3.0 nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0
+                  ResidualTol=0.01 GradientTol=0.01 MaxIter=
+                  '''  + str(it) + ' taperpars=' + TP +  ' outfile=${TARGETS[7]}',
+                  stdin=0, stdout=-1)        
+#                  '''  + str(it) +  ' outfile=${TARGETS[7]}', 
+#                  stdin=0, stdout=-1) 

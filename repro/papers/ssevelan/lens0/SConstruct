@@ -1,0 +1,169 @@
+import os
+
+# build dict of data to import
+dd = dict(DATA='ptpl0.su', SRC='pulse00.su', HOM='bmh0.rsf', BUOY='byh0.rsf')
+
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+RSFROOT         = os.getenv('RSFROOT')
+TRIP            = os.getenv('TRIP')
+MPIROOT         = os.getenv('MPIROOT')
+
+a2b             = os.path.join(CWPROOT,'bin/a2b')
+b2a             = os.path.join(CWPROOT,'bin/b2a')
+farith          = os.path.join(CWPROOT,'bin/farith')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+Sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sufrac          = os.path.join(CWPROOT,'bin/sufrac')
+suop2           = os.path.join(CWPROOT,'bin/suop2')
+suop            = os.path.join(CWPROOT,'bin/suop')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+sumean          = os.path.join(CWPROOT,'bin/sumean')
+sfsuread        = os.path.join(RSFROOT,'bin/sfsuread')
+sfmatmult       = os.path.join(RSFROOT,'bin/sfmatmult')
+sfwindow        = os.path.join(RSFROOT,'bin/sfwindow')
+sfadd           = os.path.join(RSFROOT,'bin/sfadd')
+sfget           = os.path.join(RSFROOT,'bin/sfget')
+sfput           = os.path.join(RSFROOT,'bin/sfput')
+sfspray         = os.path.join(RSFROOT,'bin/sfspray')
+sfcp            = os.path.join(RSFROOT,'bin/sfcp')
+sfmakevel       = os.path.join(RSFROOT,'bin/sfmakevel')
+sfsmooth        = os.path.join(RSFROOT,'bin/sfsmooth')
+mfexec          = os.path.join(TRIP,'pyrvl/mfexec.py')
+grand           = os.path.join(TRIP,'iwave/grid/main/GridRand.x')
+glincomb        = os.path.join(TRIP,'iwave/grid/main/GridLinComb.x')
+
+################################## S/R GEOMETRY ##################################
+
+# time steps in source, filter
+NTU=1001
+
+# time steps in data
+NTD=2501
+
+# time of first filter sample (ms)
+DELRT=-1000
+
+# time step (ms)
+DT=2
+
+# first corner frequency, bandpass filter (Hz)
+F1=1.0
+
+# second corner frequency, bandpass filter (Hz)
+F2=2.5
+
+# third corner frequency, bandpass filter (Hz)
+F3=7.5
+
+# fourth corner frequency, bandpass filter (Hz)
+F4=12.5
+
+# number of receivers
+NR=201
+
+# first receiver x (m)
+RX=2000
+
+# first receiver z (m)
+RZ=1000
+
+# receiver x step (m)
+DRX=20
+
+# receiver z step (m)
+DRZ=0
+
+# number of sources
+NS=1
+
+# first source x (m)
+SX=3500
+
+# first source z (m)
+SZ=3000
+
+# source x step (m)
+DSX=200
+
+# source z step (m)
+DSZ=0
+
+############################### generic sconstruct ##################################
+
+from rsf.proj import *
+
+import os
+import scenv
+
+CWPROOT         = os.getenv('CWPROOT')
+RSFROOT         = os.getenv('RSFROOT')
+TRIP            = os.getenv('TRIP')
+MPIROOT         = os.getenv('MPIROOT')
+
+sfcp            = os.path.join(RSFROOT,'bin/sfcp')
+mfexec          = os.path.join(TRIP,'pyrvl/mfexec.py')
+
+BASIC='../data'
+
+# retrieve data
+if not os.path.exists(BASIC):
+    print('cannot find data source directory ' + BASIC)
+    Exit(1)
+else:
+    for it in dd.keys():
+        ITEM = os.path.join(BASIC,dd[it])
+        if not os.path.exists(ITEM):
+            print('you must build the target ' + ITEM)
+            print('before building this project') 
+            Exit(1)
+        Flow(dd[it],ITEM,'/bin/cp ' + ITEM + ' ' + dd[it], stdin=0, stdout=-1)
+
+# simulator parameters
+fdpars = 'order=2 sampord=1 nsnaps=20 cfl=0.5 cmin=1.0 cmax=3.0 dmin=0.8 dmax=3.0' + \
+        ' ' + 'nl1=250 nr1=250 nl2=250 nr2=250 pmlampl=1.0 boundstest=True noisy=True partask=1'
+
+# weight operator parameters
+smpars = 'rect1=10 rect2=10 repeat=2'
+smpars0 = 'rect1=1 rect2=1 repeat=0'
+
+# line search parameters
+lspars = 'lsmax=8 mured=0.5 muinc=1.8 gammared=0.1 gammainc=0.9'
+
+descparscovfwi = r'descmax=150 desceps=0.01 descverbose=1 descout=\'outfilecovfwicwg28.txt\' lsverbose=1'
+fwipars = ' ' + fdpars + ' ' + smpars + ' ' + descparscovfwi + ' ' + lspars
+
+Flow('cx.rsf', 'bmh0.rsf',
+      sfput + ' label=Real unit=None')
+
+# FWI with CofV from final SSE model
+Flow('covmestfwicwg28.rsf',
+    ['cgw28_bulkupdlh0.rsf', dd['DATA'], dd['SRC'], dd['BUOY'], 'cx.rsf'],
+     sfcp + ' ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     mfexec + r' asgfwi.modfwiopt bulkmodout=\'${TARGETS[0]}\'' + \
+     	      r' bulkmodin=\'${SOURCES[0]}\' cmodin=\'${SOURCES[4]}\' datain=\'${SOURCES[1]}\'' + \
+              r' buoyancy=\'${SOURCES[3]}\' source=\'${SOURCES[2]}\'' + \
+	      fwipars, stdin=0, stdout=-1)
+
+Flow('resimcovmestfwicwg28.su',[dd['DATA'], dd['SRC'], 'covmestfwicwg28.rsf',dd['BUOY']],
+     ' /bin/cp ${SOURCES[0]} ${TARGETS[0]} && ' + \
+     mfexec + r' asgfwi.asgsim bulkmod=\'${SOURCES[2]}\' data_p=\'${TARGETS[0]}\'' + \
+     r' buoyancy=\'${SOURCES[3]}\' source_p=\'${SOURCES[1]}\'' + \
+     ' ' + fdpars, stdin=0, stdout=-1)
+
