@@ -53,10 +53,12 @@
 \newcommand{\Na}{N_{\alpha}}
 \newcommand{\dd}{\delta d}
 \newcommand{\ddl}{\delta d_{\alpha}}
+
+
 \title[]{Waveform Inversion via Source Extension}
-\author[]{William W. Symes \inst{1}}
-\institute[]{\inst{1} Rice University}
-\date{Workshop in honor of Jean Virieux \\June 2025}
+\author[]{William W. Symes}
+\institute[]{\inst{} Rice University}
+\date{To Jean, for his many contributions and his leadership\\June 2025}
 
 \begin{document}
 \frame{
@@ -65,14 +67,6 @@
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
-%\begin{frame}\frametitle{The Plan}
-%\begin{itemize}
-%\item What is ``extended modeling", and why bother
-%\item FWI via surface source extension - examples
-%\item Theory: why \& when it works
-%\item Zoology of source extensions
-%\end{itemize}
-%\end{frame}
 
 \section{Inversion}
 
@@ -291,7 +285,7 @@ $J_{\rm MSWI}$ (similar to $J_{\rm AWI}$).
   {\em spread source energy over a surface}, acts as antennae,
   controls full 2D phase spectrum
 
-For any $m$, determine $\bar{w}=\bar{w}[m]$ so that $F\bar{s} \approx d$. Update $m$ to drive
+For any $m$, determine $\bar{w}=\bar{w}[m]$ so that $F[m]\bar{s} \approx d$. Update $m$ to drive
 $\bar{w}(\bx,t;\bx_s) \rightarrow w(t)\delta(\bx-\bx_s)$ by minimizing
 \[
   J_{\rm SSE}[m] = \sum_{\bx_s}\sum_{\bx,t} ||(\bx-\bx_s)|
@@ -416,262 +410,36 @@ Right: FWI data residual
 provided that
 \begin{itemize}
 \item $d = F[m_*]s$,
+\item $\Gamma \subset$ phase space over source surface, initial data
+  for rays crossing receiver surface
+\item $\tau[m](\bx_s,\bp)$ = time to receiver surface along ray taking
+  off at $(\bx_s,\bp)$
 \item RMS wavelength of $w$ (hence $d$) $\rightarrow 0$,
 \end{itemize}
 \[
-  \nabla \nabla  J_{\rm SSE}[m_*] \rightarrow \sum_{\bx,\bp}
+  \mbox{Hess }  J_{\rm SSE}[m_*] \rightarrow \mbox{Hess } J_{\rm TT}[m_*]
 \]
+where $J_{\rm TT}[m] = \sum_{(\bx_s,p) \in \Gamma} (\nabla_p(\tau[m](\bx_s,\bp) -
+\tau[m_*](\bx_s,\bp)))^2$
+
+{\color{blue} SSE asymptotic to tomography-like limit}
+
+\end{frame}
+
+\begin{frame}
+Summary:
+
+\begin{itemize}
+\item for acoustic transmission data, several source extension methods
+  perform ``tomography without picking'', avoid cycle-skipping,
+  various constraints
+\item no theoretical foundation for source extension with
+  reflection inversion
+\item beyond acoustics - elasticity? attenuation?
+\end{itemize}
+
+No shortage of open questions...
 \end{frame}
 
 \end{document}
-
-
-\begin{frame}
-\begin{center}
-\vspace{-0.7in}
-\includegraphics[height=4.5in]{HMC1.pdf}
-\end{center}
-\end{frame}
-
-\begin{frame}
-HMC Salt/Carbonate Acoustic Model
-
-Streamer acquisition $z_s = 7$ m, $\Delta x_s=37.5$ m, 315 shots, $z_r=15$ m, $\Delta x_r=12.5$ m, 475 recvs, max offset = $6$ km
-
-Pulse for data generation = [2, 3, 6, 10] Hz trapezoidal bandpass filter
-
-Free surface @ $z=0$, other boundaries absorbing, 2-8 staggered FD scheme
-
-Regularization: penalize MS velocity gradient, weight (also $\alpha$) via several trials
-
-Data contains diving waves, pre- \& post-critical reflections, multiple reflections, refracted multiple reflections, head waves, free surface multiples, .... 
-
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\vspace{-0.7in}
-\includegraphics[height=4.5in]{HMC2.pdf}
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\vspace{-0.7in}
-\includegraphics[height=4.5in]{HMC3.pdf}
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\vspace{-0.7in}
-\includegraphics[height=4.5in]{HMC4.pdf}
-\end{center}
-\end{frame}
-
-\section{Theory: why \& when it works}
-
-\begin{frame}
-FWI vs. SSE for transmission (diving wave, crosswell) data:
-
-$J_{\rm FWI}[m]$ and $J_{\rm SSE}[m]$ = regular functions of $m$, locally close to quadratic approximations.
-
-$d$ consistent: $d=Ru[m,f]$, $\of = f = w(t)\delta(\bx-\bx_s)$, $A\of=0$ $\Rightarrow$
-
-\begin{itemize}
-\item  $J_{\rm FWI}[m]=J_{\rm SSE}[m]=0$
-\vspace{0.5cm}
-\item $J_{\rm FWI}[m + \delta m] \approx \mbox{const. }\omega^2 \|\delta m\|^2$ for some $\delta m$ (kinematic perturbations), $\omega$ = center frequency in source pulse $w(t)$
-\vspace{0.5cm}
-\item $J_{\rm SSE}[m+\delta m] \le \mbox{const. }\|\delta m\|^2$ independent of $\omega, \delta m$
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-$\Rightarrow$ radius of convexity region:
-\begin{itemize}
-\item $J_{\rm FWI}: O(1/\omega)$, must initialize ``within a wavelength''
-\item $J_{\rm SSE}: O(1)$, converges even with (rel.) poor initial guess, HF data
-\end{itemize}
-
-Method of proof: ray theory (``mocrolocal analysis'')
-
-More detailed analysis: minimizing $J_{\rm SSE}$ equivalent to a form of transmission travel time tomography: {\color{blue} tomography without picking} 
-
-NB: for reflection data... ???
-\end{frame}
-
-\begin{frame}\frametitle{Late Breaking News}
-Theory for special reflection case: layered ($\kappa(z)$) medium, dip filter to eliminate postcritical/diving wave energy
-
-Explicit computation of $\nabla J_{\rm SSE}$ for 
-\begin{itemize}
-\item homogenous background 
-\item data from single reflector in otherwise slowly varying $\kappa$, wavelet with central frequency $\omega$
-\end{itemize}
-$\Rightarrow$ $\nabla J_{\rm SSE} \rightarrow 0$ as $\omega \rightarrow \infty$
-
-Same behavior as $\nabla J_{\rm FWI}$!!!
-
-Upshot: for pure reflection data, SSE may not provide constructive velocity updates
-\end{frame}
-
-\begin{frame}
-{\color{blue} {\bf Summary:}} Surface Source Extension 
-
-\begin{itemize}
-\item overcomes cycle-skipping for transmission data, solid theoretical foundation
-\item same computational complexity as FWI
-\item open question: theory for reflections {\color{blue} (initial result not positive)}
-\end{itemize}
-%\end{frame}
-
-%\begin{frame}
-Other source extension methods (WRI, AWI, ...)
-
-\begin{itemize}
-\item Many promising examples 
-\item Little known theoretically - connection to travel time tomography???
-\end{itemize}
-\end{frame}
-
-\begin{frame}\frametitle{Model Extension}
-Add degrees of freedom to $v$, $\kappa$, instead of source
-
-Annihilator: flatten/focus gathers
-
-{\color{blue}Extracts velocity updates from reflection and refraction events} (S. 86, Kern \& S. 94, S. GP 08, Shen \& S. GEO 08, Shen EAGE 12, Biondi \& Almomin 12, 14, Chauris \& Cocher GEO 17, Hou \& S. GEO 18, Barnier \& Biondi SEG 19)
-
-Chief challenge: expense(model extension) $\gg$ expense(FWI) (Note: expense(source extension) $\approx$ expense(FWI))
-\end{frame}
-
-
-\begin{frame}\frametitle{Acknowledgements}
-\begin{itemize}
-\item Total E\&P USA
-\item Sponsors of The Rice Inversion Project
-\item Organizers of SS 1 (Recent Advances and Road Ahead) at SEG 2019
-\end{itemize}
-\end{frame}
-
-\end{document} 
-
-\begin{frame}
-Matched Source Waveform Inversion (Hua \& Symes 1993, 4, Huang \& Symes 2017) 
-
-\begin{itemize}
-\item similar to AWI (source wavelet for each trace), w/o normalization
-\item if
-\begin{itemize}
-\item transmission data (crosswell, diving wave)
-\item unique ray paths
-\end{itemize}
-then mean square moment $\approx$ mean square travel time misfit: {\color{blue} tomography without picking} 
-
-\item relation with tomography fails ($\approx$ FWI) if multiple rays connect sources and receivers - contrast SSE
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-Example 2: Deep Water Marmousi
-\end{center}
-\begin{center}
-\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmVt.pdf}\\
-Modified Marmousi Model: 2 km water layer added to minimize non-reflected energy, also box-snaped target
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81}\\
-Data: isotropic point source with 8 Hz Ricker wavelet, $z_r=0.04$ km, $x_r=$ 0.05 km to 9.15 km, $\Delta x_r=$ 0.05 km, $z_s=0.08$ km, $x_s=0.6$ km to $x_s=8.6$, $\Delta x_s$ = 0.1 km. Shots at $x_s=0.6$ km and $x_s=8.6$ km displayed.
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmV0.pdf}\\
-Initial $v(z)$ model for both FWI and SSE
-\end{center}
-\end{frame}
-
-\begin{frame}
-\vspace{-0.1cm}
-\begin{center}
-\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmFWI.pdf}\\
-FWI estimate of $v$: 200 iterations LBFGS, frequency domain FD 5-8 Hz
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmSurf.pdf}\\
-SSE estimate of $v$: 150 iterations LBFGS, frequency domain FD 5-8 Hz, fixed $\alpha$ set by trial
-\end{center}
-\end{frame}
-
-\begin{frame}
-%\vspace{0.07cm}
-\begin{center}
-\includegraphics[height=2in,width=4in]{Fig/marm2km/Marm2kmVt.pdf}\\
-Modified Marmousi Model: 2 km water layer added to minimize non-reflected energy, also box-snaped target
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1Inv}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81Inv}\\
-Data predicted from SSE inverted model: shots at $x_s=0.6$ km and $x_s=8.6$ km.
-\end{center}
-\end{frame}
-
-\begin{frame}
-\begin{center}
-\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot1}\includegraphics[height=2in]{Fig/marm2km/Marm2kmShot81}\\
-Target data:\\ shots at $x_s=0.6$ km and $x_s=8.6$ km.
-\end{center}
-\end{frame}
-
-\begin{frame}
-Wavefield Reconstruction Inversion: $\of(\bx,t;\bx_s)$ distributed throughout space-time
-
-van Leeuwen and Herrmann 2013, 2016, Wang \& Yingst 2016 
-
-similar: space-time extension Huang \& S. 2018 
-
-\begin{itemize}
-\item[+ ]many good examples, convincing numerical evidence
-\item[+ ]3D field data - Wang \& Yingst 2016
-\item[- ]basic form: store complete space-time (or space-frequency) fields (6D)
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-Adaptive Waveform Inversion (Warner \& Guatsch, 2014, 2016): $\of(\bx,t;\bx_r,\bx_s) = w(t;\bx_r)\delta(\bx-\bx_s)$ localized but depends on receiver coordinate $\bx_r$ - one wavelet per data trace
-
-similar: source-receiver extension Hua \& S. 1994, Huang \& S. 2017
-
-\begin{itemize}
-\item[+ ]additional storage: $\approx$ data volume (5D)
-\item[+ ]minor mod of standard FWI workflow
-\item[- ]source-receiver: loses advantage over FWI when sources, receivers connected by multiple ray paths (fails for lens model, above)
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-Intermediate: source distributed over space-time surface
-\begin{itemize}
-\item const. t surface = volume source extension - Huang \& S. 2018
-\item const z surface = {\color{blue} surface source extension (SSE):} 
-\[
-\of(\bx,t;x_s,y_s) = w(x,y; x_s,y_s)\delta(z-z_s)
-\]
-\end{itemize}
-\begin{itemize}
-\item[+ ]additional storage = O(data volume) (5D)
-\item[+ ]no problem with multiple ray paths
-\item[+ ]theory for transmission data (eg. diving wave): {\color{blue} tomography w/o picking}
-\end{itemize} 
-\end{frame}
 
