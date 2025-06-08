@@ -1,0 +1,456 @@
+\title{Computation of $Q$ for surface source extension}
+\author{William W. Symes}
+
+\begin{abstract}
+  Abstract goes here.
+\end{abstract}
+
+\section{Cauchy problem}
+
+Suppose that $K \in OPS^1$ is skew-adjoint, at least in principal
+part: $K_1^*=-K_1$. Then there is unitary $U \in OPS^0$ so that
+$U(x,\xi)^*K_1(x,\xi)U(x,\xi) = i\Lambda(x,\xi) =
+i\mbox{diag}(\lambda_1(x,\xi),...\lambda_k(x,\xi))$, with scalar
+$\lambda_j \in OPS^1, j=1,...,k$ (in fact, homogeneous of degree
+1). Also,
+\begin{equation}
+  \label{eqn:ortho}
+  U(x,D)^*U(x,D) = U(x,d)U(x,D)^* = I \mbox{ mod } OPS^{-1}
+\end{equation}
+Define $\cU(t)$ to be the one-parameter group satisfying
+\[
+  \partial_t \cU(t) = -K \cU(t), \cU(0)=I
+\]
+Note that $\cU(-t)$ is inverse to $\cU(t)$, and 
+\[
+  \partial_t \cU(-t) = -\cU(-t) \partial_t \cU(t) \cU(-t) = \cU(-t)K
+\]
+Hence
+\[
+  \partial_t \cU(t) = -iU \Lambda U^*\cU(t) + R\cU(t), R \in OPS^0 
+\]
+Write $\tilde{\cU} = U^*\cU U$. Then 
+\[
+  \partial_t \tilde{\cU}(t) = -i\Lambda \tilde{\cU}(t) + \mbox{ mod } OPS^0 
+\]
+If $u^0 = (u^0_1,...,u^0_k)$, then $\tilde{u}(t) = \tilde{\cU}(t)u^0$ satisfies
+\[
+  \partial_t \tilde{u}(t) = -i\Lambda \tilde{u}(t) + ...
+\]
+so $\tilde{u}_i$ solves
+\[
+  \partial_t \tilde{u}_i(t) = -i\lambda_i \tilde{u}_i(t), \, i=1,...,k
+\]
+Let $\tilde{\cU}_i$ solve
+\begin{equation}
+  \label{eqn:stilde}
+  \partial_t \tilde{\cU}_i(t) = - i\lambda_i \tilde{\cU}_i(t)
+\end{equation}
+Then
+\[
+  \tilde{u}_i(t) = \tilde{\cU}_i(t) u^0_i = (\tilde{\cU}(t)u^0)_i 
+\]
+whence
+\[
+  \tilde{\cU} = \mbox{diag}(\tilde{\cU}_1,....,\tilde{\cU}_k).
+\]
+and
+\begin{equation}
+  \label{eqn:spec}
+  \cU(t) = \sum_{i=1}^k U_i \tilde{\cU}_i(t)U_i^*
+\end{equation}
+
+Define
+\[
+  F = \phi_r \cU(T) \phi_s
+\]
+in which $\phi_{s,r} \in C_0^{\infty}(\bR^{n+1})$ and $T>0$. Suppose that $K$
+is perturbed by $\delta K \in OPS^1$, also essentially skew. Then
+$\Lambda$, $U$, $\cU$, $\tilde{\cU}$ and $F$ undergo perturbations
+$\delta \Lambda$, $\delta U$, $\delta \cU$, $\delta \tilde{\cU}$, and
+$\delta F$. Our object is to understand the structure of $\delta F$, under the
+assumption that $\phi_{s,r} \delta K \in OPS^{-\infty}$, i.e. that
+$\delta K$ essentially vanishes on the supports of $\phi_{s,r}$.
+
+This assumption on $\delta K$ implies that $\phi_{s,r} \delta U_i \in
+OPS^{-\infty}, i=1,...,k$. 
+\[
+  \delta F =  \phi_r \delta \cU(T) \phi_s  = \phi_r \left(\sum _{j=1}^k \delta U_j \tilde{\cU}_j(T) U_j^*
+\right.
+\]
+\[
+ +  \left. \sum_{j=1}^k U_j \delta\tilde{\cU}_j(T)U_j^* + \sum_{J=1}^k U_j
+    \tilde{\cU}_j(T)\delta U_j^*\right) \phi_s
+\]
+Every term in the first and last sums on the RHS is smoothing, since
+$\phi_r \delta U_i, \delta U_i^* \phi_s\in OPS^{-\infty}$:
+\[
+  \delta F = \phi_r \left(\sum_{j=1}^k U_j
+    \delta\tilde{\cU}_j(T)U_j^*\right)\phi_s \mbox{ mod }OPS^{-\infty}
+\]
+Denote by ${\cal B}$ operators on $H^{\infty}$ that are bounded on
+each $H^s$, all $s \in \bR$ (so $OPS^0 \subset {\cal B}$
+
+Since $[\phi_{s,r},U_i] \in OPS^{-1}$, this is
+\[
+  = \sum_{j=1}^k U_j \phi_r \delta \tilde{\cU}_j(T) U_J^*\phi_s 
+  \mbox{ mod }{\cal B}
+\]
+
+The first order perturbation of the definition \ref{eqn:stilde} is
+\begin{equation}
+  \label{eqn:dstilde}
+  \partial_t \delta \tilde{\cU}_i(t) = - i\lambda_i \delta
+  \tilde{\cU}_i(t) - i\delta \lambda_i \tilde{\cU}_i(t)
+\end{equation}
+Since $\tilde{\cU_i}(-t)$ is inverse to $\tilde{\cU}_i(t)$,
+\[
+  \partial_t \tilde{\cU}_i(-t)= -\tilde{\cU}_i(-t) (\partial_t \tilde{\cU}_i(t)) \tilde{\cU}_i(-t)
+\]
+\begin{equation}
+  \label{eqn:stildeinv}
+= -\tilde{\cU}_i(-t)(-i\lambda_i \tilde{\cU}_i(t)) \tilde{\cU}_i(-t) = i\tilde{\cU}_i(-t)\lambda_i 
+\end{equation}
+So
+\begin{equation}
+  \label{eqn:dstildeconj}
+  \partial_t\tilde{\cU}_i(-t)\delta \tilde{\cU}_i(t) = -i\tilde{\cU}_i(-t)\delta \lambda_i \tilde{\cU}_i(t).
+\end{equation}
+From \cite{Tay:81}, Egorov's Theorem (Section VIII.1), for $p \in OPS^s(\bR^n)$,
+\begin{equation}
+  \label{eqn:egorov}
+   \tilde{\cU}_i(-t) p \tilde{\cU}_i(t)=  p \circ C_i(t),\, p\tilde{\cU}_i(t) =
+   \tilde{\cU}_i(t)p \circ C_i(t)
+\end{equation}
+in which $C_i$ is the one-parameter family of symplectic maps given by
+\begin{equation}
+  \label{eqn:canon}
+  C_i(t)(x,\xi)=(y_i(t;x,\xi),\eta_i(t;x,\xi))
+\end{equation}
+Here $t \rightarrow y_i(t;x,\xi),\eta_i(t;x,\xi) $is the integral curve of the
+Hamiltonian vector field
+\[
+  H_i(x,\xi) = (\partial_{\xi}\lambda_i(x,\xi), - \partial_x\lambda_i(x,\xi)) 
+\]
+with $y_i(0;x,\xi)=x, \eta_i(0;x,\xi)=\xi$.
+
+For $p \in OPS^{\infty}$, define
+\[
+  \Gamma_i[p](T) = \int_0^T dt \, p \circ C_i(t)
+\]
+Then from the identity \ref{eqn:dstildeconj} follows
+\[
+  \delta\tilde{\cU}_i(T) = \tilde{\cU}_i(T) \Gamma_i[ -i \delta \lambda_i](T)
+\] 
+so
+\[
+  \delta F = \sum_{i=1}^k U_i \phi_r \delta \tilde{\cU}_i \phi_s U_i^*
+  =\sum_{i=1}^k U_i \phi_r \tilde{\cU}_i(T) \Gamma_i[ -i \delta
+  \lambda_i](T) U_i^*\phi_s
+  \mbox{ mod }{\cal B}
+\]
+\[
+  =\left(\sum_{i=1}^k U_i \phi_r \tilde{\cU}_i(T)U_i^*\right)
+  \left(\sum_{j=1}^k U_j  \Gamma_j[ -i \delta \lambda_j](T) U_j^*\right)
+  \phi_s   \mbox{ mod }{\cal B}
+\]
+\[
+  =\phi_r\left(\sum_{i=1}^k U_i \tilde{\cU}_i(T)U_i^*\right)
+  \left(\sum_{j=1}^k U_j  \Gamma_j[ -i \delta \lambda_j](T) U_j^*\right)
+  \phi_s   \mbox{ mod }{\cal B}
+\]
+Define
+\begin{equation}
+  \label{eqn:qdef}
+  \cQ(T) = \sum_{j=1}^k U_j  \Gamma_j[ -i \delta \lambda_j](T) U_j^*.
+\end{equation}
+Then
+\begin{equation}
+  \label{eqn:qident}
+  \phi_r (\delta \cU(T) - \cU(T)
+  \cQ(T)) \phi_s \in {\cal B}
+\end{equation}
+
+\section{Composite Map}
+
+Define $R:\bR \times (C_0^{\infty}(\Sigma_s\times \bR))^k \rightarrow
+({\cal D}'(\bR^2))^k$ by $R\bff = \bu(T)$, where
+\begin{eqnarray}
+  \label{eqn:stoc}
+  \partial_t \bu + K \bu & = & \bff \delta_{\Sigma_s},\\
+  \bu & = & 0, t \ll 0
+\end{eqnarray}
+
+Define $\tilde{R}: \bR \times ({\cal D}(\bR^2))^k \rightarrow
+(C_0^{\infty}(\Sigma_r\times \bR))^k$ by $\tilde{R}\bw = P_r \bu$, where
+\begin{eqnarray}
+  \label{eqn:ctot}
+  \partial_t \bu + K \bu & = & 0,\\
+  \bu(T) & = & \bw.
+\end{eqnarray}
+
+Define ${\cal U}: \bR \times   ({\cal D}(\bR^2))^k
+\rightarrow  ({\cal D}(\bR^2))^k$ by ${\cal U}(t)\bw = \bu(t)$
+for a solution $\bu$ of the system \ref{eqn:ctot} with $T-0$.
+
+Finally, define ${\cal S}: (C_0^{\infty}(\Sigma_s\times \bR))^k
+\rightarrow (C_0^{\infty}(\Sigma_r\times \bR))^k$ by ${\cal S}\bff =
+P_r\bu$, where $\bu$ solves the system \ref{eqn:stoc} and $P_r$ is the
+restriction map to $\Sigma_r \times \bR$, that is the pull-back by the
+injection into $\bR^3$.
+
+Let $T_{r,s}$ be the minimum travel time between the compact surfaces
+$\Sigma_r$ and $\Sigma_s$. Suppose that $\bff \in
+(C_0^{\infty}(\Sigma_s\times \bR))^k$, $\mbox{supp }\bff \subset
+\{(\bx,t):0 <t < T\}$ with $T < T_{r,s}$, also $T' \in (T,T_{r,s})$.
+Let $\bu$ be the solution of the system $\ref{eqn:stoc}$.
+Then $\bu(t)=0$ in a neighborhood of $\Sigma_r$ for $t<T'$, whence $\mbox{supp }R(t)\bff \cap \Sigma_r \times \{t\} = \emptyset$ for
+$t<T'$, so ${\cal S}\bff = \tilde{R}(T')R(T')\bff$. Since the Cauchy
+data for $\bu$ at $t=T$ is $R(T)\bff$, and is $R(T')\bff$ for $t=T'$,
+$R(T')\bff = U(T,T')R(T)\bff$. So 
+\begin{equation}
+  \label{eqn:comprep}
+  {\cal S}\bff = \tilde{R}(T'){\cal U}(T'-T)R(T)\bff.
+\end{equation}
+
+Suppose that $\phi_{s,r}$ are chosen as described above, and $T, T'$ and
+$\Phi_{s,r}(\bx,D) \in OPS^0$ so that
+\[
+  (1-\phi_s) R(T)\Phi_{s}, \, \Phi_r\tilde{R}(T') (1-\phi_r)
+\]
+are smoothing. Then
+\[
+  \Phi_r {\cal S} \Phi_s \approx \Phi_r \tilde{R} (T') \phi_r {\cal U}(T'-T)
+  \phi_s R(T)\Phi_s
+\]
+and equation \ref{eqn:qident} implies
+\[
+  \Phi_r {\delta \cal S} \Phi_s \approx \Phi_r \tilde{R} (T') \phi_r
+  \delta {\cal U}(T'-T)
+  \phi_s R(T)\Phi_s
+\]
+\[
+  \approx \Phi_r \tilde{R} (T') \phi_r
+   {\cal U}(T'-T)\tilde{{\cal Q}}(T'-T)
+  \phi_s R(T)\Phi_s
+\]
+Now suppose that $\tilde{{\cal Q}}(T'-T) R(T) \Phi_s = R(T) {\cal Q}
+ \Phi_s$, with ${\cal Q} \in OPS^1$. Since $[\tilde{{\cal Q}}, \phi_s]
+ \in OPS^0$, this
+implies that
+\begin{equation}
+  \label{eqn:qident2}
+  \Phi_r {\delta \cal S} \Phi_s \approx \Phi_r \tilde{R} (T') \phi_r
+   {\cal U}(T'-T)
+  \phi_s R(T) {\cal Q}\Phi_s = \Phi_r {\cal S} {\cal
+    Q}\Phi_s \mbox{ mod } {\cal B}
+\end{equation}
+
+
+\section{Example: 2D Acoustics}
+Source and receiver surfaces are linear antennae $\Sigma_{s,r} \subset
+\{x_2=z_{s,r}\}$. For convenience, $z_s < z_r$, so incoming rays have
+positive $x_2$ velocity components.
+
+$\tilde{\bu} = (p,v_1,v_2)$, $\bx = (x_1,x_2)$,  $ \xi = (\xi_1,\xi_2)$,
+\[
+  M\partial_t \tilde{\bu} + \tilde{K}(\bx, \partial_{\bx})\tilde{\bu} = 0
+\]
+$M=\mbox{diag }(\kappa^{-1},\rho,\rho)$, 
+\[
+  \tilde{K}(\bx,\xi) =
+ -i\left(
+    \begin{array}{ccc}
+      0 & \xi_1 & \xi_2 \\
+      \xi_1 & 0 & 0 \\
+      \xi_2 & 0 & 0
+    \end{array}
+  \right)
+\]
+If $\bu = M^{-1/2}\tilde{\bu}$, then
+\[
+  \partial_t \bu - K \bu = 0
+\]
+\[
+  K = M^{-1/2}\tilde{K} M^{-1/2} = c\tilde{K}
+\]
+$c = \kappa^{1/2}\rho^{-1/2} $ = sound velocity.
+
+Spectrum
+\[
+  \det (\lambda I + K) = \det
+  \left(
+    \begin{array}{ccc}
+      \lambda & c\xi_1 & c\xi_2 \\
+      c\xi_1 & \lambda & 0 \\
+      c\xi_2 & 0 & \lambda
+    \end{array}
+  \right)
+  = \lambda(\lambda^2 - c^2(\xi_1^2 + \xi_2^2))
+\]
+so eigenvalues are $\lambda_0=0, \lambda_1 = c\sqrt{\xi_1^2 +
+  \xi_2^2}, \lambda_2=-c\sqrt{\xi_1^2 +  \xi_2^2}$. Corresponding unit
+eigenvectors are
+\[
+  U_0(\xi) = \left(
+    \begin{array}{c}
+      0\\
+      -\frac{\xi_2}{\sqrt{\xi_1^2 + \xi_2^2}}\\
+      \frac{\xi_1}{\sqrt{\xi_1^2 + \xi_2^2}}
+    \end{array}
+  \right),\,
+  U_1(\xi) = \frac{1}{\sqrt{2}}\left(
+    \begin{array}{c}
+      1\\
+      \frac{\xi_1}{\sqrt{\xi_1^2 + \xi_2^2}}\\
+      \frac{\xi_2}{\sqrt{\xi_1^2 + \xi_2^2}}
+    \end{array}
+  \right),\,
+  U_2(\xi) = \frac{1}{\sqrt{2}}\left(
+    \begin{array}{c}
+      -1\\
+      \frac{\xi_1}{\sqrt{\xi_1^2 + \xi_2^2}}\\
+      \frac{\xi_2}{\sqrt{\xi_1^2 + \xi_2^2}}
+    \end{array}
+  \right).                     
+\]
+Note that in this case, the eigenvectors are independent of both $\bx$
+and of the material parameters - in particular, $\delta U_i \equiv 0$.
+
+So
+\[
+  H_i(\bx,\xi) = (-1)^{i-1}\left(c(\bx)\frac{\xi}{|\xi|}, - \nabla
+    c(\bx)|\xi|
+  \right),\,i=1,2
+\]
+\[
+\Gamma_j[ -i \delta \lambda_j](T;\bx,\xi) = \int_0^T dt \, \delta \lambda_j(C_j(t;\bx,\xi))
+\]
+\[
+= (-1)^{j-1}\int_0^T dt \, \delta c(\by(t;\bx,\xi))|\eta(t;\bx,\xi)|
+= (-1)^{j-1}\int_0^T dt \, \frac{\delta c(\by(t;\bx,\xi))}
+{c(\by(t;\bx,\xi))}\lambda_j(C_j(t;\bx,\xi))
+\]
+Since $\lambda_j$ is constant along $t \mapsto C_j(t;\bx,\xi)$, this
+is
+\[
+  = (-1)^{j-1}c(\bx)|\xi|\int_0^T dt \, \frac{\delta c(y(t;\bx,\xi))}
+{c(\by(t;\bx,\xi))} = = (-1)^{j-1}c(\bx)|\xi|\int_0^T ds \, \frac{\delta c(\by(t;\bx,\xi))}
+{c(\by(t;\bx,\xi))^2} 
+\]
+where $ds= c(y(t;\bx,\xi))dt $ is the element of arc length $s$ along the
+curve $t \mapsto y(t;\bx,\xi)$. Writing $y$ as a function of $s$, and
+using $s(T;\bx,\xi)$ as the limit of integration, this becomes
+\[
+  = (-1)^{j-1} c(\bx)|\xi| \int_0^{s(T;\bx,\xi)} ds\, \left(\delta
+    \frac{1}{c}\right) (\by(t(s;\bx,\xi);\bx,\xi))
+\]
+For any $C^1$ path $\gamma: [0,s(T;\bx,\xi)] \rightarrow \bR^2$ for
+which $\gamma(0) = \bx, \gamma(s(T;\bx,\xi))=\by(T;\bx,\xi)$, define the
+traveltime along $\gamma$ as usual:
+\[
+  {\cal T}(\gamma,c) = \int_0^{s(T;\bx,\xi)} ds \frac{1}{c(\gamma(s))}
+\]
+Then (Fermat)
+\[
+  \delta_{\gamma} {\cal T}(\gamma,c)_{\gamma=\by(\cdot;\bx,\xi)} = 0
+\]
+so
+\[
+  \delta_{c} {\cal T}(\by(\cdot;\bx,\xi),c)=\int_0^{s(T;\bx,\xi)} ds\, \left(\delta
+    \frac{1}{c}\right) (\by(t(s;\bx,\xi);\bx,\xi))
+\]
+
+
+Which rays are incoming on $\{z=x_2 > 0\}$ The first Hamilton
+equation:
+\[
+  \frac{dx_2}{dt} = \partial_{\xi_2} \lambda_i(\bx,\xi) = (-1)^{i-1}
+c(\bx)\frac{\xi_2}{|\xi|}
+\]
+So, it depends: if $\xi_2 >$, then components parallel to $U_1$
+propagate in positive $x_2$, positive $t$, whereas if $\xi_2<0$, it's
+components parallel to $U_2$. A $\Psi$DO projector onto such
+components is constructed as follows: choose $\epsilon>0$, and choose
+convolutional 
+$\Gamma_1\in S^0$ for which
+\[
+  \Gamma_1 \sim 1 \mbox{ for } \xi_2/|\xi| > \epsilon, \sim 0
+  \mbox{ for } \xi_2/|\xi|< \epsilon/2.
+\]
+and $\Gamma_2(\xi) =\Gamma_1(-\xi)$. Then any $\lambda_i$ bicharacteristic passing over
+$x_2=0$ in $ES(\Gamma_i)$, $i=1,2$ is incoming to $x_2>0$. 
+
+Define
+\[
+  P_+(\bx,\xi) = \chi(\bx) (\Gamma_1(\xi)U_1(\xi)U_1(\xi)^* +
+  \Gamma_2(\xi)U_2(\xi)U_2(\xi)^*)
+\]
+Choose $\chi \in C_0^{\infty}(\bR^2)$ so that any $\lambda_j$ ray with initial
+conditions in $ES(\Gamma_j) \cap \mbox{supp }\chi$ exits $\{x_2 <
+0\}$ as an incoming ray. Similarly,
+\[
+  P_-(\bx,\xi) = \chi(\bx) (\Gamma_2(\xi)U_1(\xi)U_1(\xi)^* +
+  \Gamma_1(\xi)U_2(\xi)U_2(\xi)^*)
+\]
+projects onto outgoing rays.
+
+Incoming GO solution: $\xi \in ES(\Gamma_1)$, $\tau(\bx;\xi)$ solution
+of eikonal $c(\bx)|\nabla \tau(\bx;\xi_1)|=1$ with $\tau(x_1,0,\xi_1)
+= x_1\xi_1$. Necessary condition: $c(x_1,0)|\xi_1| < 1$ for all
+$x_1$. Then 
+
+Set
+\[
+  \xi^{\pm}_2(\bx,\xi_1) = \pm \sqrt{\frac{1}{c(\bx)^2} - \xi_1^2},\,\,
+  \xi^{\pm}(\bx,\xi_1) = (\xi_1,\xi_2^{\pm}(\bx,\xi_1)).
+\]
+Then the pair $(t,x_1,\xi_1)$ indexes two ray families
+\[
+  s \rightarrow (t +
+s,\by(\pm s;(x_1,0),\xi^{\pm}((x_1,0),\xi_1)),
+\eta(\pm s;(x_1,0),\xi^{\pm}((x_1,0),\xi_1)))  = C^{\pm}(s;t,x_1,\xi_1)
+\]
+From Hamilton's equations, follows that
+$C^{-}(s;t,x_1,\xi_1)=C^{+}(-s;t,x_1,\xi_1)$, so both ray families
+generate the same solution of the eikonal, $\tau(\bx,\xi_1)$
+
+GO solutions:
+\[
+  \bu_i(t,(x_1,0)) =\exp(i\omega(t+x_1\xi_1))U_i((\xi^{\pm}((x_1,0),\xi_1)))
+\]
+incoming:
+\[
+ \bu(t,\bx;\xi_1)=a(\bx)
+ \exp(i\omega(t-\tau(\bx,\xi_1)))U_1(\xi^+(\bx,\xi_1))
+\]
+From definition of $\xi^+(\bx,\xi_1)$,
+\[
+  \frac{\xi^+_i(\bx,\xi_1)}{|\xi^+(\bx,\xi_1)|} = c(\bx) \xi^+_i(\bx,\xi_1)
+\]
+%%%%%%%%
+GO:
+\[
+  \partial_t u + \lambda(\bx,D)u = 0
+\]
+\[
+  u(x,\xi) = a(x,\xi)e^{i(\omega(t-\phi(\bx,\xi)))},\,\, \phi(\bx,\xi) = |\xi|\phi(\bx,\hat{\xi})
+\]
+Then (\cite{Tay:81}, VIII.7)
+\[
+  \lambda(\bx,D)u(\bx,\xi) =a(\bx,\xi)\lambda(\bx,\omega
+  D_x\phi(\bx,\xi)) e^{i(\omega(t-\phi(\bx,\xi)))} \mbox{ mod } S^0
+\]
+so assuming that $\lambda$ is homogeneous of degree 1 in $\xi$
+\[
+  \partial_t u + \lambda(\bx,D)u = i \omega a(\bx,\xi) (1 -
+  \lambda(\bx, D_x\phi(\bx,\xi))) e^{i(\omega(t-\phi(\bx,\xi)))}
+  \mbox{ mod } S^0
+\]
+Eikonal:
+\[
+  \lambda(\bx, D_x\phi(\bx,\xi))=1
+\]
+
+\bibliographystyle{seg}
+\bibliography{../../../bib/masterref}
