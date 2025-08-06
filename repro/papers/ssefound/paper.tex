@@ -5,6 +5,38 @@
   Abstract goes here.
 \end{abstract}
 
+\section{Scalar $\Psi$DO evolution}
+
+3D case: $\lambda(x,z,\xi,\eta) \in S^1(\bR^2) \subset
+C^{\infty}(\bR,S^1(\bR^2))$ not a $\Psi$DO on $\bR^3$ however can make
+one:
+
+Suppose $H \in OPS^0(\bR^3)$ is convolution operator, $\phi \in
+C^{\infty}_0(\bR^3)$. Let ${\cal N}_t = \{(t,x,z,\omega,\xi,\eta):
+\xi=\eta=0\}$ be the normal bundle of the constant-$t$ foliation, and
+suppose that $ES(H) \cap {\cal N}_t = \emptyset$. Then $p = \lambda \phi H
+\in OPS^1(\bR^3)$,
+\[
+p(x,z,t,\xi,\zeta,\omega) = \left(\int d\xi' d\zeta'
+\lambda(x,z,\xi+\xi',\zeta+\zeta'){\cal
+  F}_{(x,z)}\phi(t,\xi',\zeta')\right)H(\xi,\zeta,\omega)
+\]
+Suppose $u \in H^s_{\rm loc}(\bR^3)$ satisfies $(\partial_t + i\lambda(x,z,\partial_x,\partial_z))u \in
+H^s_{\rm loc}(\bR^3)$, and $(I-H)u \in H^{s+1}_{\rm loc}(\bR^3)$.
+%Also
+%choose $\phi_1 \in C^{\infty}_0(\bR^3)$ for which $\phi_1=1$ on
+%$\mbox{supp }\phi$.
+Then
+\[
+  p(x,z,t,\partial_x,\partial_z,\partial_t)u = \lambda \phi u \mbox{
+    mod } H^{s}_{\rm loc}
+\]
+\[
+  = \partial_t \phi u \mbox{ mod } H^{s}_{\rm loc}.
+\]
+
+
+
 \section{Local Analysis of Surface Source Field}
 $k \times  k$ symmetric hyperbolic system: in $\bR^{n+1}$, $\Omega
 \subset \bR^n, \Gamma_r, \Gamma_s \subset \partial \Omega$. $\Gamma_r$
@@ -618,44 +650,48 @@ Define
 \[
   F = \phi_r S(T) \phi_s
 \]
-in which $\phi_,r \in C_0^{\infty}(\bR^{n+1})$ and $T>0$. Suppose that $K$
+in which $\phi_{s,r} \in C_0^{\infty}(\bR^{n+1})$ and $T>0$. Suppose that $K$
 is perturbed by $\delta K \in OPS^1$, also essentially skew. Then
 $\Lambda$, $U$, $S$, $\tilde{S}$ and $F$ undergo perturbations
 $\delta \Lambda$, $\delta U$, $\delta S$, $\delta \tilde{S}$, and
 $\delta F$. Our object is to understand the structure of $\delta F$, under the
-assumption that $\phi_r \delta K \in OPS^{-\infty}$. 
+assumption that $\phi_{s,r} \delta K \in OPS^{-\infty}$, i.e. that
+$\delta K$ essentially vanishes on the supports of $\phi_{s,r}$.
 
-This assumption on $\delta K$ implies that $\phi_r \delta U \in
-OPS^{-\infty}$. 
+This assumption on $\delta K$ implies that $\phi_{s,r} \delta U_i \in
+OPS^{-\infty}, i=1,...,k$. 
 \[
-  \delta F =  \phi_r \delta S(T)  = \phi_r \left(\sum _{j=1}^k \delta U_j \tilde{S}_j(T) U_j^*
+  \delta F =  \phi_r \delta S(T) \phi_s  = \phi_r \left(\sum _{j=1}^k \delta U_j \tilde{S}_j(T) U_j^*
 \right.
 \]
 \[
  +  \left. \sum_{j=1}^k U_j \delta\tilde{S}_j(T)U_j^* + \sum_{J=1}^k U_j
-    \tilde{S}_j(T)\delta U_j^*\right) 
+    \tilde{S}_j(T)\delta U_j^*\right) \phi_s
 \]
-Every term in the first sum on the RHS is bounded $H^s \rightarrow H^{s-1}$ since
-$\phi_r \delta U_i \in OPS^{-\infty}$.  Since $[\phi_rU_i], \in OPS^{-1}$, 
+Every term in the first and last sums on the RHS is smoothing, since
+$\phi_r \delta U_i, \delta U_i^* \phi_s\in OPS^{-\infty}$:
 \[
-  \phi_r  U_j \delta \tilde{S}_j(T)  U_j^*  = U_j \phi_r
-  \tilde{S}_j(T) U_j^*
-  +...
+  \delta F = \phi_r \left(\sum_{j=1}^k U_j
+    \delta\tilde{S}_j(T)U_j^*\right)\phi_s \mbox{ mod }OPS^{-\infty}
 \]
-where the elided terms are operators mapping $H^s$ to $H^{s-1}$, any
-$s$. So,
+Denote by ${\cal B}$ operators on $H^{\infty}$ that are bounded on
+each $H^s$, all $s \in \bR$ (so $OPS^0 \subset {\cal B}$
+
+Since $[\phi_{s,r},U_i] \in OPS^{-1}$, this is
 \[
- \delta F = \sum_{j=1}^k U_j \phi_r \left( \delta\tilde{S}_j(T) U_i^*
-   + \tilde{S}_j(T) \delta U_j^*\right)
-  + ...
+  = \sum_{j=1}^k U_j \phi_r \delta \tilde{S}_j(T) U_J^*\phi_s 
+  \mbox{ mod }{\cal B}
 \]
 and
 \[
- S(-T)\delta F =\left(\sum_{i=1}^k U_i \tilde{S}_i(T)
-    U_i^*\right) \left(\sum_{j=1}^k U_j \phi_r ( \delta\tilde{S}_j(T) U_i^*
-    + \tilde{S}_j(T) \delta U_j^*)\right)
-\]  
-Using the relation \ref{eqn:ortho},
+ S(-T)\delta F =\left(\sum_{i=1}^k U_i \tilde{S}_i(-T)
+    U_i^*\right) \left(\sum_{j=1}^k U_j \phi_r (\delta\tilde{S}_j(T) U_j^*\phi_s\right)
+\]
+Using the relation \ref{eqn:ortho} and $\tilde{S}_i(-t)\tilde{S}_i(t)=I$, this is
+\[
+  = \left(\sum_{i=1}^k U_i \tilde{S}_i(-T) \phi_r \delta\tilde{S}_i(T) U_i^*\phi_s
+)
+\]
 The first order perturbation of the definition \ref{eqn:stilde} is
 \begin{equation}
   \label{eqn:dstilde}
