@@ -105,7 +105,7 @@ section.
 
 \section{Main Results}
 
-The version of AWI introduced by \cite{Warner:16} is based on an
+As introduced by \cite{Warner:16}, AWI is based on an
 active source acoustic model of data generation in Euclidean space
 $\bR^3$. 
 
@@ -147,11 +147,11 @@ homogeneous and known.
 %to be estimated.
 
 The parameter to be determined in the inverse problem studied here is
-the bulk modulus $\kappa$. It is presumed is bounded and smooth:
-\begin{equation}
-  \label{eqn:coeff}
-  \log \kappa \in C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)
-\end{equation}
+the bulk modulus $\kappa$. It is presumed is bounded and smooth: $\log
+\kappa \in M$, where $M$ is a bounded subset of $C^{\infty}(\bR^3) \cap
+L^{\infty}(\bR^3)$, on which further constraints will be placed by and
+by. 
+
 Under these hypotheses, the symmetric hyperbolic system \ref{eqn:awe}
 has a unique distribution solution (for example \cite{Lax:PDENotes},
 Theorem 7.4). The Propagation of
@@ -205,8 +205,11 @@ is a special case of {\em local energy decay}, a much studied topic. The {\em
   non-trapping} hypothesis is sufficient to ensure local energy decay:
 all rays of geometric asymptotics (that is, geodesics for the Riemannian metric associated
 to the system \ref{eqn:awe}) escape to infinity (\cite{Hristova:09},
-Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). That is,
-exponential decay follows from a characteristic of $\kappa$.
+Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). In particular,
+the Exponential Decay assumption is satisfied if for any $R > r>0$ and $\log
+\kappa \in M$, there exists $T>0$ so that any ray ${\bf X}:\bR^+\rightarrow \bR^3$
+  with ${\bf X}(0) \in B_r(0)$ satisfies $|{\bf X}(t)|>R$ for $t > T$. That is,
+exponential decay may follow from a propery of $M$.
 
 The second and third assumptions explicitly involve constraints on ray geometry
 (therefore on $\kappa$). A {\em normal neighborhood} of
@@ -330,13 +333,13 @@ The main result of this analysis is
   W \le C^*$ so that for
   $\log \kappa \in M$, $(\bx_s,\bx_r) \in X_{sr}$,
   \begin{itemize}
-  \item[2. ] for $0 <  \lambda \le 1$, 
+  \item[3. ] for $0 <  \lambda \le 1$, 
     \begin{equation}
       \label{eqn:mswitt}
       |\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|- \lambda^{-\frac{1}{2}} W[\kappa^*,\kappa]^{\frac{1}{2}}(\bx_s,\bx_r)|\tau[\kappa](\bx_s,\bx_r)-\tau[\kappa^*](\bx_s,\bx_r)|| \le C
       \lambda^{\frac{1}{2}};
     \end{equation}
-  \item[3. ]for sufficiently small $\lambda$, 
+  \item[4. ]for sufficiently small $\lambda$, 
     \begin{equation}
       \label{eqn:awitt}
       \left|\frac{\|T\ul[\kappa;\dl](\bx_r,\cdot;\bx_s)\|}{\|\ul[\kappa,\dl](\bx_r,\cdot;\bx_s)\|}-
@@ -428,9 +431,9 @@ If $(p,\bv)$ is a distribution solutions of the system
 \ref{eqn:awe} with respect to $t$ and eliminating $\bv$ via the second
 equation. Conversely, if $p$ is a solution of the second-order initial
 value problem\ref{eqn:awe2}, then under the conditions imposed in the
-previous section, those to be imposed below),
+previous section,
 \[
-  \bv = \beta \int_{-\infty}^t p
+  \bv = \beta \int_{-\infty}^t \nabla p
 \]
 defines a distribution, and $(p,\bv)$ is a weak solutino of the system \ref{eqn:awe}.
 
@@ -971,7 +974,7 @@ and
 Finally, for $\sigma = r\lambda$ with $r$ sufficiently small,
 \begin{equation}
   \label{eqn:Sutz}
-  \Sla[\kappa]\uzl[\kappa;\dzl] \ge \frac{1}{2}\|\dzl\|
+  \|\Sla[\kappa]\uzl[\kappa;\dzl]\| \ge \frac{1}{2}\|\dzl\|
 \end{equation}
 \end{prop}
 
