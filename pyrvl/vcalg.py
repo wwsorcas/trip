@@ -17,60 +17,30 @@ def cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq=None, verbose=0, M=None)
     optional regularization. See doc for function conjgrad.
     '''
     
-#    os.system('echo top; ls /var/tmp')
     try:
-        # print('k='+str(k))
-
-        # print('#1. $q = Ap$')
         q = A*p
-            
-        # print('#2. $s = A^T q + sig^2 p$')
         s = transp(A)*q
         if sigsq is not None:
             s.linComb(sigsq,p)
-            
-        #os.system('echo q s; ls /var/tmp')
-            
-        # print('#3. $\alpha = gamma / \langle p, s\rangle$')
         alpha = gamma/p.dot(s)
-        #print('|p|=' + str(p.norm()) + ' |q|=' + str(q.norm()) + ' |s|=' + str(s.norm()) + ' alpha=' + str(alpha))
-
-        # print('#4. $x \leftarrow x+\alpha p$')
         x.linComb(alpha,p)
-
-        # print('#5. $e \leftarrow e-\alpha q$')
-        #print('|e| before =' + str(e.norm()))
         e.linComb(-alpha,q)
         enorm = e.norm()
-        #print('|e| after  =' + str(enorm))
-        
-        # print('#6. $r \leftarrow r-\alpha s$')
         r.linComb(-alpha,s)
-
         if M is not None:
             g = M*r
             delta = g.dot(r)
         else:
             delta = r.dot(r)
         rnorm = math.sqrt(delta)
-        
-        # print('#8. $\beta = \delta / \gamma$')
         beta = delta/gamma
-        
-        # print('#9. $p \leftarrow r + \beta p$')
         if M is not None:
             p.linComb(1.0,g,beta)
         else:
             p.linComb(1.0,r,beta)
-            
-        # print('#10. $\gamma \leftarrow delta$')
         gamma=delta
-        
-        # print('#11. $k \leftarrow k+1$')
         k=k+1
         
-        # print('#12. print $k$ (iteration) $\|e\|$ (residual norm),
-        # $\|r\|$ (normal residual norm)')
         if verbose > 1:
             print('%3d  %10.4e  %10.4e' % (k, enorm, rnorm))
 
@@ -131,12 +101,8 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None, M=Non
     '''
     
     try:
-
-        #Initialize:
-        # print('#1. $x = 0$')
         x.scale(0.0)
         
-        # print('#2. $e = b$')
         if e is None:
             e = vcl.Vector(b.space)
         e.copy(b)
@@ -157,17 +123,14 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None, M=Non
             gamma0 = r.dot(r)
         else:
             gamma0 = r.dot(g)
-            
-        # print('#8. $\gamma = \gamma_0$')
         gamma=gamma0
         
-        # print('#9. $k=0$')
         k=0
         enorm0=e.norm()
         rnorm0=math.sqrt(gamma0)
         enorm=enorm0
         rnorm=rnorm0
-    
+
         if verbose > 1:
             print('  k       |e|       |r|=')
             print('%3d  %10.4e  %10.4e' % (k, enorm, rnorm))
@@ -177,7 +140,6 @@ def conjgrad(x, b, A, kmax, eps, rho, sig=None, verbose=0, e=None, r=None, M=Non
         if sig is not None:
             sigsq = sig*sig
             
-        #Repeat while $k<k_{\rm max}$, $\|e\|>\epsilon \|d\|$:
         while k<kmax and enorm>eps*enorm0 and rnorm>rho*rnorm0:
 
             [k, enorm, rnorm, gamma] = cgstep(x, A, k, p, r, e, rnorm, enorm, gamma, sigsq, verbose, M)
@@ -204,7 +166,7 @@ class cgne(vcl.LSSolver):
     a vector list. Regularization weight sig should be set to None if 
     (Tihonov) regularization not desired, to avoid useless flops.
     '''
-    def __init__(self, kmax, eps, rho, sig=None, verbose=0):
+    def __init__(self, kmax=1, eps=0.01, rho=0.01, sig=None, verbose=0):
         self.kmax = kmax
         self.eps = eps
         self.rho = rho
@@ -218,9 +180,15 @@ class cgne(vcl.LSSolver):
             if not isinstance(rhs, vcl.Vector):
                 raise Exception('second arg not Vector')
             if rhs.space != op.getRange():
-                raise Exception('second arg not in range of first arg')
+                print('Error in cgne.solve:')
+                print('op.getRange():')
+                op.getRange().myNameIs()
+                print('rhs.space:')
+                rhs.space.myNameIs()
+                raise Exception('rhs not in range of op')
             x = vcl.Vector(op.getDomain())
             e = vcl.Vector(op.getRange())
+            
             conjgrad(x, rhs, op, self.kmax, self.eps, self.rho, sig=self.sig,
                         verbose=self.verbose, e=e, r=None)
             return [x, e]
@@ -881,7 +849,7 @@ class SDwgrad(SearchDir):
         
         Update method Returns:
         Winv*g:                    weighted gradient = gradient in weighted norm
-        '''
+SD        '''
         try:
             if not Winv is None:
                 if not isinstance(Winv, vcl.LinearOperator):
@@ -959,7 +927,7 @@ class btls(LineSearch):
     fout (file):          output file - always appended!!!
 
     Parameters:
-    lsmax (int):          max steps
+ls     lsmax (int):          max steps
     mured (float):        try shorter step if actred < mured*predred
     muinc (float):        try longer step if actred > muinc*predred
     gammared (float):     step reduction factor
@@ -970,8 +938,8 @@ class btls(LineSearch):
     step (float):         updated step
     '''
     
-    def __init__(self, x, val, grad, dir, step, J, jetargs=None, lsverbose=0, fout=None,
-             lsmax=1, mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9):
+    def __init__(self, x, val, grad, dir, step, J, jetargs=None, lsverbose=0, 
+             lsmax=1, mured=0.5, muinc=1.8, gammared=0.1, gammainc=0.9, fout=None):
 
 #        self.x = x
 #        self.val = val
@@ -993,7 +961,13 @@ class btls(LineSearch):
         self.gammared = gammared
         self.gammainc = gammainc
 
-        print('btls: lsmax = ' + str(self.lsmax))
+        #print('\nbtls: lsmax = ' + str(self.lsmax))
+        #print('btls: x = ')
+        #x.myNameIs()
+        #print('btls: dir = ')
+        #dir.myNameIs()
+        #print('btls: step = ' + str(step))
+        #print('\n')
 
     def search(self):
         try:
@@ -1008,7 +982,13 @@ class btls(LineSearch):
                     print('        update step, jet', file=self.fout)
                 xtest = vcl.Vector(self.x.space)
                 xtest.copy(self.x)
+                #print('### linCOmb')
+                #print('### xtest')
+                #xtest.myNameIs()
+                #print('### dir')
+                #self.dir.myNameIs()
                 xtest.linComb(-self.step,self.dir)
+                #print('### done')
                 Jx = self.J(xtest, **self.jetargs)
                 vtest = Jx.value()
                 if self.verbose > 0:
@@ -1161,17 +1141,15 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
             if descverbose != 0:
                 print('Descent Direction class not provided', file=fout)
                 fout.flush()
-            raise Exception('Descent Direction class not provided')
-            
-        SDinstance = SD(**ddargs)
-        print('made SD')
-        ddir = SDinstance.Update(Jx)
-        gtot += 1
+                raise Exception('Descent Direction class not provided')
+        
 
         if descverbose != 0:
             print('compute initial ascent rate, gradient norm', file=fout)
             fout.flush()
 
+        SDinstance = SD(Winv)
+        ddir = SDinstance.Update(Jx)
         dr = Jx.gradient().dot(ddir)
         if Winv is None:
             gnsq = Jx.gradient().dot(Jx.gradient())
@@ -1314,18 +1292,217 @@ def lsopt(x, J, SD=None, LS=None, descmax=0, desceps=0.01, descverbose=0, descou
         print(ex)
         raise Exception('called from vcalg.lsopt')
 
+#######################
 
+class upd(ABC):
+    @abstractmethod
+    def update(self,Jx, SD, step, J, jetargs, updargs, fout=sys.stdout):
+        pass
 
+class btlsupd(upd):
 
+    def update(self, Jx, SD, k, step, J, jetargs, updargs, fout=sys.stdout):
+        dir = SD.Update(Jx)
+
+#        print('dir after call to SD.Update')
+#        dir.myNameIs()
         
+        # on first call, scale step for linear descents
+        if k == 0:
+            dr = Jx.gradient().dot(dir)
+            if 1.0 + dr <= 1.0:
+                raise Exception('ascent rate = ' + str(dr) + ' insufficient or negative')
+            step *= Jx.value()/dr
 
+        ls = btls(Jx.point(), Jx.value(), Jx.gradient(), dir, step, J, jetargs, **updargs, fout=fout)
+        [Jxtest, steptest] = ls.search()
+        if Jxtest is not None:
+            rpt = 'return from btls: step = ' + str(steptest)
+            step = steptest
+        else:
+            rpt = 'return from btls: line search failed'
+        return [Jxtest, rpt, step]
+
+import vpm
+
+def discrep(F=None, A=None, x=None, d=None, S=None, SD=None, upd=None,
+                nupd=1, updargs=None, step=0.125, gtol=0.01,
+                estar=0.1, rm=0.5, rp=1.5, gammam=0.8, gammap=1.4, 
+                archargs=None, outfile=None):
+
+    '''
+    Parameters:
+        F (Function): separable function object
+        A (vcl.LinearOperator): penalty op
+        alpha (float): penalty weight
+        x (vcl.Vector): evaluation point in nonlinear subspace 
+         of domain
+        d (vcl.Vector): rhs vector in rng(F)
+        S (vcl.LSsolver): LS solution function
+        estar (float): target relative noise level
+        rm (float): min noise ratio (applied to estar)
+        rp (float): max noise ratio (applied to estar)
+        gammam (float): scale alpha if data error > estar*rp
+        gammap (float): scale alpha if data error < estar*rm
+        SD (object): returns search direction
+        nupd (int): number of updates
+        upd (class): updating method, in form of upd class
+        updargs (dict): updating args
+        gtol (float): relative tolerance gradient redn
+        archargs (dict): archive data (archivepath, tag base, suf)
+        outfile (str): name of verbose output file
+        
+    '''
+
+    if (x.space != F.getDomain().spl[0]):
+        raise Exception('input x not in first comp of F domain')
+
+    xx = vcl.Vector(F.getDomain())
+    xx[0].copy(x)
     
+    if outfile is not None:
+        # check for legit
+        if not isinstance(outfile, str):
+            raise Exception('descout arg not string')
+        fout   = open(descout, 'w')
+    else:
+        fout   = sys.stdout
 
-
-
-
-
+    if archargs is not None:
+        archivepath = archargs['archivepath']
+        if not os.path.exists(archivepath):
+            raise Exception('given archive path = ' + archivepath + ' not valid')
+        tagbase = archargs['tagbase']
+        sufdict = archargs['sufdict']
+        if not isinstance(tagbase,str):
+            raise Exception('given tagbase is not string')
+        if not isinstance(sufdict,dict):
+            raise Exception('given sufdict is not dictionary')
         
+    # define update method
+    updater = upd()
+            
+    alpha = 0.0
+    dn = d.norm()
+    hdns = 0.5*dn*dn
+    em = estar*rm
+    ep = estar*rp
+    
+    # solve inner problem for alpha=0, first alpha update
+    jetargs = dict(F=F, b=d, S=S)
+    Jx0 = vpm.vpmjet(xx[0], **jetargs)
+    jval = Jx0.value()
+    w = Jx0.innersol()
+    Aw = A*w
+    Awns = Aw.dot(Aw)
+    if jval >= em*em*hdns:
+        raise Exception('discrep: alpha=0, data not fit\n' + \
+                            'Jx0 value = ' + str(Jx0.value()) + '\n' + \
+                            'rel lower limit = ' + str(em) + '\n' + \
+                            'half data norm sq = ' + str(hdns) + '\n' + \
+                            'penalty norm = ' + str(Awns) + '\n')
+
+    if archargs is not None:
+        if 'innersol' in sufdict.keys():
+            Jx0.archive('innersol', '_' +tagbase + '_alphazero', suflist['innersol'])
+                            
+    ############# enter discrepancy loop
+                            
+    # special case of Fu-S formula for alpha=0
+    alpha = math.sqrt((em*em*hdns - jval)/Awns)
+    
+    P = vpm.PenFunction(F, A, alpha)
+
+    print('\ndiscrep: initial alpha = ' + str(P.alpha) + '\n' +\
+                            'rel lower limit = ' + str(em) + '\n' + \
+                            'half data norm sq = ' + str(hdns) + '\n' + \
+                            'penalty norm = ' + str(Awns) + '\n')
+    
+    # convenient to construct augmented rhs here
+    b = vcl.Vector(P.getRange())
+    b.component(0).copy(d)
+    b.component(1).scale(0.0)
+    #print('b:')
+    #b.myNameIs()
+    jetargs = dict(F=P, b=b, S=S)
+
+    # initialize jet
+    Jx = vpm.vpmjet(xx[0], **jetargs)
+    print('\nInitial value = ' + str(Jx.value()))
+    gnorm0 = Jx.gradient().norm()
+    print('init gnorm      = ' + str(gnorm0))
+
+    # discrep loop
+    kupd = 0
+    while kupd < nupd:
+        print('\nDiscrep update ' + str(kupd) + ': alpha = ' + str(P.alpha) + '\n', file=fout)
+
+#        print('call updater')
+        [Jxtest, rpt, step] = updater.update(Jx, SD, kupd, step, vpm.vpmjet, jetargs, updargs, fout=fout)
+        print(rpt, file=fout)
+        if Jxtest is None:
+            kupd = nupd
+            print('Update terminated', file=fout)
+        else:
+            # record updated jet
+            kupd = kupd+1
+            Jx = Jxtest
+            xx[0].copy(Jx.point())
+            xx[1].copy(Jx.innersol())
+
+            # archive whatever needs archiving
+            if archargs is not None:
+                for k in sufdict.keys():
+                    Jx.archive(k, '_' + tagbase + '_' + str(kupd), suflist[k])
+
+            #        print('x = ')
+#            xx.myNameIs()
+
+#            print('in discrep: x = ')
+#            xx[0].myNameIs()
+            print('\nObjective value = ' + str(Jx.value()))
+            gnorm = Jx.gradient().norm()
+            print('Gradient norm   = ' + str(gnorm))
+            gred = gnorm/gnorm0
+            print('gnorm redn  = ' + str(gred) + '\n')
+
+            # bail if gradient norm reduction less than gtol
+            if gred < gtol:
+                print('less than tolerance = ' + str(gtol))
+                print('terminate iteration')
+                kupd = nupd
+            else:    
+                # new residual, norm
+                res = vcl.Vector(F.getRange())
+                res.copy(d)
+                res.linComb(-1.0,F(xx))
+                resn = res.norm()
+                if resn < em*dn or resn > ep*dn:
+                    print('\ndiscrep: alpha update')
+                    print('residual norm  = ' + str(resn))
+                    print('data norm      = ' + str(dn))
+                    print('target rel err = ' + str(estar))
+                    print('upper rel lim  = ' + str(ep))
+                    print('lower rel lim  = ' + str(em))
+                    print('current alpha  = ' + str(P.alpha))
+                    if resn < em*dn:
+                        P.alpha *= gammap
+                    if resn > ep*dn:
+                        P.alpha *= gammam
+                    print('new alpha      = ' + str(P.alpha) + '\n')
+                
+
+#    xx = vcl.Vector(F.getDomain())
+#    xx[0].copy(Jx.point())
+#    xx[1].copy(Jx.innersol())
+    return xx
+    
+            
+
+
+
+
+   
 
 
 
