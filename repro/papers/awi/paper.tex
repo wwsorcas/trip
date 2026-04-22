@@ -73,7 +73,7 @@ mean-square travel time error) appears to be much less sensitive to
 choice of initial model than is FWI. In fact, it is commonly used to
 construct an initial model for FWI
 \cite[]{Bordingetal:87,SirguePratt:04,VirieuxOperto:09}. At least for
-acoustic transmission data with single arrivals, AWI implicitly
+acoustic transpresummission data with single arrivals, AWI implicitly
 combines travel time tomography with FWI.
 
 The arguments presented here for AWI are refinements of those given by
@@ -105,29 +105,32 @@ section.
 
 \section{Main Results}
 
-As introduced by \cite{Warner:16}, AWI is based on an
+Following the introductory paper on AWI \cite{Warner:16} and much
+other work on inverse problems in wave propagation, the framework for
+the results reported here is an
 active source acoustic model of data generation in Euclidean space
-$\bR^3$. 
-
-Each acoustic source is modeled an isotropic point radiator
+$\bR^3$. Each source is modeled an isotropic point radiator
 with known location $\bx_s\in \bR^3$. These
 sources generate acoustic waves traveling through Euclidean space. The
 data are samples of these waves at receivers, modeled as isotropic
-point sensors, recording pressure at points
+point sensors,\ recording pressure at points
 ${\bf x}_r \in \bR^3$. The collection $X_{sr}$ of source-receiver pairs
 $(\bx_s,\bx_r)$ for which data is recorded should not intersect the
 diagonal - that is, no receiver should be co-located with a source for
 which it is active. The set of source locations $X_s = \{\bx_s: (\bx_s,\bx_r) \in X_{sr}
 \mbox{ for some } \bx_r \in \bR^3\}$ will also be useful.
 
-Throughtout the following discussion, it is assumed that
+The isotropy and point support assumptions on sources and receivers
+are idealizations, and may require relaxation for accurate description of 
+actually acquired data. On the other hand, experimentally achievable
+data involves finitely many source-receiver paris, as is assumed here:
 $X_{sr}$ is finite. 
   
 The pressure and velocity fields $p({\bf x},t;{\bf x}_s)$,
 ${\bf v}({\bf x},t;{\bf x}_s)$ for the source location ${\bf x}_s$
 depend on the bulk modulus $\kappa$, buoyancy $\beta$
 (reciprocal of the density $\rho$), and source wave
-form $f \in C_0^{\infty}(\bR)$ through the acoustic system
+form $f$ through the acoustic system
 \begin{eqnarray}
   \label{eqn:awe}
  \frac{\partial p}{\partial t} & = &- \kappa \nabla \cdot {\bf v} +
@@ -137,22 +140,32 @@ p, {\bf v} & = & 0 \mbox{ for }  t \ll 0.
 \end{eqnarray}
 For simplicity, I assume that the system \ref{eqn:awe} holds over all of Euclidean
 space-time $(\bx,t) \in \bR^3 \times \bR$, and ignore physical
-boundaries such as the Earth's surface. Likewise for simplicity, I
-assume in this study that the material density $\rho$ is spatially
-homogeneous and known.
+boundaries such as the Earth's surface.,
 %In some settings, eg. the earth's
 %upper crust, the material density $\rho$ exhibits substantially less variance than the
 %bulk modulus, Density is however spatially variable in most geological
 %and biomedical materials, and could reasonabliy be included amongst the parameters
 %to be estimated.
 
-The parameter to be determined in the inverse problem studied here is
-the bulk modulus $\kappa$. It is presumed is bounded and smooth: $\log
-\kappa \in M$, where $M$ is a bounded subset of $C^{\infty}(\bR^3) \cap
-L^{\infty}(\bR^3)$, on which further constraints will be placed by and
-by. 
+The data of the inverse problem to be considered here is the
+collection $\{p(\bx_r,t;\bx_s): (\bx_s,\bx_r) \in X_{sr}\}$ of time
+records or {\em traces} of pressure, recorded by the various source-receiver pairs.
+The parameter to be determined is
+the bulk modulus $\kappa$.  For simplicity, the material density
+$\rho$ is assumed spatially homogeneous and known.
 
-Under these hypotheses, the symmetric hyperbolic system \ref{eqn:awe}
+\subsection{Assumptions}
+
+To make sense of the inverse problem just defined, a number of
+additional assumptions are necessary. Some of these are serious
+constraints. Prospects for relaxing them will be discussed
+later in the paper.
+
+The bulk modulus $\kappa$ is presumed positive, bounded and smooth: $\log
+\kappa \in M$, where $M$ is a bounded subset of $C^{\infty}(\bR^3) \cap
+L^{\infty}(\bR^3)$. Also, the source waveform $f$ is supposed smooth,
+of compact support, and the same for every source $\bx_s \in X_s$. 
+Then the symmetric hyperbolic system \ref{eqn:awe}
 has a unique distribution solution (for example \cite{Lax:PDENotes},
 Theorem 7.4). The Propagation of
 Singularities Theorem (\cite{Tay:81}, Theorem VI.2.1) %and
@@ -173,7 +186,7 @@ by
   F[\kappa]= p|_{X_{sr} \times \bR}
 \end{equation}
 
-In this setting, acoustic FWI means: given the set of
+In this setting, the inverse problem may be stated as follows: given the set of
 source-receiver position pairs $X_{sr}$, source wavelet
 $f \in C_0^{\infty}(\bR)$,  density $\rho$, and data traces
 $d \in \Pi_{X_{sr}} C^{\infty}(\bR)$, find a bulk modulus $\log
@@ -200,7 +213,7 @@ the {\em Exponential Decay} assumption:
     |\partial_t^k p(\bx_r,t;\bx_s)| \le K e^{-\delta t}, \, t > T.
   \]
 \end{quote}
-SInce $X_{sr}$ is bounded, the property described in this assumption
+Since $X_{sr}$ is bounded, the property described in this assumption
 is a special case of {\em local energy decay}, a much studied topic. The {\em
   non-trapping} hypothesis is sufficient to ensure local energy decay:
 all rays of geometric asymptotics (that is, geodesics for the Riemannian metric associated
@@ -233,26 +246,82 @@ The {\em No Return} assumption is
   or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
 \end{quote}
 This assumption states that once a ray leaves
-$\Omega$, its subsequent intersection with $\Omega$ is null (hence the name).
+$\Omega$, its subsequent intersection with $\Omega$ is null (hence the
+name).
 
-Thanks to Exponential Decay, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
+The results of this paper concern high frequency, or small wavelength,
+asymptotics of the model-data relationship. The asymptotic analysis is
+based on a family of source waveforms, generated from a reference
+waveform $f_1 \in C_0^{\infty}(\bR)$. For $\lambda > 0$, define
+\begin{equation}
+  \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
+\end{equation}
+The dimensionless scale parameter $\lambda$ is a proxy for
+wavelength in the arguments that follow. The precise relationship explained below. 
+
+Denote by $\Fl$ the modeling operator $F$ defined by the choice $f=\fl$.
+
+\subsection{Full Waveform Inversion}
+
+Suppose only the Exponential Decay hypothesis is assumed. Then, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
 \ge 1$.
 Denote by $L^p(X_{sr} \times \bR)$ the product space $l^p(X_{sr},L^p(\bR))$
 with the usuall product norm. 
 
-Accordingly, FWI may be posed as a least-squares
+Accordingly, acoustic FWI may be posed as a nonlinear least-squares
 problem: given data $d \in
 L^2(X_{sr}\times \bR)$, find $\kappa$ to minimize
 \begin{equation}
   \label{eqn:fwi}
   J_{\rm FWI}[\kappa;d]= \frac{1}{2}\|F[\kappa]-d\|^2_{L^2(X_{sr} \times \bR)},
 \end{equation}
-As mentioned earlier, optimization algorithms related to Newton's method, applied to
-$J_{\rm FWI}$, tend to stagnate far from global minimizers if
-the initial choice of $\kappa$ does not predict the arrival times of
-waves correctly within a half-wavelength or so (the meaning of
-``wavelength'' in this context will be explained below)
-\cite[]{GauTarVir:86,VirieuxOperto:09}.
+Practical implementations of FWI may include regularization terms,
+constraints, and preprocesses that enhance the chances of success. 
+
+Discretizations of the components of \ref{eqn:fwi} yields
+computationally large problems, for which only local optimization
+methods are feasible. However, optimization algorithms related to
+Newton's method, applied to $J_{\rm FWI}$, tend to stagnate far from
+global minimizers if the initial choice of $\kappa$ does not predict
+the arrival times of waves correctly within a half-wavelength or so
+(the meaning of ``wavelength'' in this context will be explained
+below) \cite[]{GauTarVir:86,VirieuxOperto:09}. While it is widely
+believed that this stagnation occurs at local
+minima far from global minimizers, such local minima have not been
+shown to exist, except in low-dimensional specializations.
+
+This paper does not prove existence of non-global minima. It does
+however establish a property of $J_{\rm FWI}$ that is consistent with
+strong oscillation.
+
+\begin{theorem}
+  \label{thm:fwi}
+  Suppose that Exponential Decay, Single Arrival and No Return hold
+  for $\kappa \in exp{M}$, and that that
+  $\dl$ denotes its family of noise-free data, that is,
+  \[
+    \dl = \Fl[\kappa], \, \lambda > 0.
+  \]
+  Then there exist positive $K^*, L_*<L^* \in \bR_+$ and
+  perturbations $\kappa_{\lambda} \in exp(M), \lambda > 0,$ so that
+  \[
+   L_* \le  J_{\rm FWI}[\kappa_{\lambda};\dl] \le L^*, \,\lambda > 0
+  \]
+  but
+  \[
+    \|\kappa_{\lambda} - \kappa\|_{L^{\infty}(\bR^3)} \le K^*\lambda.
+\]
+\end{theorem}
+
+Since $ J_{\rm FWI}[\kappa;\dl]=0$, the modulus of continuity of
+$J_{\rm FWI}[\cdot;\dl]$ is bounded below by a multiple of $1/\lambda$
+as $\lambda \rightarrow 0$. This observation does not itself
+imply that $ J_{\rm FWI}$ oscillates, or has stationary points other
+than its global minimizer, but is consistent with such behaviour, and
+suggests that local optimization methods would face could be expected
+to perfore arbitrarily poorly as the data wavelength becomes small.
+
+\subsection{Adaptive Waveform Inversion}
 
 AWI modifies the least-squares FWI problem by interposing a convolution operator or
 {\em filter} $u \in L^2(X_{sr} \times \bR)$. That is, the residual
@@ -285,16 +354,6 @@ III.7) ensures the existence of a unique solution
 $u_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$ of the least squares
 problem \ref{eqn:reg},
 it is not immediiately obvious that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$.
-
-Asymptotic analysis of AWI and MSWI is based on a family of source
-wavelets: for $\lambda > 0$,
-\begin{equation}
-  \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
-\end{equation}
-The relation between the dimensionless scale parameter $\lambda$ and
-RMS wavelength will be explained below: $\lambda$ may be regarded as a
-proxy for wavelength. Correspondingly, denote the
-modeling operator with $f=\fl$ by $\Fl$.
 
 The main result of this analysis is
 
