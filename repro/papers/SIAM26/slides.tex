@@ -98,9 +98,9 @@
   \includegraphics[width=0.45\textwidth]{m}\includegraphics[width=0.40\textwidth]{cwd20}
 \end{center}
 
-Left: 2D ``lens'' $\kappa$, 20 source positions ($(x_s,z_s)$, green) at
+Left: 2D target model (``lens'') $\kappa^*$, 20 source positions ($(x_s,z_s)$, green) at
 $x_s=3000$ m, 181 receiver positions ($(x_r,z_r)$, blue) at $x=5000$ m. Right:
-predicted data $d(\bx_r,t;\bx_s)$. (from S., Chen \& Minkoff, {\em Inverse
+predicted data $d(\bx_r,t;\bx_s)=p[\kappa^*](\bx_r,t;\bx_s)$. (from S., Chen \& Minkoff, {\em Inverse
 Problems} 41 (6), 2025)
  
 }
@@ -142,6 +142,8 @@ source/receiver points - which $\tau$ to match?
 %(needs numerics for $\kappa] \rightarrow  p, \tau$ and derivatives
 %w.r.t. $\kappa$ - many choices, but often very large scale)
 
+\section{Cycle-skipping}
+
 \frame{
 Good news, bad news...
 
@@ -176,6 +178,9 @@ For TT,
   using data $d$ from ``lens'' $\kappa$. Right: residual
   $p[\kappa_{200}] - d$. RMS relative error = 0.43.
 }
+
+\section{Adaptive Waveform Inversion}
+
 \frame{
 Practical remedy for cycle skipping: pick times $t(\bx_r,\bx_s)$,
 minimize $J_{\rm TT}$, initiate minimization of $J_{\rm FWI}$
@@ -196,7 +201,13 @@ $\kappa, d$
 }
 
 \frame{
-  illustration: resim0, uest0
+  \begin{center}
+    \includegraphics[width=0.4\textwidth,height=2.8cm]{chwd20crop}\includegraphics[width=0.40\textwidth]{cwd20}\\
+    \includegraphics[width=0.4\textwidth,height=2.8cm]{cwlens20uest0crop}
+  \end{center}
+  Top Left: $p[\kappa_0], \kappa_0\equiv 4.0 GPa$. Top Right: target
+  data $d=p[\kappa^*]$. Bottom: filter $\us[\kappa_0,d]$, achieves
+  $p[\kappa_0]*\us \approx d$ (least squares, via CG iteration)
 }
 
 \frame{
@@ -225,7 +236,8 @@ $\kappa, d$
 
   once a geodesic leaves vicinity of $X_{sr}$, it never returns;
 
-  exponential time decay of solutions;
+  exponential time decay of solutions (eg. non-trapping metric,
+  Vainberg '75);
 
   asymptotics via family of source waveforms $\{\fl(t) =
   \sqrt{\lambda}f_1(t/\lambda)\}$, $f_1 \in \partial_t^2 C_0^{\infty}(\bR)$,
@@ -314,6 +326,55 @@ $\kappa, d$
 
   $O(\lambda^2)$ estimates for ``...'', other fine print - S. arXiv '24 
 }
+
+\frame{
+  \begin{center}
+    \includegraphics[width=0.45\textwidth]{cwlens20mestmswifwi}\includegraphics[width=0.40\textwidth]{cwlens20residmestmswifwi}
+  \end{center}
+  MSWI (= AWI w/o denominator, just $\|t\us\|^2$, similar local
+  asymptotics) + FWI: 12 LBFGS iterations each. Left: final estimate
+  of $\kappa$. Right: final residual, plotted on same scale as data,
+  7\% RMS.
+}
+
+\frame{
+  \begin{center}
+    \includegraphics[width=0.40\textwidth,height=2.8cm]{cwlens20uest0crop}\includegraphics[width=0.40\textwidth]{cwlens20uestmswi}
+  \end{center}
+  Filter $\us$. Left: at initial estimate $\kappa \equiv 4.0 GPa$.
+  Right: at MSWI estimate of $\kappa$, 12 LBFGS iterations (initial
+  estimate for FWI).
+}
+
+\section{Not done yet...}
+
+\frame{
+  Metric not simple (multiple geodesics connect source, receiver
+  positions) $\Rightarrow$ asymptotic relation AWI $\leftrightarrow$
+  TT {\color{blue} fails}
+  \begin{center}
+    \includegraphics[width=0.40\textwidth]{dcwm}\includegraphics[width=0.40\textwidth]{dcwd20}
+  \end{center}
+  Left: extended ``lens''. Right: data traces, sources at $x_s=2000$
+  m, receivers at
+  $x_r=6000$ m.
+
+  Interfernce between multiple waves (travel times) $\Rightarrow$ AWI
+  behavies just like FWI (``cycle skips'') (Huang et al. 19, Pladys
+  '21, Yong '23, S. '24)
+}
+
+\frame{
+  Modifications of AWI to deal with non-simple metrics:
+  \begin{itemize}
+    \item Localize in time: Local AWI (Yong, M\'{e}tivier, Brossier,...) arriving
+      waves (usually) separated in time - localize via Gabor
+      transform
+    \item Microlocalize in space-time: for dense source arrays, model data using
+      spatially extended sources, penalize extension in space (Huang
+      et al. '19)
+    \end{itemize}
+  }
 \end{document}
 
 
@@ -353,6 +414,7 @@ $\kappa, d$
 
   $\lambda$ = proxy for wavelength ($\propto$ RMS wavelength)
 }
+
 
 \frame{
   
