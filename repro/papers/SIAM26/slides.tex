@@ -74,21 +74,32 @@
 
 \section{Waves \& Rays}
 \frame{
-  $q=$ causal potential for acoustic waves radiating from isotropic point source
+  Acoustic waves radiating from isotropic point source
   at $\bx_s \in \bR^3$ with waveform $f(t)$ - solves
   \[
     \square q(\bx,t;\bx_s)  = \left(\frac{1}{\kappa}\frac{\partial^2 q}{\partial t^2} - \frac{1}{\rho}\nabla^2 q\right)(\bx,t;\bx_s)=
     f(t) \delta(\bx-\bx_s),\,q=0 \mbox{ for } t \ll 0
   \]
-  Pressure $p = \rho \partial_t q$ - depends on bulk modulus $\kappa(\bx)$ 
+  $q = $ potential\\
+  $\kappa = $ bulk modulus\\
+  $\rho = $ density\\
+  $f  = $ source time function\\
+  $p = \rho \partial_t q = $ pressure
+}
 
-  {\color{blue} Dynamic Inverse Problem:} given pressure history
-  $\{d(\bx_r,t; \bx_s)\}$ for source, receiver
-  locations $(\bx_s, \bx_r) \in X_{sr}$, find $\kappa$ so that $p[\kappa]
-  \simeq d$.
+\frame{
+Waveform data:: emit waves at $\bx_s$, record pressure at $\bx_r$
+Source-receiver pairs $X_{sr} = \{(\bx_s,\bx_r)\}$
 
-  Regard density $\rho \in \bR$, source waveform $f \in C_0^{\infty}(\bR)$ as known - highly
-  idealized!
+Simplify: density $\rho >0$, source waveform $f \in
+C_0^{\infty}(\bR)$ {\color{blue} known}
+
+Predicted pressure data $p[\kappa](\bx_r,t;\bx_s)$
+
+  {\color{blue} Dynamic Inverse Problem}: given data
+  $\{d(\bx_r,\cdot;\bx_s): (\bx_s,\bx_r) \in X_{sr}\}$, seek $\log \kappa \in
+  C^{\infty}(\bR^3)$ so that $p[\kappa]
+  \approx d$.
 
   Many variants, large literature since '70's, many apps 
 }
@@ -98,24 +109,23 @@
   \includegraphics[width=0.45\textwidth]{m}\includegraphics[width=0.40\textwidth]{cwd20}
 \end{center}
 
-Left: 2D target model (``lens'') $\kappa^*$, 20 source positions ($(x_s,z_s)$, green) at
-$x_s=3000$ m, 181 receiver positions ($(x_r,z_r)$, blue) at $x=5000$ m. Right:
-predicted data $d(\bx_r,t;\bx_s)=p[\kappa^*](\bx_r,t;\bx_s)$. (from S., Chen \& Minkoff, {\em Inverse
+Left: 2D bulk modulus field (``lens'') $\kappa^*$, 20 source positions ($\bx_s=(x_s,z_s)$, green) at
+$x_s=3000$ m, 181 receiver positions ($\bx_r=(x_r,z_r)$, blue) at $x_r=5000$ m. Right:
+predicted data $d^*(\bx_r,t;\bx_s)=p[\kappa^*](\bx_r,t;\bx_s)$. (from S., Chen \& Minkoff, {\em Inverse
 Problems} 41 (6), 2025)
- 
 }
 
 \frame{
   High frequency asymptotics (geometric optics/acoustics,...): in
   HF limit, travel time of wave from source at $\bx_s$ to receiver
-  at $\bx_r$ is {\em geodesic distance} $\tau[\kappa](\bx_s,\bx_r)$ in metric $ c^{-2}\sum_i dx_i
+  at $\bx_r$ is {\em geodesic distance} $\tau[\kappa](\bx_s,\bx_r)$ in metric $ c(\bx)^{-2}\sum_i dx_i
   \otimes dx_i$, $c = \sqrt{\kappa/\rho}$ = sound speed
 
 {\color{blue} Kinematic Inverse Problem:} given times
-    $t(\bx_s,\bx_r)$, find $\kappa$ so that $\tau[\kappa](\bx_s,\bx_r)
-    = t(\bx_s,\bx_r)$ for $(\bx_s,\bx_r) \in X_{sr}$.
+    $\{t(\bx_s,\bx_r): (\bx_s,\bx_r) \in X_{sr}\}$, find $\kappa$ so
+    that $\tau[\kappa] \approx t$
 
-Huge literature - boundary rigidity problem (find $c$ in $\Omega
+Huge literature - eg. boundary rigidity problem (find $c$ in $\Omega
 \subset \bR^n, X_{sr} \subset \partial \Omega$), many apps (seismic
 tomography,...)
 
@@ -123,8 +133,9 @@ Complication: multiple geodesics (``rays'') may connect
 source/receiver points - which $\tau$ to match?
 }
 
+
 \frame{
-  Common computational approach;: pose as
+  Common computational approach: pose as
   optimization, eg. least squares - use iterative algorithm to find
   $\kappa$ to (approximately) minimize
   \[
@@ -136,7 +147,9 @@ source/receiver points - which $\tau$ to match?
   J_{\rm TT}[\kappa,t] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
 |\tau[\kappa](\bx_s,\bx_r) - t(\bx_s,\bx_r)|^2
 \]
-(``Traveltime Tomography'').
+(``Traveltime Tomography'')
+
++ regularizations, constraints
 }
 
 %(needs numerics for $\kappa] \rightarrow  p, \tau$ and derivatives
@@ -150,21 +163,14 @@ Good news, bad news...
 For FWI,
 \begin{itemize}
 \item seismology, ultrasonic imaging, ocean acoustics,... the
-  data are pressure (or ...) histories, so FWI is the natural
+  data are pressure (or acceleration, or stress, or ...), so FWI is the natural
   approach, BUT...
 \item unless initial $\kappa$ predicts traveltimes accurately
-  (``within a half-wavelength''), Newton-like iterations tend to
+  (``within a half-wavelength''), local optimization
+  (eg. quasi-Newton), required because frequency range $\Rightarrow$ fine discretization $\Rightarrow$ large
+  problem size, tend to
   stagnate at incorrect final $\kappa$ with big data prediction
-  error - behaviour of optimization is wavelength-related (``cycle-skipping'')
-\end{itemize}
-
-For TT,
-\begin{itemize}
-\item $J_{TT}$ {\em a priori} unrelated to wavelength, optimizations tend to
-  converge to good fit, BUT...
-\item data t are not directly measured, must be inferred
-  (``picked'') from waveform data - mostly automated in
-  industrial codes, but can be noise-sensitive
+  error - wavelength-related (``cycle-skipping'')
 \end{itemize}
 
 }
@@ -179,23 +185,40 @@ For TT,
   $p[\kappa_{200}] - d$. RMS relative error = 0.43.
 }
 
+\frame{
+
+For TT,
+\begin{itemize}
+\item $J_{TT}$ {\em a priori} unrelated to wavelength, optimizations tend to
+  converge to good fit, BUT...
+\item data t are not directly measured, must be inferred
+  (``picked'') from waveform data - mostly automated in
+  industrial codes, but can be noise-sensitive
+\end{itemize}
+
+Conventional remedy for cycle skipping: pick times $t(\bx_r,\bx_s)$,
+minimize $J_{\rm TT}$, initiate minimization of $J_{\rm FWI}$
+from result, low $\rightarrow$ high frequency continuation -
+widespread use, much success (including commercial)
+
+Still, many attempts at alternatives: is there a replacement for FWI
+that uses waveform data directly but does not cycle-skip, implicitly
+accomplishes travel-time inversion?
+}
+
+
 \section{Adaptive Waveform Inversion}
 
 \frame{
-Practical remedy for cycle skipping: pick times $t(\bx_r,\bx_s)$,
-minimize $J_{\rm TT}$, initiate minimization of $J_{\rm FWI}$
-from result, low $\rightarrow$ high frequency continuation - widespread use, but many attempts at alternatives
+Warner et al. (2012, ...): FWI fails because initial predicted
+data $p[k]$ places waves at wrong times $\Rightarrow$ big error - so
+{\em move them} to make error small
 
-Warner et al. (2012, ...): FWI fails because initial prediction
-data $p[k]$ places waves at wrong times - so {\em move them} to make
-residual small
-
-Use a {\em filter} (convolution kernel) $u_{\sigma}(\bx_r,t;\bx_s)$, solution of
+Use a {\em filter} (convolution kernel) $u_{\sigma}[\kappa,d](\bx_r,t;\bx_s)$, solution of
 \[
-  \min_u \|p[\kappa] * u_{\sigma} - d\|^2 + \sigma \|u_{\sigma}\|^2
+  \us[\kappa,d] = \mbox{argmin}_u (\|p[\kappa] * u - d\|^2 + \sigma \|u\|^2)
 \]
-regularization weight $\sigma > 0$ TBD. NB: $u_{\sigma}$ depends on
-$\kappa, d$
+regularization weight $\sigma > 0$ TBD
 
 ($*$ = convolution in $t$, $\|\cdot\| = L^2$ norm)
 }
@@ -205,7 +228,7 @@ $\kappa, d$
     \includegraphics[width=0.4\textwidth,height=2.8cm]{chwd20crop}\includegraphics[width=0.40\textwidth]{cwd20}\\
     \includegraphics[width=0.4\textwidth,height=2.8cm]{cwlens20uest0crop}
   \end{center}
-  Top Left: $p[\kappa_0], \kappa_0\equiv 4.0 GPa$. Top Right: target
+  Top Left: $p[\kappa_0], \kappa_0\equiv 4.0$ GPa. Top Right: target
   data $d=p[\kappa^*]$. Bottom: filter $\us[\kappa_0,d]$, achieves
   $p[\kappa_0]*\us \approx d$ (least squares, via CG iteration)
 }
@@ -214,15 +237,16 @@ $\kappa, d$
   BUT desiired outcome is $p[\kappa] \approx d$ which is $p[\kappa]*u
   \approx d$ with $u = \delta(t)$
 
-  Since $t\delta(t) =0$, try minimizing
+  {\color{blue} Adaptive Waveform Inversion}: Since $t\delta(t) =0$,
+  try minimizing (over $\kappa$)
   \[
-    J_{{\rm AWI},\sigma}[\kappa,d] = \frac{\|tu_{\sigma}[\kappa,d]\|^2}{\|u_{\sigma}[\kappa,d]\|^2}
+    J_{{\rm AWI},\sigma}[\kappa,d] = \sum_{(\bx_r,\bx_s) \in X_{sr}} \frac{\|tu_{\sigma}[\kappa,d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa,d](\bx_r,\cdot;\bx_s)\|^2}
   \]
   
   Many successful results reported - overcomes cycle skipping! (at
   least sometimes...) 
 
-  Why should this work? Answer must lie in HF asymptotics...
+  Why should this work? 
 
   {\color{blue} Under some conditions $ J_{{\rm AWI},\sigma}[\kappa,d]
   \rightarrow J_{TT}[\kappa,t]$ as data wavelength $\rightarrow 0$}
@@ -231,10 +255,10 @@ $\kappa, d$
 \frame{
   Assume:
 
-  {\color{blue} only one geodesic connecting points near sources and
+  {\color{blue} only one geodesic connects points near sources and
     receivers (simple metric);}
 
-  once a geodesic leaves vicinity of $X_{sr}$, it never returns;
+  once a geodesic leaves neighborhood of $X_{sr}$, it never returns;
 
   exponential time decay of solutions (eg. non-trapping metric,
   Vainberg '75);
@@ -268,64 +292,61 @@ $\kappa, d$
 }
 
 \frame{
-  Why?
+  Sketch of proof:
 
   Hadamard expansion of Green's function (3D) $\Rightarrow$ for solution
   of $\square q = f(t) \delta(\bx-\bx_s)$ in simple metric domain
   (unique geodesic connects $\bx_s$ to $\bx$):
   \[
     q(\bx,t;\bx_s) = a(\bx.\bx_s)f(t-\tau(\bx,\bx_s)) +
-    \int_{\tau(\bx,\bx_s)}^t ds\,b(\bx,t-s;\bs_s)f(s)
+    \int_{\tau(\bx,\bx_s)}^t ds\,b(\bx,s;\bx_s)f(t-s)
   \] 
   $a$, $b$ smooth for $\bx \ne \bx_s$ - ``No Return'' $\Rightarrow$
   global in $t$ 
 
-  So $p[\kappa] = a \partial_t f(t-\tau) + ...$
+  So $p[\kappa](\bx_r,t;\bx_s) = \rho a(\bx_r,\bx_s) \partial_t f(t-\tau(\bx_r,\bx_s)) + ...$
 
-  (Courant \& Hilbert '62, Friedlander '75, H\"{o}rmander '85, Wei et al. '24)
+  (Hadamard 1923, Courant \& Hilbert '62, Friedlander '75, H\"{o}rmander '85, Wei et al. '24)
 }
 
 \frame{
-  ignoring ``...'', noise free data $d^* = p[\kappa^*] \approx
-  a^*f(t-\tau^*)$  ($a^*=a[\kappa^*]$ etc.)
-
-  so
+  ignore``...'', noise free data $d^* = p[\kappa^*] \approx
+  \rho a^*f(t-\tau^*)$  ($a^*=a[\kappa^*]$ etc.) so 
   \[
-    \us = \mbox{argmin}_u (\|a \partial_tf * u(t-\tau) - a^*
-    \partial_tf (t-\tau^*)\|^2)
+    \us = \mbox{argmin}_u (\rho^2\|a \partial_tf * u(t-\tau) - a^*
+    \partial_tf (t-\tau^*)\|^2 + \sigma\|u\|^2)
   \]
-  Solve via Fourier transform, obtain
   \[
     = \frac{a^*}{a}g_{\sigma}(t-(\tau-\tau^*)),\, \hat{g}_{\sigma}(\omega) =
-    \frac{a^2 \omega^2|\hat{f}(\omega)|^2}{a^2
+    \frac{\rho^2 a^2 \omega^2|\hat{f}(\omega)|^2}{\rho^2 a^2
       \omega^2|\hat{f}(\omega)|^2 + \sigma}
-  \]
-
-  Time error $\tau-\tau^*$ appears explicitly! (also $g_{\sigma}$ is even...)
- 
-}
-
-\frame{
-  so
-  \[
-    \|t\us\|^2 = \frac{(a^*)^2}{a^2}( (\tau-\tau^*)^2\|g_{\sigma}\|^2
-    + \|tg_{\sigma}\|^2 )
-  \]
-  \[
-    \|\us\|^2 = \frac{(a^*)^2}{a^2}\|g_{\sigma}\|^2
   \]
   whence
   \[
-    J_{\rm AWI,\sigma} \approx
-    (\tau-\tau^*)^2 + \frac{\|tg_{\sigma}\|^2}{\|g_{\sigma}\|^2} 
+    J_{\rm AWI,\sigma} \approx \sum_{(\bx_r,\bx_s)\in X_{sr}}\left(
+    (\tau-\tau^*)^2 + \frac{\|tg_{\sigma}\|^2}{\|g_{\sigma}\|^2} \right)
   \]
   choose $f = \fl$ and $\sigma \propto \lambda$ then
   \[
-    = (\tau-\tau^*)^2 + O(\lambda^2)
+    = \|\tau-\tau^*\|^2 + O(\lambda^2)
   \]
-
-  $O(\lambda^2)$ estimates for ``...'', other fine print - S. arXiv '24 
+$O(\lambda^2)$ estimates for ``...'', other fine print - S. '24
+  (arXiv) (related: Song '94)
+  %Time error $\tau-\tau^*$ appears explicitly! (also $g_{\sigma}$ is even...)
+ 
 }
+
+%\frame{
+%  so for each $(\bx_r,\bx_s) \in X_{sr}$,
+%  \[
+%    \|t\us\|^2 = \frac{(a^*)^2}{a^2}( (\tau-\tau^*)^2\|g_{\sigma}\|^2
+%    + \|tg_{\sigma}\|^2 )
+%  \]
+%  \[
+%    \|\us\|^2 = \frac{(a^*)^2}{a^2}\|g_{\sigma}\|^2
+%  \]
+  
+%}
 
 \frame{
   \begin{center}
@@ -334,7 +355,7 @@ $\kappa, d$
   MSWI (= AWI w/o denominator, just $\|t\us\|^2$, similar local
   asymptotics) + FWI: 12 LBFGS iterations each. Left: final estimate
   of $\kappa$. Right: final residual, plotted on same scale as data,
-  7\% RMS.
+  7\% RMS error.
 }
 
 \frame{
@@ -360,64 +381,36 @@ $\kappa, d$
   $x_r=6000$ m.
 
   Interfernce between multiple waves (travel times) $\Rightarrow$ AWI
-  behavies just like FWI (``cycle skips'') (Huang et al. 19, Pladys
+  behavies just like FWI (``cycle skips'') (S. '94, Huang 19, Pladys
   '21, Yong '23, S. '24)
 }
 
 \frame{
   Modifications of AWI to deal with non-simple metrics:
   \begin{itemize}
-    \item Localize in time: Local AWI (Yong, M\'{e}tivier, Brossier,...) arriving
-      waves (usually) separated in time - localize via Gabor
-      transform
-    \item Microlocalize in space-time: for dense source arrays, model data using
-      spatially extended sources, penalize extension in space (Huang
-      et al. '19)
-    \end{itemize}
-  }
-\end{document}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%
-\frame{
-  Assumptionw for Bulk moduli $\log \kappa \in M \subset
-  C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ and $X_{sr}$:
-
-  1.{\color{blue} Large time decay:} for  $\log \kappa \in M, n \ge 0$, there are $C,
-  t_0,\delta > 0$ so that for any $f \in C^{\infty}_0(\bR), 0 \le k
-  \le n$, solution $q$ of $\square q = f(t)\delta(\bx-\bx_s)$ satisfies
-  \[
-    |\partial_t^kq(\bx_r,t;\bx_s)| \le C e^{-\delta t}\|\partial_t f\|, t > t_0
-  \]
-  [sufficient that $\kappa - \mbox{ const.}$ has compact support, and
-  all geodesics $\rightarrow \infty$ (metric is non-trapping) - Vainberg '75] 
-
-  2. {\color{blue} Simple metric:} $X_{sr} \subset \Omega \times
-  \Omega$, $\Omega \subset \bR^3$ open, bounded, unique geodesic
-  connects every pair of points 
-
-  3. {\color{blue} No return:} once a geodesic leaves $\Omega$, it
-  does not return 
-}
-
-\frame{
-  4.{\color{blue} Zero frequency:} family $\{\fl: \lambda > 0\}$ of source waveforms,
-  \[
-    \fl(t) = \sqrt{\lambda}f_1(t/\lambda), \, f_1 = \partial_t^2
-    \tilde{f}_1, \tilde{f} \in C_0^{\infty}(\bR)
-  \]
-  ($|\hat{\fl}(\omega)| = O(|\omega|^2)$)
-
-  Corresponding families of potentials $q_{\lambda}$, pressures
-  $p_{\lambda}$
-
-  $\lambda$ = proxy for wavelength ($\propto$ RMS wavelength)
-}
-
-
-\frame{
+  \item Localize in time: Local AWI (Yong '23.) arriving
+    waves (usually) separated in time - localize via Gabor
+    transform
+  \item Microlocalize in space-time: dense source/receiver arrays,
+    spatially extended virtual sources (``acoustic antennae''),
+    penalize extension in space (Huang '19, S. '23) -
+    asymptotic to non-standard traveltime misfit ($\sim$ lens rigidity), also in presence
+    of multiple travel times
+  \end{itemize}
   
+  Completely untouched but extremely important: elasticity, EM,
+  reflection (non-smooth coefficients)
 }
+
+\frame{
+  Thanks to
+  \begin{itemize}
+  \item Hua Song, Guanghui Huang
+  \item Huiyi Chen, Sue Minkoff
+  \item Jianlian Qian, Shingyu Leung
+  \end{itemize}
+}
+\end{document}
+  
 
 
