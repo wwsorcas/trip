@@ -57,6 +57,7 @@
 \newcommand{\us}{u_{\sigma}}
 \newcommand{\pl}{p_{\lambda}}
 \newcommand{\dl}{d_{\lambda}}
+\newcommand\blfootnote[1]{\begingroup\renewcommand\thefootnote{}\footnote{#1}\addtocounter{footnote}{-1}\endgroup}
 
 
 \title[]{Approximately Kinematic Waveform Inversion Methods}
@@ -88,32 +89,22 @@
 }
 
 \frame{
-Waveform data:: emit waves at $\bx_s$, record pressure at $\bx_r$
+Waveform data:: emit waves at $\bx_s$, record pressure at $\bx_r$,
 Source-receiver pairs $X_{sr} = \{(\bx_s,\bx_r)\}$
 
 Simplify: density $\rho >0$, source waveform $f \in
-C_0^{\infty}(\bR)$ {\color{blue} known}
+C_0^{\infty}(\bR)$ {\color{blue} known}; \\also $\log \kappa \in
+C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$
 
 Predicted pressure data $p[\kappa](\bx_r,t;\bx_s)$
 
   {\color{blue} Dynamic Inverse Problem}: given data
-  $\{d(\bx_r,\cdot;\bx_s): (\bx_s,\bx_r) \in X_{sr}\}$, seek $\log \kappa \in
-  C^{\infty}(\bR^3)$ so that $p[\kappa]
+  $\{d(\bx_r,\cdot;\bx_s): (\bx_s,\bx_r) \in X_{sr}\}$, seek $\kappa$ so that $p[\kappa]
   \approx d$.
 
   Many variants, large literature since '70's, many apps 
 }
 
-\frame{
-\begin{center}
-  \includegraphics[width=0.45\textwidth]{m}\includegraphics[width=0.40\textwidth]{cwd20}
-\end{center}
-
-Left: 2D bulk modulus field (``lens'') $\kappa^*$, 20 source positions ($\bx_s=(x_s,z_s)$, green) at
-$x_s=3000$ m, 181 receiver positions ($\bx_r=(x_r,z_r)$, blue) at $x_r=5000$ m. Right:
-predicted data $d^*(\bx_r,t;\bx_s)=p[\kappa^*](\bx_r,t;\bx_s)$. (from S., Chen \& Minkoff, {\em Inverse
-Problems} 41 (6), 2025)
-}
 
 \frame{
   High frequency asymptotics (geometric optics/acoustics,...): in
@@ -144,10 +135,10 @@ source/receiver points - which $\tau$ to match?
 \]
 (``Full Waveform Inversion'') or
 \[
-  J_{\rm TT}[\kappa,t] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
+  J_{\rm TTI}[\kappa,t] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
 |\tau[\kappa](\bx_s,\bx_r) - t(\bx_s,\bx_r)|^2
 \]
-(``Traveltime Tomography'')
+(``Travel Time Inversion'')
 
 + regularizations, constraints
 }
@@ -165,14 +156,33 @@ For FWI,
 \item seismology, ultrasonic imaging, ocean acoustics,... the
   data are pressure (or acceleration, or stress, or ...), so FWI is the natural
   approach, BUT...
-\item unless initial $\kappa$ predicts traveltimes accurately
-  (``within a half-wavelength''), local optimization
+\item local optimization
   (eg. quasi-Newton), required because frequency range $\Rightarrow$ fine discretization $\Rightarrow$ large
-  problem size, tend to
+  problem size, BUT  unless initial $\kappa$ is kinematically accurate 
+  (predicts traveltimes ``within a half-wavelength''), local
+  optimization tends to
   stagnate at incorrect final $\kappa$ with big data prediction
-  error - wavelength-related (``cycle-skipping'')
+  error - worse for higher frequency data  (``cycle-skipping'')
 \end{itemize}
 
+}
+
+\frame{
+\begin{center}
+  \includegraphics[width=0.45\textwidth]{m}\includegraphics[width=0.40\textwidth]{cwd20}
+\end{center}
+
+Left: 2D bulk modulus field (``lens'') $\kappa^*$, 20 source positions ($\bx_s=(x_s,z_s)$, green) at
+$x_s=3000$ m, 181 receiver positions ($\bx_r=(x_r,z_r)$, blue) at
+$x_r=5000$ m.
+
+Right:
+predicted data $d^*(\bx_r,t;\bx_s)=p[\kappa^*](\bx_r,t;\bx_s)$. Time
+increases downwards; histories for each $z_s$ grouped together in
+order of increasing $z_r$. Note sag in middle.
+
+(from S., Chen \& Minkoff, {\em Inverse
+Problems} 41 (6), 2025)
 }
 
 \frame{
@@ -187,29 +197,32 @@ For FWI,
 
 \frame{
 
-For TT,
+For TTI,
 \begin{itemize}
-\item $J_{TT}$ {\em a priori} unrelated to wavelength, optimizations tend to
+\item $J_{TTI}$ {\em a priori} unrelated to wavelength, local optimizations tend to
   converge to good fit, BUT...
 \item data t are not directly measured, must be inferred
   (``picked'') from waveform data - mostly automated in
   industrial codes, but can be noise-sensitive
 \end{itemize}
 
-Conventional remedy for cycle skipping: pick times $t(\bx_r,\bx_s)$,
-minimize $J_{\rm TT}$, initiate minimization of $J_{\rm FWI}$
-from result, low $\rightarrow$ high frequency continuation -
-widespread use, much success (including commercial)
+Conventional remedy for cycle skipping: TTI followed by FWI. Pick times
+$t(\bx_r,\bx_s)$, minimize $J_{\rm TTI}$, initiate minimization of
+$J_{\rm FWI}$ from result, low $\rightarrow$ high frequency
+continuation - widespread use, much success (including commercial)
 
-Still, many attempts at alternatives: is there a replacement for FWI
-that uses waveform data directly but does not cycle-skip, implicitly
-accomplishes travel-time inversion?
+Q: is there a replacement for FWI
+that uses waveform data directly but implicitly
+does TTI (so no cycle-skip) - that is, 
+{\color{blue} approximately kinematic}?
 }
 
 
 \section{Adaptive Waveform Inversion}
 
 \frame{
+  A: yes, at least sometimes...
+  
 Warner et al. (2012, ...): FWI fails because initial predicted
 data $p[k]$ places waves at wrong times $\Rightarrow$ big error - so
 {\em move them} to make error small
@@ -218,7 +231,7 @@ Use a {\em filter} (convolution kernel) $u_{\sigma}[\kappa,d](\bx_r,t;\bx_s)$, s
 \[
   \us[\kappa,d] = \mbox{argmin}_u (\|p[\kappa] * u - d\|^2 + \sigma \|u\|^2)
 \]
-regularization weight $\sigma > 0$ TBD
+regularization weight $\sigma > 0$ TBD so that $p[\kappa]*u \approx d$
 
 ($*$ = convolution in $t$, $\|\cdot\| = L^2$ norm)
 }
@@ -229,15 +242,15 @@ regularization weight $\sigma > 0$ TBD
     \includegraphics[width=0.4\textwidth,height=2.8cm]{cwlens20uest0crop}
   \end{center}
   Top Left: $p[\kappa_0], \kappa_0\equiv 4.0$ GPa. Top Right: target
-  data $d=p[\kappa^*]$. Bottom: filter $\us[\kappa_0,d]$, achieves
-  $p[\kappa_0]*\us \approx d$ (least squares, via CG iteration)
+  data $d^*=p[\kappa^*]$. Bottom: filter $\us[\kappa_0,d]$, achieves
+  $p[\kappa_0]*\us \approx d^*$ (least squares, via CG iteration)
 }
 
 \frame{
-  BUT desiired outcome is $p[\kappa] \approx d$ which is $p[\kappa]*u
-  \approx d$ with $u = \delta(t)$
+  BUT want $p[\kappa] \approx d$, not $p[\kappa]*u
+  \approx d$ - these are same if $u = \delta(t)$
 
-  {\color{blue} Adaptive Waveform Inversion}: Since $t\delta(t) =0$,
+  {\color{blue} Adaptive Waveform Inversion} (AWI): Since $t\delta(t) =0$,
   try minimizing (over $\kappa$)
   \[
     J_{{\rm AWI},\sigma}[\kappa,d] = \sum_{(\bx_r,\bx_s) \in X_{sr}} \frac{\|tu_{\sigma}[\kappa,d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa,d](\bx_r,\cdot;\bx_s)\|^2}
@@ -246,13 +259,17 @@ regularization weight $\sigma > 0$ TBD
   Many successful results reported - overcomes cycle skipping! (at
   least sometimes...) 
 
-  Why should this work? 
+  Q: Why should this work? 
 
-  {\color{blue} Under some conditions $ J_{{\rm AWI},\sigma}[\kappa,d]
-  \rightarrow J_{TT}[\kappa,t]$ as data wavelength $\rightarrow 0$}
+  
 }
 
 \frame{
+  A: Under some conditions $ J_{{\rm AWI},\sigma}[\kappa,d]
+  \rightarrow J_{TTI}[\kappa,t]$ as data wavelength $\rightarrow 0$ \\
+{\color{blue} $\Rightarrow$ AWI is (sometimes) approximately
+  (asymptotically) kinematic}
+
   Assume:
 
   {\color{blue} only one geodesic connects points near sources and
@@ -263,92 +280,61 @@ regularization weight $\sigma > 0$ TBD
   exponential time decay of solutions (eg. non-trapping metric,
   Vainberg '75);
 
-  asymptotics via family of source waveforms $\{\fl(t) =
+  noise-free data: $d^* = p[\kappa^*]$.
+
+  express asymptotics via family of source waveforms $\{\fl(t) =
   \sqrt{\lambda}f_1(t/\lambda)\}$, $f_1 \in \partial_t^2 C_0^{\infty}(\bR)$,
   corresponding pressures $\pl[\kappa]$.
-  
-  noise-free data $\dl^* = \pl[\kappa^*]$.
 }
 
 \frame{
   Then:
 
-  \[
-    \|\pl[\kappa]*\us[\kappa,\dl^*]-\dl^*\| \ll \|\dl^*\| \Leftrightarrow  \sigma \approx
-    \mbox{ const. } \lambda
-  \]
-  
-  so assume $\sigma\propto \lambda$ as $\lambda \rightarrow 0$, then:
+  (1)  $\us[\kappa,d^*], t\us[\kappa,d^*] \in L^2(\bR \times X_{sr})$, so
+  $J_{\rm AWI,\sigma}[\kappa,d^*]$ is well-defined
 
-  $\us[\kappa,\dl^*], t\us[\kappa,\dl^*] \in L^2(\bR \times X_{sr})$, so
-  $J_{\rm AWI,\sigma}$ is well-defined, and for sufficiently small
-  $\sigma$ (and $\lambda$),
-  
+  (2) $\|\pl[\kappa]*\us[\kappa,\dl^*]-\dl^*\| \ll \|\dl^*\|
+  \Leftrightarrow  \sigma \approx  \mbox{ const. } \times \lambda$
+ 
+  (3) $\sigma\propto \lambda$ $\Rightarrow$
   \[
-    |J_{\rm AWI,\sigma}[\kappa,\dl^*] - J_{\rm TT}(\kappa,t^*)| \le C\lambda^2
+    |J_{\rm AWI,\sigma}[\kappa,\dl^*] - J_{\rm TTI}(\kappa,t^*)| = O(\lambda^2)
   \]
-  
   ($t^*(\bx_s,\bx_r) = \tau[\kappa^*](\bx_s,\bx_r)$)
 }
 
 \frame{
-  Sketch of proof:
-
-  Hadamard expansion of Green's function (3D) $\Rightarrow$ for solution
-  of $\square q = f(t) \delta(\bx-\bx_s)$ in simple metric domain
-  (unique geodesic connects $\bx_s$ to $\bx$):
+  Sketch of proof: 
+  Hadamard expansion\footnote{Hadamard 1923, Courant \& Hilbert '62,
+    Friedlander '75, H\"{o}rmander '85, Wei et al. '24} of 3D Green's
+  function $\Rightarrow$ 
   \[
-    q(\bx,t;\bx_s) = a(\bx.\bx_s)f(t-\tau(\bx,\bx_s)) +
-    \int_{\tau(\bx,\bx_s)}^t ds\,b(\bx,s;\bx_s)f(t-s)
+    p[\kappa](\bx,t;\bx_s) = \rho a[\kappa](\bx.\bx_s)\partial_t f(t-\tau[\kappa](\bx,\bx_s)) +
+    \int_{\tau(\bx,\bx_s)}^t ds\,b[\kappa](\bx,s;\bx_s)\partial_t f(t-s)
   \] 
-  $a$, $b$ smooth for $\bx \ne \bx_s$ - ``No Return'' $\Rightarrow$
-  global in $t$ 
-
-  So $p[\kappa](\bx_r,t;\bx_s) = \rho a(\bx_r,\bx_s) \partial_t f(t-\tau(\bx_r,\bx_s)) + ...$
-
-  (Hadamard 1923, Courant \& Hilbert '62, Friedlander '75, H\"{o}rmander '85, Wei et al. '24)
-}
-
-\frame{
-  ignore``...'', noise free data $d^* = p[\kappa^*] \approx
-  \rho a^*f(t-\tau^*)$  ($a^*=a[\kappa^*]$ etc.) so 
-  \[
-    \us = \mbox{argmin}_u (\rho^2\|a \partial_tf * u(t-\tau) - a^*
-    \partial_tf (t-\tau^*)\|^2 + \sigma\|u\|^2)
-  \]
-  \[
-    = \frac{a^*}{a}g_{\sigma}(t-(\tau-\tau^*)),\, \hat{g}_{\sigma}(\omega) =
-    \frac{\rho^2 a^2 \omega^2|\hat{f}(\omega)|^2}{\rho^2 a^2
+  Solve LS problem for $\us$ by FT: 
+\[
+    \us[\kappa,d^*]=
+    \frac{a[\kappa^*]}{a[\kappa]}g_{\sigma}[\kappa](t-(\tau[\kappa]-\tau[\kappa^*]))
+    + ...,\, \hat{g}_{\sigma}[\kappa](\omega) =
+    \frac{\rho^2 a[\kappa]^2 \omega^2|\hat{f}(\omega)|^2}{\rho^2 a[\kappa]^2
       \omega^2|\hat{f}(\omega)|^2 + \sigma}
   \]
   whence
-  \[
-    J_{\rm AWI,\sigma} \approx \sum_{(\bx_r,\bx_s)\in X_{sr}}\left(
-    (\tau-\tau^*)^2 + \frac{\|tg_{\sigma}\|^2}{\|g_{\sigma}\|^2} \right)
+\[
+    J_{\rm AWI,\sigma}[\kappa,d^*] =\sum_{(\bx_r,\bx_s)\in X_{sr}}\left(
+    (\tau[\kappa]-\tau[\kappa]^*)^2 + \frac{\|tg_{\sigma}[\kappa]\|^2}{\|g_{\sigma}[\kappa]\|^2}
+  \right) + ...
   \]
-  choose $f = \fl$ and $\sigma \propto \lambda$ then
+}
+
+\frame{
+  Asymptotics: $f = \fl$ and $\sigma \propto \lambda$ then
   \[
-    = \|\tau-\tau^*\|^2 + O(\lambda^2)
+    = \|\tau[\kappa]-\tau[\kappa^*]\|^2 + O(\lambda^2) + ...
   \]
 $O(\lambda^2)$ estimates for ``...'', other fine print - S. '24
   (arXiv) (related: Song '94)
-  %Time error $\tau-\tau^*$ appears explicitly! (also $g_{\sigma}$ is even...)
- 
-}
-
-%\frame{
-%  so for each $(\bx_r,\bx_s) \in X_{sr}$,
-%  \[
-%    \|t\us\|^2 = \frac{(a^*)^2}{a^2}( (\tau-\tau^*)^2\|g_{\sigma}\|^2
-%    + \|tg_{\sigma}\|^2 )
-%  \]
-%  \[
-%    \|\us\|^2 = \frac{(a^*)^2}{a^2}\|g_{\sigma}\|^2
-%  \]
-  
-%}
-
-\frame{
   \begin{center}
     \includegraphics[width=0.45\textwidth]{cwlens20mestmswifwi}\includegraphics[width=0.40\textwidth]{cwlens20residmestmswifwi}
   \end{center}
@@ -372,34 +358,22 @@ $O(\lambda^2)$ estimates for ``...'', other fine print - S. '24
 \frame{
   Metric not simple (multiple geodesics connect source, receiver
   positions) $\Rightarrow$ asymptotic relation AWI $\leftrightarrow$
-  TT {\color{blue} fails}
-  \begin{center}
-    \includegraphics[width=0.40\textwidth]{dcwm}\includegraphics[width=0.40\textwidth]{dcwd20}
-  \end{center}
-  Left: extended ``lens''. Right: data traces, sources at $x_s=2000$
-  m, receivers at
-  $x_r=6000$ m.
+  TTI {\color{blue} fails}, AWI cycle skips.
 
-  Interfernce between multiple waves (travel times) $\Rightarrow$ AWI
-  behavies just like FWI (``cycle skips'') (S. '94, Huang 19, Pladys
-  '21, Yong '23, S. '24)
-}
+  Why: Interference between multiple wavefronts (S. '94, Huang '19,
+  Pladys  '21, Yong '23, S. '24).
 
-\frame{
-  Modifications of AWI to deal with non-simple metrics:
+  Approximately kinematic modifications of AWI::
   \begin{itemize}
-  \item Localize in time: Local AWI (Yong '23.) arriving
-    waves (usually) separated in time - localize via Gabor
-    transform
-  \item Microlocalize in space-time: dense source/receiver arrays,
-    spatially extended virtual sources (``acoustic antennae''),
-    penalize extension in space (Huang '19, S. '23) -
-    asymptotic to non-standard traveltime misfit ($\sim$ lens rigidity), also in presence
-    of multiple travel times
+  \item Separate wavefronts in time via Gabor transform: Local AWI (Yong '23)
+  \item Separate wavefronts in phase space via spatially extended
+    sources (``acoustic antennae''), penalize spatial dispersion
+    (Huang '19, S. '23) - asymptotic to non-standard traveltime misfit
+    ($\sim$ lens rigidity)
   \end{itemize}
   
   Completely untouched but extremely important: elasticity, EM,
-  reflection (non-smooth coefficients)
+  reflection (non-smooth coefficients), {\color{blue} attenuation}
 }
 
 \frame{
@@ -407,10 +381,63 @@ $O(\lambda^2)$ estimates for ``...'', other fine print - S. '24
   \begin{itemize}
   \item Hua Song, Guanghui Huang
   \item Huiyi Chen, Sue Minkoff
-  \item Jianlian Qian, Shingyu Leung
+  \item Profs. Qian and Leung
   \end{itemize}
 }
 \end{document}
   
+\frame{
+  Metric not simple (multiple geodesics connect source, receiver
+  positions) $\Rightarrow$ asymptotic relation AWI $\leftrightarrow$
+  TTI {\color{blue} fails}
+  \begin{center}
+    \includegraphics[width=0.40\textwidth]{dcwm}\includegraphics[width=0.40\textwidth]{dcwd20}
+  \end{center}
+  Left: extended ``lens''. Right: data traces, sources at $x_s=2000$
+  m, receivers at
+  $x_r=6000$ m.
 
+  Interference between multiple waves (travel times) $\Rightarrow$ AWI
+  behavies just like FWI (``cycle skips'') (S. '94, Huang 19, Pladys
+  '21, Yong '23, S. '24)
+}
 
+\frame{
+  ignore 2nd term, $d^* = p[\kappa^*] = 
+  \rho a^*\partial_t f(t-\tau^*) +...$  ($a^*=a[\kappa^*]$ etc.)
+  so 
+  \[
+    \us = \mbox{argmin}_u (\rho^2\|a \partial_tf * u(t-\tau) - a^*
+    \partial_tf (t-\tau^*)\|^2 + \sigma\|u\|^2)
+  \]
+  \[
+    = \frac{a^*}{a}g_{\sigma}(t-(\tau-\tau^*)),\, \hat{g}_{\sigma}(\omega) =
+    \frac{\rho^2 a^2 \omega^2|\hat{f}(\omega)|^2}{\rho^2 a^2
+      \omega^2|\hat{f}(\omega)|^2 + \sigma}
+  \]
+  whence
+  \[
+    J_{\rm AWI,\sigma} \approx \sum_{(\bx_r,\bx_s)\in X_{sr}}\left(
+    (\tau-\tau^*)^2 + \frac{\|tg_{\sigma}\|^2}{\|g_{\sigma}\|^2} \right)
+  \]
+  Asymptotics: $f = \fl$ and $\sigma \propto \lambda$ then
+  \[
+    = \|\tau[\kappa]-\tau[\kappa]^*\|^2 + O(\lambda^2)
+  \]
+$O(\lambda^2)$ estimates for ``...'', other fine print - S. '24
+  (arXiv) (related: Song '94)
+  %Time error $\tau-\tau^*$ appears explicitly! (also $g_{\sigma}$ is even...)
+ 
+}
+
+%\frame{
+%  so for each $(\bx_r,\bx_s) \in X_{sr}$,
+%  \[
+%    \|t\us\|^2 = \frac{(a^*)^2}{a^2}( (\tau-\tau^*)^2\|g_{\sigma}\|^2
+%    + \|tg_{\sigma}\|^2 )
+%  \]
+%  \[
+%    \|\us\|^2 = \frac{(a^*)^2}{a^2}\|g_{\sigma}\|^2
+%  \]
+  
+%}
