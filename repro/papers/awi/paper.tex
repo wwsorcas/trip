@@ -148,11 +148,12 @@ boundaries such as the Earth's surface.,
 %to be estimated.
 
 The data of the inverse problem to be considered here is the
-collection $\{p(\bx_r,t;\bx_s): (\bx_s,\bx_r) \in X_{sr}\}$ of time
-records or {\em traces} of pressure, recorded by the various source-receiver pairs.
+collection $\{p(\bx_r,t;\bx_s): (\bx_s,\bx_r) \in X_{sr}, t \in \bR\}$ of time
+histories or {\em traces} of pressure, recorded by the various source-receiver pairs.
 The parameter to be determined is
 the bulk modulus $\kappa$.  For simplicity, the material density
-$\rho$ is assumed spatially homogeneous and known.
+$\rho$ is assumed spatially homogeneous, and both $\rho$ and the
+source time function $f$ are assumed known.
 
 \subsection{Assumptions}
 
@@ -161,14 +162,14 @@ additional assumptions are necessary. Some of these are serious
 constraints. Prospects for relaxing them will be discussed
 later in the paper.
 
-The bulk modulus $\kappa$ is presumed positive, bounded and smooth: $\log
-\kappa \in M$, where $M$ is a bounded subset of $C^{\infty}(\bR^3) \cap
-L^{\infty}(\bR^3)$. Also, the source waveform $f$ is supposed smooth,
-of compact support, and the same for every source $\bx_s \in X_s$. 
-Then the symmetric hyperbolic system \ref{eqn:awe}
-has a unique distribution solution (for example \cite{Lax:PDENotes},
-Theorem 7.4). The Propagation of
-Singularities Theorem (\cite{Tay:81}, Theorem VI.2.1) %and
+Bulk moduli $\kappa$ are presumed positive, bounded and smooth:
+$\log \kappa \in C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$. Also, the
+source waveform $f$ is supposed smooth, of compact support
+$ \subset (0,\infty)$, and the same for every source $\bx_s \in
+X_s$. With these assumptions, the symmetric hyperbolic system
+\ref{eqn:awe} has a unique distribution solution (for example
+\cite{Lax:PDENotes}, Theorem 7.4). The Propagation of Singularities
+Theorem (\cite{Tay:81}, Theorem VI.2.1) %and
 %the pull-back property of distributions (\cite{Dui:95}, Proposition
 %1.3.3)
 imples that $p(\cdot,\cdot;\bx_s)$ is smooth away from $\{\bx_s\}
@@ -178,7 +179,8 @@ $\{(\bx_r,t): t \in \bR\}$ are well-defined.
 Define the {\em modeling operator}
 \begin{equation}
   \label{eqn:modop}
-  F: exp(M)  \rightarrow \Pi_{X_{sr}} C^{\infty}(\bR)
+  F: \exp(C^{\infty}(\bR^3) \cap
+L^{\infty}(\bR^3))  \rightarrow \Pi_{X_{sr}} C^{\infty}(\bR)
 \end{equation}
 by
 \begin{equation}
@@ -189,8 +191,9 @@ by
 In this setting, the inverse problem may be stated as follows: given the set of
 source-receiver position pairs $X_{sr}$, source wavelet
 $f \in C_0^{\infty}(\bR)$,  density $\rho$, and data traces
-$d \in \Pi_{X_{sr}} C^{\infty}(\bR)$, find a bulk modulus $\log
-\kappa$
+$d \in \Pi_{X_{sr}} C^{\infty}(\bR)$, find a bulk modulus $
+\kappa \in C^{\infty}(\bR^3) \cap
+L^{\infty}(\bR^3)$
 (or equivalently wave velocity $c=\sqrt{\kappa/\rho}$)
 so that $F[\kappa] \approx d$ in some sense. If
 $d(\bx_r,\cdot;\bx_s)$ and $F[\kappa](\bx_r,\cdot;\bx_s)$ lie in a normed subspace of ${\cal D}'(\bR)$ for each
@@ -198,72 +201,116 @@ $(\bx_s,\bx_r) \in X_{sr}$, then the
 norm provides a straightforward candidate for this sense of
 approximation.
 
-The analysis to follow requires three further constraints on the set
-of source-receiver location pairs $X_{sr}$ and the domain
-$M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$ of $F$. The first is
-the {\em Exponential Decay} assumption:
-\begin{quote}
-  For any $n > 0$, $f \in C_0^{\infty}(\bR)$,
-  there exist $K >
-  0, T \in \bR,$ and $\delta>0$ so
-  that for any $k$ with $0 \le k \le n$, $(\bx_s,\bx_r) \in
- X_{sr},$ and any $\log \kappa \in M$, the solution $(p,\bv)$ of \ref{eqn:awe} is smooth
-  for $t>T$ and satisfies
-  \[
-    |\partial_t^k p(\bx_r,t;\bx_s)| \le K e^{-\delta t}, \, t > T.
-  \]
-\end{quote}
-Since $X_{sr}$ is bounded, the property described in this assumption
-is a special case of {\em local energy decay}, a much studied topic. The {\em
-  non-trapping} hypothesis is sufficient to ensure local energy decay:
-all rays of geometric asymptotics (that is, geodesics for the Riemannian metric associated
-to the system \ref{eqn:awe}) escape to infinity (\cite{Hristova:09},
-Theorem 2, \cite{EgorovShubin}, Theorem 2.104, p. 192). In particular,
-the Exponential Decay assumption is satisfied if for any $R > r>0$ and $\log
-\kappa \in M$, there exists $T>0$ so that any ray ${\bf X}:\bR^+\rightarrow \bR^3$
-  with ${\bf X}(0) \in B_r(0)$ satisfies $|{\bf X}(t)|>R$ for $t > T$. That is,
-exponential decay may follow from a propery of $M$.
+In the analysis to follow, $M \subset \exp (C^{\infty}(\bR^3) \cap
+L^{\infty}(\bR^3))$ denotes an open connected set of bulk moduli $\kappa$
+satisfying three further constraints.
 
-The second and third assumptions explicitly involve constraints on ray geometry
-(therefore on $\kappa$). A {\em normal neighborhood} of
-$\bx_s \in \bR^3$ is an open subset $\Omega$ of $\bR^3$ 
-within which every point is connected to $\bx_s$ by  a unique ray  (\cite{Friedlander:75},
-p. 16). Therefore, to every point $\bx \in \Omega$ is associated a
-unique time of travel (geodesic distance) $\tau(\bx_s,\bx)$ from $\bx_s$ to $\bx$.
-The {\em Single Arrival} assumption is
-\begin{quote}
-  $\Omega\subset \bR^3$ and $M \subset C^{\infty}(\bR^3) \cap
-  L^{\infty}(\bR^3)$ are bounded open sets for which $X_{sr} \subset
-  \Omega \times \Omega$, and for every source point $\bx_s\in X_{s}$
-  and $\log \kappa \in M$, $\Omega$ is a normal neighborhood of
-  $\bx_s$.
-\end{quote}
+Fix an open $\Omega \subset \bR^3$ so that $\Omega \times \Omega$
+is a neighborhood of $X_{sr}$. Recall that $\Omega$ is a {\em normal neighborhood} of
+$\bx_s \in X_s$ for the sound velocity $c \in C^{\infty}(\Omega)$ if every point $\bx \in \Omega$ is connected to
+$\bx_s$ by  a unique ray  (geodesic of the metric $c(x)^{-2}
+\sum_{i=1}^3dx_i \otimes dx_i$, \cite{Friedlander:75},
+p. 16). In this case, to every point $\bx \in \Omega$ is associated a
+unique time of travel (geodesic distance) $\tau(\bx_s,\bx)$ from
+$\bx_s$ to $\bx$ (a ``single arrival time'').
+\begin{assumption}
+  \label{thm:singlearrival} 
+  For every $\kappa \in M$, $\Omega\subset \bR^3$ is a normal
+  neighborhood of every source point $\bx_s\in X_{s}$ for the sound
+  velocity $c=\sqrt{\kappa/\rho}$.
+\end{assumption}
 
-The {\em No Return} assumption is
-\begin{quote}
-  for every source point $\bx_s \in X_{s}$, $\log \kappa \in M$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
+\begin{assumption}
+  \label{thm:noreturn}
+  For every $\kappa \in M$, source point $\bx_s \in X_{s}$, ray ${\bf X}:\bR^+\rightarrow \bR^3$
   with ${\bf X}(0)=\bx_s$ and any $t>0$, either $\{{\bf X}(s): 0\le s \le t\} \subset \Omega$
   or $\{{\bf X}(s): t < s < \infty\} \subset \bR^3 \setminus \Omega$.
-\end{quote}
+\end{assumption}
 This assumption states that once a ray leaves
 $\Omega$, its subsequent intersection with $\Omega$ is null (hence the
 name).
 
+\begin{assumption}
+  \label{thm:expdecay}
+  For any $n > 0$, there
+  exist $\delta, C, t_0 > 0$ that for any $\kappa \in M$, $k$ with $0 \le k \le n$,
+  $(\bx_s,\bx_r) \in X_{sr}, f \in C_0^{\infty}(\bR^+)$, the solution
+  $(p,\bv)$ of \ref{eqn:awe} satisfies
+ \begin{equation}
+   \label{eqn:expdec}
+    |\partial_t^k p(\bx_r,t;\bx_s)| \le C e^{-\delta t}\|\partial_t
+    f\|_{L^2(\bR}, t > t_o
+  \end{equation}
+\end{assumption}
+
+Since $X_{sr}$ is bounded, the property described here
+is a special case of {\em local energy decay}, a much studied
+topic. As will be explained in an appendix, Assumption 1 holds if the
+rays of geometric optics leave any bounded domain in finite time (the
+{\em non-trapping} condition on ray geometry).
+
 The results of this paper concern high frequency, or small wavelength,
-asymptotics of the model-data relationship. The asymptotic analysis is
+asymptotics of the model-data relationship. Since the system
+\ref{eqn:awe} is linear and autonomous, the frequency content of the
+right-hand side (that is, of $f$) determines the frequency content of
+the solutions. The next assumption implies that the Fourier transform
+of $f$ vanishes to second order at zero frequency, and guarantees that
+$f$ is at least somewhat oscillatory.
+
+\begin{assumption}
+  \label{thm:zerofrequency}
+  There exists $\tilde{f} \in
+  C_0^{\infty}(\bR^+)$ so that
+  \begin{equation}
+    \label{eqn:zerofreq}
+    f = \partial_t^2 \tilde{f}.
+  \end{equation}
+\end{assumption}
+
+{\bf Remark:} Of the first four assumptions, the last three can be
+weakened to some extent. Assumptions \ref{thm:noreturn} and
+\ref{thm:expdecay} ensure that regions in $\bR^3$ far from $\Omega$ do
+not influence the data, at least in high frequency limit. At the cost
+of more involved arguments, the same assurance follows from truncating
+the data in time. Assumption \ref{thm:zerofrequency} is one of many
+ways to focus on the high frequency limit. However, as we shall show
+in the final section of this paper, the first assumption is essential:
+if multiple geodesics connect sources and receivers, no result of the
+type described in Theorem \ref{thm:main} below can possibly hold.
+
+The asymptotic analysis explained in the sequel is
 based on a family of source waveforms, generated from a reference
-waveform $f_1 \in C_0^{\infty}(\bR)$. For $\lambda > 0$, define
+waveform $f_1 \in C_0^{\infty}(\bR^+)$. For $\lambda \in (0,1]$, define
 \begin{equation}
+  \label{eqn:wvltfam}
   \fl(t)= \lambda^{\frac{1}{2}}f_1\left(\frac{t}{\lambda}\right).
 \end{equation}
 The dimensionless scale parameter $\lambda$ is a proxy for
-wavelength in the arguments that follow. The precise relationship explained below. 
+wavelength in the arguments that follow. The precise relationship
+explained below.
+
+The reference waveform $f_1$ is presumed to satisfy Assumption
+\ref{thm:zerofrequency}, that is, 
+\[
+  f_1 = \partial^2 \tilde{f}_1
+\]
+Define the related family $\tilde{f}_{\lambda}$ by
+\begin{equation}
+  \label{eqn:tildeflam}
+  \tilde{f}_{\lambda}(t) =
+  \lambda^{5/2}\tilde{f}_1\left(\frac{t}{\lambda}\right).
+\end{equation}
+All members of $\{\fl: \lambda \in (0,1]\}$ then satisfy Assumption
+\ref{thm:zerofrequency}: 
+\[
+  \partial^2 \tilde{f}_{\lambda} = f_{\lambda}.
+\]
 
 Denote by $\Fl$ the modeling operator $F$ defined by the choice $f=\fl$.
 
 \subsection{Full Waveform Inversion}
 
-Suppose only the Exponential Decay hypothesis is assumed. Then, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
+Suppose that Assumption \ref{thm:expdecay} holds. Then, each trace $p(\bx_r,\cdot;\bx_s)$ is in $L^{p}(\bR)$ for $p
 \ge 1$.
 Denote by $L^p(X_{sr} \times \bR)$ the product space $l^p(X_{sr},L^p(\bR))$
 with the usuall product norm. 
@@ -275,30 +322,31 @@ L^2(X_{sr}\times \bR)$, find $\kappa$ to minimize
   \label{eqn:fwi}
   J_{\rm FWI}[\kappa;d]= \frac{1}{2}\|F[\kappa]-d\|^2_{L^2(X_{sr} \times \bR)},
 \end{equation}
-Practical implementations of FWI may include regularization terms,
-constraints, and preprocesses that enhance the chances of success. 
-
-Discretizations of the components of \ref{eqn:fwi} yields
-computationally large problems, for which only local optimization
-methods are feasible. However, optimization algorithms related to
-Newton's method, applied to $J_{\rm FWI}$, tend to stagnate far from
-global minimizers if the initial choice of $\kappa$ does not predict
-the arrival times of waves correctly within a half-wavelength or so
-(the meaning of ``wavelength'' in this context will be explained
-below) \cite[]{GauTarVir:86,VirieuxOperto:09}. While it is widely
-believed that this stagnation occurs at local
-minima far from global minimizers, such local minima have not been
-shown to exist, except in low-dimensional specializations.
+Many practical implementations of FWI have been based on minimization
+of $J_{\rm FWI}$, often with the addition of regularization terms,
+constraints, and preprocesses that enhance the chances of obtaining a
+global minimizer via local optimization (descent) methods.  Indeed,
+discretizations of the components of \ref{eqn:fwi} result in
+large-scale computational tasks, so that only local optimization
+algorithms related to Newton's method are feasible for minimization of
+$J_{\rm FWI}$. However, such
+methods tend to stagnate far from global
+minimizers if the initial choice of $\kappa$ does not predict the
+arrival times of waves correctly within a half-wavelength or so
+\cite[]{GauTarVir:86,VirieuxOperto:09}. While it is widely believed
+that this stagnation occurs at local minima far from global
+minimizers, such local minima have not been shown to exist, except in
+low-dimensional specializations.
 
 This paper does not prove existence of non-global minima. It does
 however establish a property of $J_{\rm FWI}$ that is consistent with
-strong oscillation.
+their existence.
 
 \begin{theorem}
   \label{thm:fwi}
-  Suppose that Exponential Decay, Single Arrival and No Return hold
+  Suppose that Assumptions 1 - 5 hold
   for $\kappa \in exp{M}$, and that that
-  $\dl$ denotes its family of noise-free data, that is,
+as  $\dl$ denotes its family of noise-free data, that is,
   \[
     \dl = \Fl[\kappa], \, \lambda > 0.
   \]
@@ -335,13 +383,21 @@ observation motivates the definition of the AWI objective function
 \begin{equation}
   \label{eqn:awidefmain}
   J_{\rm AWI,\sigma}[\kappa;d] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
-  \frac{\|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}.
+  \frac{\|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}{\|u_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2}..
 \end{equation}
-in which $Tu(\bx_r,t;\bx_s) = tu(\bx_r,t;\bx_s)$ and
+Here
+\begin{itemize}
+  \item[i. ]$T$ is the self-adjoint extension of the operator
+$Tu(\bx_r,t;\bx_s) = tu(\bx_r,t;\bx_s)$, $u \in \Pi_{(\bx_s,\bx_r) \in
+  X_{sr}}{\cal S}(\bR)$, to $L^2(X_{sr} \times \bR)$, with domain
+$D(T)$;
+\item[ii. ] $u_{\sigma}[\kappa,d]$ is the solution of
 \begin{equation}
   \label{eqn:reg}
   u_{\sigma}[\kappa;d] = \mbox{argmin}_{u \in L^2(X_{sr} \times \bR)} (\|F[\kappa]*u-d\|^2 + \sigma\|u\|^2)
 \end{equation}
+\end{itemize}
+
 The objective function for the closely related MSWI approach,
 mentioned in the introduction, is  
 \begin{equation}
@@ -349,19 +405,19 @@ mentioned in the introduction, is
   J_{\rm MSWI,\sigma}[\kappa;d] = \sum_{(\bx_s,\bx_r) \in X_{sr}}
   \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\|^2.
 \end{equation}
+
 Note that while the Lax-Milgram Theorem (\cite{Yosida}, section
 III.7) ensures the existence of a unique solution
 $u_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$ of the least squares
 problem \ref{eqn:reg},
-it is not immediiately obvious that $Tu_{\sigma}[\kappa;d] \in L^2(X_{sr}\times \bR)$.
+it is not immediiately obvious that $u_{\sigma}[\kappa;d] \in D(T)$,
+so the definition \ref{eqn:awidefmain} requires justification.
 
 The main result of this analysis is
 
 \begin{theorem}
   \label{thm:main}
-  Assume that Exponential Decay, Single Arrival, and No Return
-  hold for $X_{sr} \subset \Omega \times \Omega, M \subset C^{\infty}(\bR^3) \cap L^{\infty}(\bR^3)$.
-  Select $\log \kappa^* \in M$. For $0 <
+  Suppose that Assumptions 1 - 5 hold. For $0 <
   \lambda \le 1$, set
   $\dl=\Fl[\kappa^*]$ (``noise-free data''), and  define $\ul[\kappa,\dl]$
   to be the solution of 
@@ -369,8 +425,8 @@ The main result of this analysis is
   
   \begin{itemize}
   \item[1. ] for $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$, and
-    $\sigma, \lambda >0$, $Tu_{\sigma}[\kappa;\dl](\bx_r,\cdot;\bx_s) \in
-    L^2(\bR)$;
+    $\sigma, \lambda >0$, $u_{\sigma}[\kappa;\dl] \in
+    D(T)$;
   \item[2. ] There exist $R_*,R^*,\lambda_*$ with $0<R_*\le R^*, 0 <
     \lambda_*\le 1$ depending on
     $M, X_{sr}$ so that
@@ -448,6 +504,8 @@ an approximate solution of the regularized least squares problem
 The final subsection estimates the remainder and finishes the proof of
 the main result.
 
+
+
 \subsection{A Note on Notations  for Norms and Bounds}
 The Banach spaces
 $l^p(X_{sr},L^p(\bR))$ will be abbreviated as $L^p(X_{sr} \times
@@ -457,80 +515,76 @@ $\|\cdot\|$ without subscript will be understood to mean either
 $\|\cdot\|_{L^2(\bR)}$ or $\|\cdot\|_{L^2(X_{sr}\times
   \bR)}$, as context indicates.
 
-In a statement pertaining to all
-$\kappa \in M$, the letter $C$, or sometimes $C_k,
-k=0,1,2,...$ or
-$C_*,C^*$, will designate a constant (or constants) independent of
-$\kappa$.
+%In a statement pertaining to all
+%$\kappa \in M$, the letter $C$, or sometimes $C_k,
+%k=0,1,2,...$ or
+%$C_*,C^*$, will designate a constant (or constants) independent of
+%$\kappa$.
 
-Generally, constants denoted $C$ etc. will absorb any dimensional
-scale factors necessary to make sense of the expressions in which they
-appear. I will call out those few cases in which explicit use of
-dimensinoal scale factors is necessary to avoid irretrievable
-dimensional confusion.
+%Generally, constants denoted $C$ etc. will absorb any dimensional
+%scale factors necessary to make sense of the expressions in which they
+%appear. I will call out those few cases in which explicit use of
+%dimensinoal scale factors is necessary to avoid irretrievable
+%dimensional confusion.
+
+Unless otherwise stated, from now on it is presumed that assumptions
+\ref{thm:expdecay}, \ref{thm:singlearrival}, \ref{thm:noreturn},
+and \ref{thm:zerofrequency} hold for $\kappa, X_{sr} \subset \Omega$,
+  and $f$. the letter $C$, or sometimes $C_k,
+k=0,1,2,...$ or
+$C_*,C^*$, will designate a constant (or constants) that are uniform
+for configurations of $\kappa, \Omega, X_{sr}$, and $f$ for which the
+constants appearing in these assumptions are uniform. 
 
 \subsection{Hadamard's Decomposition}
 The Hadamard decomposition of the acoustic Green's function \cite[]{Friedlander:75,Qian:JCP24} provides a
 basis for analysis of AWI and MSWI. As presented by
 \cite{Friedlander:75}, for instance, this construction applies to
-second-order wave equations, but the system \ref{eqn:awe} is
-equivalent fo a second-order problem: differentiate the first equation
-with respect to $t$, eliminate $\bv$ via the second equation, and
-rearrange to obtain
+second-order wave equations. Introduce the acoustic potential $q$:
+\begin{equation}
+  \label{eqn:acpo}
+  q (\bx,t;\bx_s)  = \rho \int_{-\infty}^t ds \, p(\bx,s;\bx_s).
+\end{equation}
+From the second equation in \ref{eqn:awe}, $\bv = \nabla q$, and it follows from \ref{eqn:awe} that 
 \begin{equation}
   \label{eqn:awe2}
-  \frac{\rho}{\kappa}\frac{\partial^2 p}{\partial t^2} - \nabla^2 p -
-  \nabla \log \rho \cdot \nabla p = \rho \frac{\partial f}{\partial t}
-  \delta(\bx-\bx_s), \nonumber \\
-  p=0, \, t \ll 0.
+  \frac{\rho}{\kappa} \partial_t^2 p - \nabla^2 p = \rho \partial_t f\delta(\bx-\bx_s), \nonumber \\
+  q=0, \, t \ll 0.
 \end{equation}
-If $(p,\bv)$ is a distribution solutions of the system
-\ref{eqn:awe} then $p$ is a solution of equation
-\ref{eqn:awe2}, as follows by differentiating the first equation of
-\ref{eqn:awe} with respect to $t$ and eliminating $\bv$ via the second
-equation. Conversely, if $p$ is a solution of the second-order initial
-value problem\ref{eqn:awe2}, then under the conditions imposed in the
-previous section,
-\[
-  \bv = \beta \int_{-\infty}^t \nabla p
-\]
-defines a distribution, and $(p,\bv)$ is a weak solutino of the system \ref{eqn:awe}.
+Conversely, a solution $q$ of the system \ref{eqn:awe2} generates a
+solution $(p,\bv)$ of \ref{eqn:awe}. 
 
 Hadamard's decomposition is local, in both space-time and in the set of
 acoustic models. In the present context, it requires the Single
 Arrival hypothesis, and for global time validity the No Return
 assumption. 
 
-The construction described by \cite{Friedlander:75} produces for each $\log \kappa \in M$ functions $\tau[\kappa]$ (travel time), $a[\kappa]$
+The construction described by \cite{Friedlander:75} pertains to a
+normal neighborhood, as asserted by Assumption \ref{thm:singlearrival}
+for $X_{s} \subset \Omega$. The construction produces
+functions $\tau[\kappa]$ (travel time), $a[\kappa]$
 (geometric amplitude) on $X_s \times \Omega$ and $b[\kappa]$
-(remainder kernel) on $X_s \times \Omega \times \bR$, smooth off the
-diagonal - that is, for each $\bx_s \in X_s$, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus
-  \{\bx_s\})$, and similarly for $a[\kappa],b[\kappa]$; The traveltime $\tau$
-  satisfies the eikonal equation
-  \[
-    \sqrt{\frac{\kappa}{\rho}} |\nabla \tau(\bx_s,\cdot)| = 1 \mbox{ in } \Omega \setminus
-    \{\bx_s\}, \, \lim_{\bx \rightarrow \bx_s} \tau(\bx_s,\bx) = 0.
-  \]
-A by-product of the construction is a bound $A>0$ so that for any $\log \kappa \in M$
-and $(\bx_s,\bx_r) \in X_{sr}$,
-\begin{equation}
-  \label{eqn:aest}
-  |\log a[\kappa](\bx_s,\bx_r)| <  A.
-\end{equation}
-With no further assumptionss, there is also a uniform bound on
-$b(\bx_r,t;\bx_s)$ and
-its derivatives over any finite $t$-interval. However, with the
-addition of the Exponential Decay assumption, the bound becomes
-global in time: for any $k \ge 0$, there exists $B \ge 0,\delta > 0$
-so that for any $(\bx_s,\bx_r) \in X_{sr}$, $\log \kappa \in M$,
-\begin{equation}
-  |\partial^k_t b[\kappa](\bx_r,t;\bx_r,s)| \le B e^{-\delta t}
-  \label{eqn:best}
-\end{equation}
+(remainder kernel) on $X_s \times \Omega \times \bR$. The travel time $\tau$
+and amplitude
+$a$ are smooth and positive off the
+diagonal - that is, for each $\bx_s \in \Omega$, $\tau[\kappa](\bx_s,\cdot) \in C^{\infty}(\Omega \setminus
+\{\bx_s\})$, and similarly for $a[\kappa]$.
 
-The Hadamard
-decomposition of the Green's function $G[\kappa]$, i.e. the solution of the
-equation \ref{eqn:awe2} for $f = \beta H$, is::
+The construction explained in \cite{Friedlander:75} defines
+$b[\kappa](\bx_s, \bx_r,t)$ for small positive $t$; it vanishes for
+$t<0$, and has jump discontinuities in derivatives at $t=0$ determined
+by solution of a sequence of transport equations. The traveltime
+$\tau$ satisfies the eikonal equation
+\[
+  \sqrt{\frac{\kappa}{\rho}} |\nabla \tau(\bx_s,\cdot)| = 1 \mbox{ in
+  } \Omega \setminus \{\bx_s\}, \, \lim_{\bx \rightarrow \bx_s}
+  \tau(\bx_s,\bx) = 0.
+\] 
+A by-product of the construction are bounds on $a$ and $b$, depending on
+derivatives of $\kappa$ and the geometry of geodesics.
+
+The upshot is the Hadamard decomposition of the Green's function
+(causal fundamental solution)
 \begin{equation}
   \label{eqn:green}
   G[\kappa](\bx_s,\bx,t) = a[\kappa](\bx_s,\bx)\delta(t - \tau[\kappa](\bx_s,\bx)) +
@@ -545,6 +599,114 @@ space-time coordinates, is
   G[\kappa] = (a[\kappa]\delta +  (b[\kappa]H))*\delta_{\tau[\kappa]}.
 \end{equation}
 
+Without further assumptions, this decomposition holds within the
+normal neigborhood $\Omega$ and within a small time interval about the
+light cone, that is, for small $|t-\tau(\bx_s,\bx)|$. The No-Return
+assumption, that no bicharacteristics (geodesics) return to the domain
+$\Omega$ once having left it, combines with the previously cited
+theorem on Propagation of Singularities to assure smoothness of
+Green's function for a source at $\bx_s \in X_s$ and
+$t>\tau(\bx_s,\bx)$. That is, the remainder $b$ can be extended to
+$t > 0$ as the smooth part of the fundamental solution. The extended
+remainder depends on the global behaviour of $\kappa$ and the
+bicharacteristic geometry that it generates.
+
+Given a waveform $f \in C^{\infty}_0(\bR)$, define for $\log \kappa
+\in C^{\infty}(\bR^3)$ satisfying Assumptions \ref{thm:singlearrival}
+and \ref{thm:noreturn},
+\begin{eqnarray}
+  \label{eqn:fdefs0}
+  F^0[\kappa] = a[\kappa] \delta_{\tau[\kappa]} * \partial_t f \\
+    \label{eqn:fdefs1}
+  F^1[\kappa] = b[\kappa]H*\delta_{\tau[\kappa]} * \partial_t f
+\end{eqnarray}
+so that $F[\kappa] = F^0[\kappa] + F^1[\kappa]$. 
+
+\begin{prop}
+  \label{thm:fbounds}
+  There exists $C>0$ so that
+  \begin{eqnarray}
+    \label{eqn:f0bnd}
+    \|F^0[\kappa]\|_{L^1(X_{sr} \times \bR)} \le C\|\partial_t 
+    f\|_{L^1(\bR)}\\
+    \label{eqn:f1bnd}
+    \|F^1[\kappa]\|_{L^1(X_{sr} \times \bR)} \le C\| f\|_{L^1(\bR)}
+  \end{eqnarray}
+  Also, there exist $C, \delta, t_0>0$, so that for $t \ge t_0, (\bx_s,\bx_r)
+  \in X_{sr}$,
+  \begin{equation}
+    \label{eqn:f1asymp}
+    |F^1[\kappa](\bx_r,t;\bx_s)| \le C e^{-\delta t}\| f\|_{L^1(\bR)}
+  \end{equation}
+\end{prop}
+
+\begin{proof}
+The first conclusion follows from the first definition \ref{eqn:fdefs0} and
+Young's inequality. 
+From the second definition \ref{eqn:fdefs1},
+\[
+  F^1[\kappa](\bx_r,t;\bx_s) =
+  b[\kappa](bx_r,\tau[\kappa](\bx_s,\bx_r);\bx_s)
+  f(t-\tau[\kappa](\bx_s,\bx_r))
+\]
+\begin{equation}
+  \label{eqn:f1alt}
+  + (\partial_t
+b[\kappa](\bx_r,\cdot;\bx_s)*H(\cdot)*f(\cdot))(t)
+\end{equation}
+This identity implies that for $t_0$ as specified in Assumption \ref{thm:expdecay},
+\begin{equation}
+  \label{eqn:f1nonasymp}
+  \|F^1[\kappa](\bx_r,\cdot;\bx_s\|_{L^1[0,t_0]} \le C\|f\|_{L^1(\bR)}.
+\end{equation}
+with suitable choice of $C>0$.
+  
+Note that for $t \ge \tau(\bx_r,\bx_s) + \max({\rm supp }f)$,
+$F^1[\kappa](\bx_r,t;\bx_s) = F[\kappa](\bx_r,t;\bx_s) = p[\kappa](\bx_r,t;\bx_s)$.
+Recall the relation $p =
+\rho \partial_t q$ with the potential $q$ (solution of the second
+order wave equation \ref{eqn:awe2}).
+
+Invoke Assumption \ref{thm:zerofrequency} for the waveform $f$, that is,
+$f=\partial^2\tilde{f}$ with $\tilde{f} \in C_0^{\infty}(\bR^+)$. Define
+$\tilde{q}$ to be the solution of the \ref{eqn:awe2} with $f$ replaced by
+$\tilde{f}$, and $\tilde{p} = \partial_t \tilde{q}$ the corresponding
+pressure. According to Assumption \ref{thm:expdecay},
+\begin{equation}
+  \label{eqn:ptildebnd}
+  |\partial^2 \tilde{p}(\bx_r,t;\bx_s)\| \le C e^{-\delta t} \|\partial_t
+  \tilde{f}\|_{L^2(\bR)},\,t >t_0
+\end{equation}
+for suitable $C, \delta, t_0> 0$.
+
+Set $t_1=\inf \mbox{supp }\tilde{f}, t_2 = \sup  \mbox{supp
+}\tilde{f}$, so that
+\[
+\|\partial_t \tilde{f}\|_{L^2(\bR)}^2 = \int_{t_1}^{t_2} \,dt
+\left|\int_{t_1}^t\,f\right|^2 \le C\|f\|_{L^1(\bR)}^2.
+\]
+Since $p = \partial_t^2 \tilde{p}$, this
+inequality and \ref{eqn:ptildebnd} imply inequality \ref{eqn:f1asymp},
+possibly with larger $C, t_0$ and smaller $\delta > 0$. Combine
+\ref{eqn:f1asymp} with 
+inequatliy \ref{eqn:f1nonasymp} to conclude that $F^1$ is absolutely
+integrable, that is, conclusion \ref{eqn:f1bnd}.
+\end{proof}
+
+%\subsection{Exponential Decay}
+%The Exponential Decay condition follows from Hadamard's decomposition
+%and result of \cite{Vainberg:1982} (see also \cite{Hristova:09},
+%Theorem 2, \cite{EgorovShubin}) states that local energy decays
+%exponentially provided that the system \ref{eqn:awe} (in effect, the
+%coefficient $\kappa$) satisfies the{\em non-trapping} condition. The
+%system is non-trapping if all rays of gemetric acoustics, that is,
+%geodesics of the Riemannian metric associated to the system
+%\ref{eqn:awe}, tend to infinity. More precisely, for any
+%$R > r>0$ and $\log \kappa \in M$, there exists $T>0$ so that any
+%geodesic ${\bf X}:\bR^+\rightarrow \bR^3$ with ${\bf X}(0) \in B_r(0)$
+%satisfies $|{\bf X}(t)|>R$ for $t > T$. Vainberg's result is: 
+
+
 \subsection{Tihonov Regularization}
 Introduce the notation $S[\kappa]$ for the operator of convolution
 with $F[\kappa]$, that is,
@@ -552,12 +714,14 @@ with $F[\kappa]$, that is,
   \label{eqn:sdef}
   S[\kappa]u = u*F[\kappa]
 \end{equation}
+Under the assumptions of Proposition \ref{thm:fbounds}, $F[\kappa] \in
+L^1(X_{sr} \times \bR)$. so $S[\kappa]$ is bounded on $L^2(X_{sr} \times \bR)$.
 $S$ represents an
 extension of $F$, in the sense that with the choice
 $u(\bx_r,t;\bx_s)=\delta(t)$, the output of $F$ is recovered:
 \begin{equation}
   \label{eqn:sconsist}
-  S[\kappa]\delta = F[\kappa].
+  S[\kappa]\delta = F[\kappa]*.
 \end{equation}
 The regularized least-squares problem \ref{eqn:reg} can be re-written
 \begin{equation}
@@ -578,60 +742,46 @@ denominator in the definition \ref{eqn:awidefmain} is not defined.
 Of course, the numerator vanishes, motivating the definition of AWI,
 but the objective function is nonsense.
 
-For future reference, examine the implications of definition
-\ref{eqn:regs} for the units of the regularization weight $\sigma$,
-which is necessarily dimensional. Since the data $d$ has dimensions of
-pressure, so must $S[m]u = F[m]*u$. Of course $F[m]$ is also sampled
-pressure, and convolution is a $t$ integration, so for $S[m]u$ to be a
-pressure, $u$ must have dimensions of 1/time. Therefore
-$\|S[m]u-d\|^2$ has dimensions of pressure$^2 \times $time, $\|u\|^2$
-has dimensions of 1/time, whence $\sigma$ must be dimensioned as
-pressure$^2 \times$ time$^2$.
+%For future reference, examine the implications of definition
+%\ref{eqn:regs} for the units of the regularization weight $\sigma$,
+%which is necessarily dimensional. Since the data $d$ has dimensions of
+%pressure, so must $S[m]u = F[m]*u$. Of course $F[m]$ is also sampled
+%pressure, and convolution is a $t$ integration, so for $S[m]u$ to be a
+%pressure, $u$ must have dimensions of 1/time. Therefore
+%$\|S[m]u-d\|^2$ has dimensions of pressure$^2 \times $time, $\|u\|^2$
+%has dimensions of 1/time, whence $\sigma$ must be dimensioned as
+%pressure$^2 \times$ time$^2$.
 
-From \ref{eqn:green} and the
-definition \ref{eqn:sdef} of  $S[\kappa]$,
-\[
-  S[\kappa]u = \rho( a[\kappa]\delta    +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f *u,
-\]
-\begin{equation}
-  \label{eqn:sgood}
-  = \rho(a[\kappa]\delta_{\tau[\kappa]}*\partial_t f +
-  (b[\kappa](0)\delta + (\partial_t b[\kappa])H)
-  *\delta_{\tau[\kappa]}*f) * u.
-\end{equation}
-The formal adjoint $S[\kappa]^T$ is given by
-\begin{equation}
-  \label{eqn:sadjgood}
-  S[\kappa]^Tu = \rho( a[\kappa]\delta    -  (\check{b}[\kappa]\check{H}))
- *\delta_{-\tau[\kappa]}*\partial_t \check{f} *u,
-\end{equation}
-in which $\check{u}(t) = u(-t)$.
-The key properties of $S$ follow directly from Young's inequality and
-the representation \ref{eqn:sgood}:
-\begin{lemma}
-  \label{thm:snorm}
-  Under the Exponential Decay, Single Arrival, and No Return assumptions, the
-  expression \ref{eqn:sgood} define
-  bounded operators on
-  $\Pi_{X_{sr}} {\cal S}(\bR)$ and on
-  $L^2(X_{sr} \times \bR)$, and there exists $C>0$ so
-  that for any $\kappa \in M$,
+%From \ref{eqn:green} and the
+%definition \ref{eqn:sdef} of  %S[\kappa]%,
+%\[
+% S[\kappa]u = \rho( a[\kappa]\delta    +  (b[\kappa]H)) *\delta_{\tau[\kappa]}*\partial_t f %*u,
+%\]
+%\begin{equation}
+%  \label{eqn:sgood}
+%  = \rho(a[\kappa]\delta_{\tau[\kappa]}*\partial_t f +
+%  (b[\kappa](0)\delta + (\partial_t b[\kappa])H)
+%  *\delta_{\tau[\kappa]}*f) * u.
+%\end{equation}
+%The formal adjoint %S[\kappa]^T% is given by
+%\begin{equation}
+%  \label{eqn:sadjgood}
+%  S[\kappa]^Tu = \rho( a[\kappa]\delta    -  (\check{b}[\kappa]\check{H}))
+% *\delta_{-\tau[\kappa]}*\partial_t \check{f} *u,
+%\end{equation}
+%in which $\check{u}(t) = u(-t)$.
+
+%The key properties of $S$ follow directly from Young's inequality and
+%the representation \ref{eqn:sgood}:
+\begin{prop}
+  \label{thm:unorm}
+  There exists $C>0$ for which
   \begin{equation}
     \label{eqn:snorm}
     \|S[\kappa]\| \le C\|\partial_t f\|_{L^1(\bR)}.
   \end{equation}
-\end{lemma}
-\begin{proof} From the assumptions about $f$ and bounds
-  \ref{eqn:best},  $b[\kappa](\bx_r,\cdot;\bx_s)H *
-  \partial_tf \in {\cal S}(\bR)$ for all $(\bx_s,\bx_r) \in X_{sr}$,
-  whence the first conclusion. Bounded extension to $L^2(X_{sr} \times
-  \bR)$ follows from Young's inequality.
-\end{proof}
-
-\begin{prop}
-  \label{thm:unorm}
-  Under the assumptions of Lemma \ref{thm:snorm}, the least squares problem
-  \ref{eqn:regs} with $\sigma > 0$ and $d\in L^2(X_{sr} \times \bR)$ has a unique solution
+  Also, the least squares problem \ref{eqn:regs} with $\sigma > 0$ and
+  $d\in L^2(X_{sr} \times \bR)$ has a unique solution
   $u_{\sigma}[\kappa;d] \in L^2(X_{sr} \times \bR)$ satisfying
   \begin{equation}
     \label{eqn:unorm}
@@ -639,10 +789,10 @@ the representation \ref{eqn:sgood}:
   \end{equation}
 \end{prop}
 \begin{proof}
-For $\sigma > 0$, the Lax-Milgram Theorem (\cite{Yosida}, section
-III.7) assures the existence of unique minimizer
-$u_{\sigma}[\kappa;d]$ satisfying the  normal
-equation
+  The first conclusion follows from Proposition \ref{thm:fbounds} and
+  Young's inequality. For $\sigma > 0$, the Lax-Milgram Theorem
+  (\cite{Yosida}, section III.7) assures the existence of unique
+  minimizer $u_{\sigma}[\kappa;d]$ satisfying the normal equation
 \begin{equation}
   \label{eqn:normal}
   (S[\kappa]^TS[\kappa] + \sigma I) u_{\sigma}[\kappa;d] = S[\kappa]^Td,
@@ -650,11 +800,102 @@ equation
 and the bound follows from the inequality \ref{eqn:snorm}.
 \end{proof}
 
+In the discussion to follow, $\kappa$ is the argument of $S$ and
+$u_{\sigma}$ throughout, so drop it temporarily from the notation. The
+expressions to follow pertain to each trace, that is, for each
+$(\bx_s,\bx_r) \in X_{sr}$, so drop these from the notation also.
+
+\begin{lemma}
+  \label{thm:tcomm}
+  Suppose $g \in {\cal S}$. Then for $\phi \in {\cal S}$,
+  \[
+    [T, g*] \phi= (Tg)*\phi.
+  \]
+\end{lemma}
+\begin{proof}
+  For $\phi \in {\cal S} \subset D(T)$,
+  \[
+    T g*\phi (t) - g* T\phi(t) = \int\,ds \, (t g(t-s)\phi(s) -
+    g(t-s)s\phi(s)) = \int\, ds \, (t-s)g(t-s)\phi(s) = (Tg *) \phi
+    (t).
+  \]
+\end{proof}
+
+\begin{lemma}
+  \label{thm:commbnds}
+  The commutators $[T,S^0]$ and $[T,S^1]$ are bounded, and
+  \begin{eqnarray}
+    \label{commbnd0}
+    \|[T,S^0]\| &\le & C\|\partial_t f\|_{L^1(\bR)}\\
+    \label{commbnd1}
+    \|[T,S^1]\| &\le & C\|f\|_{L^1(\bR)}
+  \end{eqnarray}
+\end{lemma}
+\begin{proof} $S^0$ and $S^1$ are convolutions with $F^0$ and $F^1$
+  respectively, both members of ${\cal S}$. Thus $[T,S^0] = (TF^0)*$,
+  and $(TF^0)(t) =  a t \partial_t f(t-\tau)$.
+  Since the range of $\tau$ over $X_{sr}$ is bounded, and $f$ has
+  compact support, $TF^0$ is  bounded in $L^1(\bR)$ by
+  $C\|\partial_t f\|_{L^1(\bR)}$. From the identity \ref{eqn:f1alt},
+  \[
+    \|tF^1\|_{L^1([0,t_0])} \le C t_0 \|f\|_{L^1(\bR)}
+  \]
+  From \ref{eqn:f1asymp}, $tF^1\le Ce^{-\delta t}\|f\|_{L^1(\bR)}$ for
+  $t>t_0$, with adjusted $\delta$ and $C$.  Combining these two
+  observationss, conclude that actually $tF^1 \in {\cal S}$ and
+  $\|TF^1\|_{L^1(\bR)} \le \| f\|_{L^1(\bR)}$, establishing the second bound.
+\end{proof}
+
+\begin{lemma}
+  \label{thm:rhsbnd}
+  Suppose $d \in D(T)$. Then $S^T d \in D(T)$, and
+  \begin{equation}
+    \label{eqn:rhsbnd}
+    \|TS^Td\| \le C\|\partial f\|_{L^1(\bR)} (\|d\| +
+    \|Td\|).
+  \end{equation}
+  
+\end{lemma}
+\begin{proof}
+  Choose $\phi \in {\cal S} \subset D(T)$. From Proposition
+  \ref{thm:fbounds}, $S^Td\| \le C\|\partial_t f\|_{L^1(\bR)}\|d\|$. Then
+  \[
+    \langle T\phi, S^Td \rangle = \langle ST\phi,d\rangle = \langle
+    (TS + [S,T])\phi, d\rangle 
+  \]
+  From the previous lemma, $\|[S,T]\| \le C\|\partial_t
+  f\|_{L^1(\bR)}$, so the above is
+  \[
+    \le C\|\phi\| \|\partial_t f\|_{L^1(\bR)}(\|Td\| + \|d\|)
+  \]
+  and the proof is complete.
+\end{proof}
+
+\begin{lemma}
+  \label{thm:invest}
+  Suppose that $\phi \in {\cal S}$ and $\psi \in L^2(\bR)$ so that
+  \[
+    (S^TS + \sigma I)\psi = \phi.
+  \]
+  Then $\psi \in {\cal S}$, and $\|\psi\| \le \frac{C}{\sigma}\|\phi\|$.
+\end{lemma}
+\begin{proof}
+  From Proposition \ref{thm:fbounds}, $F \in {\cal S}$. as is its
+  Fourier transform $\hat{F}$. The Fourier transforms of $\phi$ and
+  $\psi$ are related by
+  \[
+    (\bar{\hat{F}}\hat{F} + \sigma)\hat{\psi} = \hat{\phi}.
+  \]
+  Since the first summand on the LHS is non-negative real,
+ $ |\hat{\psi}| \le \sigma^{-1}|\hat{\phi}|$, whence $\hat{\psi}$
+ hence $\psi$ are both in {\cal S}.
+ \end{proof}
+   
 \begin{prop}
   \label{thm:tl2}
-  In addition to the Exponential Decay, Single Arrival, and No Return assumptions, uppose that $ Td \in L^2(X_{sr} \times \bR)$. Then
-  $Tu_{\sigma}[\kappa;d]  \in L^2(X_{sr} \times \bR)$, and for each
-  $(\bx_s,\bx_r) \in X_{sr}$,
+  Suppose that $d \in D(T)$. Then
+  $u_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)  \in D(T)$ for all
+  $(\bx_s,\bx_r) \in X_{sr}$ and
   \[
     \|Tu_{\sigma}[\kappa;d](\bx_r,\cdot;\bx_s)\| \le
   \]
@@ -671,80 +912,80 @@ and the bound follows from the inequality \ref{eqn:snorm}.
 \end{prop}
 
 \begin{proof}
-  Since $\kappa$ is the argument of $S$ and $u_{\sigma}$ throughout, drop it
-  temporarily, also from the ingredients $\tau, a, $ and $b$ of the
-  Hadamard decomposition. The expressions to follow pertain to
-  each trace, that is, for each $(\bx_s,\bx_r) \in X_{sr}$, so also drop these
-  from the notation also.
-  
-  Thus
+
+  SInce these arguments do not vary, drop $[\kappa,d]$, $\bx_r$ and $\bx_s$ from the
+  notation for the filter $u_{\sigma}$ and other quantities.
+  For $\phi \in {\cal S}$, let $\psi \in {\cal S}$ so that
+  $(S^TS + \sigma I)\psi = \phi$.
   \[
-    S^TS u=
-    \rho^2(a\delta  +  (\check{b}\check{H})) *\delta_{-\tau}*\partial_t
-    f * (a\delta  +  (bH)) *\delta_{\tau}*\partial_t f*u
+    \langle T\phi, u_{\sigma}\rangle = \langle T (S^TS +
+    \sigma I)\psi, u_{\sigma}\rangle
   \]
-  \[
-    = \rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
-    (bH))*\partial_t f *\partial_t f*.
-  \]
-  $T$ is also a bounded map on $ {\cal S}(\bR)$, as is
-  its commutator with $S^TS$, and 
-  \[
-    [T,S^TS] = \rho^2((T\check{b}\check{H}) *(a\delta  +
-    (bH))*+ (a\delta  +  (\check{b}\check{H}))*(TbH))*\partial_t f
-    *\partial_t f*
-  \]
-  \[
-    +2\rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
-    (bH)))* \partial_t f  *T\partial_t f*
-  \]
-  \[
-    =\rho^2((T\partial_t\check{b}\check{H}) *(a\delta  +
-    (bH))*+ (a\delta  +  (\check{b}\check{H}))*(T\partial bH))* f
-    *\partial_t f*
-   \]
   \begin{equation}
-    \label{eqn:tsscomm}
-     +2\rho^2((a\delta  +  (\check{b}\check{H}))*(a\delta  +
-    (bH)))* \partial_t f  *T\partial_t f*.
+    \label{eqn:inter1}
+    =\langle T \psi, S^T d \rangle + \langle [T, S^TS] \psi, u_{\sigma}
+    \rangle
   \end{equation}
-  
-  Referring to the exponential decay assumption \ref{eqn:best}
-  and the standing assumption $f\in C_0^{\infty}(\bR)$, 
-  observe that all summands on the RHS of identity \ref{eqn:tsscomm} are in
-  $L^1(\bR)$, so $[T,S^TS]$ extends to a bounded
-  operator on $L^2(\bR)$, with
-  \begin{equation}
-    \label{eqn:tsscommnorm}
-    \|[T,S^TS]\| \le C\|\partial_t f\|_{L^1(\bR)}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
-  \end{equation}
-  
+  Note that
+  \[
+    [T,(S^0)^TS^0] = [T, (a (-\partial_t\check{f})*
+    \delta_{-\tau})*(a \partial_tf *\delta_{\tau})* ]
+  \]
+  \[
+   = a^2[T,
+   ( (-\partial_t \check{f})*\partial_tf)*] = -a^2
+    ((T \partial_t \check{f})*(\partial_tf)* + \partial_t \check{f}*(T\partial_tf)*)
+  \]
+  so
+  \[
+    \|[T,(S^0)^TS^0]\| \le C \|\partial_t f\|_{L^1(\bR)}\|T\partial_t
+    f\|_{L^1(\bR)}
+  \]
+  Using the inequalities from Lemmas \ref{thm:fbounds} and \ref{thm:commbnds},
+  \[
+    \|[T, (S^0)^TS^1]\| \le \|[T,(S^0)^T]S^1\| + \|(S^0)^T [T,S^1]\|
+  \]
+  \[
+    \le C(\|\partial f\|_{L^1(\bR)}\|f\|_{L^1(\bR)}.
+  \]
   Similarly,
   \[
-    [T,S]=T(\partial_t b)H*\delta_{\tau}*f + \tau(a\delta +
-    bH)*\delta_{\tau}*\partial_t f + (a\delta +
-    bH)*\delta_{\tau}*T\partial_t f.
+    \|[T, (S^1)^TS^0]\| \le C(\|\partial
+    f\|_{L^1(\bR)}\|f\|_{L^1(\bR)},
   \]
-  Young's inequality shows that the RHS lies in $L^1(\bR)$, and that there exists $C$ independent of $\kappa$ so that
-  $[T,S^T]$ obeys the same estimate as does $S$ (Lemma
-  \ref{thm:snorm}), that is,
-  \begin{equation}
-    \label{eqn:tcommst}  
-    \|[T,S^T]\| = \|[T,S]\| \le C\|\partial_t f\|_{L^1(\bR)}
-  \end{equation}
-  
-  Multiplying the normal equation for $u_{\sigma}$ by $T$ and earranging,
+  and
   \[
-    (S^TS+\sigma I)Tu_{\sigma} = -[T,S^TS]u_{\sigma} + [T,S^T]d + S^TTd.
+    \|[T, (S^0)^TS^0]\| \le C\|f\|_{L^1(\bR)}^2.
   \]
-  A theorem of von Neumann (\cite{Yosida}, VII.3, Theorem 2) implies
-  that $S^TS+\sigma I$ has a bounded inverse, so the distribution
-  $Tu_{\sigma} \in L^2(X_{sr} \times \bR)$. The inverse is bounded by
-  $1/\sigma$, so the estimates \ref{eqn:snorm}, \ref{eqn:unorm},
-  \ref{eqn:tcommst}, and \ref{eqn:tsscommnorm} combine to yield the
-  bound \ref{eqn:tunorm}.
-  
+  Combining the last several inequalities, obtain
+  \begin{equation}
+    \label{eqn:TScomm}
+    \|[T, S^TS]\| \le C\|\partial_t
+    f\|_{L^1(\bR)}(\|f\|_{L^1(\bR)}+\|T\partial_t f\|_{L^1(\bR)}).
+  \end{equation}
+  Use this inequality and inequality \ref{eqn:rhsbnd} to estimate the RHS
+  of equation \ref{eqn:inter1}:
+  \[
+    |\langle T\phi, u_{\sigma}\rangle| \le C\|\psi\|\|\partial_t
+    f\|_{L^1(\bR)}(\|d\| + \|Td\|) + \|\partial_t
+    f\|_{L^1(\bR)}(\|f\|_{L^1(\bR)}+\|T\partial_t
+    f\|_{L^1(\bR)})\|u_{\sigma}\|)
+  \]
+  Use \ref{eqn:unorm} to estimate $u_{\sigma}$, the estimate in Lemma
+  \ref{thm:invest} to estimate $\psi$, and rearrange to obtain
+  \[
+    |\langle T\phi, u_{\sigma} \rangle| \le
+  \]
+  \[
+    \frac{C}{\sigma}\left(\left(
+        \frac{\|\partial_t f\|^2_{L^1(\bR)}}{\sigma}(\|f\|_{L^1(\bR)}+\|T\partial_tf\|_{L^1(\bR)})
+      \right)\|d\| + \|\partial_t  f\|_{L^1(\bR)}(\|d\|
+      +\|Td\|)\right)
+    \|\phi\|.
+  \]
+
 \end{proof}
+
 
 The following fact will be useful later on:
 
