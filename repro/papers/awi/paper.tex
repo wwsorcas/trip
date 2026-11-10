@@ -105,11 +105,11 @@ section.
 
 \section{Main Results}
 
-Following the introductory paper on AWI \cite{Warner:16} and much
+Following the introductory paper on AWI \cite[]{Warner:16} and much
 other work on inverse problems in wave propagation, the framework for
 the results reported here is an
 active source acoustic model of data generation in Euclidean space
-$\bR^3$. Each source is modeled an isotropic point radiator
+$\bR^3$ with multiple energy sources. Each source is modeled an isotropic point radiator
 with known location $\bx_s\in \bR^3$. These
 sources generate acoustic waves traveling through Euclidean space. The
 data are samples of these waves at receivers, modeled as isotropic
@@ -646,7 +646,7 @@ Young's inequality.
 From the second definition \ref{eqn:fdefs1},
 \[
   F^1[\kappa](\bx_r,t;\bx_s) =
-  b[\kappa](bx_r,\tau[\kappa](\bx_s,\bx_r);\bx_s)
+  b[\kappa](\bx_r,\tau[\kappa](\bx_s,\bx_r);\bx_s)
   f(t-\tau[\kappa](\bx_s,\bx_r))
 \]
 \begin{equation}
@@ -657,7 +657,7 @@ b[\kappa](\bx_r,\cdot;\bx_s)*H(\cdot)*f(\cdot))(t)
 This identity implies that for $t_0$ as specified in Assumption \ref{thm:expdecay},
 \begin{equation}
   \label{eqn:f1nonasymp}
-  \|F^1[\kappa](\bx_r,\cdot;\bx_s\|_{L^1[0,t_0]} \le C\|f\|_{L^1(\bR)}.
+  \|F^1[\kappa](\bx_r,\cdot;\bx_s)\|_{L^1[0,t_0]} \le C\|f\|_{L^1(\bR)}.
 \end{equation}
 with suitable choice of $C>0$.
   
@@ -674,7 +674,7 @@ $\tilde{f}$, and $\tilde{p} = \partial_t \tilde{q}$ the corresponding
 pressure. According to Assumption \ref{thm:expdecay},
 \begin{equation}
   \label{eqn:ptildebnd}
-  |\partial^2 \tilde{p}(\bx_r,t;\bx_s)\| \le C e^{-\delta t} \|\partial_t
+  |\partial_t^2 \tilde{p}(\bx_r,t;\bx_s)\| \le C e^{-\delta t} \|\partial_t
   \tilde{f}\|_{L^2(\bR)},\,t >t_0
 \end{equation}
 for suitable $C, \delta, t_0> 0$.
@@ -1201,10 +1201,10 @@ Suppose conversely that $\|\Sl[\kappa]\ul[\kappa;d] - \dl\| \le
 \frac{1}{2}\|d\|$. Then $\|\Sl[\kappa]\ul[\kappa;d] \| \ge
 \frac{1}{2}\|d\|$, so
 \[
-  \|d\| \le 2\|\Fl[\kappa]*\ul[\kappa;d] \| \le
-  2\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
+  \|d\| \le 2\|\Sl[\kappa]\ul[\kappa;d] \| \le
+  C\lambda^{\frac{1}{2}}\|\ul[\kappa;d]\|
 \]
-from Young's inequality, Proposition \ref{thm:noisefree}, and
+from the first inequality in display \ref{eqn:Srembd}. Proposition \ref{thm:noisefree}, and
 inequalities \ref{eqn:lambdanorms}. From the bound \ref{eqn:unorm} this is in
 turn
 \[
